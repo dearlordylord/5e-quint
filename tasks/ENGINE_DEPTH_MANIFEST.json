@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "taskId": "CRPI-READY-001",
+  "productionModulesExtended": [
+    {
+      "path": "packages/battle-runtime/src/battle-reducer.ts",
+      "role": "domain-engine",
+      "domainApis": [
+        "BattleState",
+        "BattleCreatureState",
+        "resolveBattleSubject"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+      "role": "domain-engine",
+      "domainApis": ["discoverBattleActs"]
+    },
+    {
+      "path": "packages/battle-runtime/src/battle-reducer/hole-helpers.ts",
+      "role": "domain-engine",
+      "domainApis": ["battleHoleFamilyKind", "requiredAbilityCheckRollMode"]
+    },
+    {
+      "path": "packages/battle-runtime/src/battle-protocol-kinds.ts",
+      "role": "domain-engine",
+      "domainApis": ["battleFillKind"]
+    }
+  ],
+  "adapterModules": [
+    {
+      "path": "packages/battle-runtime/src/ability-check-choice-search.mbt.test.ts",
+      "quarantinedWitnessNames": [
+        "doSearchTargetChoiceOpen",
+        "doSearchAbilityCheckOpen",
+        "doSearchInvalidTargetRejected",
+        "doSearchInvalidAbilityFillRejected",
+        "doSearchFails",
+        "doSearchSucceeds",
+        "doGuidanceSkillChoiceOpen",
+        "doGuidanceInvalidAbilityFillRejected",
+        "doGuidanceSkillAthletics",
+        "doEnhanceAbilityChoiceOpen",
+        "doEnhanceAbilityInvalidSkillFillRejected",
+        "doEnhanceAbilityDex",
+        "mbt::actionTaken",
+        "observedActionTaken",
+        "traceId",
+        "qntFileSha256",
+        "sourceBranchInventorySha256",
+        "cleanroomManifestSourceCommitSha",
+        "targetProfile",
+        "targetProfileSha256",
+        "stateCheck",
+        "qRoute",
+        "route-event-list",
+        "expectedProjectionSha256",
+        "observedProjectionSha256",
+        "checkedTargetStateFields",
+        "harnessTestPath"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-READY-001.json"
+      ]
+    }
+  ],
+  "accumulatorGrowth": [],
+  "expectedNextReuse": [
+    {
+      "driver": "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt",
+      "module": "packages/battle-runtime/src/battle-reducer.ts",
+      "api": "BattleCreatureState.activeEffects"
+    },
+    {
+      "driver": "packages/battle-runtime/battle-runtime-scalar-buff.mbt.qnt",
+      "module": "packages/battle-runtime/src/battle-reducer.ts",
+      "api": "BattleCreatureState.concentration"
+    }
+  ],
+  "completion": {
+    "tag": "existing-production-owner-with-adapter-replay",
+    "notes": "No new production module or durable state field was introduced for Task 1; the replay deepened the quarantined MBT route adapter to derive qRoute from public reducer entrypoints."
+  }
+}

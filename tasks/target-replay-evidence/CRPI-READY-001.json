@@ -1,0 +1,324 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/ability-check-choice-search.mbt.test.ts public reducer route replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt",
+      "qntFileSha256": "03939fa327861bfe490825a4a15b3875e34ff266b14b896c68a01afdb0f215ac",
+      "branchFamily": "step",
+      "branchAction": "doSearchTargetChoiceOpen",
+      "observedActionTaken": "doSearchTargetChoiceOpen",
+      "harnessTestPath": "packages/battle-runtime/src/ability-check-choice-search.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=12 action=doSearchTargetChoiceOpen",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "ddaa7534785a721edee770e9260111939142e175ec774cafeb1acc64cc169dda",
+        "observedProjectionSha256": "ddaa7534785a721edee770e9260111939142e175ec774cafeb1acc64cc169dda",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": ["start_battle", "discover_battle_acts"],
+          "routeEventSource": "public reducer replay observed from discoverBattleActs",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#discoverBattleActs"
+        },
+        "checkedTargetStateFields": [
+          "BattleState.currentTurnResources",
+          "BattleCreatureState.hidden"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt",
+      "qntFileSha256": "03939fa327861bfe490825a4a15b3875e34ff266b14b896c68a01afdb0f215ac",
+      "branchFamily": "step",
+      "branchAction": "doSearchAbilityCheckOpen",
+      "observedActionTaken": "doSearchAbilityCheckOpen",
+      "harnessTestPath": "packages/battle-runtime/src/ability-check-choice-search.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=12 action=doSearchAbilityCheckOpen",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "3d137928f28538c193615d4991638b0b57948463643d6331588094822bae5144",
+        "observedProjectionSha256": "3d137928f28538c193615d4991638b0b57948463643d6331588094822bae5144",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "routeEventSource": "public reducer replay observed from resolveBattleSubject needsHoles",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleState.currentTurnResources",
+          "BattleCreatureState.hidden"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt",
+      "qntFileSha256": "03939fa327861bfe490825a4a15b3875e34ff266b14b896c68a01afdb0f215ac",
+      "branchFamily": "step",
+      "branchAction": "doSearchInvalidTargetRejected",
+      "observedActionTaken": "doSearchInvalidTargetRejected",
+      "harnessTestPath": "packages/battle-runtime/src/ability-check-choice-search.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=12 action=doSearchInvalidTargetRejected",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "5612421239848351e0842fc05960115abcd71b08bc34fba9f6296e784a79c844",
+        "observedProjectionSha256": "5612421239848351e0842fc05960115abcd71b08bc34fba9f6296e784a79c844",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "routeEventSource": "public reducer replay observed from resolveBattleSubject invalid result",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleState.currentTurnResources",
+          "BattleCreatureState.hidden"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt",
+      "qntFileSha256": "03939fa327861bfe490825a4a15b3875e34ff266b14b896c68a01afdb0f215ac",
+      "branchFamily": "step",
+      "branchAction": "doSearchInvalidAbilityFillRejected",
+      "observedActionTaken": "doSearchInvalidAbilityFillRejected",
+      "harnessTestPath": "packages/battle-runtime/src/ability-check-choice-search.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=12 action=doSearchInvalidAbilityFillRejected",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "30b060464bf66efc63a8d423aa2ec136ab003129e94c75fd416ba1665c566402",
+        "observedProjectionSha256": "30b060464bf66efc63a8d423aa2ec136ab003129e94c75fd416ba1665c566402",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "routeEventSource": "public reducer replay observed from resolveBattleSubject invalid result",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleState.currentTurnResources",
+          "BattleCreatureState.hidden"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt",
+      "qntFileSha256": "03939fa327861bfe490825a4a15b3875e34ff266b14b896c68a01afdb0f215ac",
+      "branchFamily": "step",
+      "branchAction": "doSearchFails",
+      "observedActionTaken": "doSearchFails",
+      "harnessTestPath": "packages/battle-runtime/src/ability-check-choice-search.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=12 action=doSearchFails",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "2d19ef541b258414f482c84f2513103d9cb30f7ea8b7fbf7cb1e83eac06d292d",
+        "observedProjectionSha256": "2d19ef541b258414f482c84f2513103d9cb30f7ea8b7fbf7cb1e83eac06d292d",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "routeEventSource": "public reducer replay observed from resolveBattleSubject resolved result",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleState.currentTurnResources",
+          "BattleCreatureState.hidden"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt",
+      "qntFileSha256": "03939fa327861bfe490825a4a15b3875e34ff266b14b896c68a01afdb0f215ac",
+      "branchFamily": "step",
+      "branchAction": "doSearchSucceeds",
+      "observedActionTaken": "doSearchSucceeds",
+      "harnessTestPath": "packages/battle-runtime/src/ability-check-choice-search.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=12 action=doSearchSucceeds",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "2d19ef541b258414f482c84f2513103d9cb30f7ea8b7fbf7cb1e83eac06d292d",
+        "observedProjectionSha256": "2d19ef541b258414f482c84f2513103d9cb30f7ea8b7fbf7cb1e83eac06d292d",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "routeEventSource": "public reducer replay observed from resolveBattleSubject resolved result",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleState.currentTurnResources",
+          "BattleCreatureState.hidden"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt",
+      "qntFileSha256": "03939fa327861bfe490825a4a15b3875e34ff266b14b896c68a01afdb0f215ac",
+      "branchFamily": "step",
+      "branchAction": "doGuidanceSkillChoiceOpen",
+      "observedActionTaken": "doGuidanceSkillChoiceOpen",
+      "harnessTestPath": "packages/battle-runtime/src/ability-check-choice-search.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=12 action=doGuidanceSkillChoiceOpen",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "e935953c6e87b3d962a30d46ac919ea5244d78fe90e410fc04d56418a40a724e",
+        "observedProjectionSha256": "e935953c6e87b3d962a30d46ac919ea5244d78fe90e410fc04d56418a40a724e",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "routeEventSource": "public reducer replay observed from resolveBattleSubject needsHoles",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleState.currentTurnResources",
+          "BattleCreatureState.activeEffects"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt",
+      "qntFileSha256": "03939fa327861bfe490825a4a15b3875e34ff266b14b896c68a01afdb0f215ac",
+      "branchFamily": "step",
+      "branchAction": "doGuidanceInvalidAbilityFillRejected",
+      "observedActionTaken": "doGuidanceInvalidAbilityFillRejected",
+      "harnessTestPath": "packages/battle-runtime/src/ability-check-choice-search.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=12 action=doGuidanceInvalidAbilityFillRejected",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "5adb6c2af154bf9f8bb97a149a0e2be28d1a0251cc1c14d9f6c954d42cba8f23",
+        "observedProjectionSha256": "5adb6c2af154bf9f8bb97a149a0e2be28d1a0251cc1c14d9f6c954d42cba8f23",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "routeEventSource": "public reducer replay observed from resolveBattleSubject invalid result",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleState.currentTurnResources",
+          "BattleCreatureState.activeEffects"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt",
+      "qntFileSha256": "03939fa327861bfe490825a4a15b3875e34ff266b14b896c68a01afdb0f215ac",
+      "branchFamily": "step",
+      "branchAction": "doGuidanceSkillAthletics",
+      "observedActionTaken": "doGuidanceSkillAthletics",
+      "harnessTestPath": "packages/battle-runtime/src/ability-check-choice-search.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=12 action=doGuidanceSkillAthletics",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "e977553d78766ac4c90d5c645692537a24661157ebc37295022bfca38b7ad0db",
+        "observedProjectionSha256": "e977553d78766ac4c90d5c645692537a24661157ebc37295022bfca38b7ad0db",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject"
+          ],
+          "routeEventSource": "public reducer replay observed from resolveBattleSubject resolved result and resulting BattleCreatureState.concentration",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleState.currentTurnResources",
+          "BattleCreatureState.activeEffects",
+          "BattleCreatureState.concentration"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}

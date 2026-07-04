@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "taskId": "CRPI-READY-001",
+  "durableFields": [
+    {
+      "fieldPath": "BattleState.currentTurnResources",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "owner": "battle-state",
+      "derivability": {
+        "tag": "canonical-source"
+      }
+    },
+    {
+      "fieldPath": "BattleCreatureState.hidden",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "owner": "battle-state",
+      "derivability": {
+        "tag": "canonical-source"
+      }
+    },
+    {
+      "fieldPath": "BattleCreatureState.activeEffects",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "owner": "battle-state",
+      "derivability": {
+        "tag": "canonical-source"
+      }
+    },
+    {
+      "fieldPath": "BattleCreatureState.concentration",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "owner": "battle-state",
+      "derivability": {
+        "tag": "canonical-source"
+      }
+    }
+  ],
+  "notes": [
+    "Task 1 introduced no duplicate Search, hidden-target, roll-modifier, or Concentration state.",
+    "Target admission, vicinity, hidden candidate discovery, and roll totals remain caller/table fills."
+  ]
+}
