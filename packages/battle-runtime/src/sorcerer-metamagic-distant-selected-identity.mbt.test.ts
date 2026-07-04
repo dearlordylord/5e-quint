@@ -60,7 +60,6 @@ type DistantObjectLightProjection = {
 const distantMetamagicRouteReplayDriverSchema = {
   init: {},
   doRouteSpellRangeProjection: {},
-  stepRouteSpellRangeProjection: {},
 } as const;
 
 type DistantMetamagicRouteReplayProjection = {
@@ -166,9 +165,6 @@ function createDistantMetamagicRouteReplayDriver() {
     return {
       init: reset,
       doRouteSpellRangeProjection: () => {
-        route = observeDistantObjectLightRoute();
-      },
-      stepRouteSpellRangeProjection: () => {
         route = observeDistantObjectLightRoute();
       },
       getState: (): DistantMetamagicRouteReplayProjection => ({ route }),

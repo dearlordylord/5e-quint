@@ -56,7 +56,6 @@ type ExtendedCreatureSizeProjection = {
 const extendedMetamagicRouteReplayDriverSchema = {
   init: {},
   doRouteSpellDurationProjection: {},
-  stepRouteSpellDurationProjection: {},
 } as const;
 
 type ExtendedMetamagicRouteReplayProjection = {
@@ -164,7 +163,6 @@ function createExtendedMetamagicRouteReplayDriver() {
     return {
       init: reset,
       doRouteSpellDurationProjection: recordResolvedRoute,
-      stepRouteSpellDurationProjection: recordResolvedRoute,
       getState: (): ExtendedMetamagicRouteReplayProjection => ({ route }),
     };
   });

@@ -39,8 +39,6 @@ import {
 const empoweredMetamagicRouteReplayDriverSchema = {
   init: {},
   doRouteDamageDiceReroll: {},
-  step: {},
-  stepRouteDamageDiceReroll: {},
 } as const;
 
 type EmpoweredMetamagicRouteReplayProjection = {
@@ -144,8 +142,6 @@ function createEmpoweredMetamagicRouteReplayDriver() {
     return {
       init: reset,
       doRouteDamageDiceReroll: recordResolvedRoute,
-      step: recordResolvedRoute,
-      stepRouteDamageDiceReroll: recordResolvedRoute,
       getState: (): EmpoweredMetamagicRouteReplayProjection => ({ route }),
     };
   });
