@@ -20,7 +20,7 @@ const ACCEPTED_MBT_GROUPS = {
     {
       label: "rule-core witnesses",
       reason:
-        "rule-core MBT families are split by future QAR-15/QAR-16 remediation tasks",
+        "rule-core spell families have package scripts; remaining grouped rule-core witnesses are tracked by QAR-16 feature-family remediation",
       pattern: /^src\/rule-core-.*\.mbt\.test\.ts$/,
     },
     {

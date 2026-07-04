@@ -91,7 +91,7 @@
     {
       "number": 15,
       "id": "QAR-15-RULE-CORE-SPELLS-MBT-SPLIT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Split rule-core spells MBT by procedure family"
     },
     {
@@ -187,7 +187,7 @@ mismatch. The Ralph runner or decider owns branch repair.
 | 12 | QAR-12-INDUCTIVE-WITNESS-SEEDS - Repair priority inductive specs and add reachability witnesses | done | QAR-05-SHARED-INVARIANT-PROOF-HARNESS, QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-07-DAMAGE-PAIR-NONZERO, QAR-11-RUN-BLOCK-SEPARATION-GUARD | Admits state-space repair modules and adds reachability witnesses after affected specs settle. |
 | 13 | QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD - Harden MBT closure leaf whitelist checks | done | QAR-01-TEST-LANE-ISOLATION | Hardens closure checks before driver conversions. |
 | 14 | QAR-14-STARRY-WISP-WITNESS-CONVERSION - Convert Starry Wisp object driver to a literal witness | done | QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD | Converts the clearest heavy driver to a literal witness. |
-| 15 | QAR-15-RULE-CORE-SPELLS-MBT-SPLIT - Split rule-core spells MBT by procedure family | ready-for-research | QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD | Splits spell MBT closure after admission semantics are explicit. |
+| 15 | QAR-15-RULE-CORE-SPELLS-MBT-SPLIT - Split rule-core spells MBT by procedure family | done | QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD | Splits spell MBT closure after admission semantics are explicit. |
 | 16 | QAR-16-RULE-CORE-FEATURES-MBT-SPLIT - Split rule-core features MBT by feature family | ready-for-research | QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD | Splits feature MBT closure after closure rules are hardened. |
 | 17 | QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION - Move Hunter's Prey execution to semantic support profiles | done | QAR-01-TEST-LANE-ISOLATION | Removes execution dispatch on selected authored option ids. |
 | 18 | QAR-18-OPEN-HAND-SEMANTIC-CHOICES - Move Open Hand execution to semantic effect variants | done | QAR-01-TEST-LANE-ISOLATION | Removes Open Hand authored-choice execution dispatch. |
@@ -837,7 +837,7 @@ Plan Impact:
 
 ### Task 15 - QAR-15-RULE-CORE-SPELLS-MBT-SPLIT
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on:
 
@@ -846,8 +846,8 @@ Depends on:
 
 Relevant files:
 
-- `packages/battle-runtime/rule-core-spells.mbt.qnt`
-- Matching TypeScript MBT test/bridge.
+- `packages/battle-runtime/rule-core-spell-*.mbt.qnt`
+- `packages/battle-runtime/src/rule-core-spells.mbt.test.ts`
 
 Output:
 

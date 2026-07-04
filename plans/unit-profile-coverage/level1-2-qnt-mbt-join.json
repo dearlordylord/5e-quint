@@ -44,7 +44,7 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -80,7 +80,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -220,7 +238,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -938,7 +974,7 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -974,7 +1010,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -1114,7 +1168,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -1224,7 +1296,7 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -1260,7 +1332,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -1400,7 +1490,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -1578,7 +1686,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -1895,7 +2021,7 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -1947,7 +2073,7 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -1983,7 +2109,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -2933,7 +3077,7 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -2969,7 +3113,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -3203,7 +3365,7 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -3239,7 +3401,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -3379,7 +3559,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -3489,7 +3687,7 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -3515,7 +3713,7 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -3551,7 +3749,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -3873,7 +4089,7 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -3909,7 +4125,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -4019,7 +4253,7 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -4055,7 +4289,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -4195,7 +4447,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -4425,7 +4695,7 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -4461,7 +4731,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -4601,7 +4889,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -4711,7 +5017,7 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -4747,7 +5053,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -4887,7 +5211,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -5487,7 +5829,7 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -5523,7 +5865,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -5663,7 +6023,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -5773,7 +6151,7 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -5809,7 +6187,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -6106,7 +6502,7 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -6142,7 +6538,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -6282,7 +6696,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -6392,7 +6824,7 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -6428,7 +6860,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -6568,7 +7018,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -6935,7 +7403,7 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -6971,7 +7439,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -7111,7 +7597,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -7331,7 +7835,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -7525,7 +8047,7 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -7561,7 +8083,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -7701,7 +8241,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -7931,7 +8489,7 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -7967,7 +8525,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -8103,7 +8679,7 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -8139,7 +8715,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -8249,7 +8843,7 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -8285,7 +8879,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -8441,7 +9053,7 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
           "stepAction": "step"
         },
         {
@@ -8477,7 +9089,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],
@@ -8617,7 +9247,25 @@
         {
           "kind": "focused-mbt",
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+          "qntSpecPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
           "stepAction": "step"
         }
       ],

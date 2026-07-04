@@ -1484,10 +1484,73 @@ describe("rule-core Spell focused MBT", () => {
   });
 
   it(
-    "replays QCORE10 spell procedure parity through battle-runtime reducers",
+    "replays QCORE10 damage spell procedure family through battle-runtime reducers",
     async () => {
       await run({
-        spec: mbtSpecPath(import.meta.dirname, "rule-core-spells.mbt.qnt"),
+        spec: mbtSpecPath(import.meta.dirname, "rule-core-spell-damage.mbt.qnt"),
+        init: "init",
+        step: "step",
+        driver: createRuleCoreSpellDriver(),
+        backend: "typescript",
+        seed: process.env["QUINT_SEED"],
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(ruleCoreSpellDefaultMbtSteps),
+        stateCheck: spellStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "replays QCORE10 hit point restoration spell procedure family through battle-runtime reducers",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "rule-core-spell-restoration.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createRuleCoreSpellDriver(),
+        backend: "typescript",
+        seed: process.env["QUINT_SEED"],
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(ruleCoreSpellDefaultMbtSteps),
+        stateCheck: spellStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "replays QCORE10 defensive effect spell procedure family through battle-runtime reducers",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "rule-core-spell-defensive-effect.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createRuleCoreSpellDriver(),
+        backend: "typescript",
+        seed: process.env["QUINT_SEED"],
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(ruleCoreSpellDefaultMbtSteps),
+        stateCheck: spellStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "replays QCORE10 readied response spell procedure family through battle-runtime reducers",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "rule-core-spell-readied-response.mbt.qnt",
+        ),
         init: "init",
         step: "step",
         driver: createRuleCoreSpellDriver(),

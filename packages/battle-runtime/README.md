@@ -399,8 +399,9 @@ Focused lanes currently include:
   QCORE9 Action Surge, Second Wind, Cunning Action, Improved Critical,
   Rage/Reckless, Sneak Attack, Savage Attacker, Evasion, Cutting Words, and
   Uncanny Dodge projections.
-- `rule-core-spells.mbt.qnt` / `src/rule-core-spells.mbt.test.ts` for QCORE10
-  spell invocation, supported reaction spell, and readied spell projections.
+- `rule-core-spell-*.mbt.qnt` / `src/rule-core-spells.mbt.test.ts` for QCORE10
+  spell damage, hit point restoration, defensive effect, and readied spell
+  response projections.
 - `rule-core-stat-block-controls.mbt.qnt` /
   `src/rule-core-stat-block-controls.mbt.test.ts` for QCORE11 stat-block
   Multiattack dispatch projections.
