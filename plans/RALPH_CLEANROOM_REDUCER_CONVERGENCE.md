@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "CRP-06-SETTLEMENT-REST-OWNERS",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Task-shape settlement and rest ownership acceptance"
     },
     {
@@ -456,7 +456,7 @@ depends on route-event provenance.
 
 ### Task 6 - CRP-06-SETTLEMENT-REST-OWNERS
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

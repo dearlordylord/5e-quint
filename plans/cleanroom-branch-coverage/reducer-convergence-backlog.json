@@ -1428,12 +1428,82 @@
         "packages/character-battle-runtime/character-battle-settlement.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "CharacterBattleSettlementOwner owns battle-to-sheet Hit Point, Temporary Hit Point, condition, Stable lifecycle, identity, and maximum-HP settlement gates; CharacterBattleResourceProjectionOwner owns source-exact ordinary Spell Slot, created Spell Slot, Pact Slot, and feature-resource delta projection. Character Sheet remains the durable state owner after settlement, and BattleState owns battle-local effects until settlement rejects or resolves them.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRP06-SRO-01",
+      "status": "ready",
+      "blockerId": null,
+      "settlementRestOwnerTasks": [
+        {
+          "taskId": "CRP06-SRO-01",
+          "title": "Battle-to-sheet settlement and source-exact resource deltas",
+          "status": "ready",
+          "sourcePaths": [
+            "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
+            "packages/character-battle-runtime/character-battle-settlement.route.mbt.qnt",
+            "packages/character-battle-runtime/character-battle-reducer-route.qnt",
+            "packages/character-battle-runtime/README.md",
+            "plans/cleanroom-guidance/reducer-spine.md",
+            "UBIQUITOUS_LANGUAGE.md",
+            ".references/srd-5.2.1/Playing-the-Game.md",
+            ".references/srd-5.2.1/Rules-Glossary.md",
+            ".references/srd-5.2.1/Spells/Gaining-and-Casting.md",
+            ".references/srd-5.2.1/Classes/Warlock.md",
+            ".references/srd-5.2.1/Classes/Sorcerer.md"
+          ],
+          "semanticEvidence": {
+            "driverPath": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
+            "ownerPath": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
+            "projection": "qState",
+            "comparator": "battle-settlement-state"
+          },
+          "routeEvidence": [
+            {
+              "connectorPath": "packages/character-battle-runtime/character-battle-settlement.route.mbt.qnt",
+              "projection": "qRoute",
+              "comparator": "route-event-list"
+            }
+          ],
+          "branchActions": [
+            "doSettleHitPointsConditionsSlotsAndPreservedSheetState",
+            "doSettlePurePactMagicSlotExpenditure",
+            "doRejectMixedSpellAndPactSlotSettlement",
+            "doSettleFeatureResourceExpenditure",
+            "doRejectAmbiguousCreatedSpellSlotSource",
+            "doRejectMismatchedCharacterIdentity",
+            "doRejectMaximumHpDrift",
+            "doRejectActiveWildShapeHandoff",
+            "doRejectActiveBattleStateHandoff",
+            "doRejectStableRecoveryProgressHandoff",
+            "doSettleZeroHpStableLifecycle"
+          ],
+          "acceptance": [
+            "Target replay observes semantic qState for accepted Hit Point, Temporary Hit Point, Poisoned, Prone, ordinary Spell Slot expenditure, spent Hit Dice preservation, rest-feature-use preservation, pure Pact Slot expenditure, feature-resource expenditure, accepted zero-HP Stable lifecycle, and every named settlement rejection.",
+            "Target replay observes qRoute from the public handoff or reducer entrypoint for RouteSettleBattleToCharacterSheet, RouteRecordCharacterBattleHandoffFacts, HandoffSourceExactSpellSlotDeltaFact, HandoffSourceExactPactSlotDeltaFact, HandoffFeatureResourceDeltaFact, HandoffZeroHpStableLifecycleFact, HandoffSettlementConflictFact, HandoffIdentityMatchHoleFamily, and HandoffHitPointProjectionHoleFamily.",
+            "Mixed ordinary Spell Slot and Pact Slot settlement, and source-ambiguous ordinary-vs-created Spell Slot settlement, must be rejected with settlement-conflict evidence rather than coerced into one aggregate slot ledger.",
+            "Settlement writes typed deltas and fresh sheet play-state only after identity, maximum-HP, active Wild Shape, active battle-state, and in-progress Stable recovery checks pass."
+          ],
+          "targetStateOwnerNotes": [
+            "BattleState owns combat-time mutations until settlement; Character Sheet owns durable post-settlement HP, conditions, spent Hit Dice, rest-feature uses, ordinary Spell Slot expenditures, created Spell Slot deltas, Pact Slot expenditure, and feature-resource expenditure.",
+            "CharacterBattleResourceProjectionOwner is the executable boundary for resource deltas, not a third durable resource store.",
+            "Stable with no in-progress recovery timer can settle as zero-HP lifecycle state; in-progress Stable recovery elapsed time is rejected at handoff because the sheet rest owner, not settlement, must own recovery progression."
+          ],
+          "forbiddenShortcuts": [
+            "Do not copy the entire battle resource record into Character Sheet state.",
+            "Do not merge ordinary Spell Slots, created Spell Slots, and Pact Slots into one settlement balance; source-exact deltas must remain distinguishable and conflict states must remain rejectable.",
+            "Do not preserve active battle effects, Concentration, active Wild Shape form state, or in-progress Stable recovery timers by storing battle-local state on the sheet."
+          ],
+          "verification": [
+            "Run target replay for packages/character-battle-runtime/character-battle-settlement.mbt.qnt and require semantic qState comparator battle-settlement-state.",
+            "Run target replay for packages/character-battle-runtime/character-battle-settlement.route.mbt.qnt and require qRoute comparator route-event-list from public handoff or reducer entrypoints.",
+            "Run RAW and domain-language review against .references/srd-5.2.1/Playing-the-Game.md#Hit Points, #Stabilizing a Character, #Temporary Hit Points, .references/srd-5.2.1/Rules-Glossary.md#Stable, .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots, .references/srd-5.2.1/Classes/Warlock.md#Level 1: Pact Magic, .references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Font of Magic, UBIQUITOUS_LANGUAGE.md, and packages/character-battle-runtime/README.md#Battle handoff settlement.",
+            "Run pnpm cleanroom-branch-coverage:check.",
+            "Run git diff --check.",
+            "Run reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review passes; fix every reasonable finding or document concrete rejection reason, and repeat until no reasonable findings remain."
+          ]
+        }
+      ]
     },
     {
       "driverPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt",
@@ -1853,12 +1923,82 @@
         "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "CharacterSheetHitPointOwner owns current Hit Points, Temporary Hit Points, Hit Point Maximum reduction, and Long Rest HP restoration; CharacterSheetHitDiceOwner owns spent Hit Dice and Short Rest Hit Die spending. CharacterSheetStateOwner owns rest duration and Long Rest calendar gates, while build-derived Hit Die capacity and normal Hit Point Maximum are projections, not duplicated rest state.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRP06-SRO-02",
+      "status": "ready",
+      "blockerId": null,
+      "settlementRestOwnerTasks": [
+        {
+          "taskId": "CRP06-SRO-02",
+          "title": "Character Sheet rest, Hit Point, and Hit Dice owner boundaries",
+          "status": "ready",
+          "sourcePaths": [
+            "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt",
+            "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.route.mbt.qnt",
+            "packages/character-sheet-runtime/character-sheet-reducer-route.qnt",
+            "packages/character-sheet-runtime/src/rests.ts",
+            "packages/character-sheet-runtime/README.md",
+            "plans/cleanroom-guidance/reducer-spine.md",
+            "UBIQUITOUS_LANGUAGE.md",
+            ".references/srd-5.2.1/Playing-the-Game.md",
+            ".references/srd-5.2.1/Rules-Glossary.md"
+          ],
+          "semanticEvidence": {
+            "driverPath": "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt",
+            "ownerPath": "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt",
+            "projection": "qState",
+            "comparator": "character-sheet-hp-rest-hit-dice-state"
+          },
+          "routeEvidence": [
+            {
+              "connectorPath": "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.route.mbt.qnt",
+              "projection": "qRoute",
+              "comparator": "route-event-list"
+            }
+          ],
+          "branchActions": [
+            "doRejectLongRestStartAtZeroHp",
+            "doRejectLongRestBeforeSixteenHourWait",
+            "doSpendShortRestHitPointDie",
+            "doInterruptShortRestNoBenefit",
+            "doCompleteLongRestRestoresHpHitPointDiceAndMaximum",
+            "doInterruptLongRestBeforeOneHourNoBenefit",
+            "doInterruptLongRestWithShortRestBenefits",
+            "doRejectShortRestStartAtZeroHp",
+            "doRejectShortRestDurationTooShort",
+            "doRejectLongRestDurationTooShort",
+            "doRejectLongRestPhysicalExertionTooShort",
+            "doSpendShortRestHitPointDiceSequentially",
+            "doRejectLongRestInterruptionAtRequiredDuration"
+          ],
+          "acceptance": [
+            "Target replay observes semantic qState for all rest start gates, duration gates, interruption outcomes, Short Rest Hit Die spending, sequential Hit Die spending, Long Rest HP restoration, Hit Point Maximum reduction clearing, Temporary Hit Point clearing, and spent Hit Dice restoration.",
+            "Target replay observes qRoute from public Character Sheet rest entrypoints for SheetRestRouteSubject, SheetHitPointRouteSubject, SheetRestDurationFill, SheetHitDiceSpendFill, SheetRestBenefitChoiceHoleFamily, CharacterSheetHitPointOwner, CharacterSheetHitDiceOwner, and CharacterSheetStateOwner.",
+            "Short Rest requires at least 1 HP and 1 hour before benefits; interrupted Short Rest confers no benefits.",
+            "Long Rest requires at least 1 HP, the 16-hour Long Rest start wait, full required duration, and valid interruption handling; if interrupted after at least 1 hour, only Short Rest benefits owned by the sheet rest workflow may apply."
+          ],
+          "targetStateOwnerNotes": [
+            "Character Sheet stores current HP, Temporary Hit Points, Hit Point Maximum reduction, and spent Hit Dice; normal Hit Point Maximum, Hit Die size, and Hit Die capacity stay derived from CharacterBuild and installed Unit facts.",
+            "Rest duration and calendar-gate facts are workflow inputs/state, not alternate HP or Hit Dice ledgers.",
+            "Short Rest benefit choices are explicit fills; an omitted benefit choice is not accepted as a second spelling of an empty benefit list when the route exposes SheetRestBenefitChoiceHoleFamily."
+          ],
+          "forbiddenShortcuts": [
+            "Do not store normal Hit Point Maximum or Hit Die capacity beside the CharacterBuild facts that derive them.",
+            "Do not grant Long Rest benefits from a too-short rest or from an invalid physical-exertion interruption.",
+            "Do not apply Short Rest Hit Die spending to a zero-HP sheet or before the Short Rest duration gate passes."
+          ],
+          "verification": [
+            "Run target replay for packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt and require semantic qState comparator character-sheet-hp-rest-hit-dice-state.",
+            "Run target replay for packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.route.mbt.qnt and require qRoute comparator route-event-list from public Character Sheet rest entrypoints.",
+            "Run RAW and domain-language review against .references/srd-5.2.1/Rules-Glossary.md#Short Rest, #Long Rest, #Hit Point Dice, #Hit Points, .references/srd-5.2.1/Playing-the-Game.md#Hit Points, UBIQUITOUS_LANGUAGE.md, and packages/character-sheet-runtime/README.md.",
+            "Run pnpm cleanroom-branch-coverage:check.",
+            "Run git diff --check.",
+            "Run reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review passes; fix every reasonable finding or document concrete rejection reason, and repeat until no reasonable findings remain."
+          ]
+        }
+      ]
     },
     {
       "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
@@ -1868,12 +2008,82 @@
         "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "CharacterSheetSpellSlotOwner owns ordinary Spell Slot expenditure deltas, created Spell Slot expiry, and Arcane Recovery ordinary-slot refunds; CharacterSheetPactSlotOwner owns Pact Slot expenditure and recovery; CharacterSheetFeatureResourceOwner owns rest-triggered feature-use state for Arcane Recovery and Magical Cunning. Spell Slot and Pact Slot capacities remain build-derived projections.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRP06-SRO-03",
+      "status": "ready",
+      "blockerId": null,
+      "settlementRestOwnerTasks": [
+        {
+          "taskId": "CRP06-SRO-03",
+          "title": "Character Sheet Spell Slot, Pact Slot, and rest-triggered recovery owners",
+          "status": "ready",
+          "sourcePaths": [
+            "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+            "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+            "packages/character-sheet-runtime/character-sheet-reducer-route.qnt",
+            "packages/character-sheet-runtime/src/rests.ts",
+            "packages/character-sheet-runtime/README.md",
+            "plans/cleanroom-guidance/reducer-spine.md",
+            "UBIQUITOUS_LANGUAGE.md",
+            ".references/srd-5.2.1/Spells/Gaining-and-Casting.md",
+            ".references/srd-5.2.1/Rules-Glossary.md",
+            ".references/srd-5.2.1/Classes/Warlock.md",
+            ".references/srd-5.2.1/Classes/Wizard.md"
+          ],
+          "semanticEvidence": {
+            "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+            "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+            "projection": "qState",
+            "comparator": "character-sheet-spell-slots-pact-slots-state"
+          },
+          "routeEvidence": [
+            {
+              "connectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+              "projection": "qRoute",
+              "comparator": "route-event-list"
+            }
+          ],
+          "branchActions": [
+            "doRejectMismatchedOrdinarySpellSlotCapacity",
+            "doRejectPactSlotExpenditureOverCapacity",
+            "doShortRestRestoresPactSlotsOnly",
+            "doShortRestArcaneRecoveryRefundsOrdinarySpellSlot",
+            "doCompleteLongRestRestoresOrdinaryPactAndClearsCreatedSlots",
+            "doInterruptShortRestNoSlotBenefit",
+            "doInterruptLongRestBeforeOneHourNoSlotBenefit",
+            "doInterruptLongRestWithShortRestSlotBenefits",
+            "doMagicalCunningRecoversPactSlots",
+            "doRejectMagicalCunningWithoutExpendedPactSlots",
+            "doRejectArcaneRecoveryPactSlotRefund"
+          ],
+          "acceptance": [
+            "Target replay observes semantic qState for ordinary Spell Slot capacity mismatch rejection, Pact Slot over-capacity rejection, Short Rest Pact Slot recovery, Short Rest Arcane Recovery ordinary Spell Slot refund, Long Rest ordinary and Pact Slot restoration, created Spell Slot clearing, no-benefit interruption cases, Magical Cunning Pact Slot recovery, and named recovery rejections.",
+            "Target replay observes qRoute from public Character Sheet rest and recovery entrypoints for SheetSpellResourceRouteSubject, SheetFeatureResourceRouteSubject, SheetResourceSpendFill, SheetRestDurationFill, SheetRecoverySelectionFill, SheetOrdinarySpellSlotDeltaFact, SheetPactSlotDeltaFact, SheetCreatedSlotExpiryFact, SheetFeatureRecoveryStateFact, and SheetSpellResourceRejectionFact.",
+            "Ordinary Spell Slot capacity and Pact Slot capacity are checked against build-derived tables; invalid stored expenditures are rejected rather than normalized into a fresh capacity table.",
+            "Arcane Recovery can refund ordinary Spell Slots only, records rest-feature use until Long Rest, and cannot be satisfied by Pact Slot recovery; Magical Cunning recovers expended Pact Slots only and records its Long Rest lockout."
+          ],
+          "targetStateOwnerNotes": [
+            "Character Sheet stores nonzero ordinary Spell Slot expenditures, created Spell Slot delta state, Pact Slot expenditure, and feature-use lockouts; ordinary and Pact capacities stay derived from CharacterBuild.",
+            "CharacterSheetSpellSlotOwner and CharacterSheetPactSlotOwner are distinct executable owners because the SRD recovery triggers differ.",
+            "CharacterSheetFeatureResourceOwner owns the rest-triggered use/lockout fact while the slot owner owns the actual slot delta."
+          ],
+          "forbiddenShortcuts": [
+            "Do not model Pact Slots as ordinary Spell Slots or recover ordinary Spell Slots on Short Rest except through a typed rest-triggered feature such as Arcane Recovery.",
+            "Do not keep created Spell Slots after Long Rest.",
+            "Do not branch recovery behavior on authored identity; use typed feature recovery facts and explicit ordinary-slot or Pact Slot owner routes."
+          ],
+          "verification": [
+            "Run target replay for packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt and require semantic qState comparator character-sheet-spell-slots-pact-slots-state.",
+            "Run target replay for packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt and require qRoute comparator route-event-list from public Character Sheet rest and recovery entrypoints.",
+            "Run RAW and domain-language review against .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots, .references/srd-5.2.1/Rules-Glossary.md#Short Rest, #Long Rest, .references/srd-5.2.1/Classes/Warlock.md#Level 1: Pact Magic, #Level 2: Magical Cunning, .references/srd-5.2.1/Classes/Wizard.md#Level 1: Arcane Recovery, UBIQUITOUS_LANGUAGE.md, and packages/character-sheet-runtime/README.md.",
+            "Run pnpm cleanroom-branch-coverage:check.",
+            "Run git diff --check.",
+            "Run reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review passes; fix every reasonable finding or document concrete rejection reason, and repeat until no reasonable findings remain."
+          ]
+        }
+      ]
     },
     {
       "driverPath": "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt",

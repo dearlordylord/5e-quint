@@ -78,6 +78,18 @@ const characterSessionSheetDerivedBattleActsDriverPath =
   "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt";
 const characterSessionSheetDerivedBattleActsRouteConnectorPath =
   "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.route.mbt.qnt";
+const characterBattleSettlementDriverPath =
+  "packages/character-battle-runtime/character-battle-settlement.mbt.qnt";
+const characterBattleSettlementRouteConnectorPath =
+  "packages/character-battle-runtime/character-battle-settlement.route.mbt.qnt";
+const characterSheetHpRestHitDiceDriverPath =
+  "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt";
+const characterSheetHpRestHitDiceRouteConnectorPath =
+  "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.route.mbt.qnt";
+const characterSheetSpellSlotsPactSlotsDriverPath =
+  "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt";
+const characterSheetSpellSlotsPactSlotsRouteConnectorPath =
+  "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt";
 const characterCreationFullVerticalQntAcceptanceRequired = [
   {
     tag: "qnt-semantic",
@@ -190,6 +202,19 @@ const sessionBattleEntryTaskKeys = [
   "forbiddenShortcuts",
   "verification",
 ];
+const settlementRestOwnerTaskKeys = [
+  "taskId",
+  "title",
+  "status",
+  "sourcePaths",
+  "semanticEvidence",
+  "routeEvidence",
+  "branchActions",
+  "acceptance",
+  "targetStateOwnerNotes",
+  "forbiddenShortcuts",
+  "verification",
+];
 const sessionBattleEntrySemanticComparatorsByDriverPath = new Map([
   [characterBattleInitProjectionDriverPath, "battle-init-projection-state"],
   [
@@ -223,11 +248,90 @@ const sessionBattleEntryRequiredRouteConnectorsByDriverPath = new Map([
     new Set([characterSessionSheetDerivedBattleActsRouteConnectorPath]),
   ],
 ]);
+const settlementRestOwnerSemanticComparatorsByDriverPath = new Map([
+  [characterBattleSettlementDriverPath, "battle-settlement-state"],
+  [characterSheetHpRestHitDiceDriverPath, "character-sheet-hp-rest-hit-dice-state"],
+  [
+    characterSheetSpellSlotsPactSlotsDriverPath,
+    "character-sheet-spell-slots-pact-slots-state",
+  ],
+]);
+const settlementRestOwnerRouteConnectorsByDriverPath = new Map([
+  [
+    characterBattleSettlementDriverPath,
+    new Set([characterBattleSettlementRouteConnectorPath]),
+  ],
+  [
+    characterSheetHpRestHitDiceDriverPath,
+    new Set([characterSheetHpRestHitDiceRouteConnectorPath]),
+  ],
+  [
+    characterSheetSpellSlotsPactSlotsDriverPath,
+    new Set([characterSheetSpellSlotsPactSlotsRouteConnectorPath]),
+  ],
+]);
+const settlementRestOwnerRequiredBranchActionsByDriverPath = new Map([
+  [
+    characterBattleSettlementDriverPath,
+    new Set([
+      "doSettleHitPointsConditionsSlotsAndPreservedSheetState",
+      "doSettlePurePactMagicSlotExpenditure",
+      "doRejectMixedSpellAndPactSlotSettlement",
+      "doSettleFeatureResourceExpenditure",
+      "doRejectAmbiguousCreatedSpellSlotSource",
+      "doRejectMismatchedCharacterIdentity",
+      "doRejectMaximumHpDrift",
+      "doRejectActiveWildShapeHandoff",
+      "doRejectActiveBattleStateHandoff",
+      "doRejectStableRecoveryProgressHandoff",
+      "doSettleZeroHpStableLifecycle",
+    ]),
+  ],
+  [
+    characterSheetHpRestHitDiceDriverPath,
+    new Set([
+      "doRejectLongRestStartAtZeroHp",
+      "doRejectLongRestBeforeSixteenHourWait",
+      "doSpendShortRestHitPointDie",
+      "doInterruptShortRestNoBenefit",
+      "doCompleteLongRestRestoresHpHitPointDiceAndMaximum",
+      "doInterruptLongRestBeforeOneHourNoBenefit",
+      "doInterruptLongRestWithShortRestBenefits",
+      "doRejectShortRestStartAtZeroHp",
+      "doRejectShortRestDurationTooShort",
+      "doRejectLongRestDurationTooShort",
+      "doRejectLongRestPhysicalExertionTooShort",
+      "doSpendShortRestHitPointDiceSequentially",
+      "doRejectLongRestInterruptionAtRequiredDuration",
+    ]),
+  ],
+  [
+    characterSheetSpellSlotsPactSlotsDriverPath,
+    new Set([
+      "doRejectMismatchedOrdinarySpellSlotCapacity",
+      "doRejectPactSlotExpenditureOverCapacity",
+      "doShortRestRestoresPactSlotsOnly",
+      "doShortRestArcaneRecoveryRefundsOrdinarySpellSlot",
+      "doCompleteLongRestRestoresOrdinaryPactAndClearsCreatedSlots",
+      "doInterruptShortRestNoSlotBenefit",
+      "doInterruptLongRestBeforeOneHourNoSlotBenefit",
+      "doInterruptLongRestWithShortRestSlotBenefits",
+      "doMagicalCunningRecoversPactSlots",
+      "doRejectMagicalCunningWithoutExpendedPactSlots",
+      "doRejectArcaneRecoveryPactSlotRefund",
+    ]),
+  ],
+]);
+const settlementRestOwnerRequiredConflictBranchKeys = new Set([
+  `${characterBattleSettlementDriverPath}\0doRejectAmbiguousCreatedSpellSlotSource`,
+]);
 const sessionBattleEntryRequiredVerificationItems = [
   "Run pnpm cleanroom-branch-coverage:check.",
   "Run git diff --check.",
   "Run reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review passes; fix every reasonable finding or document concrete rejection reason, and repeat until no reasonable findings remain.",
 ];
+const settlementRestOwnerRequiredVerificationItems =
+  sessionBattleEntryRequiredVerificationItems;
 const reducerConvergenceCitationPaths = [
   "plans/cleanroom-branch-coverage/reducer-route-inventory.json",
   "plans/cleanroom-branch-coverage/source-branch-inventory.json",
@@ -2448,6 +2552,24 @@ function validateReducerConvergenceBacklogSchema(schema, context) {
       }
     }
   }
+  const settlementRestTaskSchema = schema.$defs?.settlementRestOwnerTask;
+  if (!isRecord(settlementRestTaskSchema)) {
+    issues.push(
+      `${context}: $defs.settlementRestOwnerTask must be an object.`,
+    );
+  } else if (!Array.isArray(settlementRestTaskSchema.required)) {
+    issues.push(
+      `${context}: $defs.settlementRestOwnerTask.required must be an array.`,
+    );
+  } else {
+    for (const key of settlementRestOwnerTaskKeys) {
+      if (!settlementRestTaskSchema.required.includes(key)) {
+        issues.push(
+          `${context}: $defs.settlementRestOwnerTask.required is missing ${key}.`,
+        );
+      }
+    }
+  }
   return issues;
 }
 
@@ -2804,6 +2926,192 @@ function validateSessionBattleEntryTasks(
   }
 }
 
+function validateSettlementRestOwnerTasks(
+  row,
+  facts,
+  rowContext,
+  issues,
+) {
+  if (row.settlementRestOwnerTasks === undefined) return;
+  if (!settlementRestOwnerSemanticComparatorsByDriverPath.has(row.driverPath)) {
+    issues.push(
+      `${rowContext}: settlementRestOwnerTasks is only valid for ${Array.from(settlementRestOwnerSemanticComparatorsByDriverPath.keys()).join(" or ")}.`,
+    );
+  }
+  if (!Array.isArray(row.settlementRestOwnerTasks)) {
+    issues.push(
+      `${rowContext}: settlementRestOwnerTasks must be an array when present.`,
+    );
+    return;
+  }
+  const expectedComparator =
+    settlementRestOwnerSemanticComparatorsByDriverPath.get(row.driverPath);
+  const requiredRouteConnectors =
+    settlementRestOwnerRouteConnectorsByDriverPath.get(row.driverPath) ??
+    new Set();
+  const requiredBranchActions =
+    settlementRestOwnerRequiredBranchActionsByDriverPath.get(row.driverPath) ??
+    new Set();
+  const seenTaskIds = new Set();
+  const sourceBranchActions = facts.branchActionsByDriverPath.get(row.driverPath);
+  for (const [taskIndex, task] of row.settlementRestOwnerTasks.entries()) {
+    const taskContext = `${rowContext}: settlementRestOwnerTasks[${taskIndex}]`;
+    if (!isRecord(task)) {
+      issues.push(`${taskContext}: task must be an object.`);
+      continue;
+    }
+    for (const key of settlementRestOwnerTaskKeys) {
+      if (!Object.prototype.hasOwnProperty.call(task, key)) {
+        issues.push(`${taskContext}: missing stable key ${key}.`);
+      }
+    }
+    if (!nonEmptyString(task.taskId)) {
+      issues.push(`${taskContext}: taskId must be a non-empty string.`);
+    } else if (seenTaskIds.has(task.taskId)) {
+      issues.push(`${taskContext}: duplicate taskId ${task.taskId}.`);
+    } else {
+      seenTaskIds.add(task.taskId);
+    }
+    if (!nonEmptyString(task.title)) {
+      issues.push(`${taskContext}: title must be a non-empty string.`);
+    }
+    if (!reducerConvergenceStatuses.has(task.status)) {
+      issues.push(
+        `${taskContext}: status must be one of ${Array.from(reducerConvergenceStatuses).join(", ")}.`,
+      );
+    }
+    validateStringArray(task.sourcePaths, `${taskContext}: sourcePaths`, issues, {
+      minItems: 1,
+    });
+    validateReducerConvergenceEvidence(
+      task.semanticEvidence,
+      `${taskContext}: semanticEvidence`,
+      issues,
+      {
+        pathFields: ["driverPath", "ownerPath"],
+        projection: "qState",
+        comparator: undefined,
+      },
+    );
+    if (isRecord(task.semanticEvidence)) {
+      if (task.semanticEvidence.driverPath !== row.driverPath) {
+        issues.push(`${taskContext}: semanticEvidence.driverPath must match parent driverPath.`);
+      }
+      if (task.semanticEvidence.ownerPath !== row.driverPath) {
+        issues.push(`${taskContext}: semanticEvidence.ownerPath must match parent driverPath.`);
+      }
+      if (
+        expectedComparator !== undefined &&
+        task.semanticEvidence.comparator !== expectedComparator
+      ) {
+        issues.push(
+          `${taskContext}: semanticEvidence.comparator must be ${expectedComparator}.`,
+        );
+      }
+    }
+    const observedRouteConnectors = new Set();
+    if (!Array.isArray(task.routeEvidence) || task.routeEvidence.length === 0) {
+      issues.push(`${taskContext}: routeEvidence must be a non-empty array.`);
+    } else {
+      for (const [routeIndex, routeEvidence] of task.routeEvidence.entries()) {
+        const routeContext = `${taskContext}: routeEvidence[${routeIndex}]`;
+        validateReducerConvergenceEvidence(
+          routeEvidence,
+          routeContext,
+          issues,
+          {
+            pathFields: ["connectorPath"],
+            projection: qntRouteProjection,
+            comparator: qntRouteComparator,
+          },
+        );
+        if (
+          isRecord(routeEvidence) &&
+          !requiredRouteConnectors.has(routeEvidence.connectorPath)
+        ) {
+          issues.push(
+            `${routeContext}: connectorPath must be one of ${Array.from(requiredRouteConnectors).join(", ")}.`,
+          );
+        }
+        if (isRecord(routeEvidence) && nonEmptyString(routeEvidence.connectorPath)) {
+          observedRouteConnectors.add(routeEvidence.connectorPath);
+        }
+      }
+      for (const requiredConnectorPath of requiredRouteConnectors) {
+        if (!observedRouteConnectors.has(requiredConnectorPath)) {
+          issues.push(
+            `${taskContext}: routeEvidence must include required connectorPath ${requiredConnectorPath}.`,
+          );
+        }
+      }
+    }
+    validateStringArray(task.branchActions, `${taskContext}: branchActions`, issues, {
+      minItems: 1,
+    });
+    const observedBranchActions = new Set();
+    if (Array.isArray(task.branchActions) && sourceBranchActions !== undefined) {
+      for (const branchAction of task.branchActions) {
+        if (nonEmptyString(branchAction)) {
+          observedBranchActions.add(branchAction);
+        }
+        if (nonEmptyString(branchAction) && !sourceBranchActions.has(branchAction)) {
+          issues.push(
+            `${taskContext}: branchActions contains unknown settlement/rest branch ${branchAction}.`,
+          );
+          continue;
+        }
+        const branchKey = `${row.driverPath}\0${branchAction}`;
+        const obligation =
+          facts.branchObligationByDriverPathAndAction?.get(branchKey);
+        if (
+          isRecord(obligation) &&
+          !settlementRestOwnerRequiredConflictBranchKeys.has(branchKey) &&
+          (obligation.scope?.tag !== "in-scope" ||
+            obligation.replay?.tag === "transit-only")
+        ) {
+          issues.push(
+            `${taskContext}: branchActions contains non-implementation branch ${branchAction} with scope ${obligation.scope?.tag ?? "unknown"} and replay ${obligation.replay?.tag ?? "unknown"}.`,
+          );
+        }
+      }
+    }
+    for (const requiredBranchAction of requiredBranchActions) {
+      if (!observedBranchActions.has(requiredBranchAction)) {
+        issues.push(
+          `${taskContext}: branchActions must include required settlement/rest branch ${requiredBranchAction}.`,
+        );
+      }
+    }
+    validateStringArray(task.acceptance, `${taskContext}: acceptance`, issues, {
+      minItems: 1,
+    });
+    validateStringArray(
+      task.targetStateOwnerNotes,
+      `${taskContext}: targetStateOwnerNotes`,
+      issues,
+      { minItems: 1 },
+    );
+    validateStringArray(
+      task.forbiddenShortcuts,
+      `${taskContext}: forbiddenShortcuts`,
+      issues,
+      { minItems: 1 },
+    );
+    validateStringArray(task.verification, `${taskContext}: verification`, issues, {
+      minItems: 1,
+    });
+    if (Array.isArray(task.verification)) {
+      for (const requiredItem of settlementRestOwnerRequiredVerificationItems) {
+        if (!task.verification.includes(requiredItem)) {
+          issues.push(
+            `${taskContext}: verification must include "${requiredItem}".`,
+          );
+        }
+      }
+    }
+  }
+}
+
 function validateReducerConvergenceBacklogRows(backlog, facts, context, issues) {
   if (!Array.isArray(backlog.rows)) {
     issues.push(`${context}: rows must be an array.`);
@@ -2947,6 +3255,12 @@ function validateReducerConvergenceBacklogRows(backlog, facts, context, issues) 
       issues,
     );
     validateSessionBattleEntryTasks(
+      row,
+      facts,
+      rowContext,
+      issues,
+    );
+    validateSettlementRestOwnerTasks(
       row,
       facts,
       rowContext,
