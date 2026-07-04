@@ -115,7 +115,7 @@
     {
       "number": 10,
       "id": "L5UG-FINAL-01-ULTRA-GOLDEN-REFRESH",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Refresh and verify the level-1-5 ultra-golden gate"
     },
     {
@@ -383,7 +383,7 @@ Every Ralph task must run the task-base check before research or edits:
 |   7 | L5UG-MCP-03-LEVEL5-BATTLE-HANDOFF - Extend the level-5 MCP scenario through battle handoff | done | L5UG-MCP-02-LEVEL5-SHEET-SCENARIO, L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING, L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS, L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES | Adds battle handoff after Task 6 sheet coverage; non-MCP support dependencies are complete. |
 |   8 | L5UG-MCP-04-LEVEL5-SCENARIO-REGISTRY - Register the level-5 MCP scenario in acceptance coverage | done               | L5UG-MCP-03-LEVEL5-BATTLE-HANDOFF                                                               | Wires the executable scenario into MCP acceptance coverage.                             |
 |   9 | L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE - Admit level-1-5 MCP scenario evidence              | done | L5UG-MCP-04-LEVEL5-SCENARIO-REGISTRY                                                            | Updates checker-owned MCP evidence only after executable coverage exists.              |
-|  10 | L5UG-FINAL-01-ULTRA-GOLDEN-REFRESH - Refresh and verify the level-1-5 ultra-golden gate    | blocked            | L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE, L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING, L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS, L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES | Final generated refresh after scope, non-MCP support blockers, parity, and MCP evidence land. |
+|  10 | L5UG-FINAL-01-ULTRA-GOLDEN-REFRESH - Refresh and verify the level-1-5 ultra-golden gate    | ready-for-research | L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE, L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING, L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS, L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES | Final generated refresh after scope, non-MCP support blockers, parity, and MCP evidence land. |
 |  11 | L6FULL-PRE-01-L5-QUEUES-CLOSED - Verify L5 full and L5 ultra-golden queues are closed | blocked | L5UG-FINAL-01-ULTRA-GOLDEN-REFRESH | L6 starts only after the L5 extension has landed. |
 |  12 | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY - Verify level-6 scope and inventory baseline | blocked | L6FULL-PRE-01-L5-QUEUES-CLOSED | Confirms the 25-row L6 baseline and excludes spell-level-4. |
 |  13 | L6FULL-SEED-01-RANGER-ROVING - Verify existing Ranger Roving level-6 support evidence | blocked | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Preserve existing catalog/runtime evidence. |
@@ -1425,7 +1425,7 @@ Verification:
 
 ### Task 10 - L5UG-FINAL-01-ULTRA-GOLDEN-REFRESH
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE`,
 `L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING`,
