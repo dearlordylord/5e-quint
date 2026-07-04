@@ -215,6 +215,19 @@ const settlementRestOwnerTaskKeys = [
   "forbiddenShortcuts",
   "verification",
 ];
+const diagnosticReplayTaskKeys = [
+  "taskId",
+  "title",
+  "status",
+  "sourcePaths",
+  "routeEvidence",
+  "branchActions",
+  "sampledInputWitnesses",
+  "acceptance",
+  "targetStateOwnerNotes",
+  "forbiddenShortcuts",
+  "verification",
+];
 const sessionBattleEntrySemanticComparatorsByDriverPath = new Map([
   [characterBattleInitProjectionDriverPath, "battle-init-projection-state"],
   [
@@ -2296,6 +2309,7 @@ function collectReducerConvergenceDenominatorFacts({
       routeAssignmentByDriverPath: new Map(),
       branchActionsByDriverPath: new Map(),
       branchObligationByDriverPathAndAction: new Map(),
+      sampledInputPickNamesByDriverPathAndAction: new Map(),
       laneDriverPathsByLane: new Map(
         scaffoldLaneOrder.map((lane) => [lane, new Set()]),
       ),
@@ -2319,6 +2333,7 @@ function collectReducerConvergenceDenominatorFacts({
   );
   const branchActionsByDriverPath = new Map();
   const branchObligationByDriverPathAndAction = new Map();
+  const sampledInputPickNamesByDriverPathAndAction = new Map();
   for (const obligation of inventory.branchObligations) {
     if (!nonEmptyString(obligation.driverPath)) continue;
     if (!branchActionsByDriverPath.has(obligation.driverPath)) {
@@ -2333,6 +2348,22 @@ function collectReducerConvergenceDenominatorFacts({
         obligation,
       );
     }
+  }
+  for (const sampledInput of inventory.sampledInputs ?? []) {
+    if (
+      !nonEmptyString(sampledInput.driverPath) ||
+      !nonEmptyString(sampledInput.branchAction) ||
+      !nonEmptyString(sampledInput.pickName)
+    ) {
+      continue;
+    }
+    const key = `${sampledInput.driverPath}\0${sampledInput.branchAction}`;
+    if (!sampledInputPickNamesByDriverPathAndAction.has(key)) {
+      sampledInputPickNamesByDriverPathAndAction.set(key, new Set());
+    }
+    sampledInputPickNamesByDriverPathAndAction
+      .get(key)
+      .add(sampledInput.pickName);
   }
   const routeAssignmentByDriverPath = new Map();
   const laneDriverPathsByLane = new Map(
@@ -2428,7 +2459,9 @@ function collectReducerConvergenceDenominatorFacts({
     routeAssignmentByDriverPath,
     branchActionsByDriverPath,
     branchObligationByDriverPathAndAction,
+    sampledInputPickNamesByDriverPathAndAction,
     diagnosticRouteConnectorByDriverPath,
+    diagnosticReducerRoutedDriverPaths,
     laneDriverPathsByLane,
     laneCounts: Object.fromEntries(
       scaffoldLaneOrder.map((lane) => [
@@ -2566,6 +2599,24 @@ function validateReducerConvergenceBacklogSchema(schema, context) {
       if (!settlementRestTaskSchema.required.includes(key)) {
         issues.push(
           `${context}: $defs.settlementRestOwnerTask.required is missing ${key}.`,
+        );
+      }
+    }
+  }
+  const diagnosticReplayTaskSchema = schema.$defs?.diagnosticReplayTask;
+  if (!isRecord(diagnosticReplayTaskSchema)) {
+    issues.push(
+      `${context}: $defs.diagnosticReplayTask must be an object.`,
+    );
+  } else if (!Array.isArray(diagnosticReplayTaskSchema.required)) {
+    issues.push(
+      `${context}: $defs.diagnosticReplayTask.required must be an array.`,
+    );
+  } else {
+    for (const key of diagnosticReplayTaskKeys) {
+      if (!diagnosticReplayTaskSchema.required.includes(key)) {
+        issues.push(
+          `${context}: $defs.diagnosticReplayTask.required is missing ${key}.`,
         );
       }
     }
@@ -3112,6 +3163,221 @@ function validateSettlementRestOwnerTasks(
   }
 }
 
+function validateDiagnosticReplayTasks(
+  row,
+  facts,
+  rowContext,
+  issues,
+) {
+  const isDiagnosticReducerRouted =
+    facts.diagnosticReducerRoutedDriverPaths?.has(row.driverPath) ?? false;
+  if (row.diagnosticReplayTasks === undefined) {
+    if (isDiagnosticReducerRouted) {
+      issues.push(
+        `${rowContext}: active reducer-routed diagnostic rows require diagnosticReplayTasks.`,
+      );
+    }
+    return;
+  }
+  if (!isDiagnosticReducerRouted) {
+    issues.push(
+      `${rowContext}: diagnosticReplayTasks is only valid for active reducer-routed diagnostic drivers.`,
+    );
+  }
+  if (!Array.isArray(row.diagnosticReplayTasks)) {
+    issues.push(
+      `${rowContext}: diagnosticReplayTasks must be an array when present.`,
+    );
+    return;
+  }
+  if (row.diagnosticReplayTasks.length === 0) {
+    issues.push(`${rowContext}: diagnosticReplayTasks must not be empty.`);
+  }
+  const expectedConnectorPath =
+    facts.diagnosticRouteConnectorByDriverPath.get(row.driverPath);
+  const seenTaskIds = new Set();
+  const sourceBranchActions = facts.branchActionsByDriverPath.get(row.driverPath);
+  for (const [taskIndex, task] of row.diagnosticReplayTasks.entries()) {
+    const taskContext = `${rowContext}: diagnosticReplayTasks[${taskIndex}]`;
+    if (!isRecord(task)) {
+      issues.push(`${taskContext}: task must be an object.`);
+      continue;
+    }
+    for (const key of diagnosticReplayTaskKeys) {
+      if (!Object.prototype.hasOwnProperty.call(task, key)) {
+        issues.push(`${taskContext}: missing stable key ${key}.`);
+      }
+    }
+    if (!nonEmptyString(task.taskId)) {
+      issues.push(`${taskContext}: taskId must be a non-empty string.`);
+    } else if (seenTaskIds.has(task.taskId)) {
+      issues.push(`${taskContext}: duplicate taskId ${task.taskId}.`);
+    } else {
+      seenTaskIds.add(task.taskId);
+    }
+    if (!nonEmptyString(task.title)) {
+      issues.push(`${taskContext}: title must be a non-empty string.`);
+    }
+    if (!reducerConvergenceStatuses.has(task.status)) {
+      issues.push(
+        `${taskContext}: status must be one of ${Array.from(reducerConvergenceStatuses).join(", ")}.`,
+      );
+    }
+    validateStringArray(task.sourcePaths, `${taskContext}: sourcePaths`, issues, {
+      minItems: 1,
+    });
+
+    const observedRouteConnectors = new Set();
+    if (!Array.isArray(task.routeEvidence) || task.routeEvidence.length === 0) {
+      issues.push(`${taskContext}: routeEvidence must be a non-empty array.`);
+    } else {
+      for (const [routeIndex, routeEvidence] of task.routeEvidence.entries()) {
+        const routeContext = `${taskContext}: routeEvidence[${routeIndex}]`;
+        validateReducerConvergenceEvidence(
+          routeEvidence,
+          routeContext,
+          issues,
+          {
+            pathFields: ["connectorPath"],
+            projection: qntRouteProjection,
+            comparator: qntRouteComparator,
+          },
+        );
+        if (
+          isRecord(routeEvidence) &&
+          nonEmptyString(expectedConnectorPath) &&
+          routeEvidence.connectorPath !== expectedConnectorPath
+        ) {
+          issues.push(
+            `${routeContext}: connectorPath must be ${expectedConnectorPath}.`,
+          );
+        }
+        if (isRecord(routeEvidence) && nonEmptyString(routeEvidence.connectorPath)) {
+          observedRouteConnectors.add(routeEvidence.connectorPath);
+        }
+      }
+    }
+    if (
+      nonEmptyString(expectedConnectorPath) &&
+      !observedRouteConnectors.has(expectedConnectorPath)
+    ) {
+      issues.push(
+        `${taskContext}: routeEvidence must include diagnostic connectorPath ${expectedConnectorPath}.`,
+      );
+    }
+
+    validateStringArray(task.branchActions, `${taskContext}: branchActions`, issues, {
+      minItems: 1,
+    });
+    if (Array.isArray(task.branchActions) && sourceBranchActions !== undefined) {
+      for (const branchAction of task.branchActions) {
+        if (nonEmptyString(branchAction) && !sourceBranchActions.has(branchAction)) {
+          issues.push(
+            `${taskContext}: branchActions contains unknown diagnostic branch ${branchAction}.`,
+          );
+          continue;
+        }
+        const obligation = facts.branchObligationByDriverPathAndAction?.get(
+          `${row.driverPath}\0${branchAction}`,
+        );
+        if (
+          isRecord(obligation) &&
+          (obligation.scope?.tag !== "in-scope" ||
+            obligation.replay?.tag !== "observable-from-step")
+        ) {
+          issues.push(
+            `${taskContext}: branchActions contains non-replayable diagnostic branch ${branchAction} with scope ${obligation.scope?.tag ?? "unknown"} and replay ${obligation.replay?.tag ?? "unknown"}.`,
+          );
+        }
+      }
+    }
+
+    if (
+      Array.isArray(task.branchActions) &&
+      Array.isArray(task.sampledInputWitnesses)
+    ) {
+      const taskBranchActions = new Set(task.branchActions);
+      for (const [
+        witnessIndex,
+        witness,
+      ] of task.sampledInputWitnesses.entries()) {
+        if (
+          isRecord(witness) &&
+          nonEmptyString(witness.branchAction) &&
+          !taskBranchActions.has(witness.branchAction)
+        ) {
+          issues.push(
+            `${taskContext}: sampledInputWitnesses[${witnessIndex}]: branchAction ${witness.branchAction} must be listed in branchActions.`,
+          );
+        }
+      }
+    }
+
+    if (!Array.isArray(task.sampledInputWitnesses)) {
+      issues.push(`${taskContext}: sampledInputWitnesses must be an array.`);
+    } else {
+      for (const [
+        witnessIndex,
+        witness,
+      ] of task.sampledInputWitnesses.entries()) {
+        const witnessContext =
+          `${taskContext}: sampledInputWitnesses[${witnessIndex}]`;
+        if (!isRecord(witness)) {
+          issues.push(`${witnessContext}: witness must be an object.`);
+          continue;
+        }
+        if (!nonEmptyString(witness.branchAction)) {
+          issues.push(`${witnessContext}: branchAction must be a non-empty string.`);
+        }
+        if (!nonEmptyString(witness.pickName)) {
+          issues.push(`${witnessContext}: pickName must be a non-empty string.`);
+        }
+        if (!nonEmptyString(witness.protocol)) {
+          issues.push(`${witnessContext}: protocol must be a non-empty string.`);
+        }
+        if (
+          nonEmptyString(witness.branchAction) &&
+          nonEmptyString(witness.pickName)
+        ) {
+          const allowedPickNames =
+            facts.sampledInputPickNamesByDriverPathAndAction?.get(
+              `${row.driverPath}\0${witness.branchAction}`,
+            ) ?? new Set();
+          if (!allowedPickNames.has(witness.pickName)) {
+            issues.push(
+              `${witnessContext}: pickName ${witness.pickName} is not recorded for ${witness.branchAction} in source-branch-inventory.`,
+            );
+          }
+        }
+      }
+    }
+
+    validateStringArray(task.acceptance, `${taskContext}: acceptance`, issues, {
+      minItems: 1,
+    });
+    validateStringArray(
+      task.targetStateOwnerNotes,
+      `${taskContext}: targetStateOwnerNotes`,
+      issues,
+      { minItems: 1 },
+    );
+    validateStringArray(
+      task.forbiddenShortcuts,
+      `${taskContext}: forbiddenShortcuts`,
+      issues,
+      { minItems: 1 },
+    );
+    validateStringArray(task.verification, `${taskContext}: verification`, issues, {
+      minItems: 1,
+    });
+  }
+  if (nonEmptyString(row.targetTaskId) && !seenTaskIds.has(row.targetTaskId)) {
+    issues.push(
+      `${rowContext}: targetTaskId ${row.targetTaskId} must match a diagnosticReplayTasks taskId.`,
+    );
+  }
+}
+
 function validateReducerConvergenceBacklogRows(backlog, facts, context, issues) {
   if (!Array.isArray(backlog.rows)) {
     issues.push(`${context}: rows must be an array.`);
@@ -3261,6 +3527,12 @@ function validateReducerConvergenceBacklogRows(backlog, facts, context, issues) 
       issues,
     );
     validateSettlementRestOwnerTasks(
+      row,
+      facts,
+      rowContext,
+      issues,
+    );
+    validateDiagnosticReplayTasks(
       row,
       facts,
       rowContext,

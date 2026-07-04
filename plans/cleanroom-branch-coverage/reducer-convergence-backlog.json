@@ -172,9 +172,72 @@
       "durableOwner": "BattleState owns the concentrating source and active Spell Effect instances; Concentration cleanup routes through BattleConcentrationOwner and BattleActiveEffectOwner, and no adapter-local concentration or active-effect ledger is allowed.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRP07-DSR-05",
       "status": "ready",
-      "blockerId": null
+      "blockerId": null,
+      "diagnosticReplayTasks": [
+        {
+          "taskId": "CRP07-DSR-05",
+          "title": "Concentration break teardown through public battle reducer route",
+          "status": "ready",
+          "sourcePaths": [
+            "packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-concentration-break-teardown.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-concentration.qnt",
+            "plans/cleanroom-branch-coverage/reducer-route-inventory.json",
+            "plans/cleanroom-branch-coverage/source-branch-inventory.json",
+            "plans/cleanroom-guidance/reducer-spine.md",
+            "UBIQUITOUS_LANGUAGE.md",
+            ".references/srd-5.2.1/Rules-Glossary.md"
+          ],
+          "routeEvidence": [
+            {
+              "connectorPath": "packages/battle-runtime/battle-runtime-concentration-break-teardown.route.mbt.qnt",
+              "projection": "qRoute",
+              "comparator": "route-event-list"
+            }
+          ],
+          "branchActions": [
+            "doCastConcentrationSpell",
+            "doDamageRequestsConcentrationSave",
+            "doFailConcentrationSave",
+            "doVoluntaryEndConcentration",
+            "doCastReplacementConcentrationSpell"
+          ],
+          "sampledInputWitnesses": [
+            {
+              "branchAction": "doDamageRequestsConcentrationSave",
+              "pickName": "damageDiePip",
+              "protocol": "Record this source sampled input name only in adapter-quarantined target replay evidence tied to the observed public route event; do not rename copied source QNT and do not allow the name to drive production behavior."
+            },
+            {
+              "branchAction": "doFailConcentrationSave",
+              "pickName": "saveRollTotal",
+              "protocol": "Record this source sampled input name only in adapter-quarantined target replay evidence tied to the observed public route event; do not rename copied source QNT and do not allow the name to drive production behavior."
+            }
+          ],
+          "acceptance": [
+            "Target replay observes qRoute from start_battle, discover_battle_acts, and resolve_battle_subject for damage-save request, failed save, voluntary end, and replacement Concentration teardown.",
+            "Failed-save and voluntary-end cleanup resolve Concentration before active Spell Effect removal; replacement resolves prior cleanup before recording the new active effect and Concentration owner.",
+            "Concentration and active Spell Effect teardown are durable BattleState owner behavior, not adapter-local ledgers."
+          ],
+          "targetStateOwnerNotes": [
+            "BattleConcentrationOwner owns the concentrating source, save request, voluntary end, replacement break, and broken Concentration fact.",
+            "BattleActiveEffectOwner owns active Spell Effect instance cleanup and replacement recording after Concentration ownership resolves."
+          ],
+          "forbiddenShortcuts": [
+            "Do not keep a route-local Concentration or active-effect ledger to satisfy replay.",
+            "Do not branch teardown on spell identity, fixture label, or sampled input names."
+          ],
+          "verification": [
+            "Run target replay for packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt and packages/battle-runtime/battle-runtime-concentration-break-teardown.route.mbt.qnt and require qRoute comparator route-event-list from public reducer entrypoints.",
+            "Run RAW and domain-language review against .references/srd-5.2.1/Rules-Glossary.md#Concentration, UBIQUITOUS_LANGUAGE.md#Spellcasting, and plans/cleanroom-guidance/reducer-spine.md.",
+            "Run pnpm cleanroom-branch-coverage:check.",
+            "Run git diff --check.",
+            "Run reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review passes; fix every reasonable finding or document concrete rejection reason, and repeat until no reasonable findings remain."
+          ]
+        }
+      ]
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
@@ -231,12 +294,71 @@
         "packages/battle-runtime/battle-runtime-death-saving-throw.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "BattleState owns target Hit Points, Stable, Unconscious, Dead, and death-save counters; the adapter owns only sampled roll evidence.",
+      "durableOwner": "BattleState owns target Hit Points, Stable, Unconscious, Dead, death-save counters, turn advancement, and Death Saving Throw route progress; the adapter owns only sampled roll evidence.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRP07-DSR-04",
       "status": "ready",
-      "blockerId": null
+      "blockerId": null,
+      "diagnosticReplayTasks": [
+        {
+          "taskId": "CRP07-DSR-04",
+          "title": "Death Saving Throw lifecycle through public battle reducer route",
+          "status": "ready",
+          "sourcePaths": [
+            "packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-death-saving-throw.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-hit-points.qnt",
+            "packages/shared-algebras/proofs/rule-core/zero-hit-point-lifecycle.qnt",
+            "/workspace/typescript/dnd-cleanroom-jul2/tasks/BLOCKERS.md",
+            "plans/cleanroom-branch-coverage/reducer-route-inventory.json",
+            "plans/cleanroom-branch-coverage/source-branch-inventory.json",
+            "plans/cleanroom-guidance/reducer-spine.md",
+            "UBIQUITOUS_LANGUAGE.md",
+            ".references/srd-5.2.1/Playing-the-Game.md",
+            ".references/srd-5.2.1/Rules-Glossary.md"
+          ],
+          "routeEvidence": [
+            {
+              "connectorPath": "packages/battle-runtime/battle-runtime-death-saving-throw.route.mbt.qnt",
+              "projection": "qRoute",
+              "comparator": "route-event-list"
+            }
+          ],
+          "branchActions": [
+            "doDiscoverEndTurnDeathSavingThrow",
+            "doFillDeathSavingThrow",
+            "doRejectWrongActorEndTurnAfterResolved"
+          ],
+          "sampledInputWitnesses": [
+            {
+              "branchAction": "doFillDeathSavingThrow",
+              "pickName": "roll",
+              "protocol": "Record this source sampled input name only in adapter-quarantined target replay evidence tied to the observed public route event; do not rename copied source QNT and do not allow the name to drive production behavior."
+            }
+          ],
+          "acceptance": [
+            "Target replay observes qRoute from start_battle, discover_battle_acts, and resolve_battle_subject or turn advancement for DeathSavingThrowRouteSubject discovery, fill, and wrong-actor rejection.",
+            "Natural 1, ordinary failure, ordinary success, and natural 20 outcomes mutate battle-owned death-save counters, Stable, Unconscious, Dead, and Hit Points through the same lifecycle owner as damage and healing.",
+            "The sampled input name roll is allowed only as target replay witness protocol tied to source evidence and adapter quarantine; no source-QNT rename is required and production runtime must not dispatch on it."
+          ],
+          "targetStateOwnerNotes": [
+            "BattleState owns HP, Stable, Unconscious, Dead, death-save counters, current actor/turn advancement, and the Death Saving Throw route subject.",
+            "The adapter may record the sampled roll witness for replay evidence only; the runtime consumes a typed d20 result fact."
+          ],
+          "forbiddenShortcuts": [
+            "Do not implement death-save behavior as adapter replay state or as a fixture-name branch.",
+            "Do not broaden the sampled input name roll into production vocabulary admission outside the quarantined replay evidence boundary."
+          ],
+          "verification": [
+            "Run target replay for packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt and packages/battle-runtime/battle-runtime-death-saving-throw.route.mbt.qnt and require qRoute comparator route-event-list from public reducer or turn-advancement entrypoints.",
+            "Run RAW and domain-language review against .references/srd-5.2.1/Rules-Glossary.md#Death Saving Throw, .references/srd-5.2.1/Playing-the-Game.md#Death Saving Throws, .references/srd-5.2.1/Playing-the-Game.md#Dropping to 0 Hit Points, UBIQUITOUS_LANGUAGE.md#Hit Points and Death, /workspace/typescript/dnd-cleanroom-jul2/tasks/BLOCKERS.md#T036, and plans/cleanroom-guidance/reducer-spine.md.",
+            "Run pnpm cleanroom-branch-coverage:check.",
+            "Run git diff --check.",
+            "Run reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review passes; fix every reasonable finding or document concrete rejection reason, and repeat until no reasonable findings remain."
+          ]
+        }
+      ]
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt",
@@ -366,12 +488,69 @@
         "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "BattleState owns restored target Hit Points and zero-Hit-Point lifecycle cleanup; the healing frontier does not own a duplicate HP ledger.",
+      "durableOwner": "BattleState owns restored target Hit Points, zero-Hit-Point lifecycle cleanup, healing subject frontier progress, action economy, and Spell Slot expenditure; the healing frontier does not own a duplicate HP ledger.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "completed-reducer-route-tracer",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRP07-DSR-03",
       "status": "ready",
-      "blockerId": null
+      "blockerId": null,
+      "diagnosticReplayTasks": [
+        {
+          "taskId": "CRP07-DSR-03",
+          "title": "Hit Point restoration ordering and zero-HP cleanup through public battle reducer route",
+          "status": "ready",
+          "sourcePaths": [
+            "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.qnt",
+            "plans/cleanroom-branch-coverage/reducer-route-inventory.json",
+            "plans/cleanroom-branch-coverage/source-branch-inventory.json",
+            "plans/cleanroom-guidance/reducer-spine.md",
+            "UBIQUITOUS_LANGUAGE.md",
+            ".references/srd-5.2.1/Playing-the-Game.md",
+            ".references/srd-5.2.1/Rules-Glossary.md"
+          ],
+          "routeEvidence": [
+            {
+              "connectorPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.route.mbt.qnt",
+              "projection": "qRoute",
+              "comparator": "route-event-list"
+            }
+          ],
+          "branchActions": [
+            "doDiscoverSingleTargetSpellHealing",
+            "doSubmitHealingRollBeforeTargetChoice",
+            "doFillSpellHealingTargetChoice",
+            "doDiscoverTargetListSpellHealing",
+            "doSubmitHealingRollBeforeTargetList",
+            "doFillSpellHealingTargetList",
+            "doFillSpellHealingRoll",
+            "doDiscoverFeatureHealingPool",
+            "doFillFeatureHealingDistribution"
+          ],
+          "sampledInputWitnesses": [],
+          "acceptance": [
+            "Target replay observes qRoute for spell healing target choice/list, healing roll, feature healing-pool distribution, and zero-HP cleanup events from discover_battle_acts and resolve_battle_subject.",
+            "Restored Hit Points and zero-Hit-Point cleanup use the battle-owned Hit Point lifecycle; the route does not create a separate healing HP ledger.",
+            "Spell healing target/distribution fills remain subject frontier progress through the shared reducer surface."
+          ],
+          "targetStateOwnerNotes": [
+            "BattleState owns current HP, restoration, zero-HP lifecycle cleanup, action economy, Spell Slot use, and healing hole frontier progress.",
+            "Feature healing-pool distribution is an explicit fill into the same HP owner rather than a second store of pending healing."
+          ],
+          "forbiddenShortcuts": [
+            "Do not satisfy restoration replay with an adapter-local HP or healing-pool ledger.",
+            "Do not skip zero-HP lifecycle cleanup when healing restores HP."
+          ],
+          "verification": [
+            "Run target replay for packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt and packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.route.mbt.qnt and require qRoute comparator route-event-list from discover_battle_acts and resolve_battle_subject.",
+            "Run RAW and domain-language review against .references/srd-5.2.1/Playing-the-Game.md#Healing, .references/srd-5.2.1/Playing-the-Game.md#Dropping to 0 Hit Points, .references/srd-5.2.1/Rules-Glossary.md#Hit Points, .references/srd-5.2.1/Rules-Glossary.md#Healing, UBIQUITOUS_LANGUAGE.md#Hit Points and Death, and plans/cleanroom-guidance/reducer-spine.md.",
+            "Run pnpm cleanroom-branch-coverage:check.",
+            "Run git diff --check.",
+            "Run reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review passes; fix every reasonable finding or document concrete rejection reason, and repeat until no reasonable findings remain."
+          ]
+        }
+      ]
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-interrupt-stack-resume.mbt.qnt",
@@ -507,12 +686,69 @@
         "packages/battle-runtime/battle-runtime-magic-missile.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "BattleState owns current actor, turn action resource, spell-slot expenditure, and target Hit Points; the adapter owns only replay evidence.",
+      "durableOwner": "BattleState owns current actor, turn action resource, spell-slot expenditure, target Hit Points, and spell target/damage hole frontier progress; the adapter owns only observed replay evidence.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "completed-reducer-route-tracer",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRP07-DSR-01",
       "status": "ready",
-      "blockerId": null
+      "blockerId": null,
+      "diagnosticReplayTasks": [
+        {
+          "taskId": "CRP07-DSR-01",
+          "title": "Magic Missile allocation and damage through public battle reducer route",
+          "status": "ready",
+          "sourcePaths": [
+            "packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-magic-missile.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt",
+            "plans/cleanroom-branch-coverage/reducer-route-inventory.json",
+            "plans/cleanroom-branch-coverage/source-branch-inventory.json",
+            "plans/cleanroom-guidance/reducer-spine.md",
+            "UBIQUITOUS_LANGUAGE.md",
+            ".references/srd-5.2.1/Spells/Gaining-and-Casting.md",
+            ".references/srd-5.2.1/Playing-the-Game.md",
+            ".references/srd-5.2.1/Rules-Glossary.md"
+          ],
+          "routeEvidence": [
+            {
+              "connectorPath": "packages/battle-runtime/battle-runtime-magic-missile.route.mbt.qnt",
+              "projection": "qRoute",
+              "comparator": "route-event-list"
+            }
+          ],
+          "branchActions": [
+            "doFillMagicMissileAllocation",
+            "doFillMagicMissileDamage"
+          ],
+          "sampledInputWitnesses": [
+            {
+              "branchAction": "doFillMagicMissileDamage",
+              "pickName": "dartRollTotal",
+              "protocol": "Record this source sampled input name only in adapter-quarantined target replay evidence tied to the observed public route event; do not rename copied source QNT and do not allow the name to drive production behavior."
+            }
+          ],
+          "acceptance": [
+            "Target replay observes qRoute from start_battle, discover_battle_acts, and resolve_battle_subject for SpellTargetAllocation and SpellDamageRoll route events.",
+            "The accepted route spends the Magic action and one ordinary Spell Slot through battle-owned action economy and Spell Slot state before damage is committed.",
+            "Target Hit Point loss, death flag projection, multiattack dispatch count, and Sneak Attack turn-use projection are derived from BattleState route facts rather than a driver-local Magic Missile ledger."
+          ],
+          "targetStateOwnerNotes": [
+            "BattleState owns current actor, action availability, committed Spell Slot use, target Hit Points, and spell hole frontier progress.",
+            "Spell allocation and damage fills are route subject progress; authored spell identity is selection/provenance only and must not be production dispatch logic."
+          ],
+          "forbiddenShortcuts": [
+            "Do not satisfy replay with a Magic Missile-specific reducer island, expected-route table, or adapter-local HP ledger.",
+            "Do not branch production behavior on spell id, spell name, fixture label, qRoute event name, or sampled input name."
+          ],
+          "verification": [
+            "Run target replay for packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt and packages/battle-runtime/battle-runtime-magic-missile.route.mbt.qnt and require qRoute comparator route-event-list from start_battle, discover_battle_acts, and resolve_battle_subject.",
+            "Run RAW and domain-language review against .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots, .references/srd-5.2.1/Playing-the-Game.md#Hit Points, .references/srd-5.2.1/Rules-Glossary.md#Hit Points, UBIQUITOUS_LANGUAGE.md#Hit Points and Death, UBIQUITOUS_LANGUAGE.md#Action Lifecycle, and plans/cleanroom-guidance/reducer-spine.md.",
+            "Run pnpm cleanroom-branch-coverage:check.",
+            "Run git diff --check.",
+            "Run reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review passes; fix every reasonable finding or document concrete rejection reason, and repeat until no reasonable findings remain."
+          ]
+        }
+      ]
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt",
@@ -642,12 +878,70 @@
         "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "BattleState owns subject frontier progress and spell resource effects; ordering-error labels remain reducer result facts, not adapter state.",
+      "durableOwner": "BattleState owns Magic-action spell subject frontier progress, Spell Slot expenditure, spell save outcomes, condition/damage effect route progress, and target Hit Point effects; ordering-error labels remain reducer result facts, not adapter state.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "completed-reducer-route-tracer",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRP07-DSR-02",
       "status": "ready",
-      "blockerId": null
+      "blockerId": null,
+      "diagnosticReplayTasks": [
+        {
+          "taskId": "CRP07-DSR-02",
+          "title": "Save-gated spell ordering through public battle reducer route",
+          "status": "ready",
+          "sourcePaths": [
+            "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.qnt",
+            "plans/cleanroom-branch-coverage/reducer-route-inventory.json",
+            "plans/cleanroom-branch-coverage/source-branch-inventory.json",
+            "plans/cleanroom-guidance/reducer-spine.md",
+            "UBIQUITOUS_LANGUAGE.md",
+            ".references/srd-5.2.1/Playing-the-Game.md",
+            ".references/srd-5.2.1/Spells/Gaining-and-Casting.md"
+          ],
+          "routeEvidence": [
+            {
+              "connectorPath": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
+              "projection": "qRoute",
+              "comparator": "route-event-list"
+            }
+          ],
+          "branchActions": [
+            "doDiscoverAreaSaveDamage",
+            "doSubmitDamageBeforeSavingThrow",
+            "doFillAreaSaveFailed",
+            "doFillAreaDamageDice",
+            "doDiscoverTargetListConditionChoice",
+            "doFillTargetListBeforeConditionChoice",
+            "doFillConditionChoiceAfterTargetList",
+            "doFillConditionChoiceBeforeTargetList",
+            "doFillTargetListAfterConditionChoice",
+            "doFillConditionSavingThrow"
+          ],
+          "sampledInputWitnesses": [],
+          "acceptance": [
+            "Target replay observes qRoute for area save damage, target-list condition choice, Saving Throw, condition choice, target list, and damage dice frontier events from discover_battle_acts and resolve_battle_subject.",
+            "Ordering rejections are reducer result facts produced by the shared subject frontier; they are not implemented as a local save-gated ordering module.",
+            "Magic-action and Spell Slot ownership are reused from the battle spell route substrate before save-gated fills can resolve effect progress."
+          ],
+          "targetStateOwnerNotes": [
+            "BattleState owns spell subject frontier progress, action economy, Spell Slot use, Saving Throw outcomes, condition effect progress, and damage/Hit Point effects.",
+            "Ordering labels are derived route/result facts; there is no durable adapter-side ordering state."
+          ],
+          "forbiddenShortcuts": [
+            "Do not implement a driver-local ordering table or bypass Magic-action and Spell Slot ownership.",
+            "Do not branch production behavior on authored spell identity, qRoute event names, or fixture labels."
+          ],
+          "verification": [
+            "Run target replay for packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt and packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt and require qRoute comparator route-event-list from discover_battle_acts and resolve_battle_subject.",
+            "Run RAW and domain-language review against .references/srd-5.2.1/Playing-the-Game.md#Saving Throws, .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Saving Throws, .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots, UBIQUITOUS_LANGUAGE.md#Spellcasting, UBIQUITOUS_LANGUAGE.md#Action Lifecycle, and plans/cleanroom-guidance/reducer-spine.md.",
+            "Run pnpm cleanroom-branch-coverage:check.",
+            "Run git diff --check.",
+            "Run reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review passes; fix every reasonable finding or document concrete rejection reason, and repeat until no reasonable findings remain."
+          ]
+        }
+      ]
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt",
@@ -657,12 +951,67 @@
         "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "BattleState owns active Spell Effect projections, Hit Points, Hit Point maximum, Temporary Hit Points, Speed, Armor Class, and Concentration; no route-local buff ledger is introduced.",
+      "durableOwner": "BattleState owns active Spell Effect instances, Concentration ownership, movement and special-Speed projections, Hit Point maximum changes, Temporary Hit Points, Armor Class modifiers, action economy, and Spell Slot expenditure; scalar profile facts stay source procedure facts rather than target adapter state.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRP07-DSR-06",
       "status": "ready",
-      "blockerId": null
+      "blockerId": null,
+      "diagnosticReplayTasks": [
+        {
+          "taskId": "CRP07-DSR-06",
+          "title": "Scalar-buff active effects through public battle reducer route",
+          "status": "ready",
+          "sourcePaths": [
+            "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt",
+            "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt",
+            "packages/shared-algebras/proofs/rule-core/spell-scalar-buff-projection-core.qnt",
+            "packages/battle-runtime/battle-runtime-spell-bridge-examples.qnt",
+            "plans/cleanroom-branch-coverage/reducer-route-inventory.json",
+            "plans/cleanroom-branch-coverage/source-branch-inventory.json",
+            "plans/cleanroom-guidance/reducer-spine.md",
+            "UBIQUITOUS_LANGUAGE.md",
+            ".references/srd-5.2.1/Rules-Glossary.md",
+            ".references/srd-5.2.1/Playing-the-Game.md"
+          ],
+          "routeEvidence": [
+            {
+              "connectorPath": "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt",
+              "projection": "qRoute",
+              "comparator": "route-event-list"
+            }
+          ],
+          "branchActions": [
+            "doCastShieldOfFaith",
+            "doCastLongstrider",
+            "doCastSpiderClimb",
+            "doCastAid",
+            "doCastFalseLife",
+            "doStutter"
+          ],
+          "sampledInputWitnesses": [],
+          "acceptance": [
+            "Target replay observes qRoute from start_battle, discover_battle_acts, and resolve_battle_subject for Armor Class, Speed, special Speed, Hit Point maximum, immediate Temporary Hit Point, and terminal stutter projections.",
+            "Action economy, Spell Slot expenditure, active Spell Effect lifecycle, movement, Hit Point, Temporary Hit Point, and Concentration owners are all visible in observed public route events.",
+            "Scalar profile facts are parsed procedure/source facts; the adapter does not store a parallel buff ledger or dispatch on authored spell identity."
+          ],
+          "targetStateOwnerNotes": [
+            "BattleState owns active Spell Effect instances, AC modifiers, Speed and special-Speed projections, HP maximum changes, current HP adjustment, Temporary Hit Points, Concentration, action economy, and Spell Slot expenditure.",
+            "Movement consumes projected Speed facts; it does not duplicate scalar-buff speed values beside active Spell Effect state."
+          ],
+          "forbiddenShortcuts": [
+            "Do not implement per-spell branches for scalar-buff behavior in production runtime.",
+            "Do not satisfy replay by storing route-local AC, Speed, HP maximum, Temporary Hit Point, Concentration, or active-effect ledgers."
+          ],
+          "verification": [
+            "Run target replay for packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt and packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt and require qRoute comparator route-event-list from public reducer entrypoints.",
+            "Run RAW and domain-language review against .references/srd-5.2.1/Rules-Glossary.md#Concentration, .references/srd-5.2.1/Rules-Glossary.md#Armor Class, .references/srd-5.2.1/Rules-Glossary.md#Speed, .references/srd-5.2.1/Playing-the-Game.md#Hit Points, .references/srd-5.2.1/Playing-the-Game.md#Temporary Hit Points, UBIQUITOUS_LANGUAGE.md#Armor Class and Defense, UBIQUITOUS_LANGUAGE.md#Movement, UBIQUITOUS_LANGUAGE.md#Hit Points and Death, UBIQUITOUS_LANGUAGE.md#Spellcasting, and plans/cleanroom-guidance/reducer-spine.md.",
+            "Run pnpm cleanroom-branch-coverage:check.",
+            "Run git diff --check.",
+            "Run reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review passes; fix every reasonable finding or document concrete rejection reason, and repeat until no reasonable findings remain."
+          ]
+        }
+      ]
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-scalar-buff.mbt.qnt",

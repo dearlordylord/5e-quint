@@ -43,13 +43,13 @@
     {
       "number": 7,
       "id": "CRP-07-DIAGNOSTIC-SEED-REPLAY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Lock the active reducer diagnostic replay seed"
     },
     {
       "number": 8,
       "id": "CRP-08-TEMPLATE-AND-CHECKER-LOCK",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Lock the implementation task template and checker contract"
     },
     {
@@ -107,6 +107,9 @@ Source-side backlog:
   now has one row for each current `levelDenominators[0].driverRouteAssignments[]`
   row, with route class, connector or blocker, owner classification, source
   task id, target task placeholder, status, and blocker id fields.
+- The six active reducer-spine diagnostic rows now have concrete
+  `CRP07-DSR-*` implementation task records that require observed `qRoute`
+  replay from public reducer entrypoints.
 
 Historical target evidence:
 
@@ -152,8 +155,8 @@ The expanded queue must account for these families:
 | `CRP-04` | `ready-for-research` | `CRP-01` | creation fill-batch implementation task rows |
 | `CRP-05` | `ready-for-research` | `CRP-01`, `CRP-02` | session battle entry implementation task rows |
 | `CRP-06` | `ready-for-research` | `CRP-01` | settlement/rest owner implementation task rows |
-| `CRP-07` | `ready-for-research` | `CRP-02`, `CRP-03` | active diagnostic seed implementation tasks |
-| `CRP-08` | `blocked` | `CRP-01`-`CRP-07` | locked task template/checker contract |
+| `CRP-07` | `done` | `CRP-02`, `CRP-03` | active diagnostic seed implementation tasks |
+| `CRP-08` | `ready-for-research` | `CRP-01`-`CRP-07` | locked task template/checker contract |
 | `CRP-09` | `blocked` | `CRP-08` | executable implementation queue |
 
 ## Required Task Template
@@ -507,7 +510,7 @@ evidence boundaries.
 
 ### Task 7 - CRP-07-DIAGNOSTIC-SEED-REPLAY
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
@@ -559,12 +562,7 @@ valid dependency/owner-decision blockers.
 
 ### Task 8 - CRP-08-TEMPLATE-AND-CHECKER-LOCK
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: depends on `CRP-01` through `CRP-07` so the template reflects
-all discovered required fields and blocker classes.
+Status: `ready-for-research`
 
 Goal:
 
