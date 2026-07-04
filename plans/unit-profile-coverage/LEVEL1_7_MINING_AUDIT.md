@@ -44,8 +44,8 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | catalog-authored-review-required | 49 |
 | catalog-installed-owner-evidence-present | 501 |
 | catalog-installed-owner-evidence-required | 1 |
-| catalog-only/dead-for-now | 219 |
-| level-5-7-follow-up-required | 14 |
+| catalog-only/dead-for-now | 220 |
+| level-5-7-follow-up-required | 13 |
 | missing-authored-record | 32 |
 | non-runtime | 84 |
 
@@ -60,10 +60,10 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 134 |
+| not-recorded | 133 |
 | profile-subset-supported | 59 |
 | supported-profile | 309 |
-| unsupported-profile | 398 |
+| unsupported-profile | 399 |
 
 ### Battle Readiness Snapshot
 
@@ -829,7 +829,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Sorcerer level 4 feature table row | level-4 | character-level | character-creation or progression mechanic | `class_sorcerer` | `.references/srd-5.2.1/Classes/Sorcerer.md:38` | present | installed | unsupported-profile | non-runtime | accepted-no-battle-effect | not-recorded | No runtime work; keep classification as explicit closure. |
 | Sorcerer Sorcerous Restoration | level-5 | character-level | class feature | `sorcerer_sorcerous_restoration` | `.references/srd-5.2.1/Classes/Sorcerer.md:127` | present | installed | supported-profile | catalog-installed-owner-evidence-present | not-applicable | not-recorded | Owner-specific operational evidence is classified and present. |
 | Sorcerer level 5 feature table row | level-5 | character-level | character-creation or progression mechanic | `class_sorcerer` | `.references/srd-5.2.1/Classes/Sorcerer.md:39` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
-| Sorcerer Elemental Affinity | level-6 | character-level | class feature | `sorcerer_elemental_affinity` | `.references/srd-5.2.1/Classes/Sorcerer.md:432` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
+| Sorcerer Elemental Affinity | level-6 | character-level | class feature | `sorcerer_elemental_affinity` | `.references/srd-5.2.1/Classes/Sorcerer.md:432` | present | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | character-fact-and-runtime-detached-split: future-owner-before-SDK character-sheet-runtime selected Elemental Affinity damage-type owner plus battle-runtime passive Resistance and spell damage-roll modifier owners | SRD Elemental Affinity chooses one of Acid, Cold, Fire, Lightning, or Poison, grants Resistance to that chosen damage type, and lets the Sorcerer add Charisma modifier to one damage roll of a spell that deals that damage type. The local SRD 5.2.1 text does not spend Sorcery Points for this feature. Existing passive damage Resistance support is scoped to fixed or species Draconic Ancestry facts, and existing spell damage owners do not admit a selected class-feature damage-type filter, one-roll-per-spell accounting, or a shared build-time damage-type binding across Resistance and the spell damage rider. A future owner must consume typed Surface facts for the selected Elemental Affinity feature, retain the single chosen damage type as a character-owned source fact, project target-side Resistance through the shared damage adjustment boundary, and project the optional Charisma modifier through the spell damage-roll owner without duplicating Spell Slot state, spell damage dice or totals, character ability state, damage adjustment state, Sorcery Point state, subclass selection state, or dispatching on Sorcerer, Draconic Sorcery, Elemental Affinity, or selected spell authored identity. |
 | Sorcerer level 6 feature table row | level-6 | character-level | character-creation or progression mechanic | `class_sorcerer` | `.references/srd-5.2.1/Classes/Sorcerer.md:40` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
 | Sorcerer Sorcery Incarnate | level-7 | character-level | class feature | `sorcerer_sorcery_incarnate` | `.references/srd-5.2.1/Classes/Sorcerer.md:131` | present | not-installed | not-recorded | level-5-7-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
 | Sorcerer level 7 feature table row | level-7 | character-level | character-creation or progression mechanic | `class_sorcerer` | `.references/srd-5.2.1/Classes/Sorcerer.md:41` | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
