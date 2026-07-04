@@ -1,34 +1,44 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-013",
+  "taskId": "CRPI-READY-014",
   "durableFields": [
+    {
+      "fieldPath": "AvailableBattleAct.routeEvents",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "owner": "executable-boundary-projection",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleSubject.actionSpell.metamagic.effectKind and BattleSubject.actionSpell.invocation.procedure",
+        "boundary": "discoverBattleActs public reducer boundary"
+      }
+    },
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject, BattleSpellDamageRollHole.spellDamageRerolls, BattleRolledDiceFill.spellDamageReroll, and resolved damage state delta",
+        "sourceField": "BattleSubject, BattleCreatureState.activeEffects, and BattleCreatureState.concentration",
         "boundary": "resolveBattleSubject public reducer boundary"
       }
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=metamagicDamageDiceReroll",
+      "fieldPath": "BattleReducerRouteEvent.subject=metamagicSpellDurationProjection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject.actionSpell.invocation.procedure=spellAttackDamage, BattleSpellDamageRollHole.spellDamageRerolls.effectKind=damage_dice_reroll, and BattleRolledDiceFill.spellDamageReroll.effectKind=damage_dice_reroll",
-        "boundary": "battleReducerRouteForResolution"
+        "sourceField": "BattleSubject.actionSpell.metamagic.effectKind=duration_extension_and_concentration_save_advantage, creature-size spell procedure, active-effect state delta, and Concentration state",
+        "boundary": "battleReducerRouteEventsForDiscoveredAct and battleReducerRouteForResolution"
       }
     }
   ],
   "notes": [
-    "Task 44 introduced no new BattleState, BattleCreatureState, character spellcasting, or table-state durable field.",
+    "Task 45 introduced no new BattleState, BattleCreatureState, character spellcasting, or table-state durable field.",
     "Sorcery Point ownership remains existing CharacterBattlePointPoolResourceState.pointsRemaining.",
-    "Target Hit Point and active effect ownership remain existing BattleCreatureState fields.",
+    "Extended duration ownership remains existing BattleCreatureState.activeEffects and BattleCreatureState.concentration.",
     "Selected Metamagic option identity remains at catalog, selection, admission, and fixture boundaries.",
-    "Route events are public reducer boundary projections derived from typed Metamagic effect facts, spell procedure facts, holes/fills, and executable state deltas.",
-    "The Empowered Spell route does not dispatch on Sorcerer authored feature identity or the Empowered Spell option name; production routing is admitted by typed damage_dice_reroll facts on the damage-roll hole and rolled-dice fill."
+    "Route events are public reducer boundary projections derived from typed Metamagic effect facts, spell procedure facts, active-effect state deltas, and Concentration state.",
+    "The Extended Spell route does not dispatch on Sorcerer authored feature identity or the Extended Spell option name; production routing is admitted by typed duration_extension_and_concentration_save_advantage facts on a promoted duration-bearing spell procedure."
   ]
 }

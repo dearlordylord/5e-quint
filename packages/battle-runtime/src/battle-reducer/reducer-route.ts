@@ -17,6 +17,7 @@ import {
   CAREFUL_METAMAGIC_EFFECT_KIND,
   DISTANT_METAMAGIC_EFFECT_KIND,
   EMPOWERED_METAMAGIC_EFFECT_KIND,
+  EXTENDED_METAMAGIC_EFFECT_KIND,
   QUICKENED_METAMAGIC_EFFECT_KIND,
 } from "./metamagic-support.ts";
 
@@ -31,6 +32,7 @@ export type BattleReducerRouteSubjectFamily =
   | "metamagicSavingThrowProtection"
   | "metamagicSpellGovernor"
   | "metamagicSpellRangeProjection"
+  | "metamagicSpellDurationProjection"
   | "reactionSpell"
   | "rollModifierEffect"
   | "saveGatedSpell"
@@ -198,6 +200,16 @@ export function battleReducerRouteEventsForDiscoveredAct(
       },
     ];
   }
+  if (isExtendedSpellDurationProjectionSubject(act.subject)) {
+    return [
+      {
+        kind: "discoverBattleActs",
+        subject: "metamagicSpellDurationProjection",
+        holes: [],
+        owner: "battleFeatureResource",
+      },
+    ];
+  }
   if (isCommandEffectDiscoverySubject(act.subject)) {
     return [
       {
@@ -323,6 +335,11 @@ export function battleReducerRouteForResolution(
   );
   if (deathSavingThrowRoute !== undefined) {
     return deathSavingThrowRoute;
+  }
+  const metamagicSpellDurationProjectionRoute =
+    metamagicSpellDurationProjectionRouteForResolution(input, result);
+  if (metamagicSpellDurationProjectionRoute !== undefined) {
+    return metamagicSpellDurationProjectionRoute;
   }
   const concentrationRoute = concentrationRouteForResolution(input, result);
   if (concentrationRoute !== undefined) {
@@ -708,6 +725,55 @@ function metamagicSpellRangeProjectionRouteForResolution(
   ];
 }
 
+function metamagicSpellDurationProjectionRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  if (
+    result.tag !== "resolved" ||
+    !isExtendedSpellDurationProjectionSubject(input.subject) ||
+    !metamagicSpellDurationProjectionChangedState(input, result.state)
+  ) {
+    return undefined;
+  }
+  return [
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "metamagicSpellDurationProjection",
+      holes: [],
+      owner: "battleActiveEffect",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "metamagicSpellDurationProjection",
+      holes: [],
+      owner: "battleConcentration",
+    },
+  ];
+}
+
+function metamagicSpellDurationProjectionChangedState(
+  input: BattleResolutionInput,
+  after: BattleState,
+): boolean {
+  return (
+    combatantsActiveEffectsChanged(input.state, after) ||
+    (input.subject.tag === "actionSpell" &&
+      combatantConcentrationChanged(input.state, after, input.subject.actorId))
+  );
+}
+
+function combatantsActiveEffectsChanged(
+  before: BattleState,
+  after: BattleState,
+): boolean {
+  return [...after.combatants.values()].some(
+    (combatant) =>
+      before.combatants.get(combatant.combatantId)?.activeEffects !==
+      combatant.activeEffects,
+  );
+}
+
 function metamagicDamageDiceRerollRouteForResolution(
   input: BattleResolutionInput,
   result: BattleResolutionResult,
@@ -862,6 +928,20 @@ function isDistantSpellRangeProjectionSubject(
     subject.invocation.procedure === "objectLight" &&
     subject.metamagic?.some(
       (selection) => selection.effectKind === DISTANT_METAMAGIC_EFFECT_KIND,
+    ) === true
+  );
+}
+
+function isExtendedSpellDurationProjectionSubject(
+  subject: BattleResolutionInput["subject"],
+): boolean {
+  return (
+    subject.tag === "actionSpell" &&
+    subject.mode.tag === "cast" &&
+    (subject.invocation.procedure === "creatureSizeIncrease" ||
+      subject.invocation.procedure === "creatureSizeDecrease") &&
+    subject.metamagic?.some(
+      (selection) => selection.effectKind === EXTENDED_METAMAGIC_EFFECT_KIND,
     ) === true
   );
 }

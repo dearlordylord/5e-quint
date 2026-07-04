@@ -1,5 +1,108 @@
 # Validation Report
 
+## CRPI-READY-014
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec`
+- Driver: `packages/battle-runtime/battle-runtime-sorcerer-metamagic-extended-selected-identity.mbt.qnt`
+- Route connector: `packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+- Acceptance status: `accepted`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/battle-runtime-sorcerer-metamagic-extended-selected-identity.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-reducer-route.qnt`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Classes/Sorcerer.md`
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+Extended Spell selected-identity replay now compares the copied
+`MetamagicSpellDurationProjectionRouteSubject` `qRoute` to public reducer
+route events. The MBT replay executes the connector's deterministic
+`stepRouteSpellDurationProjection` wrapper, which delegates to the copied
+`doRouteSpellDurationProjection` action and updates `qRoute`. The target driver
+derives its projection by calling public reducer entrypoints: the route begins
+with `battleReducerStartRouteEvent`, discovers the Extended Enlarge/Reduce act
+through `discoverBattleActs`, then resolves the willing creature target through
+`resolveBattleSubject`. The emitted route records the feature-resource
+discovery frontier, active Spell Effect ownership for the duration projection,
+and Concentration ownership for the maintenance-save Advantage projection.
+
+The runtime does not add a parallel Extended Spell ledger. Sorcery Point spend
+remains in `CharacterBattlePointPoolResourceState.pointsRemaining`, selected
+Metamagic identity remains a catalog/selection/admission boundary, doubled
+duration remains in `BattleCreatureState.activeEffects`, and Concentration
+maintenance save Advantage remains in `BattleCreatureState.concentration`.
+
+Generated branch coverage:
+
+| Obligation | Target replay evidence | Diagnostic tests | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-sorcerer-metamagic-extended-selected-identity.mbt.qnt#step:doResolveExtendedCreatureSizeIncrease` | `tasks/target-replay-evidence/CRPI-READY-014.json#driver:packages/battle-runtime/battle-runtime-sorcerer-metamagic-extended-selected-identity.mbt.qnt#step:doResolveExtendedCreatureSizeIncrease#trace:public-route=metamagicSpellDurationProjection action=doResolveExtendedCreatureSizeIncrease qRoute=metamagic-spell-duration-projection-public-route` | `packages/battle-runtime/src/sorcerer-metamagic-extended-selected-identity.mbt.test.ts#compares Extended Spell duration-projection public reducer route to copied qRoute` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-014.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id: `public-route=metamagicSpellDurationProjection action=doResolveExtendedCreatureSizeIncrease qRoute=metamagic-spell-duration-projection-public-route`
+- Copied connector replay assertion:
+  - `packages/battle-runtime/src/sorcerer-metamagic-extended-selected-identity.mbt.test.ts#compares Extended Spell duration-projection public reducer route to copied qRoute`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-READY-014/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 45.
+
+Plan Impact:
+
+- Status: `none`
+- Affected tasks:
+  - Task 45 / `CRPI-READY-014`: `unblocked`; copied `qRoute` replay is accepted.
+  - Future metamagic route tasks: `left unchanged`.
+- Observations:
+  - Extended Spell duration projection is a cast-property Metamagic route:
+    discovery is owned by feature-resource admission, while resolution ownership
+    is split across the active Spell Effect and Concentration state delta.
+  - The route should stay derived from typed
+    `duration_extension_and_concentration_save_advantage` facts and promoted
+    duration-bearing spell procedure shape, not selected option identity.
+- Required plan edits: none.
+
+Verification results:
+
+- Base check passed: `ralph/crpi-ready-014-launcher` and
+  `HEAD` were both `69fbba65f Mark Ralph task 44 done`, and
+  `git merge-base --is-ancestor 69fbba65fa73812fc773e9d38d958a966a426ac1 HEAD`
+  exited 0.
+- `pnpm --filter @dnd/battle-runtime typecheck` passed.
+- `START=$(date +%s); MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/battle-runtime exec vitest run src/sorcerer-metamagic-extended-selected-identity.mbt.test.ts 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 3 tests passed and `TOTAL: 7s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- `pnpm quality` passed. The app lint stage reported warnings only and exited 0.
+- RAW/ubiquitous-language review passed against Sorcerer Metamagic, Extended
+  Spell, Sorcery Points, Enlarge/Reduce, and UBIQUITOUS_LANGUAGE.md terms for
+  Spell Invocation, Spell Effect, Pool, Spend, Duration, Concentration, Saving
+  Throw, and Advantage.
+- Reviewer-loop convergence passed: round 1 added public
+  `metamagicSpellDurationProjection` route ownership; round 2 verified route
+  admission is based on typed Extended Metamagic facts, promoted creature-size
+  procedure shape, active-effect state delta, and Concentration state, with no
+  duplicate durable state or authored-identity dispatch.
+
 ## CRPI-READY-013
 
 - Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`

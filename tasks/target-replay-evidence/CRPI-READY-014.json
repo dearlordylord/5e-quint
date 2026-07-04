@@ -1,0 +1,74 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/sorcerer-metamagic-extended-selected-identity.mbt.test.ts Extended Spell copied qRoute versus public reducer replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-extended-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      "qntFileSha256": "c42260e9907a0bf084780b3d9b835472a20d227ee2e8679cea81a3c2cae79294",
+      "routeConnectorSha256": "02f3841627441360a350d2b1864cd994a227260a372bd2448fda91fa1c9fe7e2",
+      "branchFamily": "step",
+      "branchAction": "doResolveExtendedCreatureSizeIncrease",
+      "observedActionTaken": "doResolveExtendedCreatureSizeIncrease",
+      "harnessTestPath": "packages/battle-runtime/src/sorcerer-metamagic-extended-selected-identity.mbt.test.ts",
+      "traceId": "public-route=metamagicSpellDurationProjection action=doResolveExtendedCreatureSizeIncrease qRoute=metamagic-spell-duration-projection-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "stepRouteSpellDurationProjection",
+        "delegatedAction": "doRouteSpellDurationProjection",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/sorcerer-metamagic-extended-selected-identity.mbt.test.ts#createExtendedMetamagicRouteReplayDriver"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "8c43226730c73a85555d686602e1cd801d7a299784de843edc79b874d63cd550",
+        "observedProjectionSha256": "8c43226730c73a85555d686602e1cd801d7a299784de843edc79b874d63cd550",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+          "stepAction": "stepRouteSpellDurationProjection",
+          "delegatedAction": "doRouteSpellDurationProjection",
+          "qntStateField": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "public-reducer-route-events",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(state), AvailableBattleAct.routeEvents, and BattleResolutionResult.routeEvents during Extended Spell Enlarge/Reduce creature-size resolution",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=metamagicSpellDurationProjection",
+          "BattleReducerRouteEvent.owner=battleFeatureResource",
+          "BattleReducerRouteEvent.owner=battleActiveEffect",
+          "BattleReducerRouteEvent.owner=battleConcentration",
+          "BattleSubject.actionSpell.metamagic.effectKind=duration_extension_and_concentration_save_advantage",
+          "BattleSubject.actionSpell.invocation.procedure=creatureSizeIncrease",
+          "CharacterBattlePointPoolResourceState.pointsRemaining",
+          "BattleCreatureState.activeEffects",
+          "BattleCreatureState.concentration.maintenanceSavingThrowRollMode"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}

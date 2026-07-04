@@ -8,6 +8,7 @@
 //   when it requires Concentration, grants Advantage on maintenance saves.
 // - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Enlarge/Reduce:
 //   Concentration up to 1 minute and a creature size-change effect.
+import { it } from "vitest";
 import { resourceCount } from "@dnd/shared/types";
 
 import { concentrationSavingThrowHole } from "./battle-reducer/damage-apply.ts";
@@ -17,13 +18,24 @@ import {
   type CharacterBattleMetamagicOptionFact,
   type CharacterBattlePointPoolResourceState,
 } from "./character-battle-resources.ts";
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
+import {
+  defineDriver,
+  focusedMbtMaxSteps,
+  MBT_TEST_TIMEOUT_MS,
+  mbtSpecPath,
+  reducerRoutedMetamagicStateCheck,
+  run,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import {
   enlargeReduceUnitId,
   spellCasterId,
   unitLibrary,
 } from "./unit-profile-admission-catalog-support.ts";
+import {
+  battleReducerStartRouteEvent,
+  type BattleReducerRouteEvent,
+} from "./index.ts";
 import { requireHole } from "./unit-profile-admission-creature-fixture-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import { knownWillingSpellTargetFill } from "./unit-profile-admission-spell-fill-support.ts";
@@ -39,6 +51,16 @@ type ExtendedCreatureSizeProjection = {
   readonly durationTicks: number;
   readonly concentrationSavingThrowMode: "normal" | "advantage";
   readonly lastResult: "init" | "extendedCreatureSizeIncrease";
+};
+
+const extendedMetamagicRouteReplayDriverSchema = {
+  init: {},
+  doRouteSpellDurationProjection: {},
+  stepRouteSpellDurationProjection: {},
+} as const;
+
+type ExtendedMetamagicRouteReplayProjection = {
+  readonly route: readonly BattleReducerRouteEvent[];
 };
 
 defineSelectedIdentityWitness({
@@ -91,7 +113,69 @@ defineSelectedIdentityWitness({
   ],
 });
 
+it(
+  "compares Extended Spell duration-projection public reducer route to copied qRoute",
+  async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "stepRouteSpellDurationProjection",
+      driver: createExtendedMetamagicRouteReplayDriver(),
+      backend: "typescript",
+      nTraces: 1,
+      maxSteps: focusedMbtMaxSteps(1),
+      stateCheck: reducerRoutedMetamagicStateCheck,
+    });
+  },
+  MBT_TEST_TIMEOUT_MS,
+);
+
 function resolveExtendedCreatureSizeIncrease(): BattleState {
+  return resolveExtendedCreatureSizeIncreaseSubject().state;
+}
+
+function observeExtendedCreatureSizeIncreaseRoute() {
+  const resolved = resolveExtendedCreatureSizeIncreaseSubject();
+  return [
+    battleReducerStartRouteEvent(resolved.initialState),
+    ...(resolved.act.routeEvents ?? []),
+    ...(resolved.routeEvents ?? []),
+  ];
+}
+
+function createExtendedMetamagicRouteReplayDriver() {
+  return defineDriver(extendedMetamagicRouteReplayDriverSchema, () => {
+    let route: readonly BattleReducerRouteEvent[] =
+      observeExtendedCreatureSizeIncreaseInitialRoute();
+
+    function reset(): void {
+      route = observeExtendedCreatureSizeIncreaseInitialRoute();
+    }
+
+    function recordResolvedRoute(): void {
+      route = observeExtendedCreatureSizeIncreaseRoute();
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doRouteSpellDurationProjection: recordResolvedRoute,
+      stepRouteSpellDurationProjection: recordResolvedRoute,
+      getState: (): ExtendedMetamagicRouteReplayProjection => ({ route }),
+    };
+  });
+}
+
+function observeExtendedCreatureSizeIncreaseInitialRoute() {
+  const resolved = resolveExtendedCreatureSizeIncreaseSubject();
+  return [battleReducerStartRouteEvent(resolved.initialState)];
+}
+
+function resolveExtendedCreatureSizeIncreaseSubject() {
   const spell = spellRecord(enlargeReduceUnitId);
   const state = spellBattle({
     preparedSpells: [spell],
@@ -138,7 +222,7 @@ function resolveExtendedCreatureSizeIncrease(): BattleState {
       `Expected Extended Enlarge/Reduce to resolve, got ${resolved.tag}.`,
     );
   }
-  return resolved.state;
+  return { initialState: state, act: extendedAct, ...resolved };
 }
 
 function extendedMetamagicOption(): CharacterBattleMetamagicOptionFact {
