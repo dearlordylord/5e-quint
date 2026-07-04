@@ -127,7 +127,7 @@
     {
       "number": 21,
       "id": "QAR-21-CHARACTER-SHEET-SPLIT-EXPORT-RECONCILIATION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Reconcile character-sheet runtime split export gate"
     },
     {
@@ -211,7 +211,7 @@ mismatch. The Ralph runner or decider owns branch repair.
 | 18 | QAR-18-OPEN-HAND-SEMANTIC-CHOICES - Move Open Hand execution to semantic effect variants | done | QAR-01-TEST-LANE-ISOLATION | Removes Open Hand authored-choice execution dispatch. |
 | 19 | QAR-19-AUTHORED-ID-CHECKER-HARDENING - Harden authored-identity dispatch checking | done | QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION, QAR-18-OPEN-HAND-SEMANTIC-CHOICES | Tightens the checker after known migrations land. |
 | 20 | QAR-20-FINAL-CONVERGENCE-AUDIT - Run final Quint and architecture convergence audit | blocked | QAR-02-MBT-LANE-INVENTORY-GATE, QAR-03-SHARED-QNT-PROOF-HARNESS, QAR-04-CHARACTER-CREATION-QNT-PROOFS, QAR-05-SHARED-INVARIANT-PROOF-HARNESS, QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-07-DAMAGE-PAIR-NONZERO, QAR-08-SHOVE-PROJECTION-UNION, QAR-09-CUNNING-STRIKE-TYPED-QNT, QAR-10-ACID-ARROW-TYPED-TIMING, QAR-11-RUN-BLOCK-SEPARATION-GUARD, QAR-12-INDUCTIVE-WITNESS-SEEDS, QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD, QAR-14-STARRY-WISP-WITNESS-CONVERSION, QAR-15-RULE-CORE-SPELLS-MBT-SPLIT, QAR-16-RULE-CORE-FEATURES-MBT-SPLIT, QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION, QAR-18-OPEN-HAND-SEMANTIC-CHOICES, QAR-19-AUTHORED-ID-CHECKER-HARDENING, QAR-21-CHARACTER-SHEET-SPLIT-EXPORT-RECONCILIATION, QAR-22-DEFAULT-TEST-BASELINE-REPAIRS, QAR-23-CLEANROOM-HARNESS-SELF-TEST-REPAIR | Final repeated review loop found concrete follow-up blockers; rerun after QAR-21 through QAR-23. |
-| 21 | QAR-21-CHARACTER-SHEET-SPLIT-EXPORT-RECONCILIATION - Reconcile character-sheet runtime split export gate | ready-for-research | none | Fix the `pnpm quality` blocker in the character-sheet split export gate. |
+| 21 | QAR-21-CHARACTER-SHEET-SPLIT-EXPORT-RECONCILIATION - Reconcile character-sheet runtime split export gate | done | none | Fix the `pnpm quality` blocker in the character-sheet split export gate. |
 | 22 | QAR-22-DEFAULT-TEST-BASELINE-REPAIRS - Repair default test baseline failures found by final audit | ready-for-research | none | Fix unrelated default `pnpm test` baseline failures found during final audit. |
 | 23 | QAR-23-CLEANROOM-HARNESS-SELF-TEST-REPAIR - Repair cleanroom harness sampled-input self-test | ready-for-research | none | Fix the cleanroom harness checker self-test blocker found during final audit. |
 
@@ -1178,7 +1178,7 @@ Plan Impact:
 
 ### Task 21 - QAR-21-CHARACTER-SHEET-SPLIT-EXPORT-RECONCILIATION
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: none
 
