@@ -10449,6 +10449,7 @@ export function createHitPointRestorationOrderingRouteDriver() {
           findAct: (act) =>
             act.subject.tag === "bonusActionSpell" &&
             act.subject.invocation.procedure === "directHitPointRestoration" &&
+            // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
             act.subject.invocation.spellId === "healing_word",
           nextStage: "spellHealingTargetChoice",
         });
@@ -10487,6 +10488,7 @@ export function createHitPointRestorationOrderingRouteDriver() {
           findAct: (act) =>
             act.subject.tag === "bonusActionSpell" &&
             act.subject.invocation.procedure === "directHitPointRestoration" &&
+            // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
             act.subject.invocation.spellId === "mass_healing_word",
           nextStage: "spellHealingTargetList",
         });
@@ -10538,6 +10540,7 @@ export function createHitPointRestorationOrderingRouteDriver() {
           nextState: featureHealingPoolOrderingBattle(),
           findAct: (act) =>
             act.subject.tag === "unitFeature" &&
+            // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
             act.subject.unitId === "cleric_preserve_life",
           nextStage: "featureHealingPoolDistribution",
         });
@@ -16130,6 +16133,7 @@ function requireInterruptShieldReactionChoice(
       candidate.kind === "castTriggeredReactionSpell" &&
       candidate.reactorId === interruptShieldCasterId &&
       candidate.invocation.tag === "spellSlot" &&
+      // authored-id-dispatch-allow: battle-runtime-mbt-fixture-boundary
       candidate.invocation.spellId === interruptShieldUnitId &&
       candidate.invocation.procedure === "shieldReaction",
   );

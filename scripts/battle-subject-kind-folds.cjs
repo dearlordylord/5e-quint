@@ -76,6 +76,7 @@ function runtimeCommandSubjectKind(discriminatorValue) {
     case "webAreaRemoved":
     case "disperseFogCloud":
     case "wardingBondSeparation":
+    case "endConcentration":
       return "runtimeEffectCleanup";
     case "gustOfWindLineDirectionChange":
     case "movableZoneReposition":
