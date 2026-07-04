@@ -1,5 +1,108 @@
 # Validation Report
 
+## CRPI-READY-012
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec`
+- Driver: `packages/battle-runtime/battle-runtime-sorcerer-metamagic-distant-selected-identity.mbt.qnt`
+- Route connector: `packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+- Acceptance status: `accepted`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/battle-runtime-sorcerer-metamagic-distant-selected-identity.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-reducer-route.qnt`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Classes/Sorcerer.md`
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+Distant Spell selected-identity replay now compares the copied
+`MetamagicSpellRangeProjectionRouteSubject` `qRoute` to public reducer route
+events. The MBT replay executes the connector's deterministic
+`stepRouteSpellRangeProjection` wrapper, which delegates to the copied
+`doRouteSpellRangeProjection` action and updates `qRoute`. The target driver
+derives its projection by calling public reducer entrypoints: the route begins
+with `battleReducerStartRouteEvent`, discovers the Distant object-light act
+through `discoverBattleActs`, then resolves the object target through
+`resolveBattleSubject`. The emitted route records the feature-resource
+discovery frontier, the object-target boundary owner, and the target-selection
+owner.
+
+The runtime does not add a parallel Distant Spell ledger. Action economy and
+spell use remain in `BattleState.currentTurnResources`, Sorcery Point spend
+remains in `CharacterBattlePointPoolResourceState.pointsRemaining`, selected
+Metamagic identity remains a catalog/selection/admission boundary, and Light
+output remains `BattleState.lightEmitters`.
+
+Generated branch coverage:
+
+| Obligation | Target replay evidence | Diagnostic tests | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-sorcerer-metamagic-distant-selected-identity.mbt.qnt#step:doResolveDistantObjectLight` | `tasks/target-replay-evidence/CRPI-READY-012.json#driver:packages/battle-runtime/battle-runtime-sorcerer-metamagic-distant-selected-identity.mbt.qnt#step:doResolveDistantObjectLight#trace:public-route=metamagicSpellRangeProjection action=doResolveDistantObjectLight qRoute=metamagic-spell-range-projection-public-route` | `packages/battle-runtime/src/sorcerer-metamagic-distant-selected-identity.mbt.test.ts#compares Distant Spell range-projection public reducer route to copied qRoute` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-012.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id: `public-route=metamagicSpellRangeProjection action=doResolveDistantObjectLight qRoute=metamagic-spell-range-projection-public-route`
+- Copied connector replay assertion:
+  - `packages/battle-runtime/src/sorcerer-metamagic-distant-selected-identity.mbt.test.ts#compares Distant Spell range-projection public reducer route to copied qRoute`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-READY-012/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 43.
+
+Plan Impact:
+
+- Status: `none`
+- Affected tasks:
+  - Task 43 / `CRPI-READY-012`: `unblocked`; copied `qRoute` replay is accepted.
+  - Task 44 and later metamagic route tasks: `left unchanged`.
+- Observations:
+  - Distant object-light selected identity matches the copied metamagic
+    `doRouteSpellRangeProjection` connector shape without synthetic route
+    events or duplicate state.
+  - The reusable route fact is the typed `spell_range_increase` Metamagic
+    effect on an action-spell cast whose `objectLight` procedure consumes an
+    object-target frontier.
+- Required plan edits: none.
+
+Verification results:
+
+- Base check passed: `ralph/crpi-ready-012-metamagic-distant-route/integration`
+  and `HEAD` were both `61011ccc7 Mark Task 42 metamagic careful route blocked`,
+  and `git merge-base --is-ancestor 61011ccc7ba7300e5fc341b8944efafa43eedb18 HEAD`
+  exited 0.
+- `pnpm --filter @dnd/battle-runtime exec tsc --noEmit --pretty false` passed.
+- `START=$(date +%s); MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/battle-runtime exec vitest run src/sorcerer-metamagic-distant-selected-identity.mbt.test.ts 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 3 tests passed and `TOTAL: 8s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- RAW/ubiquitous-language review passed against Sorcerer Metamagic, Distant
+  Spell, Sorcery Points, Light, and UBIQUITOUS_LANGUAGE.md terms for Magic
+  Action, Spell Invocation, Pool, Spend, Spell Effect, and Light.
+- Reviewer-loop convergence passed: round 1 found the missing public
+  `metamagicSpellRangeProjection` route subject and added object-target boundary
+  ownership; round 2 restored this cumulative validation report history after
+  reviewer feedback; round 3 replaced the literal route assertion and generic
+  connector sampling with deterministic copied `doRouteSpellRangeProjection`
+  `qRoute` replay against the public reducer route. No duplicate durable state
+  or authored-identity dispatch was added.
+
 ## CRPI-READY-011
 
 - Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`

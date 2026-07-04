@@ -7,6 +7,7 @@
 //   becomes 30 feet for the selected cast and spends 1 Sorcery Point.
 // - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Light: the object
 //   emits Bright Light 20 feet plus Dim Light for 20 more feet.
+import { it } from "vitest";
 import { resourceCount } from "@dnd/shared/types";
 
 import { DISTANT_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts";
@@ -15,13 +16,24 @@ import {
   type CharacterBattleMetamagicOptionFact,
   type CharacterBattlePointPoolResourceState,
 } from "./character-battle-resources.ts";
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
+import {
+  defineDriver,
+  focusedMbtMaxSteps,
+  MBT_TEST_TIMEOUT_MS,
+  mbtSpecPath,
+  reducerRoutedMetamagicStateCheck,
+  run,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import {
   lightUnitId,
   spellCasterId,
   unitLibrary,
 } from "./unit-profile-admission-catalog-support.ts";
+import {
+  battleReducerStartRouteEvent,
+  type BattleReducerRouteEvent,
+} from "./index.ts";
 import { requireHole } from "./unit-profile-admission-creature-fixture-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
@@ -43,6 +55,16 @@ type DistantObjectLightProjection = {
   readonly brightRadiusFeet: number;
   readonly dimAdditionalFeet: number;
   readonly lastResult: "init" | "distantObjectLight";
+};
+
+const distantMetamagicRouteReplayDriverSchema = {
+  init: {},
+  doRouteSpellRangeProjection: {},
+  stepRouteSpellRangeProjection: {},
+} as const;
+
+type DistantMetamagicRouteReplayProjection = {
+  readonly route: readonly BattleReducerRouteEvent[];
 };
 
 defineSelectedIdentityWitness({
@@ -96,7 +118,70 @@ defineSelectedIdentityWitness({
   ],
 });
 
+it(
+  "compares Distant Spell range-projection public reducer route to copied qRoute",
+  async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "stepRouteSpellRangeProjection",
+      driver: createDistantMetamagicRouteReplayDriver(),
+      backend: "typescript",
+      nTraces: 1,
+      maxSteps: focusedMbtMaxSteps(1),
+      stateCheck: reducerRoutedMetamagicStateCheck,
+    });
+  },
+  MBT_TEST_TIMEOUT_MS,
+);
+
 function resolveDistantObjectLight(): BattleState {
+  const resolved = resolveDistantObjectLightSubject();
+  return resolved.state;
+}
+
+function observeDistantObjectLightRoute() {
+  const resolved = resolveDistantObjectLightSubject();
+  return [
+    battleReducerStartRouteEvent(resolved.initialState),
+    ...(resolved.act.routeEvents ?? []),
+    ...(resolved.routeEvents ?? []),
+  ];
+}
+
+function createDistantMetamagicRouteReplayDriver() {
+  return defineDriver(distantMetamagicRouteReplayDriverSchema, () => {
+    let route: readonly BattleReducerRouteEvent[] =
+      observeDistantObjectLightInitialRoute();
+
+    function reset(): void {
+      route = observeDistantObjectLightInitialRoute();
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doRouteSpellRangeProjection: () => {
+        route = observeDistantObjectLightRoute();
+      },
+      stepRouteSpellRangeProjection: () => {
+        route = observeDistantObjectLightRoute();
+      },
+      getState: (): DistantMetamagicRouteReplayProjection => ({ route }),
+    };
+  });
+}
+
+function observeDistantObjectLightInitialRoute() {
+  const resolved = resolveDistantObjectLightSubject();
+  return [battleReducerStartRouteEvent(resolved.initialState)];
+}
+
+function resolveDistantObjectLightSubject() {
   const spell = spellRecord(lightUnitId);
   const state = spellBattle({
     cantrips: [spell],
@@ -142,7 +227,7 @@ function resolveDistantObjectLight(): BattleState {
   if (resolved.tag !== "resolved") {
     throw new Error(`Expected Distant Light to resolve, got ${resolved.tag}.`);
   }
-  return resolved.state;
+  return { initialState: state, act: distantAct, ...resolved };
 }
 
 function distantMetamagicOption(): CharacterBattleMetamagicOptionFact {

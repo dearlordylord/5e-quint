@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-011",
+  "taskId": "CRPI-READY-012",
   "durableFields": [
     {
       "fieldPath": "AvailableBattleAct.routeEvents",
@@ -8,7 +8,7 @@
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject.actionSpell.metamagic.effectKind=saving_throw_protection and public act initial holes",
+        "sourceField": "BattleSubject.actionSpell.metamagic.effectKind=spell_range_increase and public act initial holes",
         "boundary": "discoverBattleActs public reducer boundary"
       }
     },
@@ -18,37 +18,27 @@
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject, BattleFill kind, and save-gated damage adjustment frontier",
+        "sourceField": "BattleSubject, objectTargetChoice fill, and object-light resolution state delta",
         "boundary": "resolveBattleSubject public reducer boundary"
       }
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=metamagicSavingThrowProtection",
+      "fieldPath": "BattleReducerRouteEvent.subject=metamagicSpellRangeProjection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject.actionSpell.metamagic.effectKind=saving_throw_protection, public act initial holes, and save-gated damage resolution frontier",
+        "sourceField": "BattleSubject.actionSpell.metamagic.effectKind=spell_range_increase, action spell cast mode, objectLight procedure, public object target hole, and target-choice fill",
         "boundary": "battleReducerRouteEventsForDiscoveredAct and battleReducerRouteForResolution"
-      }
-    },
-    {
-      "fieldPath": "BattleReducerRouteEvent.owner=battleDamageAdjustment",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "owner": "executable-boundary-projection",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "Careful Spell protected-target saving-throw outcome and pending rolled-dice frontier",
-        "boundary": "battleReducerRouteForResolution"
       }
     }
   ],
   "notes": [
-    "Task 42 introduced no new BattleState, BattleCreatureState, character spellcasting, or table-state durable field.",
+    "Task 43 introduced no new BattleState, BattleCreatureState, character spellcasting, or table-state durable field.",
     "Sorcery Point ownership remains existing CharacterBattlePointPoolResourceState.pointsRemaining.",
+    "Object-light projection remains existing BattleState.lightEmitters.",
     "Selected Metamagic option identity remains at catalog, selection, admission, and fixture boundaries.",
     "Route events are public reducer boundary projections derived from typed Metamagic effect facts, spell procedure facts, holes/fills, and executable state deltas.",
-    "The diagnostic damage route does not dispatch on Sorcerer authored feature identity or the Careful Spell option name; production routing is admitted by effectKind=saving_throw_protection and the public reducer subject/holes/fills.",
-    "Careful Command no-effect route replay is blocked rather than modeled with duplicate state: the public reducer owns that branch as commandEffect with no rolled-dice damage-adjustment frontier, while the copied metamagic route connector is damage-shaped."
+    "The Distant Spell route does not dispatch on Sorcerer authored feature identity or the Distant Spell option name; production routing is admitted by effectKind=spell_range_increase, action-spell cast mode, objectLight procedure shape, object-target hole/fill state, and public reducer state changes."
   ]
 }

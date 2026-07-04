@@ -259,7 +259,7 @@
     {
       "number": 43,
       "id": "CRPI-READY-012",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-sorcerer-metamagic-distant-selected-identity"
     },
     {
@@ -695,7 +695,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRPI-READY-009` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-010` | `blocked` | source-qnt-corpus-blocker | owner/source-corpus decision before implementation |
 | `CRPI-READY-011` | `blocked` | source-qnt-corpus-blocker | owner/source-corpus decision before implementation |
-| `CRPI-READY-012` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-READY-012` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-013` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-READY-014` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-READY-015` | `ready-for-research` | none | target replay evidence and owner implementation |
@@ -3146,7 +3146,7 @@ Plan Impact:
 
 ### Task 43 - CRPI-READY-012
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

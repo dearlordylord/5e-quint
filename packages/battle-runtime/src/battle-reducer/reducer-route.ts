@@ -15,6 +15,7 @@ import type { CombatantId } from "../identity.ts";
 import { battleHoleFamilyKind } from "./hole-helpers.ts";
 import {
   CAREFUL_METAMAGIC_EFFECT_KIND,
+  DISTANT_METAMAGIC_EFFECT_KIND,
   QUICKENED_METAMAGIC_EFFECT_KIND,
 } from "./metamagic-support.ts";
 
@@ -27,6 +28,7 @@ export type BattleReducerRouteSubjectFamily =
   | "metamagicBonusActionCastingTime"
   | "metamagicSavingThrowProtection"
   | "metamagicSpellGovernor"
+  | "metamagicSpellRangeProjection"
   | "reactionSpell"
   | "rollModifierEffect"
   | "saveGatedSpell"
@@ -221,6 +223,16 @@ export function battleReducerRouteEventsForDiscoveredAct(
       {
         kind: "discoverBattleActs",
         subject: "metamagicSavingThrowProtection",
+        holes: battleReducerRouteHoles(act.initialHoles),
+        owner: "battleFeatureResource",
+      },
+    ];
+  }
+  if (isDistantSpellRangeProjectionSubject(act.subject)) {
+    return [
+      {
+        kind: "discoverBattleActs",
+        subject: "metamagicSpellRangeProjection",
         holes: battleReducerRouteHoles(act.initialHoles),
         owner: "battleFeatureResource",
       },
@@ -485,10 +497,9 @@ function metamagicRouteForResolution(
     return [metamagicGovernorInvalidRoute(input)];
   }
   if (!isQuickenedBonusActionCastingTimeSubject(input.subject)) {
-    return metamagicSavingThrowProtectionRouteForResolution(
-      input,
-      result,
-      fill,
+    return (
+      metamagicSpellRangeProjectionRouteForResolution(input, result, fill) ??
+      metamagicSavingThrowProtectionRouteForResolution(input, result, fill)
     );
   }
 
@@ -659,6 +670,40 @@ function metamagicSavingThrowProtectionRouteForResolution(
   return undefined;
 }
 
+function metamagicSpellRangeProjectionRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+  fill: BattleFill | undefined,
+): BattleReducerRouteEvents | undefined {
+  if (!isDistantSpellRangeProjectionSubject(input.subject)) {
+    return undefined;
+  }
+  if (fill === undefined || result.tag === "invalid") {
+    return undefined;
+  }
+  const routeFill = battleReducerRouteFill(fill);
+  if (routeFill !== "targetChoice") {
+    return undefined;
+  }
+  const holes =
+    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
+  return [
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "metamagicSpellRangeProjection",
+      holes: ["targetChoice"],
+      owner: "battleObjectTargetBoundary",
+    },
+    {
+      kind: "resolveBattleSubject",
+      subject: "metamagicSpellRangeProjection",
+      fill: routeFill,
+      holes,
+      owner: "battleTargetSelection",
+    },
+  ];
+}
+
 function metamagicBonusActionTimingRoutes(
   holes: readonly BattleReducerRouteHole[],
 ): readonly [BattleReducerRouteEvent, BattleReducerRouteEvent] {
@@ -729,6 +774,19 @@ function isCarefulSavingThrowProtectionSubject(
     subject.tag === "actionSpell" &&
     subject.metamagic?.some(
       (selection) => selection.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND,
+    ) === true
+  );
+}
+
+function isDistantSpellRangeProjectionSubject(
+  subject: BattleResolutionInput["subject"],
+): boolean {
+  return (
+    subject.tag === "actionSpell" &&
+    subject.mode.tag === "cast" &&
+    subject.invocation.procedure === "objectLight" &&
+    subject.metamagic?.some(
+      (selection) => selection.effectKind === DISTANT_METAMAGIC_EFFECT_KIND,
     ) === true
   );
 }
@@ -2167,6 +2225,7 @@ function battleReducerRouteHole(
   }
   if (family === "interruptDecision") return ["interruptDecision"];
   if (family === "movement") return ["movement"];
+  if (family === "objectTargetChoice") return ["targetChoice"];
   if (family === "rolledDice") return ["rolledDice"];
   if (family === "savingThrowOutcome") return ["savingThrowOutcome"];
   if (family === "spellTargetAllocation") return ["spellTargetAllocation"];
@@ -2187,6 +2246,7 @@ function battleReducerRouteFill(
     return "hitPointHealingDistribution";
   }
   if (kind === "interruptDecision") return "interruptDecision";
+  if (kind === "objectTargetChoice") return "targetChoice";
   if (kind === "rolledDice") return "rolledDice";
   if (kind === "savingThrowOutcome") return "savingThrowOutcome";
   if (kind === "spellTargetAllocation") return "spellTargetAllocation";

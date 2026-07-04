@@ -1191,6 +1191,69 @@
           "detail": "Round 1 added public metamagicSavingThrowProtection route ownership; revision round 2 removed overclaimed accepted coverage for doResolveCarefulSaveGatedNoEffect; revision round 5 corrected the Careful damage diagnostic to expose the protected-target spellTargetList frontier before savingThrowOutcome and recorded both selected-identity branches as source-QNT-corpus blockers. No duplicate durable state or authored-identity dispatch was added."
         }
       ]
+    },
+    {
+      "taskId": "CRPI-READY-012",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic-distant-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "6dfdbb682a9ef95ec5a882215133d96aed1c6253becb3ca399e9e76d60f0b9ae"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "8327f4edaa46b8432e8c9f9a86dd1bba9e545cf5e3c26a9342b6bafb990b79ad"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "9ee4ad0a519a2c48c6ae602c9bb3ab17f99250572b728315a8c3e92d5f15ae60"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-READY-012.json",
+          "sha256": "3f2d124810de14dc6fac7ee7920b3c57552c673d3b07a8e6739f521874396d87",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-READY-012.json#driver:packages/battle-runtime/battle-runtime-sorcerer-metamagic-distant-selected-identity.mbt.qnt#step:doResolveDistantObjectLight#trace:public-route=metamagicSpellRangeProjection action=doResolveDistantObjectLight qRoute=metamagic-spell-range-projection-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/crpi-ready-012-metamagic-distant-route/integration && git log --oneline -1 HEAD && git merge-base --is-ancestor 61011ccc7ba7300e5fc341b8944efafa43eedb18 HEAD",
+          "status": "pass",
+          "detail": "Integration and HEAD were 61011ccc7; base SHA is an ancestor."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec tsc --noEmit --pretty false",
+          "status": "pass"
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/battle-runtime exec vitest run src/sorcerer-metamagic-distant-selected-identity.mbt.test.ts 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "3 tests passed; deterministic stepRouteSpellRangeProjection executed copied doRouteSpellRangeProjection qRoute and compared it to the public reducer route; final timed run TOTAL: 8s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 added public metamagicSpellRangeProjection route ownership; round 3 replaced the literal assertion/generic connector sampling evidence with deterministic copied doRouteSpellRangeProjection qRoute replay against the public reducer route. No duplicate durable state or authored-identity dispatch was added."
+        }
+      ]
     }
   ]
 }

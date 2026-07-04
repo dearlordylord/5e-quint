@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-011",
+  "taskId": "CRPI-READY-012",
   "productionModulesExtended": [
     {
       "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "role": "domain-api",
       "domainApis": [
-        "BattleReducerRouteEvent.subject=metamagicSavingThrowProtection",
+        "BattleReducerRouteEvent.subject=metamagicSpellRangeProjection",
         "BattleReducerRouteEvent.owner=battleFeatureResource",
-        "BattleReducerRouteEvent.owner=battleSavingThrowOutcome",
-        "BattleReducerRouteEvent.owner=battleDamageAdjustment",
+        "BattleReducerRouteEvent.owner=battleObjectTargetBoundary",
+        "BattleReducerRouteEvent.owner=battleTargetSelection",
         "battleReducerRouteEventsForDiscoveredAct",
         "battleReducerRouteForResolution"
       ]
@@ -20,54 +20,54 @@
       "path": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
       "quarantinedWitnessNames": [
         "qRoute",
-        "MetamagicSavingThrowProtectionRouteSubject",
-        "SavingThrowOutcomeFillKind",
-        "RolledDiceHoleKind",
+        "MetamagicSpellRangeProjectionRouteSubject",
+        "TargetChoiceHoleKind",
+        "TargetChoiceFillKind",
         "BattleFeatureResourceOwner",
-        "BattleSavingThrowOutcomeOwner",
-        "BattleDamageAdjustmentOwner"
+        "BattleObjectTargetBoundaryOwner",
+        "BattleTargetSelectionOwner",
+        "doRouteSpellRangeProjection"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-011.json"
+        "tasks/target-replay-evidence/CRPI-READY-012.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/sorcerer-metamagic-careful-selected-identity.mbt.test.ts",
+      "path": "packages/battle-runtime/src/sorcerer-metamagic-distant-selected-identity.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "observes Careful Spell save-protection route through public reducer entrypoints",
-        "observes Careful Command no-effect route through public reducer entrypoints",
-        "observeCarefulSavingThrowProtectionRoute",
-        "observeCarefulCommandNoEffectRoute"
+        "doResolveDistantObjectLight",
+        "observes Distant Spell range-projection route through public reducer entrypoints",
+        "observeDistantObjectLightRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-011.json"
+        "tasks/target-replay-evidence/CRPI-READY-012.json"
       ]
     }
   ],
   "accumulatorGrowth": [
     {
       "fieldPath": "AvailableBattleAct.routeEvents",
-      "reason": "Careful Spell diagnostics expose the public Metamagic save-protection discovery frontier before copied qRoute comparison."
+      "reason": "Distant Spell diagnostics expose the public Metamagic spell-range projection discovery frontier."
     },
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
-      "reason": "Careful Spell diagnostics expose protected-target, saving-throw outcome, damage-adjustment, and feature-resource owner evidence through public subject resolution."
+      "reason": "Distant Spell diagnostics expose object-target boundary and target-selection owner evidence through public subject resolution."
     }
   ],
   "expectedNextReuse": [
     {
-      "driver": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-heightened-selected-identity.mbt.qnt",
+      "driver": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-extended-selected-identity.mbt.qnt",
       "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "api": "Metamagic save-affecting option route projection"
+      "api": "Metamagic option route projection through typed effect facts"
     },
     {
-      "driver": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-transmuted-selected-identity.mbt.qnt",
+      "driver": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-subtle-selected-identity.mbt.qnt",
       "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "api": "Metamagic option route projection through typed effect facts"
     }
   ],
   "completion": {
-    "tag": "blocked",
-    "notes": "Task 42 records honest public route diagnostics for Careful Spell selected identity, but accepts no copied qRoute replay. The Burning Hands damage branch is blocked because the public reducer route starts at the protected-target spellTargetList frontier before the copied connector's savingThrowOutcome frontier. The no-effect Command branch is blocked because public reducer route events expose commandEffect, while the copied metamagic route connector only has a damage-shaped saving-throw-protection qRoute. No new BattleState field was introduced."
+    "tag": "accepted",
+    "notes": "Task 43 observes the copied Metamagic spell-range projection qRoute through public reducer route events for Distant Spell object-light resolution. No new BattleState field was introduced."
   }
 }
