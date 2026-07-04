@@ -204,25 +204,22 @@ const openHandTechniqueSupport = {
       base: 8,
       ability: "wis",
     },
-    choices: [
-      {
-        id: "addle",
-        effect: {
-          kind: "denyOpportunityAttacks",
-          expires: "startOfTargetNextTurn",
-        },
+    effects: {
+      denyOpportunityAttacks: {
+        kind: "denyOpportunityAttacks",
+        expires: "startOfTargetNextTurn",
       },
-      {
-        id: "push",
+      pushAwayOnFailedSave: {
+        kind: "pushAwayOnFailedSave",
         save: { ability: "str" },
-        onFail: { kind: "pushAway", distanceFeet: movementFeet(15) },
+        distanceFeet: movementFeet(15),
       },
-      {
-        id: "topple",
+      applyConditionOnFailedSave: {
+        kind: "applyConditionOnFailedSave",
         save: { ability: "dex" },
-        onFail: { kind: "applyCondition", condition: "prone" },
+        condition: "prone",
       },
-    ],
+    },
   },
 } as const;
 
@@ -1003,6 +1000,36 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
     ) {
       throw new Error("Expected Task 18 level-3 feature mechanics.");
     }
+    const openHandDenyOpportunityAttacks =
+      openHandTechnique.mechanics.choices.find(
+        (choice) =>
+          "effect" in choice &&
+          choice.effect.kind === "deny_opportunity_attacks",
+      );
+    const openHandPushAway = openHandTechnique.mechanics.choices.find(
+      (choice) =>
+        "save" in choice &&
+        "onFail" in choice &&
+        choice.save.ability === "str" &&
+        choice.onFail.kind === "push_away",
+    );
+    const openHandApplyProne = openHandTechnique.mechanics.choices.find(
+      (choice) =>
+        "save" in choice &&
+        "onFail" in choice &&
+        choice.save.ability === "dex" &&
+        choice.onFail.kind === "apply_condition",
+    );
+    if (
+      openHandDenyOpportunityAttacks === undefined ||
+      openHandPushAway === undefined ||
+      openHandApplyProne === undefined
+    ) {
+      throw new Error("Expected Open Hand Technique semantic effects.");
+    }
+    if (!("onFail" in openHandPushAway)) {
+      throw new Error("Expected Open Hand Technique push failed-save effect.");
+    }
 
     expect(
       battleRemarkableAthleteSupportForUnit(
@@ -1021,19 +1048,34 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
     expect(
       battleOpenHandTechniqueSupportForUnit(
         unitMechanicsVariant(openHandTechnique, {
+          id: "monk_open_hand_technique_reordered_effects",
+          mechanics: {
+            ...openHandTechnique.mechanics,
+            choices: [
+              openHandApplyProne,
+              openHandDenyOpportunityAttacks,
+              openHandPushAway,
+            ],
+          },
+        }),
+      ),
+    ).toEqual(openHandTechniqueSupport);
+    expect(
+      battleOpenHandTechniqueSupportForUnit(
+        unitMechanicsVariant(openHandTechnique, {
           id: "monk_open_hand_technique_wrong_push_distance",
           mechanics: {
             ...openHandTechnique.mechanics,
             choices: [
-              openHandTechnique.mechanics.choices[0],
+              openHandDenyOpportunityAttacks,
               {
-                ...openHandTechnique.mechanics.choices[1],
+                ...openHandPushAway,
                 onFail: {
-                  ...openHandTechnique.mechanics.choices[1].onFail,
+                  ...openHandPushAway.onFail,
                   distanceFeet: 10,
                 },
               },
-              openHandTechnique.mechanics.choices[2],
+              openHandApplyProne,
             ],
           },
         }),

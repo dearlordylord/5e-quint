@@ -250,6 +250,8 @@ import {
   HUNTERS_MARK_FINDING_SKILLS,
   type MirrorImageDuplicateCount,
   type MirrorImageUnaffectedSense,
+  OPEN_HAND_TECHNIQUE_DECISION_CHOICES,
+  type OpenHandTechniqueDecisionChoice,
   type ScorchingRayRayCount,
   type SelfTransformationModeKind,
   THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
@@ -5913,7 +5915,7 @@ export type BattleUnitFeatureDecisionHole = {
   readonly choices:
     | readonly ["use", "decline"]
     | readonly ["attempt", "decline"]
-    | readonly ["addle", "push", "topple", "decline"];
+    | typeof OPEN_HAND_TECHNIQUE_DECISION_CHOICES;
 };
 export type BattleHitPointHealingPoolAllocation = {
   readonly targetId: CombatantId;
@@ -6404,10 +6406,7 @@ export type BattleFill =
       readonly value:
         | "use"
         | "attempt"
-        | "addle"
-        | "push"
-        | "topple"
-        | "decline";
+        | OpenHandTechniqueDecisionChoice;
     }
   | {
       readonly kind: "hitPointHealingDistribution";

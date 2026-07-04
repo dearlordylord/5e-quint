@@ -1,7 +1,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.open-hand-technique
 // UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3PUTB-06-MONK-OPEN-HAND-TECHNIQUE-RUNTIME monk_open_hand_technique
-// UNIT-IDENTITY-MBT-REPLAY: L3PUTB-06-MONK-OPEN-HAND-TECHNIQUE-RUNTIME monk_open_hand_technique doAddle doPushSaveSucceeded doPushSaveFailed doToppleSaveSucceeded doToppleSaveFailed doRejectNonFlurry doRejectPushTooFar doRejectTopplePushDisposition
+// UNIT-IDENTITY-MBT-REPLAY: L3PUTB-06-MONK-OPEN-HAND-TECHNIQUE-RUNTIME monk_open_hand_technique doDecline doDenyOpportunityAttacks doPushAwaySaveSucceeded doPushAwaySaveFailed doApplyProneSaveSucceeded doApplyProneSaveFailed doRejectNonFlurry doRejectPushTooFar doRejectApplyPronePushDisposition
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import { battleTablePositionId } from "./index.ts";
@@ -61,14 +61,15 @@ defineSelectedIdentityWitness({
   quintVariantFieldTags: {
     lastResult: {
       Init: "init",
-      Addle: "addle",
-      PushSaveSucceeded: "pushSaveSucceeded",
-      PushSaveFailed: "pushSaveFailed",
-      ToppleSaveSucceeded: "toppleSaveSucceeded",
-      ToppleSaveFailed: "toppleSaveFailed",
+      Decline: "decline",
+      DenyOpportunityAttacks: "denyOpportunityAttacks",
+      PushAwaySaveSucceeded: "pushAwaySaveSucceeded",
+      PushAwaySaveFailed: "pushAwaySaveFailed",
+      ApplyProneSaveSucceeded: "applyProneSaveSucceeded",
+      ApplyProneSaveFailed: "applyProneSaveFailed",
       RejectNonFlurry: "rejectNonFlurry",
       RejectPushTooFar: "rejectPushTooFar",
-      RejectTopplePushDisposition: "rejectTopplePushDisposition",
+      RejectApplyPronePushDisposition: "rejectApplyPronePushDisposition",
     },
   },
   projectionSchema: {
@@ -82,57 +83,81 @@ defineSelectedIdentityWitness({
   witnessInvalidScenarioReasons: {
     rejectNonFlurry: "invalidFill",
     rejectPushTooFar: "invalidFill",
-    rejectTopplePushDisposition: "invalidFill",
+    rejectApplyPronePushDisposition: "invalidFill",
   },
   units: [
     {
       unitId: "monk_open_hand_technique",
       procedures: [
         {
-          actionName: "doAddle",
+          actionName: "doDecline",
+          projectionAfter: expectedProjection({
+            lastResult: "decline",
+          }),
+          discover: () => projectChoice("decline", "decline"),
+        },
+        {
+          actionName: "doDenyOpportunityAttacks",
           projectionAfter: expectedProjection({
             targetOpportunityAttackDenied: true,
-            lastResult: "addle",
+            lastResult: "denyOpportunityAttacks",
           }),
-          discover: () => projectChoice("addle", "addle"),
+          discover: () =>
+            projectChoice(
+              "denyOpportunityAttacks",
+              "denyOpportunityAttacks",
+            ),
         },
         {
-          actionName: "doPushSaveSucceeded",
+          actionName: "doPushAwaySaveSucceeded",
           projectionAfter: expectedProjection({
-            lastResult: "pushSaveSucceeded",
-          }),
-          discover: () => projectSaveChoice("push", true, "pushSaveSucceeded"),
-        },
-        {
-          actionName: "doPushSaveFailed",
-          projectionAfter: expectedProjection({
-            pushDistanceFeet: 10,
-            lastResult: "pushSaveFailed",
+            lastResult: "pushAwaySaveSucceeded",
           }),
           discover: () =>
             projectSaveChoice(
-              "push",
+              "pushAwayOnFailedSave",
+              true,
+              "pushAwaySaveSucceeded",
+            ),
+        },
+        {
+          actionName: "doPushAwaySaveFailed",
+          projectionAfter: expectedProjection({
+            pushDistanceFeet: 10,
+            lastResult: "pushAwaySaveFailed",
+          }),
+          discover: () =>
+            projectSaveChoice(
+              "pushAwayOnFailedSave",
               false,
-              "pushSaveFailed",
+              "pushAwaySaveFailed",
               openHandPush(10),
             ),
         },
         {
-          actionName: "doToppleSaveSucceeded",
+          actionName: "doApplyProneSaveSucceeded",
           projectionAfter: expectedProjection({
-            lastResult: "toppleSaveSucceeded",
+            lastResult: "applyProneSaveSucceeded",
           }),
           discover: () =>
-            projectSaveChoice("topple", true, "toppleSaveSucceeded"),
+            projectSaveChoice(
+              "applyConditionOnFailedSave",
+              true,
+              "applyProneSaveSucceeded",
+            ),
         },
         {
-          actionName: "doToppleSaveFailed",
+          actionName: "doApplyProneSaveFailed",
           projectionAfter: expectedProjection({
             targetProne: true,
-            lastResult: "toppleSaveFailed",
+            lastResult: "applyProneSaveFailed",
           }),
           discover: () =>
-            projectSaveChoice("topple", false, "toppleSaveFailed"),
+            projectSaveChoice(
+              "applyConditionOnFailedSave",
+              false,
+              "applyProneSaveFailed",
+            ),
         },
         {
           actionName: "doRejectNonFlurry",
@@ -151,12 +176,12 @@ defineSelectedIdentityWitness({
           discover: projectRejectPushTooFar,
         },
         {
-          actionName: "doRejectTopplePushDisposition",
+          actionName: "doRejectApplyPronePushDisposition",
           projectionAfter: expectedProjection({
-            lastResult: "rejectTopplePushDisposition",
+            lastResult: "rejectApplyPronePushDisposition",
             lastInvalidReason: "invalidFill",
           }),
-          discover: projectRejectTopplePushDisposition,
+          discover: projectRejectApplyPronePushDisposition,
         },
       ],
     },
@@ -177,7 +202,7 @@ function expectedProjection(
 }
 
 function projectChoice(
-  choice: "addle" | "decline",
+  choice: "denyOpportunityAttacks" | "decline",
   lastResult: string,
 ): OpenHandTechniqueProjection {
   const window = openHandTechniqueHitWindow();
@@ -197,7 +222,7 @@ function projectChoice(
 }
 
 function projectSaveChoice(
-  choice: "push" | "topple",
+  choice: "pushAwayOnFailedSave" | "applyConditionOnFailedSave",
   succeeded: boolean,
   lastResult: string,
   push?: BattleShovePushOutcome,
@@ -257,7 +282,7 @@ function projectRejectNonFlurry(): OpenHandTechniqueProjection {
     fills: [
       targetFill(target, goblinId),
       attackRollFill(roll, { total: 20, naturalD20: 15 }),
-      unitFeatureDecisionFill(flurry.decision, "addle"),
+      unitFeatureDecisionFill(flurry.decision, "denyOpportunityAttacks"),
     ],
   });
   return expectedProjection({
@@ -274,7 +299,7 @@ function projectRejectPushTooFar(): OpenHandTechniqueProjection {
       subject: window.subject,
       fills: [
         ...window.hitFills,
-        unitFeatureDecisionFill(window.decision, "push"),
+        unitFeatureDecisionFill(window.decision, "pushAwayOnFailedSave"),
       ],
     }),
     "savingThrowOutcome",
@@ -284,7 +309,7 @@ function projectRejectPushTooFar(): OpenHandTechniqueProjection {
     subject: window.subject,
     fills: [
       ...window.hitFills,
-      unitFeatureDecisionFill(window.decision, "push"),
+      unitFeatureDecisionFill(window.decision, "pushAwayOnFailedSave"),
       openHandSavingThrowFill(save, false, openHandPush(20)),
     ],
   });
@@ -294,7 +319,7 @@ function projectRejectPushTooFar(): OpenHandTechniqueProjection {
   });
 }
 
-function projectRejectTopplePushDisposition(): OpenHandTechniqueProjection {
+function projectRejectApplyPronePushDisposition(): OpenHandTechniqueProjection {
   const window = openHandTechniqueHitWindow();
   const save = requireHole(
     resolveBattleSubject({
@@ -302,7 +327,7 @@ function projectRejectTopplePushDisposition(): OpenHandTechniqueProjection {
       subject: window.subject,
       fills: [
         ...window.hitFills,
-        unitFeatureDecisionFill(window.decision, "topple"),
+        unitFeatureDecisionFill(window.decision, "applyConditionOnFailedSave"),
       ],
     }),
     "savingThrowOutcome",
@@ -312,12 +337,12 @@ function projectRejectTopplePushDisposition(): OpenHandTechniqueProjection {
     subject: window.subject,
     fills: [
       ...window.hitFills,
-      unitFeatureDecisionFill(window.decision, "topple"),
+      unitFeatureDecisionFill(window.decision, "applyConditionOnFailedSave"),
       openHandSavingThrowFill(save, false, openHandPush(10)),
     ],
   });
   return expectedProjection({
-    lastResult: "rejectTopplePushDisposition",
+    lastResult: "rejectApplyPronePushDisposition",
     lastInvalidReason: result.tag === "invalid" ? result.reason : "notInvalid",
   });
 }

@@ -654,31 +654,22 @@ export type OpenHandTechniqueProfile = {
     readonly base: 8;
     readonly ability: "wis";
   };
-  readonly choices: readonly [
-    {
-      readonly id: "addle";
-      readonly effect: {
-        readonly kind: "denyOpportunityAttacks";
-        readonly expires: "startOfTargetNextTurn";
-      };
-    },
-    {
-      readonly id: "push";
+  readonly effects: {
+    readonly denyOpportunityAttacks: {
+      readonly kind: "denyOpportunityAttacks";
+      readonly expires: "startOfTargetNextTurn";
+    };
+    readonly pushAwayOnFailedSave: {
+      readonly kind: "pushAwayOnFailedSave";
       readonly save: { readonly ability: "str" };
-      readonly onFail: {
-        readonly kind: "pushAway";
-        readonly distanceFeet: MovementFeet;
-      };
-    },
-    {
-      readonly id: "topple";
+      readonly distanceFeet: MovementFeet;
+    };
+    readonly applyConditionOnFailedSave: {
+      readonly kind: "applyConditionOnFailedSave";
       readonly save: { readonly ability: "dex" };
-      readonly onFail: {
-        readonly kind: "applyCondition";
-        readonly condition: "prone";
-      };
-    },
-  ];
+      readonly condition: "prone";
+    };
+  };
 };
 export type BattleOpenHandTechniqueSupportProfile = {
   readonly kind: typeof OPEN_HAND_TECHNIQUE_SUPPORT_PROFILE;
@@ -5497,7 +5488,6 @@ function openHandTechniqueProfileForUnit(
     return null;
   }
   const mechanics = unit.mechanics;
-  const [addle, push, topple] = mechanics.choices;
   if (
     mechanics.trigger.kind !== "hit_with_attack_granted_by" ||
     mechanics.trigger.resourceOptionUnitId !== MONK_FOCUS_RESOURCE_UNIT_ID ||
@@ -5506,18 +5496,34 @@ function openHandTechniqueProfileForUnit(
     mechanics.effectSaveDc.kind !== "class_feature_ability_save_dc" ||
     mechanics.effectSaveDc.base !== 8 ||
     mechanics.effectSaveDc.ability !== "wis" ||
-    mechanics.choices.length !== 3 ||
-    addle?.id !== "addle" ||
-    addle.effect.kind !== "deny_opportunity_attacks" ||
-    addle.effect.expires !== "start_of_target_next_turn" ||
-    push?.id !== "push" ||
-    push.save.ability !== "str" ||
-    push.onFail.kind !== "push_away" ||
-    push.onFail.distanceFeet !== 15 ||
-    topple?.id !== "topple" ||
-    topple.save.ability !== "dex" ||
-    topple.onFail.kind !== "apply_condition" ||
-    topple.onFail.condition !== "prone"
+    mechanics.choices.length !== 3
+  ) {
+    return null;
+  }
+  const denyOpportunityAttacks = mechanics.choices.find(
+    (choice) =>
+      "effect" in choice &&
+      choice.effect.kind === "deny_opportunity_attacks" &&
+      choice.effect.expires === "start_of_target_next_turn",
+  );
+  const pushAwayOnFailedSave = mechanics.choices.find(
+    (choice) =>
+      "save" in choice &&
+      choice.save.ability === "str" &&
+      choice.onFail.kind === "push_away" &&
+      choice.onFail.distanceFeet === 15,
+  );
+  const applyConditionOnFailedSave = mechanics.choices.find(
+    (choice) =>
+      "save" in choice &&
+      choice.save.ability === "dex" &&
+      choice.onFail.kind === "apply_condition" &&
+      choice.onFail.condition === "prone",
+  );
+  if (
+    denyOpportunityAttacks === undefined ||
+    pushAwayOnFailedSave === undefined ||
+    applyConditionOnFailedSave === undefined
   ) {
     return null;
   }
@@ -5536,25 +5542,22 @@ function openHandTechniqueProfileForUnit(
         base: 8,
         ability: "wis",
       },
-      choices: [
-        {
-          id: "addle",
-          effect: {
-            kind: "denyOpportunityAttacks",
-            expires: "startOfTargetNextTurn",
-          },
+      effects: {
+        denyOpportunityAttacks: {
+          kind: "denyOpportunityAttacks",
+          expires: "startOfTargetNextTurn",
         },
-        {
-          id: "push",
+        pushAwayOnFailedSave: {
+          kind: "pushAwayOnFailedSave",
           save: { ability: "str" },
-          onFail: { kind: "pushAway", distanceFeet: movementFeet(15) },
+          distanceFeet: movementFeet(15),
         },
-        {
-          id: "topple",
+        applyConditionOnFailedSave: {
+          kind: "applyConditionOnFailedSave",
           save: { ability: "dex" },
-          onFail: { kind: "applyCondition", condition: "prone" },
+          condition: "prone",
         },
-      ],
+      },
     },
   };
 }

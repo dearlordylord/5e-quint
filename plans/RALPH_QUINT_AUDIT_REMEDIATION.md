@@ -109,13 +109,13 @@
     {
       "number": 18,
       "id": "QAR-18-OPEN-HAND-SEMANTIC-CHOICES",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Move Open Hand execution to semantic effect variants"
     },
     {
       "number": 19,
       "id": "QAR-19-AUTHORED-ID-CHECKER-HARDENING",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Harden authored-identity dispatch checking"
     },
     {
@@ -190,8 +190,8 @@ mismatch. The Ralph runner or decider owns branch repair.
 | 15 | QAR-15-RULE-CORE-SPELLS-MBT-SPLIT - Split rule-core spells MBT by procedure family | ready-for-research | QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD | Splits spell MBT closure after admission semantics are explicit. |
 | 16 | QAR-16-RULE-CORE-FEATURES-MBT-SPLIT - Split rule-core features MBT by feature family | ready-for-research | QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD | Splits feature MBT closure after closure rules are hardened. |
 | 17 | QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION - Move Hunter's Prey execution to semantic support profiles | done | QAR-01-TEST-LANE-ISOLATION | Removes execution dispatch on selected authored option ids. |
-| 18 | QAR-18-OPEN-HAND-SEMANTIC-CHOICES - Move Open Hand execution to semantic effect variants | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Removes Open Hand authored-choice execution dispatch. |
-| 19 | QAR-19-AUTHORED-ID-CHECKER-HARDENING - Harden authored-identity dispatch checking | blocked | QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION, QAR-18-OPEN-HAND-SEMANTIC-CHOICES | Tightens the checker after known migrations land. |
+| 18 | QAR-18-OPEN-HAND-SEMANTIC-CHOICES - Move Open Hand execution to semantic effect variants | done | QAR-01-TEST-LANE-ISOLATION | Removes Open Hand authored-choice execution dispatch. |
+| 19 | QAR-19-AUTHORED-ID-CHECKER-HARDENING - Harden authored-identity dispatch checking | ready-for-research | QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION, QAR-18-OPEN-HAND-SEMANTIC-CHOICES | Tightens the checker after known migrations land. |
 | 20 | QAR-20-FINAL-CONVERGENCE-AUDIT - Run final Quint and architecture convergence audit | blocked | QAR-02-MBT-LANE-INVENTORY-GATE, QAR-03-SHARED-QNT-PROOF-HARNESS, QAR-04-CHARACTER-CREATION-QNT-PROOFS, QAR-05-SHARED-INVARIANT-PROOF-HARNESS, QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-07-DAMAGE-PAIR-NONZERO, QAR-08-SHOVE-PROJECTION-UNION, QAR-09-CUNNING-STRIKE-TYPED-QNT, QAR-10-ACID-ARROW-TYPED-TIMING, QAR-11-RUN-BLOCK-SEPARATION-GUARD, QAR-12-INDUCTIVE-WITNESS-SEEDS, QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD, QAR-14-STARRY-WISP-WITNESS-CONVERSION, QAR-15-RULE-CORE-SPELLS-MBT-SPLIT, QAR-16-RULE-CORE-FEATURES-MBT-SPLIT, QAR-17-HUNTERS-PREY-SEMANTIC-SELECTION, QAR-18-OPEN-HAND-SEMANTIC-CHOICES, QAR-19-AUTHORED-ID-CHECKER-HARDENING | Final repeated review loop and whole-plan verification. |
 
 ## Shared Verification
@@ -971,7 +971,7 @@ Plan Impact:
 
 ### Task 18 - QAR-18-OPEN-HAND-SEMANTIC-CHOICES
 
-Status: `ready-for-research`
+Status: `done`
 
 Blocker Type: dependency
 
@@ -1021,7 +1021,7 @@ Plan Impact:
 
 ### Task 19 - QAR-19-AUTHORED-ID-CHECKER-HARDENING
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Blocker Type: dependency
 
