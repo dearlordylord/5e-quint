@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "CRP-09-CLOSEOUT-EXPANDED-QUEUE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Close the bootstrap phase with an executable implementation queue"
     }
   ]
@@ -145,6 +145,31 @@ The expanded queue must account for these families:
 | Session battle entry | `character-session-sheet-derived-battle-acts.mbt.qnt` plus `.route.mbt.qnt` | sheet/session projection, encounter composition, runtime entry, and settlement route |
 | Settlement/rest owners | character-battle settlement and character-sheet rest drivers | source-exact deltas and rest-triggered recovery owners, not duplicated target state |
 
+## Closeout Queue
+
+`CRP-09` created the executable launch plan
+`plans/RALPH_CLEANROOM_REDUCER_IMPLEMENTATION_QUEUE.md` and synchronized
+`plans/cleanroom-branch-coverage/reducer-convergence-backlog.json` so every
+denominator row has a queue task id or existing child task ids.
+
+Final accounting:
+
+- Backlog denominator rows: 101.
+- Ralph implementation queue tasks: 103.
+- Runnable implementation tasks: 48.
+- Blocked tasks: 55.
+- Route classes: 75 `reducer-routed`, 15 `catalog-after-substrate`, 10
+  `component-first`, and 1 `replay-refresh-only`.
+
+The final queue has more tasks than the provisional nine-task bootstrap because
+the nine bootstrap tasks were a planning program, not the implementation
+denominator. The 101 reducer-convergence rows expand to 103 launch tasks
+because the character-creation full vertical row intentionally splits into
+three fill-batch tasks, while existing diagnostic, session-entry, and
+settlement/rest child task records retain their source-owned task ids. Pending
+`owner-todo` rows are now explicit blocked `owner-decision` tasks rather than
+prose-only backlog.
+
 ## DAG
 
 | Task | Status | Depends On | Output |
@@ -152,12 +177,12 @@ The expanded queue must account for these families:
 | `CRP-01` | `done` | none | populated backlog denominator rows |
 | `CRP-02` | `done` | none | replay evidence provenance contract |
 | `CRP-03` | `done` | `CRP-02` | witness/domain vocabulary split |
-| `CRP-04` | `ready-for-research` | `CRP-01` | creation fill-batch implementation task rows |
-| `CRP-05` | `ready-for-research` | `CRP-01`, `CRP-02` | session battle entry implementation task rows |
-| `CRP-06` | `ready-for-research` | `CRP-01` | settlement/rest owner implementation task rows |
+| `CRP-04` | `done` | `CRP-01` | creation fill-batch implementation task rows |
+| `CRP-05` | `done` | `CRP-01`, `CRP-02` | session battle entry implementation task rows |
+| `CRP-06` | `done` | `CRP-01` | settlement/rest owner implementation task rows |
 | `CRP-07` | `done` | `CRP-02`, `CRP-03` | active diagnostic seed implementation tasks |
 | `CRP-08` | `done` | `CRP-01`-`CRP-07` | locked task template/checker contract |
-| `CRP-09` | `ready-for-research` | `CRP-08` | executable implementation queue |
+| `CRP-09` | `done` | `CRP-08` | `plans/RALPH_CLEANROOM_REDUCER_IMPLEMENTATION_QUEUE.md` |
 
 ## Required Task Template
 
@@ -611,7 +636,7 @@ locked template.
 
 ### Task 9 - CRP-09-CLOSEOUT-EXPANDED-QUEUE
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
@@ -659,5 +684,6 @@ Verification:
 
 Plan Impact:
 
-`applied` when the executable queue is present, synchronized, and ready for a
+`applied`: `plans/RALPH_CLEANROOM_REDUCER_IMPLEMENTATION_QUEUE.md` is present,
+the backlog task ids/statuses are synchronized, and the queue is ready for a
 separate Ralph run.

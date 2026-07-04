@@ -343,6 +343,8 @@ const sessionBattleEntryRequiredVerificationItems = [
   "Run git diff --check.",
   "Run reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review passes; fix every reasonable finding or document concrete rejection reason, and repeat until no reasonable findings remain.",
 ];
+const characterCreationFillBatchRequiredVerificationItems =
+  sessionBattleEntryRequiredVerificationItems;
 const settlementRestOwnerRequiredVerificationItems =
   sessionBattleEntryRequiredVerificationItems;
 const reducerConvergenceCitationPaths = [
@@ -2800,6 +2802,43 @@ function validateCharacterCreationFillBatchTasks(
     validateStringArray(task.verification, `${taskContext}: verification`, issues, {
       minItems: 1,
     });
+    if (Array.isArray(task.verification)) {
+      for (const requiredItem of characterCreationFillBatchRequiredVerificationItems) {
+        if (!task.verification.includes(requiredItem)) {
+          issues.push(
+            `${taskContext}: verification must include "${requiredItem}".`,
+          );
+        }
+      }
+    }
+  }
+  if (row.targetTaskIds !== undefined) {
+    if (!Array.isArray(row.targetTaskIds)) {
+      issues.push(`${rowContext}: targetTaskIds must be an array when present.`);
+    } else {
+      const childTaskIds = row.characterCreationFillBatchTasks
+        .map((task) => task.taskId)
+        .filter(nonEmptyString);
+      if (row.targetTaskIds.length !== childTaskIds.length) {
+        issues.push(
+          `${rowContext}: targetTaskIds must match characterCreationFillBatchTasks task ids.`,
+        );
+      }
+      for (const taskId of row.targetTaskIds) {
+        if (!childTaskIds.includes(taskId)) {
+          issues.push(
+            `${rowContext}: targetTaskIds contains ${taskId}, which is not a characterCreationFillBatchTasks taskId.`,
+          );
+        }
+      }
+      for (const taskId of childTaskIds) {
+        if (!row.targetTaskIds.includes(taskId)) {
+          issues.push(
+            `${rowContext}: targetTaskIds must include characterCreationFillBatchTasks taskId ${taskId}.`,
+          );
+        }
+      }
+    }
   }
 }
 

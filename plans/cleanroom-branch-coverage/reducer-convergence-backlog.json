@@ -63,7 +63,7 @@
       "durableOwner": "BattleState owns Search action resources, target admission progress, hidden-target reveal state, roll-modifier active effects, and Concentration; hidden candidate discovery, vicinity, target admission facts, and roll totals remain table/caller boundary fills.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR21-BATTLE-ABILITY-SEARCH-CHOICE-ROUTES",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-001",
       "status": "ready",
       "blockerId": null
     },
@@ -78,9 +78,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-001",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-001"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
@@ -93,9 +93,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-002",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-002"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt",
@@ -112,9 +112,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-003",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-003"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-chained-attack-sequence.mbt.qnt",
@@ -127,7 +127,7 @@
       "durableOwner": "BattleState owns the chained spell-attack procedure fill frontier through the typed spell procedure subject: damage-type choice, per-step target history, Attack Roll resolution, Hit Point damage, and leap continuation. Table-supplied spell-target and leap-range facts stay boundary fills.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR16-CHAINED-ATTACK-PROCEDURE-ROUTES",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-002",
       "status": "ready",
       "blockerId": null
     },
@@ -142,9 +142,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-004",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-004"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-command-ordering.mbt.qnt",
@@ -157,7 +157,7 @@
       "durableOwner": "BattleState owns Command pending active effects, Prone condition application, Movement spent on Approach/Flee, and interrupt-stack opening for Flee Opportunity Attack windows; held-object inventory and route geometry stay boundary fills.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-003",
       "status": "ready",
       "blockerId": null
     },
@@ -252,9 +252,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-005",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-005"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt",
@@ -267,9 +267,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-006",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-006"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-danger-sense-selected-identity.mbt.qnt",
@@ -282,9 +282,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR07-FU03-CONDITION-AND-ROLL-MODIFIER-FEATURE-SUBSTRATES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-007",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-007"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt",
@@ -371,9 +371,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR07-FU07-DRAGONBORN-BREATH-WEAPON-SUBSTRATE",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-008",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-008"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt",
@@ -386,9 +386,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR07-FU05-FEATURE-MOVEMENT-AND-FORM-SUBSTRATES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-009",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-009"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt",
@@ -401,7 +401,7 @@
       "durableOwner": "BattleState owns independent spell-attack sequence progress through the typed spell procedure subject: per-beam target admission, Attack Roll resolution, Hit Point damage, and sequence continuation. Object target identity, Armor Class, range, and Hit Point facts remain table-supplied boundary fills at the object-target boundary.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR22-BATTLE-INDEPENDENT-SPELL-ATTACK-SEQUENCE-ROUTES",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-004",
       "status": "ready",
       "blockerId": null
     },
@@ -416,9 +416,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR07-FU09-INNATE-SPELL-BENEFIT-FEATURE-SUBSTRATE",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-010",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-010"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.mbt.qnt",
@@ -431,9 +431,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR20-BATTLE-COMPANION-OBJECT-BOUNDARY-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-011",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-011"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt",
@@ -446,9 +446,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-012",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-012"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt",
@@ -461,9 +461,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR07-FU02-SPECIES-PASSIVE-TRAIT-SUBSTRATES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-013",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-013"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt",
@@ -476,9 +476,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR07-FU04-ZERO-HP-STABILIZATION-SUBSTRATE",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-014",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-014"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt",
@@ -563,7 +563,7 @@
       "durableOwner": "BattleState owns interrupt-stack push/resume frames, reaction availability, spell-slot/action-economy spend, active effects, Hit Points, and continuation holes; table choices stay boundary fills.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR19-BATTLE-REACTION-INTERRUPT-ROUTES",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-005",
       "status": "ready",
       "blockerId": null
     },
@@ -583,9 +583,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-015",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-015"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
@@ -603,9 +603,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-016",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-016"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt",
@@ -624,9 +624,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-017",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-017"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt",
@@ -642,9 +642,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-018",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-018"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt",
@@ -659,9 +659,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-019",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-019"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-mage-armor-selected-identity.mbt.qnt",
@@ -674,9 +674,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-020",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-020"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt",
@@ -761,9 +761,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR07-FU05-FEATURE-MOVEMENT-AND-FORM-SUBSTRATES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-021",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-021"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt",
@@ -776,7 +776,7 @@
       "durableOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-006",
       "status": "ready",
       "blockerId": null
     },
@@ -791,7 +791,7 @@
       "durableOwner": "BattleState owns reaction availability, reaction spell-slot spend, triggering spell slot spend or non-spend, interrupt-stack clear/resume, and Hit Point effects; table-trigger facts and chosen reaction decisions stay boundary fills.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR19-BATTLE-REACTION-INTERRUPT-ROUTES",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-007",
       "status": "ready",
       "blockerId": null
     },
@@ -806,9 +806,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "FCSF-05-REACTION-INTERRUPT-PAYLOAD-TAXONOMY",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-022",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-022"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt",
@@ -819,7 +819,7 @@
       "durableOwner": "source-blocker: baseline composition witness is not a queued cleanroom implementation driver.",
       "ownerClassification": "source-blocker",
       "sourceTaskId": "completed-baseline-reducer-spine-witness",
-      "targetTaskId": "not-queued-replay-refresh-only",
+      "targetTaskId": "CRPI-BLOCK-023",
       "status": "blocked",
       "blockerId": "replay-refresh-only-baseline-witness"
     },
@@ -834,7 +834,7 @@
       "durableOwner": "BattleState owns roll-modifier active Spell Effects and Concentration teardown; table-supplied choice frontiers remain explicit fills, while the Thaumaturgy one-minute-effect count stays boundary evidence instead of a duplicate ledger.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-008",
       "status": "ready",
       "blockerId": null
     },
@@ -851,9 +851,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR07-FU03-CONDITION-AND-ROLL-MODIFIER-FEATURE-SUBSTRATES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-024",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-024"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt",
@@ -866,9 +866,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-025",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-025"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt",
@@ -1024,7 +1024,7 @@
       "durableOwner": "BattleState owns the target Speed projection and active Spell Effect instance; the route connector does not introduce a duplicate speed/effect ledger.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-009",
       "status": "ready",
       "blockerId": null
     },
@@ -1039,7 +1039,7 @@
       "durableOwner": "BattleState owns Sleep active-effect state, Concentration, condition lifecycle, and turn-boundary repeat-save frontier; no duplicate repeat-save or condition ledger is introduced.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-010",
       "status": "ready",
       "blockerId": null
     },
@@ -1054,7 +1054,7 @@
       "durableOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-011",
       "status": "ready",
       "blockerId": null
     },
@@ -1069,7 +1069,7 @@
       "durableOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-012",
       "status": "ready",
       "blockerId": null
     },
@@ -1084,7 +1084,7 @@
       "durableOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-013",
       "status": "ready",
       "blockerId": null
     },
@@ -1099,7 +1099,7 @@
       "durableOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-014",
       "status": "ready",
       "blockerId": null
     },
@@ -1114,7 +1114,7 @@
       "durableOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-015",
       "status": "ready",
       "blockerId": null
     },
@@ -1129,7 +1129,7 @@
       "durableOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-016",
       "status": "ready",
       "blockerId": null
     },
@@ -1144,7 +1144,7 @@
       "durableOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-017",
       "status": "ready",
       "blockerId": null
     },
@@ -1159,7 +1159,7 @@
       "durableOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-018",
       "status": "ready",
       "blockerId": null
     },
@@ -1174,7 +1174,7 @@
       "durableOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-019",
       "status": "ready",
       "blockerId": null
     },
@@ -1189,7 +1189,7 @@
       "durableOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-020",
       "status": "ready",
       "blockerId": null
     },
@@ -1204,7 +1204,7 @@
       "durableOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-021",
       "status": "ready",
       "blockerId": null
     },
@@ -1219,7 +1219,7 @@
       "durableOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-022",
       "status": "ready",
       "blockerId": null
     },
@@ -1234,9 +1234,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR07-FU02-SPECIES-PASSIVE-TRAIT-SUBSTRATES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-026",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-026"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt",
@@ -1249,9 +1249,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-027",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-027"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt",
@@ -1264,9 +1264,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR20-BATTLE-COMPANION-OBJECT-BOUNDARY-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-028",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-028"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt",
@@ -1279,9 +1279,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-029",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-029"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt",
@@ -1294,9 +1294,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-030",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-030"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt",
@@ -1309,9 +1309,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-031",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-031"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-thaumaturgy-selected-identity.mbt.qnt",
@@ -1324,9 +1324,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-032",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-032"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt",
@@ -1339,7 +1339,7 @@
       "durableOwner": "BattleState turn-boundary state owns initiative/round advancement while HP and active effects remain with their own owners; same-timing order stays at the table/boundary frontier.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-023",
       "status": "ready",
       "blockerId": null
     },
@@ -1354,9 +1354,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-033",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-033"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt",
@@ -1369,9 +1369,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-034",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-034"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
@@ -1390,9 +1390,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR17-WEAPON-HOSTED-RIDER-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-035",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-035"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt",
@@ -1405,7 +1405,7 @@
       "durableOwner": "BattleState owns the selected weapon attack, target Hit Points, Topple condition lifecycle, Sap active-effect rider, and Cleave once-per-turn rider use; selected mastery identity remains an admitted source reference, not the behavior dispatch key.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU06-WEAPON-MASTERY-PROPERTY-SUBSTRATES",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-024",
       "status": "ready",
       "blockerId": null
     },
@@ -1420,7 +1420,7 @@
       "durableOwner": "BattleState owns spell-attack procedure progress, HP/zero-HP lifecycle, conditions, Concentration, and active-effect teardown; no local Shield or HP replay ledger is introduced.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-025",
       "status": "ready",
       "blockerId": null
     },
@@ -1435,9 +1435,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-036",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-036"
     },
     {
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
@@ -1450,7 +1450,7 @@
       "durableOwner": "RuleCoreAbilitySkillCommandOwner",
       "ownerClassification": "component-owner",
       "sourceTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-026",
       "status": "ready",
       "blockerId": null
     },
@@ -1465,7 +1465,7 @@
       "durableOwner": "RuleCoreAttackDamageDispositionOwner",
       "ownerClassification": "component-owner",
       "sourceTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-027",
       "status": "ready",
       "blockerId": null
     },
@@ -1480,7 +1480,7 @@
       "durableOwner": "RuleCoreFeatureProfileSemanticsOwner",
       "ownerClassification": "component-owner",
       "sourceTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-028",
       "status": "ready",
       "blockerId": null
     },
@@ -1495,7 +1495,7 @@
       "durableOwner": "RuleCoreHitPointDamageOwner",
       "ownerClassification": "component-owner",
       "sourceTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-029",
       "status": "ready",
       "blockerId": null
     },
@@ -1510,7 +1510,7 @@
       "durableOwner": "RuleCoreMovementGrappleOwner",
       "ownerClassification": "component-owner",
       "sourceTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-030",
       "status": "ready",
       "blockerId": null
     },
@@ -1525,7 +1525,7 @@
       "durableOwner": "RuleCoreReactionContinuationConcentrationOwner",
       "ownerClassification": "component-owner",
       "sourceTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-031",
       "status": "ready",
       "blockerId": null
     },
@@ -1540,7 +1540,7 @@
       "durableOwner": "RuleCoreShoveOutcomeOwner",
       "ownerClassification": "component-owner",
       "sourceTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-032",
       "status": "ready",
       "blockerId": null
     },
@@ -1555,7 +1555,7 @@
       "durableOwner": "RuleCoreSpellProcedureProfileOwner",
       "ownerClassification": "component-owner",
       "sourceTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-033",
       "status": "ready",
       "blockerId": null
     },
@@ -1570,7 +1570,7 @@
       "durableOwner": "RuleCoreSpellProcedureProfileOwner; RuleCoreHitPointDamageOwner",
       "ownerClassification": "component-owner",
       "sourceTaskId": "FCSF-03G-EXACT-DAMAGE-PROJECTION-FACTS",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-BLOCK-037",
       "status": "blocked",
       "blockerId": "source-qnt-corpus-blocker"
     },
@@ -1585,7 +1585,7 @@
       "durableOwner": "RuleCoreStatBlockControlOwner",
       "ownerClassification": "component-owner",
       "sourceTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
-      "targetTaskId": "target-task-todo",
+      "targetTaskId": "CRPI-READY-034",
       "status": "ready",
       "blockerId": null
     },
@@ -1682,9 +1682,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-038",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-038"
     },
     {
       "driverPath": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt",
@@ -1865,9 +1865,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-039",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-039"
     },
     {
       "driverPath": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
@@ -1880,9 +1880,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-040",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-040"
     },
     {
       "driverPath": "packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt",
@@ -1895,9 +1895,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-041",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-041"
     },
     {
       "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
@@ -1910,9 +1910,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-042",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-042"
     },
     {
       "driverPath": "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt",
@@ -1925,9 +1925,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-043",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-043"
     },
     {
       "driverPath": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
@@ -1940,9 +1940,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-044",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-044"
     },
     {
       "driverPath": "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.mbt.qnt",
@@ -1955,9 +1955,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-045",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-045"
     },
     {
       "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
@@ -1970,7 +1970,7 @@
       "durableOwner": "Character Draft owns draft revision and accepted creation selections; Creation Hole Frontier is derived from the draft plus support-profile admission; Character Build owns finalized build facts. A target must not store open holes, finalization status, or issue lists as duplicate durable state beside their source facts.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
-      "targetTaskId": "CRP04-CCF-01..03",
+      "targetTaskId": "CRP04-CCF-01",
       "status": "ready",
       "blockerId": null,
       "characterCreationFillBatchTasks": [
@@ -2028,7 +2028,10 @@
           "verification": [
             "Run target replay for packages/character-creation-runtime/character-creation-runtime.mbt.qnt and require semantic qState comparator character-creation-runtime-state.",
             "Run target replay for packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt and require qRoute comparator route-event-list from public reducer entrypoints.",
-            "Run RAW and domain-language review against .references/srd-5.2.1/Character-Creation.md, Character-Origins.md, Classes/Fighter.md, Equipment.md, UBIQUITOUS_LANGUAGE.md, and packages/character-creation-runtime/VOCABULARY.md."
+            "Run RAW and domain-language review against .references/srd-5.2.1/Character-Creation.md, Character-Origins.md, Classes/Fighter.md, Equipment.md, UBIQUITOUS_LANGUAGE.md, and packages/character-creation-runtime/VOCABULARY.md.",
+            "Run pnpm cleanroom-branch-coverage:check.",
+            "Run git diff --check.",
+            "Run reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review passes; fix every reasonable finding or document concrete rejection reason, and repeat until no reasonable findings remain."
           ]
         },
         {
@@ -2082,7 +2085,10 @@
           "verification": [
             "Run target replay for packages/character-creation-runtime/character-creation-runtime.mbt.qnt and require semantic qState comparator character-creation-runtime-state.",
             "Run target replay for packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt and require qRoute comparator route-event-list from public reducer entrypoints.",
-            "Run reviewer-loop convergence for RAW traceability, domain language, architecture/connascence, and code-review checks."
+            "Run RAW and domain-language review against .references/srd-5.2.1/Character-Creation.md, Character-Origins.md, Classes/Fighter.md, Equipment.md, UBIQUITOUS_LANGUAGE.md, and packages/character-creation-runtime/VOCABULARY.md.",
+            "Run pnpm cleanroom-branch-coverage:check.",
+            "Run git diff --check.",
+            "Run reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review passes; fix every reasonable finding or document concrete rejection reason, and repeat until no reasonable findings remain."
           ]
         },
         {
@@ -2139,9 +2145,17 @@
           "verification": [
             "Run target replay for packages/character-creation-runtime/character-creation-runtime.mbt.qnt and require semantic qState comparator character-creation-runtime-state.",
             "Run target replay for packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt and require qRoute comparator route-event-list from public reducer entrypoints.",
-            "Run RAW and domain-language review against .references/srd-5.2.1/Character-Creation.md, Character-Origins.md, Classes/Fighter.md, Equipment.md, UBIQUITOUS_LANGUAGE.md, and packages/character-creation-runtime/VOCABULARY.md."
+            "Run RAW and domain-language review against .references/srd-5.2.1/Character-Creation.md, Character-Origins.md, Classes/Fighter.md, Equipment.md, UBIQUITOUS_LANGUAGE.md, and packages/character-creation-runtime/VOCABULARY.md.",
+            "Run pnpm cleanroom-branch-coverage:check.",
+            "Run git diff --check.",
+            "Run reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review passes; fix every reasonable finding or document concrete rejection reason, and repeat until no reasonable findings remain."
           ]
         }
+      ],
+      "targetTaskIds": [
+        "CRP04-CCF-01",
+        "CRP04-CCF-02",
+        "CRP04-CCF-03"
       ]
     },
     {
@@ -2155,9 +2169,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-046",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-046"
     },
     {
       "driverPath": "packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt",
@@ -2170,9 +2184,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-047",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-047"
     },
     {
       "driverPath": "packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt",
@@ -2185,9 +2199,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-048",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-048"
     },
     {
       "driverPath": "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt",
@@ -2200,9 +2214,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-049",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-049"
     },
     {
       "driverPath": "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt",
@@ -2215,9 +2229,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-050",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-050"
     },
     {
       "driverPath": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt",
@@ -2230,9 +2244,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-051",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-051"
     },
     {
       "driverPath": "packages/character-sheet-runtime/character-sheet-healing-resource-selected-identity.mbt.qnt",
@@ -2245,9 +2259,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-052",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-052"
     },
     {
       "driverPath": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt",
@@ -2260,9 +2274,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-053",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-053"
     },
     {
       "driverPath": "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt",
@@ -2445,9 +2459,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-054",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-054"
     },
     {
       "driverPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt",
@@ -2460,9 +2474,9 @@
       "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
       "ownerClassification": "owner-todo",
       "sourceTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
-      "targetTaskId": "target-task-todo",
-      "status": "pending",
-      "blockerId": null
+      "targetTaskId": "CRPI-BLOCK-055",
+      "status": "blocked",
+      "blockerId": "owner-decision-required-055"
     }
   ]
 }
