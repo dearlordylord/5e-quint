@@ -825,42 +825,45 @@ export type BattlePaladinSacredWeaponSupportProfile = {
   readonly kind: typeof PALADIN_SACRED_WEAPON_SUPPORT_PROFILE;
   readonly sacredWeapon: PaladinSacredWeaponProfile;
 };
-export type HuntersPreyProfile = {
-  readonly choice: {
-    readonly kind: "chooseOne";
-    readonly replaceOn: "shortOrLongRest";
+export type HuntersPreyWoundedTargetWeaponDamageProfile = {
+  readonly kind: "woundedTargetWeaponDamage";
+  readonly trigger: "hitCreatureWithWeapon";
+  readonly targetPredicate: "missingAnyHitPoints";
+  readonly usageLimit: "oncePerTurn";
+  readonly damage: {
+    readonly kind: "addAttackDamageDice";
+    readonly dice: { readonly dice: 1; readonly dieSize: 8 };
+    readonly damageType: "sameAsAttack";
   };
-  readonly options: readonly [
-    {
-      readonly id: "colossusSlayer";
-      readonly trigger: "hitCreatureWithWeapon";
-      readonly targetPredicate: "missingAnyHitPoints";
-      readonly usageLimit: "oncePerTurn";
-      readonly damage: {
-        readonly kind: "addAttackDamageDice";
-        readonly dice: { readonly dice: 1; readonly dieSize: 8 };
-        readonly damageType: "sameAsAttack";
-      };
-    },
-    {
-      readonly id: "hordeBreaker";
-      readonly trigger: "makeWeaponAttack";
-      readonly usageLimit: "oncePerTurn";
-      readonly extraAttack: {
-        readonly weapon: "sameWeapon";
-        readonly target: {
-          readonly kind: "differentCreatureNearOriginalTarget";
-          readonly withinFeetOfOriginalTarget: MovementFeet;
-          readonly withinWeaponRange: true;
-          readonly notAttackedThisTurn: true;
-        };
-      };
-    },
-  ];
 };
+export type HuntersPreyNearbyDifferentTargetSameWeaponAttackProfile = {
+  readonly kind: "nearbyDifferentTargetSameWeaponAttack";
+  readonly trigger: "makeWeaponAttack";
+  readonly usageLimit: "oncePerTurn";
+  readonly extraAttack: {
+    readonly weapon: "sameWeapon";
+    readonly target: {
+      readonly kind: "differentCreatureNearOriginalTarget";
+      readonly withinFeetOfOriginalTarget: MovementFeet;
+      readonly withinWeaponRange: true;
+      readonly notAttackedThisTurn: true;
+    };
+  };
+};
+export type HuntersPreyProfile =
+  | HuntersPreyWoundedTargetWeaponDamageProfile
+  | HuntersPreyNearbyDifferentTargetSameWeaponAttackProfile;
 export type BattleHuntersPreySupportProfile = {
   readonly kind: typeof HUNTERS_PREY_SUPPORT_PROFILE;
   readonly huntersPrey: HuntersPreyProfile;
+};
+export type BattleUnitSupportProfileSelectedOption = {
+  readonly kind: "huntersPrey";
+  readonly optionId: "colossusSlayer" | "hordeBreaker";
+};
+type HuntersPreyAdmittedMechanicsProfile = {
+  readonly woundedTargetWeaponDamage: HuntersPreyWoundedTargetWeaponDamageProfile;
+  readonly nearbyDifferentTargetSameWeaponAttack: HuntersPreyNearbyDifferentTargetSameWeaponAttackProfile;
 };
 export type RogueSteadyAimProfile = {
   readonly activationCost: { readonly kind: "bonusAction" };
@@ -1499,14 +1502,12 @@ export function battleUnitSupportProfilesForUnit(input: {
     supportProfiles.push(paladinSacredWeaponSupport);
   }
 
-  const huntersPreySupport = battleHuntersPreySupportForUnit(input.unit);
-  if (huntersPreySupport === "unsupported") {
+  const huntersPreySupportValidation =
+    battleHuntersPreySupportValidationForUnit(input.unit);
+  if (huntersPreySupportValidation === "unsupported") {
     return battleUnitSupportProfileIssue(
       `Unsupported battle Hunter's Prey Unit hook: ${input.unit.id}.`,
     );
-  }
-  if (huntersPreySupport !== null) {
-    supportProfiles.push(huntersPreySupport);
   }
 
   const rogueSteadyAimSupport = battleRogueSteadyAimSupportForUnit(input.unit);
@@ -1617,7 +1618,10 @@ export function battleUnitSupportProfilesForUnit(input: {
 }
 
 export function battleUnitRefWithSupportProfiles(input: {
-  readonly unitRef: Pick<BattleUnitRef, "unitId" | "selectedOption">;
+  readonly unitRef: {
+    readonly unitId: UnitRecord["id"];
+    readonly selectedOption?: BattleUnitSupportProfileSelectedOption;
+  };
   readonly unit: BattleUnitSupportSource;
   readonly classLevels?: readonly CharacterBattleClassLevelInit[];
   readonly sourceFacts?: BattleUnitSupportProfileSourceFacts;
@@ -1637,13 +1641,28 @@ export function battleUnitRefWithSupportProfiles(input: {
       : { sourceFacts: input.sourceFacts }),
   });
   if (Either.isLeft(supportProfiles)) return Either.left(supportProfiles.left);
+
+  const huntersPreySupport = battleHuntersPreySupportForUnit(
+    input.unit,
+    input.unitRef.selectedOption,
+  );
+  if (huntersPreySupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Hunter's Prey Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (
+    !isClassicNonSrdMechanicsUnit(input.unit) &&
+    hasClassFeatureMechanicsFamily(input.unit, "hunters_prey") &&
+    huntersPreySupport === null
+  ) {
+    return battleUnitSupportProfileIssue(
+      `Battle Unit ref ${input.unitRef.unitId} requires a retained Hunter's Prey selection before battle initialization.`,
+    );
+  }
   if (
     input.unitRef.selectedOption?.kind === "huntersPrey" &&
-    !supportProfiles.right.some(
-      (profile) =>
-        typeof profile === "object" &&
-        profile.kind === HUNTERS_PREY_SUPPORT_PROFILE,
-    )
+    huntersPreySupport === null
   ) {
     return battleUnitSupportProfileIssue(
       `Battle Unit ref ${input.unitRef.unitId} selected Hunter's Prey option requires Hunter's Prey support.`,
@@ -1651,10 +1670,10 @@ export function battleUnitRefWithSupportProfiles(input: {
   }
   return Either.right({
     unitId: input.unitRef.unitId,
-    supportProfiles: supportProfiles.right,
-    ...(input.unitRef.selectedOption === undefined
-      ? {}
-      : { selectedOption: input.unitRef.selectedOption }),
+    supportProfiles:
+      huntersPreySupport === null
+        ? supportProfiles.right
+        : [...supportProfiles.right, huntersPreySupport],
   });
 }
 
@@ -2238,11 +2257,6 @@ export type SupportedUnitFeatureProfile =
       readonly kind: "paladinSacredWeapon";
       readonly unit: UnitRecord;
       readonly sacredWeapon: PaladinSacredWeaponProfile;
-    }
-  | {
-      readonly kind: "huntersPrey";
-      readonly unit: UnitRecord;
-      readonly huntersPrey: HuntersPreyProfile;
     }
   | {
       readonly kind: "rogueSteadyAim";
@@ -3432,18 +3446,56 @@ export function battlePaladinSacredWeaponSupportForUnit(
 }
 
 export function battleHuntersPreySupportForUnit(
-  unit: UnitRecord,
+  unit: BattleUnitSupportSource,
+  selectedOption?: BattleUnitSupportProfileSelectedOption,
 ): BattleHuntersPreySupport {
-  if (!hasClassFeatureMechanicsFamily(unit, "hunters_prey")) {
+  if (
+    isClassicNonSrdMechanicsUnit(unit) ||
+    !hasClassFeatureMechanicsFamily(unit, "hunters_prey")
+  ) {
     return null;
   }
-  const profile = huntersPreyProfileForUnit(unit);
-  return profile === null
+  const admitted = huntersPreyAdmittedMechanicsProfileForUnit(unit);
+  if (admitted === null) {
+    return "unsupported";
+  }
+  return selectedOption === undefined
+    ? null
+    : selectedHuntersPreySupportProfile(admitted, selectedOption);
+}
+
+function selectedHuntersPreySupportProfile(
+  admitted: HuntersPreyAdmittedMechanicsProfile,
+  selectedOption: BattleUnitSupportProfileSelectedOption,
+): BattleHuntersPreySupportProfile {
+  return {
+    kind: HUNTERS_PREY_SUPPORT_PROFILE,
+    huntersPrey: Match.value(selectedOption.optionId).pipe(
+      Match.when(
+        "colossusSlayer",
+        () => admitted.woundedTargetWeaponDamage,
+      ),
+      Match.when(
+        "hordeBreaker",
+        () => admitted.nearbyDifferentTargetSameWeaponAttack,
+      ),
+      Match.exhaustive,
+    ),
+  };
+}
+
+function battleHuntersPreySupportValidationForUnit(
+  unit: BattleUnitSupportSource,
+): "unsupported" | null {
+  if (
+    isClassicNonSrdMechanicsUnit(unit) ||
+    !hasClassFeatureMechanicsFamily(unit, "hunters_prey")
+  ) {
+    return null;
+  }
+  return huntersPreyAdmittedMechanicsProfileForUnit(unit) === null
     ? "unsupported"
-    : {
-        kind: HUNTERS_PREY_SUPPORT_PROFILE,
-        huntersPrey: profile.huntersPrey,
-      };
+    : null;
 }
 
 export function battleRogueSteadyAimSupportForUnit(
@@ -5349,7 +5401,6 @@ export function parseSupportedUnitFeatureProfile(
     stunningStrikeProfileForUnit(unit) ??
     cunningStrikeProfileForUnit(unit, classLevels) ??
     paladinSacredWeaponProfileForUnit(unit) ??
-    huntersPreyProfileForUnit(unit) ??
     rogueSteadyAimProfileForUnit(unit) ??
     potentCantripProfileForUnit(unit) ??
     grapplerProfileForUnit(unit)
@@ -5810,13 +5861,11 @@ function paladinSacredWeaponProfileForUnit(
   };
 }
 
-function huntersPreyProfileForUnit(
-  unit: UnitRecord,
-): Extract<
-  SupportedUnitFeatureProfile,
-  { readonly kind: "huntersPrey" }
-> | null {
+function huntersPreyAdmittedMechanicsProfileForUnit(
+  unit: BattleUnitSupportSource,
+): HuntersPreyAdmittedMechanicsProfile | null {
   if (
+    isClassicNonSrdMechanicsUnit(unit) ||
     unit.kind !== "class_feature" ||
     unit.className !== "ranger" ||
     unit.mechanics.family !== "hunters_prey"
@@ -5850,37 +5899,30 @@ function huntersPreyProfileForUnit(
     return null;
   }
   return {
-    kind: "huntersPrey",
-    unit,
-    huntersPrey: {
-      choice: { kind: "chooseOne", replaceOn: "shortOrLongRest" },
-      options: [
-        {
-          id: "colossusSlayer",
-          trigger: "hitCreatureWithWeapon",
-          targetPredicate: "missingAnyHitPoints",
-          usageLimit: "oncePerTurn",
-          damage: {
-            kind: "addAttackDamageDice",
-            dice: { dice: 1, dieSize: 8 },
-            damageType: "sameAsAttack",
-          },
+    woundedTargetWeaponDamage: {
+      kind: "woundedTargetWeaponDamage",
+      trigger: "hitCreatureWithWeapon",
+      targetPredicate: "missingAnyHitPoints",
+      usageLimit: "oncePerTurn",
+      damage: {
+        kind: "addAttackDamageDice",
+        dice: { dice: 1, dieSize: 8 },
+        damageType: "sameAsAttack",
+      },
+    },
+    nearbyDifferentTargetSameWeaponAttack: {
+      kind: "nearbyDifferentTargetSameWeaponAttack",
+      trigger: "makeWeaponAttack",
+      usageLimit: "oncePerTurn",
+      extraAttack: {
+        weapon: "sameWeapon",
+        target: {
+          kind: "differentCreatureNearOriginalTarget",
+          withinFeetOfOriginalTarget: movementFeet(5),
+          withinWeaponRange: true,
+          notAttackedThisTurn: true,
         },
-        {
-          id: "hordeBreaker",
-          trigger: "makeWeaponAttack",
-          usageLimit: "oncePerTurn",
-          extraAttack: {
-            weapon: "sameWeapon",
-            target: {
-              kind: "differentCreatureNearOriginalTarget",
-              withinFeetOfOriginalTarget: movementFeet(5),
-              withinWeaponRange: true,
-              notAttackedThisTurn: true,
-            },
-          },
-        },
-      ],
+      },
     },
   };
 }

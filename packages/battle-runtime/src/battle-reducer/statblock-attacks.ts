@@ -22,6 +22,7 @@ import {
   HUNTERS_PREY_SUPPORT_PROFILE,
   PASSIVE_RANGED_ATTACK_ROLL_BONUS_SUPPORT_PROFILE,
   WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
+  type BattleHuntersPreySupportProfile,
   type SupportedUnitFeatureProfile,
 } from "../unit-feature-support.ts";
 import type {
@@ -508,8 +509,6 @@ function huntersPreyColossusSlayerRiders(input: {
   }
   return input.attacker.origin.characterUnitRefs.flatMap((unitRef) => {
     if (
-      unitRef.selectedOption?.kind !== "huntersPrey" ||
-      unitRef.selectedOption.optionId !== "colossusSlayer" ||
       input.state.currentTurnResources.attackDamageRidersUsedThisTurn.some(
         (usage) =>
           usage.attackerId === input.attackerId &&
@@ -519,17 +518,18 @@ function huntersPreyColossusSlayerRiders(input: {
       return [];
     }
     const supportProfile = unitRef.supportProfiles.find(
-      (profile) =>
+      (profile): profile is BattleHuntersPreySupportProfile =>
         typeof profile === "object" &&
         profile.kind === HUNTERS_PREY_SUPPORT_PROFILE,
     );
-    if (supportProfile === undefined || typeof supportProfile === "string") {
+    if (supportProfile === undefined) {
       return [];
     }
-    const colossusSlayer = supportProfile.huntersPrey.options.find(
-      (option) => option.id === "colossusSlayer",
-    );
-    if (colossusSlayer?.damage.kind !== "addAttackDamageDice") {
+    const huntersPrey = supportProfile.huntersPrey;
+    if (
+      huntersPrey.kind !== "woundedTargetWeaponDamage" ||
+      huntersPrey.damage.kind !== "addAttackDamageDice"
+    ) {
       return [];
     }
     return [
@@ -539,8 +539,8 @@ function huntersPreyColossusSlayerRiders(input: {
         label: "Colossus Slayer",
         optional: true,
         damage: {
-          dice: colossusSlayer.damage.dice.dice,
-          dieSize: colossusSlayer.damage.dice.dieSize,
+          dice: huntersPrey.damage.dice.dice,
+          dieSize: huntersPrey.damage.dice.dieSize,
           damageType: selectedWeaponDamage(attack.weapon).damageType,
         },
       },

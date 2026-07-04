@@ -251,37 +251,36 @@ const sacredWeaponSupport = {
   },
 } as const;
 
-const huntersPreySupport = {
+const huntersPreyWoundedTargetWeaponDamageSupport = {
   kind: HUNTERS_PREY_SUPPORT_PROFILE,
   huntersPrey: {
-    choice: { kind: "chooseOne", replaceOn: "shortOrLongRest" },
-    options: [
-      {
-        id: "colossusSlayer",
-        trigger: "hitCreatureWithWeapon",
-        targetPredicate: "missingAnyHitPoints",
-        usageLimit: "oncePerTurn",
-        damage: {
-          kind: "addAttackDamageDice",
-          dice: { dice: 1, dieSize: 8 },
-          damageType: "sameAsAttack",
-        },
+    kind: "woundedTargetWeaponDamage",
+    trigger: "hitCreatureWithWeapon",
+    targetPredicate: "missingAnyHitPoints",
+    usageLimit: "oncePerTurn",
+    damage: {
+      kind: "addAttackDamageDice",
+      dice: { dice: 1, dieSize: 8 },
+      damageType: "sameAsAttack",
+    },
+  },
+} as const;
+
+const huntersPreyNearbyDifferentTargetSameWeaponAttackSupport = {
+  kind: HUNTERS_PREY_SUPPORT_PROFILE,
+  huntersPrey: {
+    kind: "nearbyDifferentTargetSameWeaponAttack",
+    trigger: "makeWeaponAttack",
+    usageLimit: "oncePerTurn",
+    extraAttack: {
+      weapon: "sameWeapon",
+      target: {
+        kind: "differentCreatureNearOriginalTarget",
+        withinFeetOfOriginalTarget: movementFeet(5),
+        withinWeaponRange: true,
+        notAttackedThisTurn: true,
       },
-      {
-        id: "hordeBreaker",
-        trigger: "makeWeaponAttack",
-        usageLimit: "oncePerTurn",
-        extraAttack: {
-          weapon: "sameWeapon",
-          target: {
-            kind: "differentCreatureNearOriginalTarget",
-            withinFeetOfOriginalTarget: movementFeet(5),
-            withinWeaponRange: true,
-            notAttackedThisTurn: true,
-          },
-        },
-      },
-    ],
+    },
   },
 } as const;
 
@@ -329,13 +328,6 @@ const admissionCases = [
     support: sacredWeaponSupport,
     supportForUnit: battlePaladinSacredWeaponSupportForUnit,
     payloadKey: "sacredWeapon",
-  },
-  {
-    unitId: rangerHuntersPreyUnitId,
-    className: "ranger",
-    support: huntersPreySupport,
-    supportForUnit: battleHuntersPreySupportForUnit,
-    payloadKey: "huntersPrey",
   },
   {
     unitId: rogueSteadyAimUnitId,
@@ -403,6 +395,71 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
         { level: 3, unitId: wizardPotentCantripUnitId },
       ]),
     });
+  });
+
+  test("Hunter's Prey selected options project to semantic battle support", () => {
+    const unit = unitLibrary.requireUnit(rangerHuntersPreyUnitId);
+
+    expect(
+      battleUnitRefWithSupportProfiles({
+        unitRef: {
+          unitId: unit.id,
+          selectedOption: {
+            kind: "huntersPrey",
+            optionId: "colossusSlayer",
+          },
+        },
+        unit,
+      }),
+    ).toEqual(
+      Either.right({
+        unitId: rangerHuntersPreyUnitId,
+        supportProfiles: [huntersPreyWoundedTargetWeaponDamageSupport],
+      }),
+    );
+    expect(
+      battleUnitRefWithSupportProfiles({
+        unitRef: {
+          unitId: unit.id,
+          selectedOption: {
+            kind: "huntersPrey",
+            optionId: "hordeBreaker",
+          },
+        },
+        unit,
+      }),
+    ).toEqual(
+      Either.right({
+        unitId: rangerHuntersPreyUnitId,
+        supportProfiles: [
+          huntersPreyNearbyDifferentTargetSameWeaponAttackSupport,
+        ],
+      }),
+    );
+    expect(
+      battleUnitRefWithSupportProfiles({
+        unitRef: { unitId: unit.id },
+        unit,
+      }),
+    ).toEqual(
+      Either.left({
+        tag: "battleUnitSupportProfileIssue",
+        message:
+          "Battle Unit ref ranger_hunters_prey requires a retained Hunter's Prey selection before battle initialization.",
+      }),
+    );
+    expect(battleHuntersPreySupportForUnit(unit)).toBeNull();
+    expect(
+      battleHuntersPreySupportForUnit(unit, {
+        kind: "huntersPrey",
+        optionId: "hordeBreaker",
+      }),
+    ).toEqual(huntersPreyNearbyDifferentTargetSameWeaponAttackSupport);
+    expect(
+      parseSupportedUnitFeatureProfile(unit, [
+        { className: "ranger", level: classLevel(3) },
+      ]),
+    ).toBeNull();
   });
 
   test.each(admissionCases)(
