@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "QAR-10-ACID-ARROW-TYPED-TIMING",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Replace Acid Arrow string timing with typed QNT"
     },
     {
@@ -182,7 +182,7 @@ mismatch. The Ralph runner or decider owns branch repair.
 | 7 | QAR-07-DAMAGE-PAIR-NONZERO - Encode nonzero damage-allocation preconditions | done | QAR-01-TEST-LANE-ISOLATION | Encodes the nonzero total precondition. |
 | 8 | QAR-08-SHOVE-PROJECTION-UNION - Replace Shove flattened projection with a closed union | done | QAR-01-TEST-LANE-ISOLATION | Replaces impossible Shove projection combinations. |
 | 9 | QAR-09-CUNNING-STRIKE-TYPED-QNT - Replace Cunning Strike string projections with typed QNT | done | QAR-01-TEST-LANE-ISOLATION | Replaces raw Cunning Strike strings. |
-| 10 | QAR-10-ACID-ARROW-TYPED-TIMING - Replace Acid Arrow string timing with typed QNT | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Replaces raw Acid Arrow timing strings. |
+| 10 | QAR-10-ACID-ARROW-TYPED-TIMING - Replace Acid Arrow string timing with typed QNT | done | QAR-01-TEST-LANE-ISOLATION | Replaces raw Acid Arrow timing strings. |
 | 11 | QAR-11-RUN-BLOCK-SEPARATION-GUARD - Separate QNT run blocks from owner modules | blocked | QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-07-DAMAGE-PAIR-NONZERO, QAR-08-SHOVE-PROJECTION-UNION, QAR-09-CUNNING-STRIKE-TYPED-QNT, QAR-10-ACID-ARROW-TYPED-TIMING | Cleans owner modules after semantic edits land. |
 | 12 | QAR-12-INDUCTIVE-WITNESS-SEEDS - Repair priority inductive specs and add reachability witnesses | blocked | QAR-05-SHARED-INVARIANT-PROOF-HARNESS, QAR-06-ACTION-COST-ADMISSION-RESULT, QAR-07-DAMAGE-PAIR-NONZERO, QAR-11-RUN-BLOCK-SEPARATION-GUARD | Admits state-space repair modules and adds reachability witnesses after affected specs settle. |
 | 13 | QAR-13-MBT-CLOSURE-LEAF-WHITELIST-GUARD - Harden MBT closure leaf whitelist checks | ready-for-research | QAR-01-TEST-LANE-ISOLATION | Hardens closure checks before driver conversions. |
@@ -614,7 +614,7 @@ Plan Impact:
 
 ### Task 10 - QAR-10-ACID-ARROW-TYPED-TIMING
 
-Status: `ready-for-research`
+Status: `done`
 
 Blocker Type: dependency
 
