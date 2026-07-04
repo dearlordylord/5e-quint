@@ -127,91 +127,91 @@
     {
       "number": 12,
       "id": "L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Verify level-6 scope and inventory baseline"
     },
     {
       "number": 13,
       "id": "L6FULL-SEED-01-RANGER-ROVING",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Verify existing Ranger Roving level-6 support evidence"
     },
     {
       "number": 14,
       "id": "L6FULL-SEED-02-ROGUE-EXPERTISE",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Verify existing Rogue Expertise level-6 support evidence"
     },
     {
       "number": 15,
       "id": "L6FULL-CLOSE-01-LEVEL6-CLASS-TABLES",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Explicitly close the twelve level-6 class-table summary rows"
     },
     {
       "number": 16,
       "id": "L6FULL-ASI-01-FIGHTER-ASI-L6",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Admit or close Fighter level-6 Ability Score Improvement"
     },
     {
       "number": 17,
       "id": "L6FULL-OWN-01-BARBARIAN-MINDLESS-RAGE",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Resolve level-6 owner evidence for Barbarian Mindless Rage"
     },
     {
       "number": 18,
       "id": "L6FULL-OWN-02-BARD-MAGICAL-DISCOVERIES",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Resolve level-6 owner evidence for Bard Magical Discoveries"
     },
     {
       "number": 19,
       "id": "L6FULL-OWN-03-CLERIC-BLESSED-HEALER",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Resolve level-6 owner evidence for Cleric Blessed Healer"
     },
     {
       "number": 20,
       "id": "L6FULL-OWN-04-DRUID-NATURAL-RECOVERY",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Resolve level-6 owner evidence for Druid Natural Recovery"
     },
     {
       "number": 21,
       "id": "L6FULL-OWN-05-MONK-EMPOWERED-STRIKES",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Resolve level-6 owner evidence for Monk Empowered Strikes"
     },
     {
       "number": 22,
       "id": "L6FULL-OWN-06-MONK-WHOLENESS-OF-BODY",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Resolve level-6 owner evidence for Monk Wholeness of Body"
     },
     {
       "number": 23,
       "id": "L6FULL-OWN-07-PALADIN-AURA-OF-PROTECTION",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Resolve level-6 owner evidence for Paladin Aura of Protection"
     },
     {
       "number": 24,
       "id": "L6FULL-OWN-08-SORCERER-ELEMENTAL-AFFINITY",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Resolve level-6 owner evidence for Sorcerer Elemental Affinity"
     },
     {
       "number": 25,
       "id": "L6FULL-OWN-09-WARLOCK-DARK-ONES-OWN-LUCK",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Resolve level-6 owner evidence for Warlock Dark One's Own Luck"
     },
     {
       "number": 26,
       "id": "L6FULL-OWN-10-WIZARD-SCULPT-SPELLS",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Resolve level-6 owner evidence for Wizard Sculpt Spells"
     },
     {
@@ -385,21 +385,21 @@ Every Ralph task must run the task-base check before research or edits:
 |   9 | L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE - Admit level-1-5 MCP scenario evidence              | done | L5UG-MCP-04-LEVEL5-SCENARIO-REGISTRY                                                            | Updates checker-owned MCP evidence only after executable coverage exists.              |
 |  10 | L5UG-FINAL-01-ULTRA-GOLDEN-REFRESH - Refresh and verify the level-1-5 ultra-golden gate    | done | L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE, L5UG-GATE-02-LEVEL15-OPEN-SPELL-EFFECT-ACCOUNTING, L5UG-GATE-03-LEVEL15-LATER-LEVEL-RESIDUALS, L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES | Final generated refresh after scope, non-MCP support blockers, parity, and MCP evidence land. |
 |  11 | L6FULL-PRE-01-L5-QUEUES-CLOSED - Verify L5 full and L5 ultra-golden queues are closed | done | L5UG-FINAL-01-ULTRA-GOLDEN-REFRESH | L6 starts only after the L5 extension has landed. |
-|  12 | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY - Verify level-6 scope and inventory baseline | ready-for-research | L6FULL-PRE-01-L5-QUEUES-CLOSED | Confirms the 25-row L6 baseline and excludes spell-level-4. |
-|  13 | L6FULL-SEED-01-RANGER-ROVING - Verify existing Ranger Roving level-6 support evidence | blocked | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Preserve existing catalog/runtime evidence. |
-|  14 | L6FULL-SEED-02-ROGUE-EXPERTISE - Verify existing Rogue Expertise level-6 support evidence | blocked | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Preserve existing catalog/character-creation evidence. |
-|  15 | L6FULL-CLOSE-01-LEVEL6-CLASS-TABLES - Explicitly close the twelve level-6 class-table summary rows | blocked | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Table/progression rows remain explicit non-runtime closures. |
-|  16 | L6FULL-ASI-01-FIGHTER-ASI-L6 - Admit or close Fighter level-6 Ability Score Improvement | blocked | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Special repeated ASI/catalog admission task. |
-|  17 | L6FULL-OWN-01-BARBARIAN-MINDLESS-RAGE - Resolve level-6 owner evidence for Barbarian Mindless Rage | blocked | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
-|  18 | L6FULL-OWN-02-BARD-MAGICAL-DISCOVERIES - Resolve level-6 owner evidence for Bard Magical Discoveries | blocked | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
-|  19 | L6FULL-OWN-03-CLERIC-BLESSED-HEALER - Resolve level-6 owner evidence for Cleric Blessed Healer | blocked | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
-|  20 | L6FULL-OWN-04-DRUID-NATURAL-RECOVERY - Resolve level-6 owner evidence for Druid Natural Recovery | blocked | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
-|  21 | L6FULL-OWN-05-MONK-EMPOWERED-STRIKES - Resolve level-6 owner evidence for Monk Empowered Strikes | blocked | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
-|  22 | L6FULL-OWN-06-MONK-WHOLENESS-OF-BODY - Resolve level-6 owner evidence for Monk Wholeness of Body | blocked | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
-|  23 | L6FULL-OWN-07-PALADIN-AURA-OF-PROTECTION - Resolve level-6 owner evidence for Paladin Aura of Protection | blocked | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
-|  24 | L6FULL-OWN-08-SORCERER-ELEMENTAL-AFFINITY - Resolve level-6 owner evidence for Sorcerer Elemental Affinity | blocked | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
-|  25 | L6FULL-OWN-09-WARLOCK-DARK-ONES-OWN-LUCK - Resolve level-6 owner evidence for Warlock Dark One's Own Luck | blocked | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
-|  26 | L6FULL-OWN-10-WIZARD-SCULPT-SPELLS - Resolve level-6 owner evidence for Wizard Sculpt Spells | blocked | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
+|  12 | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY - Verify level-6 scope and inventory baseline | done | L6FULL-PRE-01-L5-QUEUES-CLOSED | Confirms the 25-row L6 baseline and excludes spell-level-4. |
+|  13 | L6FULL-SEED-01-RANGER-ROVING - Verify existing Ranger Roving level-6 support evidence | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Preserve existing catalog/runtime evidence. |
+|  14 | L6FULL-SEED-02-ROGUE-EXPERTISE - Verify existing Rogue Expertise level-6 support evidence | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Preserve existing catalog/character-creation evidence. |
+|  15 | L6FULL-CLOSE-01-LEVEL6-CLASS-TABLES - Explicitly close the twelve level-6 class-table summary rows | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Table/progression rows remain explicit non-runtime closures. |
+|  16 | L6FULL-ASI-01-FIGHTER-ASI-L6 - Admit or close Fighter level-6 Ability Score Improvement | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Special repeated ASI/catalog admission task. |
+|  17 | L6FULL-OWN-01-BARBARIAN-MINDLESS-RAGE - Resolve level-6 owner evidence for Barbarian Mindless Rage | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
+|  18 | L6FULL-OWN-02-BARD-MAGICAL-DISCOVERIES - Resolve level-6 owner evidence for Bard Magical Discoveries | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
+|  19 | L6FULL-OWN-03-CLERIC-BLESSED-HEALER - Resolve level-6 owner evidence for Cleric Blessed Healer | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
+|  20 | L6FULL-OWN-04-DRUID-NATURAL-RECOVERY - Resolve level-6 owner evidence for Druid Natural Recovery | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
+|  21 | L6FULL-OWN-05-MONK-EMPOWERED-STRIKES - Resolve level-6 owner evidence for Monk Empowered Strikes | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
+|  22 | L6FULL-OWN-06-MONK-WHOLENESS-OF-BODY - Resolve level-6 owner evidence for Monk Wholeness of Body | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
+|  23 | L6FULL-OWN-07-PALADIN-AURA-OF-PROTECTION - Resolve level-6 owner evidence for Paladin Aura of Protection | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
+|  24 | L6FULL-OWN-08-SORCERER-ELEMENTAL-AFFINITY - Resolve level-6 owner evidence for Sorcerer Elemental Affinity | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
+|  25 | L6FULL-OWN-09-WARLOCK-DARK-ONES-OWN-LUCK - Resolve level-6 owner evidence for Warlock Dark One's Own Luck | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
+|  26 | L6FULL-OWN-10-WIZARD-SCULPT-SPELLS - Resolve level-6 owner evidence for Wizard Sculpt Spells | ready-for-research | L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY | Choose supported evidence or durable future-owner closure. |
 |  27 | L6FULL-FINAL-01-LEVEL6-ACCOUNTING-REFRESH - Refresh and verify level-6 full SRD accounting | blocked | L6FULL-SEED-01-RANGER-ROVING, L6FULL-SEED-02-ROGUE-EXPERTISE, L6FULL-CLOSE-01-LEVEL6-CLASS-TABLES, L6FULL-ASI-01-FIGHTER-ASI-L6, L6FULL-OWN-01-BARBARIAN-MINDLESS-RAGE, L6FULL-OWN-02-BARD-MAGICAL-DISCOVERIES, L6FULL-OWN-03-CLERIC-BLESSED-HEALER, L6FULL-OWN-04-DRUID-NATURAL-RECOVERY, L6FULL-OWN-05-MONK-EMPOWERED-STRIKES, L6FULL-OWN-06-MONK-WHOLENESS-OF-BODY, L6FULL-OWN-07-PALADIN-AURA-OF-PROTECTION, L6FULL-OWN-08-SORCERER-ELEMENTAL-AFFINITY, L6FULL-OWN-09-WARLOCK-DARK-ONES-OWN-LUCK, L6FULL-OWN-10-WIZARD-SCULPT-SPELLS | Final generated refresh after all L6 rows are supported or explicitly closed. |
 |  28 | L6UG-PRE-01-L6-FULL-QUEUE-CLOSED - Verify the L6 full SRD queue is closed | blocked | L6FULL-FINAL-01-LEVEL6-ACCOUNTING-REFRESH | Ultra-golden L6 starts only after L6 full closure. |
 |  29 | L6UG-SCOPE-01-LEVEL16-REPORT-PLUMBING - Add level-1-6 support report plumbing | blocked | L6UG-PRE-01-L6-FULL-QUEUE-CLOSED | Adds checker-owned `level-1-6` report artifacts. |
@@ -1604,7 +1604,7 @@ Plan Impact:
 
 ### Task 12 - L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: `L6FULL-PRE-01-L5-QUEUES-CLOSED`
 
@@ -1643,15 +1643,21 @@ Verification:
 - `pnpm unit-profile-coverage:check`
 - `git diff --check`
 
+Plan Impact:
+
+- Applied. The checked-in generated inventory at the accepted integration head
+  still has 25 `level-6` rows: 12 `class-table-summary` rows, 2
+  `catalog-installed-owner-evidence-present` feature rows, and 11
+  `level-5-7-follow-up-required` feature rows.
+- The L6 slice remains character-level level 6 only; spell-level-4 work remains
+  outside this queue.
+- Tasks 13 through 26 are unblocked for research.
+
 ### Task 13 - L6FULL-SEED-01-RANGER-ROVING
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
-
-Blocker Type: dependency
-
-Blocker Detail: waiting for `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`.
 
 Inputs:
 
@@ -1690,13 +1696,9 @@ Verification:
 
 ### Task 14 - L6FULL-SEED-02-ROGUE-EXPERTISE
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
-
-Blocker Type: dependency
-
-Blocker Detail: waiting for `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`.
 
 Inputs:
 
@@ -1731,13 +1733,9 @@ Verification:
 
 ### Task 15 - L6FULL-CLOSE-01-LEVEL6-CLASS-TABLES
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
-
-Blocker Type: dependency
-
-Blocker Detail: waiting for `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`.
 
 Inputs:
 
@@ -1770,13 +1768,9 @@ Verification:
 
 ### Task 16 - L6FULL-ASI-01-FIGHTER-ASI-L6
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
-
-Blocker Type: dependency
-
-Blocker Detail: waiting for `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`.
 
 Inputs:
 
@@ -1821,13 +1815,9 @@ Verification:
 
 ### Task 17 - L6FULL-OWN-01-BARBARIAN-MINDLESS-RAGE
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
-
-Blocker Type: dependency
-
-Blocker Detail: waiting for `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`.
 
 Inputs:
 
@@ -1853,13 +1843,9 @@ Verification:
 
 ### Task 18 - L6FULL-OWN-02-BARD-MAGICAL-DISCOVERIES
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
-
-Blocker Type: dependency
-
-Blocker Detail: waiting for `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`.
 
 Inputs:
 
@@ -1886,13 +1872,9 @@ Verification:
 
 ### Task 19 - L6FULL-OWN-03-CLERIC-BLESSED-HEALER
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
-
-Blocker Type: dependency
-
-Blocker Detail: waiting for `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`.
 
 Inputs:
 
@@ -1918,13 +1900,9 @@ Verification:
 
 ### Task 20 - L6FULL-OWN-04-DRUID-NATURAL-RECOVERY
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
-
-Blocker Type: dependency
-
-Blocker Detail: waiting for `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`.
 
 Inputs:
 
@@ -1951,13 +1929,9 @@ Verification:
 
 ### Task 21 - L6FULL-OWN-05-MONK-EMPOWERED-STRIKES
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
-
-Blocker Type: dependency
-
-Blocker Detail: waiting for `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`.
 
 Inputs:
 
@@ -1983,13 +1957,9 @@ Verification:
 
 ### Task 22 - L6FULL-OWN-06-MONK-WHOLENESS-OF-BODY
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
-
-Blocker Type: dependency
-
-Blocker Detail: waiting for `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`.
 
 Inputs:
 
@@ -2014,13 +1984,9 @@ Verification:
 
 ### Task 23 - L6FULL-OWN-07-PALADIN-AURA-OF-PROTECTION
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
-
-Blocker Type: dependency
-
-Blocker Detail: waiting for `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`.
 
 Inputs:
 
@@ -2047,13 +2013,9 @@ Verification:
 
 ### Task 24 - L6FULL-OWN-08-SORCERER-ELEMENTAL-AFFINITY
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
-
-Blocker Type: dependency
-
-Blocker Detail: waiting for `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`.
 
 Inputs:
 
@@ -2081,13 +2043,9 @@ Verification:
 
 ### Task 25 - L6FULL-OWN-09-WARLOCK-DARK-ONES-OWN-LUCK
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
-
-Blocker Type: dependency
-
-Blocker Detail: waiting for `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`.
 
 Inputs:
 
@@ -2112,13 +2070,9 @@ Verification:
 
 ### Task 26 - L6FULL-OWN-10-WIZARD-SCULPT-SPELLS
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`
-
-Blocker Type: dependency
-
-Blocker Detail: waiting for `L6FULL-PRE-02-LEVEL6-SCOPE-INVENTORY`.
 
 Inputs:
 
