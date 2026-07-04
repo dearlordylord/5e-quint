@@ -44,6 +44,10 @@
         {
           "checklist": "report-honesty",
           "status": "pass"
+        },
+        {
+          "checklist": "verification-contract",
+          "status": "pass"
         }
       ]
     },
@@ -88,6 +92,10 @@
         },
         {
           "checklist": "report-honesty",
+          "status": "pass"
+        },
+        {
+          "checklist": "verification-contract",
           "status": "pass"
         }
       ]

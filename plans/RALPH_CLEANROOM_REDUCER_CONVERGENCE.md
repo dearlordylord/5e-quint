@@ -49,13 +49,13 @@
     {
       "number": 8,
       "id": "CRP-08-TEMPLATE-AND-CHECKER-LOCK",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Lock the implementation task template and checker contract"
     },
     {
       "number": 9,
       "id": "CRP-09-CLOSEOUT-EXPANDED-QUEUE",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Close the bootstrap phase with an executable implementation queue"
     }
   ]
@@ -156,8 +156,8 @@ The expanded queue must account for these families:
 | `CRP-05` | `ready-for-research` | `CRP-01`, `CRP-02` | session battle entry implementation task rows |
 | `CRP-06` | `ready-for-research` | `CRP-01` | settlement/rest owner implementation task rows |
 | `CRP-07` | `done` | `CRP-02`, `CRP-03` | active diagnostic seed implementation tasks |
-| `CRP-08` | `ready-for-research` | `CRP-01`-`CRP-07` | locked task template/checker contract |
-| `CRP-09` | `blocked` | `CRP-08` | executable implementation queue |
+| `CRP-08` | `done` | `CRP-01`-`CRP-07` | locked task template/checker contract |
+| `CRP-09` | `ready-for-research` | `CRP-08` | executable implementation queue |
 
 ## Required Task Template
 
@@ -562,7 +562,7 @@ valid dependency/owner-decision blockers.
 
 ### Task 8 - CRP-08-TEMPLATE-AND-CHECKER-LOCK
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
@@ -611,11 +611,7 @@ locked template.
 
 ### Task 9 - CRP-09-CLOSEOUT-EXPANDED-QUEUE
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: depends on `CRP-08`.
+Status: `ready-for-research`
 
 Goal:
 

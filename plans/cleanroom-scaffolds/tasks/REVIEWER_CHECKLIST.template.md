@@ -50,6 +50,19 @@ run multiple checklists, but each checklist result must be recorded separately.
   are rejected.
 - Focused target-language tests are listed only as diagnostics.
 
+### verification-contract
+
+- The task artifact includes `Goal`, `Starting Points`, `Output`,
+  `Acceptance`, `Verification`, and `Plan Impact`.
+- Rule-bearing tasks cite local RAW and ubiquitous-language/domain inputs.
+- MBT is not treated as bootstrap verification. MBT is accepted only when the
+  implementation task explicitly names a focused MBT command for the selected
+  behavior.
+- Remaining blockers use only `source-qnt-corpus`, `source-scope`, or
+  `target-implementation` classes.
+- The task goal and acceptance do not use generic `improve architecture`
+  wording; they name a concrete rule, route, component, or state owner.
+
 ### code-shape-depth
 
 - The task deepens a reusable engine module or records an adapter-only paired

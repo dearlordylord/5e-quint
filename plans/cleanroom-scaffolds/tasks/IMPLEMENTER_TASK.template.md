@@ -2,6 +2,76 @@
 
 Use this before changing `{{enginePath}}`.
 
+## Goal
+
+Implement the selected cleanroom branch set named by `tasks/ACTIVE_WORK.json`
+and the selected `.mbt.qnt` drivers. The goal must name one driver, fixed driver
+group, harness rule, or owner boundary. Do not use generic `improve
+architecture` wording as the task goal; name the rule, route, component, or
+state owner that must become executable.
+
+## Starting Points
+
+- `tasks/ACTIVE_WORK.json`
+- `cleanroom-input/MANIFEST.md`
+- `cleanroom-input/branch-coverage/source-branch-inventory.json`
+- `cleanroom-input/branch-coverage/reducer-route-inventory.json`
+- `cleanroom-input/qnt/**` for the selected drivers and connectors
+- `cleanroom-input/raw/srd-5.2.1/**` for rule-bearing behavior
+- `cleanroom-input/domain/UBIQUITOUS_LANGUAGE.md`
+- `cleanroom-input/domain/CLEANROOM_ASSUMPTIONS.md`
+- `cleanroom-input/guidance/**`
+- existing `{{enginePath}}/**`
+
+## Output
+
+- `tasks/START_GATE.json`
+- production changes under `{{enginePath}}/**`
+- quarantined adapter or harness changes under `{{enginePath}}/**`
+- `tasks/ENGINE_DEPTH_MANIFEST.json`
+- `tasks/STATE_OWNER_MANIFEST.json`
+- `tasks/target-replay-evidence/*.json`
+- `tasks/history/<taskId>/*.json`
+- `tasks/RUN_LEDGER.json`
+- `tasks/VALIDATION_REPORT.md`
+- `tasks/BLOCKERS.md` when a valid blocker remains
+
+## Acceptance
+
+- The selected source driver path, route class, connector path, accepted
+  projection (`qRoute`, `qComponentRoute`, or semantic projection), durable
+  owner, forbidden shortcuts, and pass/fail condition are all named in the task
+  artifacts.
+- Rule-bearing tasks cite local RAW and ubiquitous-language/domain inputs.
+- Target replay evidence records the required evidence fields from
+  `tasks/TARGET_REPLAY_EVIDENCE.example.json`, including target entrypoint
+  sequence, observed projection source, and reducer/public API path.
+- If a branch cannot be implemented, `tasks/BLOCKERS.md` uses only these
+  blocker classes: `source-qnt-corpus`, `source-scope`, or
+  `target-implementation`.
+- No production runtime semantics branch on authored identity, QNT action names,
+  witness field names, fixture labels, or generated report rows.
+
+## Verification
+
+- Run every command from the target profile:
+{{verificationCommandsMarkdown}}
+- For rule-bearing tasks, run reviewer-loop convergence: RAW traceability,
+  ubiquitous-language/domain language, architecture/connascence, and
+  code-review passes; fix every reasonable finding or document a concrete
+  rejection reason, then repeat until no reasonable findings remain.
+- MBT is not a bootstrap verification step. Run MBT only when this
+  implementation task explicitly names a focused MBT command for the selected
+  behavior.
+
+## Plan Impact
+
+Use `none` when the task does not affect future work. Use `update-required`
+when a durable discovery changes task status, dependencies, ordering, blocker
+classification, acceptance criteria, verification, or creates follow-up work.
+Use `applied` only when the task itself updates the executable queue or
+scaffold contract.
+
 ## Start Gate
 
 Write `tasks/START_GATE.json` before implementation begins. It must record:

@@ -28,6 +28,7 @@ const requiredReviewChecklists = [
   "state-owner-derivability",
   "authored-identity-dispatch",
   "report-honesty",
+  "verification-contract",
 ];
 
 const requiredDeciderGates = [
@@ -38,6 +39,7 @@ const requiredDeciderGates = [
   "state-owner-derivability",
   "authored-identity-dispatch",
   "report-honesty",
+  "task-template-contract",
   "reviewer-loop-convergence",
 ];
 

@@ -20,6 +20,11 @@ findings converge. Record the decision in `tasks/DECIDER_DECISION.json`.
   authored identity.
 - `report-honesty` — validation report coverage rows are derived from target
   replay evidence, not diagnostic tests or prose.
+- `task-template-contract` — the task artifact includes `Goal`, `Starting
+  Points`, `Output`, `Acceptance`, `Verification`, and `Plan Impact`; rule
+  behavior has RAW/ubiquitous-language traceability; any remaining blocker uses
+  the allowed `source-qnt-corpus`, `source-scope`, or
+  `target-implementation` class.
 - `reviewer-loop-convergence` — all reasonable reviewer findings are fixed or
   explicitly rejected with rationale.
 
@@ -36,6 +41,9 @@ findings converge. Record the decision in `tasks/DECIDER_DECISION.json`.
 - Unresolved reasonable reviewer finding.
 - Validation report row that marks diagnostic target-language tests, generated
   report equivalence, or adapter-local expected routes as MBT coverage.
+- A task that treats MBT as bootstrap verification, invokes MBT without an
+  explicitly named focused command, or closes with generic `improve
+  architecture` wording instead of concrete owner/route/rule acceptance.
 
 ## Verification Commands
 
