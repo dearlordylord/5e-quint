@@ -47,15 +47,19 @@ export type InductiveProofModuleRunConfig = {
 type ProofProcessConfig = {
   readonly packageRootUrl: URL;
   readonly modulePath: string;
+  readonly proofKind: "inductive" | "run-block";
   readonly args: NonEmptyReadonlyArray<string>;
   readonly timedOutDetail: string;
   readonly env?: NodeJS.ProcessEnv;
   readonly requiredStdoutFragment?: string;
 };
 
+type ProofProgressEvent = "fail" | "heartbeat" | "pass" | "start" | "timeout";
+
 const runBlockPattern = /^[ \t]*run\s+([A-Za-z_][A-Za-z0-9_]*)\b/gm;
 
 export const proofModuleTimeoutMs = 360_000;
+const proofProgressIntervalMs = 60_000;
 const apalacheJavaBin = `${process.env.HOME ?? ""}/.local/java/jdk-17.0.18+8-jre/bin`;
 
 function asDirectoryPath(path: string): string {
@@ -181,9 +185,34 @@ function quintVerifyEnv(): NodeJS.ProcessEnv {
   };
 }
 
+function elapsedMsSince(startedAtMs: number): number {
+  return Date.now() - startedAtMs;
+}
+
+function logProofProgress(
+  config: ProofProcessConfig,
+  event: ProofProgressEvent,
+  startedAtMs: number,
+  pid: number | undefined,
+): void {
+  console.error(
+    `QNT_PROOF_EVENT ${JSON.stringify({
+      event,
+      kind: config.proofKind,
+      module: config.modulePath,
+      pid,
+      elapsedMs: elapsedMsSince(startedAtMs),
+      timeoutMs: proofModuleTimeoutMs,
+      command: ["quint", ...config.args],
+    })}`,
+  );
+}
+
 async function runProofProcess(
   config: ProofProcessConfig,
 ): Promise<ProofModuleOutcome> {
+  const startedAtMs = Date.now();
+  let childPid: number | undefined;
   const result = await new Promise<{
     readonly timedOut: boolean;
     readonly error: Error | null;
@@ -192,6 +221,7 @@ async function runProofProcess(
   }>((resolve) => {
     let timedOut = false;
     let deadline: ReturnType<typeof setTimeout> | undefined;
+    let heartbeat: ReturnType<typeof setInterval> | undefined;
     const child = execFile(
       "pnpm",
       ["exec", "quint", ...config.args],
@@ -203,6 +233,7 @@ async function runProofProcess(
       },
       (error, stdout, stderr) => {
         clearTimeout(deadline);
+        clearInterval(heartbeat);
         resolve({
           timedOut,
           error: error ?? null,
@@ -211,9 +242,15 @@ async function runProofProcess(
         });
       },
     );
+    childPid = child.pid;
+    logProofProgress(config, "start", startedAtMs, childPid);
+    heartbeat = setInterval(() => {
+      logProofProgress(config, "heartbeat", startedAtMs, childPid);
+    }, proofProgressIntervalMs);
     deadline = setTimeout(() => {
       timedOut = true;
-      if (child.pid !== undefined) killProcessTree(child.pid);
+      logProofProgress(config, "timeout", startedAtMs, childPid);
+      if (childPid !== undefined) killProcessTree(childPid);
     }, proofModuleTimeoutMs);
   });
 
@@ -222,6 +259,7 @@ async function runProofProcess(
       config.requiredStdoutFragment !== undefined &&
       !result.stdout.includes(config.requiredStdoutFragment)
     ) {
+      logProofProgress(config, "fail", startedAtMs, childPid);
       return {
         tag: "failed",
         module: config.modulePath,
@@ -230,10 +268,12 @@ async function runProofProcess(
           result.stdout,
       };
     }
+    logProofProgress(config, "pass", startedAtMs, childPid);
     return { tag: "passed", module: config.modulePath };
   }
 
   const banner = result.timedOut ? config.timedOutDetail : result.error.message;
+  logProofProgress(config, "fail", startedAtMs, childPid);
   return {
     tag: "failed",
     module: config.modulePath,
@@ -252,6 +292,7 @@ export async function runProofModule(
   return runProofProcess({
     packageRootUrl: config.packageRootUrl,
     modulePath: config.proofModule.modulePath,
+    proofKind: "run-block",
     args: [
       "test",
       "--backend",
@@ -274,6 +315,7 @@ export async function runInductiveProofModule(
   return runProofProcess({
     packageRootUrl: config.packageRootUrl,
     modulePath: config.proofModule.modulePath,
+    proofKind: "inductive",
     args: [
       "verify",
       specPath,
