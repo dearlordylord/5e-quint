@@ -16,6 +16,7 @@ import {
   createHitPointRestorationOrderingRouteDriver,
   createHitPointRegainPreventionRouteDriver,
   createIndependentSpellAttackSequenceRouteDriver,
+  createInterruptStackResumeRouteDriver,
   createLevel1SpatialCompositionRouteDriver,
   createLevel1WeaponHostedSelectedRouteDriver,
   createMagicMissileRouteDriver,
@@ -49,6 +50,7 @@ import {
   reducerRoutedChainedAttackProcedureStateCheck,
   reducerRoutedConditionRiderStateCheck,
   reducerRoutedIndependentSpellAttackSequenceStateCheck,
+  reducerRoutedInterruptStackResumeStateCheck,
   reducerRoutedMagicMissileStateCheck,
   reducerRoutedMarkedDamageImmunityStateCheck,
   reducerRoutedLevel1SpatialCompositionStateCheck,
@@ -349,6 +351,26 @@ describe("battle reducer route connector MBT", () => {
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(4),
         stateCheck: reducerRoutedIndependentSpellAttackSequenceStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "routes interrupt stack resume through the shared reducer surface",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-interrupt-stack-resume.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createInterruptStackResumeRouteDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(1),
+        stateCheck: reducerRoutedInterruptStackResumeStateCheck,
       });
     },
     MBT_TEST_TIMEOUT_MS,

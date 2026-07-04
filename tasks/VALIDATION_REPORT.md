@@ -1,5 +1,81 @@
 # Validation Report
 
+## CRPI-READY-005
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec`
+- Driver: `packages/battle-runtime/battle-runtime-interrupt-stack-resume.mbt.qnt`
+- Route connector: `packages/battle-runtime/battle-runtime-interrupt-stack-resume.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/battle-runtime-interrupt-stack-resume.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-interrupt-stack-resume.route.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-reducer-route.qnt`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Playing-the-Game.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+Interrupt-stack resume route replay now observes the copied `qRoute`
+projection through public battle reducer route events. Attack-hit and
+save-failed interrupt windows are emitted from `BattleResolutionResult.routeEvents`
+on `resolveBattleSubject`; interrupt decisions are emitted from
+`BattleResolutionResult.routeEvents` on `resolveBattleInterrupt`; Shield-style
+active-effect ownership is emitted only when the interrupt resolution adds an
+Armor Class effect compared with the pre-interrupt state; replayed procedure
+suffixes are emitted from the public `resolveBattleSubject` path after public
+`resolveBattleInterrupt` decline calls create the
+`BattleState.interruptStack` replay-continuation frame. The runtime does not
+add a parallel interrupt ledger: interrupt frames and continuation holes remain
+`BattleState.interruptStack` plus the existing hole frontier, Reaction
+availability remains `BattleCreatureState.reactionAvailable`, spell slot spend
+remains character spellcasting state, active effects remain
+`BattleCreatureState.activeEffects`, and Hit Points remain `BattleCreatureState.hp`.
+
+Generated branch coverage:
+
+| Obligation | Target replay evidence | Diagnostic tests | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-interrupt-stack-resume.mbt.qnt#step:doNestedDeclineResumesOuterInterrupt` | `tasks/target-replay-evidence/CRPI-READY-005.json#driver:packages/battle-runtime/battle-runtime-interrupt-stack-resume.mbt.qnt#step:doNestedDeclineResumesOuterInterrupt#trace:MBT_TRACES=1 MBT_STEPS=1 action=doNestedDeclineResumesOuterInterrupt` | `packages/battle-runtime/src/interrupt-stack-resume.mbt.test.ts`, `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes interrupt stack resume through the shared reducer surface` | `covered` |
+| `packages/battle-runtime/battle-runtime-interrupt-stack-resume.mbt.qnt#step:doShieldMutationResumesInterruptedAttack` | `tasks/target-replay-evidence/CRPI-READY-005.json#driver:packages/battle-runtime/battle-runtime-interrupt-stack-resume.mbt.qnt#step:doShieldMutationResumesInterruptedAttack#trace:MBT_TRACES=1 MBT_STEPS=1 action=doShieldMutationResumesInterruptedAttack` | `packages/battle-runtime/src/interrupt-stack-resume.mbt.test.ts`, `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes interrupt stack resume through the shared reducer surface` | `covered` |
+| `packages/battle-runtime/battle-runtime-interrupt-stack-resume.mbt.qnt#step:doReplayRecordedProcedureFromRoot` | `tasks/target-replay-evidence/CRPI-READY-005.json#driver:packages/battle-runtime/battle-runtime-interrupt-stack-resume.mbt.qnt#step:doReplayRecordedProcedureFromRoot#trace:MBT_TRACES=1 MBT_STEPS=1 action=doReplayRecordedProcedureFromRoot` | `packages/battle-runtime/src/interrupt-stack-resume.mbt.test.ts`, `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes interrupt stack resume through the shared reducer surface` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-005.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id: `MBT_TRACES=1 MBT_STEPS=1 action=<branchAction>`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-READY-005/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 22.
+
+Verification results:
+
+- `pnpm --filter @dnd/battle-runtime typecheck` passed.
+- First focused MBT attempt `MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/battle-runtime exec vitest run src/interrupt-stack-resume.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "interrupt stack resume"` failed because released readied save-gated spell resolution was still classified as adapter-local interrupt discovery instead of the public `saveGatedSpell` route subject.
+- `MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/battle-runtime exec vitest run src/interrupt-stack-resume.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "interrupt stack resume"` passed after classifying release-readied save-gated procedure shape through existing `BattleState.readiedSpells`; final timed run `TOTAL: 5s`.
+- Revision round 2 fixed the missing `savingThrowOutcome` route-fill mapping, restricted `weaponAttack` route suffix events to resolved replay-continuation state, removed the replay adapter's internal `replayContinuationFrame` construction, and regenerated the focused target replay; `MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/battle-runtime exec vitest run src/interrupt-stack-resume.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "interrupt stack resume"` passed with 3 tests; final timed run `TOTAL: 6s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- RAW/ubiquitous-language review passed against Playing the Game Reactions, Rules Glossary Reaction and Ready Action, Spells/Gaining-and-Casting Reaction and Bonus Action Triggers, and UBIQUITOUS_LANGUAGE.md Offer/Decline/Advance, Reaction, Spell Effect, Readied Spell Response, and Spell Slot.
+- Reviewer-loop convergence passed: round 1 found and fixed the readied-spell route classification mismatch; round 2 tightened Shield-style route ownership to compare pre/post active-effect state and kept save-gated spell routing to the interrupt-opening case; revision round 2 addressed all reviewer findings and found no remaining reasonable RAW/domain, architecture/connascence, or code-review findings before broad verification.
+
 ## CRPI-READY-001
 
 - Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`

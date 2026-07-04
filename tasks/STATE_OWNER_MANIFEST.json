@@ -1,31 +1,25 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-004",
+  "taskId": "CRPI-READY-005",
   "durableFields": [
-    {
-      "fieldPath": "AvailableBattleAct.routeEvents",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "owner": "public-reducer-boundary-projection",
-      "derivability": {
-        "tag": "boundary-projection",
-        "sourceField": "BattleSubject, BattleHole, and reducer route owner facts"
-      }
-    },
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "owner": "public-reducer-boundary-projection",
       "derivability": {
         "tag": "boundary-projection",
-        "sourceField": "BattleSubject, BattleFill, BattleHole, BattleInvalidReasonCode, Hit Point state, and reducer route owner facts"
+        "sourceField": "BattleSubject, BattleFill, BattleHole, BattleState.interruptStack, active effects, spellcasting resources, and reducer route owner facts"
       }
     }
   ],
   "notes": [
-    "Task 15 introduced no new BattleState or BattleCreatureState durable spell-attack sequence field.",
-    "Independent beam sequence progress remains represented by the typed action-spell subject, ordered fills, and public reducer hole frontier.",
-    "Creature Hit Points remain BattleCreatureState.hp.",
-    "Object target identity, Armor Class, range, and Hit Point facts remain table-supplied object-target boundary fills.",
-    "AvailableBattleAct.routeEvents is a public reducer boundary projection for acts that expose multiple route-owner events; it is not a duplicated rules ledger."
+    "Task 22 introduced no new BattleState or BattleCreatureState durable field.",
+    "Interrupt push/resume frames and replay-continuation frames remain BattleState.interruptStack.",
+    "Reaction availability remains BattleCreatureState.reactionAvailable.",
+    "Shield-style Armor Class mutation remains BattleCreatureState.activeEffects plus existing Armor Class projection.",
+    "Spell slot spend remains character spellcasting resource state.",
+    "Hit Point mutation remains BattleCreatureState.hp.",
+    "Continuation holes remain the existing public BattleHole frontier projected from resolveBattleSubject and resolveBattleInterrupt results.",
+    "BattleResolutionResult.routeEvents is a public reducer boundary projection, not a duplicated rules ledger."
   ]
 }

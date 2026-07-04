@@ -160,7 +160,10 @@ import {
   triggeredReactionSpellTurnResourceAvailable,
 } from "./reaction-triggered-spells.ts";
 import { invalidResult } from "./result-helpers.ts";
-import { battleReducerRouteForResolution } from "./reducer-route.ts";
+import {
+  battleReducerRouteForInterrupt,
+  battleReducerRouteForResolution,
+} from "./reducer-route.ts";
 import { battleStateAfterTargetActionEarlyEndForActor } from "./sanctuary-targeting-interdiction.ts";
 import { stateAfterSpellCastDeclared } from "./spell-cast-declaration.ts";
 import { releaseGlyphStoredSpell } from "./glyph-durable-occurrence.ts";
@@ -2853,6 +2856,12 @@ export function resolveBattleInterrupt(input: {
   readonly state: BattleState;
   readonly fill: Extract<BattleFill, { readonly kind: "interruptDecision" }>;
 }): BattleResolutionResult {
+  const withInterruptRoute = (
+    result: BattleResolutionResult,
+  ): BattleResolutionResult => ({
+    ...result,
+    routeEvents: battleReducerRouteForInterrupt(input.state, result),
+  });
   const frame = currentInterruptCheckpoint(input.state);
   if (frame === null) {
     return invalidResult(
@@ -2902,12 +2911,14 @@ export function resolveBattleInterrupt(input: {
       );
     }
     if (choice.kind === "reactionRollOrDamageReduction") {
-      return resolveReactionRollOrDamageReduction({
-        state: input.state,
-        frame,
-        choice,
-        selection: input.fill.value.choice,
-      });
+      return withInterruptRoute(
+        resolveReactionRollOrDamageReduction({
+          state: input.state,
+          frame,
+          choice,
+          selection: input.fill.value.choice,
+        }),
+      );
     }
     const activeFrame = {
       ...frame,
@@ -2937,9 +2948,11 @@ export function resolveBattleInterrupt(input: {
       },
       { replayingInterruptedProcedure: true },
     );
-    return interruptResult.tag === "resolved"
-      ? completeActiveInterruptProcedure(interruptResult.state)
-      : interruptResult;
+    return withInterruptRoute(
+      interruptResult.tag === "resolved"
+        ? completeActiveInterruptProcedure(interruptResult.state)
+        : interruptResult,
+    );
   }
 
   const updatedFrame = {
@@ -2975,19 +2988,21 @@ export function resolveBattleInterrupt(input: {
         )
       : closedState;
 
-  return remainingResponders.length === 0
-    ? completeResolvedActiveInterruptIfPending(
-        resumeInterruptedProcedure(
-          stateForContinuingInterruptCheckpoint(nextState, updatedFrame),
-          updatedFrame.continuation,
-          updatedFrame.trigger,
-        ),
-      )
-    : {
-        tag: "resolved",
-        state: nextState,
-        snapshot: snapshotBattle(nextState),
-      };
+  return withInterruptRoute(
+    remainingResponders.length === 0
+      ? completeResolvedActiveInterruptIfPending(
+          resumeInterruptedProcedure(
+            stateForContinuingInterruptCheckpoint(nextState, updatedFrame),
+            updatedFrame.continuation,
+            updatedFrame.trigger,
+          ),
+        )
+      : {
+          tag: "resolved",
+          state: nextState,
+          snapshot: snapshotBattle(nextState),
+        },
+  );
 }
 
 export function spendReaction(

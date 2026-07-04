@@ -3,6 +3,7 @@
 import { battleFillKind } from "../battle-protocol-kinds.ts";
 import type {
   AvailableBattleAct,
+  BattleActiveEffect,
   BattleFill,
   BattleHole,
   BattleResolutionInput,
@@ -16,7 +17,10 @@ export type BattleReducerRouteSubjectFamily =
   | "commandEffect"
   | "deathSavingThrow"
   | "hitPointRestoration"
-  | "spellAttackProcedure";
+  | "interruptStackResume"
+  | "saveGatedSpell"
+  | "spellAttackProcedure"
+  | "weaponAttack";
 
 export type BattleReducerRouteOwnerGroup =
   | "battleActionEconomy"
@@ -54,6 +58,7 @@ export type BattleReducerRouteFill =
   | "concentrationSavingThrow"
   | "deathSavingThrow"
   | "hitPointHealingDistribution"
+  | "interruptDecision"
   | "damageTypeChoice"
   | "movement"
   | "rolledDice"
@@ -82,6 +87,13 @@ export type BattleReducerRouteEvent =
   | {
       readonly kind: "resolveBattleSubjectWithoutFill";
       readonly subject: BattleReducerRouteSubjectFamily;
+      readonly holes: readonly BattleReducerRouteHole[];
+      readonly owner: BattleReducerRouteOwnerGroup;
+    }
+  | {
+      readonly kind: "resolveBattleInterrupt";
+      readonly subject: BattleReducerRouteSubjectFamily;
+      readonly fill: BattleReducerRouteFill;
       readonly holes: readonly BattleReducerRouteHole[];
       readonly owner: BattleReducerRouteOwnerGroup;
     };
@@ -192,6 +204,19 @@ export function battleReducerRouteForResolution(
   if (hitPointRestorationRoute !== undefined) {
     return [hitPointRestorationRoute];
   }
+  const saveGatedRoute = saveGatedSpellRouteForResolution(input, result);
+  if (saveGatedRoute !== undefined) {
+    return [saveGatedRoute];
+  }
+  const interruptResumeDiscoveryRoute =
+    interruptStackResumeDiscoveryRouteForResolution(input, result);
+  if (interruptResumeDiscoveryRoute !== undefined) {
+    return [interruptResumeDiscoveryRoute];
+  }
+  const weaponAttackRoute = weaponAttackRouteForResolution(input, result);
+  if (weaponAttackRoute !== undefined) {
+    return weaponAttackRoute;
+  }
   if (!isSpellAttackProcedureSubject(input.subject)) {
     return undefined;
   }
@@ -233,6 +258,34 @@ export function battleReducerRouteForResolution(
     owner,
   });
   return [eventForOwner(firstOwner), ...remainingOwners.map(eventForOwner)];
+}
+
+export function battleReducerRouteForInterrupt(
+  before: BattleState,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents {
+  const holes =
+    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
+  const eventForOwner = (
+    owner: BattleReducerRouteOwnerGroup,
+  ): BattleReducerRouteEvent => ({
+    kind: "resolveBattleInterrupt",
+    subject: "interruptStackResume",
+    fill: "interruptDecision",
+    holes,
+    owner,
+  });
+  if (
+    result.tag === "resolved" &&
+    interruptResolutionAddedArmorClassEffect(before, result)
+  ) {
+    return [
+      eventForOwner("battleSpellSlotAndActionEconomy"),
+      eventForOwner("battleActiveEffect"),
+      eventForOwner("battleInterruptStack"),
+    ];
+  }
+  return [eventForOwner("battleInterruptStack")];
 }
 
 function deathSavingThrowRouteForResolution(
@@ -544,6 +597,104 @@ function commandRouteOwner(
   return "battleActiveEffect";
 }
 
+function saveGatedSpellRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvent | undefined {
+  if (!isSaveGatedSpellResolution(input)) {
+    return undefined;
+  }
+  if (result.tag !== "needsHoles") {
+    return undefined;
+  }
+  const holes = battleReducerRouteHoles(result.holes);
+  if (!holes.includes("interruptDecision")) {
+    return undefined;
+  }
+
+  const fill = input.fills.at(-1);
+  if (fill === undefined) {
+    return undefined;
+  }
+  const routeFill = battleReducerRouteFill(fill);
+  if (routeFill !== "savingThrowOutcome") {
+    return undefined;
+  }
+
+  return {
+    kind: "resolveBattleSubject",
+    subject: "saveGatedSpell",
+    fill: routeFill,
+    holes,
+    owner: "battleInterruptStack",
+  };
+}
+
+function interruptStackResumeDiscoveryRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvent | undefined {
+  if (result.tag !== "needsHoles") {
+    return undefined;
+  }
+  const holes = battleReducerRouteHoles(result.holes);
+  const discoversInterruptDecision = holes.includes("interruptDecision");
+  const discoversReplayContinuationHole =
+    input.state.interruptStack.at(-1)?.kind === "replayContinuation" &&
+    holes.includes("rolledDice");
+  if (!discoversInterruptDecision && !discoversReplayContinuationHole) {
+    return undefined;
+  }
+
+  return {
+    kind: "discoverBattleActs",
+    subject: "interruptStackResume",
+    holes,
+    owner: "battleInterruptStack",
+  };
+}
+
+function weaponAttackRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  if (input.state.interruptStack.at(-1)?.kind !== "replayContinuation") {
+    return undefined;
+  }
+  if (!isWeaponAttackSubject(input.subject)) {
+    return undefined;
+  }
+  if (result.tag !== "resolved") {
+    return undefined;
+  }
+
+  const fill = input.fills.at(-1);
+  if (fill === undefined) {
+    return undefined;
+  }
+  const routeFill = battleReducerRouteFill(fill);
+  if (routeFill !== "rolledDice") {
+    return undefined;
+  }
+
+  const weaponDamageRoute: BattleReducerRouteEvent = {
+    kind: "resolveBattleSubject",
+    subject: "weaponAttack",
+    fill: routeFill,
+    holes: [],
+    owner: "battleHitPoint",
+  };
+  return [
+    weaponDamageRoute,
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "interruptStackResume",
+      holes: [],
+      owner: "battleInterruptStack",
+    },
+  ];
+}
+
 function commandRouteHolesAfter(
   input: BattleResolutionInput,
   result: BattleResolutionResult,
@@ -584,6 +735,37 @@ function isSpellAttackProcedureSubject(
     (subject.invocation.procedure === "chainedSpellAttackDamage" ||
       subject.invocation.procedure === "spellAttackSequence")
   );
+}
+
+function isSaveGatedSpellResolution(
+  input: BattleResolutionInput,
+): boolean {
+  if (input.subject.tag === "actionSpell") {
+    return isSaveGatedSpellProcedure(input.subject.invocation.procedure);
+  }
+  if (
+    input.subject.tag === "runtimeCommand" &&
+    input.subject.command === "releaseReadiedSpell"
+  ) {
+    const readied = input.state.readiedSpells.get(
+      input.subject.readiedSpellCasterId,
+    );
+    return (
+      readied !== undefined &&
+      isSaveGatedSpellProcedure(readied.invocation.procedure)
+    );
+  }
+  return false;
+}
+
+function isSaveGatedSpellProcedure(procedure: string): boolean {
+  return procedure === "saveGatedDamage" || procedure === "saveGatedCondition";
+}
+
+function isWeaponAttackSubject(
+  subject: BattleResolutionInput["subject"],
+): boolean {
+  return subject.tag === "action" && subject.action === "attack";
 }
 
 function isCommandEffectSubject(
@@ -737,7 +919,9 @@ function battleReducerRouteFill(
   if (kind === "hitPointHealingDistribution") {
     return "hitPointHealingDistribution";
   }
+  if (kind === "interruptDecision") return "interruptDecision";
   if (kind === "rolledDice") return "rolledDice";
+  if (kind === "savingThrowOutcome") return "savingThrowOutcome";
   if (kind === "spellTargetList") return "spellTargetList";
   if (kind === "targetChoice") return "targetChoice";
   return undefined;
@@ -762,4 +946,24 @@ function spellAttackProcedureRouteOwners(
     return ["battleTargetSelection", "battleSpellAttackProcedure"];
   }
   return [];
+}
+
+function interruptResolutionAddedArmorClassEffect(
+  before: BattleState,
+  result: Extract<BattleResolutionResult, { readonly tag: "resolved" }>,
+): boolean {
+  return [...result.state.combatants.values()].some((combatant) =>
+    armorClassEffectCount(combatant.activeEffects) >
+      armorClassEffectCount(
+        before.combatants.get(combatant.combatantId)?.activeEffects ?? [],
+      ),
+  );
+}
+
+function armorClassEffectCount(
+  activeEffects: readonly BattleActiveEffect[],
+): number {
+  return activeEffects.filter(
+    (effect) => effect.kind === "spellArmorClassBonus",
+  ).length;
 }

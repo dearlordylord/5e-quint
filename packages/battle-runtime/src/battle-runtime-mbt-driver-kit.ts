@@ -87,16 +87,31 @@ import {
   spellSaveDcForCaster,
   spellSlotInvocationRef,
   startBattle,
+  type AvailableBattleAct,
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
   type BattleInvalidReasonCode,
+  type BattleInterruptProcedureChoice,
   type BattleResolutionResult,
   type BattleState,
   type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
+import {
+  attackInitialTargetHole as interruptAttackInitialTargetHole,
+  attackRollHoleAfterTarget as interruptAttackRollHoleAfterTarget,
+  attackTargetFill as interruptAttackTargetFill,
+  fighterAttackSubject as interruptFighterAttackSubject,
+  fighterTurnWithReadiedAcidAndSecondReadiedRay,
+  goblinId as interruptGoblinId,
+  interruptDecisionFill as interruptDecisionFillSupport,
+  reactionChoiceWithSubject as interruptReactionChoiceWithSubject,
+  savingThrowOutcomeFill as interruptSavingThrowOutcomeFill,
+  secondWizardId as interruptSecondWizardId,
+  wizardId as interruptWizardId,
+} from "./battle-runtime-test-support.ts";
 
 export { defineDriver, run, stateCheck };
 export {
@@ -1717,6 +1732,9 @@ type ReducerRoutedChainedAttackProcedureProjection = {
 type ReducerRoutedIndependentSpellAttackSequenceProjection = {
   readonly route: readonly ReducerRouteEvent[];
 };
+type ReducerRoutedInterruptStackResumeProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+};
 type ActionSpellSubject = Extract<
   BattleSubject,
   { readonly tag: "actionSpell" }
@@ -1893,6 +1911,12 @@ const deathSavingThrowTargetId = combatantId("death-saving-throw-target");
 const concentrationBreakAttackerId = combatantId(
   "concentration-break-attacker",
 );
+const interruptShieldAttackerId = combatantId(
+  "interrupt-stack-shield-attacker",
+);
+const interruptShieldCasterId = combatantId("interrupt-stack-shield-caster");
+const interruptShieldUnitId = "shield";
+const interruptInitialHp = 12;
 const chainedAttackProcedureSecondTargetId = combatantId(
   "chained-attack-procedure-second-target",
 );
@@ -2267,6 +2291,14 @@ const independentSpellAttackSequenceRouteDriverSchema = {
   doFillSecondAttackHit: {},
   doFillSecondDamageLow: {},
   doRejectStaleAfterResolved: {},
+  step: {},
+} as const;
+
+const interruptStackResumeRouteDriverSchema = {
+  init: {},
+  doNestedDeclineResumesOuterInterrupt: {},
+  doShieldMutationResumesInterruptedAttack: {},
+  doReplayRecordedProcedureFromRoot: {},
   step: {},
 } as const;
 
@@ -9724,6 +9756,248 @@ export function createIndependentSpellAttackSequenceRouteDriver() {
   });
 }
 
+export function createInterruptStackResumeRouteDriver() {
+  return defineDriver(interruptStackResumeRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] = [];
+
+    function reset(): void {
+      const state = interruptShieldBattle();
+      route = [battleReducerStartRouteEvent(state)];
+    }
+
+    function appendInterruptRouteEvents(result: BattleResolutionResult): void {
+      if (result.routeEvents === undefined || result.routeEvents.length === 0) {
+        throw new Error(
+          "Expected public reducer route events on interrupt-stack resume resolution.",
+        );
+      }
+      route = [...route, ...result.routeEvents];
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doNestedDeclineResumesOuterInterrupt: () => {
+        const state = fighterTurnWithReadiedAcidAndSecondReadiedRay();
+        const subject = interruptFighterAttackSubject();
+        const target = interruptAttackInitialTargetHole(state, subject);
+        const attackRoll = interruptAttackRollHoleAfterTarget(
+          state,
+          target,
+          subject,
+          interruptGoblinId,
+        );
+        const awaitingAttackReaction = resolveBattleSubject({
+          state,
+          subject,
+          fills: [
+            interruptAttackTargetFill(
+              target,
+              subject.actorId,
+              interruptGoblinId,
+              subject.attackName,
+            ),
+            attackRollFill(attackRoll, { total: 15, naturalD20: 10 }),
+          ],
+        });
+        if (awaitingAttackReaction.tag !== "needsHoles") {
+          throw new Error("Expected outer attack-hit interrupt window.");
+        }
+        appendInterruptRouteEvents(awaitingAttackReaction);
+        const releaseChoice = interruptReactionChoiceWithSubject(
+          awaitingAttackReaction.snapshot.pendingInterrupt!.choices,
+        );
+        const released = resolveBattleInterrupt({
+          state: awaitingAttackReaction.state,
+          fill: interruptDecisionFillSupport(
+            awaitingAttackReaction.snapshot.pendingInterrupt!.decisionHole,
+            {
+              kind: "resolve",
+              responderId: interruptWizardId,
+              choice: {
+                kind: "releaseReadiedSpell",
+                readiedSpellCasterId: interruptWizardId,
+                fills: [],
+              },
+            },
+          ),
+        });
+        if (released.tag !== "needsHoles") {
+          throw new Error("Expected released readied spell holes.");
+        }
+        appendInterruptRouteEvents(released);
+        const save = requireTypedHole(released.holes, "savingThrowOutcome");
+        const nested = resolveBattleSubject({
+          state: released.state,
+          subject: releaseChoice.subject,
+          fills: [
+            interruptSavingThrowOutcomeFill(save, [
+              { targetId: interruptGoblinId, succeeded: false },
+            ]),
+          ],
+        });
+        if (nested.tag !== "needsHoles") {
+          throw new Error("Expected nested save-failed interrupt window.");
+        }
+        appendInterruptRouteEvents(nested);
+        const declinedNested = resolveBattleInterrupt({
+          state: nested.state,
+          fill: interruptDecisionFillSupport(
+            nested.snapshot.pendingInterrupt!.decisionHole,
+            {
+              kind: "decline",
+              responderId: interruptSecondWizardId,
+            },
+          ),
+        });
+        if (declinedNested.tag !== "needsHoles") {
+          throw new Error("Expected nested decline to resume spell damage.");
+        }
+        appendInterruptRouteEvents(declinedNested);
+      },
+      doShieldMutationResumesInterruptedAttack: () => {
+        const state = interruptShieldBattle();
+        const attackAct = interruptShieldUnarmedStrikeAct(state);
+        const target = requireTypedHole(attackAct.initialHoles, "targetChoice");
+        const targetFillForAttack = interruptShieldAttackTargetFill(target);
+        const awaitingAttackRoll = resolveBattleSubject({
+          state,
+          subject: attackAct.subject,
+          fills: [targetFillForAttack],
+        });
+        if (awaitingAttackRoll.tag !== "needsHoles") {
+          throw new Error("Expected attack target to request an Attack Roll.");
+        }
+        const attackRoll = requireTypedHole(
+          awaitingAttackRoll.holes,
+          "attackRoll",
+        );
+        const awaitingReaction = resolveBattleSubject({
+          state,
+          subject: attackAct.subject,
+          fills: [
+            targetFillForAttack,
+            attackRollFill(attackRoll, { total: 14, naturalD20: 10 }),
+          ],
+        });
+        if (awaitingReaction.tag !== "needsHoles") {
+          throw new Error("Expected Shield to open an attack-hit interrupt.");
+        }
+        appendInterruptRouteEvents(awaitingReaction);
+        const choice = requireInterruptShieldReactionChoice(awaitingReaction);
+        const resolved = resolveBattleInterrupt({
+          state: awaitingReaction.state,
+          fill: interruptDecisionFillSupport(
+            awaitingReaction.snapshot.pendingInterrupt!.decisionHole,
+            {
+              kind: "resolve",
+              responderId: interruptShieldCasterId,
+              choice: {
+                kind: "castTriggeredReactionSpell",
+                invocation: choice.invocation,
+                fills: [],
+              },
+            },
+          ),
+        });
+        if (resolved.tag !== "resolved") {
+          throw new Error("Expected Shield active effect to resume attack.");
+        }
+        appendInterruptRouteEvents(resolved);
+      },
+      doReplayRecordedProcedureFromRoot: () => {
+        const continuation = publicReplayContinuationAfterAttackDeclines();
+        route = [battleReducerStartRouteEvent(continuation.state)];
+        const pendingDamage = resolveBattleSubject({
+          state: continuation.state,
+          subject: continuation.subject,
+          fills: [],
+        });
+        if (pendingDamage.tag !== "needsHoles") {
+          throw new Error("Expected replay continuation to request damage.");
+        }
+        appendInterruptRouteEvents(pendingDamage);
+        const replayDamage = requireTypedHole(pendingDamage.holes, "rolledDice");
+        const replayFromRoot = resolveBattleSubject({
+          state: pendingDamage.state,
+          subject: continuation.subject,
+          fills: [damageRollFill(replayDamage, 4)],
+        });
+        if (replayFromRoot.tag !== "resolved") {
+          throw new Error("Expected replay-from-root to resolve.");
+        }
+        appendInterruptRouteEvents(replayFromRoot);
+      },
+      step: () => {},
+      getState: (): ReducerRoutedInterruptStackResumeProjection => ({
+        route,
+      }),
+    };
+  });
+}
+
+function publicReplayContinuationAfterAttackDeclines(): {
+  readonly state: BattleState;
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "attack" }
+  >;
+} {
+  const state = fighterTurnWithReadiedAcidAndSecondReadiedRay();
+  const subject = interruptFighterAttackSubject();
+  const target = interruptAttackInitialTargetHole(state, subject);
+  const attackRoll = interruptAttackRollHoleAfterTarget(
+    state,
+    target,
+    subject,
+    interruptGoblinId,
+  );
+  let result: BattleResolutionResult = resolveBattleSubject({
+    state,
+    subject,
+    fills: [
+      interruptAttackTargetFill(
+        target,
+        subject.actorId,
+        interruptGoblinId,
+        subject.attackName,
+      ),
+      attackRollFill(attackRoll, { total: 15, naturalD20: 10 }),
+    ],
+  });
+  while (
+    result.tag === "needsHoles" &&
+    result.holes.some((hole) => hole.kind === "interruptDecision")
+  ) {
+    const pending = result.snapshot.pendingInterrupt;
+    const responderId = pending?.choices[0]?.reactorId;
+    if (pending == null || responderId === undefined) {
+      throw new Error("Expected public interrupt decision responder.");
+    }
+    result = resolveBattleInterrupt({
+      state: result.state,
+      fill: interruptDecisionFillSupport(pending.decisionHole, {
+        kind: "decline",
+        responderId,
+      }),
+    });
+  }
+  if (
+    result.tag !== "needsHoles" ||
+    !result.holes.some((hole) => hole.kind === "rolledDice") ||
+    result.state.interruptStack.at(-1)?.kind !== "replayContinuation"
+  ) {
+    throw new Error(
+      "Expected public interrupt decline path to reach replay continuation damage.",
+    );
+  }
+  return {
+    state: result.state,
+    subject,
+  };
+}
+
 export function createHitPointRestorationOrderingDriver() {
   return defineDriver(hitPointRestorationOrderingDriverSchema, () => {
     let state = healingSpellOrderingBattle();
@@ -13874,6 +14148,15 @@ function normalizeReducerRoutedIndependentSpellAttackSequenceQuintState(
   };
 }
 
+function normalizeReducerRoutedInterruptStackResumeQuintState(
+  raw: unknown,
+): ReducerRoutedInterruptStackResumeProjection {
+  const state = quintStateRecord(raw);
+  return {
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
 function normalizeHitPointRestorationOrderingQuintState(
   raw: unknown,
 ): HitPointRestorationOrderingProjection {
@@ -14574,6 +14857,16 @@ export const reducerRoutedIndependentSpellAttackSequenceStateCheck = stateCheck(
   (
     spec: ReducerRoutedIndependentSpellAttackSequenceProjection,
     impl: ReducerRoutedIndependentSpellAttackSequenceProjection,
+  ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+export const reducerRoutedInterruptStackResumeStateCheck = stateCheck(
+  normalizeReducerRoutedInterruptStackResumeQuintState,
+  (
+    spec: ReducerRoutedInterruptStackResumeProjection,
+    impl: ReducerRoutedInterruptStackResumeProjection,
   ) => {
     expect(impl).toEqual(spec);
     return true;
@@ -15695,6 +15988,72 @@ function independentSpellAttackSequenceAct(
   return act;
 }
 
+type InterruptShieldAttackAct = AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "attack" }
+  >;
+};
+
+function interruptShieldUnarmedStrikeAct(
+  state: BattleState,
+): InterruptShieldAttackAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is InterruptShieldAttackAct =>
+      candidate.subject.tag === "action" &&
+      candidate.subject.action === "attack" &&
+      candidate.subject.actorId === interruptShieldAttackerId &&
+      candidate.subject.attackName === "Unarmed Strike",
+  );
+  if (act === undefined) {
+    throw new Error("Expected interrupt-stack Shield Unarmed Strike act.");
+  }
+  return act;
+}
+
+function interruptShieldAttackTargetFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  return {
+    kind: "targetChoice",
+    holeId: hole.holeId,
+    value: interruptShieldCasterId,
+    spatialFacts: [
+      {
+        kind: "attackTargetInMeleeReach",
+        actorId: interruptShieldAttackerId,
+        targetId: interruptShieldCasterId,
+        attackName: "Unarmed Strike",
+      },
+    ],
+  };
+}
+
+function requireInterruptShieldReactionChoice(
+  result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
+): Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "castTriggeredReactionSpell" }
+> {
+  const choice = result.snapshot.pendingInterrupt?.choices.find(
+    (
+      candidate,
+    ): candidate is Extract<
+      BattleInterruptProcedureChoice,
+      { readonly kind: "castTriggeredReactionSpell" }
+    > =>
+      candidate.kind === "castTriggeredReactionSpell" &&
+      candidate.reactorId === interruptShieldCasterId &&
+      candidate.invocation.tag === "spellSlot" &&
+      candidate.invocation.spellId === interruptShieldUnitId &&
+      candidate.invocation.procedure === "shieldReaction",
+  );
+  if (choice === undefined) {
+    throw new Error("Expected interrupt-stack Shield Reaction choice.");
+  }
+  return choice;
+}
+
 function twoIndependentSpellAttackSequenceTargetHoles(
   holes: readonly BattleHole[],
 ): readonly [
@@ -15923,6 +16282,38 @@ function fighterVsSkeletonBattle(): BattleState {
   });
 }
 
+function interruptShieldBattle(): BattleState {
+  return startBattleRight({
+    battleId: battleId("battle-runtime-mbt-interrupt-stack-resume-shield"),
+    combatants: [
+      interruptShieldCharacterCreature({
+        combatantId: interruptShieldAttackerId,
+        displayName: "Attacker",
+        initiative: 20,
+        side: oppositionSide,
+      }),
+      interruptShieldCharacterCreature({
+        combatantId: interruptShieldCasterId,
+        displayName: "Shield caster",
+        initiative: 10,
+        side: partySide,
+        spellcasting: {
+          sourceClassName: "wizard",
+          spellcastingAbilityModifier: abilityModifier(3),
+          proficiencyBonus: proficiencyBonus(2),
+          canCastSpells: true,
+          cantrips: [],
+          preparedSpells: [unitCatalogSpellRecord(interruptShieldUnitId)],
+          featurePreparedSpells: [],
+          spellbookRitualSpellAccesses: [],
+          invocationSpellAccesses: [],
+          spellSlots: [{ spellLevel: 1, count: 1 }],
+        },
+      }),
+    ],
+  });
+}
+
 function extraAttackBattle(
   unitId: ExtraAttackMbtUnitId = "fighter_extra_attack",
 ): BattleState {
@@ -15949,6 +16340,14 @@ export function extraAttackMbtInitAction(
   if (additionalAttacks === 1) return "initOneAdditionalAttack";
   if (additionalAttacks === 2) return "initTwoAdditionalAttacks";
   return "initThreeAdditionalAttacks";
+}
+
+function unitCatalogSpellRecord(unitId: string): SpellRecord {
+  const unit = unitLibrary.requireUnit(unitId);
+  if (unit.kind !== "spell") {
+    throw new Error(`Expected Unit ${unitId} to be a Spell.`);
+  }
+  return unit;
 }
 
 function extraAttackMbtUnit(unitId: ExtraAttackMbtUnitId): UnitRecord {
@@ -16436,6 +16835,49 @@ function rogueCreatureInit(input: {
         invocationSpellAccesses: [],
         spellSlots: [{ spellLevel: 1, count: 1 }],
       },
+    },
+  };
+}
+
+function interruptShieldCharacterCreature(input: {
+  readonly combatantId: CombatantId;
+  readonly displayName: string;
+  readonly initiative: number;
+  readonly side: typeof partySide | typeof oppositionSide;
+  readonly spellcasting?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["spellcasting"];
+}): BattleCreatureInit {
+  return {
+    combatantId: input.combatantId,
+    displayName: input.displayName,
+    initiative: initiativeScore(input.initiative),
+    side: input.side,
+    creatureInit: {
+      kind: "character",
+      characterId: characterId(`${input.combatantId}-character`),
+      characterUnitRefs: [],
+      classLevels: [{ className: "wizard", level: 1 }],
+      knownLanguages: ["Common"],
+      d20Statistics: testCharacterD20Statistics(),
+      armorClass: defaultArmorClassState(),
+      size: "medium",
+      speed: { walkFeet: movementFeet(30) },
+      currentHp: Hp(interruptInitialHp),
+      maxHp: Hp(interruptInitialHp),
+      tempHp: Hp(0),
+      selectedLoadout: {},
+      attack: null,
+      unarmedStrike: {
+        ...baseUnarmedStrike(),
+        attackAbilityModifier: abilityModifier(0),
+        attackBonus: attackBonus(2),
+        damageAbilityModifier: abilityModifier(0),
+      },
+      ...(input.spellcasting === undefined
+        ? {}
+        : { spellcasting: input.spellcasting }),
     },
   };
 }

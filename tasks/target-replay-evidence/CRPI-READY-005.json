@@ -1,0 +1,145 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts interrupt stack resume public reducer route-event replay, revision round 2 regenerated"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-interrupt-stack-resume.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-interrupt-stack-resume.route.mbt.qnt",
+      "qntFileSha256": "10202d06193f86792c580341d392a4a1c36514de2e76eed6053dd61e1360ec43",
+      "routeConnectorSha256": "9072b1c7c3a313528d8b37da03d83bd8cd576f47121aac445f547585047c51c4",
+      "branchFamily": "step",
+      "branchAction": "doNestedDeclineResumesOuterInterrupt",
+      "observedActionTaken": "doNestedDeclineResumesOuterInterrupt",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=1 action=doNestedDeclineResumesOuterInterrupt",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "8e1d1c0ab6e66ac8d64bf31731456c8ec446271f76e5fd0cb7f655c323890c65",
+        "observedProjectionSha256": "8e1d1c0ab6e66ac8d64bf31731456c8ec446271f76e5fd0cb7f655c323890c65",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "resolve_battle_interrupt",
+            "packages/battle-runtime/src/index.ts#resolveBattleInterrupt"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), BattleResolutionResult.routeEvents from resolveBattleSubject, and BattleResolutionResult.routeEvents from resolveBattleInterrupt",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "BattleState.interruptStack",
+          "BattleCreatureState.reactionAvailable",
+          "BattleResolutionResult.routeEvents",
+          "BattleSubject.runtimeCommand.releaseReadiedSpell",
+          "BattleHole.kind"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-interrupt-stack-resume.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-interrupt-stack-resume.route.mbt.qnt",
+      "qntFileSha256": "10202d06193f86792c580341d392a4a1c36514de2e76eed6053dd61e1360ec43",
+      "routeConnectorSha256": "9072b1c7c3a313528d8b37da03d83bd8cd576f47121aac445f547585047c51c4",
+      "branchFamily": "step",
+      "branchAction": "doShieldMutationResumesInterruptedAttack",
+      "observedActionTaken": "doShieldMutationResumesInterruptedAttack",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=1 action=doShieldMutationResumesInterruptedAttack",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "4a17be339550934bd834092b5aea3e10a429a936e251a4522e67bbbaeb985c12",
+        "observedProjectionSha256": "4a17be339550934bd834092b5aea3e10a429a936e251a4522e67bbbaeb985c12",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "resolve_battle_interrupt",
+            "packages/battle-runtime/src/index.ts#resolveBattleInterrupt"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), BattleResolutionResult.routeEvents from resolveBattleSubject, and BattleResolutionResult.routeEvents from resolveBattleInterrupt",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "BattleState.interruptStack",
+          "BattleCreatureState.reactionAvailable",
+          "CharacterBattleSpellSlotState",
+          "BattleCreatureState.activeEffects",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-interrupt-stack-resume.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-interrupt-stack-resume.route.mbt.qnt",
+      "qntFileSha256": "10202d06193f86792c580341d392a4a1c36514de2e76eed6053dd61e1360ec43",
+      "routeConnectorSha256": "9072b1c7c3a313528d8b37da03d83bd8cd576f47121aac445f547585047c51c4",
+      "branchFamily": "step",
+      "branchAction": "doReplayRecordedProcedureFromRoot",
+      "observedActionTaken": "doReplayRecordedProcedureFromRoot",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=1 action=doReplayRecordedProcedureFromRoot",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "8550504b100cf5097ace59cdcd45da069426f59427f7216ca21a1696c8f17591",
+        "observedProjectionSha256": "8550504b100cf5097ace59cdcd45da069426f59427f7216ca21a1696c8f17591",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "resolve_battle_interrupt",
+            "packages/battle-runtime/src/index.ts#resolveBattleInterrupt",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result) and BattleResolutionResult.routeEvents from resolveBattleSubject after public resolveBattleInterrupt decline calls create the replayContinuation frame",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleState.interruptStack",
+          "BattleReplayContinuationFrame",
+          "BattleInterruptedProcedure.fills",
+          "BattleCreatureState.hitPoints",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}
