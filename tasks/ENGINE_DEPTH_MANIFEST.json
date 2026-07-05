@@ -1,29 +1,29 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-030",
+  "taskId": "CRPI-BLOCK-031",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.route.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.route.mbt.qnt",
       "quarantinedWitnessNames": [
         "qProtocol",
         "qRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-030.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-031.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts",
+      "path": "packages/battle-runtime/src/stat-block-size-gated-condition-rider.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "StatBlockMultiDamageProjection",
-        "StatBlockMultiDamageRouteProjection",
-        "createStatBlockMultiDamageRouteDriver",
-        "normalizeStatBlockMultiDamageRouteQuintState",
-        "statBlockMultiDamageRouteStateCheck"
+        "SizeGatedConditionRiderProjection",
+        "SizeGatedConditionRiderRouteProjection",
+        "createSizeGatedConditionRiderRouteDriver",
+        "normalizeSizeGatedConditionRiderRouteQuintState",
+        "sizeGatedConditionRiderRouteStateCheck"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-030.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-031.json"
       ]
     }
   ],
@@ -33,7 +33,7 @@
       "owners": [
         "BattleStatBlockActionOwner"
       ],
-      "notes": "Existing public BattleSubject action resolution is reused for Stat Block action dispatch; damage notation remains a Stat Block source fact."
+      "notes": "Existing public BattleSubject action resolution is reused for Stat Block action dispatch; condition-rider source shape remains a Stat Block source fact."
     },
     {
       "path": "packages/battle-runtime/src/battle-reducer/attack-main.ts",
@@ -41,33 +41,44 @@
         "BattleTargetSelectionOwner",
         "BattleAttackRollOwner"
       ],
-      "notes": "Existing target-choice and attack-roll progression is reused for rolled and static Stat Block attack route replay."
+      "notes": "Existing target-choice and attack-roll progression is reused for Stat Block size-gated condition rider route replay."
+    },
+    {
+      "path": "packages/battle-runtime/src/battle-reducer/statblock-attack-hit-condition-riders.ts",
+      "owners": [
+        "BattleConditionLifecycleOwner",
+        "BattleCreatureStateOwner"
+      ],
+      "notes": "Existing Stat Block attack-hit condition rider resolution reads target effective Size and condition-immunity input facts from BattleCreatureState before applying Prone through the condition lifecycle. No route-local Size or immunity state was added."
     },
     {
       "path": "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
       "owners": [
         "BattleHitPointOwner"
       ],
-      "notes": "Existing Hit Point damage application is reused for rolled and static Stat Block damage notation route replay."
+      "notes": "Existing Hit Point damage application is reused for size-gated condition rider damage resolution after condition lifecycle handling."
     },
     {
       "path": "packages/battle-runtime/src/battle-reducer/statblock-attacks.ts",
       "owners": [
         "BattleStatBlockActionOwner",
+        "BattleConditionLifecycleOwner",
         "BattleHitPointOwner"
       ],
-      "notes": "Existing Stat Block attack damage projection resolves multi-component rolled and static damage without adding a route-local damage or HP ledger."
-    }
-  ],
-  "expectedNextReuse": [
+      "notes": "Existing Stat Block attack damage projection resolves damage and delegates supported attack-hit condition riders without adding a route-local condition, damage, or HP ledger."
+    },
     {
-      "driver": "packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt",
-      "module": "packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts",
-      "api": "Future Stat Block condition-rider replay can reuse the same StatBlockActionRouteSubject target-selection, attack-roll, and Hit Point owner route shape."
+      "path": "packages/battle-runtime/src/statblock-attack-hit-condition-support.ts",
+      "owners": [
+        "BattleStatBlockActionOwner",
+        "BattleConditionLifecycleOwner"
+      ],
+      "notes": "Existing support-profile reader admits the typed Surface shape for Prone size-gated attack-hit condition riders by parsed effect shape rather than authored identity."
     }
   ],
+  "expectedNextReuse": [],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 58 observes copied qRoute for Stat Block multi-damage rolled and static damage notation through public battle-runtime reducer entrypoints. No duplicate durable damage or Hit Point state was introduced."
+    "notes": "Task 59 observes copied qRoute for Stat Block size-gated condition riders through public battle-runtime reducer entrypoints. No duplicate durable target Size, condition-immunity, condition, damage, or Hit Point state was introduced."
   }
 }
