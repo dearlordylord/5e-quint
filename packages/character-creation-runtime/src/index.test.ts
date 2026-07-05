@@ -10394,11 +10394,15 @@ function replayGnomishLineageTraitProjection(): {
       unitLibrary,
     }),
   );
-  if (projection === undefined || projection.option.id !== "rock_gnome") {
+  if (
+    projection === undefined ||
+    projection.traitUnitId !== SRD_GNOMISH_LINEAGE_TRAIT_UNIT_ID ||
+    projection.option.id !== "rock_gnome"
+  ) {
     throw new Error("Expected selected Gnomish Lineage projection replay.");
   }
   return {
-    unitId: projection.traitUnitId,
+    unitId: SRD_GNOMISH_LINEAGE_TRAIT_UNIT_ID,
     procedure: "species-lineage-trait-projection",
     result: "rock_gnome",
   };
