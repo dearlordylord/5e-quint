@@ -7,10 +7,12 @@ import { describe, expect, it } from "vitest";
 import {
   characterBattleEncounterCompositionRouteStep,
   characterBattleInitProjectionRouteStep,
+  characterSessionSheetDerivedBattleActsRouteStep,
   composeBattleEncounterRoute as composeBattleEncounter,
   enterBattleRuntimeRoute as enterBattleRuntime,
   initialCharacterBattleEncounterCompositionRoute,
   initialCharacterBattleInitProjectionRoute,
+  initialCharacterSessionSheetDerivedBattleActsRoute,
   projectCharacterSheetToBattleRoute as projectCharacterSheetToBattle,
   recordCharacterBattleHandoffFactsRoute as recordCharacterBattleHandoffFacts,
   rejectCharacterBattleHandoffRoute as rejectCharacterBattleHandoff,
@@ -24,6 +26,7 @@ import {
   type CharacterBattleRouteHole,
   type CharacterBattleRouteOwner,
   type CharacterBattleRouteSubject,
+  type CharacterSessionSheetDerivedBattleActsRouteAction,
 } from "./index.ts";
 
 const MBT_TEST_TIMEOUT_MS = 120_000;
@@ -140,6 +143,13 @@ const encounterCompositionRouteDriverSchema = {
   step: {},
 } as const;
 
+const sheetDerivedBattleActsRouteDriverSchema = {
+  init: {},
+  doEnterSheetDerivedSessionBattle: {},
+  doSettleSheetDerivedSpellSlot: {},
+  step: {},
+} as const;
+
 const settlementRouteDriverSchema = {
   init: {},
   doSettleHitPointsConditionsSlotsAndPreservedSheetState: {},
@@ -228,6 +238,18 @@ describe("character battle reducer route connector MBT", () => {
         initialCharacterBattleEncounterCompositionRoute,
       ),
       maxSteps: 5,
+    });
+  }, MBT_TEST_TIMEOUT_MS);
+
+  it("routes sheet-derived battle acts and source-exact slot settlement", async () => {
+    await runRouteMbt({
+      specFileName: "character-session-sheet-derived-battle-acts.route.mbt.qnt",
+      driver: createIndexedRouteDriver(
+        sheetDerivedBattleActsRouteDriverSchema,
+        sheetDerivedBattleActsRouteActions,
+        initialCharacterSessionSheetDerivedBattleActsRoute,
+      ),
+      maxSteps: 2,
     });
   }, MBT_TEST_TIMEOUT_MS);
 
@@ -331,6 +353,20 @@ const encounterCompositionRouteActions = indexedActionEntries(
   ],
 );
 
+const sheetDerivedBattleActsRouteActions = indexedActionEntries(
+  sheetDerivedBattleActsRouteDriverSchema,
+  [
+    [
+      "doEnterSheetDerivedSessionBattle",
+      sheetDerivedBattleActsRouteStep("doEnterSheetDerivedSessionBattle"),
+    ],
+    [
+      "doSettleSheetDerivedSpellSlot",
+      sheetDerivedBattleActsRouteStep("doSettleSheetDerivedSpellSlot"),
+    ],
+  ],
+);
+
 const settlementRouteActions = indexedActionEntries(settlementRouteDriverSchema, [
   [
     "doSettleHitPointsConditionsSlotsAndPreservedSheetState",
@@ -420,6 +456,12 @@ function encounterCompositionRouteStep(
   action: CharacterBattleEncounterCompositionRouteAction,
 ): RouteAppender {
   return (route) => characterBattleEncounterCompositionRouteStep(route, action);
+}
+
+function sheetDerivedBattleActsRouteStep(
+  action: CharacterSessionSheetDerivedBattleActsRouteAction,
+): RouteAppender {
+  return (route) => characterSessionSheetDerivedBattleActsRouteStep(route, action);
 }
 
 function initialBattleSettlementRoute(): readonly CharacterBattleRouteEvent[] {

@@ -1636,6 +1636,17 @@ function routeRowForReplay(routeInventory, run) {
   );
 }
 
+function routeRowForConnectorReplay(routeInventory, run) {
+  const connectorPath =
+    typeof run.routeConnectorPath === "string" && run.routeConnectorPath.trim() !== ""
+      ? run.routeConnectorPath
+      : run.driverPath;
+  const { branchRows, driverRows } = routeRowsForReplay(routeInventory);
+  return [...branchRows, ...driverRows].find((row) =>
+    collectRouteConnectorPaths(row).includes(connectorPath),
+  );
+}
+
 function routeRowForObligation(routeInventory, obligation) {
   const { branchRows, driverRows } = routeRowsForReplay(routeInventory);
   return (
@@ -1680,7 +1691,8 @@ function expectedReplayStateCheck(routeRow) {
 function validateRouteReplayProjection(run, routeInventory, context, issues) {
   if (run.stateCheck?.qntAcceptance?.tag === "qnt-semantic") return;
   const expectedStateCheck = expectedReplayStateCheck(
-    routeRowForReplay(routeInventory, run),
+    routeRowForReplay(routeInventory, run) ??
+      routeRowForConnectorReplay(routeInventory, run),
   );
   if (expectedStateCheck === undefined) return;
   if (run.stateCheck?.projection !== expectedStateCheck.projection) {
@@ -1693,6 +1705,92 @@ function validateRouteReplayProjection(run, routeInventory, context, issues) {
       `${context}: ${run.driverPath} route evidence requires stateCheck.comparator ${expectedStateCheck.comparator}.`,
     );
   }
+}
+
+function routeConnectorDefinesAction(connectorPath, actionName) {
+  if (
+    typeof connectorPath !== "string" ||
+    typeof actionName !== "string" ||
+    !repoFileExists(connectorPath)
+  ) {
+    return false;
+  }
+  const text = fs.readFileSync(path.join(root, connectorPath), "utf8");
+  return new RegExp(`\\baction\\s+${escapeRegExp(actionName)}\\b`).test(text);
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function routeConnectorReplayPath(run) {
+  return typeof run.routeConnectorPath === "string" &&
+    run.routeConnectorPath.trim() !== ""
+    ? run.routeConnectorPath
+    : run.driverPath;
+}
+
+function validateRouteConnectorReplay(run, routeInventory, context, issues) {
+  const connectorPath = routeConnectorReplayPath(run);
+  const routeRow = routeRowForConnectorReplay(routeInventory, run);
+  if (routeRow === undefined) {
+    issues.push(
+      `${context}: route connector replay ${connectorPath} does not match a reducer route row.`,
+    );
+    return undefined;
+  }
+  if (run.driverPath !== connectorPath) {
+    issues.push(
+      `${context}: route connector replay driverPath must equal routeConnectorPath ${connectorPath}.`,
+    );
+  }
+  if (!connectorPath.endsWith(".route.mbt.qnt")) {
+    issues.push(`${context}: route connector replay must point at a .route.mbt.qnt file.`);
+  }
+  if (!routeConnectorDefinesAction(connectorPath, run.branchAction)) {
+    issues.push(
+      `${context}: route connector ${connectorPath} does not define action ${run.branchAction}.`,
+    );
+  }
+  const connectorSha256 = repoFileExists(connectorPath)
+    ? sha256File(path.join(root, connectorPath))
+    : undefined;
+  if (connectorSha256 !== undefined && run.qntFileSha256 !== connectorSha256) {
+    issues.push(`${context}: route connector QNT file hash does not match.`);
+  }
+  if (
+    connectorSha256 !== undefined &&
+    run.routeConnectorSha256 !== undefined &&
+    run.routeConnectorSha256 !== connectorSha256
+  ) {
+    issues.push(`${context}: routeConnectorSha256 does not match connector file.`);
+  }
+  validatePassingStateCheck(run.stateCheck, context, issues);
+  const acceptedQntRequirement = qntAcceptanceStateCheckRequirement(
+    run.stateCheck,
+    routeRow,
+    context,
+    issues,
+  );
+  let acceptedQntRequirementKey;
+  if (acceptedQntRequirement !== undefined) {
+    acceptedQntRequirementKey = qntAcceptanceKey(acceptedQntRequirement);
+    const requiredKeys = new Set(
+      qntAcceptanceRequirements(routeRow)
+        .map(qntAcceptanceKey)
+        .filter((key) => key !== undefined),
+    );
+    if (
+      acceptedQntRequirementKey === undefined ||
+      !requiredKeys.has(acceptedQntRequirementKey)
+    ) {
+      issues.push(
+        `${context}: stateCheck.qntAcceptance does not match a qntAcceptance.required route entry for ${routeRow.driverPath}.`,
+      );
+    }
+  }
+  validateRouteReplayProjection(run, routeInventory, context, issues);
+  return { routeRow, acceptedQntRequirementKey };
 }
 
 function qntAcceptanceStateCheckRequirement(stateCheck, routeRow, context, issues) {
@@ -3956,6 +4054,7 @@ function validateTargetReplayEvidence(
   }
   const covered = new Set();
   const qntAcceptanceCovered = new Set();
+  const routeQntAcceptanceCovered = new Set();
   const sampledInputsByObligation = new Map();
   for (const input of inventory.sampledInputs ?? []) {
     const obligationId = `${input.driverPath}#${input.branchFamily}:${input.branchAction}`;
@@ -3965,6 +4064,7 @@ function validateTargetReplayEvidence(
     sampledInputsByObligation.get(obligationId).add(input.pickName);
   }
   const traceIdsByObligation = new Set();
+  const traceIdsByRouteConnector = new Set();
   for (const [index, run] of evidence.runs.entries()) {
     const context = `target replay evidence runs[${index}]`;
     const issueCountBeforeRun = issues.length;
@@ -3993,6 +4093,51 @@ function validateTargetReplayEvidence(
     const obligationId = `${run.driverPath}#${run.branchFamily}:${run.branchAction}`;
     const obligation = obligationsById.get(obligationId);
     if (obligation === undefined) {
+      const isRouteConnectorRun =
+        run.stateCheck?.qntAcceptance?.tag === "qnt-route" &&
+        (run.driverPath.endsWith(".route.mbt.qnt") ||
+          (typeof run.routeConnectorPath === "string" &&
+            run.routeConnectorPath.endsWith(".route.mbt.qnt")));
+      if (isRouteConnectorRun) {
+        const connectorTraceKey = `${routeConnectorReplayPath(run)}\u0000${run.branchFamily}\u0000${run.branchAction}\u0000${run.traceId}`;
+        if (traceIdsByRouteConnector.has(connectorTraceKey)) {
+          issues.push(
+            `${context}: duplicate route connector traceId ${run.traceId} for ${routeConnectorReplayPath(run)}#${run.branchFamily}:${run.branchAction}.`,
+          );
+        }
+        traceIdsByRouteConnector.add(connectorTraceKey);
+        if (!isRecord(run.stateCheck) || typeof run.stateCheck.tag !== "string") {
+          issues.push(`${context}: stateCheck must be a tagged record.`);
+        }
+        if (!isRecord(run.result) || typeof run.result.tag !== "string") {
+          issues.push(`${context}: result must be a tagged record.`);
+        }
+        if (run.observedActionTaken !== run.branchAction) {
+          issues.push(
+            `${context}: observedActionTaken ${run.observedActionTaken} does not match branchAction ${run.branchAction}.`,
+          );
+        }
+        if (run.result?.tag === "pass") {
+          const routeResult = validateRouteConnectorReplay(
+            run,
+            routeInventory,
+            context,
+            issues,
+          );
+          if (
+            routeResult?.acceptedQntRequirementKey !== undefined &&
+            routeResult.routeRow?.driverPath !== undefined &&
+            issues.length === issueCountBeforeRun
+          ) {
+            routeQntAcceptanceCovered.add(
+              `${routeResult.routeRow.driverPath}\u0000${routeResult.acceptedQntRequirementKey}`,
+            );
+          }
+        } else if (run.result?.tag !== "fail") {
+          issues.push(`${context}: result tag must be pass or fail.`);
+        }
+        continue;
+      }
       issues.push(`${context}: unknown source obligation ${obligationId}.`);
       continue;
     }
@@ -4061,9 +4206,10 @@ function validateTargetReplayEvidence(
     }
     const routeRow = routeRowForReplay(routeInventory, run);
     let acceptedQntRequirementKey;
+    let acceptedQntRequirement;
     if (run.result?.tag === "pass") {
       validatePassingStateCheck(run.stateCheck, context, issues);
-      const acceptedQntRequirement = qntAcceptanceStateCheckRequirement(
+      acceptedQntRequirement = qntAcceptanceStateCheckRequirement(
         run.stateCheck,
         routeRow,
         context,
@@ -4090,7 +4236,11 @@ function validateTargetReplayEvidence(
     if (run.result?.tag === "pass" && issues.length === issueCountBeforeRun) {
       covered.add(obligationId);
       if (acceptedQntRequirementKey !== undefined) {
-        qntAcceptanceCovered.add(`${obligationId}\u0000${acceptedQntRequirementKey}`);
+        if (acceptedQntRequirement?.tag === "qnt-route") {
+          routeQntAcceptanceCovered.add(`${routeRow?.driverPath}\u0000${acceptedQntRequirementKey}`);
+        } else {
+          qntAcceptanceCovered.add(`${obligationId}\u0000${acceptedQntRequirementKey}`);
+        }
       }
     } else if (run.result?.tag !== "pass" && run.result?.tag !== "fail") {
       issues.push(`${context}: result tag must be pass or fail.`);
@@ -4106,6 +4256,17 @@ function validateTargetReplayEvidence(
       const routeRow = routeRowForObligation(routeInventory, obligation);
       for (const requirement of qntAcceptanceRequirements(routeRow)) {
         const key = qntAcceptanceKey(requirement);
+        if (requirement.tag === "qnt-route") {
+          if (
+            key !== undefined &&
+            !routeQntAcceptanceCovered.has(`${routeRow?.driverPath}\u0000${key}`)
+          ) {
+            issues.push(
+              `${obligation.obligationId}: missing passing target replay evidence for ${requirement.tag} ${acceptancePath(requirement)}.`,
+            );
+          }
+          continue;
+        }
         if (
           key !== undefined &&
           !qntAcceptanceCovered.has(`${obligation.obligationId}\u0000${key}`)

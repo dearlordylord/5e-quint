@@ -136,6 +136,7 @@ const ACCEPTED_MBT_GROUPS = {
         "src/character-battle-init-projection.mbt.test.ts",
         "src/character-battle-settlement.mbt.test.ts",
         "src/character-layer-projection-lifecycle.mbt.test.ts",
+        "src/character-session-sheet-derived-battle-acts.mbt.test.ts",
         "src/character-sheet-feature-resources.mbt.test.ts",
       ]),
     },

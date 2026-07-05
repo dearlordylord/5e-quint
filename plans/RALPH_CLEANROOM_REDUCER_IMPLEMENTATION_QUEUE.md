@@ -481,7 +481,7 @@
     {
       "number": 80,
       "id": "CRP05-SBE-02",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Sheet-derived battle acts and source-exact spell-slot settlement"
     },
     {
@@ -732,7 +732,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRPI-READY-034` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRP05-SBE-01` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-038` | `blocked` | blocked by task body | blocker resolution before implementation |
-| `CRP05-SBE-02` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRP05-SBE-02` | `done` | none | target replay evidence and owner implementation |
 | `CRP06-SRO-01` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-039` | `blocked` | blocked by task body | blocker resolution before implementation |
 | `CRPI-BLOCK-040` | `blocked` | blocked by task body | blocker resolution before implementation |
@@ -5197,7 +5197,7 @@ Plan Impact:
 
 ### Task 80 - CRP05-SBE-02
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
