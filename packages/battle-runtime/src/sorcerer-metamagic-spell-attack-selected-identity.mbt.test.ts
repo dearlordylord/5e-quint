@@ -7,19 +7,44 @@
 //   Quickened Spell costs 2 Sorcery Points and changes an action casting time
 //   to a Bonus Action for that casting.
 // - .references/srd-5.2.1/Spells/Descriptions-Q-R.md#Ray of Frost:
-//   Ray of Frost is an action-cast ranged Spell Attack cantrip.
+//   Ray of Frost is an action-cast ranged Spell Attack that deals Cold damage
+//   on a hit and creates a Speed-reduction Spell Effect.
 // - UBIQUITOUS_LANGUAGE.md: Magic Action, Bonus Action, Spell Invocation,
-//   Attack Roll, Damage Roll, Sorcery Points as a Pool, and Spend.
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
+//   Spell Effect, Attack Roll, Pool, and Spend.
+import { it } from "vitest";
+
+import {
+  defineDriver,
+  focusedMbtMaxSteps,
+  MBT_TEST_TIMEOUT_MS,
+  mbtSpecPath,
+  reducerRoutedMetamagicStateCheck,
+  run,
+} from "./battle-runtime-mbt-driver-kit.ts";
+import {
+  battleReducerStartRouteEvent,
+  type BattleReducerRouteEvent,
+} from "./index.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import {
+  observeQuickenedRayOfFrostRoute,
   projectBattleState,
   resolveQuickenedRayOfFrost,
   sorcererMetamagicBattle,
 } from "./sorcerer-metamagic-selected-identity-support.ts";
 
+const quickenedSpellAttackRouteReplayDriverSchema = {
+  init: {},
+  doRouteBonusActionCastingTime: {},
+  stepRouteBonusActionCastingTime: {},
+} as const;
+
+type QuickenedSpellAttackRouteReplayProjection = {
+  readonly route: readonly BattleReducerRouteEvent[];
+};
+
 defineSelectedIdentityWitness({
-  describeLabel: "Sorcerer Metamagic spell attack selected identity MBT",
+  describeLabel: "Sorcerer Metamagic spell-attack selected identity MBT",
   taskId: "L3META-02-SORCERER-METAMAGIC-QUICKENED-SPELL-ATTACKS",
   specFile: mbtSpecPath(
     import.meta.dirname,
@@ -74,3 +99,53 @@ defineSelectedIdentityWitness({
     },
   ],
 });
+
+it(
+  "compares Quickened Spell attack public reducer route to copied qRoute",
+  async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "stepRouteBonusActionCastingTime",
+      driver: createQuickenedSpellAttackRouteReplayDriver(),
+      backend: "typescript",
+      nTraces: 1,
+      maxSteps: focusedMbtMaxSteps(1),
+      stateCheck: reducerRoutedMetamagicStateCheck,
+    });
+  },
+  MBT_TEST_TIMEOUT_MS,
+);
+
+function createQuickenedSpellAttackRouteReplayDriver() {
+  return defineDriver(quickenedSpellAttackRouteReplayDriverSchema, () => {
+    let route: readonly BattleReducerRouteEvent[] =
+      observeQuickenedRayOfFrostInitialRoute();
+
+    function reset(): void {
+      route = observeQuickenedRayOfFrostInitialRoute();
+    }
+
+    function recordResolvedRoute(): void {
+      route = observeQuickenedRayOfFrostRoute(sorcererMetamagicBattle());
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doRouteBonusActionCastingTime: recordResolvedRoute,
+      stepRouteBonusActionCastingTime: recordResolvedRoute,
+      getState: (): QuickenedSpellAttackRouteReplayProjection => ({
+        route,
+      }),
+    };
+  });
+}
+
+function observeQuickenedRayOfFrostInitialRoute() {
+  return [battleReducerStartRouteEvent(sorcererMetamagicBattle())] as const;
+}

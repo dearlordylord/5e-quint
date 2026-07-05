@@ -166,6 +166,55 @@ export function resolveQuickenedRayOfFrost(state: BattleState): BattleState {
   ).state;
 }
 
+export function observeQuickenedRayOfFrostRoute(
+  state: BattleState,
+): readonly BattleReducerRouteEvent[] {
+  const act = quickenedRayOfFrostAct(state);
+  const targetHole = findHole(act.initialHoles, "targetChoice");
+  const target = targetFill(targetHole, skeletonId);
+  const awaitingAttackRoll = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [target],
+  });
+  const attackRollHole = findHole(
+    awaitingAttackRoll.tag === "needsHoles" ? awaitingAttackRoll.holes : [],
+    "attackRoll",
+  );
+  const attackRoll = attackRollFill(attackRollHole, {
+    total: 15,
+    naturalD20: 10,
+  });
+  const awaitingDamage = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [target, attackRoll],
+  });
+  const damageHole = findHole(
+    awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+    "rolledDice",
+  );
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        target,
+        attackRoll,
+        damageRollFillWithGroups(damageHole, [[4, 3]]),
+      ],
+    }),
+  );
+
+  return [
+    battleReducerStartRouteEvent(state),
+    ...(act.routeEvents ?? []),
+    ...(awaitingAttackRoll.routeEvents ?? []),
+    ...(awaitingDamage.routeEvents ?? []),
+    ...(resolved.routeEvents ?? []),
+  ];
+}
+
 export function resolveSeekingRayOfFrost(state: BattleState): BattleState {
   return resolveSeekingRayOfFrostSubject(state).resolved.state;
 }

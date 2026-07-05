@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-017",
+  "taskId": "CRPI-READY-018",
   "productionModulesExtended": [
     {
       "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
@@ -10,8 +10,8 @@
         "BattleReducerRouteEvent.owner=battleFeatureResource",
         "BattleReducerRouteEvent.owner=battleActionEconomy",
         "BattleReducerRouteEvent.owner=battleSpellSlotAndActionEconomy",
-        "BattleReducerRouteEvent.owner=battleSavingThrowOutcome",
-        "BattleReducerRouteEvent.owner=battleDamageRoll",
+        "BattleReducerRouteEvent.owner=battleTargetSelection",
+        "BattleReducerRouteEvent.owner=battleSpellAttackProcedure",
         "BattleReducerRouteEvent.owner=battleTurnBoundary",
         "battleReducerRouteForResolution"
       ]
@@ -26,57 +26,57 @@
         "BattleFeatureResourceOwner",
         "BattleActionEconomyOwner",
         "BattleSpellSlotAndActionEconomyOwner",
-        "BattleSavingThrowOutcomeOwner",
-        "BattleDamageRollOwner",
+        "BattleTargetSelectionOwner",
+        "BattleSpellAttackProcedureOwner",
         "BattleTurnBoundaryOwner",
-        "doResolveQuickenedSaveGatedDamage",
-        "stepRouteQuickenedSaveGatedDamage"
+        "doRouteBonusActionCastingTime",
+        "stepRouteBonusActionCastingTime"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-017.json"
+        "tasks/target-replay-evidence/CRPI-READY-018.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/sorcerer-metamagic-selected-identity.mbt.test.ts",
+      "path": "packages/battle-runtime/src/sorcerer-metamagic-spell-attack-selected-identity.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "doResolveQuickenedSaveGatedDamage",
-        "compares Quickened Spell save-gated damage public reducer route to copied qRoute",
-        "createQuickenedSaveGatedDamageRouteReplayDriver"
+        "doResolveQuickenedSpellAttack",
+        "compares Quickened Spell attack public reducer route to copied qRoute",
+        "createQuickenedSpellAttackRouteReplayDriver"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-017.json"
+        "tasks/target-replay-evidence/CRPI-READY-018.json"
       ]
     },
     {
       "path": "packages/battle-runtime/src/sorcerer-metamagic-selected-identity-support.ts",
       "quarantinedWitnessNames": [
-        "observeQuickenedBurningHandsRoute"
+        "observeQuickenedRayOfFrostRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-017.json"
+        "tasks/target-replay-evidence/CRPI-READY-018.json"
       ]
     }
   ],
   "accumulatorGrowth": [
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
-      "reason": "Quickened Spell save-gated damage diagnostics expose bonus-action casting-time discovery, action-economy and spell-slot settlement, Saving Throw outcome ownership, damage-roll ownership, and turn-boundary lock ownership through public subject resolution."
+      "reason": "Quickened Spell attack diagnostics expose bonus-action casting-time discovery, action-economy and spell-slot settlement, target-selection ownership, spell Attack Roll ownership, and turn-boundary lock ownership through public subject resolution."
     }
   ],
   "expectedNextReuse": [
     {
-      "driver": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-selected-identity.mbt.qnt",
-      "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "api": "Quickened Spell route projection remains derived from typed bonus-action casting-time facts and reducer-owned holes/fills rather than selected option identity"
-    },
-    {
       "driver": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.qnt",
       "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "api": "Quickened Spell route projection continues to flow from promoted spell procedure shape, action economy, spell-slot settlement, and turn-boundary lock state"
+      "api": "Quickened Spell route projection remains derived from typed bonus-action casting-time facts and reducer-owned spell-attack holes/fills rather than selected option identity"
+    },
+    {
+      "driver": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      "module": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      "api": "stepRouteBonusActionCastingTime is a deterministic copied-route replay wrapper for doRouteBonusActionCastingTime"
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 48 observes the copied Quickened Spell save-gated damage qRoute through public reducer route events for Burning Hands resolution. No new BattleState field was introduced."
+    "notes": "Task 49 observes the copied Quickened Spell attack qRoute through public reducer route events for Ray of Frost resolution. No new BattleState field was introduced."
   }
 }

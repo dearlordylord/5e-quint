@@ -845,6 +845,10 @@ module battleRuntimeSorcererMetamagicRouteMbt {
     doResolveQuickenedSaveGatedDamage,
   }
 
+  action stepRouteBonusActionCastingTime = any {
+    doRouteBonusActionCastingTime,
+  }
+
   action step = any {
     doRouteMetamagicResourceGovernor,
     doRejectMetamagicResourceGovernor,

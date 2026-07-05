@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-017",
+  "taskId": "CRPI-READY-018",
   "durableFields": [
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
@@ -8,7 +8,7 @@
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject.bonusActionSpell metamagic Quickened effect fact, BattleSubject.bonusActionSpell.invocation.procedure=saveGatedDamage, savingThrowOutcome fill, rolledDice fill, and BattleResolutionResult hole frontier",
+        "sourceField": "BattleSubject.bonusActionSpell metamagic Quickened effect fact, BattleSubject.bonusActionSpell.invocation.procedure=spellAttackDamage, targetChoice fill, attackRoll fill, and BattleResolutionResult hole frontier",
         "boundary": "resolveBattleSubject public reducer boundary"
       }
     },
@@ -18,18 +18,19 @@
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject.bonusActionSpell.metamagic.effectKind=action_casting_time_to_bonus_action_with_spell_turn_limit and BattleSubject.bonusActionSpell.invocation.procedure=saveGatedDamage",
+        "sourceField": "BattleSubject.bonusActionSpell.metamagic.effectKind=action_casting_time_to_bonus_action_with_spell_turn_limit and BattleSubject.bonusActionSpell.invocation.procedure=spellAttackDamage",
         "boundary": "battleReducerRouteForResolution"
       }
     }
   ],
   "notes": [
-    "Task 48 introduced no new BattleState, BattleCreatureState, character spellcasting, or table-state durable field.",
+    "Task 49 introduced no new BattleState, BattleCreatureState, character spellcasting, or table-state durable field.",
     "Sorcery Point ownership remains existing CharacterBattlePointPoolResourceState.pointsRemaining.",
-    "Save outcome and damage roll ownership remain existing table-supplied BattleFill values and reducer-owned hole frontiers.",
+    "Target choice, Attack Roll, and damage roll ownership remain existing table-supplied BattleFill values and reducer-owned hole frontiers.",
     "Target Hit Point ownership remains existing BattleCreatureState.hp.",
+    "Ray of Frost Speed-reduction Spell Effect ownership remains existing BattleCreatureState.activeEffects.",
     "Selected Metamagic option identity remains at catalog, selection, admission, and fixture boundaries.",
-    "Route events are public reducer boundary projections derived from typed Quickened Metamagic effect facts, promoted save-gated damage procedure shape, saving-throw and damage-roll fills, and turn-boundary spell-lock state.",
-    "The Quickened save-gated damage route does not dispatch on Sorcerer authored feature identity or the Quickened Spell option name; production routing is admitted by typed action_casting_time_to_bonus_action_with_spell_turn_limit facts on promoted bonus-action spell subjects."
+    "Route events are public reducer boundary projections derived from typed Quickened Metamagic effect facts, promoted spell Attack damage procedure shape, target-choice and attack-roll fills, and turn-boundary spell-lock state.",
+    "The Quickened spell Attack route does not dispatch on Sorcerer authored feature identity or the Quickened Spell option name; production routing is admitted by typed action_casting_time_to_bonus_action_with_spell_turn_limit facts on promoted bonus-action spell subjects."
   ]
 }
