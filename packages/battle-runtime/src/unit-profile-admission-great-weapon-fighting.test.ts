@@ -1,4 +1,6 @@
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME feat_great_weapon_fighting
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME feat_great_weapon_fighting
+// UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME feat_great_weapon_fighting doReplayGreatWeaponFightingAttackDamageDieFloor
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-damage-die-floor
 import { describe, expect, test } from "vitest";
 import {
@@ -24,6 +26,7 @@ import {
   parseSupportedUnitFeatureProfile,
   resolveBattleSubject,
 } from "./unit-profile-admission-test-support.ts";
+import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.ts";
 import type {
   BattleActiveEffect,
   BattleCreatureInit,
@@ -342,7 +345,12 @@ function resolveWeaponHit(input: {
       state: input.state,
       subject,
       fills: [
-        attackTargetFill(target, spellCasterId, spellTargetId, input.attackName),
+        attackTargetFill(
+          target,
+          spellCasterId,
+          spellTargetId,
+          input.attackName,
+        ),
       ],
     }),
     "attackRoll",
@@ -352,7 +360,12 @@ function resolveWeaponHit(input: {
       state: input.state,
       subject,
       fills: [
-        attackTargetFill(target, spellCasterId, spellTargetId, input.attackName),
+        attackTargetFill(
+          target,
+          spellCasterId,
+          spellTargetId,
+          input.attackName,
+        ),
         attackRollFill(roll, { total: 15, naturalD20: 10 }),
       ],
     }),
@@ -410,3 +423,57 @@ function withTargetSlashingResistance(state: BattleState): BattleState {
     }),
   };
 }
+
+defineSelectedIdentityReplayWitness({
+  describeLabel:
+    "L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME selected identity replay",
+  taskId: "L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME",
+  initialProjection: {
+    unitId: greatWeaponFightingUnitId,
+    procedure: "initial",
+    targetHp: 12,
+  },
+  units: [
+    {
+      unitId: greatWeaponFightingUnitId,
+      procedures: [
+        {
+          actionName: "doReplayGreatWeaponFightingAttackDamageDieFloor",
+          projectionAfter: {
+            unitId: greatWeaponFightingUnitId,
+            procedure: "attackDamageDieFloor",
+            targetHp: 6,
+          },
+          discover: () => {
+            const attack = zeroAbilityWeaponAttack("weapon_greatsword");
+            const state = greatWeaponFightingBattle({
+              attack,
+              selectedLoadout: mainWeaponLoadout(
+                "weapon_greatsword",
+                "two_handed",
+              ),
+            });
+            const resolved = resolveWeaponHit({
+              state,
+              attackName: "Greatsword",
+              damageGroups: [[1, 2]],
+              attackDamageDieFloorSelection: "apply",
+            });
+            if (resolved.tag !== "resolved") {
+              throw new Error(
+                "Expected selected Great Weapon Fighting replay.",
+              );
+            }
+            return {
+              unitId: greatWeaponFightingUnitId,
+              procedure: "attackDamageDieFloor",
+              targetHp: Number(
+                resolved.state.combatants.get(spellTargetId)?.hp,
+              ),
+            };
+          },
+        },
+      ],
+    },
+  ],
+});

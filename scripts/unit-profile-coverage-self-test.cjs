@@ -388,8 +388,7 @@ function mindSpikeDeferredSelectedIdentityUnit(withSelectedIdentityEvidence) {
           mechanic:
             "failed-save same-plane location knowledge, Hidden prevention, and observer-scoped Invisible benefit denial",
           battleReadinessClosure: {
-            kind:
-              battleReadinessClosureKind.outsideRuntimePresentationExploration,
+            kind: battleReadinessClosureKind.outsideRuntimePresentationExploration,
             owner: "runtime-detached table/perception/knowledge owner",
             reason:
               "The promoted battle runtime does not store duplicate table/perception knowledge state.",
@@ -929,8 +928,7 @@ function runSelfTest(root) {
     const completeLevel13ScopeId = "level-1-3";
     const completeLevel13ObligationId = "BATTLE.FIXTURE.COMPLETE";
     const completeLevel13McpFlowId = "fixture-covered-flow";
-    const completeLevel13McpTaskId =
-      "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED";
+    const completeLevel13McpTaskId = "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED";
     const completeLevel13Report = fullSupportReportFixture({
       scopeTitle: "Fixture complete level 1-3",
       claimGate: {
@@ -984,8 +982,7 @@ function runSelfTest(root) {
             flowId: completeLevel13McpFlowId,
             scopeIds: [completeLevel13ScopeId],
             scenarioId: "fixture-covered-scenario",
-            ownerPath:
-              "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+            ownerPath: "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
             testPath: "packages/mcp/src/mcp-protocol.test.ts",
             taskId: completeLevel13McpTaskId,
             summary: "fixture MCP scenario evidence",
@@ -1056,9 +1053,8 @@ function runSelfTest(root) {
         );
       }
     }
-    const renderedCompleteLevel13Gate = renderUltraGoldenGate(
-      completeLevel13Gate,
-    );
+    const renderedCompleteLevel13Gate =
+      renderUltraGoldenGate(completeLevel13Gate);
     for (const expectedRow of [
       "Ultra-golden gate: **pass**.",
       `| ${completeLevel13ScopeId} | pass | 4/4 | 1 |`,
@@ -1311,10 +1307,11 @@ function runSelfTest(root) {
       "packages/battle-runtime/src/unreachable-selected-identity.mbt.test.ts",
     );
     const selectedReplayText = [
+      'const fixtureUnitId = "fixture_unit";',
       "const selectedUnitIdentityReplays = [",
       "  {",
       '    taskId: "QMBT10",',
-      '    unitId: "fixture_unit",',
+      "    unitId: fixtureUnitId,",
       '    actions: ["doReachableAction"],',
       "    sequences: [],",
       "  },",
@@ -1343,6 +1340,11 @@ function runSelfTest(root) {
     if (reachableRows[0]?.reducerReachability?.reachable !== true) {
       fail(
         `Self-test failed: expected selected identity owner to reach production runtime entrypoints, got ${JSON.stringify(reachableRows)}`,
+      );
+    }
+    if (reachableRows[0]?.unitId !== "fixture_unit") {
+      fail(
+        `Self-test failed: expected const-backed selected identity Unit id to resolve, got ${JSON.stringify(reachableRows)}`,
       );
     }
     if (unreachableRows[0]?.reducerReachability?.reachable !== false) {
@@ -1653,7 +1655,8 @@ function runSelfTest(root) {
       ],
       rulesKernelProfileJoin,
     );
-    const fixtureProfileGap = rulesKernelSupportedUnitJoin.units[0]?.profiles[0];
+    const fixtureProfileGap =
+      rulesKernelSupportedUnitJoin.units[0]?.profiles[0];
     if (
       fixtureProfileGap?.joinStatus !== "unmapped" ||
       fixtureProfileGap.followUpTaskIds?.[0] !==
@@ -2039,14 +2042,16 @@ function runSelfTest(root) {
                   battleReadinessClosure: {
                     kind: "outside-battle-runtime",
                     owner: "fixture self-test",
-                    reason: "The fixture closed portion has no selected identity replay entrypoint.",
+                    reason:
+                      "The fixture closed portion has no selected identity replay entrypoint.",
                   },
                 },
               ],
               selectedIdentityEvidenceDisposition: {
                 tag: "not-applicable",
                 owner: "fixture self-test",
-                reason: "The fixture closed portion has no selected identity replay entrypoint.",
+                reason:
+                  "The fixture closed portion has no selected identity replay entrypoint.",
               },
             },
           },
@@ -2076,8 +2081,7 @@ function runSelfTest(root) {
         `Self-test failed: expected selected identity hard-gate issue ${JSON.stringify(missingIdentityExpected)}, got ${JSON.stringify(selectedIdentityHardGateIssues)}`,
       );
     }
-    const mindSpikeMissingIdentityExpected =
-      `Supported executable Unit ${mindSpikeFixture.unitId} has no selected-identity-replay evidence and no selectedIdentityEvidenceDisposition not-applicable classification.`;
+    const mindSpikeMissingIdentityExpected = `Supported executable Unit ${mindSpikeFixture.unitId} has no selected-identity-replay evidence and no selectedIdentityEvidenceDisposition not-applicable classification.`;
     if (
       !selectedIdentityHardGateIssues.includes(mindSpikeMissingIdentityExpected)
     ) {

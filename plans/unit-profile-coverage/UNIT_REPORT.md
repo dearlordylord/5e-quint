@@ -26,7 +26,7 @@ SRD 5.2.1 is conceptually part of Classic, but it is stored separately because t
 | Rules-kernel covered profile coverage | 167/168 | 99.4% |
 | Supported Unit rules-kernel chain coverage | 177/177 | 100% |
 | Deterministic admission/projection coverage | 186/191 | 97.4% |
-| Selected identity replay coverage | 178/183 | 97.3% |
+| Selected identity replay coverage | 183/183 | 100% |
 | Classic non-SRD expression gate | 1/1 | 100% |
 
 ## Metric Semantics
@@ -58,8 +58,8 @@ Background, feat, spell, and class-feature groups are counted from installed Uni
 | Group | Installed Unit denominator | Executable Unit denominator | Supported-profile Units | Profile-subset Units | Unsupported/other Units | Profile fact denominator | Selected-identity replay witnesses/denominator | Selected-identity replay gaps | Deferred selected-identity non-applicable |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | Background Units | 4 | 0 | 0 | 0 | 4 | 0 | 0/0 | 0 | 0 |
-| Feat Units | 13 | 13 | 9 | 0 | 4 | 11 | 6/8 | 2 | 0 |
-| Spell Units | 148 | 148 | 95 | 20 | 33 | 145 | 110/115 | 5 | 0 |
+| Feat Units | 13 | 13 | 9 | 0 | 4 | 11 | 8/8 | 0 | 0 |
+| Spell Units | 148 | 148 | 95 | 20 | 33 | 145 | 115/115 | 0 | 0 |
 | Class-feature Units | 96 | 96 | 74 | 8 | 14 | 122 | 76/76 | 0 | 0 |
 
 | Denominator | Rule |
@@ -1157,9 +1157,12 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `feat_archery` | `unit-feature.passive-ranged-attack-roll-bonus` | passive-and-zero-hp-features | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `feat_boon_of_combat_prowess` | `unit-feature.attack-roll-miss-to-hit-replacement` | L1H-BOON-COMBAT-PROWESS | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `defense` | `unit-feature.passive-armor-class-bonus` | passive-and-zero-hp-features | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `feat_great_weapon_fighting` | `unit-feature.attack-damage-die-floor` | L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME | `packages/battle-runtime/src/unit-profile-admission-great-weapon-fighting.test.ts` |
 | `feat_grappler` | `character-creation.grappler-general-feat`, `unit-feature.grappler` | L3-FOLLOWUP-GRAPPLER-RUNTIME | `packages/battle-runtime/src/grappler-selected-identity.mbt.test.ts` |
 | `alert` | `unit-feature.initiative-proficiency-and-swap` | B7-FEAT-IDENTITY-BATCH | `packages/character-battle-runtime/src/origin-feat-selected-identity.mbt.test.ts` |
 | `feat_savage_attacker` | `unit-feature.weapon-damage-dice-roll-choice` | QMBT31 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
+| `feat_two_weapon_fighting` | `unit-feature.light-extra-attack-damage-ability-modifier` | L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME | `packages/battle-runtime/src/unit-profile-admission-two-weapon-fighting.test.ts` |
+| `feat_two_weapon_fighting` | `unit-feature.light-extra-attack-damage-ability-modifier` | L3-FOLLOWUP-TWO-WEAPON-FIGHTING-DECLINE-RUNTIME | `packages/battle-runtime/src/unit-profile-admission-two-weapon-fighting.test.ts` |
 | `paladin_lay_on_hands` | `character-sheet.healing-resource-action` | healing-stabilization | `packages/character-sheet-runtime/src/healing-resource-selected-identity.mbt.test.ts` |
 | `paladin_fighting_style` | `character-creation.class-feature-feat-choice`, `character-creation.class-feature-option-projection`, `character-creation.fighting-style-cantrip-advancement-replacement` | B5-CLASS-FEATURE-IDENTITY-BATCH-2 | `packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts` |
 | `paladin_paladins_smite` | `spell.invocation-after-hit-damage` | B5-CLASS-FEATURE-IDENTITY-BATCH-2 | `packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts` |
@@ -1223,6 +1226,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `guidance` | `spell.invocation-roll-modifier` | roll-modifier-buff | `packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts` |
 | `grease` | `spell.invocation-grease-ground-hazard` | level1-spatial-witness | `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts` |
 | `guiding_bolt` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | attack-spell-shape | `packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts` |
+| `haste` | `spell.invocation-haste-positive` | L5-C17-HASTE-POSITIVE-RUNTIME | `packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts` |
+| `haste` | `spell.invocation-haste-positive` | L5-C18-HASTE-LETHARGY-RUNTIME | `packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts` |
 | `heat_metal` | `spell.invocation-object-contact-damage` | B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts` |
 | `heroism` | `spell.invocation-condition-immunity-turn-start-temporary-hit-points` | L1E-HEROISM | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
 | `hex` | `spell.invocation-marked-damage-rider` | L1E-HEX | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
@@ -1237,6 +1242,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `longstrider` | `spell.scalar-buff` | L1E-LONGSTRIDER | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
 | `misty_step` | `spell.invocation-self-teleport` | B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-mobility-spell-selected-identity.test.ts` |
 | `poison_spray` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | level1-damage-spell-selected-identity | `packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts` |
+| `protection_from_energy` | `spell.invocation-chosen-damage-resistance` | L5-B08-PROTECTION-FROM-ENERGY | `packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts` |
 | `protection_from_evil_and_good` | `spell.creature-type-protection-and-charm` | L1H-PROTECTION-EVIL-GOOD | `packages/battle-runtime/src/creature-type-protection-and-charm-selected-identity.mbt.test.ts` |
 | `protection_from_poison` | `spell.invocation-condition-removal-protection` | RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY | `packages/battle-runtime/src/condition-removal-protection-selected-identity.mbt.test.ts` |
 | `produce_flame` | `spell.invocation-damage-save-or-attack`, `spell.invocation-held-light-emitter` | level1-spatial-witness | `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts` |
@@ -1267,6 +1273,8 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `shillelagh` | `spell.invocation-weapon-attack-override` | L1E-SHILLELAGH | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
 | `shining_smite` | `spell.invocation-after-hit-damage-illumination` | B25-SHINING-SMITE-IDENTITY-WITNESS | `packages/battle-runtime/src/shining-smite-selected-identity.test.ts` |
 | `sleep` | `spell.invocation-sleep-target-admission`, `spell.invocation-sleep-repeat-save-lifecycle` | condition-saving-throw-lifecycle | `packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts` |
+| `slow` | `spell.invocation-slow-active-penalties` | L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME | `packages/battle-runtime/src/unit-profile-admission-slow-active-penalties.test.ts` |
+| `slow` | `spell.invocation-slow-active-penalties` | L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME | `packages/battle-runtime/src/unit-profile-admission-slow-active-penalties.test.ts` |
 | `spider_climb` | `spell.scalar-buff` | B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-mobility-spell-selected-identity.test.ts` |
 | `spiritual_weapon` | `spell.invocation-spiritual-weapon-attack-proxy` | B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts` |
 | `thunderwave` | `spell.invocation-damage-save-or-attack` | level1-spatial-witness | `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts` |
@@ -1288,17 +1296,7 @@ Deferred-portion non-applicable rows are not replay gaps; they are listed in the
 
 | Unit | Claim | Selected identity | Catalog | Collection | Kind | Profiles | Source |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `feat_great_weapon_fighting` | supported-profile | missing-witness | installed | srd-5.2.1 | feat | `unit-feature.attack-damage-die-floor` | `packages/surface/content/feat_great_weapon_fighting.json` |
-| `feat_two_weapon_fighting` | supported-profile | missing-witness | installed | srd-5.2.1 | feat | `unit-feature.light-extra-attack-damage-ability-modifier` | `packages/surface/content/feat_two_weapon_fighting.json` |
-| `species_gnome` | profile-subset-supported | missing-witness | installed | srd-5.2.1 | species | `character-creation.species-lineage-choice` | `packages/surface/content/species_gnome.json` |
-| `species_gnome_gnomish_lineage` | profile-subset-supported | missing-witness | installed | srd-5.2.1 | species_trait | `character-creation.species-lineage-choice`, `character-sheet.species-lineage-trait-projection` | `packages/surface/content/species_gnome_gnomish_lineage.json` |
-| `species_halfling_luck` | profile-subset-supported | missing-witness | installed | srd-5.2.1 | species_trait | `unit-feature.d20-test-natural-one-reroll` | `packages/surface/content/species_halfling_luck.json` |
-| `species_halfling_naturally_stealthy` | profile-subset-supported | missing-witness | installed | srd-5.2.1 | species_trait | `unit-feature.hide-action-obscurement-permission` | `packages/surface/content/species_halfling_naturally_stealthy.json` |
-| `glyph_of_warding` | profile-subset-supported | missing-witness | installed | srd-5.2.1 | spell | `spell.invocation-glyph-durable-occurrence`, `spell.invocation-glyph-explosive-rune-release`, `spell.invocation-glyph-stored-spell-release`, `spell.invocation-glyph-stored-concentration-full-duration`, `spell.invocation-glyph-stored-summon-object-placement` | `packages/surface/content/glyph_of_warding.json` |
-| `haste` | supported-profile | missing-witness | installed | srd-5.2.1 | spell | `spell.invocation-haste-positive` | `packages/surface/content/haste.json` |
-| `protection_from_energy` | supported-profile | missing-witness | installed | srd-5.2.1 | spell | `spell.invocation-chosen-damage-resistance` | `packages/surface/content/protection_from_energy.json` |
-| `sleet_storm` | profile-subset-supported | missing-witness | installed | srd-5.2.1 | spell | `spell.invocation-sleet-storm-area-hazard` | `packages/surface/content/sleet_storm.json` |
-| `slow` | supported-profile | missing-witness | installed | srd-5.2.1 | spell | `spell.invocation-slow-active-penalties` | `packages/surface/content/slow.json` |
+| _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ |
 
 ## Selected Identity Deferred Non-Applicable
 

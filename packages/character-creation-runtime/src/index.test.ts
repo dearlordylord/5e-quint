@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { describe, expect, test } from "vitest";
+import { describe, expect, it, test } from "vitest";
 import { Either, Match, Option } from "effect";
 import fc from "fast-check";
 import {
@@ -169,6 +169,43 @@ import { soldierBackgroundFixtureOptionIds } from "./background-fixture.test-sup
 
 const SRD_SORCERY_POINTS_POOL_ID = "sorcery_points";
 const SRD_GNOMISH_LINEAGE_TRAIT_UNIT_ID = "species_gnome_gnomish_lineage";
+const driverSchema = {
+  doReplayGnomishLineageChoice: {},
+  doReplayGnomishLineageTraitProjection: {},
+} as const;
+type GnomishLineageReplayAction = keyof typeof driverSchema;
+const selectedUnitIdentityReplays = [
+  {
+    taskId: "LT4-B02-GNOMISH-LINEAGE-CHOICE-OWNER",
+    unitId: SRD_GNOMISH_LINEAGE_TRAIT_UNIT_ID,
+    actions: ["doReplayGnomishLineageChoice"],
+    sequences: [["doReplayGnomishLineageChoice"]],
+  },
+  {
+    taskId: "LT4-B03-GNOME-LINEAGE-TRAIT-PROJECTION",
+    unitId: SRD_GNOMISH_LINEAGE_TRAIT_UNIT_ID,
+    actions: ["doReplayGnomishLineageTraitProjection"],
+    sequences: [["doReplayGnomishLineageTraitProjection"]],
+  },
+] as const satisfies ReadonlyArray<{
+  readonly taskId: string;
+  readonly unitId: string;
+  readonly actions: readonly GnomishLineageReplayAction[];
+  readonly sequences: readonly (readonly GnomishLineageReplayAction[])[];
+}>;
+const selectedIdentityReplayDrivers = {
+  doReplayGnomishLineageChoice: replayGnomishLineageChoice,
+  doReplayGnomishLineageTraitProjection: replayGnomishLineageTraitProjection,
+} satisfies Record<
+  GnomishLineageReplayAction,
+  () => {
+    readonly unitId: typeof SRD_GNOMISH_LINEAGE_TRAIT_UNIT_ID;
+    readonly procedure:
+      | "species-lineage-choice"
+      | "species-lineage-trait-projection";
+    readonly result: string;
+  }
+>;
 
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.class-feature-feat-choice
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-creation.weapon-mastery-choice
@@ -207,9 +244,13 @@ const SRD_GNOMISH_LINEAGE_TRAIT_UNIT_ID = "species_gnome_gnomish_lineage";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L14G-B02-FEAT-SKILLED feat_skilled
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection LT4-C01-HUMAN-VERSATILE-ORIGIN-FEAT-DENOMINATOR species_human_versatile
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection LT4-C03-SKILLED-HUMAN-VERSATILE-NESTED-CHOICE-EVIDENCE species_human_versatile feat_skilled
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay LT4-B02-GNOMISH-LINEAGE-CHOICE-OWNER species_gnome_gnomish_lineage
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay LT4-B03-GNOME-LINEAGE-TRAIT-PROJECTION species_gnome_gnomish_lineage
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection LT4-B02-GNOMISH-LINEAGE-CHOICE-OWNER species_gnome_gnomish_lineage
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection LT4-B03-GNOME-LINEAGE-TRAIT-PROJECTION species_gnome_gnomish_lineage
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection LT4-B04-GNOME-SPECIES-ADMISSION-EVIDENCE species_gnome species_gnome_gnomish_lineage
+// UNIT-IDENTITY-REPLAY: LT4-B02-GNOMISH-LINEAGE-CHOICE-OWNER species_gnome_gnomish_lineage doReplayGnomishLineageChoice
+// UNIT-IDENTITY-REPLAY: LT4-B03-GNOME-LINEAGE-TRAIT-PROJECTION species_gnome_gnomish_lineage doReplayGnomishLineageTraitProjection
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -3683,6 +3724,20 @@ describe("character creation finalization", () => {
       },
       duration: { amount: 8, unit: "hour" },
     });
+  });
+
+  it("replays selected Unit identities deterministically", () => {
+    for (const replay of selectedUnitIdentityReplays) {
+      for (const sequence of replay.sequences) {
+        const replayed = new Set<GnomishLineageReplayAction>();
+        for (const action of sequence) {
+          const projection = selectedIdentityReplayDrivers[action]();
+          expect(projection.unitId).toBe(replay.unitId);
+          replayed.add(action);
+        }
+        expect(replayed).toEqual(new Set(replay.actions));
+      }
+    }
   });
 
   test("discovers and projects Human Skillful and Versatile species choices", () => {
@@ -10269,6 +10324,83 @@ function completeManifestDraftForGnomishLineage(
         ),
       ],
     },
+  };
+}
+
+function replayGnomishLineageChoice(): {
+  readonly unitId: typeof SRD_GNOMISH_LINEAGE_TRAIT_UNIT_ID;
+  readonly procedure: "species-lineage-choice";
+  readonly result: "accepted";
+} {
+  const draft = draftWithSelections({ species: SRD_GNOME_SPECIES_UNIT_ID });
+  const holes = discoverCreationHoles({ draft, unitLibrary });
+  expect(
+    optionIds(
+      holeById(
+        holes,
+        testUnitHoleId(
+          SRD_GNOMISH_LINEAGE_TRAIT_UNIT_ID,
+          GNOMISH_LINEAGE_CHOICE_KEY,
+        ),
+      ),
+    ),
+  ).toEqual(["forest_gnome", "rock_gnome"]);
+  const result = fillCreationHoles({
+    draft,
+    unitLibrary,
+    expectedRevision: draft.revision,
+    fills: [
+      choiceFill(
+        testUnitHoleId(
+          SRD_GNOMISH_LINEAGE_TRAIT_UNIT_ID,
+          GNOMISH_LINEAGE_CHOICE_KEY,
+        ),
+        "forest_gnome",
+      ),
+      choiceFill(
+        testUnitHoleId(
+          SRD_GNOMISH_LINEAGE_TRAIT_UNIT_ID,
+          GNOMISH_LINEAGE_SPELLCASTING_ABILITY_CHOICE_KEY,
+        ),
+        "int",
+      ),
+    ],
+  });
+  if (result.tag !== "accepted") {
+    throw new Error("Expected selected Gnomish Lineage choice replay.");
+  }
+  return {
+    unitId: SRD_GNOMISH_LINEAGE_TRAIT_UNIT_ID,
+    procedure: "species-lineage-choice",
+    result: "accepted",
+  };
+}
+
+function replayGnomishLineageTraitProjection(): {
+  readonly unitId: typeof SRD_GNOMISH_LINEAGE_TRAIT_UNIT_ID;
+  readonly procedure: "species-lineage-trait-projection";
+  readonly result: "rock_gnome";
+} {
+  const finalization = finalizeCharacterDraft({
+    draft: completeManifestDraftForGnomishLineage("rock_gnome", "cha"),
+    unitLibrary,
+  });
+  if (finalization.tag !== "ready") {
+    throw new Error("Expected selected Gnomish Lineage finalization replay.");
+  }
+  const projection = expectRight(
+    characterBuildGnomishLineageTraitProjection({
+      build: finalization.build,
+      unitLibrary,
+    }),
+  );
+  if (projection === undefined || projection.option.id !== "rock_gnome") {
+    throw new Error("Expected selected Gnomish Lineage projection replay.");
+  }
+  return {
+    unitId: projection.traitUnitId,
+    procedure: "species-lineage-trait-projection",
+    result: "rock_gnome",
   };
 }
 

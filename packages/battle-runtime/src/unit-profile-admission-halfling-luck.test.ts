@@ -1,5 +1,9 @@
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-HALFLING-LUCK-RUNTIME species_halfling_luck
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-D20-TEST-ROLLED-DIE-REROLL-CHOICE species_halfling_luck
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-HALFLING-LUCK-RUNTIME species_halfling_luck
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-D20-TEST-ROLLED-DIE-REROLL-CHOICE species_halfling_luck
+// UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-HALFLING-LUCK-RUNTIME species_halfling_luck doReplayHalflingLuckNaturalOneReroll
+// UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-D20-TEST-ROLLED-DIE-REROLL-CHOICE species_halfling_luck doReplayHalflingLuckRawD20RerollChoice
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.d20-test-natural-one-reroll
 
 import {
@@ -86,6 +90,7 @@ import {
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import { battleSpellEffectOccurrenceId } from "./identity.ts";
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
+import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.ts";
 
 const expectedRerollProfile = {
   optional: true,
@@ -1745,5 +1750,127 @@ function rerollDie(
     kind: "reroll",
     effectKind: D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
     replacement: DieRollResult(replacement),
+  };
+}
+
+defineSelectedIdentityReplayWitness({
+  describeLabel: "L3-FOLLOWUP-HALFLING-LUCK-RUNTIME selected identity replay",
+  taskId: "L3-FOLLOWUP-HALFLING-LUCK-RUNTIME",
+  initialProjection: {
+    unitId: speciesHalflingLuckUnitId,
+    procedure: "initial",
+    outcome: "pending",
+  },
+  units: [
+    {
+      unitId: speciesHalflingLuckUnitId,
+      procedures: [
+        {
+          actionName: "doReplayHalflingLuckNaturalOneReroll",
+          projectionAfter: {
+            unitId: speciesHalflingLuckUnitId,
+            procedure: "d20TestNaturalOneReroll",
+            outcome: "damageRequested",
+          },
+          discover: replayHalflingLuckNaturalOneReroll,
+        },
+        {
+          actionName: "doReplayHalflingLuckRawD20RerollChoice",
+          projectionAfter: {
+            unitId: speciesHalflingLuckUnitId,
+            procedure: "rawD20RerollChoice",
+            outcome: "damageRequested",
+          },
+          discover: replayHalflingLuckRawD20RerollChoice,
+        },
+      ],
+    },
+  ],
+});
+
+function replayHalflingLuckNaturalOneReroll(): {
+  readonly unitId: typeof speciesHalflingLuckUnitId;
+  readonly procedure: "d20TestNaturalOneReroll";
+  readonly outcome: "damageRequested";
+} {
+  const state = halflingLuckFighterBattle();
+  const subject = attackSubject();
+  const target = requireTypedHole(
+    resolveAttack(state, subject, []),
+    "targetChoice",
+  );
+  const targetSelection = targetFill(target, goblinId);
+  const roll = requireTypedHole(
+    resolveAttack(state, subject, [targetSelection]),
+    "attackRoll",
+  );
+  const result = resolveAttack(state, subject, [
+    targetSelection,
+    attackRollFill(roll, {
+      total: 2,
+      naturalD20: 1,
+      d20TestNaturalOneReroll: rerollRoll({
+        total: 15,
+        naturalD20: 12,
+      }),
+    }),
+  ]);
+  if (
+    result.tag !== "needsHoles" ||
+    !result.holes.some((hole) => hole.kind === "rolledDice")
+  ) {
+    throw new Error("Expected selected Halfling Luck reroll replay.");
+  }
+  return {
+    unitId: speciesHalflingLuckUnitId,
+    procedure: "d20TestNaturalOneReroll",
+    outcome: "damageRequested",
+  };
+}
+
+function replayHalflingLuckRawD20RerollChoice(): {
+  readonly unitId: typeof speciesHalflingLuckUnitId;
+  readonly procedure: "rawD20RerollChoice";
+  readonly outcome: "damageRequested";
+} {
+  const state = halflingLuckFighterBattle();
+  const subject = attackSubject();
+  const target = requireTypedHole(
+    resolveAttack(state, subject, []),
+    "targetChoice",
+  );
+  const targetSelection = targetFill(target, goblinId);
+  const roll = requireTypedHole(
+    resolveAttack(state, subject, [targetSelection]),
+    "attackRoll",
+  );
+  const result = resolveAttack(state, subject, [
+    targetSelection,
+    attackRollFill(roll, {
+      total: 15,
+      naturalD20: 10,
+      rollMode: "advantage",
+      rolledD20s: rolledD20s({ first: 1, second: 10, selected: "second" }),
+      d20TestNaturalOneReroll: rerollRolledDieRoll({
+        die: "first",
+        naturalD20: 20,
+        result: {
+          total: 25,
+          naturalD20: 20,
+          rollMode: "advantage",
+        },
+      }),
+    }),
+  ]);
+  if (
+    result.tag !== "needsHoles" ||
+    !result.holes.some((hole) => hole.kind === "rolledDice")
+  ) {
+    throw new Error("Expected selected Halfling Luck raw d20 replay.");
+  }
+  return {
+    unitId: speciesHalflingLuckUnitId,
+    procedure: "rawD20RerollChoice",
+    outcome: "damageRequested",
   };
 }

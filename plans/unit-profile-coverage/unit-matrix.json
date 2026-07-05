@@ -108,8 +108,8 @@
     },
     "selectedIdentityReplayCoverage": {
       "denominator": 183,
-      "numerator": 178,
-      "percent": "97.3%"
+      "numerator": 183,
+      "percent": "100%"
     },
     "supportedProfileCoverage": {
       "denominator": 282,
@@ -13554,201 +13554,8 @@
       "evidenceTag": "selected-identity-replay"
     },
     "deferredNonApplicableRows": [],
-    "rowCount": 11,
-    "rows": [
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "feat",
-        "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-replay evidence.",
-          "status": "missing-witness"
-        },
-        "sourceRecordPath": "packages/surface/content/feat_great_weapon_fighting.json",
-        "support": {
-          "profileIds": [
-            "unit-feature.attack-damage-die-floor"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "feat_great_weapon_fighting"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "feat",
-        "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-replay evidence.",
-          "status": "missing-witness"
-        },
-        "sourceRecordPath": "packages/surface/content/feat_two_weapon_fighting.json",
-        "support": {
-          "profileIds": [
-            "unit-feature.light-extra-attack-damage-ability-modifier"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "feat_two_weapon_fighting"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "species",
-        "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-replay evidence.",
-          "status": "missing-witness"
-        },
-        "sourceRecordPath": "packages/surface/content/species_gnome.json",
-        "support": {
-          "profileIds": [
-            "character-creation.species-lineage-choice"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "species_gnome"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "species_trait",
-        "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-replay evidence.",
-          "status": "missing-witness"
-        },
-        "sourceRecordPath": "packages/surface/content/species_gnome_gnomish_lineage.json",
-        "support": {
-          "profileIds": [
-            "character-creation.species-lineage-choice",
-            "character-sheet.species-lineage-trait-projection"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "species_gnome_gnomish_lineage"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "species_trait",
-        "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-replay evidence.",
-          "status": "missing-witness"
-        },
-        "sourceRecordPath": "packages/surface/content/species_halfling_luck.json",
-        "support": {
-          "profileIds": [
-            "unit-feature.d20-test-natural-one-reroll"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "species_halfling_luck"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "species_trait",
-        "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-replay evidence.",
-          "status": "missing-witness"
-        },
-        "sourceRecordPath": "packages/surface/content/species_halfling_naturally_stealthy.json",
-        "support": {
-          "profileIds": [
-            "unit-feature.hide-action-obscurement-permission"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "species_halfling_naturally_stealthy"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-replay evidence.",
-          "status": "missing-witness"
-        },
-        "sourceRecordPath": "packages/surface/content/glyph_of_warding.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-glyph-durable-occurrence",
-            "spell.invocation-glyph-explosive-rune-release",
-            "spell.invocation-glyph-stored-spell-release",
-            "spell.invocation-glyph-stored-concentration-full-duration",
-            "spell.invocation-glyph-stored-summon-object-placement"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "glyph_of_warding"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-replay evidence.",
-          "status": "missing-witness"
-        },
-        "sourceRecordPath": "packages/surface/content/haste.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-haste-positive"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "haste"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-replay evidence.",
-          "status": "missing-witness"
-        },
-        "sourceRecordPath": "packages/surface/content/protection_from_energy.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-chosen-damage-resistance"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "protection_from_energy"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-replay evidence.",
-          "status": "missing-witness"
-        },
-        "sourceRecordPath": "packages/surface/content/sleet_storm.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-sleet-storm-area-hazard"
-          ],
-          "tag": "profile-subset-supported"
-        },
-        "unitId": "sleet_storm"
-      },
-      {
-        "catalogAdmissionStatus": "installed",
-        "collectionId": "srd-5.2.1",
-        "kind": "spell",
-        "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-replay evidence.",
-          "status": "missing-witness"
-        },
-        "sourceRecordPath": "packages/surface/content/slow.json",
-        "support": {
-          "profileIds": [
-            "spell.invocation-slow-active-penalties"
-          ],
-          "tag": "supported-profile"
-        },
-        "unitId": "slow"
-      }
-    ]
+    "rowCount": 0,
+    "rows": []
   },
   "taskClaims": [
     {
@@ -17664,8 +17471,8 @@
         "profileSubsetSupportedUnits": 0,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 8,
-        "selectedIdentityReplayGapUnits": 2,
-        "selectedIdentityReplayWitnessUnits": 6,
+        "selectedIdentityReplayGapUnits": 0,
+        "selectedIdentityReplayWitnessUnits": 8,
         "supportedProfileUnits": 9,
         "unsupportedOrOtherUnits": 4
       },
@@ -17678,8 +17485,8 @@
         "profileSubsetSupportedUnits": 20,
         "selectedIdentityDeferredNonApplicableUnits": 0,
         "selectedIdentityReplayDenominator": 115,
-        "selectedIdentityReplayGapUnits": 5,
-        "selectedIdentityReplayWitnessUnits": 110,
+        "selectedIdentityReplayGapUnits": 0,
+        "selectedIdentityReplayWitnessUnits": 115,
         "supportedProfileUnits": 95,
         "unsupportedOrOtherUnits": 33
       },
@@ -18083,6 +17890,11 @@
         "profileIds": [
           "character-creation.species-lineage-choice"
         ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "character-creation-runtime selected Gnome container owner plus selected trait Unit replay owners",
+          "reason": "The aggregate Gnome species Unit is a selection-grant container that retains selected species identity and trait refs; executable selected-identity replay is owned by the concrete selected trait Unit, with Gnomish Lineage replayed by species_gnome_gnomish_lineage.",
+          "tag": "not-applicable"
+        },
         "supportedMechanics": [
           "Character Creation admits Gnome through the SRD species option set as a fixed Small Humanoid species with 30-foot Speed source facts retained from Surface",
           "Character Creation retains the selected Gnome species Unit ref and authored trait Unit refs for Darkvision, Gnomish Cunning, and Gnomish Lineage without duplicating trait execution state on CharacterBuild",
@@ -24850,6 +24662,11 @@
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-great-weapon-fighting.test.ts",
+          "tag": "selected-identity-replay",
+          "taskId": "L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-great-weapon-fighting.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME"
         }
@@ -25321,6 +25138,16 @@
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-two-weapon-fighting.test.ts",
+          "tag": "selected-identity-replay",
+          "taskId": "L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-two-weapon-fighting.test.ts",
+          "tag": "selected-identity-replay",
+          "taskId": "L3-FOLLOWUP-TWO-WEAPON-FIGHTING-DECLINE-RUNTIME"
+        },
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-two-weapon-fighting.test.ts",
           "tag": "deterministic-admission-projection",
@@ -27146,6 +26973,16 @@
       "evidence": [
         {
           "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "selected-identity-replay",
+          "taskId": "LT4-B02-GNOMISH-LINEAGE-CHOICE-OWNER"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
+          "tag": "selected-identity-replay",
+          "taskId": "LT4-B03-GNOME-LINEAGE-TRAIT-PROJECTION"
+        },
+        {
+          "ownerPath": "packages/character-creation-runtime/src/index.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "LT4-B02-GNOMISH-LINEAGE-CHOICE-OWNER"
         },
@@ -27434,6 +27271,16 @@
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-halfling-luck.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L3-FOLLOWUP-D20-TEST-ROLLED-DIE-REROLL-CHOICE"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-halfling-luck.test.ts",
+          "tag": "selected-identity-replay",
+          "taskId": "L3-FOLLOWUP-HALFLING-LUCK-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-halfling-luck.test.ts",
+          "tag": "selected-identity-replay",
+          "taskId": "L3-FOLLOWUP-D20-TEST-ROLLED-DIE-REROLL-CHOICE"
         }
       ],
       "executableMechanics": true,
@@ -27522,6 +27369,11 @@
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-halfling-naturally-stealthy.test.ts",
+          "tag": "selected-identity-replay",
+          "taskId": "L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME"
+        },
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-halfling-naturally-stealthy.test.ts",
           "tag": "deterministic-admission-projection",
@@ -32034,6 +31886,16 @@
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts",
+          "tag": "selected-identity-replay",
+          "taskId": "L5-C17-HASTE-POSITIVE-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts",
+          "tag": "selected-identity-replay",
+          "taskId": "L5-C18-HASTE-LETHARGY-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-haste-positive.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L5-C17-HASTE-POSITIVE-RUNTIME"
         },
@@ -33597,6 +33459,11 @@
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
+          "tag": "selected-identity-replay",
+          "taskId": "L5-B08-PROTECTION-FROM-ENERGY"
+        },
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-roll-modifier-and-resistance-spells.test.ts",
           "tag": "deterministic-admission-projection",
@@ -36902,6 +36769,11 @@
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-sleet-storm-area-hazard.test.ts",
+          "tag": "selected-identity-replay",
+          "taskId": "L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-sleet-storm-area-hazard.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME"
         }
@@ -36987,6 +36859,16 @@
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-slow-active-penalties.test.ts",
+          "tag": "selected-identity-replay",
+          "taskId": "L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-slow-active-penalties.test.ts",
+          "tag": "selected-identity-replay",
+          "taskId": "L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME"
+        },
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-slow-active-penalties.test.ts",
           "tag": "deterministic-admission-projection",
@@ -37268,6 +37150,56 @@
       },
       "collectionId": "srd-5.2.1",
       "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts",
+          "tag": "selected-identity-replay",
+          "taskId": "L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts",
+          "tag": "selected-identity-replay",
+          "taskId": "L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts",
+          "tag": "selected-identity-replay",
+          "taskId": "L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts",
+          "tag": "selected-identity-replay",
+          "taskId": "L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts",
+          "tag": "selected-identity-replay",
+          "taskId": "L3-FOLLOWUP-GLYPH-STORED-REMAINING-CONCENTRATION"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts",
+          "tag": "selected-identity-replay",
+          "taskId": "L3-FOLLOWUP-GLYPH-STORED-SUMMON-OBJECT-PLACEMENT"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts",
+          "tag": "selected-identity-replay",
+          "taskId": "L3-FOLLOWUP-GLYPH-STORED-AREA-ONGOING-CONCENTRATION"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts",
+          "tag": "selected-identity-replay",
+          "taskId": "L3-FOLLOWUP-GLYPH-STORED-AREA-CONTROL-CONCENTRATION"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts",
+          "tag": "selected-identity-replay",
+          "taskId": "L3-FOLLOWUP-GLYPH-STORED-SINGLE-CREATURE-ACTIVE-EFFECT-CONCENTRATION"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts",
+          "tag": "selected-identity-replay",
+          "taskId": "L3-FOLLOWUP-GLYPH-STORED-SELF-TRANSFORMATION-CONCENTRATION"
+        },
         {
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-glyph-of-warding.test.ts",
           "tag": "deterministic-admission-projection",
