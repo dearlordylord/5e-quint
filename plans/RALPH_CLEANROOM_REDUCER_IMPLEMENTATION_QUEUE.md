@@ -541,7 +541,7 @@
     {
       "number": 90,
       "id": "CRP04-CCF-02",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Character creation stale revision, duplicate fill, wrong-kind, and closed-hole rejection"
     },
     {
@@ -5781,7 +5781,7 @@ Plan Impact:
 
 ### Task 90 - CRP04-CCF-02
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

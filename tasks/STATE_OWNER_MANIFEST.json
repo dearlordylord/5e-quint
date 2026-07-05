@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRP04-CCF-01",
+  "taskId": "CRP04-CCF-02",
   "durableFields": [
     {
       "fieldPath": "CharacterDraft.revision",
@@ -25,7 +25,7 @@
       "derivability": {
         "tag": "stored-executable-boundary-projection",
         "sourceField": "CharacterDraft.selections plus UnitCatalog support-profile readers",
-        "boundary": "fillCreationHoles result and discoverCreationHoles projection"
+        "boundary": "fillCreationHoles rejected result and discoverCreationHoles projection"
       }
     },
     {
@@ -35,7 +35,7 @@
       "derivability": {
         "tag": "stored-executable-boundary-projection",
         "sourceField": "CharacterDraft.selections plus UnitCatalog support-profile readers",
-        "boundary": "fillCreationHoles result and finalizeCharacterDraft projection"
+        "boundary": "fillCreationHoles rejected result and finalizeCharacterDraft projection"
       }
     },
     {
@@ -44,7 +44,7 @@
       "introducedIn": "packages/character-creation-runtime/src/fill-reducer.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "submitted CreationFill batch and current CharacterDraft.revision",
+        "sourceField": "submitted CreationFill batch, current CharacterDraft.revision, and currently derived Creation Hole Frontier",
         "boundary": "fillCreationHoles rejected result"
       }
     },
@@ -61,7 +61,8 @@
     "Character Draft owns accepted source facts and draft revision.",
     "Creation Hole Frontier is derived by discoverCreationHoles from the draft and support-profile readers; no durable open-hole ledger is stored.",
     "Finalization is derived by finalizeCharacterDraft from the draft and support-profile admission; no durable finalization status ledger is stored beside the draft.",
-    "Character Build is produced only by the finalization gate once holes are empty and the support profile admits the completed draft.",
-    "Empty issue collections in qState are replay projections of an accepted or issue-free result, not a second durable issue store."
+    "Rejected batch issues and fill issues are result projections at the fillCreationHoles boundary, not durable state beside the draft.",
+    "Closed and not-yet-open holes are rejected by comparing a fill against the derived Creation Hole Frontier; no closed-hole status field is stored.",
+    "Character Build is produced only by the finalization gate once holes are empty and the support profile admits the completed draft."
   ]
 }

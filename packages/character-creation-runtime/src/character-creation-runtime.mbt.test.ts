@@ -27,6 +27,7 @@ import {
   startingClassUnitId,
   type CharacterDraft,
   type CreationBatchIssueCode,
+  type CreationBatchFillInput,
   type CreationBatchFillResult,
   type CreationFill,
   type CreationFillIssueCode,
@@ -796,6 +797,27 @@ type AcceptedFillBatchStep = {
   readonly fills: (holes: readonly CreationHole[]) => readonly CreationFill[];
 };
 
+type RejectedFillBatchStep = {
+  readonly name: keyof Pick<
+    typeof driverSchema,
+    | "doRejectStaleInitialManifest"
+    | "doRejectDuplicateFill"
+    | "doRejectWrongKindPrimaryClass"
+    | "doRejectClosedInitialProgressionHole"
+    | "doRejectUnknownLoadoutArmor"
+  >;
+  readonly expectedRevision?: (
+    draft: CharacterDraft,
+  ) => CreationBatchFillInput["expectedRevision"];
+  readonly fills: (holes: readonly CreationHole[]) => readonly CreationFill[];
+  readonly expectedBatchIssueCodes: readonly CreationBatchIssueCode[];
+  readonly expectedFillIssues: readonly FillIssueProjection[];
+  readonly prepare?: () => {
+    readonly draft: CharacterDraft;
+    readonly holes: readonly CreationHole[];
+  };
+};
+
 function holeVariantForId(holeId: string): HoleVariant {
   const entry = Object.entries(holeIds).find(([, id]) => id === holeId);
   if (entry == null) {
@@ -816,6 +838,74 @@ const manifestToFinalizationAcceptedFillBatchSteps = [
   { name: "doFillManifestPurchase", fills: manifestPurchaseFills },
   { name: "doFillManifestLoadout", fills: manifestLoadoutFills },
 ] as const satisfies ReadonlyArray<AcceptedFillBatchStep>;
+
+function initialDraftState(): {
+  readonly draft: CharacterDraft;
+  readonly holes: readonly CreationHole[];
+} {
+  const draft = newDraft();
+  return { draft, holes: discoverCreationHoles({ draft, unitLibrary }) };
+}
+
+function initialChoicesAcceptedState(): {
+  readonly draft: CharacterDraft;
+  readonly holes: readonly CreationHole[];
+} {
+  const state = initialDraftState();
+  const result = fillCreationHoles({
+    draft: state.draft,
+    fills: initialChoicesOnlyFills(state.holes),
+    expectedRevision: state.draft.revision,
+    unitLibrary,
+  });
+  if (result.tag !== "accepted") {
+    throw new Error("Initial choices fixture must be accepted.");
+  }
+  return { draft: result.draft, holes: result.holes };
+}
+
+const rejectedFillBatchSteps: ReadonlyArray<RejectedFillBatchStep> = [
+  {
+    name: "doRejectStaleInitialManifest",
+    expectedRevision: () => draftRevision(999),
+    fills: initialManifestFills,
+    expectedBatchIssueCodes: ["staleRevision"],
+    expectedFillIssues: [],
+  },
+  {
+    name: "doRejectDuplicateFill",
+    fills: duplicateLanguageHoleFills,
+    expectedBatchIssueCodes: [],
+    expectedFillIssues: [
+      { fillIndex: 1, hole: "HLanguages", code: "duplicateFill" },
+    ],
+  },
+  {
+    name: "doRejectWrongKindPrimaryClass",
+    fills: (holes) => [standardArrayFill(holes, "HProgression")],
+    expectedBatchIssueCodes: [],
+    expectedFillIssues: [
+      { fillIndex: 0, hole: "HProgression", code: "wrongFillKind" },
+    ],
+  },
+  {
+    name: "doRejectClosedInitialProgressionHole",
+    fills: () => closedInitialProgressionHoleFills(),
+    expectedBatchIssueCodes: [],
+    expectedFillIssues: [
+      { fillIndex: 0, hole: "HProgression", code: "unknownHole" },
+    ],
+    prepare: initialChoicesAcceptedState,
+  },
+  {
+    name: "doRejectUnknownLoadoutArmor",
+    fills: () => [choiceFillForKnownProtocolHole("HLoadoutArmor", ["worn"])],
+    expectedBatchIssueCodes: [],
+    expectedFillIssues: [
+      { fillIndex: 0, hole: "HLoadoutArmor", code: "unknownHole" },
+    ],
+  },
+];
 
 const runtimeStateCheck = stateCheck(normalizeQuintState, compareState);
 
@@ -878,6 +968,43 @@ describe("Character creation runtime MBT", () => {
     expect(
       finalizeCharacterDraft({ draft: acceptedState.draft, unitLibrary }).tag,
     ).toBe("ready");
+  });
+
+  it("rejects invalid creation fill batches before mutating the draft", () => {
+    for (const step of rejectedFillBatchSteps) {
+      const state = step.prepare?.() ?? initialDraftState();
+      const expectedRevision =
+        step.expectedRevision?.(state.draft) ?? state.draft.revision;
+      const expectedHoles = discoverCreationHoles({
+        draft: state.draft,
+        unitLibrary,
+      });
+      const expectedFinalization = finalizeCharacterDraft({
+        draft: state.draft,
+        unitLibrary,
+      });
+      const result = fillCreationHoles({
+        draft: state.draft,
+        fills: step.fills(state.holes),
+        expectedRevision,
+        unitLibrary,
+      });
+
+      expect(result.tag, step.name).toBe("rejected");
+      if (result.tag !== "rejected") {
+        throw new Error(`${step.name} should be rejected.`);
+      }
+
+      expect(result.draft, step.name).toEqual(state.draft);
+      expect(result.holes, step.name).toEqual(expectedHoles);
+      expect(result.finalization, step.name).toEqual(expectedFinalization);
+      expect(batchIssueCodesForResult(result), step.name).toEqual(
+        step.expectedBatchIssueCodes,
+      );
+      expect(fillIssuesForResult(result), step.name).toEqual(
+        step.expectedFillIssues,
+      );
+    }
   });
 
   it("replays character creation fill traces against the runtime reducer", async () => {

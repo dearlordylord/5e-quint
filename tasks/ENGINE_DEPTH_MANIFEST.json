@@ -1,13 +1,12 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRP04-CCF-01",
+  "taskId": "CRP04-CCF-02",
   "productionModulesExtended": [
     {
       "path": "packages/character-creation-runtime/src/fill-reducer.ts",
       "role": "domain-engine",
       "domainApis": [
         "fillCreationHoles",
-        "acceptedCreationBatchFillResult",
         "creationFillIssues"
       ]
     }
@@ -18,13 +17,12 @@
       "quarantinedWitnessNames": [
         "qState",
         "CreationRuntimeWitnessState",
-        "CreationAccepted",
         "CreationRejected",
         "batchIssueCodes",
         "fillIssues"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRP04-CCF-01.json"
+        "tasks/target-replay-evidence/CRP04-CCF-02.json"
       ]
     },
     {
@@ -34,10 +32,10 @@
         "RouteApplyCreationFillBatch",
         "RouteDiscoverCreationHoles",
         "RouteRecordCreationFacts",
-        "RouteFinalizeCharacterDraft"
+        "CreationStaleFillRejectionFact"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRP04-CCF-01.json"
+        "tasks/target-replay-evidence/CRP04-CCF-02.json"
       ]
     },
     {
@@ -46,10 +44,10 @@
         "normalizeQuintState",
         "RuntimeMbtState",
         "character-creation-runtime-state",
-        "acceptedFillBatchSteps"
+        "rejectedFillBatchSteps"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRP04-CCF-01.json"
+        "tasks/target-replay-evidence/CRP04-CCF-02.json"
       ]
     },
     {
@@ -60,7 +58,7 @@
         "route-event-list"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRP04-CCF-01.json"
+        "tasks/target-replay-evidence/CRP04-CCF-02.json"
       ]
     }
   ],
@@ -69,16 +67,16 @@
     {
       "driver": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
       "module": "packages/character-creation-runtime/src/fill-reducer.ts",
-      "api": "fillCreationHoles remains the public atomic batch entrypoint for accepted creation fills, hole rediscovery, and finalization projection; later rejection tasks reuse the same validation boundary."
+      "api": "fillCreationHoles remains the public atomic batch entrypoint for rejected creation fills; validation completes before draft mutation and rejected results derive holes and finalization from the unchanged draft."
     },
     {
       "driver": "packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt",
       "module": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
-      "api": "Character creation route replay remains derived from createCharacterDraft, fillCreationHoles, discoverCreationHoles, and finalizeCharacterDraft rather than an adapter-local state ledger."
+      "api": "Character creation route replay records rejection owners from public reducer entrypoints instead of adapter-local expected routes."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 89 records accepted qState and qRoute replay evidence for character creation fill batches. No duplicate durable open-hole or finalization store was introduced."
+    "notes": "Task 90 records rejected qState and qRoute replay evidence for stale revision, duplicate fill, wrong-kind fill, and non-open hole rejection. No duplicate durable open-hole, finalization, or issue store was introduced."
   }
 }
