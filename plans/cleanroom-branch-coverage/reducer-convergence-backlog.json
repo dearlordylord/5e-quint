@@ -2286,12 +2286,12 @@
         "packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "CharacterSheetBuildProjectionOwner owns Ability Check Proficiency Bonus projection from CharacterBuild proficiency, Expertise, Jack of All Trades, level, and typed other-bonus gates. Character Sheet must not store a parallel proficiency or expertise ledger beside the build-derived facts.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
       "targetTaskId": "CRPI-BLOCK-048",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-048"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt",
@@ -2301,12 +2301,12 @@
         "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "CharacterSheetSpellSlotOwner owns ordinary Spell Slot refund and reset deltas; CharacterSheetFeatureResourceOwner owns Arcane Recovery use lockout; CharacterSheetPactSlotOwner owns the Pact Slot rejection boundary. Slot capacities stay build-derived projections, not duplicated sheet state.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
       "targetTaskId": "CRPI-BLOCK-049",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-049"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt",
@@ -2316,12 +2316,12 @@
         "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "CharacterSheetSelectedReferenceOwner owns selected Armor Class base references; CharacterSheetBuildProjectionOwner owns Armor Class projection from build, loadout, and Surface facts. Selected identity is retained reference evidence, not behavior dispatch.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
       "targetTaskId": "CRPI-BLOCK-050",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-050"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt",
@@ -2331,12 +2331,12 @@
         "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "CharacterSheetSelectedReferenceOwner owns retained class-feature and subclass references; CharacterSheetBuildProjectionOwner owns derived Ability Check and spell-access projections; existing Character Sheet state owns Druid land choice where the route reads that sheet fact. Selected feature identity remains retained reference evidence, not executable dispatch.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
       "targetTaskId": "CRPI-BLOCK-051",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-051"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/character-sheet-runtime/character-sheet-healing-resource-selected-identity.mbt.qnt",
@@ -2346,12 +2346,12 @@
         "packages/character-sheet-runtime/character-sheet-healing-resource-selected-identity.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "CharacterSheetFeatureResourceOwner owns Lay On Hands pool spend; CharacterSheetHitPointOwner owns Hit Point restoration; the existing Character Sheet condition list owns Poisoned removal because the route vocabulary has no separate sheet condition owner.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
       "targetTaskId": "CRPI-BLOCK-052",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-052"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt",
@@ -2361,12 +2361,12 @@
         "packages/character-sheet-runtime/character-sheet-hit-point-maximum.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "CharacterSheetHitPointOwner owns effective and reduced Hit Point Maximum projection boundaries; CharacterSheetBuildProjectionOwner owns normal maximum arithmetic inputs from build facts. Normal Hit Point Maximum remains derived, while maximum reduction is sheet Hit Point state.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
       "targetTaskId": "CRPI-BLOCK-053",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-053"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt",
@@ -2546,12 +2546,12 @@
         "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "CharacterSheetSelectedReferenceOwner owns spellbook and ritual access selected references plus no-slot ritual invocation projection; CharacterSheetBuildProjectionOwner owns build spellbook and spell-access facts. Ritual selected identity is retained access evidence, not authored-name dispatch.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
       "targetTaskId": "CRPI-BLOCK-054",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-054"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt",
@@ -2561,12 +2561,12 @@
         "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "CharacterSheetSelectedReferenceOwner owns selected weapon references and Long Rest reselection; CharacterSheetBuildProjectionOwner owns eligibility and count projection from build and Surface facts. Weapon Mastery property behavior is not owned by this sheet selected-reference replay.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
       "targetTaskId": "CRPI-BLOCK-055",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-055"
+      "status": "ready",
+      "blockerId": null
     }
   ]
 }
