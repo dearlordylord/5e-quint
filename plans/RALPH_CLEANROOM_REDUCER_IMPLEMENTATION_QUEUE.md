@@ -343,20 +343,20 @@
     {
       "number": 57,
       "id": "CRPI-BLOCK-029",
-      "status": "blocked",
-      "title": "Blocked route replay: battle-runtime-stat-block-action-ordering"
+      "status": "ready-for-research",
+      "title": "Implement route replay: battle-runtime-stat-block-action-ordering"
     },
     {
       "number": 58,
       "id": "CRPI-BLOCK-030",
-      "status": "blocked",
-      "title": "Blocked route replay: battle-runtime-stat-block-multi-damage"
+      "status": "ready-for-research",
+      "title": "Implement route replay: battle-runtime-stat-block-multi-damage"
     },
     {
       "number": 59,
       "id": "CRPI-BLOCK-031",
-      "status": "blocked",
-      "title": "Blocked route replay: battle-runtime-stat-block-size-gated-condition-rider"
+      "status": "ready-for-research",
+      "title": "Implement route replay: battle-runtime-stat-block-size-gated-condition-rider"
     },
     {
       "number": 60,
@@ -635,9 +635,9 @@ This is the executable follow-on Ralph queue produced by `CRP-09-CLOSEOUT-EXPAND
 - Backlog denominator rows: 101.
 - Route classes: reducer-routed 75, catalog-after-substrate 15, replay-refresh-only 1, component-first 10.
 - Generated queue tasks: 103.
-- Runnable tasks: 48.
-- Blocked tasks: 55.
-- Queue statuses: ready-for-research 48, blocked 55.
+- Runnable tasks: 3.
+- Blocked tasks: 54.
+- Queue statuses: ready-for-research 3, blocked 54.
 
 The final queue has more tasks than the provisional nine-task bootstrap because the provisional plan was a bootstrap program, not the implementation denominator. The 101 backlog rows expand to 103 Ralph tasks because the character-creation full vertical row intentionally splits into three fill-batch tasks, while the remaining multi-row batches retain their existing one-row-per-owner task shape. Pending `owner-todo` rows are not hidden prose: each is a blocked owner-decision task with a concrete unblock criterion.
 
@@ -709,9 +709,9 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRPI-BLOCK-026` | `blocked` | blocked by task body | blocker resolution before implementation |
 | `CRPI-BLOCK-027` | `blocked` | blocked by task body | blocker resolution before implementation |
 | `CRPI-BLOCK-028` | `blocked` | blocked by task body | blocker resolution before implementation |
-| `CRPI-BLOCK-029` | `blocked` | blocked by task body | blocker resolution before implementation |
-| `CRPI-BLOCK-030` | `blocked` | blocked by task body | blocker resolution before implementation |
-| `CRPI-BLOCK-031` | `blocked` | blocked by task body | blocker resolution before implementation |
+| `CRPI-BLOCK-029` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-030` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-031` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-032` | `blocked` | blocked by task body | blocker resolution before implementation |
 | `CRPI-READY-023` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-033` | `blocked` | blocked by task body | blocker resolution before implementation |
@@ -3916,15 +3916,11 @@ Plan Impact:
 
 ### Task 57 - CRPI-BLOCK-029
 
-Status: `blocked`
-
-Blocker Type: owner-decision
-
-Blocker Detail: Backlog row `packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt` still records `ownerClassification: owner-todo`; a decider must name the durable owner from QNT route connector, reducer guidance, RAW/domain language, or an explicit source blocker before implementation starts.
+Status: `ready-for-research`
 
 Goal:
 
-Unblock and then implement target replay for `packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt` as a `reducer-routed` reducer-convergence task.
+Implement target replay for `packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt` as a `reducer-routed` reducer-convergence task.
 
 Starting Points:
 
@@ -3937,49 +3933,54 @@ Starting Points:
 - `UBIQUITOUS_LANGUAGE.md`
 - `.references/srd-5.2.1/`
 
-Output After Unblock:
+Output:
 
-- Updated backlog row and queue entry replacing the blocker with a concrete durable owner or source dependency output.
-- Target production/harness changes and accepted replay evidence only after the blocker is resolved.
+- Target production changes for the durable owner named below.
+- Quarantined replay adapter/harness changes only where needed to compare copied source projections.
+- `tasks/target-replay-evidence/CRPI-BLOCK-029.json`, `tasks/history/CRPI-BLOCK-029/`, `tasks/RUN_LEDGER.json`, and `tasks/VALIDATION_REPORT.md` updates in the cleanroom target.
+- `tasks/ENGINE_DEPTH_MANIFEST.json` and `tasks/STATE_OWNER_MANIFEST.json` entries for every introduced target module or state field.
 
-Acceptance After Unblock:
+Acceptance:
 
 - Driver Path: `packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt`
 - Route Class: `reducer-routed`
 - Connector Path(s): `packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt`
-- Current Owner Field: owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.
-- Required Accepted Projection: `qRoute`
-- Target replay evidence requirement: after unblock, evidence must be generated by public target entrypoints and record observed projection source, reducer/public API path, source manifest SHA, and source branch inventory SHA.
+- Durable Owner: BattleState owns Stat Block action dispatch, target-selection frontier, attack-roll progression, Hit Point damage, and hole-frontier stale/rejection state through BattleStatBlockActionOwner, BattleTargetSelectionOwner, BattleAttackRollOwner, BattleHitPointOwner, and BattleHoleFrontierOwner. RuleCoreStatBlockControlOwner owns reusable Multiattack dispatch control facts; authored Stat Block identity and attack notation stay catalog/source facts, not reducer dispatch keys.
+- Accepted Projection: `qRoute`
+- Target replay evidence requirement: Target replay must observe `qRoute` from the copied route connector through public battle reducer entrypoints, using the shared `start_battle -> discover_battle_acts -> resolve_battle_subject` shape unless the connector requires a narrower public surface.
+- Pass/fail condition: the cleanroom target evidence file matches the copied connector projection and records target entrypoint sequence, observed projection source, reducer/public API path, source manifest SHA, and source branch inventory SHA.
+
+Target Owner Notes:
+
+- The route connector names `BattleStatBlockActionOwner`, `BattleHoleFrontierOwner`, `BattleTargetSelectionOwner`, `BattleAttackRollOwner`, and `BattleHitPointOwner` for the public `StatBlockActionRouteSubject` path.
+- `tasks/VALIDATION_REPORT.md#CRPI-READY-034` accepts `RuleCoreStatBlockControlOwner` for reusable Multiattack dispatch controls before downstream Stat Block action routes consume that owner.
 
 Forbidden Shortcuts:
 
-- Do not implement while the durable owner is `owner-todo` or while a source connector dependency is unresolved.
-- Do not use catalog identity, fixture labels, QNT action names, or historical target reports as a substitute for owner/source evidence.
-- Do not add workaround adapters or duplicate state to bypass the blocker.
+- Do not satisfy replay with adapter-local expected routes, generated reports, dirty cleanroom history, or target-only fixture labels.
+- Do not branch production behavior on authored identity, official catalog names, QNT branch action names, witness field names, fixture labels, or connector filenames.
+- Do not duplicate durable state already owned by another target layer; thread, derive, or re-export the existing fact instead.
+- Do not widen MBT driver imports or add barrel/behavioral QNT imports to simulated drivers.
 
-Verification After Unblock:
+Verification:
 
+- Run target replay for `packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt` and `packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt`; require `qRoute` route-event evidence from public target reducer entrypoints.
+- Run RAW and ubiquitous-language review against SRD 5.2.1 Playing-the-Game attack and damage rules, SRD 5.2.1 Rules Glossary Stat Block, Attack Notation, Damage Notation, Multiattack, Recharge, and `UBIQUITOUS_LANGUAGE.md` terms for Creature, Attack Roll, Damage, Hit Points, Stat Block, Multiattack, Recharge, and Condition before modeling rule behavior.
 - Run `pnpm cleanroom-branch-coverage:check` after updating the source queue/backlog.
-- Run target replay for `packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt` and the connector or dependency output that resolves this blocker.
-- Run RAW and ubiquitous-language review against the local `.references/srd-5.2.1/` passages selected by the unblocked owner plus `UBIQUITOUS_LANGUAGE.md` before modeling rule behavior.
 - Run `git diff --check`.
 - Run reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review passes; fix every reasonable finding or document a concrete rejection reason, and repeat until no reasonable findings remain.
 
 Plan Impact:
 
-`update-required` when the blocker is resolved; update this queue task, the backlog row, and any dependent implementation tasks in the same planning change.
+`applied`: owner-decision blocker resolved from route connector owners and route inventory derivability facts; this task is now runnable. CRPI-READY-034 remains upstream Stat Block control evidence, not a substitute for this task's required route replay.
 
 ### Task 58 - CRPI-BLOCK-030
 
-Status: `blocked`
-
-Blocker Type: owner-decision
-
-Blocker Detail: Backlog row `packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt` still records `ownerClassification: owner-todo`; a decider must name the durable owner from QNT route connector, reducer guidance, RAW/domain language, or an explicit source blocker before implementation starts.
+Status: `ready-for-research`
 
 Goal:
 
-Unblock and then implement target replay for `packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt` as a `reducer-routed` reducer-convergence task.
+Implement target replay for `packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt` as a `reducer-routed` reducer-convergence task.
 
 Starting Points:
 
@@ -3992,49 +3993,54 @@ Starting Points:
 - `UBIQUITOUS_LANGUAGE.md`
 - `.references/srd-5.2.1/`
 
-Output After Unblock:
+Output:
 
-- Updated backlog row and queue entry replacing the blocker with a concrete durable owner or source dependency output.
-- Target production/harness changes and accepted replay evidence only after the blocker is resolved.
+- Target production changes for the durable owner named below.
+- Quarantined replay adapter/harness changes only where needed to compare copied source projections.
+- `tasks/target-replay-evidence/CRPI-BLOCK-030.json`, `tasks/history/CRPI-BLOCK-030/`, `tasks/RUN_LEDGER.json`, and `tasks/VALIDATION_REPORT.md` updates in the cleanroom target.
+- `tasks/ENGINE_DEPTH_MANIFEST.json` and `tasks/STATE_OWNER_MANIFEST.json` entries for every introduced target module or state field.
 
-Acceptance After Unblock:
+Acceptance:
 
 - Driver Path: `packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt`
 - Route Class: `reducer-routed`
 - Connector Path(s): `packages/battle-runtime/battle-runtime-stat-block-multi-damage.route.mbt.qnt`
-- Current Owner Field: owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.
-- Required Accepted Projection: `qRoute`
-- Target replay evidence requirement: after unblock, evidence must be generated by public target entrypoints and record observed projection source, reducer/public API path, source manifest SHA, and source branch inventory SHA.
+- Durable Owner: BattleState owns Stat Block action dispatch, target selection, attack-roll resolution, and Hit Point updates for rolled and static damage notation through BattleStatBlockActionOwner, BattleTargetSelectionOwner, BattleAttackRollOwner, and BattleHitPointOwner. Damage notation remains a Stat Block source fact; the target must not add an alternate damage or HP ledger.
+- Accepted Projection: `qRoute`
+- Target replay evidence requirement: Target replay must observe `qRoute` from the copied route connector through public battle reducer entrypoints, using the shared `start_battle -> discover_battle_acts -> resolve_battle_subject` shape unless the connector requires a narrower public surface.
+- Pass/fail condition: the cleanroom target evidence file matches the copied connector projection and records target entrypoint sequence, observed projection source, reducer/public API path, source manifest SHA, and source branch inventory SHA.
+
+Target Owner Notes:
+
+- The route connector names `BattleStatBlockActionOwner`, `BattleTargetSelectionOwner`, `BattleAttackRollOwner`, and `BattleHitPointOwner` for rolled and static damage notation on `StatBlockActionRouteSubject`.
+- `CRPI-READY-034` is only upstream Stat Block control evidence for dispatch reuse; this task still must produce its own copied `qRoute` versus public reducer route replay evidence.
 
 Forbidden Shortcuts:
 
-- Do not implement while the durable owner is `owner-todo` or while a source connector dependency is unresolved.
-- Do not use catalog identity, fixture labels, QNT action names, or historical target reports as a substitute for owner/source evidence.
-- Do not add workaround adapters or duplicate state to bypass the blocker.
+- Do not satisfy replay with adapter-local expected routes, generated reports, dirty cleanroom history, or target-only fixture labels.
+- Do not branch production behavior on authored identity, official catalog names, QNT branch action names, witness field names, fixture labels, or connector filenames.
+- Do not duplicate durable state already owned by another target layer; thread, derive, or re-export the existing fact instead.
+- Do not widen MBT driver imports or add barrel/behavioral QNT imports to simulated drivers.
 
-Verification After Unblock:
+Verification:
 
+- Run target replay for `packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt` and `packages/battle-runtime/battle-runtime-stat-block-multi-damage.route.mbt.qnt`; require `qRoute` route-event evidence from public target reducer entrypoints.
+- Run RAW and ubiquitous-language review against SRD 5.2.1 Playing-the-Game attack and damage rules, SRD 5.2.1 Rules Glossary Stat Block, Attack Notation, Damage Notation, Multiattack, Recharge, and `UBIQUITOUS_LANGUAGE.md` terms for Creature, Attack Roll, Damage, Hit Points, Stat Block, Multiattack, Recharge, and Condition before modeling rule behavior.
 - Run `pnpm cleanroom-branch-coverage:check` after updating the source queue/backlog.
-- Run target replay for `packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt` and the connector or dependency output that resolves this blocker.
-- Run RAW and ubiquitous-language review against the local `.references/srd-5.2.1/` passages selected by the unblocked owner plus `UBIQUITOUS_LANGUAGE.md` before modeling rule behavior.
 - Run `git diff --check`.
 - Run reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review passes; fix every reasonable finding or document a concrete rejection reason, and repeat until no reasonable findings remain.
 
 Plan Impact:
 
-`update-required` when the blocker is resolved; update this queue task, the backlog row, and any dependent implementation tasks in the same planning change.
+`applied`: owner-decision blocker resolved from route connector owners and route inventory derivability facts; this task is now runnable. CRPI-READY-034 remains upstream Stat Block control evidence, not a substitute for this task's required route replay.
 
 ### Task 59 - CRPI-BLOCK-031
 
-Status: `blocked`
-
-Blocker Type: owner-decision
-
-Blocker Detail: Backlog row `packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt` still records `ownerClassification: owner-todo`; a decider must name the durable owner from QNT route connector, reducer guidance, RAW/domain language, or an explicit source blocker before implementation starts.
+Status: `ready-for-research`
 
 Goal:
 
-Unblock and then implement target replay for `packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt` as a `reducer-routed` reducer-convergence task.
+Implement target replay for `packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt` as a `reducer-routed` reducer-convergence task.
 
 Starting Points:
 
@@ -4047,37 +4053,46 @@ Starting Points:
 - `UBIQUITOUS_LANGUAGE.md`
 - `.references/srd-5.2.1/`
 
-Output After Unblock:
+Output:
 
-- Updated backlog row and queue entry replacing the blocker with a concrete durable owner or source dependency output.
-- Target production/harness changes and accepted replay evidence only after the blocker is resolved.
+- Target production changes for the durable owner named below.
+- Quarantined replay adapter/harness changes only where needed to compare copied source projections.
+- `tasks/target-replay-evidence/CRPI-BLOCK-031.json`, `tasks/history/CRPI-BLOCK-031/`, `tasks/RUN_LEDGER.json`, and `tasks/VALIDATION_REPORT.md` updates in the cleanroom target.
+- `tasks/ENGINE_DEPTH_MANIFEST.json` and `tasks/STATE_OWNER_MANIFEST.json` entries for every introduced target module or state field.
 
-Acceptance After Unblock:
+Acceptance:
 
 - Driver Path: `packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt`
 - Route Class: `reducer-routed`
 - Connector Path(s): `packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.route.mbt.qnt`
-- Current Owner Field: owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.
-- Required Accepted Projection: `qRoute`
-- Target replay evidence requirement: after unblock, evidence must be generated by public target entrypoints and record observed projection source, reducer/public API path, source manifest SHA, and source branch inventory SHA.
+- Durable Owner: BattleState owns Stat Block action dispatch, target selection, size-gated condition lifecycle, and Hit Point updates through BattleStatBlockActionOwner, BattleTargetSelectionOwner, BattleConditionLifecycleOwner, and BattleHitPointOwner. BattleCreatureStateOwner owns target Size and condition-immunity input facts; those facts must be read from existing creature state and must not become route-local state.
+- Accepted Projection: `qRoute`
+- Target replay evidence requirement: Target replay must observe `qRoute` from the copied route connector through public battle reducer entrypoints, using the shared `start_battle -> discover_battle_acts -> resolve_battle_subject` shape unless the connector requires a narrower public surface.
+- Pass/fail condition: the cleanroom target evidence file matches the copied connector projection and records target entrypoint sequence, observed projection source, reducer/public API path, source manifest SHA, and source branch inventory SHA.
+
+Target Owner Notes:
+
+- The route connector names `BattleStatBlockActionOwner`, `BattleTargetSelectionOwner`, `BattleConditionLifecycleOwner`, and `BattleHitPointOwner` for `StatBlockActionRouteSubject` condition-rider resolution.
+- `BattleCreatureStateOwner` is an input-fact owner for target Size and condition-immunity facts, not an expected `qRoute` event owner for this connector.
 
 Forbidden Shortcuts:
 
-- Do not implement while the durable owner is `owner-todo` or while a source connector dependency is unresolved.
-- Do not use catalog identity, fixture labels, QNT action names, or historical target reports as a substitute for owner/source evidence.
-- Do not add workaround adapters or duplicate state to bypass the blocker.
+- Do not satisfy replay with adapter-local expected routes, generated reports, dirty cleanroom history, or target-only fixture labels.
+- Do not branch production behavior on authored identity, official catalog names, QNT branch action names, witness field names, fixture labels, or connector filenames.
+- Do not duplicate durable state already owned by another target layer; thread, derive, or re-export the existing fact instead.
+- Do not widen MBT driver imports or add barrel/behavioral QNT imports to simulated drivers.
 
-Verification After Unblock:
+Verification:
 
+- Run target replay for `packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt` and `packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.route.mbt.qnt`; require `qRoute` route-event evidence from public target reducer entrypoints.
+- Run RAW and ubiquitous-language review against SRD 5.2.1 Playing-the-Game attack and damage rules, SRD 5.2.1 Rules Glossary Stat Block, Attack Notation, Damage Notation, Multiattack, Recharge, and `UBIQUITOUS_LANGUAGE.md` terms for Creature, Attack Roll, Damage, Hit Points, Stat Block, Multiattack, Recharge, and Condition before modeling rule behavior.
 - Run `pnpm cleanroom-branch-coverage:check` after updating the source queue/backlog.
-- Run target replay for `packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt` and the connector or dependency output that resolves this blocker.
-- Run RAW and ubiquitous-language review against the local `.references/srd-5.2.1/` passages selected by the unblocked owner plus `UBIQUITOUS_LANGUAGE.md` before modeling rule behavior.
 - Run `git diff --check`.
 - Run reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review passes; fix every reasonable finding or document a concrete rejection reason, and repeat until no reasonable findings remain.
 
 Plan Impact:
 
-`update-required` when the blocker is resolved; update this queue task, the backlog row, and any dependent implementation tasks in the same planning change.
+`applied`: owner-decision blocker resolved from route connector owners and route inventory derivability facts; this task is now runnable. CRPI-READY-034 remains upstream Stat Block control evidence, not a substitute for this task's required route replay.
 
 ### Task 60 - CRPI-BLOCK-032
 

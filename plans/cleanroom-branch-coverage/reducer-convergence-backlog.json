@@ -1276,12 +1276,12 @@
         "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns Stat Block action dispatch, target-selection frontier, attack-roll progression, Hit Point damage, and hole-frontier stale/rejection state through BattleStatBlockActionOwner, BattleTargetSelectionOwner, BattleAttackRollOwner, BattleHitPointOwner, and BattleHoleFrontierOwner. RuleCoreStatBlockControlOwner owns reusable Multiattack dispatch control facts; authored Stat Block identity and attack notation stay catalog/source facts, not reducer dispatch keys.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
       "targetTaskId": "CRPI-BLOCK-029",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-029"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt",
@@ -1291,12 +1291,12 @@
         "packages/battle-runtime/battle-runtime-stat-block-multi-damage.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns Stat Block action dispatch, target selection, attack-roll resolution, and Hit Point updates for rolled and static damage notation through BattleStatBlockActionOwner, BattleTargetSelectionOwner, BattleAttackRollOwner, and BattleHitPointOwner. Damage notation remains a Stat Block source fact; the target must not add an alternate damage or HP ledger.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
       "targetTaskId": "CRPI-BLOCK-030",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-030"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt",
@@ -1306,12 +1306,12 @@
         "packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns Stat Block action dispatch, target selection, size-gated condition lifecycle, and Hit Point updates through BattleStatBlockActionOwner, BattleTargetSelectionOwner, BattleConditionLifecycleOwner, and BattleHitPointOwner. BattleCreatureStateOwner owns target Size and condition-immunity input facts; those facts must be read from existing creature state and must not become route-local state.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
       "targetTaskId": "CRPI-BLOCK-031",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-031"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-thaumaturgy-selected-identity.mbt.qnt",
