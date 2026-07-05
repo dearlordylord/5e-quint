@@ -62,6 +62,11 @@ const levelFiveWizardFireballCombatantId = "wizard-level-5";
 const levelFiveWizardFireballBattleId = "battle:stdio-level-five-fireball";
 const levelSixRogueExpertiseDraftId =
   "draft:stdio-level-six-orc-soldier-rogue-expertise";
+const levelSixRogueExpertiseBattleId =
+  "battle:stdio-level-six-rogue-steady-aim";
+const levelSixRogueExpertiseCombatantId = "rogue-level-6";
+const levelSixRogueSteadyAimUnitId = "rogue_steady_aim";
+const levelSixRogueSteadyAimActLabel = "Steady Aim";
 const levelSixRogueProgressionOptionId =
   "11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue:level_6:fixed_hp_gain";
 const levelSixRogueExpertiseSkills = [
@@ -1327,6 +1332,133 @@ export async function verifyLevelSixRogueExpertiseSheetScenario(
   assertLevelSixRogueExpertiseBuild(rogue, "build.proficiencyChoices");
 }
 
+export async function verifyLevelSixRogueSteadyAimBattleHandoff(
+  client: Client,
+) {
+  const workflow = await callTool(client, "describe_mcp_workflow", {});
+  assert.equal(get(workflow, "resultPaths.battleActs"), "snapshot.acts");
+  assert.equal(
+    get(workflow, "resultPaths.battleCombatants"),
+    "snapshot.combatants",
+  );
+
+  const units = await callTool(client, "list_catalog_units", {});
+  assert.ok(
+    unitSummaries(units, "class_feature").some(
+      (unit) => unit.id === levelSixRogueSteadyAimUnitId,
+    ),
+  );
+
+  const finalizedRogue = await createAndFinalizeOrcRogueSixWithExpertise(
+    client,
+    levelSixRogueExpertiseDraftId,
+  );
+  assert.equal(get(finalizedRogue, "finalization.tag"), "ready");
+
+  const returnedCharacterIds = stringArrayAt(
+    finalizedRogue,
+    "session.characterIds",
+  );
+  assert.equal(returnedCharacterIds.length, 1);
+  const [characterId] = returnedCharacterIds;
+  assert.ok(characterId, "finalize_character must return a characterId");
+  const listedBeforeBattle = await callTool(client, "list_characters", {});
+  const rogueSheet = characterRow(listedBeforeBattle, characterId);
+  assert.equal(get(rogueSheet, "status"), "available");
+  assertLevelSixRogueExpertiseBuild(rogueSheet, "build.proficiencyChoices");
+
+  const selected = await callTool(client, "select_stat_block", {
+    statBlockId: "stat_block_goblin_warrior",
+  });
+  assert.equal(
+    get(selected, "selectedStatBlock.statBlock.displayName"),
+    "Goblin Warrior",
+  );
+
+  const started = await callTool(client, "start_battle", {
+    battleId: levelSixRogueExpertiseBattleId,
+    initialCombatants: [
+      {
+        kind: "characterSession",
+        characterId,
+        combatantId: levelSixRogueExpertiseCombatantId,
+        initiative: 16,
+        side: "party",
+      },
+      statBlockCombatant("goblin", "stat_block_goblin_warrior", 8),
+    ],
+  });
+  assert.equal(
+    get(started, "snapshot.battleId"),
+    levelSixRogueExpertiseBattleId,
+  );
+  assert.deepEqual(get(started, "snapshot.turnOrder"), [
+    levelSixRogueExpertiseCombatantId,
+    "goblin",
+  ]);
+  assert.equal(
+    get(started, "snapshot.currentActorId"),
+    levelSixRogueExpertiseCombatantId,
+  );
+  const startedRogue = battleCombatant(
+    started,
+    levelSixRogueExpertiseCombatantId,
+  );
+  assert.equal(get(startedRogue, "origin.kind"), "character");
+  assert.equal(get(startedRogue, "origin.characterId"), characterId);
+
+  const read = await callTool(client, "read_battle_state", {});
+  assert.equal(
+    get(read, "snapshot.currentActorId"),
+    levelSixRogueExpertiseCombatantId,
+  );
+  assert.equal(
+    get(
+      battleCombatant(read, levelSixRogueExpertiseCombatantId),
+      "origin.characterId",
+    ),
+    characterId,
+  );
+
+  const rogueActs = await callTool(client, "discover_battle_acts", {});
+  assert.equal(
+    get(rogueActs, "snapshot.currentActorId"),
+    levelSixRogueExpertiseCombatantId,
+  );
+  const steadyAimAct = battleActByLabel(
+    rogueActs,
+    levelSixRogueSteadyAimActLabel,
+  );
+  assert.ok(steadyAimAct, `Missing ${levelSixRogueSteadyAimActLabel} act`);
+  assert.deepEqual(steadyAimAct.subject, {
+    tag: "unitFeature",
+    actorId: levelSixRogueExpertiseCombatantId,
+    unitId: levelSixRogueSteadyAimUnitId,
+  });
+  assert.deepEqual(steadyAimAct.initialHoles, []);
+
+  const aimed = await callTool(client, "resolve_battle_act", {
+    subject: steadyAimAct.subject,
+  });
+  assert.equal(get(aimed, "result.tag"), "resolved");
+  assert.equal(get(aimed, "snapshot.turn.bonusActionAvailable"), false);
+  const aimedMovement = get(
+    battleCombatant(aimed, levelSixRogueExpertiseCombatantId),
+    "movement",
+  );
+  assert.ok(isJsonObject(aimedMovement));
+  assert.equal(get(aimedMovement, "speedFeet"), 0);
+  assert.equal(get(aimedMovement, "remainingFeet"), 0);
+  assert.equal(get(aimedMovement, "spentFeet"), 0);
+  assert.equal(
+    get(
+      battleCombatant(aimed, levelSixRogueExpertiseCombatantId),
+      "origin.characterId",
+    ),
+    characterId,
+  );
+}
+
 async function createAndFinalizeFighterTwo(client: Client, draftId: string) {
   await callTool(client, "create_character_draft", { draftId });
   await fillBaseOrcSoldier(
@@ -2518,6 +2650,15 @@ function combatantHp(payload: JsonObject, combatantId: string) {
   );
   assert.ok(combatant, `Missing combatant ${combatantId}`);
   return combatant.hp;
+}
+
+function battleCombatant(payload: JsonObject, combatantId: string) {
+  const combatants = jsonObjectArrayAt(payload, "snapshot.combatants");
+  const combatant = combatants.find(
+    (candidate) => candidate.combatantId === combatantId,
+  );
+  assert.ok(combatant, `Missing battle combatant ${combatantId}`);
+  return combatant;
 }
 
 function resultHole(payload: JsonObject, kind: string) {
