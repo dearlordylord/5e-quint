@@ -1,81 +1,66 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-022",
+  "taskId": "CRPI-READY-023",
   "productionModulesExtended": [
     {
       "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "role": "domain-api",
       "domainApis": [
-        "BattleReducerRouteEvent.subject=metamagicEffectiveSpellLevel",
-        "BattleReducerRouteEvent.owner=battleFeatureResource",
-        "BattleReducerRouteEvent.owner=battleSpellSlotAndActionEconomy",
-        "BattleReducerRouteEvent.owner=battleTargetSelection",
-        "battleReducerRouteEventsForDiscoveredAct",
+        "BattleReducerRouteEvent.subject=turnBoundaryEffectLifecycle",
+        "BattleReducerRouteEvent.owner=battleTurnBoundary",
+        "BattleReducerRouteEvent.owner=battleHitPoint",
+        "BattleReducerRouteEvent.owner=battleActiveEffect",
         "battleReducerRouteForResolution"
       ]
     }
   ],
   "adapterModules": [
     {
-      "path": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.route.mbt.qnt",
       "quarantinedWitnessNames": [
         "qRoute",
-        "MetamagicEffectiveSpellLevelRouteSubject",
-        "BattleFeatureResourceOwner",
-        "BattleSpellSlotAndActionEconomyOwner",
-        "BattleTargetSelectionOwner",
-        "doRouteEffectiveSpellLevel",
-        "stepRouteEffectiveSpellLevel"
+        "TurnBoundaryEffectLifecycleRouteSubject",
+        "BattleTurnBoundaryOwner",
+        "BattleHitPointOwner",
+        "BattleActiveEffectOwner",
+        "doResolveTargetStartTurn",
+        "doResolveSourceNextTurn"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-022.json"
+        "tasks/target-replay-evidence/CRPI-READY-023.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/sorcerer-metamagic-twinned-selected-identity.mbt.test.ts",
+      "path": "packages/battle-runtime/src/turn-boundary-effect-lifecycle.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "doResolveTwinnedTargetCount",
-        "compares Twinned Spell effective-level public reducer route to copied qRoute",
-        "createTwinnedMetamagicRouteReplayDriver"
+        "compares turn-boundary public reducer route to copied qRoute",
+        "createTurnBoundaryRouteReplayDriver",
+        "turnBoundaryRouteStateCheck"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-022.json"
-      ]
-    },
-    {
-      "path": "packages/battle-runtime/src/sorcerer-metamagic-selected-identity-support.ts",
-      "quarantinedWitnessNames": [
-        "observeTwinnedBlessRoute"
-      ],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-022.json"
+        "tasks/target-replay-evidence/CRPI-READY-023.json"
       ]
     }
   ],
   "accumulatorGrowth": [
     {
-      "fieldPath": "AvailableBattleAct.routeEvents",
-      "reason": "Twinned Spell effective-level diagnostics expose typed effective_spell_level_increase_for_extra_target Metamagic discovery through the public battle act list."
+      "fieldPath": "BattleResolutionResult.routeEvents",
+      "reason": "Turn-boundary diagnostics expose copied qRoute ownership for public endTurn discovery and resolution without adding duplicate turn-boundary, Hit Point, or active-effect state."
     },
     {
-      "fieldPath": "BattleResolutionResult.routeEvents",
-      "reason": "Twinned Spell effective-level diagnostics expose spell-slot/action-economy ownership and target-list ownership through public subject resolution."
+      "fieldPath": "BattleReducerRouteEvent.subject=turnBoundaryEffectLifecycle",
+      "reason": "The route subject records the existing endTurn boundary lifecycle shape for start/end turn active Spell Effects and owner handoff."
     }
   ],
   "expectedNextReuse": [
     {
-      "driver": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
-      "module": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
-      "api": "stepRouteEffectiveSpellLevel is a deterministic copied-route replay wrapper for doRouteEffectiveSpellLevel"
-    },
-    {
-      "driver": "future metamagic route tasks",
+      "driver": "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.route.mbt.qnt",
       "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "api": "Metamagic route projection remains derived from typed effectKind facts and promoted spell procedure shape rather than selected option identity"
+      "api": "turnBoundaryEffectLifecycle route events remain derived from runtimeCommand endTurn holes, fills, and active-effect shapes."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 53 observes the copied Twinned Spell effective-level qRoute through public reducer route events for Bless target-list resolution. No new BattleState field was introduced."
+    "notes": "Task 61 observes copied turn-boundary qRoute through public endTurn route events. No new BattleState field was introduced."
   }
 }

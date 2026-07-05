@@ -1,47 +1,36 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-022",
+  "taskId": "CRPI-READY-023",
   "durableFields": [
-    {
-      "fieldPath": "AvailableBattleAct.routeEvents",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "owner": "executable-boundary-projection",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject.actionSpell.metamagic.effectKind=effective_spell_level_increase_for_extra_target, BattleSubject.actionSpell.invocation.procedure=rollModifier, and AvailableBattleAct.initialHoles=spellTargetList",
-        "boundary": "discoverBattleActs public reducer boundary"
-      }
-    },
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject.actionSpell.metamagic.effectKind=effective_spell_level_increase_for_extra_target, spellTargetList fill, and BattleResolutionResult resolved state",
-        "boundary": "resolveBattleSubject public reducer boundary"
+        "sourceField": "runtimeCommand endTurn subject, BattleHole.kind, BattleFill.kind, and BattleState combatant activeEffects",
+        "boundary": "endTurn public reducer boundary"
       }
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=metamagicEffectiveSpellLevel",
+      "fieldPath": "BattleReducerRouteEvent.subject=turnBoundaryEffectLifecycle",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject.actionSpell.metamagic.effectKind=effective_spell_level_increase_for_extra_target and spellTargetList fill",
-        "boundary": "battleReducerRouteEventsForDiscoveredAct and battleReducerRouteForResolution"
+        "sourceField": "runtimeCommand endTurn subject with rolledDice and savingThrowOutcome holes/fills for active turn-boundary Spell Effects",
+        "boundary": "battleReducerRouteForResolution"
       }
     }
   ],
   "notes": [
-    "Task 53 introduced no new BattleState, BattleCreatureState, character spellcasting, or table-state durable field.",
-    "Sorcery Point ownership remains existing CharacterBattlePointPoolResourceState.pointsRemaining.",
-    "Spell-slot and action-economy ownership remain existing spell invocation resolver facts.",
-    "The Twinned effective spell level remains a typed selected Metamagic application fact on the BattleSubject and an invocation targeting projection derived from catalog/selection/admission boundaries.",
-    "Target-list ownership remains the existing table-supplied spellTargetList BattleFill and reducer-owned hole frontier.",
-    "Active Spell Effect ownership remains existing BattleCreatureState.activeEffects.",
-    "Selected Metamagic option identity remains at catalog, selection, admission, and SRD fixture boundaries.",
-    "Route events are public reducer boundary projections derived from typed Twinned Metamagic effect facts, promoted rollModifier spell procedure shape, and spellTargetList fills.",
-    "The Twinned effective-level route does not dispatch on Sorcerer authored feature identity, the Twinned Spell option name, Bless authored identity, QNT branch names, or fixture labels; production routing is admitted by typed effective_spell_level_increase_for_extra_target facts on promoted action-spell subjects."
+    "Task 61 introduced no new BattleState, BattleCreatureState, HP, active-effect, ongoing-feature, or initiative durable field.",
+    "Initiative order and round advancement remain existing BattleState.initiative facts owned by the turn-boundary reducer.",
+    "Hit Points remain existing BattleCreatureState.hp facts owned by the Hit Point reducer.",
+    "Active Spell Effects remain existing BattleCreatureState.activeEffects facts owned by the active-effect lifecycle reducer.",
+    "Ongoing Feature occurrences remain existing BattleCreatureState.activeOngoingFeatureOccurrences facts owned by the ongoing-feature lifecycle reducer.",
+    "Same-timing order remains at the public turn-boundary hole/fill frontier; no fixture-local ordering ledger was added.",
+    "Route events are public reducer boundary projections derived from endTurn subject shape, active-effect kind shape, and typed holes/fills.",
+    "The route does not dispatch on authored spell identity, QNT branch names, witness field names, connector filenames, or fixture labels."
   ]
 }

@@ -2445,3 +2445,147 @@ Verification results:
   Twinned roll-modifier cast subjects with a `spellTargetList` fill. The run
   ledger base-check artifact was corrected to distinguish the revision prompt's
   Ralph base ref from the reviewer-feedback codex base ref.
+
+## CRPI-READY-023
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec`
+- Driver: `packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt`
+- Route connector: `packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.route.mbt.qnt`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Playing-the-Game.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `UBIQUITOUS_LANGUAGE.md`
+- `ASSUMPTIONS.md`
+
+Behavior implemented:
+
+The route replay for turn-boundary effect lifecycle now observes the copied
+`qRoute` projection through public battle reducer entrypoints. The replay starts
+from `battleReducerStartRouteEvent`, then uses `endTurn` to observe boundary
+discovery, rolled-dice Hit Point resolution, saving-throw active-effect
+resolution, target end-turn damage, active-effect expiry, and turn-boundary
+advancement.
+
+Revision round 2 constrained route admission to the actual public holes owned by
+each route subject. A mixed `endTurn` frontier with `deathSavingThrow`,
+turn-start damage, and turn-start save holes now emits one `deathSavingThrow`
+discovery event owned by `battleHitPointAndZeroHpLifecycle` and one
+`turnBoundaryEffectLifecycle` discovery event owned by `battleTurnBoundary`.
+
+Revision round 3 preserves non-turn-boundary route metadata after turn-boundary
+damage. If turn-boundary damage opens a `concentrationSavingThrow` frontier, the
+public route evidence now emits the Hit Point owner event for the consumed
+damage roll and a separate `concentrationTeardown` event owned by
+`battleConcentration`. Invalid turn-boundary rolled-dice fills return the
+typed invalid result without a `battleHitPoint` ownership event.
+
+Revision round 4 narrows turn-boundary save-fill route admission to the actual
+`spellTurnStartSave` hole id. A mixed `endTurn` frontier with a normal spell
+condition end-turn save and a turn-start damage/save lifecycle now resolves the
+non-turn-boundary save as the generic command route without emitting
+`turnBoundaryEffectLifecycle` / `battleActiveEffect` ownership for that fill.
+
+Revision round 5 preserves turn-boundary discovery when a repeat-save condition
+frontier is present at the same `endTurn` boundary. A mixed
+`sleepPendingRepeatSave` plus turn-start damage/save frontier now emits both the
+`repeatSaveConditionEffect` discovery and the `turnBoundaryEffectLifecycle`
+discovery through public route events.
+
+Revision round 6 removes the cross-module string-value connascence for
+turn-start save hole ids. The hole producer now owns
+`spellTurnStartSavingThrowOutcomeHoleId`, and the route classifier reuses that
+constructor when deciding whether a `savingThrowOutcome` fill belongs to
+`turnBoundaryEffectLifecycle`.
+
+BattleState remains the durable owner for Initiative order and round
+advancement. Hit Points remain in `BattleCreatureState.hp`; active Spell
+Effects remain in `BattleCreatureState.activeEffects`; ongoing feature
+occurrences remain in `BattleCreatureState.activeOngoingFeatureOccurrences`.
+Same-timing order remains at the public turn-boundary hole/fill frontier. No
+authored identity, QNT branch name, witness field name, connector filename, or
+fixture label dispatch was added.
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-023.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id: `public-route=turnBoundaryEffectLifecycle action=doResolveTargetStartTurn qRoute=target-start-turn-boundary-public-route`
+- Reproduction trace id: `public-route=turnBoundaryEffectLifecycle action=doResolveSourceNextTurn qRoute=source-next-turn-boundary-public-route`
+- Regression trace id: `public-route=mixed-death-save-turn-boundary-frontier route-ownership-split`
+- Regression trace id: `public-route=turn-boundary-damage-concentration-frontier route-ownership-split`
+- Regression trace id: `public-route=invalid-turn-boundary-damage-roll-fill no-hit-point-owner-overclaim`
+- Regression trace id: `public-route=mixed-non-boundary-save-turn-boundary-save no-active-effect-owner-overclaim`
+- Regression trace id: `public-route=mixed-repeat-save-turn-boundary-frontier route-ownership-split`
+
+Branch evidence:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt#step:doResolveTargetStartTurn` | `tasks/target-replay-evidence/CRPI-READY-023.json#driver:packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt#step:doResolveTargetStartTurn#trace:public-route=turnBoundaryEffectLifecycle action=doResolveTargetStartTurn qRoute=target-start-turn-boundary-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt#step:doResolveSourceNextTurn` | `tasks/target-replay-evidence/CRPI-READY-023.json#driver:packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt#step:doResolveSourceNextTurn#trace:public-route=turnBoundaryEffectLifecycle action=doResolveSourceNextTurn qRoute=source-next-turn-boundary-public-route` | `_none_` | `covered` |
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-READY-023/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 61.
+
+Verification results:
+
+- Base check passed: the current task packet's declared Ralph base ref
+  `ralph/cleanroom-reducer-full-lane-20260704T211636Z/integration` resolved to
+  `a2c638f04 Mark Ralph task 53 done`, `HEAD` resolved to
+  `a2c638f04 Mark Ralph task 53 done`, and the task Base SHA
+  `a2c638f04c0a79028080c528a193dabe4901797a` was an ancestor of `HEAD`.
+  The round-4 reviewer merge note separately checked
+  `codex/cleanroom-reducer-full-lane-20260704T211636Z`, which resolved to
+  `10baec507 Mark Ralph task 45 done`.
+- `pnpm --filter @dnd/battle-runtime typecheck` passed.
+- `pnpm --filter @dnd/battle-runtime exec vitest run src/turn-boundary-effect-lifecycle.mbt.test.ts -t "non-boundary end-turn save|mixed repeat-save"` passed; the route classifier still recognizes actual turn-start save fills through the centralized hole-id helper, and mixed repeat-save discovery remains split.
+- First focused replay attempt failed because the route replay tried to resolve
+  the target save from partially-filled end-turn state; the public reducer
+  protocol keeps the same boundary subject and expects accumulated fills.
+- `pnpm --filter @dnd/battle-runtime exec vitest run src/turn-boundary-effect-lifecycle.mbt.test.ts -t "splits mixed death-save"` passed; mixed Death Saving Throw plus turn-boundary damage/save discovery split route ownership correctly.
+- `pnpm --filter @dnd/battle-runtime exec vitest run src/turn-boundary-effect-lifecycle.mbt.test.ts -t "splits concentration|does not route invalid"` passed; turn-boundary damage concentration holes split to `battleConcentration`, and invalid duplicate turn-boundary damage roll fills emitted no `battleHitPoint` route.
+- `pnpm --filter @dnd/battle-runtime exec vitest run src/turn-boundary-effect-lifecycle.mbt.test.ts -t "non-boundary end-turn save"` passed; mixed spell condition end-turn save plus turn-start damage/save frontier did not route the non-turn-boundary save fill as `turnBoundaryEffectLifecycle`.
+- `pnpm --filter @dnd/battle-runtime exec vitest run src/turn-boundary-effect-lifecycle.mbt.test.ts -t "mixed repeat-save"` passed; mixed `sleepPendingRepeatSave` plus turn-start damage/save discovery split route ownership correctly.
+- MBT process precheck passed before the timed focused replay:
+  `ps aux | grep vitest | grep -v grep` and
+  `ps aux | grep quint_evaluator | grep -v grep` found no running processes; no
+  evaluator cleanup was needed.
+- `START=$(date +%s); MBT_TRACES=1 MBT_STEPS=2 pnpm --filter @dnd/battle-runtime exec vitest run src/turn-boundary-effect-lifecycle.mbt.test.ts 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 8 tests; copied `qRoute` was compared to public `endTurn` route events for both branches and all route regressions passed; final timed run `TOTAL: 6s`.
+- `pnpm --filter @dnd/battle-runtime exec vitest run src/turn-boundary-effect-lifecycle.mbt.test.ts` passed with 8 tests; copied `qRoute` was compared to public `endTurn` route events for both branches and all route regressions passed.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- `pnpm quality` passed end to end; app lint reported warnings only and exited 0.
+- RAW/ubiquitous-language review passed against SRD 5.2.1 The Order of Combat,
+  Simultaneous Effects, Reaction, Ready Action, Burning, `ASSUMPTIONS.md#A6`,
+  and `UBIQUITOUS_LANGUAGE.md` terms Boundary Crossing, Spell Effect, Timer,
+  Reaction, and Turn Structure.
+- Reviewer-loop convergence passed: round 1 added public
+  `turnBoundaryEffectLifecycle` route ownership and copied-route replay; round
+  2 verified route admission is typed by `runtimeCommand` `endTurn`, active
+  effect kind shape, public holes/fills, and existing BattleState, Hit Point,
+  active-effect, and ongoing-feature owners; round 3 verified concentration
+  frontier preservation and invalid-fill non-ownership; round 4 verified that
+  non-turn-boundary saving throw fills do not overclaim turn-boundary active
+  effect ownership; round 5 verified repeat-save discovery no longer hides
+  same-frontier turn-boundary lifecycle discovery; round 6 centralized the
+  turn-start save hole-id projection with the hole producer to remove duplicated
+  string-value connascence. No duplicate durable state or authored-identity
+  dispatch was added.

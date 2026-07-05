@@ -26,6 +26,7 @@ import {
   TWINNED_METAMAGIC_EFFECT_KIND,
 } from "./metamagic-support.ts";
 import { isHeightenedSpellTargetChoiceHoleId } from "./spells-damage-fills.ts";
+import { spellTurnStartSavingThrowOutcomeHoleId } from "./turn-end-movement.ts";
 
 export type BattleReducerRouteSubjectFamily =
   | "concentrationTeardown"
@@ -49,6 +50,7 @@ export type BattleReducerRouteSubjectFamily =
   | "saveGatedSpell"
   | "scalarBuffEffect"
   | "repeatSaveConditionEffect"
+  | "turnBoundaryEffectLifecycle"
   | "slotSpell"
   | "spellAttackProcedure"
   | "weaponAttack";
@@ -388,6 +390,11 @@ export function battleReducerRouteForResolution(
   );
   if (deathSavingThrowRoute !== undefined) {
     return deathSavingThrowRoute;
+  }
+  const turnBoundaryEffectLifecycleRoute =
+    turnBoundaryEffectLifecycleRouteForResolution(input, result);
+  if (turnBoundaryEffectLifecycleRoute !== undefined) {
+    return turnBoundaryEffectLifecycleRoute;
   }
   const metamagicSpellDurationProjectionRoute =
     metamagicSpellDurationProjectionRouteForResolution(input, result);
@@ -1399,35 +1406,49 @@ function deathSavingThrowRouteForResolution(
     if (result.tag === "invalid" && result.reason !== "wrongActor") {
       return undefined;
     }
-    return [
+    const turnBoundaryDiscovery =
+      turnBoundaryEffectLifecycleDiscoveryRouteForResolution(input, result);
+    return nonEmptyRouteEvents([
       {
         kind: "resolveBattleSubject",
         subject: "deathSavingThrow",
         fill: "deathSavingThrow",
         holes:
           result.tag === "needsHoles"
-            ? battleReducerRouteHoles(result.holes)
+            ? deathSavingThrowRouteHoles(result.holes)
             : [],
         owner: "battleHitPointAndZeroHpLifecycle",
       },
-    ];
+      ...(turnBoundaryDiscovery === undefined ? [] : [turnBoundaryDiscovery]),
+    ]);
   }
 
   if (
     result.tag !== "needsHoles" ||
-    !battleReducerRouteHoles(result.holes).includes("deathSavingThrow")
+    !deathSavingThrowRouteHoles(result.holes).includes("deathSavingThrow")
   ) {
     return undefined;
   }
 
-  return [
+  const turnBoundaryDiscovery =
+    turnBoundaryEffectLifecycleDiscoveryRouteForResolution(input, result);
+  return nonEmptyRouteEvents([
     {
       kind: "discoverBattleActs",
       subject: "deathSavingThrow",
-      holes: battleReducerRouteHoles(result.holes),
+      holes: deathSavingThrowRouteHoles(result.holes),
       owner: "battleHitPointAndZeroHpLifecycle",
     },
-  ];
+    ...(turnBoundaryDiscovery === undefined ? [] : [turnBoundaryDiscovery]),
+  ]);
+}
+
+function deathSavingThrowRouteHoles(
+  holes: readonly BattleHole[],
+): readonly BattleReducerRouteHole[] {
+  return battleReducerRouteHoles(
+    holes.filter((hole) => hole.kind === "deathSavingThrow"),
+  );
 }
 
 function concentrationRouteForResolution(
@@ -2190,16 +2211,21 @@ function sleepRepeatSaveTurnBoundaryRoute(
   if (fill === undefined) {
     if (result.tag === "needsHoles") {
       const holes = sleepRepeatSaveRouteHoles(result.holes);
+      const turnBoundaryDiscovery =
+        turnBoundaryEffectLifecycleDiscoveryRouteForResolution(input, result);
       return holes.length === 0
         ? undefined
-        : [
+        : nonEmptyRouteEvents([
             {
               kind: "discoverBattleActs",
               subject: "repeatSaveConditionEffect",
               holes,
               owner: "battleTurnBoundary",
             },
-          ];
+            ...(turnBoundaryDiscovery === undefined
+              ? []
+              : [turnBoundaryDiscovery]),
+          ]);
     }
     if (
       result.tag === "resolved" &&
@@ -2289,6 +2315,191 @@ function sleepRepeatSaveResolveWithoutFill(
     holes,
     owner,
   };
+}
+
+function turnBoundaryEffectLifecycleRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  if (!isEndTurnSubject(input.subject)) {
+    return undefined;
+  }
+  if (!battleHasTurnBoundaryLifecycleEffects(input.state)) {
+    return undefined;
+  }
+  if (result.tag === "invalid") {
+    return undefined;
+  }
+  const fill = input.fills.at(-1);
+  const holes =
+    result.tag === "needsHoles"
+      ? turnBoundaryEffectLifecycleRouteHoles(result.holes)
+      : [];
+  if (fill === undefined) {
+    const discovery = turnBoundaryEffectLifecycleDiscoveryRouteForResolution(
+      input,
+      result,
+    );
+    return discovery === undefined ? undefined : [discovery];
+  }
+
+  const routeFill = battleReducerRouteFill(fill);
+  if (routeFill === "rolledDice") {
+    const hitPointRoute: BattleReducerRouteEvent = {
+      kind: "resolveBattleSubject",
+      subject: "turnBoundaryEffectLifecycle",
+      fill: routeFill,
+      holes,
+      owner: "battleHitPoint",
+    };
+    const concentrationRoute =
+      turnBoundaryEffectLifecycleConcentrationRouteForResolution(
+        routeFill,
+        result,
+      );
+    return result.tag === "resolved" && holes.length === 0
+      ? [
+          hitPointRoute,
+          turnBoundaryEffectLifecycleResolveWithoutFill(
+            "battleActiveEffect",
+          ),
+          turnBoundaryEffectLifecycleResolveWithoutFill(
+            "battleTurnBoundary",
+          ),
+        ]
+      : nonEmptyRouteEvents([
+          hitPointRoute,
+          ...(concentrationRoute === undefined ? [] : [concentrationRoute]),
+        ]);
+  }
+  if (routeFill === "savingThrowOutcome") {
+    if (
+      fill.kind !== "savingThrowOutcome" ||
+      !isTurnBoundaryEffectLifecycleSavingThrowFill(input.state, fill)
+    ) {
+      return undefined;
+    }
+    return [
+      {
+        kind: "resolveBattleSubject",
+        subject: "turnBoundaryEffectLifecycle",
+        fill: routeFill,
+        holes,
+        owner: "battleActiveEffect",
+      },
+    ];
+  }
+  return undefined;
+}
+
+function turnBoundaryEffectLifecycleConcentrationRouteForResolution(
+  fill: BattleReducerRouteFill,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvent | undefined {
+  if (result.tag !== "needsHoles") {
+    return undefined;
+  }
+  const holes = concentrationSavingThrowRouteHoles(result.holes);
+  if (holes.length === 0) {
+    return undefined;
+  }
+  return {
+    kind: "resolveBattleSubject",
+    subject: "concentrationTeardown",
+    fill,
+    holes,
+    owner: "battleConcentration",
+  };
+}
+
+function turnBoundaryEffectLifecycleDiscoveryRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvent | undefined {
+  if (!isEndTurnSubject(input.subject)) {
+    return undefined;
+  }
+  if (!battleHasTurnBoundaryLifecycleEffects(input.state)) {
+    return undefined;
+  }
+  if (result.tag !== "needsHoles") {
+    return undefined;
+  }
+  const holes = turnBoundaryEffectLifecycleRouteHoles(result.holes);
+  if (holes.length === 0) {
+    return undefined;
+  }
+  return {
+    kind: "discoverBattleActs",
+    subject: "turnBoundaryEffectLifecycle",
+    holes,
+    owner: "battleTurnBoundary",
+  };
+}
+
+function turnBoundaryEffectLifecycleResolveWithoutFill(
+  owner: BattleReducerRouteOwnerGroup,
+): BattleReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubjectWithoutFill",
+    subject: "turnBoundaryEffectLifecycle",
+    holes: [],
+    owner,
+  };
+}
+
+function battleHasTurnBoundaryLifecycleEffects(state: BattleState): boolean {
+  return [...state.combatants.values()].some((combatant) =>
+    combatant.activeEffects.some(isTurnBoundaryLifecycleEffect),
+  );
+}
+
+function isTurnBoundaryLifecycleEffect(effect: BattleActiveEffect): boolean {
+  return (
+    effect.kind === "spellTurnStartDamageAndSave" ||
+    effect.kind === "spellTurnEndDamage"
+  );
+}
+
+function isTurnBoundaryEffectLifecycleSavingThrowFill(
+  state: BattleState,
+  fill: Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>,
+): boolean {
+  return [...state.combatants.values()].some((combatant) =>
+    combatant.activeEffects.some(
+      (effect) =>
+        effect.kind === "spellTurnStartDamageAndSave" &&
+        fill.holeId ===
+          spellTurnStartSavingThrowOutcomeHoleId(
+            combatant.combatantId,
+            effect,
+          ),
+    ),
+  );
+}
+
+function turnBoundaryEffectLifecycleRouteHoles(
+  holes: readonly BattleHole[],
+): readonly BattleReducerRouteHole[] {
+  return battleReducerRouteHoles(
+    holes.filter(isTurnBoundaryEffectLifecycleHole),
+  );
+}
+
+function concentrationSavingThrowRouteHoles(
+  holes: readonly BattleHole[],
+): readonly BattleReducerRouteHole[] {
+  return battleReducerRouteHoles(
+    holes.filter((hole) => hole.kind === "concentrationSavingThrow"),
+  );
+}
+
+function isTurnBoundaryEffectLifecycleHole(hole: BattleHole): boolean {
+  return (
+    (hole.kind === "rolledDice" &&
+      ("spellTurnStartDamage" in hole || "spellTurnEndDamage" in hole)) ||
+    (hole.kind === "savingThrowOutcome" && "spellTurnStartSave" in hole)
+  );
 }
 
 function sleepRepeatSaveSavingThrowFill(
