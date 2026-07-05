@@ -21,17 +21,21 @@ import {
   MBT_TEST_TIMEOUT_MS,
   assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeReducerRoute,
   decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintField,
   quintRecordField,
   quintStateRecord,
+  quintVariantMappedValue,
   quintVariantTag,
   run,
   stateCheck,
+  type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import {
   attackRollFill,
@@ -51,10 +55,14 @@ import {
 } from "./battle-runtime-test-support.ts";
 import {
   battleId,
+  battleReducerStartRouteEvent,
+  discoverBattleActs,
   resolveBattleSubject,
   spellId,
+  type AvailableBattleAct,
   type BattleActiveEffect,
   type BattleHole,
+  type BattleReducerRouteEvent,
   type BattleResolutionResult,
   type BattleState,
 } from "./index.ts";
@@ -66,6 +74,12 @@ const zeroHitPointMidResolutionScenarios = [
 ] as const;
 type ZeroHitPointMidResolutionScenario =
   (typeof zeroHitPointMidResolutionScenarios)[number];
+const zeroHitPointRouteSurfaceByTag = {
+  FreshRouteSurface: "fresh",
+  SpellAttackSequenceResolvedRouteSurface: "spellAttackSequenceResolved",
+} as const satisfies Readonly<Record<string, string>>;
+type ZeroHitPointRouteSurface =
+  (typeof zeroHitPointRouteSurfaceByTag)[keyof typeof zeroHitPointRouteSurfaceByTag];
 
 const scenarioByQuintTag = {
   Init: "init",
@@ -94,6 +108,11 @@ type ZeroHitPointMidResolutionProjection = {
   readonly remainderUsedPostTeardownState: boolean;
 };
 
+type ZeroHitPointRouteProjection = {
+  readonly surface: ZeroHitPointRouteSurface;
+  readonly route: readonly ReducerRouteEvent[];
+};
+
 type ZeroHitPointMidResolutionRuntimeState = {
   readonly battle: BattleState;
   readonly scenario: ZeroHitPointMidResolutionScenario;
@@ -103,6 +122,10 @@ type ZeroHitPointMidResolutionRuntimeState = {
   readonly zeroHpAppliedBeforeSecondBeam: boolean;
   readonly teardownBeforeSecondBeam: boolean;
   readonly remainderUsedPostTeardownState: boolean;
+};
+
+type ZeroHitPointSpellAttackAct = AvailableBattleAct & {
+  readonly subject: Extract<AvailableBattleAct["subject"], { readonly tag: "actionSpell" }>;
 };
 
 const eldritchBlastUnitId = "eldritch_blast";
@@ -120,9 +143,19 @@ const driverSchema = {
   step: {},
 } as const;
 
+const routeDriverSchema = {
+  init: {},
+  doResolveEldritchBlast: {},
+  step: {},
+} as const;
+
 const zeroHitPointMidResolutionStateCheck = stateCheck(
   normalizeZeroHitPointMidResolutionQuintState,
   compareZeroHitPointMidResolutionStates,
+);
+const zeroHitPointRouteStateCheck = stateCheck(
+  normalizeZeroHitPointRouteQuintState,
+  compareZeroHitPointRouteStates,
 );
 
 describe("zero-Hit-Point mid-resolution MBT parity", () => {
@@ -170,6 +203,36 @@ describe("zero-Hit-Point mid-resolution MBT parity", () => {
     },
     MBT_TEST_TIMEOUT_MS,
   );
+
+  it(
+    "observes the copied zero-Hit-Point qRoute through public reducer entrypoints",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-zero-hit-point-mid-resolution.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createZeroHitPointRouteReplayDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(1),
+        stateCheck: zeroHitPointRouteStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it("does not route readied-spell concentration cleanup as Spell Effect teardown", () => {
+    const projection = observeZeroHitPointMidResolutionPublicRoute(
+      battleWithReadiedSpellConcentrationSource(),
+    );
+
+    expect(
+      zeroHitPointSpellEffectTeardownEvents(projection.route),
+    ).toHaveLength(0);
+  });
 });
 
 function createZeroHitPointMidResolutionDriver() {
@@ -188,6 +251,22 @@ function createZeroHitPointMidResolutionDriver() {
   });
 }
 
+function createZeroHitPointRouteReplayDriver() {
+  return defineDriver(routeDriverSchema, () => {
+    let projection = initialZeroHitPointRouteProjection();
+    return {
+      init: () => {
+        projection = initialZeroHitPointRouteProjection();
+      },
+      doResolveEldritchBlast: () => {
+        projection = observeZeroHitPointMidResolutionPublicRoute();
+      },
+      step: () => {},
+      getState: () => projection,
+    };
+  });
+}
+
 function initialRuntimeState(): ZeroHitPointMidResolutionRuntimeState {
   return {
     battle: battleWithConcentratingShieldOfFaithSource(),
@@ -198,6 +277,143 @@ function initialRuntimeState(): ZeroHitPointMidResolutionRuntimeState {
     zeroHpAppliedBeforeSecondBeam: false,
     teardownBeforeSecondBeam: false,
     remainderUsedPostTeardownState: false,
+  };
+}
+
+function initialZeroHitPointRouteProjection(): ZeroHitPointRouteProjection {
+  const battle = battleWithConcentratingShieldOfFaithSource();
+  return {
+    surface: "fresh",
+    route: [battleReducerStartRouteEvent(battle)],
+  };
+}
+
+function observeZeroHitPointMidResolutionPublicRoute(
+  battle = battleWithConcentratingShieldOfFaithSource(),
+): ZeroHitPointRouteProjection {
+  const route: BattleReducerRouteEvent[] = [
+    battleReducerStartRouteEvent(battle),
+  ];
+  const act = requireZeroHitPointSpellAttackAct(battle);
+  route.push(...requireRouteEvents(act.routeEvents, "Eldritch Blast discovery"));
+  const subject = act.subject;
+  const firstTarget = requireHole(
+    resolveBattleSubject({
+      state: battle,
+      subject,
+      fills: [],
+    }),
+    "targetChoice",
+  );
+  const firstBeamTarget = targetFill(firstTarget, skeletonId);
+  const secondTargetResult = resolveBattleSubject({
+    state: battle,
+    subject,
+    fills: [firstBeamTarget],
+  });
+  route.push(
+    ...requireRouteEvents(secondTargetResult.routeEvents, "first target"),
+  );
+  const secondTarget = requireHole(secondTargetResult, "targetChoice");
+  const secondBeamTarget = targetFill(secondTarget, secondSkeletonId);
+  const targetFills = [firstBeamTarget, secondBeamTarget] as const;
+  const firstAttackResult = resolveBattleSubject({
+    state: battle,
+    subject,
+    fills: targetFills,
+  });
+  route.push(
+    ...requireRouteEvents(firstAttackResult.routeEvents, "second target"),
+  );
+  const firstAttack = requireHole(firstAttackResult, "attackRoll");
+  const firstAttackFill = attackRollFill(firstAttack, {
+    total: 18,
+    naturalD20: 12,
+  });
+  const firstDamageResult = resolveBattleSubject({
+    state: battle,
+    subject,
+    fills: [...targetFills, firstAttackFill],
+  });
+  route.push(
+    ...requireRouteEvents(firstDamageResult.routeEvents, "first attack"),
+  );
+  const firstDamage = requireHole(firstDamageResult, "rolledDice");
+  const firstDamageFill = damageRollFillWithGroups(firstDamage, [
+    [firstBeamDamage],
+  ]);
+  const pendingConcentration = resolveBattleSubject({
+    state: battle,
+    subject,
+    fills: [...targetFills, firstAttackFill, firstDamageFill],
+  });
+  route.push(
+    ...requireRouteEvents(pendingConcentration.routeEvents, "first damage"),
+  );
+  expect(pendingConcentration).toMatchObject({ tag: "needsHoles" });
+  if (pendingConcentration.tag !== "needsHoles") {
+    throw new Error("Expected Eldritch Blast to request Concentration saves.");
+  }
+  const concentrationFills = concentrationSavingThrowHoles(
+    pendingConcentration.holes,
+  ).map((hole) => concentrationSavingThrowFill(hole, true));
+  const secondAttackResult = resolveBattleSubject({
+    state: battle,
+    subject,
+    fills: [
+      ...targetFills,
+      firstAttackFill,
+      firstDamageFill,
+      ...concentrationFills,
+    ],
+  });
+  route.push(
+    ...requireRouteEvents(
+      secondAttackResult.routeEvents,
+      "concentration saving throw",
+    ),
+  );
+  const secondAttack = requireHole(secondAttackResult, "attackRoll");
+  const secondAttackFill = attackRollFill(secondAttack, {
+    total: secondBeamAttackTotal,
+    naturalD20: 6,
+  });
+  const secondDamageResult = resolveBattleSubject({
+    state: battle,
+    subject,
+    fills: [
+      ...targetFills,
+      firstAttackFill,
+      firstDamageFill,
+      ...concentrationFills,
+      secondAttackFill,
+    ],
+  });
+  route.push(
+    ...requireRouteEvents(secondDamageResult.routeEvents, "second attack"),
+  );
+  const secondDamage = requireHole(secondDamageResult, "rolledDice");
+  const secondDamageFill = damageRollFillWithGroups(secondDamage, [
+    [secondBeamDamage],
+  ]);
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: battle,
+      subject,
+      fills: [
+        ...targetFills,
+        firstAttackFill,
+        firstDamageFill,
+        ...concentrationFills,
+        secondAttackFill,
+        secondDamageFill,
+      ],
+    }),
+  );
+  route.push(...requireRouteEvents(resolved.routeEvents, "second damage"));
+  return {
+    surface: "spellAttackSequenceResolved",
+    route,
   };
 }
 
@@ -411,6 +627,52 @@ function battleWithConcentratingShieldOfFaithSource(): BattleState {
   };
 }
 
+function battleWithReadiedSpellConcentrationSource(): BattleState {
+  const base = battleWithConcentratingShieldOfFaithSource();
+  const source = requireCombatant(base, skeletonId);
+  const protectedTarget = requireCombatant(base, secondSkeletonId);
+  return {
+    ...base,
+    combatants: new Map(base.combatants)
+      .set(skeletonId, {
+        ...source,
+        concentration: {
+          sourceSpellId: spellId(shieldOfFaithUnitId),
+          effectKind: "readiedSpell",
+        },
+      })
+      .set(secondSkeletonId, {
+        ...protectedTarget,
+        activeEffects: protectedTarget.activeEffects.filter(
+          (effect) =>
+            !(
+              effect.kind === "spellArmorClassBonus" &&
+              effect.sourceSpellId === spellId(shieldOfFaithUnitId) &&
+              effect.sourceCombatantId === skeletonId
+            ),
+        ),
+      }),
+  };
+}
+
+function zeroHitPointSpellEffectTeardownEvents(
+  route: readonly ReducerRouteEvent[],
+): readonly Extract<
+  ReducerRouteEvent,
+  { readonly kind: "resolveBattleSubjectWithoutFill" }
+>[] {
+  return route.filter(
+    (
+      event,
+    ): event is Extract<
+      ReducerRouteEvent,
+      { readonly kind: "resolveBattleSubjectWithoutFill" }
+    > =>
+      event.kind === "resolveBattleSubjectWithoutFill" &&
+      event.subject === "zeroHitPointSpellEffectTeardown",
+  );
+}
+
 function concentrationSavingThrowHoles(
   holes: readonly BattleHole[],
 ): readonly Extract<
@@ -459,6 +721,32 @@ function shieldOfFaithPresentOnProtectedTarget(state: BattleState): boolean {
       effect.sourceSpellId === spellId(shieldOfFaithUnitId) &&
       effect.sourceCombatantId === skeletonId,
   );
+}
+
+function requireZeroHitPointSpellAttackAct(
+  state: BattleState,
+): ZeroHitPointSpellAttackAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ZeroHitPointSpellAttackAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.actorId === wizardId &&
+      candidate.subject.invocation.spellId === spellId(eldritchBlastUnitId) &&
+      candidate.subject.invocation.procedure === "spellAttackSequence",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Eldritch Blast spell attack sequence act.");
+  }
+  return act;
+}
+
+function requireRouteEvents(
+  routeEvents: readonly BattleReducerRouteEvent[] | undefined,
+  label: string,
+): readonly BattleReducerRouteEvent[] {
+  if (routeEvents === undefined) {
+    throw new Error(`Expected public reducer route events for ${label}.`);
+  }
+  return routeEvents;
 }
 
 function requireResolved(
@@ -525,6 +813,21 @@ function normalizeZeroHitPointMidResolutionQuintState(
   };
 }
 
+function normalizeZeroHitPointRouteQuintState(
+  raw: unknown,
+): ZeroHitPointRouteProjection {
+  const state = quintStateRecord(raw);
+  return {
+    surface: quintVariantMappedValue(
+      quintField(state, "qSurface"),
+      "qSurface",
+      zeroHitPointRouteSurfaceByTag,
+      "zero-Hit-Point route surface",
+    ),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
+}
+
 function zeroHitPointMidResolutionScenario(
   raw: unknown,
 ): ZeroHitPointMidResolutionScenario {
@@ -549,6 +852,14 @@ function zeroHitPointMidResolutionHole(
 function compareZeroHitPointMidResolutionStates(
   runtime: ZeroHitPointMidResolutionProjection,
   quint: ZeroHitPointMidResolutionProjection,
+): boolean {
+  expect(runtime).toStrictEqual(quint);
+  return true;
+}
+
+function compareZeroHitPointRouteStates(
+  runtime: ZeroHitPointRouteProjection,
+  quint: ZeroHitPointRouteProjection,
 ): boolean {
   expect(runtime).toStrictEqual(quint);
   return true;

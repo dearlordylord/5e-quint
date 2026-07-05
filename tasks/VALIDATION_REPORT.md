@@ -1,5 +1,103 @@
 # Validation Report
 
+## CRPI-READY-025
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Driver: `packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt`
+- Route connector: `packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+- Acceptance status: `accepted`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.route.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-reducer-route.qnt`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Playing-the-Game.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md`
+- `.references/srd-5.2.1/Spells/Descriptions-S-Z.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Files changed for the replay:
+
+- `packages/battle-runtime/src/battle-reducer/reducer-route.ts`
+- `packages/battle-runtime/src/zero-hit-point-mid-resolution.mbt.test.ts`
+- `tasks/target-replay-evidence/CRPI-READY-025.json`
+- `tasks/history/CRPI-READY-025/README.md`
+- `tasks/ENGINE_DEPTH_MANIFEST.json`
+- `tasks/STATE_OWNER_MANIFEST.json`
+- `tasks/RUN_LEDGER.json`
+- `tasks/VALIDATION_REPORT.md`
+
+The target route begins with `battleReducerStartRouteEvent`, discovers the spell
+attack sequence through `discoverBattleActs`, and observes copied `qRoute`
+events through public `resolveBattleSubject` calls. The replay covers Eldritch
+Blast target selection, first Attack Roll, first damage, the Concentration
+Saving Throw frontier, zero-Hit-Point Unconscious condition transition,
+Concentration teardown, dependent Spell Effect cleanup, and second-beam
+continuation against post-teardown state.
+
+No duplicate durable state was introduced. Hit Points remain
+`BattleCreatureState.hp`; zero-Hit-Point condition state remains
+`BattleCreatureState.conditions`; Concentration remains
+`BattleCreatureState.concentration`; dependent Spell Effect cleanup remains
+`BattleCreatureState.activeEffects`. Route admission is derived from typed spell
+attack sequence fills, route hole families, and before/after BattleState facts.
+No authored spell name, QNT branch name, witness field name, connector filename,
+or fixture label is used for production behavior dispatch.
+
+Branch evidence:
+
+| Obligation | Evidence | Harness | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt#step:doResolveEldritchBlast` | `tasks/target-replay-evidence/CRPI-READY-025.json#driver:packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt#step:doResolveEldritchBlast#trace:public-route=zeroHitPointSpellEffectTeardown action=doResolveEldritchBlast qRoute=zero-hit-point-mid-resolution-public-route` | `packages/battle-runtime/src/zero-hit-point-mid-resolution.mbt.test.ts#observes the copied zero-Hit-Point qRoute through public reducer entrypoints` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-025.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id: `public-route=zeroHitPointSpellEffectTeardown action=doResolveEldritchBlast qRoute=zero-hit-point-mid-resolution-public-route`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-READY-025/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 66.
+
+Plan Impact:
+
+- Status: `none`
+- Affected task: Task 66 / `CRPI-READY-025` is unblocked by accepted copied `qRoute` replay evidence.
+- Observations:
+  - `spellAttackProcedure` route holes for spell attack sequences represent remaining procedure families, not only the immediate public hole frontier.
+  - `zeroHitPointSpellEffectTeardown` is now a public reducer route subject derived from existing zero-Hit-Point, condition, Concentration, and active-effect state transitions.
+- Required plan edits: none.
+
+Verification results:
+
+- Base check passed: the required codex base ref `codex/cleanroom-reducer-full-lane-20260704T211636Z` resolved to `10baec507 Mark Ralph task 45 done`; `HEAD` resolved to `e000fb182 Mark Ralph task 65 done`; the task Base SHA `e000fb1829090dadff171c1a5ffc108c36aadf44` was an ancestor of `HEAD`, and `HEAD` is exactly the Base SHA.
+- RAW/ubiquitous-language review passed against SRD 5.2.1 `.references/srd-5.2.1/Playing-the-Game.md#Dropping to 0 Hit Points` and `#Falling Unconscious`, `.references/srd-5.2.1/Rules-Glossary.md#Concentration`, `#Incapacitated`, and `#Unconscious`, `.references/srd-5.2.1/Spells/Descriptions-E-L.md#Eldritch Blast`, `.references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shield of Faith`, and `UBIQUITOUS_LANGUAGE.md` terms Hit Points, Unconscious, Incapacitated, Concentration, Spell Effect, and Spell Attack.
+- `pnpm --filter @dnd/battle-runtime typecheck` passed.
+- `pnpm --filter @dnd/battle-runtime exec vitest run src/zero-hit-point-mid-resolution.mbt.test.ts -t "does not route readied-spell"` passed with 1 test; readied-spell Concentration cleanup at 0 HP does not emit `zeroHitPointSpellEffectTeardown`.
+- Initial timed focused MBT replay failed because production route projection still exposed the immediate spell-attack-sequence hole frontier and object target boundary instead of the copied procedure-level route holes. The route projection was corrected before the passing run.
+- MBT process precheck passed before each timed focused replay: `ps aux | grep vitest | grep -v grep` and `ps aux | grep quint_evaluator | grep -v grep` found no running processes; no evaluator cleanup was needed.
+- `START=$(date +%s); pnpm --filter @dnd/battle-runtime exec vitest run src/zero-hit-point-mid-resolution.mbt.test.ts 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 4 tests; copied `qRoute` was compared to public `battleReducerStartRouteEvent`, `discoverBattleActs`, and `resolveBattleSubject` route events for `doResolveEldritchBlast`, and readied-spell Concentration cleanup stayed out of the spell-effect teardown route; final timed run `TOTAL: 7s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- `pnpm quality` passed end to end; app lint reported warnings only and exited 0.
+- Reviewer-loop convergence round 1 identified and fixed the missing production `zeroHitPointSpellEffectTeardown` route subject and Concentration Saving Throw ownership; round 2 identified and fixed spell-attack-sequence route hole projection so public replay matches copied `qRoute`; round 3 corrected task-base artifact wording; round 4 gated `zeroHitPointSpellEffectTeardown` on spell-effect Concentration and added readied-spell negative coverage.
+
 ## CRPI-READY-024
 
 - Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`

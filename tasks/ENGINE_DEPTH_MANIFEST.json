@@ -1,15 +1,13 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-024",
+  "taskId": "CRPI-READY-025",
   "productionModulesExtended": [
     {
       "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "role": "domain-api",
       "domainApis": [
-        "BattleReducerRouteEvent.subject=weaponAttack",
-        "BattleReducerRouteEvent.subject=weaponMasteryProperty",
-        "BattleReducerRouteHole=unitFeatureDecision",
-        "BattleReducerRouteFill=unitFeatureDecision",
+        "BattleReducerRouteEvent.subject=spellAttackProcedure",
+        "BattleReducerRouteEvent.subject=zeroHitPointSpellEffectTeardown",
         "battleReducerRouteEventsForDiscoveredAct",
         "battleReducerRouteForResolution"
       ]
@@ -17,55 +15,52 @@
   ],
   "adapterModules": [
     {
-      "path": "packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.route.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.route.mbt.qnt",
       "quarantinedWitnessNames": [
         "qRoute",
-        "WeaponMasteryPropertyRouteSubject",
-        "stepRouteSapPropertyActiveEffectRider",
-        "stepRouteTopplePropertyConditionRider",
-        "stepRouteCleavePropertySecondDamage"
+        "SpellAttackProcedureRouteSubject",
+        "ZeroHitPointSpellEffectTeardownRouteSubject",
+        "doResolveEldritchBlast"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-024.json"
+        "tasks/target-replay-evidence/CRPI-READY-025.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts",
+      "path": "packages/battle-runtime/src/zero-hit-point-mid-resolution.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "compares Weapon Mastery property public reducer routes to copied qRoute",
-        "createWeaponMasteryPropertyRouteReplayDriver",
-        "observeSapMasteryPropertyRoute",
-        "observeToppleMasteryPropertyConditionRoute",
-        "observeCleaveMasteryPropertySecondDamageRoute"
+        "observes the copied zero-Hit-Point qRoute through public reducer entrypoints",
+        "createZeroHitPointRouteReplayDriver",
+        "observeZeroHitPointMidResolutionPublicRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-024.json"
+        "tasks/target-replay-evidence/CRPI-READY-025.json"
       ]
     }
   ],
   "accumulatorGrowth": [
     {
       "fieldPath": "AvailableBattleAct.routeEvents",
-      "reason": "Weapon Attack discovery now exposes copied qRoute ownership through the public discover_battle_acts boundary."
+      "reason": "Spell attack sequence discovery now exposes copied qRoute ownership through the public discover_battle_acts boundary."
     },
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
-      "reason": "Weapon Attack target, Attack Roll, damage, and Weapon Mastery rider frontiers now expose copied qRoute ownership without adding duplicate battle state."
+      "reason": "Spell attack sequence target, Attack Roll, damage, Concentration Saving Throw, and zero-Hit-Point teardown frontiers now expose copied qRoute ownership without adding duplicate battle state."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=weaponMasteryProperty",
-      "reason": "The route subject records generic mastery-property rider handoff for Sap active-effect, Topple condition, and Cleave feature-resource ownership."
+      "fieldPath": "BattleReducerRouteEvent.subject=zeroHitPointSpellEffectTeardown",
+      "reason": "The route subject records generic zero-Hit-Point Spell Effect teardown handoff to condition, Concentration, and active-effect owners."
     }
   ],
   "expectedNextReuse": [
     {
-      "driver": "packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.route.mbt.qnt",
+      "driver": "packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.route.mbt.qnt",
       "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "api": "weaponMasteryProperty route events remain derived from typed weapon Attack fills, unitFeatureDecision holes/fills, active-effect state changes, condition lifecycle frontiers, and Cleave turn resource settlement."
+      "api": "zeroHitPointSpellEffectTeardown route events remain derived from typed spell attack sequence fills, route hole families, BattleCreatureState.hp, BattleCreatureState.conditions, BattleCreatureState.concentration, and BattleCreatureState.activeEffects."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 65 observes copied Sap, Topple, and Cleave qRoute through public start_battle, discover_battle_acts, and resolve_battle_subject route events. No new BattleState field was introduced."
+    "notes": "Task 66 observes copied zero-Hit-Point mid-resolution qRoute through public start_battle, discover_battle_acts, and resolve_battle_subject route events. No new BattleState field was introduced."
   }
 }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-024",
+  "taskId": "CRPI-READY-025",
   "durableFields": [
     {
       "fieldPath": "AvailableBattleAct.routeEvents",
@@ -8,7 +8,7 @@
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject action attack and BattleHole.kind",
+        "sourceField": "BattleSubject actionSpell invocation procedure and BattleHole.kind",
         "boundary": "discoverBattleActs public reducer boundary"
       }
     },
@@ -18,28 +18,28 @@
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject action attack, BattleFill.kind, BattleHole.kind, BattleCreatureState.hp, BattleCreatureState.activeEffects, BattleCreatureState.conditions, and BattleState.currentTurnResources.weaponMasteryCleaveAttackersUsedThisTurn",
+        "sourceField": "BattleSubject actionSpell invocation procedure, BattleFill.kind, BattleHole.kind, BattleCreatureState.hp, BattleCreatureState.conditions, BattleCreatureState.concentration, and BattleCreatureState.activeEffects",
         "boundary": "resolveBattleSubject public reducer boundary"
       }
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=weaponMasteryProperty",
+      "fieldPath": "BattleReducerRouteEvent.subject=zeroHitPointSpellEffectTeardown",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "typed Weapon Attack fills, unitFeatureDecision holes/fills, active-effect state changes, condition lifecycle frontiers, and Cleave turn resource settlement",
+        "sourceField": "typed Concentration Saving Throw fill plus existing before/after BattleCreatureState.hp, conditions, concentration, and activeEffects facts",
         "boundary": "battleReducerRouteForResolution"
       }
     }
   ],
   "notes": [
-    "Task 65 introduced no new BattleState, BattleCreatureState, Hit Point, condition, active-effect, or feature-resource durable field.",
-    "Selected Weapon Mastery identity remains an admitted source reference on character weapon mastery selection and Unit support-profile facts; production route behavior does not branch on authored mastery ids, weapon names, QNT branch names, or fixture labels.",
+    "Task 66 introduced no new BattleState, BattleCreatureState, Hit Point, condition, Concentration, or active-effect durable field.",
     "Hit Points remain existing BattleCreatureState.hp facts owned by the Hit Point reducer.",
-    "Topple Prone condition lifecycle remains existing BattleCreatureState.conditions state.",
-    "Sap next-Attack-Roll rider remains existing BattleCreatureState.activeEffects state.",
-    "Cleave once-per-turn use remains existing BattleState.currentTurnResources.weaponMasteryCleaveAttackersUsedThisTurn state.",
+    "Zero-Hit-Point Unconscious lifecycle remains existing BattleCreatureState.conditions state.",
+    "Concentration ownership remains existing BattleCreatureState.concentration state.",
+    "Dependent Spell Effect cleanup remains existing BattleCreatureState.activeEffects state.",
+    "Production route behavior does not branch on authored spell names, QNT branch names, witness field names, connector filenames, or fixture labels.",
     "Route events are public reducer boundary projections derived from subject shape, fill kind, hole family, and existing battle-owned state transitions."
   ]
 }
