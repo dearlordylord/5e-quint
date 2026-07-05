@@ -601,7 +601,7 @@
     {
       "number": 100,
       "id": "CRP06-SRO-02",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Character Sheet rest, Hit Point, and Hit Dice owner boundaries"
     },
     {
@@ -6352,7 +6352,7 @@ Plan Impact:
 
 ### Task 100 - CRP06-SRO-02
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
