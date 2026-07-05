@@ -385,6 +385,73 @@ export function resolveQuickenedEldritchBlast(state: BattleState): BattleState {
   ).state;
 }
 
+export function observeQuickenedEldritchBlastRoute(
+  state: BattleState,
+): readonly BattleReducerRouteEvent[] {
+  const act = quickenedEldritchBlastAct(state);
+  const targetHoles = targetChoiceHoles(act.initialHoles);
+  const firstTarget = eldritchBlastTargetFill(targetHoles[0]!);
+  const secondTarget = eldritchBlastTargetFill(targetHoles[1]!);
+  const targetFills: BattleFill[] = [firstTarget, secondTarget];
+  const awaitingFirstAttackRoll = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: targetFills,
+  });
+  const firstAttackRollHole = findHole(
+    awaitingFirstAttackRoll.tag === "needsHoles"
+      ? awaitingFirstAttackRoll.holes
+      : [],
+    "attackRoll",
+  );
+  const firstAttackRoll = attackRollFill(firstAttackRollHole, {
+    total: 15,
+    naturalD20: 10,
+  });
+  const awaitingFirstDamage = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [...targetFills, firstAttackRoll],
+  });
+  const firstDamageHole = findHole(
+    awaitingFirstDamage.tag === "needsHoles" ? awaitingFirstDamage.holes : [],
+    "rolledDice",
+  );
+  const firstDamage = damageRollFillWithGroups(firstDamageHole, [[4]]);
+  const awaitingSecondAttackRoll = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [...targetFills, firstAttackRoll, firstDamage],
+  });
+  const secondAttackRollHole = findHole(
+    awaitingSecondAttackRoll.tag === "needsHoles"
+      ? awaitingSecondAttackRoll.holes
+      : [],
+    "attackRoll",
+  );
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        ...targetFills,
+        firstAttackRoll,
+        firstDamage,
+        attackRollFill(secondAttackRollHole, { total: 1, naturalD20: 1 }),
+      ],
+    }),
+  );
+
+  return [
+    battleReducerStartRouteEvent(state),
+    ...(act.routeEvents ?? []),
+    ...(awaitingFirstAttackRoll.routeEvents ?? []),
+    ...(awaitingFirstDamage.routeEvents ?? []),
+    ...(awaitingSecondAttackRoll.routeEvents ?? []),
+    ...(resolved.routeEvents ?? []),
+  ];
+}
+
 export function resolveCarefulBurningHands(state: BattleState): BattleState {
   const act = carefulBurningHandsAct(state);
   const protectedTargets = protectedTargetsFill(act.initialHoles);

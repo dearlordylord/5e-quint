@@ -301,7 +301,7 @@
     {
       "number": 50,
       "id": "CRPI-READY-019",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-sorcerer-metamagic-spell-attack-sequence-selected-identity"
     },
     {
@@ -3531,7 +3531,7 @@ Plan Impact:
 
 ### Task 50 - CRPI-READY-019
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

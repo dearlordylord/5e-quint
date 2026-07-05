@@ -559,6 +559,19 @@ function metamagicRouteForResolution(
     ];
   }
   if (routeFill === "attackRoll") {
+    if (
+      input.subject.invocation.procedure === "spellAttackSequence" &&
+      result.tag === "resolved"
+    ) {
+      return [
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "metamagicBonusActionCastingTime",
+          holes: [],
+          owner: "battleTurnBoundary",
+        },
+      ];
+    }
     return [
       {
         kind: "resolveBattleSubject",

@@ -1706,6 +1706,79 @@
           "detail": "Round 1 added copied Quickened spell Attack route connector evidence and public route ownership; round 2 verified route admission is typed by Quickened Metamagic facts, spell Attack damage procedure shape, target/attack/damage fills, and turn-boundary lock ownership. No duplicate durable state or authored-identity dispatch was added."
         }
       ]
+    },
+    {
+      "taskId": "CRPI-READY-019",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "0da15bfe0871d5a45782c7ac355d622be8907d44",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "3c60deca03131f24f5148149e419cf55660063f469a3a73eec46ac213f533386"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "6537db0400c772dac78ff6121d1aec757fd5b4465b733ecf6bdbd02df3be3beb"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "15c04bd8676706fca2976b4a092aa39e423fb463b58361e83552f7d89c93baac"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-READY-019.json",
+          "sha256": "290e0f6f26cefa81d5a895024d4ad6a6332629190588c0f0143a4cbb25caabc2",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-READY-019.json#driver:packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.qnt#step:doResolveQuickenedSpellAttackSequence#trace:public-route=metamagicBonusActionCastingTime action=doResolveQuickenedSpellAttackSequence qRoute=metamagic-quickened-spell-attack-sequence-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-reducer-full-lane-20260704T211636Z/integration && git log --oneline -1 HEAD && git merge-base --is-ancestor 1a172c8c9d49e4b69f24876c5b0d74b38ddb1b32 HEAD",
+          "status": "pass",
+          "detail": "Declared base ref and HEAD were both 1a172c8c Mark Ralph task 49 done; Base SHA 1a172c8c9d49e4b69f24876c5b0d74b38ddb1b32 is an ancestor of HEAD."
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/battle-runtime exec vitest run src/sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.test.ts 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "fail",
+          "detail": "Initial Task 50 route replay failed because public reducer route emitted terminal attackRoll/battleSpellAttackProcedure for the final missed Eldritch Blast sequence attack where copied qRoute expects turn-boundary ownership."
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/battle-runtime exec vitest run src/sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.test.ts 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "3 tests passed after the route-owner fix; deterministic stepRouteBonusActionCastingTime executed copied doRouteBonusActionCastingTime qRoute and compared it to the public reducer route; final timed run TOTAL: 7s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "Quality passed end to end; app lint reported warnings only and exited 0."
+        },
+        {
+          "command": "RAW/ubiquitous-language review against .references/srd-5.2.1/Classes/Sorcerer.md, .references/srd-5.2.1/Spells/Descriptions-E-L.md, and UBIQUITOUS_LANGUAGE.md",
+          "status": "pass"
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 identified and fixed the terminal Quickened spell Attack sequence route-owner gap; round 2 verified route admission is typed by Quickened Metamagic facts, spell Attack sequence procedure shape, target/attack/damage fills, and turn-boundary lock ownership. No duplicate durable state or authored-identity dispatch was added."
+        }
+      ]
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-018",
+  "taskId": "CRPI-READY-019",
   "productionModulesExtended": [
     {
       "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
@@ -33,41 +33,39 @@
         "stepRouteBonusActionCastingTime"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-018.json"
+        "tasks/target-replay-evidence/CRPI-READY-019.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/sorcerer-metamagic-spell-attack-selected-identity.mbt.test.ts",
+      "path": "packages/battle-runtime/src/sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "doResolveQuickenedSpellAttack",
-        "compares Quickened Spell attack public reducer route to copied qRoute",
-        "createQuickenedSpellAttackRouteReplayDriver"
+        "doResolveQuickenedSpellAttackSequence",
+        "compares Quickened Spell attack sequence public reducer route to copied qRoute",
+        "createQuickenedSpellAttackSequenceRouteReplayDriver"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-018.json"
+        "tasks/target-replay-evidence/CRPI-READY-019.json"
       ]
     },
     {
       "path": "packages/battle-runtime/src/sorcerer-metamagic-selected-identity-support.ts",
-      "quarantinedWitnessNames": [
-        "observeQuickenedRayOfFrostRoute"
-      ],
+      "quarantinedWitnessNames": ["observeQuickenedEldritchBlastRoute"],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-018.json"
+        "tasks/target-replay-evidence/CRPI-READY-019.json"
       ]
     }
   ],
   "accumulatorGrowth": [
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
-      "reason": "Quickened Spell attack diagnostics expose bonus-action casting-time discovery, action-economy and spell-slot settlement, target-selection ownership, spell Attack Roll ownership, and turn-boundary lock ownership through public subject resolution."
+      "reason": "Quickened Spell attack sequence diagnostics expose bonus-action casting-time discovery, action-economy and spell-slot settlement, target-selection ownership, spell Attack Roll ownership, and turn-boundary lock ownership through public subject resolution."
     }
   ],
   "expectedNextReuse": [
     {
-      "driver": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.qnt",
+      "driver": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-subtle-selected-identity.mbt.qnt",
       "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "api": "Quickened Spell route projection remains derived from typed bonus-action casting-time facts and reducer-owned spell-attack holes/fills rather than selected option identity"
+      "api": "Quickened Spell route projection remains derived from typed bonus-action casting-time facts and reducer-owned spell procedure holes/fills rather than selected option identity"
     },
     {
       "driver": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
@@ -77,6 +75,6 @@
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 49 observes the copied Quickened Spell attack qRoute through public reducer route events for Ray of Frost resolution. No new BattleState field was introduced."
+    "notes": "Task 50 observes the copied Quickened Spell attack sequence qRoute through public reducer route events for Eldritch Blast resolution. No new BattleState field was introduced."
   }
 }
