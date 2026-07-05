@@ -1,7 +1,7 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt reaction-interruption shield hellish_rebuke counterspell
-// UNIT-IDENTITY-MBT-REPLAY: reaction-interruption shield doResolveShieldReactionSpellHit
-// UNIT-IDENTITY-MBT-REPLAY: reaction-interruption hellish_rebuke doResolveHellishRebukeFailedSavingThrow
-// UNIT-IDENTITY-MBT-REPLAY: reaction-interruption counterspell doResolveCounterspellMagicMissileCast
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay reaction-interruption shield hellish_rebuke counterspell
+// UNIT-IDENTITY-REPLAY: reaction-interruption shield doResolveShieldReactionSpellHit
+// UNIT-IDENTITY-REPLAY: reaction-interruption hellish_rebuke doResolveHellishRebukeFailedSavingThrow
+// UNIT-IDENTITY-REPLAY: reaction-interruption counterspell doResolveCounterspellMagicMissileCast
 import { Either } from "effect";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
@@ -43,7 +43,7 @@ import {
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 
 type ReactionSpellProjection = {
   readonly reactorHp: number;
@@ -87,8 +87,8 @@ if (unitCatalogResult.tag !== "ok") {
 }
 const unitLibrary = unitCatalogResult.catalog;
 
-defineSelectedIdentityWitness({
-  describeLabel: "Reaction spell selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Reaction spell selected identity replay",
   taskId: "reaction-interruption",
   specFile: mbtSpecPath(
     import.meta.dirname,

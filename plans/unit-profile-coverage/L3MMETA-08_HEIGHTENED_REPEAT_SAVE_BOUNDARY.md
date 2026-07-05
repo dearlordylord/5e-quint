@@ -116,7 +116,7 @@ Recommended implementation steps:
    is modeled at the same boundary as the runtime.
 5. Add focused runtime tests for initial failed save, end-turn repeat save, and
    damage-triggered repeat save cancellation.
-6. Add or extend selected-identity MBT evidence only after the runtime and QNT
+6. Add or extend selected-identity replay evidence only after the runtime and QNT
    owner carry the Heightened roll-mode fact through the Spell Effect
    occurrence.
 7. Remove `hideousLaughter` from the repeat-save Heightened support rejection
@@ -145,7 +145,7 @@ No MBT run is needed for this boundary task because no runtime behavior changed.
 The future `hideousLaughter` implementation should verify with:
 
 - `pnpm --filter @dnd/battle-runtime exec vitest run src/battle-runtime-metamagic-resource.test.ts src/unit-profile-admission-hideous-laughter-repeat-saves.test.ts`
-- A focused selected-identity MBT run for Heightened Hideous Laughter, using the
+- A focused selected-identity QNT replay run for Heightened Hideous Laughter, using the
   AGENTS.md timing/background protocol.
 - `pnpm unit-profile-coverage:check -- --write`
 - `pnpm unit-profile-coverage:check`

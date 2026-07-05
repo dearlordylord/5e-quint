@@ -1,7 +1,7 @@
 # SRDINV91D Selected Identity MBT Frontier Batch
 
-Task 339 raises selected identity MBT coverage from 10/85 to 17/85 by adding
-checker-visible `selected-identity-mbt` rows for a representative batch that
+Task 339 raises selected identity replay coverage from 10/85 to 17/85 by adding
+checker-visible `selected-identity-replay` rows for a representative batch that
 already had deterministic admission/projection evidence and focused MBT owner
 actions.
 
@@ -19,7 +19,7 @@ actions.
 
 This batch intentionally uses existing focused MBT owner files instead of broad
 exploratory MBT. The new evidence rows are paired with owner-local
-`UNIT-IDENTITY-MBT-REPLAY` markers and deterministic replay data that proves the
+`UNIT-IDENTITY-REPLAY` markers and deterministic replay data that proves the
 claimed Unit id is bound during the named driver actions.
 
 ## RAW And Vocabulary Check
@@ -42,8 +42,8 @@ local SRD 5.2.1 anchors before wiring the selected rows:
 ## Follow-On Observations
 
 `bard_bardic_inspiration` and `monk_martial_arts` remain
-`profile-subset-supported`, so selected identity MBT rows for those Units would
-not increase the current 85-row selected identity MBT denominator. Weapon
+`profile-subset-supported`, so selected identity replay rows for those Units would
+not increase the current 85-row selected identity replay denominator. Weapon
 mastery identities have deterministic admission/projection evidence from
 `packages/character-battle-runtime/src/index.test.ts`; a later selected MBT
 batch should add a focused MBT owner for at least one mastery profile rather

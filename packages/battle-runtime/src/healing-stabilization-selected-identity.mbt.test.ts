@@ -1,5 +1,5 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt healing-stabilization spare_the_dying
-// UNIT-IDENTITY-MBT-REPLAY: healing-stabilization spare_the_dying doResolveSpareTheDyingStable
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay healing-stabilization spare_the_dying
+// UNIT-IDENTITY-REPLAY: healing-stabilization spare_the_dying doResolveSpareTheDyingStable
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MAKE_STABLE_LIFECYCLE
 import { isDeepStrictEqual } from "node:util";
 
@@ -41,7 +41,7 @@ import {
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 
 type HealingStabilizationProjection = {
   readonly targetHp: number;
@@ -77,8 +77,8 @@ const HEALING_STABILIZATION_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
   Resolved: "resolved",
 } as const satisfies Readonly<Record<string, "init" | "resolved">>;
 
-defineSelectedIdentityWitness({
-  describeLabel: "Healing stabilization selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Healing stabilization selected identity replay",
   taskId: "healing-stabilization",
   specFile: mbtSpecPath(
     import.meta.dirname,

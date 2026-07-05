@@ -93,15 +93,15 @@ Scope audit decisions are checker-owned conclusions from the MCP scenario eviden
 
 ## Selected Identity Evidence Join Audit
 
-Selected-identity replay is Unit identity wiring evidence. This audit keeps it separate from the ultra-golden QNT/MBT and MCP layers by listing scoped supported Units whose selected-identity evidence owner has neither an exact QNT/MBT parity-witness join nor inferred MCP flow scenario evidence.
+Selected-identity replay is Unit identity wiring evidence. This audit keeps it separate from the ultra-golden parity witness and MCP layers by listing scoped supported Units whose selected-identity replay evidence has neither a Unit-scoped parity witness join nor inferred MCP flow scenario evidence.
 
-| Scope | Selected-identity evidence rows | Joined through QNT/MBT or MCP | Missing join rows |
+| Scope | Selected-identity evidence rows | Joined through parity witness or MCP | Missing join rows |
 | --- | ---: | ---: | ---: |
 | level-1 | 83 | 83/83 | 0 |
 | level-1-2 | 99 | 99/99 | 0 |
 | level-1-3 | 147 | 147/147 | 0 |
 | level-1-4 | 148 | 148/148 | 0 |
 
-| Scope | Unit | Kind | Evidence task | Evidence owner | QNT/MBT join | QNT/MBT witness owners for Unit | MCP join | Required MCP flows | Missing MCP flows | Profiles |
+| Scope | Unit | Kind | Evidence task | Evidence owner | Parity witness join | Parity witness owners for Unit | MCP join | Required MCP flows | Missing MCP flows | Profiles |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ |

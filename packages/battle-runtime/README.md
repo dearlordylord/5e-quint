@@ -408,7 +408,7 @@ Focused lanes currently include:
 These focused lanes are Procedure Parity MBT. They prove supported procedure
 shapes through production reducers. Authored Unit identity coverage is owned by
 `plans/unit-profile-coverage/`: deterministic matrix/projection coverage should
-span all executable Units, while Specific Unit Parity MBT is selective for
+span all executable Units, while Selected identity replay is selective for
 representative or high-risk Unit ids.
 
 Action naming and replay:

@@ -1,8 +1,8 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY lesser_restoration protection_from_poison
-// UNIT-IDENTITY-MBT-REPLAY: RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY lesser_restoration doResolveLesserRestorationChoice doResolveLesserRestorationConcentrationCleanup
-// UNIT-IDENTITY-MBT-REPLAY: RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY protection_from_poison doResolveProtectionFromPoison
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY lesser_restoration protection_from_poison
+// UNIT-IDENTITY-REPLAY: RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY lesser_restoration doResolveLesserRestorationChoice doResolveLesserRestorationConcentrationCleanup
+// UNIT-IDENTITY-REPLAY: RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY protection_from_poison doResolveProtectionFromPoison
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import type { BattleActiveEffect } from "./index.ts";
 import { resolveBattleSubject, snapshotBattle } from "./index.ts";
@@ -68,8 +68,8 @@ type ConditionSavingThrowRollModeEffect = Extract<
   { readonly kind: "conditionSavingThrowRollMode" }
 >;
 
-defineSelectedIdentityWitness({
-  describeLabel: "Condition removal and protection selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Condition removal and protection selected identity replay",
   taskId: "RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY",
   specFile: mbtSpecPath(
     import.meta.dirname,

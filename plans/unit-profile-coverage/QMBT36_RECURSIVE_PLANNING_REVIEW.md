@@ -31,7 +31,7 @@ Append:
   authored passive `scale_attack_count` / `additional: 1` shape.
 - The current generated matrix reports 54 installed Units, 17 stable
   executable profiles, 22/40 supported executable Unit coverage, 22/22
-  deterministic admission/projection coverage, and 10/22 selected identity MBT
+  deterministic admission/projection coverage, and 10/22 selected identity replay
   coverage.
 
 ## Source Check

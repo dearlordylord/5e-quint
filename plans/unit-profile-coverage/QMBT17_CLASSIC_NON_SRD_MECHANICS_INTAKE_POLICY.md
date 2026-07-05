@@ -87,7 +87,7 @@ claims:
 3. Completed runtime parity claims require focused MBT or runtime-test owners.
 4. Deterministic admission/projection evidence proves the production catalog or
    support boundary admits the synthetic Unit when the Unit is executable.
-5. Selected identity MBT is optional and reserved for representative or
+5. Selected identity replay is optional and reserved for representative or
    high-risk identities.
 
 Unsupported, widening, and assumption dispositions are closure evidence, not

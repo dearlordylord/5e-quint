@@ -1,5 +1,5 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1D2-BARDIC-INSPIRATION-SCALING bard_bardic_inspiration
-// UNIT-IDENTITY-MBT-REPLAY: L1D2-BARDIC-INSPIRATION-SCALING bard_bardic_inspiration doGrantBardicInspirationD12
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1D2-BARDIC-INSPIRATION-SCALING bard_bardic_inspiration
+// UNIT-IDENTITY-REPLAY: L1D2-BARDIC-INSPIRATION-SCALING bard_bardic_inspiration doGrantBardicInspirationD12
 import * as Either from "effect/Either";
 import { expect } from "vitest";
 
@@ -35,7 +35,7 @@ import {
   type BattleSubject,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 
 type BardicInspirationProjection = {
@@ -60,8 +60,8 @@ if (unitCatalogResult.tag !== "ok") {
 }
 const unitLibrary = unitCatalogResult.catalog;
 
-defineSelectedIdentityWitness({
-  describeLabel: "Bardic Inspiration selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Bardic Inspiration selected identity replay",
   taskId: "L1D2-BARDIC-INSPIRATION-SCALING",
   specFile: mbtSpecPath(
     import.meta.dirname,

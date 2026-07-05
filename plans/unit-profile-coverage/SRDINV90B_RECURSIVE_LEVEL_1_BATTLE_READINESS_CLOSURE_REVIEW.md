@@ -43,7 +43,7 @@ The generated Unit matrix separately reports:
 - Runtime mapping coverage: 62/62 (100%).
 - Runtime parity coverage: 62/62 (100%).
 - Deterministic admission/projection coverage: 78/85 (91.8%).
-- Selected identity MBT coverage: 10/85 (11.8%).
+- Selected identity replay coverage: 10/85 (11.8%).
 
 ## SRDINV90A Review
 
@@ -123,5 +123,5 @@ metric.
   367/367 and by every previously residual row having an explicit owner closure.
 - Round 2: found no remaining concrete executable owner to append. The only
   lower percentages left in the matrix are different metrics, chiefly supported
-  executable Unit coverage and selected identity MBT coverage, and they should
+  executable Unit coverage and selected identity replay coverage, and they should
   remain separate planning signals rather than blockers for this lane.

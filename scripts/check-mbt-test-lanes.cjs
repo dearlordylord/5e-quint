@@ -8,14 +8,67 @@ const PACKAGES_ROOT = path.join(REPO_ROOT, "packages");
 const MBT_TEST_SUFFIX = ".mbt.test.ts";
 
 const DEFAULT_TEST_EXCLUDE_PATTERN = "**/*.mbt.test.ts";
+const SELECTED_IDENTITY_VOCABULARY_SCOPES = [
+  {
+    label: "package source",
+    root: path.join(REPO_ROOT, "packages"),
+    include: /\.(ts|tsx|js|mjs|cjs|qnt)$/,
+  },
+  {
+    label: "checker scripts",
+    root: path.join(REPO_ROOT, "scripts"),
+    include: /\.(js|mjs|cjs|ts)$/,
+  },
+  {
+    label: "active planning docs",
+    root: path.join(REPO_ROOT, "plans"),
+    include: /\.(md|json|jsonl)$/,
+  },
+  {
+    label: "product docs",
+    root: path.join(REPO_ROOT, "prd"),
+    include: /\.md$/,
+  },
+];
+const SELECTED_IDENTITY_VOCABULARY_EXCLUDED_PATHS = new Set([
+  "plans/SELECTED_IDENTITY_EVIDENCE_RECLASSIFICATION_PLAN.md",
+  "plans/unit-profile-coverage/SRDINV91D_SELECTED_IDENTITY_MBT_FRONTIER_BATCH.md",
+]);
+const SELECTED_IDENTITY_VOCABULARY_EXCLUDED_PREFIXES = [
+  "plans/ralph-artifacts/",
+  "plans/cleanroom-scaffolds/trials/",
+];
+const FORBIDDEN_SELECTED_IDENTITY_VOCABULARY = [
+  {
+    pattern: /selected-identity-mbt/,
+    reason: "use selected-identity-replay for bookkeeping evidence",
+  },
+  {
+    pattern: /UNIT-IDENTITY-MBT-REPLAY/,
+    reason: "use UNIT-IDENTITY-REPLAY for selected identity replay markers",
+  },
+  {
+    pattern: /selected[- ]identity MBT/i,
+    reason: "selected identity replay is not MBT by itself",
+  },
+  {
+    pattern: /replays MBT parity/,
+    reason: "name deterministic QNT parity or focused MBT explicitly",
+  },
+  {
+    pattern: /selectedIdentityMbt|unitIdentityMbt|MbtReplays/,
+    reason: "use selected identity replay names for bookkeeping evidence",
+  },
+];
 
 const ACCEPTED_MBT_GROUPS = {
   "@dnd/battle-runtime": [
     {
-      label: "selected-identity witnesses",
+      label: "selected-identity QNT replay owners",
       reason:
-        "authored-selection evidence is intentionally grouped while semantic execution migrations land",
+        "selected-identity QNT replay owners remain in the explicit MBT lane during replay split migration",
       pattern: /^src\/.*selected-identity\.mbt\.test\.ts$/,
+      requiresSelectedIdentityQntReplay: true,
     },
     {
       label: "rule-core witnesses",
@@ -70,9 +123,10 @@ const ACCEPTED_MBT_GROUPS = {
   ],
   "@dnd/character-battle-runtime": [
     {
-      label: "selected-identity witnesses",
-      reason: "character-to-battle selected-identity evidence is grouped",
+      label: "selected-identity QNT replay owners",
+      reason: "character-to-battle selected-identity QNT replay owners are grouped",
       pattern: /^src\/.*selected-identity\.mbt\.test\.ts$/,
+      requiresSelectedIdentityQntReplay: true,
     },
     {
       label: "character battle projection witnesses",
@@ -88,9 +142,10 @@ const ACCEPTED_MBT_GROUPS = {
   ],
   "@dnd/character-creation-runtime": [
     {
-      label: "selected-identity witnesses",
-      reason: "character creation selected-identity evidence is grouped",
+      label: "selected-identity QNT replay owners",
+      reason: "character creation selected-identity QNT replay owners are grouped",
       pattern: /^src\/.*selected-identity\.mbt\.test\.ts$/,
+      requiresSelectedIdentityQntReplay: true,
     },
     {
       label: "character creation projection and route witnesses",
@@ -105,9 +160,10 @@ const ACCEPTED_MBT_GROUPS = {
   ],
   "@dnd/character-sheet-runtime": [
     {
-      label: "selected-identity witnesses",
-      reason: "character sheet selected-identity evidence is grouped",
+      label: "selected-identity QNT replay owners",
+      reason: "character sheet selected-identity QNT replay owners are grouped",
       pattern: /^src\/.*selected-identity\.mbt\.test\.ts$/,
+      requiresSelectedIdentityQntReplay: true,
     },
     {
       label: "character sheet projection and resource witnesses",
@@ -167,10 +223,82 @@ function listFiles(dir, predicate) {
   return files.sort();
 }
 
+function selectedIdentityVocabularyFailures() {
+  const failures = [];
+  for (const scope of SELECTED_IDENTITY_VOCABULARY_SCOPES) {
+    for (const filePath of listFiles(scope.root, (file) =>
+      scope.include.test(file),
+    )) {
+      const repoPath = path.relative(REPO_ROOT, filePath).split(path.sep).join("/");
+      if (repoPath === "scripts/check-mbt-test-lanes.cjs") continue;
+      if (SELECTED_IDENTITY_VOCABULARY_EXCLUDED_PATHS.has(repoPath)) continue;
+      if (
+        SELECTED_IDENTITY_VOCABULARY_EXCLUDED_PREFIXES.some((prefix) =>
+          repoPath.startsWith(prefix),
+        )
+      ) {
+        continue;
+      }
+      const text = fs.readFileSync(filePath, "utf8");
+      for (const rule of FORBIDDEN_SELECTED_IDENTITY_VOCABULARY) {
+        if (rule.pattern.test(text)) {
+          failures.push(`${repoPath}: ${rule.reason}`);
+        }
+      }
+      if (
+        repoPath !== "packages/battle-runtime/src/selected-identity-witness.ts" &&
+        /defineSelectedIdentityWitness\s*\(/.test(text)
+      ) {
+        failures.push(
+          `${repoPath}: use defineSelectedIdentityReplayWitness, defineSelectedIdentityQntReplay, or defineSelectedIdentityReplayAndQntReplay`,
+        );
+      }
+    }
+  }
+  return failures;
+}
+
 function listMbtTests(pkg) {
   return listFiles(pkg.root, (filePath) =>
     path.basename(filePath).endsWith(MBT_TEST_SUFFIX),
   ).map((filePath) => toPackagePath(pkg, filePath));
+}
+
+function listQntReplaySupportFiles() {
+  return listFiles(PACKAGES_ROOT, (filePath) =>
+    path.basename(filePath).endsWith(".qnt-replay.test-support.ts"),
+  );
+}
+
+function relativeTsImports(text) {
+  return [
+    ...text.matchAll(/from\s+"(\.{1,2}\/[^"]+\.ts)"/g),
+    ...text.matchAll(/import\s*\(\s*"(\.{1,2}\/[^"]+\.ts)"\s*\)/g),
+  ].map((match) => match[1]);
+}
+
+function importedTsFilesFromMbtTests(packages) {
+  const importedFiles = new Set();
+  for (const pkg of packages) {
+    for (const file of listMbtTests(pkg)) {
+      const filePath = path.join(pkg.root, ...file.split("/"));
+      const text = fs.readFileSync(filePath, "utf8");
+      for (const importPath of relativeTsImports(text)) {
+        importedFiles.add(path.resolve(path.dirname(filePath), importPath));
+      }
+    }
+  }
+  return importedFiles;
+}
+
+function qntReplaySupportFailures(packages) {
+  const importedFiles = importedTsFilesFromMbtTests(packages);
+  return listQntReplaySupportFiles()
+    .filter((filePath) => !importedFiles.has(filePath))
+    .map(
+      (filePath) =>
+        `${path.relative(REPO_ROOT, filePath).split(path.sep).join("/")}: QNT replay support files must be imported by a runnable .mbt.test.ts owner.`,
+    );
 }
 
 function listVitestConfigs(pkg) {
@@ -406,12 +534,30 @@ function explicitMbtTargets(pkg) {
 
 function matchingGroup(pkg, file) {
   for (const group of ACCEPTED_MBT_GROUPS[pkg.name] ?? []) {
-    if (group.files?.has(file) || group.pattern?.test(file)) {
+    if (
+      (group.files?.has(file) || group.pattern?.test(file)) &&
+      acceptedGroupFileShape(pkg, file, group)
+    ) {
       return group;
     }
   }
 
   return null;
+}
+
+function acceptedGroupFileShape(pkg, file, group) {
+  if (group.requiresSelectedIdentityQntReplay !== true) return true;
+  const text = fs.readFileSync(path.join(pkg.root, ...file.split("/")), "utf8");
+  const hasQntReplayMarker = /UNIT-IDENTITY-QNT-REPLAY:/.test(text);
+  const hasLegacyReplayMarker = /UNIT-IDENTITY-REPLAY:/.test(text);
+  const hasSplitQntHelper = /defineSelectedIdentityQntReplay\s*\(/.test(text);
+  const hasCombinedQntHelper =
+    /defineSelectedIdentityReplayAndQntReplay\s*\(/.test(text);
+  const hasHandRolledQntReplay =
+    /\brun\s*\(\s*\{/.test(text) && /\bstateCheck\s*:/.test(text);
+  const hasQntReplayShape =
+    hasSplitQntHelper || hasCombinedQntHelper || hasHandRolledQntReplay;
+  return (hasQntReplayMarker || hasLegacyReplayMarker) && hasQntReplayShape;
 }
 
 function groupCounts(pkg, files, explicitTargets) {
@@ -432,7 +578,10 @@ function groupCounts(pkg, files, explicitTargets) {
 
 function runTestLaneHygiene() {
   const packages = listPackageJsonFiles().map(readPackage);
-  const failures = [];
+  const failures = [
+    ...selectedIdentityVocabularyFailures(),
+    ...qntReplaySupportFailures(packages),
+  ];
 
   console.log("Default test lane hygiene:");
 

@@ -1,6 +1,6 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B6-CLASS-FEATURE-IDENTITY-BATCH-3 sorcerer_font_of_magic sorcerer_metamagic
-// UNIT-IDENTITY-MBT-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 sorcerer_font_of_magic doProjectSorcererFontAndMetamagic
-// UNIT-IDENTITY-MBT-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 sorcerer_metamagic doProjectSorcererFontAndMetamagic
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay B6-CLASS-FEATURE-IDENTITY-BATCH-3 sorcerer_font_of_magic sorcerer_metamagic
+// UNIT-IDENTITY-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 sorcerer_font_of_magic doProjectSorcererFontAndMetamagic
+// UNIT-IDENTITY-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 sorcerer_metamagic doProjectSorcererFontAndMetamagic
 // KERNEL-COVERAGE: parity-witness CREATION.CLASS_FEATURE_RESOURCE.PROJECTION CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION
 import * as path from "node:path";
 

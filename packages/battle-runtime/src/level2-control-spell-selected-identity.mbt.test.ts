@@ -1,19 +1,19 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH calm_emotions charm_person darkness enthrall gust_of_wind invisibility levitate see_invisibility spike_growth web
-// UNIT-IDENTITY-MBT-REPLAY: B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH calm_emotions doDiscoverCalmEmotionsConditionImmunity
-// UNIT-IDENTITY-MBT-REPLAY: B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH charm_person doDiscoverCharmPersonSaveGatedCondition
-// UNIT-IDENTITY-MBT-REPLAY: B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH darkness doDiscoverDarknessPointOrigin
-// UNIT-IDENTITY-MBT-REPLAY: B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH enthrall doDiscoverEnthrallPerceptionPenalty
-// UNIT-IDENTITY-MBT-REPLAY: B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH gust_of_wind doDiscoverGustOfWindLine
-// UNIT-IDENTITY-MBT-REPLAY: B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH invisibility doDiscoverInvisibilityDirectCondition
-// UNIT-IDENTITY-MBT-REPLAY: B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH levitate doDiscoverLevitateCreature
-// UNIT-IDENTITY-MBT-REPLAY: B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH see_invisibility doDiscoverSeeInvisibilityObserverSight
-// UNIT-IDENTITY-MBT-REPLAY: B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH spike_growth doDiscoverSpikeGrowthMovementHazard
-// UNIT-IDENTITY-MBT-REPLAY: B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH web doDiscoverWebRestraintHazard
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH calm_emotions charm_person darkness enthrall gust_of_wind invisibility levitate see_invisibility spike_growth web
+// UNIT-IDENTITY-REPLAY: B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH calm_emotions doDiscoverCalmEmotionsConditionImmunity
+// UNIT-IDENTITY-REPLAY: B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH charm_person doDiscoverCharmPersonSaveGatedCondition
+// UNIT-IDENTITY-REPLAY: B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH darkness doDiscoverDarknessPointOrigin
+// UNIT-IDENTITY-REPLAY: B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH enthrall doDiscoverEnthrallPerceptionPenalty
+// UNIT-IDENTITY-REPLAY: B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH gust_of_wind doDiscoverGustOfWindLine
+// UNIT-IDENTITY-REPLAY: B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH invisibility doDiscoverInvisibilityDirectCondition
+// UNIT-IDENTITY-REPLAY: B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH levitate doDiscoverLevitateCreature
+// UNIT-IDENTITY-REPLAY: B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH see_invisibility doDiscoverSeeInvisibilityObserverSight
+// UNIT-IDENTITY-REPLAY: B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH spike_growth doDiscoverSpikeGrowthMovementHazard
+// UNIT-IDENTITY-REPLAY: B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH web doDiscoverWebRestraintHazard
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { expect } from "vitest";
 
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import type { BattleState } from "./index.ts";
 import {
   calmEmotionsUnitId,
@@ -82,8 +82,8 @@ const LEVEL2_CONTROL_SPELL_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
   WebRestraintHazard: "webRestraintHazard",
 } as const satisfies Readonly<Record<string, Level2ControlSpellSelectedIdentityResult>>;
 
-defineSelectedIdentityWitness({
-  describeLabel: "Level 2 control spell selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Level 2 control spell selected identity replay",
   taskId: "B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH",
   specFile: mbtSpecPath(
     import.meta.dirname,

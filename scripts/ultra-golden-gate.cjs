@@ -855,7 +855,7 @@ function requireAuditProfileIds(unit) {
   return unit.claim.profileIds;
 }
 
-function profileScopedQntMbtJoinRows(unit) {
+function profileScopedParityWitnessJoinRows(unit) {
   return (unit.profiles ?? []).flatMap((profile) => {
     if (profile.profileKind !== "battle-admission") return [];
     const qntOwners = profile.qntOwners ?? [];
@@ -877,7 +877,7 @@ function profileScopedQntMbtJoinRows(unit) {
   });
 }
 
-function qntMbtJoinRowsByUnitId(levelReport, kernelIndexes, unitMatrix) {
+function parityWitnessJoinRowsByUnitId(levelReport, kernelIndexes, unitMatrix) {
   const rowsByUnitId = new Map();
   for (const unit of levelReport.rulesKernelSupportedUnitJoin?.units ?? []) {
     const current = rowsByUnitId.get(unit.unitId) ?? [];
@@ -898,7 +898,7 @@ function qntMbtJoinRowsByUnitId(levelReport, kernelIndexes, unitMatrix) {
   }
   for (const unit of unitMatrix.units ?? []) {
     const current = rowsByUnitId.get(unit.unitId) ?? [];
-    const profileScopedRows = profileScopedQntMbtJoinRows(unit);
+    const profileScopedRows = profileScopedParityWitnessJoinRows(unit);
     if (profileScopedRows.length > 0) {
       rowsByUnitId.set(unit.unitId, [...current, ...profileScopedRows]);
     }
@@ -906,8 +906,8 @@ function qntMbtJoinRowsByUnitId(levelReport, kernelIndexes, unitMatrix) {
   return rowsByUnitId;
 }
 
-function mcpFlowIdsForUnit(unit, qntMbtRows) {
-  const fromQntRows = qntMbtRows
+function mcpFlowIdsForUnit(unit, parityWitnessRows) {
+  const fromQntRows = parityWitnessRows
     .map((row) => {
       if (row.runtime === "battle") return "battle";
       if (row.runtime === "character-creation") return "character-creation";
@@ -924,33 +924,27 @@ function mcpFlowIdsForUnit(unit, qntMbtRows) {
 function buildSelectedIdentityAuditRow({
   coveredMcpFlowIds,
   evidence,
-  qntMbtRows,
+  parityWitnessRows,
   unit,
 }) {
-  const joinedQntMbtRows = qntMbtRows.filter((row) =>
-    row.parityWitnesses.some(
-      (witness) => witness.ownerPath === evidence.ownerPath,
-    ),
-  );
-  const qntMbtWitnessOwners = uniqueSorted(
-    qntMbtRows.flatMap((row) =>
+  const joinedParityWitnessRows = parityWitnessRows;
+  const parityWitnessOwners = uniqueSorted(
+    parityWitnessRows.flatMap((row) =>
       row.parityWitnesses.map((witness) => witness.ownerPath),
     ),
   );
-  const requiredMcpFlowIds = mcpFlowIdsForUnit(unit, qntMbtRows);
+  const requiredMcpFlowIds = mcpFlowIdsForUnit(unit, parityWitnessRows);
   const coveredRequiredMcpFlowIds = requiredMcpFlowIds.filter((flowId) =>
     coveredMcpFlowIds.has(flowId),
   );
   const missingMcpFlowIds = requiredMcpFlowIds.filter(
     (flowId) => !coveredMcpFlowIds.has(flowId),
   );
-  const hasQntMbtJoin = joinedQntMbtRows.length > 0;
+  const hasParityWitnessJoin = joinedParityWitnessRows.length > 0;
   const hasMcpScenarioJoin = coveredRequiredMcpFlowIds.length > 0;
-  const qntMbtJoinStatus = hasQntMbtJoin
-    ? "selected-evidence-owner-joined"
-    : qntMbtRows.length > 0
-      ? "unit-profile-joined-with-different-owner"
-      : "missing-unit-profile-join";
+  const parityWitnessJoinStatus = hasParityWitnessJoin
+    ? "unit-profile-joined"
+    : "missing-unit-profile-join";
   const mcpScenarioJoinStatus = hasMcpScenarioJoin
     ? "flow-evidence-present"
     : requiredMcpFlowIds.length > 0
@@ -967,19 +961,18 @@ function buildSelectedIdentityAuditRow({
       taskId: evidence.taskId,
       ownerPath: evidence.ownerPath,
     },
-    qntMbtJoin: {
-      status: qntMbtJoinStatus,
-      joinedRows: joinedQntMbtRows.map((row) => ({
+    parityWitnessJoin: {
+      status: parityWitnessJoinStatus,
+      joinedRows: joinedParityWitnessRows.map((row) => ({
         obligationId: row.obligationId,
         profileId: row.profileId,
         witnessKinds: uniqueSorted(
           row.parityWitnesses
-            .filter((witness) => witness.ownerPath === evidence.ownerPath)
             .map((witness) => witness.kind),
         ),
       })),
-      unitProfileJoinRowCount: qntMbtRows.length,
-      unitProfileWitnessOwners: qntMbtWitnessOwners,
+      unitProfileJoinRowCount: parityWitnessRows.length,
+      unitProfileWitnessOwners: parityWitnessOwners,
     },
     mcpScenarioJoin: {
       status: mcpScenarioJoinStatus,
@@ -995,12 +988,12 @@ function buildSelectedIdentityEvidenceAuditScope({
   levelReport,
   mcpScenarioEvidence,
   scopeId,
-  selectedIdentityMbtEvidenceTag,
+  selectedIdentityReplayEvidenceTag,
   unitMatrix,
 }) {
   const unitsById = indexUnits(unitMatrix);
   const scopedSupportedUnitIds = supportedUnitIds(levelReport);
-  const qntMbtRowsByUnitId = qntMbtJoinRowsByUnitId(
+  const parityWitnessRowsByUnitId = parityWitnessJoinRowsByUnitId(
     levelReport,
     kernelIndexes,
     unitMatrix,
@@ -1014,12 +1007,12 @@ function buildSelectedIdentityEvidenceAuditScope({
     .map((unitId) => requireAuditUnit(unitsById, unitId))
     .flatMap((unit) =>
       (unit.evidence ?? [])
-        .filter((evidence) => evidence.tag === selectedIdentityMbtEvidenceTag)
+        .filter((evidence) => evidence.tag === selectedIdentityReplayEvidenceTag)
         .map((evidence) =>
           buildSelectedIdentityAuditRow({
             coveredMcpFlowIds,
             evidence,
-            qntMbtRows: qntMbtRowsByUnitId.get(unit.unitId) ?? [],
+            parityWitnessRows: parityWitnessRowsByUnitId.get(unit.unitId) ?? [],
             unit,
           }),
         ),
@@ -1032,7 +1025,7 @@ function buildSelectedIdentityEvidenceAuditScope({
     );
   const missingJoinRows = auditedRows.filter(
     (row) =>
-      row.qntMbtJoin.status !== "selected-evidence-owner-joined" &&
+      row.parityWitnessJoin.status !== "unit-profile-joined" &&
       row.mcpScenarioJoin.status !== "flow-evidence-present",
   );
   return stable({
@@ -1063,7 +1056,7 @@ function buildSelectedIdentityEvidenceAudit({
   level14FullSupport,
   mcpScenarioEvidence,
   rulesKernelMatrix,
-  selectedIdentityMbtEvidenceTag,
+  selectedIdentityReplayEvidenceTag,
   unitMatrix,
 }) {
   const kernelIndexes = buildKernelIndexes(rulesKernelMatrix);
@@ -1075,13 +1068,13 @@ function buildSelectedIdentityEvidenceAudit({
   };
   return stable({
     criteria: {
-      evidenceTag: selectedIdentityMbtEvidenceTag,
-      qntMbtJoin:
-        "A selected-identity evidence row is joined to QNT/MBT when its ownerPath is also a rules-kernel parity witness for a scoped supported Unit profile or a profile-scoped focused MBT verification owner for battle-admission profiles with QNT owners.",
+      evidenceTag: selectedIdentityReplayEvidenceTag,
+      parityWitnessJoin:
+        "A selected-identity replay evidence row is joined to parity evidence when the same Unit has a checked parity witness for a scoped supported Unit profile.",
       mcpScenarioJoin:
-        "A selected-identity evidence row is joined to MCP when at least one required MCP flow inferred from its scoped supported profile has scenario evidence.",
+        "A selected-identity replay evidence row is joined to MCP when at least one required MCP flow inferred from its scoped supported profile has scenario evidence.",
       rowPolicy:
-        "Rows list scoped supported Units whose selected-identity evidence exists but has neither an exact QNT/MBT parity-witness owner join nor an MCP scenario-evidence flow join.",
+        "Rows list scoped supported Units whose selected-identity replay evidence exists but has neither a Unit-scoped parity witness join nor an MCP scenario-evidence flow join.",
     },
     scopes: ultraGoldenScopeFields.map(({ reportField, scopeId }) =>
       buildSelectedIdentityEvidenceAuditScope({
@@ -1089,7 +1082,7 @@ function buildSelectedIdentityEvidenceAudit({
         levelReport: levelReports[reportField],
         mcpScenarioEvidence,
         scopeId,
-        selectedIdentityMbtEvidenceTag,
+        selectedIdentityReplayEvidenceTag,
         unitMatrix,
       }),
     ),
@@ -1131,7 +1124,7 @@ function buildUltraGoldenGate({
   level14FullSupport,
   mcpScenarioEvidence,
   rulesKernelMatrix,
-  selectedIdentityMbtEvidenceTag,
+  selectedIdentityReplayEvidenceTag,
   unitMatrix,
 }) {
   const levelReports = {
@@ -1156,7 +1149,7 @@ function buildUltraGoldenGate({
     level14FullSupport,
     mcpScenarioEvidence,
     rulesKernelMatrix,
-    selectedIdentityMbtEvidenceTag,
+    selectedIdentityReplayEvidenceTag,
     unitMatrix,
   });
   return stable({
@@ -1236,10 +1229,10 @@ function renderList(values) {
 function renderSelectedIdentityAuditRows(scope) {
   return scope.rows.map((row) => {
     const profiles = renderList(row.profileIds);
-    const qntOwners = renderList(row.qntMbtJoin.unitProfileWitnessOwners);
+    const qntOwners = renderList(row.parityWitnessJoin.unitProfileWitnessOwners);
     const requiredMcpFlows = renderList(row.mcpScenarioJoin.requiredFlowIds);
     const missingMcpFlows = renderList(row.mcpScenarioJoin.missingFlowIds);
-    return `| ${scope.scopeId} | ${code(row.unitId)} | ${md(row.kind)} | ${code(row.evidence.taskId)} | ${code(row.evidence.ownerPath)} | ${md(row.qntMbtJoin.status)} | ${qntOwners} | ${md(row.mcpScenarioJoin.status)} | ${requiredMcpFlows} | ${missingMcpFlows} | ${profiles} |`;
+    return `| ${scope.scopeId} | ${code(row.unitId)} | ${md(row.kind)} | ${code(row.evidence.taskId)} | ${code(row.evidence.ownerPath)} | ${md(row.parityWitnessJoin.status)} | ${qntOwners} | ${md(row.mcpScenarioJoin.status)} | ${requiredMcpFlows} | ${missingMcpFlows} | ${profiles} |`;
   });
 }
 
@@ -1337,6 +1330,7 @@ function renderLayerSnapshotRow({ detail, layer, layerLabel }) {
 function renderLevel12UltraGoldenSummary({
   level12FullSupport,
   level12QntMbtJoin,
+  level12ParityWitnessJoin = level12QntMbtJoin,
   ultraGoldenGate,
 }) {
   const scope = ultraGoldenGate.scopes.find(
@@ -1368,9 +1362,9 @@ function renderLevel12UltraGoldenSummary({
     level12FullSupport.metrics.productReadiness.rowsByStatus ?? {};
   const witnessKinds = mbtParityLayer.evidence.witnessKinds ?? {};
   const sourceArtifacts = uniqueSorted([
-    level12QntMbtJoin.sourceArtifacts.level12FullSupport,
-    level12QntMbtJoin.sourceArtifacts.rulesKernelMatrix,
-    level12QntMbtJoin.sourceArtifacts.profileObligations,
+    level12ParityWitnessJoin.sourceArtifacts.level12FullSupport,
+    level12ParityWitnessJoin.sourceArtifacts.rulesKernelMatrix,
+    level12ParityWitnessJoin.sourceArtifacts.profileObligations,
     ultraGoldenGate.sourceArtifacts.mcpScenarioEvidence,
     ultraGoldenGate.sourceArtifacts.unitMatrix,
   ]);
@@ -1443,16 +1437,16 @@ function renderLevel12UltraGoldenSummary({
     "",
     "## QNT, Generator, And Parity",
     "",
-    `Level 1-2 QNT/MBT join open gaps: **${level12QntMbtJoin.openGapRows.length}**.`,
+    `Level 1-2 parity witness join open gaps: **${level12ParityWitnessJoin.openGapRows.length}**.`,
     "",
     "| Join metric | Result |",
     "| --- | ---: |",
-    `| Supported Units in join | ${renderCoverageMetric(level12QntMbtJoin.metrics.supportedUnits)} |`,
-    `| Rules-kernel profiles in join | ${renderCoverageMetric(level12QntMbtJoin.metrics.rulesKernelProfiles)} |`,
-    `| Obligation join rows without open gaps | ${renderCoverageMetric(level12QntMbtJoin.metrics.obligationJoinRows)} |`,
-    `| Unique covered obligations | ${renderCoverageMetric(level12QntMbtJoin.metrics.uniqueCoveredObligations)} |`,
-    `| Unique QNT-owned obligations | ${renderCoverageMetric(level12QntMbtJoin.metrics.uniqueQntOwnedObligations)} |`,
-    `| Unique parity-witnessed obligations | ${renderCoverageMetric(level12QntMbtJoin.metrics.uniqueParityWitnessedObligations)} |`,
+    `| Supported Units in join | ${renderCoverageMetric(level12ParityWitnessJoin.metrics.supportedUnits)} |`,
+    `| Rules-kernel profiles in join | ${renderCoverageMetric(level12ParityWitnessJoin.metrics.rulesKernelProfiles)} |`,
+    `| Obligation join rows without open gaps | ${renderCoverageMetric(level12ParityWitnessJoin.metrics.obligationJoinRows)} |`,
+    `| Unique covered obligations | ${renderCoverageMetric(level12ParityWitnessJoin.metrics.uniqueCoveredObligations)} |`,
+    `| Unique QNT-owned obligations | ${renderCoverageMetric(level12ParityWitnessJoin.metrics.uniqueQntOwnedObligations)} |`,
+    `| Unique parity-witnessed obligations | ${renderCoverageMetric(level12ParityWitnessJoin.metrics.uniqueParityWitnessedObligations)} |`,
     "",
     "Generator readiness passes when every scoped semantic-core obligation is generation-subset-clean and has no blocker or follow-up rows. It does not require a generator implementation or committed generated Rust.",
     "",
@@ -1537,13 +1531,13 @@ function renderUltraGoldenGate(gate) {
     "",
     "## Selected Identity Evidence Join Audit",
     "",
-    "Selected-identity replay is Unit identity wiring evidence. This audit keeps it separate from the ultra-golden QNT/MBT and MCP layers by listing scoped supported Units whose selected-identity evidence owner has neither an exact QNT/MBT parity-witness join nor inferred MCP flow scenario evidence.",
+    "Selected-identity replay is Unit identity wiring evidence. This audit keeps it separate from the ultra-golden parity witness and MCP layers by listing scoped supported Units whose selected-identity replay evidence has neither a Unit-scoped parity witness join nor inferred MCP flow scenario evidence.",
     "",
-    "| Scope | Selected-identity evidence rows | Joined through QNT/MBT or MCP | Missing join rows |",
+    "| Scope | Selected-identity evidence rows | Joined through parity witness or MCP | Missing join rows |",
     "| --- | ---: | ---: | ---: |",
     ...gate.selectedIdentityEvidenceAudit.scopes.map(renderAuditMetricRow),
     "",
-    "| Scope | Unit | Kind | Evidence task | Evidence owner | QNT/MBT join | QNT/MBT witness owners for Unit | MCP join | Required MCP flows | Missing MCP flows | Profiles |",
+    "| Scope | Unit | Kind | Evidence task | Evidence owner | Parity witness join | Parity witness owners for Unit | MCP join | Required MCP flows | Missing MCP flows | Profiles |",
     "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
     ...(selectedIdentityAuditRows.length === 0
       ? [

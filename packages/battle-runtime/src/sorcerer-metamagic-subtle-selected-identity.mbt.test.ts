@@ -1,6 +1,6 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.metamagic-cast-component-suppression
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT sorcerer_metamagic
-// UNIT-IDENTITY-MBT-REPLAY: PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT sorcerer_metamagic doResolveSubtleFalseLife doRejectSubtleFalseLifeWithoutSorceryPoints
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT sorcerer_metamagic
+// UNIT-IDENTITY-REPLAY: PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT sorcerer_metamagic doResolveSubtleFalseLife doRejectSubtleFalseLifeWithoutSorceryPoints
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION
 // RAW trace:
 // - .references/srd-5.2.1/Classes/Sorcerer.md#Subtle Spell: spending
@@ -26,7 +26,7 @@ import {
 } from "./character-battle-resources.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { damageRollFillWithGroups } from "./battle-runtime-test-support.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
   falseLifeUnitId,
   spellCasterId,
@@ -55,8 +55,8 @@ type SubtleFalseLifeProjection = {
     | "unaffordableSubtleFalseLife";
 };
 
-defineSelectedIdentityWitness({
-  describeLabel: "Sorcerer Subtle Spell component suppression selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Sorcerer Subtle Spell component suppression selected identity replay",
   taskId: "PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT",
   specFile: mbtSpecPath(
     import.meta.dirname,

@@ -1,11 +1,11 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt condition-saving-throw-lifecycle blindness_deafness color_spray entangle hideous_laughter hold_person hypnotic_pattern sleep
-// UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle blindness_deafness doResolveBlindnessDeafnessBlindedSavingThrow doResolveBlindnessDeafnessDeafenedSavingThrow
-// UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle color_spray doResolveColorSprayFailedSavingThrow
-// UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle entangle doResolveEntangleFailedSavingThrow
-// UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle hideous_laughter doResolveHideousLaughterRepeatSavingThrowSuccess
-// UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle hold_person doResolveHoldPersonFailedSavingThrow doResolveHoldPersonRepeatSavingThrowSuccess
-// UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle hypnotic_pattern doResolveHypnoticPatternFailedSavingThrow
-// UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle sleep doResolveSleepRepeatSavingThrowFailure
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay condition-saving-throw-lifecycle blindness_deafness color_spray entangle hideous_laughter hold_person hypnotic_pattern sleep
+// UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle blindness_deafness doResolveBlindnessDeafnessBlindedSavingThrow doResolveBlindnessDeafnessDeafenedSavingThrow
+// UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle color_spray doResolveColorSprayFailedSavingThrow
+// UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle entangle doResolveEntangleFailedSavingThrow
+// UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle hideous_laughter doResolveHideousLaughterRepeatSavingThrowSuccess
+// UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle hold_person doResolveHoldPersonFailedSavingThrow doResolveHoldPersonRepeatSavingThrowSuccess
+// UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle hypnotic_pattern doResolveHypnoticPatternFailedSavingThrow
+// UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle sleep doResolveSleepRepeatSavingThrowFailure
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE
 import { Either } from "effect";
 
@@ -47,7 +47,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { spellConditionChoiceFill } from "./unit-profile-admission-spell-fill-support.ts";
 
@@ -109,8 +109,8 @@ if (unitCatalogResult.tag !== "ok") {
 const unitLibrary = unitCatalogResult.catalog;
 const hypnoticPatternSpell = decodeHypnoticPatternSpellRecord();
 
-defineSelectedIdentityWitness({
-  describeLabel: "Condition Saving Throw selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Condition Saving Throw selected identity replay",
   taskId: "condition-saving-throw-lifecycle",
   specFile: mbtSpecPath(
     import.meta.dirname,

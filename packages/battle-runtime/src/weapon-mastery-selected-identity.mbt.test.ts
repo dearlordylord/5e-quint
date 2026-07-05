@@ -1,7 +1,7 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt weapon-mastery-properties mastery_sap mastery_topple mastery_cleave
-// UNIT-IDENTITY-MBT-REPLAY: weapon-mastery-properties mastery_sap doResolveSapMasteryPropertyHit
-// UNIT-IDENTITY-MBT-REPLAY: weapon-mastery-properties mastery_topple doResolveToppleMasteryPropertyFailedSavingThrow
-// UNIT-IDENTITY-MBT-REPLAY: weapon-mastery-properties mastery_cleave doResolveCleaveMasteryPropertySecondTargetHit
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay weapon-mastery-properties mastery_sap mastery_topple mastery_cleave
+// UNIT-IDENTITY-REPLAY: weapon-mastery-properties mastery_sap doResolveSapMasteryPropertyHit
+// UNIT-IDENTITY-REPLAY: weapon-mastery-properties mastery_topple doResolveToppleMasteryPropertyFailedSavingThrow
+// UNIT-IDENTITY-REPLAY: weapon-mastery-properties mastery_cleave doResolveCleaveMasteryPropertySecondTargetHit
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { Either } from "effect";
 
@@ -40,7 +40,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 
 type WeaponMasteryProjection = {
   readonly primaryTargetHp: number;
@@ -88,8 +88,8 @@ const weaponMasteryPropertyScenarios = {
 } as const;
 type WeaponMasteryPropertyUnitId = keyof typeof weaponMasteryPropertyScenarios;
 
-defineSelectedIdentityWitness({
-  describeLabel: "Weapon Mastery selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Weapon Mastery selected identity replay",
   taskId: "weapon-mastery-properties",
   specFile: mbtSpecPath(
     import.meta.dirname,

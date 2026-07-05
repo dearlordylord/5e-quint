@@ -46,7 +46,7 @@ Append:
   prepared Spell Slot, Shield, and class cantrip lanes.
 - The current generated matrix reports 59 installed Units, 21 stable
   executable profiles, 28/45 supported executable Unit coverage, 28/28
-  deterministic admission/projection coverage, and 10/28 selected identity MBT
+  deterministic admission/projection coverage, and 10/28 selected identity replay
   coverage.
 
 ## Source Check

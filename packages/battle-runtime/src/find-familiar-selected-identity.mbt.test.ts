@@ -1,6 +1,6 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.find-familiar-lifecycle
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B22-FIND-FAMILIAR-IDENTITY-WITNESS find_familiar
-// UNIT-IDENTITY-MBT-REPLAY: B22-FIND-FAMILIAR-IDENTITY-WITNESS find_familiar doCastFindFamiliar doRecastFindFamiliarReplacement doDismissAndReappearFindFamiliar doDeliverTouchSpellThroughFindFamiliar
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay B22-FIND-FAMILIAR-IDENTITY-WITNESS find_familiar
+// UNIT-IDENTITY-REPLAY: B22-FIND-FAMILIAR-IDENTITY-WITNESS find_familiar doCastFindFamiliar doRecastFindFamiliarReplacement doDismissAndReappearFindFamiliar doDeliverTouchSpellThroughFindFamiliar
 import {
   DieRollResult,
   abilityModifier,
@@ -14,7 +14,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
 
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer.ts";
 import {
   characterCreature,
@@ -88,8 +88,8 @@ const FIND_FAMILIAR_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
     | "dismissedAndReappeared"
     | "touchDelivered">>;
 
-defineSelectedIdentityWitness({
-  describeLabel: "Find Familiar selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Find Familiar selected identity replay",
   taskId: "B22-FIND-FAMILIAR-IDENTITY-WITNESS",
   specFile: mbtSpecPath(
     import.meta.dirname,

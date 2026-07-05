@@ -16,11 +16,11 @@ replay metrics in `plans/unit-profile-coverage/unit-matrix.json` and
 
 The generated matrix is green after the unit-feature ownership splits:
 
-- `selectedIdentityMbtCoverage` is `144/144`.
+- `selectedIdentityReplayCoverage` is `144/144`.
 - `selectedIdentityReplayGaps.rowCount` is `0`.
 - The report lists no selected-identity replay gap rows.
 - A read-only scan of supported `unit-feature.` Units found 37 supported
-  feature Units and 0 missing `selected-identity-mbt` evidence rows.
+  feature Units and 0 missing `selected-identity-replay` evidence rows.
 
 The matrix still contains one deferred selected-identity non-applicable row for
 a spell profile-subset case. That row is visible in the deferred bucket, is not

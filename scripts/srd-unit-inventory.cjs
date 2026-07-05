@@ -4,7 +4,7 @@ const {
   battleReadinessClosureKinds,
   deterministicAdmissionProjectionEvidenceTag,
   isUnitFeatureProfileId,
-  selectedIdentityMbtEvidenceTag,
+  selectedIdentityReplayEvidenceTag,
 } = require("./unit-profile-coverage-config.cjs");
 
 const classDir = ".references/srd-5.2.1/Classes";
@@ -129,11 +129,11 @@ const battleRuntimeExecutableEvidenceRequirementsByUnitId = new Map([
     "fighter_remarkable_athlete",
     [
       {
-        tag: selectedIdentityMbtEvidenceTag,
+        tag: selectedIdentityReplayEvidenceTag,
         taskId: "L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES",
       },
       {
-        tag: selectedIdentityMbtEvidenceTag,
+        tag: selectedIdentityReplayEvidenceTag,
         taskId: "L3CF-02-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT",
       },
     ],
@@ -142,7 +142,7 @@ const battleRuntimeExecutableEvidenceRequirementsByUnitId = new Map([
     "rogue_steady_aim",
     [
       {
-        tag: selectedIdentityMbtEvidenceTag,
+        tag: selectedIdentityReplayEvidenceTag,
         taskId: "L3PUTB-01-ROGUE-STEADY-AIM-RUNTIME",
       },
     ],
@@ -151,7 +151,7 @@ const battleRuntimeExecutableEvidenceRequirementsByUnitId = new Map([
     "rogue_cunning_strike",
     [
       {
-        tag: selectedIdentityMbtEvidenceTag,
+        tag: selectedIdentityReplayEvidenceTag,
         taskId: "L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME",
       },
     ],
@@ -2224,7 +2224,7 @@ function requiredBattleRuntimeExecutableEvidence(unitId, unitEvidenceByUnitId) {
     return undefined;
   }
   return [
-    `plans/unit-profile-coverage/unit-evidence.jsonl records required ${selectedIdentityMbtEvidenceTag} executable evidence`,
+    `plans/unit-profile-coverage/unit-evidence.jsonl records required ${selectedIdentityReplayEvidenceTag} executable evidence`,
     ...matchedRows.map(
       (row) => `${row.evidence.taskId} at ${row.evidence.ownerPath}`,
     ),

@@ -1,11 +1,11 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt movement-forced-movement dissonant_whispers command expeditious_retreat ranger_roving barbarian_fast_movement
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B5-CLASS-FEATURE-IDENTITY-BATCH-2 monk_unarmored_movement
-// UNIT-IDENTITY-MBT-REPLAY: movement-forced-movement dissonant_whispers doDissonantWhispersForcedReactionMovement
-// UNIT-IDENTITY-MBT-REPLAY: movement-forced-movement command doCommandFleeTargetTurn
-// UNIT-IDENTITY-MBT-REPLAY: movement-forced-movement expeditious_retreat doExpeditiousRetreatImmediateDash
-// UNIT-IDENTITY-MBT-REPLAY: movement-forced-movement ranger_roving doRangerRovingClimbSwimMovement
-// UNIT-IDENTITY-MBT-REPLAY: movement-forced-movement barbarian_fast_movement doBarbarianFastMovementDash
-// UNIT-IDENTITY-MBT-REPLAY: B5-CLASS-FEATURE-IDENTITY-BATCH-2 monk_unarmored_movement doMonkUnarmoredMovementDash
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay movement-forced-movement dissonant_whispers command expeditious_retreat ranger_roving barbarian_fast_movement
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay B5-CLASS-FEATURE-IDENTITY-BATCH-2 monk_unarmored_movement
+// UNIT-IDENTITY-REPLAY: movement-forced-movement dissonant_whispers doDissonantWhispersForcedReactionMovement
+// UNIT-IDENTITY-REPLAY: movement-forced-movement command doCommandFleeTargetTurn
+// UNIT-IDENTITY-REPLAY: movement-forced-movement expeditious_retreat doExpeditiousRetreatImmediateDash
+// UNIT-IDENTITY-REPLAY: movement-forced-movement ranger_roving doRangerRovingClimbSwimMovement
+// UNIT-IDENTITY-REPLAY: movement-forced-movement barbarian_fast_movement doBarbarianFastMovementDash
+// UNIT-IDENTITY-REPLAY: B5-CLASS-FEATURE-IDENTITY-BATCH-2 monk_unarmored_movement doMonkUnarmoredMovementDash
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
@@ -70,7 +70,7 @@ import {
   stateCheck,
   type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 
 const movementForcedMovementSpellIds = [
   "dissonant_whispers",
@@ -152,8 +152,8 @@ if (unitCatalogResult.tag !== "ok") {
 }
 const unitLibrary = unitCatalogResult.catalog;
 
-defineSelectedIdentityWitness({
-  describeLabel: "Movement and forced movement selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Movement and forced movement selected identity replay",
   taskId: "movement-forced-movement",
   specFile: mbtSpecPath(
     import.meta.dirname,

@@ -48,7 +48,7 @@ Coverage rows are denominator-specific gates, not weighted completion scores. Un
 | Rules-kernel covered profile coverage | Do rules-kernel-admitted mechanics profiles point to covered rules-kernel obligations? | rules-kernel-applicable profile records whose mapped obligations are all covered | profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings |
 | Supported Unit rules-kernel chain coverage | Do supported Unit identities have every rules-kernel-admitted profile connected to covered rules-kernel obligations? | supported Unit ids whose rules-kernel-applicable profiles all map to covered obligations | installed Units with supported-profile claims and at least one rules-kernel-applicable profile |
 | Deterministic admission/projection coverage | Which supported Unit identities have deterministic production catalog/support/projection evidence? | supported Unit ids with deterministic-admission-projection evidence | installed Units with supported-profile claims |
-| Selected identity replay coverage | Which supported Unit identities have intentionally selected concrete identity replay evidence? | supported Unit ids in the replay denominator with selected-identity-mbt evidence | installed Units with supported-profile claims, excluding whole-claim selected-identity not-applicable dispositions |
+| Selected identity replay coverage | Which supported Unit identities have intentionally selected concrete identity replay evidence? | supported Unit ids in the replay denominator with selected-identity-replay evidence | installed Units with supported-profile claims, excluding whole-claim selected-identity not-applicable dispositions |
 | Classic non-SRD expression gate | Did every installed Classic non-SRD mechanics-only Unit pass the public-expression gate? | installed Classic non-SRD records passing validation | installed Classic non-SRD records |
 
 ## Unit Group Denominator Audit
@@ -1189,7 +1189,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `acid_splash` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | spell-procedure-core | `packages/battle-runtime/src/rule-core-spells.mbt.test.ts` |
 | `acid_arrow` | `spell.invocation-acid-arrow-attack-timing` | B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts` |
 | `aid` | `spell.scalar-buff` | B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-protection-spell-selected-identity.mbt.test.ts` |
-| `alter_self` | `spell.invocation-self-transformation-mode` | B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-mobility-spell-selected-identity.mbt.test.ts` |
+| `alter_self` | `spell.invocation-self-transformation-mode` | B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-mobility-spell-selected-identity.test.ts` |
 | `animal_friendship` | `spell.creature-type-protection-and-charm` | L1H-ANIMAL-FRIENDSHIP | `packages/battle-runtime/src/creature-type-protection-and-charm-selected-identity.mbt.test.ts` |
 | `barkskin` | `spell.scalar-buff` | B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-protection-spell-selected-identity.mbt.test.ts` |
 | `blindness_deafness` | `spell.invocation-condition-save` | condition-saving-throw-lifecycle | `packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts` |
@@ -1216,7 +1216,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `feather_fall` | `spell.invocation-feather-fall-mitigation` | level1-spatial-witness | `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts` |
 | `false_life` | `spell.scalar-buff` | L1E-FALSE-LIFE | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
 | `fire_bolt` | `spell.invocation-damage-save-or-attack` | attack-spell-shape | `packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts` |
-| `fireball` | `spell.invocation-damage-save-or-attack` | B23-FIREBALL-IDENTITY-WITNESS | `packages/battle-runtime/src/fireball-selected-identity.mbt.test.ts` |
+| `fireball` | `spell.invocation-damage-save-or-attack` | B23-FIREBALL-IDENTITY-WITNESS | `packages/battle-runtime/src/fireball-selected-identity.test.ts` |
 | `flame_blade` | `spell.invocation-spell-created-held-object` | B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts` |
 | `flaming_sphere` | `spell.invocation-flaming-sphere-hazard-ram` | B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts` |
 | `fog_cloud` | `spell.invocation-fog-cloud-obscurement` | level1-spatial-witness | `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts` |
@@ -1232,10 +1232,10 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `invisibility` | `spell.invocation-direct-condition` | B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts` |
 | `jump` | `spell.invocation-jump-movement-replacement` | level1-spatial-witness | `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts` |
 | `lesser_restoration` | `spell.invocation-direct-condition-removal` | RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY | `packages/battle-runtime/src/condition-removal-protection-selected-identity.mbt.test.ts` |
-| `lightning_bolt` | `spell.invocation-damage-save-or-attack` | B24-LIGHTNING-BOLT-IDENTITY-WITNESS | `packages/battle-runtime/src/lightning-bolt-selected-identity.mbt.test.ts` |
+| `lightning_bolt` | `spell.invocation-damage-save-or-attack` | B24-LIGHTNING-BOLT-IDENTITY-WITNESS | `packages/battle-runtime/src/lightning-bolt-selected-identity.test.ts` |
 | `light` | `spell.invocation-object-light` | level1-spatial-witness | `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts` |
 | `longstrider` | `spell.scalar-buff` | L1E-LONGSTRIDER | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
-| `misty_step` | `spell.invocation-self-teleport` | B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-mobility-spell-selected-identity.mbt.test.ts` |
+| `misty_step` | `spell.invocation-self-teleport` | B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-mobility-spell-selected-identity.test.ts` |
 | `poison_spray` | `spell.invocation-damage-save-or-attack`, `spell.readied-action-time-spell` | level1-damage-spell-selected-identity | `packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts` |
 | `protection_from_evil_and_good` | `spell.creature-type-protection-and-charm` | L1H-PROTECTION-EVIL-GOOD | `packages/battle-runtime/src/creature-type-protection-and-charm-selected-identity.mbt.test.ts` |
 | `protection_from_poison` | `spell.invocation-condition-removal-protection` | RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY | `packages/battle-runtime/src/condition-removal-protection-selected-identity.mbt.test.ts` |
@@ -1265,9 +1265,9 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `shield_of_faith` | `spell.scalar-buff` | roll-modifier-buff | `packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts` |
 | `shatter` | `spell.invocation-damage-save-or-attack` | B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts` |
 | `shillelagh` | `spell.invocation-weapon-attack-override` | L1E-SHILLELAGH | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
-| `shining_smite` | `spell.invocation-after-hit-damage-illumination` | B25-SHINING-SMITE-IDENTITY-WITNESS | `packages/battle-runtime/src/shining-smite-selected-identity.mbt.test.ts` |
+| `shining_smite` | `spell.invocation-after-hit-damage-illumination` | B25-SHINING-SMITE-IDENTITY-WITNESS | `packages/battle-runtime/src/shining-smite-selected-identity.test.ts` |
 | `sleep` | `spell.invocation-sleep-target-admission`, `spell.invocation-sleep-repeat-save-lifecycle` | condition-saving-throw-lifecycle | `packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts` |
-| `spider_climb` | `spell.scalar-buff` | B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-mobility-spell-selected-identity.mbt.test.ts` |
+| `spider_climb` | `spell.scalar-buff` | B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-mobility-spell-selected-identity.test.ts` |
 | `spiritual_weapon` | `spell.invocation-spiritual-weapon-attack-proxy` | B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH | `packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts` |
 | `thunderwave` | `spell.invocation-damage-save-or-attack` | level1-spatial-witness | `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts` |
 | `true_strike` | `spell.invocation-spell-hosted-weapon-attack` | L1E-TRUE-STRIKE | `packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts` |
@@ -1283,7 +1283,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 
 ## Selected Identity Replay Gaps
 
-This generated view lists `profile-subset-supported` and `supported-profile` Units that have no `selected-identity-mbt` evidence row and no selected-identity non-applicable disposition at the whole-claim or deferred-mechanics boundary.
+This generated view lists `profile-subset-supported` and `supported-profile` Units that have no `selected-identity-replay` evidence row and no selected-identity non-applicable disposition at the whole-claim or deferred-mechanics boundary.
 Deferred-portion non-applicable rows are not replay gaps; they are listed in the next section so they remain visible without being counted as missing replay witnesses.
 
 | Unit | Claim | Selected identity | Catalog | Collection | Kind | Profiles | Source |

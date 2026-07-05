@@ -1,6 +1,6 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.metamagic-cast-range-increase
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3MMETA-15-DISTANT-OBJECT-LIGHT sorcerer_metamagic
-// UNIT-IDENTITY-MBT-REPLAY: L3MMETA-15-DISTANT-OBJECT-LIGHT sorcerer_metamagic doResolveDistantObjectLight
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3MMETA-15-DISTANT-OBJECT-LIGHT sorcerer_metamagic
+// UNIT-IDENTITY-REPLAY: L3MMETA-15-DISTANT-OBJECT-LIGHT sorcerer_metamagic doResolveDistantObjectLight
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_DISTANT_CAST_RANGE_INCREASE
 // RAW trace:
 // - .references/srd-5.2.1/Classes/Sorcerer.md#Distant Spell: Touch range
@@ -24,7 +24,7 @@ import {
   reducerRoutedMetamagicStateCheck,
   run,
 } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
   lightUnitId,
   spellCasterId,
@@ -66,8 +66,8 @@ type DistantMetamagicRouteReplayProjection = {
   readonly route: readonly BattleReducerRouteEvent[];
 };
 
-defineSelectedIdentityWitness({
-  describeLabel: "Sorcerer Distant Spell object-light selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Sorcerer Distant Spell object-light selected identity replay",
   taskId: "L3MMETA-15-DISTANT-OBJECT-LIGHT",
   specFile: mbtSpecPath(
     import.meta.dirname,

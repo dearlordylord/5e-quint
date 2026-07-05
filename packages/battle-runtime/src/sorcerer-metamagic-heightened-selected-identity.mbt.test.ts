@@ -1,7 +1,7 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3META-05-HEIGHTENED-SPELL-SAVE-PROFILES sorcerer_metamagic
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3MMETA-22-HEIGHTENED-SAVE-GATED-CONDITION-MULTITARGET-REPEAT-SAVE-SLICE sorcerer_metamagic
-// UNIT-IDENTITY-MBT-REPLAY: L3META-05-HEIGHTENED-SPELL-SAVE-PROFILES sorcerer_metamagic doResolveHeightenedSaveGatedDamage doResolveHeightenedHideousLaughter doResolveHeightenedGreaseEntrySave doResolveHeightenedGustOfWindEndTurnSave doResolveHeightenedSaveGatedConditionEndTurnSave
-// UNIT-IDENTITY-MBT-REPLAY: L3MMETA-22-HEIGHTENED-SAVE-GATED-CONDITION-MULTITARGET-REPEAT-SAVE-SLICE sorcerer_metamagic doResolveHeightenedSaveGatedConditionEndTurnSave
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3META-05-HEIGHTENED-SPELL-SAVE-PROFILES sorcerer_metamagic
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3MMETA-22-HEIGHTENED-SAVE-GATED-CONDITION-MULTITARGET-REPEAT-SAVE-SLICE sorcerer_metamagic
+// UNIT-IDENTITY-REPLAY: L3META-05-HEIGHTENED-SPELL-SAVE-PROFILES sorcerer_metamagic doResolveHeightenedSaveGatedDamage doResolveHeightenedHideousLaughter doResolveHeightenedGreaseEntrySave doResolveHeightenedGustOfWindEndTurnSave doResolveHeightenedSaveGatedConditionEndTurnSave
+// UNIT-IDENTITY-REPLAY: L3MMETA-22-HEIGHTENED-SAVE-GATED-CONDITION-MULTITARGET-REPEAT-SAVE-SLICE sorcerer_metamagic doResolveHeightenedSaveGatedConditionEndTurnSave
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.metamagic-heightened-save-disadvantage
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_HEIGHTENED_SAVE_DISADVANTAGE
 // RAW trace:
@@ -41,7 +41,7 @@ import {
   battleReducerStartRouteEvent,
   type BattleReducerRouteEvent,
 } from "./index.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
   heightenedSorcererMetamagicBattle,
   observeHeightenedHideousLaughterRoute,
@@ -63,8 +63,8 @@ type HeightenedMetamagicRouteReplayProjection = {
   readonly route: readonly BattleReducerRouteEvent[];
 };
 
-defineSelectedIdentityWitness({
-  describeLabel: "Sorcerer Metamagic Heightened Spell selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Sorcerer Metamagic Heightened Spell selected identity replay",
   taskId: "L3META-05-HEIGHTENED-SPELL-SAVE-PROFILES",
   specFile: mbtSpecPath(
     import.meta.dirname,
@@ -245,5 +245,5 @@ function createHeightenedMetamagicRouteReplayDriver() {
 }
 
 function observeHeightenedHideousLaughterInitialRoute() {
-  return [battleReducerStartRouteEvent(heightenedSorcererMetamagicBattle())];
+  return [battleReducerStartRouteEvent()];
 }

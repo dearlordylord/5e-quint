@@ -1,10 +1,10 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES fighter_remarkable_athlete
-// UNIT-IDENTITY-MBT-REPLAY: L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES fighter_remarkable_athlete doProjectRemarkableAthleteRollModes
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3CF-02-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT fighter_remarkable_athlete
-// UNIT-IDENTITY-MBT-REPLAY: L3CF-02-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT fighter_remarkable_athlete doProjectRemarkableAthleteRollModes doProjectRemarkableAthleteCriticalMovement
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES fighter_remarkable_athlete
+// UNIT-IDENTITY-REPLAY: L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES fighter_remarkable_athlete doProjectRemarkableAthleteRollModes
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3CF-02-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT fighter_remarkable_athlete
+// UNIT-IDENTITY-REPLAY: L3CF-02-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT fighter_remarkable_athlete doProjectRemarkableAthleteRollModes doProjectRemarkableAthleteCriticalMovement
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.remarkable-athlete
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
 import type { BattleHole } from "./index.ts";
 import {
@@ -47,8 +47,8 @@ const remarkableAthleteActorId = combatantId("remarkable-athlete-mbt-actor");
 const unselectedActorId = combatantId("remarkable-athlete-mbt-unselected");
 const targetId = combatantId("remarkable-athlete-mbt-target");
 
-defineSelectedIdentityWitness({
-  describeLabel: "Remarkable Athlete selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Remarkable Athlete selected identity replay",
   taskId: "L3CF-02-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT",
   specFile: mbtSpecPath(
     import.meta.dirname,

@@ -7,8 +7,8 @@
 
 ## Problem
 
-The repository currently uses `selected-identity-mbt`,
-`UNIT-IDENTITY-MBT-REPLAY`, `*.mbt.test.ts`, `*.mbt.qnt`, and labels such as
+The repository currently uses `selected-identity-replay`,
+`UNIT-IDENTITY-REPLAY`, `*.mbt.test.ts`, `*.mbt.qnt`, and labels such as
 `replays MBT parity` for selected-identity evidence that actually contains two
 different claims:
 
@@ -53,9 +53,10 @@ moving files.
 ### What to build
 
 Introduce explicit selected-identity replay vocabulary in the unit-profile
-coverage model. Treat old `selected-identity-mbt` and
-`UNIT-IDENTITY-MBT-REPLAY` names as legacy aliases only during migration.
-Generated reports and checker messages should render the new terms.
+coverage model. Treat old `selected-identity-mbt`,
+`UNIT-IDENTITY-MBT-REPLAY`, and helper/API names that say MBT for deterministic
+replay as legacy aliases only during migration. Generated reports and checker
+messages should render the new terms.
 
 Recommended durable names:
 
@@ -151,7 +152,7 @@ Checks should cover:
 - no selected-identity deterministic replay describe/test label containing
   `MBT`;
 - no new `selected-identity-mbt` or `UNIT-IDENTITY-MBT-REPLAY` markers outside
-  the legacy allowlist;
+  the historical allowlist;
 - no report column or generated status that groups deterministic replay under
   MBT completion;
 - no rules-kernel aggregation that collapses deterministic QNT replay and
@@ -191,7 +192,8 @@ The docs should preserve two hard distinctions:
       or source/accounting evidence unless paired with harness-generated target
       replay evidence.
 - [ ] Older PRD language is either updated or marked historical where it still
-      says "Specific Unit Parity MBT" for selected-identity bookkeeping.
+      says selected-identity bookkeeping is MBT, focused MBT, or cleanroom
+      target replay by itself.
 
 ## Phase 6: Migrate Representative Owners, Then Batch
 

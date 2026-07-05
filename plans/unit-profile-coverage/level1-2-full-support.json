@@ -67,7 +67,7 @@
       "kind": "spell",
       "reason": "Friendly disposition, the Charmed condition's Social Advantage, social interaction adjudication, and target knowledge when the spell ends are social/knowledge facts outside promoted battle runtime state.",
       "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
+        "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/charm_person.json",
@@ -486,7 +486,7 @@
       "kind": "class_feature",
       "reason": "Wild Companion delegates familiar lifecycle behavior to the promoted Find Familiar Unit; unsupported familiar form attacks and companion command/action selection beyond table choices remain under the explicit SRDINV86 companion-control boundary.",
       "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
+        "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/druid_wild_companion.json",
@@ -520,7 +520,7 @@
       "kind": "class_feature",
       "reason": "Wild Shape action admission is keyed by Surface section/action shape, not Beast or Druid identity. Multiattack, save-gated, support, action-option, special, Bonus Action, Reaction, and Legendary Action sections remain closed unless their generic procedure owner consumes the typed facts; this task does not promote generic Utilize/object-use execution.; Current battle runtime owns selected-loadout Wild Shape disposition, practical worn equipment and weapon consumers, explicit fallen-equipment drop outcomes, and active form-limb witness storage. It does not own generic carried-object inventory, map placement, object retrieval, or generic Utilize object procedures; adding Wild Shape-local state for those facts would duplicate table/object state.; ASSUMPTIONS.md A27 explicitly rejects active Wild Shape at Character Sheet handoff. Cross-session active-form persistence requires a future owner-decision to revise that assumption and introduce a session active-effect persistence owner for selected form identity and remaining half-Druid-level duration without duplicating Character Sheet or Stat Block facts.",
       "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
+        "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/druid_wild_shape.json",
@@ -672,7 +672,7 @@
       "kind": "class_feature",
       "reason": "The promoted battle-runtime subset consumes the paid Step of the Wind jump-distance multiplier where the runtime has typed movement-replacement witnesses: Jump spell movement replacement. Ordinary Long Jump and High Jump require separate Strength-derived distance, route, obstacle, destination, and landing witnesses that are not part of the promoted battle-runtime movement command surface in this lane.",
       "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
+        "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/monk_monks_focus.json",
@@ -705,7 +705,7 @@
       "kind": "class_feature",
       "reason": "The remaining Favored Enemy free-cast count changes first occur at Ranger level 5, outside the character-level-1-through-3 support claim.",
       "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
+        "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/ranger_favored_enemy.json",
@@ -833,7 +833,7 @@
       "kind": "class_feature",
       "reason": "RAW distinguishes the Bonus Action resource conversion from spell execution, and the existing Character Sheet boundary is the canonical owner of ordinary-vs-created Spell Slot source state. Character Battle intentionally carries only aggregate Spell Slot capacity and the shared Sorcery Point pool, rejects source-ambiguous handoff when both ordinary and created slots of the same level could have been spent, and does not introduce a second battle-local Spell Slot source pool or source ledger.",
       "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
+        "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/sorcerer_font_of_magic.json",
@@ -866,7 +866,7 @@
       "kind": "class_feature",
       "reason": "L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS: Promote Quickened Spell beyond the current direct restoration, scalar buff, save-gated damage, save-gated condition/immunity, direct condition, roll modifier, and direct spell-attack damage subset only for standalone damage, control, ongoing-effect, and other action-casting Spell Invocation procedures whose owners add typed resource-threading and parity witnesses, using typed procedure support gates and the level-1-plus spell cast turn lock for slot, free-cast, and cantrip resource paths. Owner: battle-runtime Spell Invocation discovery and resolution profiles plus Quint parity. Required output: Supported-profile or profile-subset-supported Unit claim with focused runtime tests and promoted Quint/runtime parity for any additional Quickened action-to-Bonus-Action rewrite procedure owner without option authored identity dispatch.",
       "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
+        "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/sorcerer_metamagic.json",
@@ -973,7 +973,7 @@
       "kind": "spell",
       "reason": "Thaumaturgy's non-Booming minor wonders alter appearance, flames, doors/windows, sounds, and tremors; promoted battle runtime owns only Booming Voice's check Advantage and consumes total active-effect count witnesses for the shared cap.",
       "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
+        "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/thaumaturgy.json",

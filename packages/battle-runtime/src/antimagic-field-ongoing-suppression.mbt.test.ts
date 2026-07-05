@@ -1,6 +1,6 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-antimagic-field-ongoing-spell-suppression
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B19-ANTIMAGIC-FIELD-IDENTITY-WITNESS antimagic_field
-// UNIT-IDENTITY-MBT-REPLAY: B19-ANTIMAGIC-FIELD-IDENTITY-WITNESS antimagic_field doSuppressOrdinarySpell doSuppressArtifactSpell doBreakAntimagicConcentration
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay B19-ANTIMAGIC-FIELD-IDENTITY-WITNESS antimagic_field
+// UNIT-IDENTITY-REPLAY: B19-ANTIMAGIC-FIELD-IDENTITY-WITNESS antimagic_field doSuppressOrdinarySpell doSuppressArtifactSpell doBreakAntimagicConcentration
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION
 import { abilityModifier } from "@dnd/shared-algebras/armor-class-algebra";
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";

@@ -1,23 +1,29 @@
 # Selected Identity Reducer Replay Gate
 
-`selected-identity-mbt` evidence means a concrete authored Unit identity is
+`selected-identity-replay` evidence means a concrete authored Unit identity is
 bound by executable replay that reaches the production runtime entrypoint for
 the owner package. It is not satisfied by a driver-local action table alone.
 
 The checker accepts two replay owner shapes:
 
-- owner-local `selectedUnitIdentityReplays` tables with a matching local
-  `*DriverSchema` and focused QNT `step`;
-- `defineSelectedIdentityWitness(...)`, whose helper creates the deterministic
-  replay test and the focused MBT parity run.
+- owner-local `selectedUnitIdentityReplays` tables with deterministic replay
+  data and, when paired with QNT replay evidence, a focused QNT `step`;
+- `defineSelectedIdentityReplayWitness(...)`, which creates only the
+  deterministic replay test;
+- `defineSelectedIdentityReplayAndQntReplay(...)`, which creates the
+  deterministic replay test and the deterministic QNT parity run.
 
-For either shape, `scripts/unit-profile-coverage-claim-scan.cjs` checks:
+For deterministic selected-identity replay,
+`scripts/unit-profile-coverage-claim-scan.cjs` checks:
 
 - the `unit-evidence.jsonl` row has a matching `UNIT-IDENTITY-EVIDENCE` marker;
-- the `UNIT-IDENTITY-MBT-REPLAY` marker actions match replay data;
+- the `UNIT-IDENTITY-REPLAY` marker actions match replay data;
 - the actions are declared by the owner shape;
-- the actions are reachable from the focused QNT `step`;
 - the owner/import closure reaches the package's public runtime entrypoint.
+
+For separate `UNIT-IDENTITY-QNT-REPLAY` rows, the checker also verifies that
+the claimed actions are reachable from the focused QNT `step` and joined to
+matching deterministic replay data by task, Unit, and actions.
 
 For `packages/battle-runtime`, full reducer replays are recognized through
 public battle runtime entrypoints such as `startBattle`, `discoverBattleActs`,

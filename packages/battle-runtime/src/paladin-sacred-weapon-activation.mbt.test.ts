@@ -1,13 +1,13 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION paladin_sacred_weapon
-// UNIT-IDENTITY-MBT-REPLAY: L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION paladin_sacred_weapon doActivateSacredWeapon doRejectSacredWeaponNoResource doRejectSacredWeaponRangedWeapon doRecastSacredWeapon
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT paladin_sacred_weapon
-// UNIT-IDENTITY-MBT-REPLAY: L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT paladin_sacred_weapon doProjectSacredWeaponAttackDamageAndLight doDismissSacredWeapon doEndSacredWeaponWhenNotCarryingWeapon
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION paladin_sacred_weapon
+// UNIT-IDENTITY-REPLAY: L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION paladin_sacred_weapon doActivateSacredWeapon doRejectSacredWeaponNoResource doRejectSacredWeaponRangedWeapon doRecastSacredWeapon
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT paladin_sacred_weapon
+// UNIT-IDENTITY-REPLAY: L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT paladin_sacred_weapon doProjectSacredWeaponAttackDamageAndLight doDismissSacredWeapon doEndSacredWeaponWhenNotCarryingWeapon
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.paladin-sacred-weapon
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.paladin-sacred-weapon
 import { describe, expect, test } from "vitest";
 
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
   attackTargetFill,
   battleId,
@@ -237,8 +237,8 @@ describe("Sacred Weapon activation", () => {
   });
 });
 
-defineSelectedIdentityWitness({
-  describeLabel: "Paladin Sacred Weapon selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Paladin Sacred Weapon selected identity replay",
   taskId: "L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION",
   specFile: mbtSpecPath(
     import.meta.dirname,

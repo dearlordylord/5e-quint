@@ -18693,7 +18693,7 @@
         },
         {
           "owner": "battle-runtime",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L13UG-A18 at packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts; plans/unit-profile-coverage/unit-evidence.jsonl records required selected-identity-mbt executable evidence; L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES at packages/battle-runtime/src/remarkable-athlete-selected-identity.mbt.test.ts; L3CF-02-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT at packages/battle-runtime/src/remarkable-athlete-selected-identity.mbt.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L13UG-A18 at packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts; plans/unit-profile-coverage/unit-evidence.jsonl records required selected-identity-replay executable evidence; L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES at packages/battle-runtime/src/remarkable-athlete-selected-identity.mbt.test.ts; L3CF-02-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT at packages/battle-runtime/src/remarkable-athlete-selected-identity.mbt.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -26195,7 +26195,7 @@
         },
         {
           "owner": "battle-runtime",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L13UG-A18 at packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts; plans/unit-profile-coverage/unit-evidence.jsonl records required selected-identity-mbt executable evidence; L3PUTB-01-ROGUE-STEADY-AIM-RUNTIME at packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L13UG-A18 at packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts; plans/unit-profile-coverage/unit-evidence.jsonl records required selected-identity-replay executable evidence; L3PUTB-01-ROGUE-STEADY-AIM-RUNTIME at packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -26410,7 +26410,7 @@
         },
         {
           "owner": "battle-runtime",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME at packages/battle-runtime/src/battle-runtime-cunning-strike.test.ts; plans/unit-profile-coverage/unit-evidence.jsonl records required selected-identity-mbt executable evidence; L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME at packages/battle-runtime/src/cunning-strike-selected-identity.mbt.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME at packages/battle-runtime/src/battle-runtime-cunning-strike.test.ts; plans/unit-profile-coverage/unit-evidence.jsonl records required selected-identity-replay executable evidence; L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME at packages/battle-runtime/src/cunning-strike-selected-identity.mbt.test.ts",
           "status": "owner evidence present"
         }
       ],

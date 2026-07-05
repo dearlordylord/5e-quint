@@ -37,7 +37,7 @@ Append:
   support-profile and Spell Access projection smoke coverage.
 - The current generated matrix reports 58 installed Units, 19 stable
   executable profiles, 26/44 supported executable Unit coverage, 26/26
-  deterministic admission/projection coverage, and 10/26 selected identity MBT
+  deterministic admission/projection coverage, and 10/26 selected identity replay
   coverage.
 
 ## Source Check

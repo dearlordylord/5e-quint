@@ -65,11 +65,11 @@ source file manually:
 - level or level band when the SRD gives one;
 - current status: missing authored record, authored not in catalog, installed
   unsupported, needs surface widening, supported with deterministic evidence,
-  selected identity MBT, non-runtime data, or needs assumption;
+  selected identity replay, non-runtime data, or needs assumption;
 - next action category: author Surface record, install catalog record, add
   unsupported disposition, widen Surface shape, add QNT profile/MBT expectation,
   implement TS/runtime support, add deterministic admission evidence, or choose
-  selected identity MBT.
+  selected identity replay.
 
 ## Priority Rule
 

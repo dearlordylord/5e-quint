@@ -356,7 +356,7 @@
       "kind": "spell",
       "reason": "Attitude is social monster disposition rather than battle-owned condition state; the runtime has no per-creature attitude relationship model.",
       "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
+        "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/calm_emotions.json",
@@ -401,7 +401,7 @@
       "kind": "spell",
       "reason": "Friendly disposition, the Charmed condition's Social Advantage, social interaction adjudication, and target knowledge when the spell ends are social/knowledge facts outside promoted battle runtime state.",
       "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
+        "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/charm_person.json",
@@ -590,7 +590,7 @@
       "kind": "spell",
       "reason": "SRD component rules require the costly consumed Material component for Continual Flame. Promoted battle runtime spends the Magic Action and Spell Slot and records battle-visible spell effects; inventory, hand access, focus/component substitution eligibility, and costly consumed Material component consumption belong to the character equipment/component legality boundary. No battle-runtime component stock, component-spend ledger, or copied inventory field should be added for this residual.; Promoted battle runtime consumes object light and opaque-cover facts; it does not render flame appearance, object covering/hiding, heat, fuel, smothering, or quenching presentation facts.",
       "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
+        "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/continual_flame.json",
@@ -647,7 +647,7 @@
       "kind": "spell",
       "reason": "Darkness's object-origin branch requires selecting an unworn/un-carried object, deriving a 15-foot Emanation from that object, moving the Emanation with the object, and deciding opaque-cover blocking. The existing runtime can consume caller-supplied point-area and light-emitter projection witnesses, but it does not own object position, object movement, cover, area membership, sight-line, or map-illumination state. Adding those facts only for Darkness would duplicate table/map object lifecycle state.",
       "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
+        "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/darkness.json",
@@ -1127,7 +1127,7 @@
       "kind": "class_feature",
       "reason": "Wild Companion delegates familiar lifecycle behavior to the promoted Find Familiar Unit; unsupported familiar form attacks and companion command/action selection beyond table choices remain under the explicit SRDINV86 companion-control boundary.",
       "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
+        "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/druid_wild_companion.json",
@@ -1161,7 +1161,7 @@
       "kind": "class_feature",
       "reason": "Wild Shape action admission is keyed by Surface section/action shape, not Beast or Druid identity. Multiattack, save-gated, support, action-option, special, Bonus Action, Reaction, and Legendary Action sections remain closed unless their generic procedure owner consumes the typed facts; this task does not promote generic Utilize/object-use execution.; Current battle runtime owns selected-loadout Wild Shape disposition, practical worn equipment and weapon consumers, explicit fallen-equipment drop outcomes, and active form-limb witness storage. It does not own generic carried-object inventory, map placement, object retrieval, or generic Utilize object procedures; adding Wild Shape-local state for those facts would duplicate table/object state.; ASSUMPTIONS.md A27 explicitly rejects active Wild Shape at Character Sheet handoff. Cross-session active-form persistence requires a future owner-decision to revise that assumption and introduce a session active-effect persistence owner for selected form identity and remaining half-Druid-level duration without duplicating Character Sheet or Stat Block facts.",
       "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
+        "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/druid_wild_shape.json",
@@ -1194,7 +1194,7 @@
       "kind": "spell",
       "reason": "Promoted battle runtime has no canonical object Size state, carried/worn item Size state, dropped-item location state, or thrown weapon/ammunition occurrence lifecycle to mutate and clean up. The existing creature branch already models the battle-visible attack damage consequence without duplicating item state, so object and item Size normalization remain outside promoted battle runtime until a generic object/item lifecycle owner exists.",
       "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
+        "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/enlarge_reduce.json",
@@ -1263,7 +1263,7 @@
       "kind": "spell",
       "reason": "The SRD fight/attention clauses depend on table relationship and social attention facts outside promoted battle-runtime state; the runtime consumes caller-selected eligible targets and records battle-visible failed-save Perception effects.",
       "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
+        "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/enthrall.json",
@@ -1498,7 +1498,7 @@
       "kind": "spell",
       "reason": "Gust of Wind's Line records the authored strong-wind area fact, and promoted Fog Cloud owns strong-wind dispersal as a caller/table-supplied cleanup command. The Gust profile does not derive overlap with gas, vapor, fog, smoke, or other cloud effects; those gas/vapor area owners consume the same table-supplied strong-wind witness at their own effect boundary instead of adding spell-local gas state; Candle and lantern flame state, protected versus unprotected flame classification, wild flame presentation, and the 50 percent extinguishing chance are object/environment presentation facts with no promoted battle-runtime owner; Gust of Wind does not add duplicate flame, candle, lantern, or environmental wind state.",
       "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
+        "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/gust_of_wind.json",
@@ -1674,7 +1674,7 @@
       "kind": "spell",
       "reason": "The Surface Spell Definition records the loose-object target shape and 500-pound gate, but promoted battle runtime has no canonical loose-object position, weight, aloft/grounded, fixed-object attachment, surface reach, range derivation, map geometry, or gentle-grounding lifecycle state to mutate and clean up. Reusing the creature altitude active effect for objects would duplicate object lifecycle state inside Levitate, so the loose-object branch remains table/object-spatial adjudication until a generic loose-object lifecycle owner exists.",
       "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
+        "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/levitate.json",
@@ -1914,7 +1914,7 @@
       "kind": "spell",
       "reason": "The promoted battle runtime owns Spell Invocation, target admission, save-damage resolution, Spell Slot spend, failed-save Concentration lock, and the one-hour maximum duration cleanup. Same-plane location knowledge, Hidden prevention, and observer-scoped Invisible benefit denial are table/perception knowledge facts not consumed by promoted battle procedures, so they remain runtime-detached rather than stored as parallel state.",
       "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
+        "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/mind_spike.json",
@@ -2061,7 +2061,7 @@
       "kind": "class_feature",
       "reason": "The promoted battle-runtime subset consumes the paid Step of the Wind jump-distance multiplier where the runtime has typed movement-replacement witnesses: Jump spell movement replacement. Ordinary Long Jump and High Jump require separate Strength-derived distance, route, obstacle, destination, and landing witnesses that are not part of the promoted battle-runtime movement command surface in this lane.",
       "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
+        "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/monk_monks_focus.json",
@@ -2094,7 +2094,7 @@
       "kind": "spell",
       "reason": "Promoting stat-block shapechanger reversion would require one canonical active-form owner for Shape-Shift choices, speed replacement, equipment non-transformation, and return-to-true-form state. The current SRD catalog exposes only prose specials and the battle runtime deliberately supports executable Stat Block attacks while rejecting specials, so adding Moonbeam-specific metadata would duplicate Stat Block true-form facts and create authored-identity coupling.",
       "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
+        "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/moonbeam.json",
@@ -2160,7 +2160,7 @@
       "kind": "spell",
       "reason": "Pass without Trace's changing aura membership and non-caster chosen affected creatures depend on caller-supplied table/spatial facts at cast time, and leaving no tracks is pursuit/exploration state outside promoted battle runtime.",
       "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
+        "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/pass_without_trace.json",
@@ -2205,7 +2205,7 @@
       "kind": "spell",
       "reason": "Prayer of Healing application consumes completed-cast recipient eligibility facts; map geometry, range over the entire casting, Magic-action sequencing for the 10-minute cast, and interruption detection are not stored as parallel Character Sheet state.",
       "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
+        "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/prayer_of_healing.json",
@@ -2283,7 +2283,7 @@
       "kind": "class_feature",
       "reason": "The remaining Favored Enemy free-cast count changes first occur at Ranger level 5, outside the character-level-1-through-3 support claim.",
       "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
+        "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/ranger_favored_enemy.json",
@@ -2601,7 +2601,7 @@
       "kind": "class_feature",
       "reason": "RAW distinguishes the Bonus Action resource conversion from spell execution, and the existing Character Sheet boundary is the canonical owner of ordinary-vs-created Spell Slot source state. Character Battle intentionally carries only aggregate Spell Slot capacity and the shared Sorcery Point pool, rejects source-ambiguous handoff when both ordinary and created slots of the same level could have been spent, and does not introduce a second battle-local Spell Slot source pool or source ledger.",
       "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
+        "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/sorcerer_font_of_magic.json",
@@ -2634,7 +2634,7 @@
       "kind": "class_feature",
       "reason": "L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS: Promote Quickened Spell beyond the current direct restoration, scalar buff, save-gated damage, save-gated condition/immunity, direct condition, roll modifier, and direct spell-attack damage subset only for standalone damage, control, ongoing-effect, and other action-casting Spell Invocation procedures whose owners add typed resource-threading and parity witnesses, using typed procedure support gates and the level-1-plus spell cast turn lock for slot, free-cast, and cantrip resource paths. Owner: battle-runtime Spell Invocation discovery and resolution profiles plus Quint parity. Required output: Supported-profile or profile-subset-supported Unit claim with focused runtime tests and promoted Quint/runtime parity for any additional Quickened action-to-Bonus-Action rewrite procedure owner without option authored identity dispatch.",
       "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
+        "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/sorcerer_metamagic.json",
@@ -2741,7 +2741,7 @@
       "kind": "spell",
       "reason": "The SRD recognition clause depends on table-owned visibility at cast time, the creature's declared Search Action before entering, skill applicability, and the resulting terrain-recognition witness. Promoted battle runtime already consumes movement-area facts for Spike Growth and does not store parallel per-observer terrain knowledge or perception state.",
       "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
+        "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/spike_growth.json",
@@ -2855,7 +2855,7 @@
       "kind": "spell",
       "reason": "Thaumaturgy's non-Booming minor wonders alter appearance, flames, doors/windows, sounds, and tremors; promoted battle runtime owns only Booming Voice's check Advantage and consumes total active-effect count witnesses for the shared cap.",
       "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
+        "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/thaumaturgy.json",
@@ -2954,7 +2954,7 @@
       "kind": "class_feature",
       "reason": "Wizard level 3 owns subclass acquisition and the two level-2-or-lower Evocation spellbook choices. The separate new-spell-slot-level grant does not fire during that same level-3 creation event; the next new Wizard Spell Slot level is level 3 spells at Wizard level 5.",
       "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
+        "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/wizard_evocation_savant.json",

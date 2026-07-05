@@ -100,7 +100,7 @@ Recommended first Distant slice:
    within-range facts, so the witness proves the rewritten range boundary
    without adding automatic map geometry.
 4. Add focused runtime and QNT parity only for that owner, then add
-   selected-identity MBT evidence.
+   selected-identity replay evidence.
 
 ## Extended Spell Shape
 
@@ -185,7 +185,7 @@ boundary is meant to avoid.
 No MBT run is needed for this boundary task because no runtime behavior changed.
 
 Future implementation slices should verify with focused runtime tests, focused
-QNT owner tests, selected-identity MBT only after runtime and QNT witnesses
+QNT owner tests, selected-identity replay only after runtime and QNT witnesses
 exist, and then:
 
 - `pnpm unit-profile-coverage:check -- --write`

@@ -183,13 +183,13 @@ const metricDefinitions = [
     denominator: "installed Units with supported-profile claims",
   },
   {
-    key: "selectedIdentityMbtCoverage",
+    key: "selectedIdentityReplayCoverage",
     label: "Selected identity replay coverage",
     kind: "coverage",
     planningQuestion:
       "Which supported Unit identities have intentionally selected concrete identity replay evidence?",
     numerator:
-      "supported Unit ids in the replay denominator with selected-identity-mbt evidence",
+      "supported Unit ids in the replay denominator with selected-identity-replay evidence",
     denominator:
       "installed Units with supported-profile claims, excluding whole-claim selected-identity not-applicable dispositions",
   },
@@ -214,7 +214,7 @@ function groupUnitEvidence(unitEvidence) {
   return grouped;
 }
 
-function selectedIdentityEvidenceStatus(unit, selectedIdentityMbtEvidenceTag) {
+function selectedIdentityEvidenceStatus(unit, selectedIdentityReplayEvidenceTag) {
   const claim = unit.claim;
   if (
     claim?.tag !== "supported-profile" &&
@@ -228,12 +228,12 @@ function selectedIdentityEvidenceStatus(unit, selectedIdentityMbtEvidenceTag) {
   }
 
   const hasWitness = (unit.evidence ?? []).some(
-    (evidence) => evidence.tag === selectedIdentityMbtEvidenceTag,
+    (evidence) => evidence.tag === selectedIdentityReplayEvidenceTag,
   );
   if (hasWitness) {
     return {
       status: selectedIdentityStatus.witnessPresent,
-      reason: `The Unit has ${selectedIdentityMbtEvidenceTag} evidence.`,
+      reason: `The Unit has ${selectedIdentityReplayEvidenceTag} evidence.`,
     };
   }
 
@@ -258,7 +258,7 @@ function selectedIdentityEvidenceStatus(unit, selectedIdentityMbtEvidenceTag) {
 
   return {
     status: selectedIdentityStatus.missingWitness,
-    reason: `The Unit has no ${selectedIdentityMbtEvidenceTag} evidence.`,
+    reason: `The Unit has no ${selectedIdentityReplayEvidenceTag} evidence.`,
   };
 }
 
@@ -274,7 +274,7 @@ function isSelectedIdentityDeferredNonApplicable(selectedIdentity) {
 }
 
 function selectedIdentityReplayCoverageMetric({
-  selectedIdentityMbtEvidenceTag,
+  selectedIdentityReplayEvidenceTag,
   supportedUnitClaims,
   unitEvidence,
 }) {
@@ -290,7 +290,7 @@ function selectedIdentityReplayCoverageMetric({
     .map((unit) => ({
       selectedIdentity: selectedIdentityEvidenceStatus(
         unit,
-        selectedIdentityMbtEvidenceTag,
+        selectedIdentityReplayEvidenceTag,
       ),
       unit,
     }))
@@ -346,7 +346,7 @@ function metrics({
   deterministicAdmissionProjectionEvidenceTag,
   rulesKernelProfileJoin,
   rulesKernelSupportedUnitJoin,
-  selectedIdentityMbtEvidenceTag,
+  selectedIdentityReplayEvidenceTag,
 }) {
   const inventoryIds = new Set(inventory.map((unit) => unit.unitId));
   const installedUnitClaims = unitClaims.filter((claim) =>
@@ -470,8 +470,8 @@ function metrics({
         supportedUnitClaims.length,
       ),
     },
-    selectedIdentityMbtCoverage: selectedIdentityReplayCoverageMetric({
-      selectedIdentityMbtEvidenceTag,
+    selectedIdentityReplayCoverage: selectedIdentityReplayCoverageMetric({
+      selectedIdentityReplayEvidenceTag,
       supportedUnitClaims,
       unitEvidence,
     }),
@@ -572,7 +572,7 @@ function selectedIdentityReplayGapSupport(claim) {
 }
 
 function buildSelectedIdentityReplayGapReport({
-  selectedIdentityMbtEvidenceTag,
+  selectedIdentityReplayEvidenceTag,
   units,
 }) {
   const rowsWithStatus = units
@@ -581,7 +581,7 @@ function buildSelectedIdentityReplayGapReport({
       unit,
       selectedIdentity: selectedIdentityEvidenceStatus(
         unit,
-        selectedIdentityMbtEvidenceTag,
+        selectedIdentityReplayEvidenceTag,
       ),
     }))
     .filter(
@@ -611,7 +611,7 @@ function buildSelectedIdentityReplayGapReport({
   );
   return stable({
     criteria: {
-      evidenceTag: selectedIdentityMbtEvidenceTag,
+      evidenceTag: selectedIdentityReplayEvidenceTag,
       claimTags: selectedIdentityReplayGapClaimTags,
     },
     deferredNonApplicableRows,
@@ -621,7 +621,7 @@ function buildSelectedIdentityReplayGapReport({
 }
 
 function buildUnitGroupDenominatorAudit({
-  selectedIdentityMbtEvidenceTag,
+  selectedIdentityReplayEvidenceTag,
   units,
 }) {
   const installedUnits = units.filter(
@@ -637,7 +637,7 @@ function buildUnitGroupDenominatorAudit({
         unit,
         selectedIdentity: selectedIdentityEvidenceStatus(
           unit,
-          selectedIdentityMbtEvidenceTag,
+          selectedIdentityReplayEvidenceTag,
         ),
       }))
       .filter(
@@ -689,7 +689,7 @@ function buildUnitGroupDenominatorAudit({
     criteria: {
       kinds: unitGroupDenominatorAuditKinds.map((entry) => entry.kind),
       profileClaimTags: selectedIdentityReplayGapClaimTags,
-      selectedIdentityEvidenceTag: selectedIdentityMbtEvidenceTag,
+      selectedIdentityEvidenceTag: selectedIdentityReplayEvidenceTag,
     },
     denominatorRules: {
       installedUnitDenominator:
@@ -724,7 +724,7 @@ function buildMatrix(
   {
     executableProfileKinds,
     deterministicAdmissionProjectionEvidenceTag,
-    selectedIdentityMbtEvidenceTag,
+    selectedIdentityReplayEvidenceTag,
   },
 ) {
   const profileMap = new Map(profiles.map((profile) => [profile.id, profile]));
@@ -816,15 +816,15 @@ function buildMatrix(
     deterministicAdmissionProjectionEvidenceTag,
     rulesKernelProfileJoin,
     rulesKernelSupportedUnitJoin,
-    selectedIdentityMbtEvidenceTag,
+    selectedIdentityReplayEvidenceTag,
   });
   assertMetricDefinitionCoverage(matrixMetrics);
   const selectedIdentityReplayGaps = buildSelectedIdentityReplayGapReport({
-    selectedIdentityMbtEvidenceTag,
+    selectedIdentityReplayEvidenceTag,
     units,
   });
   const unitGroupDenominatorAudit = buildUnitGroupDenominatorAudit({
-    selectedIdentityMbtEvidenceTag,
+    selectedIdentityReplayEvidenceTag,
     units,
   });
   return stable({
@@ -976,7 +976,7 @@ function renderReport(
   {
     executableProfileKinds,
     deterministicAdmissionProjectionEvidenceTag,
-    selectedIdentityMbtEvidenceTag,
+    selectedIdentityReplayEvidenceTag,
   },
 ) {
   const installedUnits = matrix.units.filter(
@@ -1020,9 +1020,9 @@ function renderReport(
       )
       .map((evidence) => ({ unit, evidence })),
   );
-  const selectedIdentityMbtEvidence = supported.flatMap((unit) =>
+  const selectedIdentityReplayEvidence = supported.flatMap((unit) =>
     (unit.evidence ?? [])
-      .filter((evidence) => evidence.tag === selectedIdentityMbtEvidenceTag)
+      .filter((evidence) => evidence.tag === selectedIdentityReplayEvidenceTag)
       .map((evidence) => ({ unit, evidence })),
   );
   const unsupportedPressure = Array.from(
@@ -1321,9 +1321,9 @@ function renderReport(
     "",
     "| Unit | Profiles | Task | Owner |",
     "| --- | --- | --- | --- |",
-    ...(selectedIdentityMbtEvidence.length === 0
+    ...(selectedIdentityReplayEvidence.length === 0
       ? ["| _none_ | _none_ | _none_ | _none_ |"]
-      : selectedIdentityMbtEvidence.map(
+      : selectedIdentityReplayEvidence.map(
           ({ unit, evidence }) =>
             `| \`${unit.unitId}\` | ${unit.claim.profileIds.map((id) => `\`${id}\``).join(", ")} | ${evidence.taskId} | \`${evidence.ownerPath}\` |`,
         )),
@@ -1332,7 +1332,7 @@ function renderReport(
     "",
     `This generated view lists ${selectedIdentityReplayGapClaimTags
       .map((tag) => `\`${tag}\``)
-      .join(" and ")} Units that have no \`${selectedIdentityMbtEvidenceTag}\` evidence row and no selected-identity non-applicable disposition at the whole-claim or deferred-mechanics boundary.`,
+      .join(" and ")} Units that have no \`${selectedIdentityReplayEvidenceTag}\` evidence row and no selected-identity non-applicable disposition at the whole-claim or deferred-mechanics boundary.`,
     "Deferred-portion non-applicable rows are not replay gaps; they are listed in the next section so they remain visible without being counted as missing replay witnesses.",
     "",
     "| Unit | Claim | Selected identity | Catalog | Collection | Kind | Profiles | Source |",

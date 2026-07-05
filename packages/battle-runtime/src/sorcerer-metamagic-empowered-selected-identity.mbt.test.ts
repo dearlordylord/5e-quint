@@ -1,5 +1,5 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3MMETA-19-EMPOWERED-SPELL-DAMAGE-REROLL-SLICE sorcerer_metamagic
-// UNIT-IDENTITY-MBT-REPLAY: L3MMETA-19-EMPOWERED-SPELL-DAMAGE-REROLL-SLICE sorcerer_metamagic doResolveEmpoweredSpellDamageReroll
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3MMETA-19-EMPOWERED-SPELL-DAMAGE-REROLL-SLICE sorcerer_metamagic
+// UNIT-IDENTITY-REPLAY: L3MMETA-19-EMPOWERED-SPELL-DAMAGE-REROLL-SLICE sorcerer_metamagic doResolveEmpoweredSpellDamageReroll
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.metamagic-damage-dice-reroll
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
 // RAW trace:
@@ -28,7 +28,7 @@ import {
   battleReducerStartRouteEvent,
   type BattleReducerRouteEvent,
 } from "./index.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
   empoweredSorcererMetamagicBattle,
   observeEmpoweredRayOfFrostRoute,
@@ -45,8 +45,8 @@ type EmpoweredMetamagicRouteReplayProjection = {
   readonly route: readonly BattleReducerRouteEvent[];
 };
 
-defineSelectedIdentityWitness({
-  describeLabel: "Sorcerer Metamagic Empowered Spell selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Sorcerer Metamagic Empowered Spell selected identity replay",
   taskId: "L3MMETA-19-EMPOWERED-SPELL-DAMAGE-REROLL-SLICE",
   specFile: mbtSpecPath(
     import.meta.dirname,

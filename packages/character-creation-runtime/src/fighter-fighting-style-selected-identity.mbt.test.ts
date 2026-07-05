@@ -1,5 +1,5 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1D2-FIGHTER-FIGHTING-STYLE fighter_fighting_style
-// UNIT-IDENTITY-MBT-REPLAY: L1D2-FIGHTER-FIGHTING-STYLE fighter_fighting_style doSelectDefenseFightingStyle doSelectArcheryFightingStyle doSelectGreatWeaponFightingStyle doSelectTwoWeaponFightingStyle doReplaceArcheryWithDefenseOnFighterLevelGain doReplaceDefenseWithArcheryOnFighterLevelGain doReplaceDefenseWithGreatWeaponFightingOnFighterLevelGain doReplaceDefenseWithTwoWeaponFightingOnFighterLevelGain
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1D2-FIGHTER-FIGHTING-STYLE fighter_fighting_style
+// UNIT-IDENTITY-REPLAY: L1D2-FIGHTER-FIGHTING-STYLE fighter_fighting_style doSelectDefenseFightingStyle doSelectArcheryFightingStyle doSelectGreatWeaponFightingStyle doSelectTwoWeaponFightingStyle doReplaceArcheryWithDefenseOnFighterLevelGain doReplaceDefenseWithArcheryOnFighterLevelGain doReplaceDefenseWithGreatWeaponFightingOnFighterLevelGain doReplaceDefenseWithTwoWeaponFightingOnFighterLevelGain
 // KERNEL-COVERAGE: parity-witness CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION
 // KERNEL-COVERAGE: parity-witness CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt character-creation.fighter-fighting-style-advancement-replacement
@@ -284,7 +284,7 @@ function nullaryVariantTag(raw: unknown, field: string): string {
   throw new Error(`Expected Quint variant field ${field}.`);
 }
 
-describe("Character Creation Fighter Fighting Style selected identity MBT", () => {
+describe("Character Creation Fighter Fighting Style selected identity replay", () => {
   it("replays selected Unit identities deterministically", async () => {
     for (const replay of selectedUnitIdentityReplays) {
       const replayedActions =

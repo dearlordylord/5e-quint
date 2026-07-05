@@ -719,7 +719,7 @@ Acceptance:
 Verification:
 
 - Shared verification.
-- Focused selected-identity MBT for touched drivers.
+- Focused selected-identity replay or QNT replay for touched drivers.
 - `pnpm check:authored-id-dispatch`
 
 Plan Impact:

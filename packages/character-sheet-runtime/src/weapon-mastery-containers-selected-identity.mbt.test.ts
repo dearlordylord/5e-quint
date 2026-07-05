@@ -1,7 +1,7 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1D2-WEAPON-MASTERY-CONTAINERS paladin_weapon_mastery ranger_weapon_mastery rogue_weapon_mastery
-// UNIT-IDENTITY-MBT-REPLAY: L1D2-WEAPON-MASTERY-CONTAINERS paladin_weapon_mastery doSelectPaladinWeaponMastery doReselectPaladinWeaponMasteryOnLongRest
-// UNIT-IDENTITY-MBT-REPLAY: L1D2-WEAPON-MASTERY-CONTAINERS ranger_weapon_mastery doSelectRangerWeaponMastery doReselectRangerWeaponMasteryOnLongRest
-// UNIT-IDENTITY-MBT-REPLAY: L1D2-WEAPON-MASTERY-CONTAINERS rogue_weapon_mastery doSelectRogueWeaponMastery doReselectRogueWeaponMasteryOnLongRest
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1D2-WEAPON-MASTERY-CONTAINERS paladin_weapon_mastery ranger_weapon_mastery rogue_weapon_mastery
+// UNIT-IDENTITY-REPLAY: L1D2-WEAPON-MASTERY-CONTAINERS paladin_weapon_mastery doSelectPaladinWeaponMastery doReselectPaladinWeaponMasteryOnLongRest
+// UNIT-IDENTITY-REPLAY: L1D2-WEAPON-MASTERY-CONTAINERS ranger_weapon_mastery doSelectRangerWeaponMastery doReselectRangerWeaponMasteryOnLongRest
+// UNIT-IDENTITY-REPLAY: L1D2-WEAPON-MASTERY-CONTAINERS rogue_weapon_mastery doSelectRogueWeaponMastery doReselectRogueWeaponMasteryOnLongRest
 // KERNEL-COVERAGE: parity-witness SHEET.WEAPON_MASTERY.RESELECTION
 import * as path from "node:path";
 
@@ -325,7 +325,7 @@ const semanticCoreReplayActions = [
   "doRejectTooManyChangesWeaponMasteryReselection",
 ] as const satisfies ReadonlyArray<WeaponMasteryContainerSelectedIdentityDriverAction>;
 
-describe("Character Sheet Weapon Mastery container selected identity MBT", () => {
+describe("Character Sheet Weapon Mastery container selected identity replay", () => {
   it("audits Surface-derived eligibility and selected-ref sheet storage", () => {
     for (const profile of WEAPON_MASTERY_CONTAINER_PROFILES) {
       const sheet = weaponMasterySheet({

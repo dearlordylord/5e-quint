@@ -1,8 +1,8 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.cunning-strike
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME rogue_cunning_strike
-// UNIT-IDENTITY-MBT-REPLAY: L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME rogue_cunning_strike doResolveCunningStrikeTripFailedSave doResolveCunningStrikePoisonFailedSave doResolveCunningStrikeWithdrawMove
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME rogue_cunning_strike
+// UNIT-IDENTITY-REPLAY: L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME rogue_cunning_strike doResolveCunningStrikeTripFailedSave doResolveCunningStrikePoisonFailedSave doResolveCunningStrikeWithdrawMove
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
   attackDamageDispositionFill,
   attackDamageHoleAfterHit,
@@ -56,8 +56,8 @@ type CunningStrikeOptionId = "poison" | "trip" | "withdraw";
 const cunningStrikeUnitId = "rogue_cunning_strike";
 const sneakAttackUnitId = "rogue_sneak_attack";
 
-defineSelectedIdentityWitness({
-  describeLabel: "Cunning Strike selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Cunning Strike selected identity replay",
   taskId: "L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME",
   specFile: mbtSpecPath(
     import.meta.dirname,

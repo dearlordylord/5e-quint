@@ -1,5 +1,5 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-ELDRITCH-BLAST eldritch_blast
-// UNIT-IDENTITY-MBT-REPLAY: L1H-ELDRITCH-BLAST eldritch_blast doDiscoverLevelFiveBeamTargetHoles doResolveTwoCreatureBeamsSameTarget doResolveTwoCreatureBeamsSplitTargets doResolveCreatureAndObjectBeamTargets
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-ELDRITCH-BLAST eldritch_blast
+// UNIT-IDENTITY-REPLAY: L1H-ELDRITCH-BLAST eldritch_blast doDiscoverLevelFiveBeamTargetHoles doResolveTwoCreatureBeamsSameTarget doResolveTwoCreatureBeamsSplitTargets doResolveCreatureAndObjectBeamTargets
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
 import { Either } from "effect";
 
@@ -42,7 +42,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 
 const eldritchBlastUnitId = "eldritch_blast";
@@ -121,8 +121,8 @@ if (unitCatalogResult.tag !== "ok") {
 }
 const unitLibrary = unitCatalogResult.catalog;
 
-defineSelectedIdentityWitness({
-  describeLabel: "Beam sequence selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Beam sequence selected identity replay",
   taskId: "L1H-ELDRITCH-BLAST",
   specFile: mbtSpecPath(
     import.meta.dirname,

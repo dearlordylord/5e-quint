@@ -1,5 +1,5 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B6-CLASS-FEATURE-IDENTITY-BATCH-3 warlock_magical_cunning
-// UNIT-IDENTITY-MBT-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 warlock_magical_cunning doMagicalCunningRecoversPactSlots doRejectMagicalCunningWithoutExpendedPactSlots
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay B6-CLASS-FEATURE-IDENTITY-BATCH-3 warlock_magical_cunning
+// UNIT-IDENTITY-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 warlock_magical_cunning doMagicalCunningRecoversPactSlots doRejectMagicalCunningWithoutExpendedPactSlots
 // KERNEL-COVERAGE: parity-witness SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS
 // KERNEL-COVERAGE: parity-witness SHEET.SPELL_SLOTS.TABLE_DERIVATION
 import * as path from "node:path";

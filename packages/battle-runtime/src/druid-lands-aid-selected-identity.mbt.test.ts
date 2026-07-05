@@ -1,7 +1,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.magic-action-area-save-damage-healing
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3PUTB-08-DRUID-LANDS-AID-RUNTIME druid_lands_aid
-// UNIT-IDENTITY-MBT-REPLAY: L3PUTB-08-DRUID-LANDS-AID-RUNTIME druid_lands_aid doResolveAreaSaveDamageHealing doResolveAreaSaveDamageHealingLevel10 doResolveAreaSaveDamageHealingLevel14 doRejectMissingResource doRejectMissingAreaMembership doRejectDuplicateSaveFill doRejectInvalidHealingTarget doRejectInvalidDamageRoll doRejectInvalidHealingRoll
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3PUTB-08-DRUID-LANDS-AID-RUNTIME druid_lands_aid
+// UNIT-IDENTITY-REPLAY: L3PUTB-08-DRUID-LANDS-AID-RUNTIME druid_lands_aid doResolveAreaSaveDamageHealing doResolveAreaSaveDamageHealingLevel10 doResolveAreaSaveDamageHealingLevel14 doRejectMissingResource doRejectMissingAreaMembership doRejectDuplicateSaveFill doRejectInvalidHealingTarget doRejectInvalidDamageRoll doRejectInvalidHealingRoll
 import { DieRollResult, movementFeet } from "@dnd/shared/types";
 import * as Either from "effect/Either";
 
@@ -18,7 +18,7 @@ import {
   characterSeed,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import {
   druidLandsAidUnitId,
@@ -80,8 +80,8 @@ const wildShapeUnit = unitLibrary.requireUnit(druidWildShapeUnitId);
 const secondTargetId = combatantId("lands-aid-selected-second-target");
 const healingTargetId = combatantId("lands-aid-selected-healing-target");
 
-defineSelectedIdentityWitness({
-  describeLabel: "Druid Land's Aid selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Druid Land's Aid selected identity replay",
   taskId: "L3PUTB-08-DRUID-LANDS-AID-RUNTIME",
   specFile: mbtSpecPath(
     import.meta.dirname,

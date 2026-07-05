@@ -1024,10 +1024,10 @@
   ],
   "selectedIdentityEvidenceAudit": {
     "criteria": {
-      "evidenceTag": "selected-identity-mbt",
-      "mcpScenarioJoin": "A selected-identity evidence row is joined to MCP when at least one required MCP flow inferred from its scoped supported profile has scenario evidence.",
-      "qntMbtJoin": "A selected-identity evidence row is joined to QNT/MBT when its ownerPath is also a rules-kernel parity witness for a scoped supported Unit profile or a profile-scoped focused MBT verification owner for battle-admission profiles with QNT owners.",
-      "rowPolicy": "Rows list scoped supported Units whose selected-identity evidence exists but has neither an exact QNT/MBT parity-witness owner join nor an MCP scenario-evidence flow join."
+      "evidenceTag": "selected-identity-replay",
+      "mcpScenarioJoin": "A selected-identity replay evidence row is joined to MCP when at least one required MCP flow inferred from its scoped supported profile has scenario evidence.",
+      "parityWitnessJoin": "A selected-identity replay evidence row is joined to parity evidence when the same Unit has a checked parity witness for a scoped supported Unit profile.",
+      "rowPolicy": "Rows list scoped supported Units whose selected-identity replay evidence exists but has neither a Unit-scoped parity witness join nor an MCP scenario-evidence flow join."
     },
     "scopes": [
       {

@@ -1,10 +1,10 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.creature-space-movement-permission
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME species_halfling_nimbleness
-// UNIT-IDENTITY-MBT-REPLAY: L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME species_halfling_nimbleness doMoveThroughLargerCreatureSpace doRejectOccupiedStop doRejectMissingProfile doRejectSameSizeTraversal
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME species_halfling_nimbleness
+// UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME species_halfling_nimbleness doMoveThroughLargerCreatureSpace doRejectOccupiedStop doRejectMissingProfile doRejectSameSizeTraversal
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
   battleId,
   battleTablePositionId,
@@ -51,8 +51,8 @@ const occupiedPositionId = battleTablePositionId(
   "halfling-nimbleness-occupied-space",
 );
 
-defineSelectedIdentityWitness({
-  describeLabel: "Halfling Nimbleness selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Halfling Nimbleness selected identity replay",
   taskId: "L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME",
   specFile: mbtSpecPath(
     import.meta.dirname,

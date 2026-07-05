@@ -1,5 +1,5 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1D2-ROGUE-EXPERTISE rogue_expertise
-// UNIT-IDENTITY-MBT-REPLAY: L1D2-ROGUE-EXPERTISE rogue_expertise doSelectLevelOneOwnedSkillExpertise doSelectLevelSixAdditionalOwnedSkillExpertise
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1D2-ROGUE-EXPERTISE rogue_expertise
+// UNIT-IDENTITY-REPLAY: L1D2-ROGUE-EXPERTISE rogue_expertise doSelectLevelOneOwnedSkillExpertise doSelectLevelSixAdditionalOwnedSkillExpertise
 // KERNEL-COVERAGE: parity-witness CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION
 import * as path from "node:path";
 
@@ -237,7 +237,7 @@ function nullaryVariantTag(raw: unknown, field: string): string {
   throw new Error(`Expected Quint variant field ${field}.`);
 }
 
-describe("Character Creation Rogue Expertise selected identity MBT", () => {
+describe("Character Creation Rogue Expertise selected identity replay", () => {
   it("replays selected Unit identities deterministically", async () => {
     for (const replay of selectedUnitIdentityReplays) {
       const replayedActions =

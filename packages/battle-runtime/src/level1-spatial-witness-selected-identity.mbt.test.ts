@@ -1,13 +1,13 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-spatial-witness dancing_lights faerie_fire feather_fall fog_cloud grease jump light produce_flame thunderwave
-// UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness dancing_lights doDancingLightsMovableDimLight
-// UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness faerie_fire doFaerieFireOutlineAdvantageInvisibleDimLight
-// UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness feather_fall doFeatherFallReactionMitigationLanding
-// UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness fog_cloud doFogCloudAreaIdentityObscurementStrongWindCleanup
-// UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness grease doGreaseCastGroundHazardSavingThrows doGreaseMovementAndTurnTriggers
-// UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness jump doJumpMovementReplacementLandingWitness
-// UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness light doLightObjectEmitterProjectionReplacementCleanup
-// UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness produce_flame doProduceFlameHeldLightProjectionHurlCleanup
-// UNIT-IDENTITY-MBT-REPLAY: level1-spatial-witness thunderwave doThunderwaveSavePushObjectsBoom
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay level1-spatial-witness dancing_lights faerie_fire feather_fall fog_cloud grease jump light produce_flame thunderwave
+// UNIT-IDENTITY-REPLAY: level1-spatial-witness dancing_lights doDancingLightsMovableDimLight
+// UNIT-IDENTITY-REPLAY: level1-spatial-witness faerie_fire doFaerieFireOutlineAdvantageInvisibleDimLight
+// UNIT-IDENTITY-REPLAY: level1-spatial-witness feather_fall doFeatherFallReactionMitigationLanding
+// UNIT-IDENTITY-REPLAY: level1-spatial-witness fog_cloud doFogCloudAreaIdentityObscurementStrongWindCleanup
+// UNIT-IDENTITY-REPLAY: level1-spatial-witness grease doGreaseCastGroundHazardSavingThrows doGreaseMovementAndTurnTriggers
+// UNIT-IDENTITY-REPLAY: level1-spatial-witness jump doJumpMovementReplacementLandingWitness
+// UNIT-IDENTITY-REPLAY: level1-spatial-witness light doLightObjectEmitterProjectionReplacementCleanup
+// UNIT-IDENTITY-REPLAY: level1-spatial-witness produce_flame doProduceFlameHeldLightProjectionHurlCleanup
+// UNIT-IDENTITY-REPLAY: level1-spatial-witness thunderwave doThunderwaveSavePushObjectsBoom
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE
 import { Either } from "effect";
 
@@ -90,7 +90,7 @@ import {
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 
 type Level1SpatialWitnessSelectedIdentityProjection = {
   readonly lightEmitterCount: number;
@@ -817,8 +817,8 @@ const LEVEL1_SPATIAL_WITNESS_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
     | "produceFlameHeldLightProjectionHurlCleanup"
     | "thunderwaveSavePushObjectsBoom">>;
 
-defineSelectedIdentityWitness({
-  describeLabel: "Level 1 spatial witness selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Level 1 spatial witness selected identity replay",
   taskId: "level1-spatial-witness",
   specFile: mbtSpecPath(
     import.meta.dirname,

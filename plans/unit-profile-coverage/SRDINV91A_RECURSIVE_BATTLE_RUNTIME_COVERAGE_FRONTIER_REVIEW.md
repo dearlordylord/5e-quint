@@ -13,7 +13,7 @@ Generated Unit matrix metrics from `plans/unit-profile-coverage/unit-matrix.json
 - Supported executable Unit coverage: 85/117 (72.6%).
 - Deterministic admission/projection coverage: 78/85 (91.8%).
 - QNT proof coverage: 61/62 (98.4%).
-- Selected identity MBT coverage: 10/85 (11.8%).
+- Selected identity replay coverage: 10/85 (11.8%).
 - QNT profile modeling, runtime mapping, and runtime parity coverage are each
   100% for their current denominators.
 
@@ -39,10 +39,10 @@ The QNT proof metric has one executable profile gap:
 
 - `spell.invocation-condition-save`.
 
-The selected identity MBT metric remains intentionally sparse. Existing selected
-identity MBT evidence covers 10 supported identities, all in older rule-core
-feature evidence. The remaining 75 supported-profile identities should be
-handled by representative selected batches, not broad exploratory MBT.
+The selected identity replay metric remains intentionally sparse. Existing
+selected identity replay evidence covers 10 supported identities, all in older
+rule-core feature evidence. The remaining 75 supported-profile identities should
+be handled by representative selected batches, not broad exploratory MBT.
 
 ## Source Review
 
@@ -93,9 +93,9 @@ the broader battle-runtime evidence frontier open.
 
 ## reviewer loop Convergence
 
-- Round 1: rejected choosing selected identity MBT as the first follow-up
+- Round 1: rejected choosing selected identity replay as the first follow-up
   because deterministic admission/projection and QNT proof have much smaller,
   exact gaps that should close before MBT evidence selection.
-- Round 2: kept selected identity MBT as a concrete follow-up task rather than a
+- Round 2: kept selected identity replay as a concrete follow-up task rather than a
   vague backlog item, but blocked it on SRDINV91B and SRDINV91C so the evidence
   batch is selected from a clean deterministic/proof baseline.

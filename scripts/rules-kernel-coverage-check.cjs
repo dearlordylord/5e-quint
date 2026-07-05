@@ -903,11 +903,8 @@ function declaresParityRunTarget(rootPath, witness, witnessText, helperTexts) {
     ),
   );
   if (!helperRunsDeclaredStep) return false;
-  return witnessNamesSpecPath(
-    rootPath,
-    witness.ownerPath,
-    witnessText,
-    witness.qntSpecPath,
+  return [witnessText, ...helperTexts].some((text) =>
+    witnessNamesSpecPath(rootPath, witness.ownerPath, text, witness.qntSpecPath),
   );
 }
 

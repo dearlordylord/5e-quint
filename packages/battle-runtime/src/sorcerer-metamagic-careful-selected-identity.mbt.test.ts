@@ -1,5 +1,5 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3META-04-SORCERER-METAMAGIC-CAREFUL-SAVE-PROFILES sorcerer_metamagic
-// UNIT-IDENTITY-MBT-REPLAY: L3META-04-SORCERER-METAMAGIC-CAREFUL-SAVE-PROFILES sorcerer_metamagic doResolveCarefulSaveGatedDamage doResolveCarefulSaveGatedNoEffect
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3META-04-SORCERER-METAMAGIC-CAREFUL-SAVE-PROFILES sorcerer_metamagic
+// UNIT-IDENTITY-REPLAY: L3META-04-SORCERER-METAMAGIC-CAREFUL-SAVE-PROFILES sorcerer_metamagic doResolveCarefulSaveGatedDamage doResolveCarefulSaveGatedNoEffect
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.metamagic-careful-save-protection
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION
 // RAW trace:
@@ -20,7 +20,7 @@
 import { expect, it } from "vitest";
 
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
   observeCarefulCommandNoEffectRoute,
   carefulSorcererMetamagicBattle,
@@ -30,8 +30,8 @@ import {
   resolveCarefulCommand,
 } from "./sorcerer-metamagic-selected-identity-support.ts";
 
-defineSelectedIdentityWitness({
-  describeLabel: "Sorcerer Metamagic Careful Spell selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Sorcerer Metamagic Careful Spell selected identity replay",
   taskId: "L3META-04-SORCERER-METAMAGIC-CAREFUL-SAVE-PROFILES",
   specFile: mbtSpecPath(
     import.meta.dirname,

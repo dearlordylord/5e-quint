@@ -1,6 +1,6 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.bonus-action-dash-temporary-hit-points
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-ORC-ADRENALINE-RUSH orc_adrenaline_rush
-// UNIT-IDENTITY-MBT-REPLAY: L1H-ORC-ADRENALINE-RUSH orc_adrenaline_rush doAdrenalineRushDash doRejectSecondDash
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-ORC-ADRENALINE-RUSH orc_adrenaline_rush
+// UNIT-IDENTITY-REPLAY: L1H-ORC-ADRENALINE-RUSH orc_adrenaline_rush doAdrenalineRushDash doRejectSecondDash
 import { describe, expect, it } from "vitest";
 
 import {

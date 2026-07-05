@@ -1,6 +1,6 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.druid-wild-shape-known-form
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3MWILD-10-WILD-SHAPE-SELECTED-IDENTITY-AUDIT druid_wild_shape
-// UNIT-IDENTITY-MBT-REPLAY: L3MWILD-10-WILD-SHAPE-SELECTED-IDENTITY-AUDIT druid_wild_shape doAssumeRidingHorse doReuseAsCat doDismissForm doIncapacitatedReversion doDeathReversion
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3MWILD-10-WILD-SHAPE-SELECTED-IDENTITY-AUDIT druid_wild_shape
+// UNIT-IDENTITY-REPLAY: L3MWILD-10-WILD-SHAPE-SELECTED-IDENTITY-AUDIT druid_wild_shape doAssumeRidingHorse doReuseAsCat doDismissForm doIncapacitatedReversion doDeathReversion
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 // RAW trace:
 // - .references/srd-5.2.1/Classes/Druid.md#Level 2: Wild Shape:
@@ -71,7 +71,7 @@ import {
   unitLibrary,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 
 const ACTIVE_FORMS = ["trueForm", "ridingHorse", "cat"] as const;
 type ActiveForm = (typeof ACTIVE_FORMS)[number];
@@ -481,8 +481,8 @@ function compareDruidWildShapeFormLifecycleRouteStates(
   return true;
 }
 
-defineSelectedIdentityWitness({
-  describeLabel: "Druid Wild Shape selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Druid Wild Shape selected identity replay",
   taskId: selectedIdentityTaskId,
   specFile: mbtSpecPath(
     import.meta.dirname,
