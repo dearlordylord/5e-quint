@@ -397,7 +397,7 @@
     {
       "number": 66,
       "id": "CRPI-READY-025",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-zero-hit-point-mid-resolution"
     },
     {
@@ -4417,7 +4417,7 @@ Plan Impact:
 
 ### Task 66 - CRPI-READY-025
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
