@@ -1,5 +1,101 @@
 # Validation Report
 
+## CRP06-SRO-01
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Driver: `packages/character-battle-runtime/character-battle-settlement.mbt.qnt`
+- Route connector: `packages/character-battle-runtime/character-battle-settlement.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+- Acceptance status: `accepted`
+
+Allowed inputs used:
+
+- `packages/character-battle-runtime/character-battle-settlement.mbt.qnt`
+- `packages/character-battle-runtime/character-battle-settlement.route.mbt.qnt`
+- `packages/character-battle-runtime/character-battle-reducer-route.qnt`
+- `packages/character-battle-runtime/src/character-battle-settlement.mbt.test.ts`
+- `packages/character-battle-runtime/src/reducer-route-connectors.mbt.test.ts`
+- `packages/character-battle-runtime/src/character-battle-route.ts`
+- `packages/character-battle-runtime/README.md`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Playing-the-Game.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`
+- `.references/srd-5.2.1/Classes/Warlock.md`
+- `.references/srd-5.2.1/Classes/Sorcerer.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+Character-battle runtime now exposes production route replay for battle-to-sheet
+settlement through `characterBattleSettlementRouteStep`, so the copied
+settlement connector is compared against package route vocabulary instead of
+test-local duplicate route builders. The semantic settlement replay observes
+accepted Hit Points, Temporary Hit Points, Poisoned, Prone, ordinary Spell Slot
+expenditure, spent Hit Dice preservation, rest-feature-use preservation, pure
+Pact Slot expenditure, feature-resource expenditure, accepted zero-HP Stable
+lifecycle, and the named settlement rejections. The route replay records
+`RouteSettleBattleToCharacterSheet`,
+`RouteRecordCharacterBattleHandoffFacts`, source-exact Spell Slot and Pact Slot
+deltas, feature-resource delta, zero-HP Stable lifecycle, settlement-conflict,
+identity-match, and hit-point-projection route families.
+
+Mixed ordinary Spell Slot plus Pact Slot settlement and source-ambiguous
+ordinary-vs-created Spell Slot settlement reject with settlement-conflict
+evidence. Settlement writes fresh sheet play state only after identity,
+maximum-HP, active Wild Shape, active battle-state, and in-progress Stable
+recovery gates pass.
+
+Generated branch and route coverage:
+
+| Obligation | Evidence | Harness | Status |
+| --- | --- | --- | --- |
+| `doSettleHitPointsConditionsSlotsAndPreservedSheetState` | `tasks/target-replay-evidence/CRP06-SRO-01.json#driver:packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doSettleHitPointsConditionsSlotsAndPreservedSheetState#trace:semantic-qState action=doSettleHitPointsConditionsSlotsAndPreservedSheetState` and `#trace:settlement-qRoute action=doSettleHitPointsConditionsSlotsAndPreservedSheetState` | `packages/character-battle-runtime/src/character-battle-settlement.mbt.test.ts`, `packages/character-battle-runtime/src/reducer-route-connectors.mbt.test.ts` | `covered` |
+| `doSettlePurePactMagicSlotExpenditure` | `tasks/target-replay-evidence/CRP06-SRO-01.json#driver:packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doSettlePurePactMagicSlotExpenditure#trace:semantic-qState action=doSettlePurePactMagicSlotExpenditure` and `#trace:settlement-qRoute action=doSettlePurePactMagicSlotExpenditure` | same | `covered` |
+| `doRejectMixedSpellAndPactSlotSettlement` | `tasks/target-replay-evidence/CRP06-SRO-01.json#driver:packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doRejectMixedSpellAndPactSlotSettlement#trace:semantic-qState action=doRejectMixedSpellAndPactSlotSettlement` and `#trace:settlement-qRoute action=doRejectMixedSpellAndPactSlotSettlement` | same | `covered` |
+| `doSettleFeatureResourceExpenditure` | `tasks/target-replay-evidence/CRP06-SRO-01.json#driver:packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doSettleFeatureResourceExpenditure#trace:semantic-qState action=doSettleFeatureResourceExpenditure` and `#trace:settlement-qRoute action=doSettleFeatureResourceExpenditure` | same | `covered` |
+| `doRejectAmbiguousCreatedSpellSlotSource` | `tasks/target-replay-evidence/CRP06-SRO-01.json#driver:packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doRejectAmbiguousCreatedSpellSlotSource#trace:semantic-qState action=doRejectAmbiguousCreatedSpellSlotSource` and `#trace:settlement-qRoute action=doRejectAmbiguousCreatedSpellSlotSource` | same | `covered` |
+| `doRejectMismatchedCharacterIdentity` | `tasks/target-replay-evidence/CRP06-SRO-01.json#driver:packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doRejectMismatchedCharacterIdentity#trace:semantic-qState action=doRejectMismatchedCharacterIdentity` and `#trace:settlement-qRoute action=doRejectMismatchedCharacterIdentity` | same | `covered` |
+| `doRejectMaximumHpDrift` | `tasks/target-replay-evidence/CRP06-SRO-01.json#driver:packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doRejectMaximumHpDrift#trace:semantic-qState action=doRejectMaximumHpDrift` and `#trace:settlement-qRoute action=doRejectMaximumHpDrift` | same | `covered` |
+| `doRejectActiveWildShapeHandoff` | `tasks/target-replay-evidence/CRP06-SRO-01.json#driver:packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doRejectActiveWildShapeHandoff#trace:semantic-qState action=doRejectActiveWildShapeHandoff` and `#trace:settlement-qRoute action=doRejectActiveWildShapeHandoff` | same | `covered` |
+| `doRejectActiveBattleStateHandoff` | `tasks/target-replay-evidence/CRP06-SRO-01.json#driver:packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doRejectActiveBattleStateHandoff#trace:semantic-qState action=doRejectActiveBattleStateHandoff` and `#trace:settlement-qRoute action=doRejectActiveBattleStateHandoff` | same | `covered` |
+| `doRejectStableRecoveryProgressHandoff` | `tasks/target-replay-evidence/CRP06-SRO-01.json#driver:packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doRejectStableRecoveryProgressHandoff#trace:semantic-qState action=doRejectStableRecoveryProgressHandoff` and `#trace:settlement-qRoute action=doRejectStableRecoveryProgressHandoff` | same | `covered` |
+| `doSettleZeroHpStableLifecycle` | `tasks/target-replay-evidence/CRP06-SRO-01.json#driver:packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doSettleZeroHpStableLifecycle#trace:semantic-qState action=doSettleZeroHpStableLifecycle` and `#trace:settlement-qRoute action=doSettleZeroHpStableLifecycle` | same | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRP06-SRO-01.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+
+Harness artifacts:
+
+- Immutable history: `tasks/history/CRP06-SRO-01/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 81.
+
+Verification results:
+
+- Base check passed: `git log --oneline -1 ralph/cleanroom-character-battle-lane-20260705/integration` and `git log --oneline -1 HEAD` both resolved to `e1def5288 Accept Ralph task 80 sheet-derived battle acts`; `git merge-base --is-ancestor e1def5288e7eddc8d88adcec562bdfe873e6dce9 HEAD` passed.
+- RAW/ubiquitous-language review passed against Hit Points, Temporary Hit Points, Stabilizing a Character, Stable, Spell Slots, Warlock Pact Magic, Sorcerer Font of Magic, `UBIQUITOUS_LANGUAGE.md`, and `packages/character-battle-runtime/README.md#Battle handoff settlement`.
+- Focused MBT replay passed under the timed protocol with no pre-existing vitest or quint evaluator process: `flock /tmp/dnd-mbt-qnt.lock env MBT_TRACES=1 pnpm --filter @dnd/character-battle-runtime exec vitest run src/character-battle-settlement.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "settlement"` passed with 3 tests and 5 skipped after the route-action cleanup; final timed run `TOTAL: 26s`.
+- `pnpm --filter @dnd/character-battle-runtime typecheck` passed.
+- `node scripts/cleanroom-branch-coverage-check.cjs` passed with 738 obligations and 24 sampled inputs.
+- `node -e "JSON.parse(...)"` for `tasks/target-replay-evidence/CRP06-SRO-01.json` and `tasks/RUN_LEDGER.json` passed.
+- `git diff --check` passed.
+- `flock /tmp/dnd-mbt-qnt.lock pnpm quality` was diagnostic: it passed the Task 81-owned gates through cleanroom coverage and later lint/circular checks, then failed at repo-wide `turbo typecheck` on the known off-surface baseline error `packages/character-creation-runtime/src/index.test.ts(10401,5): Type 'string' is not assignable to type '"species_gnome_gnomish_lineage"'`.
+- Reviewer-loop convergence passed: round 1 moved settlement route action ordering to the exported production `CHARACTER_BATTLE_SETTLEMENT_ROUTE_ACTIONS` list so the connector test no longer owns a second order list; round 2 found no remaining reasonable RAW, ubiquitous-language/domain, architecture/connascence, or code-review issues for Task 81.
+
+Plan Impact:
+
+- Status: `none`
+- Affected task: Task 81 / `CRP06-SRO-01` is unblocked by accepted semantic and route replay evidence.
+- Required plan edits: none.
+
 ## CRPI-READY-032
 
 - Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`

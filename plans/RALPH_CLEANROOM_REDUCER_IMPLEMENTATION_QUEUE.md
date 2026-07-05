@@ -487,7 +487,7 @@
     {
       "number": 81,
       "id": "CRP06-SRO-01",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Battle-to-sheet settlement and source-exact resource deltas"
     },
     {
@@ -5263,7 +5263,7 @@ Plan Impact:
 
 ### Task 81 - CRP06-SRO-01
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

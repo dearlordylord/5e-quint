@@ -3891,6 +3891,104 @@
         ],
         "requiredPlanEdits": "none"
       }
+    },
+    {
+      "taskId": "CRP06-SRO-01",
+      "assignmentId": "settlement-rest-owner",
+      "laneId": "handoff",
+      "selectedDrivers": [
+        "packages/character-battle-runtime/character-battle-settlement.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "7239e5de28db036ab9bf2d0a8e29699581135d3dd89c1d457812fb3e76419fb8"
+        },
+        "history": {
+          "path": "tasks/history/CRP06-SRO-01/README.md",
+          "sha256": "e70b3ebb6b742ffd11f9806cd797d7b4aba9ccd1e3653d1329225b1a75810a61"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRP06-SRO-01.json",
+          "sha256": "ce1625c87051dae9793bc1fd471b680f56e454cba27fe7d7ee55700a521efd03",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRP06-SRO-01.json#driver:packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doSettleHitPointsConditionsSlotsAndPreservedSheetState#trace:semantic-qState action=doSettleHitPointsConditionsSlotsAndPreservedSheetState",
+            "tasks/target-replay-evidence/CRP06-SRO-01.json#driver:packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doSettleHitPointsConditionsSlotsAndPreservedSheetState#trace:settlement-qRoute action=doSettleHitPointsConditionsSlotsAndPreservedSheetState",
+            "tasks/target-replay-evidence/CRP06-SRO-01.json#driver:packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doSettlePurePactMagicSlotExpenditure#trace:semantic-qState action=doSettlePurePactMagicSlotExpenditure",
+            "tasks/target-replay-evidence/CRP06-SRO-01.json#driver:packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doSettlePurePactMagicSlotExpenditure#trace:settlement-qRoute action=doSettlePurePactMagicSlotExpenditure",
+            "tasks/target-replay-evidence/CRP06-SRO-01.json#driver:packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doRejectMixedSpellAndPactSlotSettlement#trace:semantic-qState action=doRejectMixedSpellAndPactSlotSettlement",
+            "tasks/target-replay-evidence/CRP06-SRO-01.json#driver:packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doRejectMixedSpellAndPactSlotSettlement#trace:settlement-qRoute action=doRejectMixedSpellAndPactSlotSettlement",
+            "tasks/target-replay-evidence/CRP06-SRO-01.json#driver:packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doSettleFeatureResourceExpenditure#trace:semantic-qState action=doSettleFeatureResourceExpenditure",
+            "tasks/target-replay-evidence/CRP06-SRO-01.json#driver:packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doSettleFeatureResourceExpenditure#trace:settlement-qRoute action=doSettleFeatureResourceExpenditure",
+            "tasks/target-replay-evidence/CRP06-SRO-01.json#driver:packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doRejectAmbiguousCreatedSpellSlotSource#trace:semantic-qState action=doRejectAmbiguousCreatedSpellSlotSource",
+            "tasks/target-replay-evidence/CRP06-SRO-01.json#driver:packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doRejectAmbiguousCreatedSpellSlotSource#trace:settlement-qRoute action=doRejectAmbiguousCreatedSpellSlotSource",
+            "tasks/target-replay-evidence/CRP06-SRO-01.json#driver:packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doRejectMismatchedCharacterIdentity#trace:semantic-qState action=doRejectMismatchedCharacterIdentity",
+            "tasks/target-replay-evidence/CRP06-SRO-01.json#driver:packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doRejectMismatchedCharacterIdentity#trace:settlement-qRoute action=doRejectMismatchedCharacterIdentity",
+            "tasks/target-replay-evidence/CRP06-SRO-01.json#driver:packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doRejectMaximumHpDrift#trace:semantic-qState action=doRejectMaximumHpDrift",
+            "tasks/target-replay-evidence/CRP06-SRO-01.json#driver:packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doRejectMaximumHpDrift#trace:settlement-qRoute action=doRejectMaximumHpDrift",
+            "tasks/target-replay-evidence/CRP06-SRO-01.json#driver:packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doRejectActiveWildShapeHandoff#trace:semantic-qState action=doRejectActiveWildShapeHandoff",
+            "tasks/target-replay-evidence/CRP06-SRO-01.json#driver:packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doRejectActiveWildShapeHandoff#trace:settlement-qRoute action=doRejectActiveWildShapeHandoff",
+            "tasks/target-replay-evidence/CRP06-SRO-01.json#driver:packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doRejectActiveBattleStateHandoff#trace:semantic-qState action=doRejectActiveBattleStateHandoff",
+            "tasks/target-replay-evidence/CRP06-SRO-01.json#driver:packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doRejectActiveBattleStateHandoff#trace:settlement-qRoute action=doRejectActiveBattleStateHandoff",
+            "tasks/target-replay-evidence/CRP06-SRO-01.json#driver:packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doRejectStableRecoveryProgressHandoff#trace:semantic-qState action=doRejectStableRecoveryProgressHandoff",
+            "tasks/target-replay-evidence/CRP06-SRO-01.json#driver:packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doRejectStableRecoveryProgressHandoff#trace:settlement-qRoute action=doRejectStableRecoveryProgressHandoff",
+            "tasks/target-replay-evidence/CRP06-SRO-01.json#driver:packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doSettleZeroHpStableLifecycle#trace:semantic-qState action=doSettleZeroHpStableLifecycle",
+            "tasks/target-replay-evidence/CRP06-SRO-01.json#driver:packages/character-battle-runtime/character-battle-settlement.mbt.qnt#step:doSettleZeroHpStableLifecycle#trace:settlement-qRoute action=doSettleZeroHpStableLifecycle"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-character-battle-lane-20260705/integration && git log --oneline -1 HEAD && git merge-base --is-ancestor e1def5288e7eddc8d88adcec562bdfe873e6dce9 HEAD",
+          "status": "pass",
+          "detail": "Declared Ralph base ref and HEAD both resolved to e1def5288 Accept Ralph task 80 sheet-derived battle acts; Base SHA e1def5288e7eddc8d88adcec562bdfe873e6dce9 is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language review against .references/srd-5.2.1/Playing-the-Game.md, .references/srd-5.2.1/Rules-Glossary.md, .references/srd-5.2.1/Spells/Gaining-and-Casting.md, .references/srd-5.2.1/Classes/Warlock.md, .references/srd-5.2.1/Classes/Sorcerer.md, UBIQUITOUS_LANGUAGE.md, and packages/character-battle-runtime/README.md",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm --filter @dnd/character-battle-runtime typecheck",
+          "status": "pass"
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Both process checks exited 1 before the focused timed MBT replay; no evaluator cleanup was needed."
+        },
+        {
+          "command": "START=$(date +%s); flock /tmp/dnd-mbt-qnt.lock env MBT_TRACES=1 pnpm --filter @dnd/character-battle-runtime exec vitest run src/character-battle-settlement.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"settlement\" 2>&1; STATUS=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$STATUS\"",
+          "status": "pass",
+          "detail": "Focused semantic qState and route qRoute settlement replay passed after route-action cleanup with 3 tests and 5 skipped; TOTAL: 26s."
+        },
+        {
+          "command": "node scripts/cleanroom-branch-coverage-check.cjs",
+          "status": "pass",
+          "detail": "738 obligations and 24 sampled inputs passed after adding CRP06-SRO-01 evidence."
+        },
+        {
+          "command": "node -e \"JSON.parse(require('fs').readFileSync('tasks/target-replay-evidence/CRP06-SRO-01.json','utf8')); JSON.parse(require('fs').readFileSync('tasks/RUN_LEDGER.json','utf8')); console.log('task artifacts json ok')\"",
+          "status": "pass"
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "flock /tmp/dnd-mbt-qnt.lock pnpm quality",
+          "status": "fail",
+          "detail": "Diagnostic broad verification: passed Task 81-owned gates through cleanroom branch coverage and later lint/circular checks; failed at repo-wide turbo typecheck on known off-surface baseline error packages/character-creation-runtime/src/index.test.ts(10401,5): Type 'string' is not assignable to type '\"species_gnome_gnomish_lineage\"'."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 moved settlement route action ordering to exported production CHARACTER_BATTLE_SETTLEMENT_ROUTE_ACTIONS so the connector test no longer owns a second order list; round 2 found no remaining reasonable Task 81 findings."
+        }
+      ]
     }
   ]
 }

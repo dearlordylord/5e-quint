@@ -127,6 +127,7 @@ export {
 export {
   CHARACTER_BATTLE_ENCOUNTER_COMPOSITION_ROUTE_ACTIONS,
   CHARACTER_BATTLE_INIT_PROJECTION_ROUTE_ACTIONS,
+  CHARACTER_BATTLE_SETTLEMENT_ROUTE_ACTIONS,
   CHARACTER_SESSION_SHEET_DERIVED_BATTLE_ACTS_ROUTE_ACTIONS,
   CHARACTER_BATTLE_ROUTE_COMPOSITION_FACTS,
   CHARACTER_BATTLE_ROUTE_FILLS,
@@ -134,6 +135,7 @@ export {
   CHARACTER_BATTLE_ROUTE_HOLES,
   CHARACTER_BATTLE_ROUTE_OWNERS,
   CHARACTER_BATTLE_ROUTE_SUBJECTS,
+  characterBattleSettlementRouteStep,
   characterBattleEncounterCompositionRoute,
   characterBattleEncounterCompositionRouteStep,
   characterBattleInitProjectionRouteAfter,
@@ -143,6 +145,7 @@ export {
   enterBattleRuntimeRoute,
   initialCharacterBattleEncounterCompositionRoute,
   initialCharacterBattleInitProjectionRoute,
+  initialCharacterBattleSettlementRoute,
   initialCharacterSessionSheetDerivedBattleActsRoute,
   projectCharacterSheetToBattleRoute,
   recordCharacterBattleHandoffFactsRoute,
@@ -157,6 +160,7 @@ export {
   type CharacterBattleRouteHole,
   type CharacterBattleRouteOwner,
   type CharacterBattleRouteSubject,
+  type CharacterBattleSettlementRouteAction,
   type CharacterSessionSheetDerivedBattleActsRouteAction,
 } from "./character-battle-route.ts";
 
