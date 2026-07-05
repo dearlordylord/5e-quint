@@ -2473,6 +2473,115 @@
           "detail": "Round 1 verified RAW traceability, component-first architecture, adapter quarantine, no duplicate durable state, no authored-identity dispatch, and no remaining reasonable Task 69 findings."
         }
       ]
+    },
+    {
+      "taskId": "CRP05-SBE-01",
+      "assignmentId": "character-battle-session-entry",
+      "laneId": "handoff",
+      "selectedDrivers": [
+        "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "c84d674259969fed3da21201b9372471eeffa8faee4faade60c997427791cb26"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "29c025a0579fc96b7b4b4539f3411802dd7b11ef0ae38e3823dc0f72dd6f631f"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "a28225417eebe1d80eb15b3e6b15db010e5ed4d71d158082d71c03dd3a114472"
+        },
+        "history": {
+          "path": "tasks/history/CRP05-SBE-01/README.md",
+          "sha256": "d6d8c4311dbeb32148f36e920b1d1bf29ae2db95842b79f71d06457777920892"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRP05-SBE-01.json",
+          "sha256": "aeac97806ee13dc3a5f1812e4c7561332ff060e7df82074e55f37be73d1c84b8",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRP05-SBE-01.json#driver:packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doProjectSheetHitPointsArmorClassConditionsAndProfiles#trace:semantic-qState action=doProjectSheetHitPointsArmorClassConditionsAndProfiles",
+            "tasks/target-replay-evidence/CRP05-SBE-01.json#driver:packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doProjectSheetHitPointsArmorClassConditionsAndProfiles#trace:init-qRoute action=doProjectSheetHitPointsArmorClassConditionsAndProfiles",
+            "tasks/target-replay-evidence/CRP05-SBE-01.json#driver:packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doProjectSheetHitPointsArmorClassConditionsAndProfiles#trace:encounter-qRoute action=doProjectSheetHitPointsArmorClassConditionsAndProfiles",
+            "tasks/target-replay-evidence/CRP05-SBE-01.json#driver:packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doProjectPurePactMagicSlot#trace:semantic-qState action=doProjectPurePactMagicSlot",
+            "tasks/target-replay-evidence/CRP05-SBE-01.json#driver:packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doProjectPurePactMagicSlot#trace:init-qRoute action=doProjectPurePactMagicSlot",
+            "tasks/target-replay-evidence/CRP05-SBE-01.json#driver:packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doProjectPurePactMagicSlot#trace:encounter-qRoute action=doProjectPurePactMagicSlot",
+            "tasks/target-replay-evidence/CRP05-SBE-01.json#driver:packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doRejectMixedSpellAndPactSlotInit#trace:semantic-qState action=doRejectMixedSpellAndPactSlotInit",
+            "tasks/target-replay-evidence/CRP05-SBE-01.json#driver:packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doRejectMixedSpellAndPactSlotInit#trace:init-qRoute action=doRejectMixedSpellAndPactSlotInit",
+            "tasks/target-replay-evidence/CRP05-SBE-01.json#driver:packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doRejectMixedSpellAndPactSlotInit#trace:encounter-qRoute action=doRejectMixedSpellAndPactSlotInit",
+            "tasks/target-replay-evidence/CRP05-SBE-01.json#driver:packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doRejectBuildMaximumAboveBuildMaximum#trace:semantic-qState action=doRejectBuildMaximumAboveBuildMaximum",
+            "tasks/target-replay-evidence/CRP05-SBE-01.json#driver:packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doRejectBuildMaximumAboveBuildMaximum#trace:init-qRoute action=doRejectBuildMaximumAboveBuildMaximum",
+            "tasks/target-replay-evidence/CRP05-SBE-01.json#driver:packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doRejectBuildMaximumAboveBuildMaximum#trace:encounter-qRoute action=doRejectBuildMaximumAboveBuildMaximum",
+            "tasks/target-replay-evidence/CRP05-SBE-01.json#driver:packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doRejectStableRecoveryProgressDuringInit#trace:semantic-qState action=doRejectStableRecoveryProgressDuringInit",
+            "tasks/target-replay-evidence/CRP05-SBE-01.json#driver:packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doRejectStableRecoveryProgressDuringInit#trace:init-qRoute action=doRejectStableRecoveryProgressDuringInit",
+            "tasks/target-replay-evidence/CRP05-SBE-01.json#driver:packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doRejectStableRecoveryProgressDuringInit#trace:encounter-qRoute action=doRejectStableRecoveryProgressDuringInit"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-character-battle-lane-20260705/integration && git log --oneline -1 HEAD && git merge-base --is-ancestor 84e17424ba5882f076783f4bd0780b34d2a0a58e HEAD",
+          "status": "pass",
+          "detail": "Declared Ralph base ref and HEAD both resolved to 84e17424b Merge Ralph route replay tasks 61-69; Base SHA 84e17424ba5882f076783f4bd0780b34d2a0a58e is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language review against .references/srd-5.2.1/Playing-the-Game.md, .references/srd-5.2.1/Rules-Glossary.md, .references/srd-5.2.1/Spells/Gaining-and-Casting.md, .references/srd-5.2.1/Classes/Warlock.md, UBIQUITOUS_LANGUAGE.md, and plans/cleanroom-guidance/reducer-spine.md",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm --filter @dnd/character-battle-runtime typecheck",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm --filter @dnd/character-battle-runtime test",
+          "status": "pass",
+          "detail": "3 files passed; 159 tests passed."
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Both process checks exited 1 before the timed focused MBT replay, meaning no vitest or quint_evaluator process was running; no evaluator cleanup was needed."
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 pnpm --filter @dnd/character-battle-runtime exec vitest run src/character-battle-init-projection.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"initialization deterministic|routes Character Sheet|routes sheet-derived encounter\"; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "3 tests passed, 4 skipped; semantic qState and both qRoute connector replays passed; revision-round-2 route driver used production route replay functions; final timed run TOTAL: 10s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check --target-replay-evidence tasks/target-replay-evidence/CRP05-SBE-01.json",
+          "status": "fail",
+          "detail": "Diagnostic only: the checker parsed the Task 78 evidence, then failed because it requires target evidence for every in-scope repository obligation and reported global missing evidence outside Task 78."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations and 24 sampled inputs passed."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "node -e \"JSON.parse(require('fs').readFileSync('tasks/target-replay-evidence/CRP05-SBE-01.json','utf8')); JSON.parse(require('fs').readFileSync('tasks/RUN_LEDGER.json','utf8')); console.log('task artifacts json ok')\"",
+          "status": "pass"
+        },
+        {
+          "command": "flock /tmp/dnd-mbt-qnt.lock pnpm quality",
+          "status": "fail",
+          "detail": "Diagnostic only: failed in repo-wide turbo typecheck on off-surface baseline error packages/character-creation-runtime/src/index.test.ts(10401,5): Type 'string' is not assignable to type '\"species_gnome_gnomish_lineage\"'."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 moved route event shape from test-local duplication into production character-battle route vocabulary; round 2 moved Task 78 cumulative route replay into production, made the route MBT driver consume that production replay, tied build max-HP rejection routing to the battle-init owner constant, and constrained encounter-composition route facts to the typed composed-entry boundary."
+        }
+      ]
     }
   ]
 }
