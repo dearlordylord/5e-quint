@@ -1,14 +1,13 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-026",
+  "taskId": "CRPI-READY-027",
   "durableFields": [],
   "notes": [
-    "Task 68 introduced no new durable BattleState, BattleCreatureState, TurnState, action-resource, movement, condition, active-effect, Concentration, or interrupt-stack field.",
-    "RuleCoreAbilitySkillCommandOwner is component route ownership evidence, not runtime durable state.",
-    "Search hidden-state projection remains existing BattleCreatureState.hidden.",
-    "Guidance and Enhance Ability roll-modifier projection remains existing BattleCreatureState.activeEffects.",
-    "Command pending option and next-turn consequences remain existing active effects, BattleCreatureState.conditions, BattleSnapshot movement projection, BattleState.currentTurnResources.commandHalt, and BattleState.interruptStack.",
+    "Task 69 introduced no new durable BattleState, BattleCreatureState, TurnState, action-resource, movement, condition, active-effect, Concentration, or interrupt-stack field.",
+    "RuleCoreAttackDamageDispositionOwner is component route ownership evidence, not runtime durable state.",
+    "Melee Knock Out projection remains existing BattleCreatureState Hit Points, conditions, and zero-HP lifecycle state.",
+    "Ranged Knock Out rejection remains existing typed attack kind and ResolutionResult invalid path; no duplicate acceptance flag is stored in durable state.",
     "Component route behavior does not branch on authored spell names, QNT branch names, witness field names, connector filenames, or fixture labels.",
-    "qComponentRoute is a target replay boundary projection derived from the typed RuleCoreAbilitySkillCommandOwner route vocabulary."
+    "qComponentRoute is a target replay boundary projection derived from the typed RuleCoreAttackDamageDispositionOwner route vocabulary."
   ]
 }

@@ -2395,6 +2395,84 @@
           "detail": "Round 1 verified RAW traceability, component-first architecture, adapter quarantine, no duplicate durable state, no authored-identity dispatch, and no remaining reasonable Task 68 findings."
         }
       ]
+    },
+    {
+      "taskId": "CRPI-READY-027",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "rules-core",
+      "selectedDrivers": [
+        "packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "c84d674259969fed3da21201b9372471eeffa8faee4faade60c997427791cb26"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "29c025a0579fc96b7b4b4539f3411802dd7b11ef0ae38e3823dc0f72dd6f631f"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "f17daba033283c4868ffa197d8f4a5baa1bdf6eba6f843511473d5d65309dadd"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-READY-027/README.md",
+          "sha256": "dd016fa5e93a2f026bbfaaf0046688ca3c34dda24b83eb573a3100004d5c9595"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-READY-027.json",
+          "sha256": "89cb567768d947262e8eea3cc70ea9219c886e8c8de1e3a1898cdc64b6a759b4",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-READY-027.json#driver:packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt#step:doMeleeKnockOut#trace:component-route=RuleCoreAttackDamageDispositionOwner action=doMeleeKnockOut qComponentRoute=attack-damage-disposition-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-027.json#driver:packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt#step:doRejectRangedKnockOut#trace:component-route=RuleCoreAttackDamageDispositionOwner action=doRejectRangedKnockOut qComponentRoute=attack-damage-disposition-component-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-reducer-full-lane-20260704T211636Z/integration && git log --oneline -1 HEAD && git merge-base --is-ancestor 547d20c6c4d960c049c918d360aa704880ee4b3c HEAD",
+          "status": "pass",
+          "detail": "Declared Ralph base ref and HEAD both resolved to 547d20c6c Mark Ralph task 68 done; Base SHA 547d20c6c4d960c049c918d360aa704880ee4b3c is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language review against .references/srd-5.2.1/Playing-the-Game.md, .references/srd-5.2.1/Rules-Glossary.md, and UBIQUITOUS_LANGUAGE.md",
+          "status": "pass"
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Both process checks exited 1 before the timed focused MBT replay, meaning no vitest or quint_evaluator process was running; no evaluator cleanup was needed."
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 MBT_STEPS=2 pnpm --filter @dnd/battle-runtime exec vitest run src/rule-core-attack-damage-disposition.mbt.test.ts 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "1 test passed; copied qComponentRoute was compared through RuleCoreAttackDamageDispositionOwner for both step branch obligations; final timed run TOTAL: 7s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "Quality passed end to end; app lint reported warnings only and exited 0."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 verified RAW traceability, component-first architecture, adapter quarantine, no duplicate durable state, no authored-identity dispatch, and no remaining reasonable Task 69 findings."
+        }
+      ]
     }
   ]
 }

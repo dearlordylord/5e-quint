@@ -1,5 +1,78 @@
 # Validation Report
 
+## CRPI-READY-027
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Driver: `packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt`
+- Component connector: `packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt`
+- `packages/battle-runtime/rule-core-component-route.qnt`
+- `packages/battle-runtime/src/rule-core-attack-damage-disposition.mbt.test.ts`
+- `packages/battle-runtime/src/rule-core-component-route.ts`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Playing-the-Game.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+The component-first replay for attack damage disposition now has accepted target
+evidence for the copied `qComponentRoute` projection. The target harness records
+the reusable component route sequence parse input, admit input, call
+`RuleCoreAttackDamageDispositionOwner`, and project result before downstream attack route tasks consume
+this owner. The observed runtime projections are produced through public
+battle-runtime attack resolution for melee Knock Out acceptance and ranged Knock
+Out rejection, then compared to the copied component connector route.
+
+No production reducer state was added. Knock Out acceptance reuses existing
+`BattleCreatureState` Hit Points, Unconscious condition, and zero-HP lifecycle
+state. Ranged Knock Out rejection reuses the existing typed attack kind and
+invalid-resolution path. The component route is owned by typed route vocabulary,
+not authored spell identity, QNT branch names, witness field names, fixture
+labels, or connector filenames.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Harness | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt#step:doMeleeKnockOut` | `tasks/target-replay-evidence/CRPI-READY-027.json#driver:packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt#step:doMeleeKnockOut#trace:component-route=RuleCoreAttackDamageDispositionOwner action=doMeleeKnockOut qComponentRoute=attack-damage-disposition-component-route` | `packages/battle-runtime/src/rule-core-attack-damage-disposition.mbt.test.ts#replays Knock Out disposition acceptance and ranged rejection` | `covered` |
+| `packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt#step:doRejectRangedKnockOut` | `tasks/target-replay-evidence/CRPI-READY-027.json#driver:packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt#step:doRejectRangedKnockOut#trace:component-route=RuleCoreAttackDamageDispositionOwner action=doRejectRangedKnockOut qComponentRoute=attack-damage-disposition-component-route` | `packages/battle-runtime/src/rule-core-attack-damage-disposition.mbt.test.ts#replays Knock Out disposition acceptance and ranged rejection` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-027.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id pattern: `component-route=RuleCoreAttackDamageDispositionOwner action=<branchAction> qComponentRoute=attack-damage-disposition-component-route`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-READY-027/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 69.
+
+Verification results:
+
+- Base check passed: `git log --oneline -1 ralph/cleanroom-reducer-full-lane-20260704T211636Z/integration` and `git log --oneline -1 HEAD` both resolved to `547d20c6c Mark Ralph task 68 done`; `git merge-base --is-ancestor 547d20c6c4d960c049c918d360aa704880ee4b3c HEAD` passed.
+- RAW/ubiquitous-language review passed against Making an Attack, Damage Rolls, Hit Points, Knocking Out a Creature, Dropping to 0 Hit Points, and `UBIQUITOUS_LANGUAGE.md` terms Knock Out and Unconscious.
+- Focused MBT replay passed: `START=$(date +%s); MBT_TRACES=1 MBT_STEPS=2 pnpm --filter @dnd/battle-runtime exec vitest run src/rule-core-attack-damage-disposition.mbt.test.ts 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 1 test; final timed run `TOTAL: 7s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- `pnpm quality` passed end to end; app lint reported warnings only and exited 0.
+- Reviewer-loop convergence passed: round 1 verified RAW traceability, ubiquitous-language/domain terms, component-first architecture, adapter quarantine, no duplicate durable state, no authored-identity dispatch, and no remaining reasonable code-review findings.
+
 ## CRPI-READY-026
 
 - Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
