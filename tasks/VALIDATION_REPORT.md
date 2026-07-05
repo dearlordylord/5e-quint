@@ -1,5 +1,97 @@
 # Validation Report
 
+## CRP06-SRO-02
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Driver: `packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt`
+- Route connector: `packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+- Acceptance status: `accepted`
+
+Allowed inputs used:
+
+- `packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt`
+- `packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.route.mbt.qnt`
+- `packages/character-sheet-runtime/character-sheet-reducer-route.qnt`
+- `packages/character-sheet-runtime/src/rests.ts`
+- `packages/character-sheet-runtime/src/healing-rest-benefit.ts`
+- `packages/character-sheet-runtime/src/hp-rest-hit-dice.mbt.test.ts`
+- `packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts`
+- `packages/character-sheet-runtime/README.md`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `.references/srd-5.2.1/Playing-the-Game.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+The Character Sheet HP/rest/Hit Dice replay now has accepted target evidence for
+both copied projections required by Task 100. The semantic replay compares
+`qState` against public Character Sheet rest entrypoints for Short Rest and Long
+Rest start gates, duration gates, interruption outcomes, Short Rest Hit Die
+spending, sequential Hit Die spending, Long Rest HP restoration, Hit Point
+Maximum reduction clearing, Temporary Hit Point clearing, and spent Hit Dice
+restoration. The route replay compares copied `qRoute` against public
+character-sheet reducer route events for rest duration fills, Hit Dice spend
+fills, Short Rest benefit-choice holes, and the Hit Point, Hit Dice, and sheet
+state owners.
+
+No duplicate durable state was introduced. Current HP, Temporary Hit Points, and
+Hit Point Maximum reduction remain Character Sheet HP state; spent Hit Dice
+remain `CharacterSheet.spentHitDice`; rest duration and Long Rest calendar wait
+facts remain rest workflow state. Normal Hit Point Maximum, Hit Die size, and Hit
+Die capacity continue to be projected from `CharacterBuild` and installed Unit
+facts.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Harness | Status |
+| --- | --- | --- | --- |
+| `packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doRejectLongRestStartAtZeroHp` | `tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doRejectLongRestStartAtZeroHp#trace:semantic-qState=hp-rest-hit-dice action=doRejectLongRestStartAtZeroHp` and `#trace:public-route=characterSheetRest action=doRejectLongRestStartAtZeroHp qRoute=hp-rest-hit-dice-public-route` | `packages/character-sheet-runtime/src/hp-rest-hit-dice.mbt.test.ts`, `packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts` | `covered` |
+| `packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doRejectLongRestBeforeSixteenHourWait` | `tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doRejectLongRestBeforeSixteenHourWait` | same | `covered` |
+| `packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doSpendShortRestHitPointDie` | `tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doSpendShortRestHitPointDie` | same | `covered` |
+| `packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doInterruptShortRestNoBenefit` | `tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doInterruptShortRestNoBenefit` | same | `covered` |
+| `packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doCompleteLongRestRestoresHpHitPointDiceAndMaximum` | `tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doCompleteLongRestRestoresHpHitPointDiceAndMaximum` | same | `covered` |
+| `packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doInterruptLongRestBeforeOneHourNoBenefit` | `tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doInterruptLongRestBeforeOneHourNoBenefit` | same | `covered` |
+| `packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doInterruptLongRestWithShortRestBenefits` | `tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doInterruptLongRestWithShortRestBenefits` | same | `covered` |
+| `packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doRejectShortRestStartAtZeroHp` | `tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doRejectShortRestStartAtZeroHp` | same | `covered` |
+| `packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doRejectShortRestDurationTooShort` | `tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doRejectShortRestDurationTooShort` | same | `covered` |
+| `packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doRejectLongRestDurationTooShort` | `tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doRejectLongRestDurationTooShort` | same | `covered` |
+| `packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doRejectLongRestPhysicalExertionTooShort` | `tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doRejectLongRestPhysicalExertionTooShort` | same | `covered` |
+| `packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doSpendShortRestHitPointDiceSequentially` | `tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doSpendShortRestHitPointDiceSequentially` | same | `covered` |
+| `packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doRejectLongRestInterruptionAtRequiredDuration` | `tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doRejectLongRestInterruptionAtRequiredDuration` | same | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRP06-SRO-02.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id patterns: `semantic-qState=hp-rest-hit-dice action=<branchAction>` and `public-route=characterSheetRest action=<branchAction> qRoute=hp-rest-hit-dice-public-route`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRP06-SRO-02/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 100.
+
+Verification results:
+
+- Base check passed: `git log --oneline -1 ralph/cleanroom-character-sheet-lane-20260705/integration` and `git log --oneline -1 HEAD` both resolved to `84e17424b Merge Ralph route replay tasks 61-69`; `git merge-base --is-ancestor 84e17424ba5882f076783f4bd0780b34d2a0a58e HEAD` passed.
+- RAW/ubiquitous-language review passed against Rules Glossary Short Rest, Long Rest, Hit Point Dice, Hit Points, Playing the Game Hit Points and Temporary Hit Points, `UBIQUITOUS_LANGUAGE.md`, and `packages/character-sheet-runtime/README.md`.
+- Focused Character Sheet deterministic replay passed: `START=$(date +%s); pnpm --filter @dnd/character-sheet-runtime exec vitest run src/hp-rest-hit-dice.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "HP rest|Hit Dice" 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 2 tests; final timed run `TOTAL: 13s`.
+- Target evidence subset validation passed with 13 covered obligations.
+- Targeted typecheck passed: `pnpm --filter @dnd/character-sheet-runtime typecheck`.
+- Requested broad verification `flock /tmp/dnd-mbt-qnt.lock pnpm quality` reached repo-wide typecheck and failed in unrelated baseline code: `packages/character-creation-runtime/src/index.test.ts(10401,5): error TS2322: Type 'string' is not assignable to type "species_gnome_gnomish_lineage".` No Task 100 files are in that ownership surface.
+- Reviewer-loop convergence passed: round 1 verified RAW traceability, ubiquitous-language/domain terms, no duplicate HP or Hit Dice capacity state, rest owner boundaries, explicit Short Rest benefit-choice fills, and no remaining reasonable code-review findings.
+
 ## CRPI-READY-027
 
 - Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`

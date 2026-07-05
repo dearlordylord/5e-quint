@@ -2983,7 +2983,23 @@
             ],
             "blockers": []
           },
-          "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.route.mbt.qnt"
+          "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.route.mbt.qnt",
+          "qntAcceptance": {
+            "required": [
+              {
+                "tag": "qnt-semantic",
+                "ownerPath": "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt",
+                "projection": "qState",
+                "comparator": "character-sheet-hp-rest-hit-dice-state"
+              },
+              {
+                "tag": "qnt-route",
+                "connectorPath": "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.route.mbt.qnt",
+                "projection": "qRoute",
+                "comparator": "route-event-list"
+              }
+            ]
+          }
         },
         {
           "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",

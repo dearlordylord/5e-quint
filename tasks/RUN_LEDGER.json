@@ -2473,6 +2473,116 @@
           "detail": "Round 1 verified RAW traceability, component-first architecture, adapter quarantine, no duplicate durable state, no authored-identity dispatch, and no remaining reasonable Task 69 findings."
         }
       ]
+    },
+    {
+      "taskId": "CRP06-SRO-02",
+      "assignmentId": "settlement-rest-owner-sheet",
+      "laneId": "sheet",
+      "selectedDrivers": [
+        "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "62508f53c2bd0f1ab7c3efbe04594fb797a579b19ac83554d008a98accf58e01"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "29985bab47f926f32d21dc4a76355f9f7811bd53343679a2d5adcf19991255f3"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "20696aa175e2cbab285997ebfa5770d1f4c81c1436fb4b9121b80b46db96fd6a"
+        },
+        "history": {
+          "path": "tasks/history/CRP06-SRO-02/README.md",
+          "sha256": "67e4ca9589ac23d7c4da787e985ef2a8793f2a9d7c14f8ae381ab2dbbcf37487"
+        },
+        "reducerRouteInventory": {
+          "path": "plans/cleanroom-branch-coverage/reducer-route-inventory.json",
+          "sha256": "9ded20737a7a2750fa8999d7e6650e7167429d70a6200e98ef93d4930d8447b9"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRP06-SRO-02.json",
+          "sha256": "61bbf9355ed549f53db29742f4a93b2cd3f8398c9006df48784f5a60e7f56a71",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doRejectLongRestStartAtZeroHp#trace:semantic-qState=hp-rest-hit-dice action=doRejectLongRestStartAtZeroHp",
+            "tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doRejectLongRestStartAtZeroHp#trace:public-route=characterSheetRest action=doRejectLongRestStartAtZeroHp qRoute=hp-rest-hit-dice-public-route",
+            "tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doRejectLongRestBeforeSixteenHourWait#trace:semantic-qState=hp-rest-hit-dice action=doRejectLongRestBeforeSixteenHourWait",
+            "tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doRejectLongRestBeforeSixteenHourWait#trace:public-route=characterSheetRest action=doRejectLongRestBeforeSixteenHourWait qRoute=hp-rest-hit-dice-public-route",
+            "tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doSpendShortRestHitPointDie#trace:semantic-qState=hp-rest-hit-dice action=doSpendShortRestHitPointDie",
+            "tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doSpendShortRestHitPointDie#trace:public-route=characterSheetRest action=doSpendShortRestHitPointDie qRoute=hp-rest-hit-dice-public-route",
+            "tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doInterruptShortRestNoBenefit#trace:semantic-qState=hp-rest-hit-dice action=doInterruptShortRestNoBenefit",
+            "tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doInterruptShortRestNoBenefit#trace:public-route=characterSheetRest action=doInterruptShortRestNoBenefit qRoute=hp-rest-hit-dice-public-route",
+            "tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doCompleteLongRestRestoresHpHitPointDiceAndMaximum#trace:semantic-qState=hp-rest-hit-dice action=doCompleteLongRestRestoresHpHitPointDiceAndMaximum",
+            "tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doCompleteLongRestRestoresHpHitPointDiceAndMaximum#trace:public-route=characterSheetRest action=doCompleteLongRestRestoresHpHitPointDiceAndMaximum qRoute=hp-rest-hit-dice-public-route",
+            "tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doInterruptLongRestBeforeOneHourNoBenefit#trace:semantic-qState=hp-rest-hit-dice action=doInterruptLongRestBeforeOneHourNoBenefit",
+            "tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doInterruptLongRestBeforeOneHourNoBenefit#trace:public-route=characterSheetRest action=doInterruptLongRestBeforeOneHourNoBenefit qRoute=hp-rest-hit-dice-public-route",
+            "tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doInterruptLongRestWithShortRestBenefits#trace:semantic-qState=hp-rest-hit-dice action=doInterruptLongRestWithShortRestBenefits",
+            "tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doInterruptLongRestWithShortRestBenefits#trace:public-route=characterSheetRest action=doInterruptLongRestWithShortRestBenefits qRoute=hp-rest-hit-dice-public-route",
+            "tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doRejectShortRestStartAtZeroHp#trace:semantic-qState=hp-rest-hit-dice action=doRejectShortRestStartAtZeroHp",
+            "tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doRejectShortRestStartAtZeroHp#trace:public-route=characterSheetRest action=doRejectShortRestStartAtZeroHp qRoute=hp-rest-hit-dice-public-route",
+            "tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doRejectShortRestDurationTooShort#trace:semantic-qState=hp-rest-hit-dice action=doRejectShortRestDurationTooShort",
+            "tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doRejectShortRestDurationTooShort#trace:public-route=characterSheetRest action=doRejectShortRestDurationTooShort qRoute=hp-rest-hit-dice-public-route",
+            "tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doRejectLongRestDurationTooShort#trace:semantic-qState=hp-rest-hit-dice action=doRejectLongRestDurationTooShort",
+            "tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doRejectLongRestDurationTooShort#trace:public-route=characterSheetRest action=doRejectLongRestDurationTooShort qRoute=hp-rest-hit-dice-public-route",
+            "tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doRejectLongRestPhysicalExertionTooShort#trace:semantic-qState=hp-rest-hit-dice action=doRejectLongRestPhysicalExertionTooShort",
+            "tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doRejectLongRestPhysicalExertionTooShort#trace:public-route=characterSheetRest action=doRejectLongRestPhysicalExertionTooShort qRoute=hp-rest-hit-dice-public-route",
+            "tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doSpendShortRestHitPointDiceSequentially#trace:semantic-qState=hp-rest-hit-dice action=doSpendShortRestHitPointDiceSequentially",
+            "tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doSpendShortRestHitPointDiceSequentially#trace:public-route=characterSheetRest action=doSpendShortRestHitPointDiceSequentially qRoute=hp-rest-hit-dice-public-route",
+            "tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doRejectLongRestInterruptionAtRequiredDuration#trace:semantic-qState=hp-rest-hit-dice action=doRejectLongRestInterruptionAtRequiredDuration",
+            "tasks/target-replay-evidence/CRP06-SRO-02.json#driver:packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt#step:doRejectLongRestInterruptionAtRequiredDuration#trace:public-route=characterSheetRest action=doRejectLongRestInterruptionAtRequiredDuration qRoute=hp-rest-hit-dice-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-character-sheet-lane-20260705/integration && git log --oneline -1 HEAD && git merge-base --is-ancestor 84e17424ba5882f076783f4bd0780b34d2a0a58e HEAD",
+          "status": "pass",
+          "detail": "Declared Ralph base ref and HEAD both resolved to 84e17424b Merge Ralph route replay tasks 61-69; Base SHA 84e17424ba5882f076783f4bd0780b34d2a0a58e is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language review against .references/srd-5.2.1/Rules-Glossary.md#Short Rest, #Long Rest, #Hit Point Dice, #Hit Points, .references/srd-5.2.1/Playing-the-Game.md#Hit Points, UBIQUITOUS_LANGUAGE.md, and packages/character-sheet-runtime/README.md",
+          "status": "pass"
+        },
+        {
+          "command": "START=$(date +%s); pnpm --filter @dnd/character-sheet-runtime exec vitest run src/hp-rest-hit-dice.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"HP rest|Hit Dice\" 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "2 tests passed; semantic qState and route qRoute replay covered 13 HP/rest/Hit Dice branch obligations; final timed run TOTAL: 13s."
+        },
+        {
+          "command": "node target replay evidence subset validation for CRP06-SRO-02",
+          "status": "pass",
+          "detail": "13 covered obligations; semantic qState comparator character-sheet-hp-rest-hit-dice-state and qRoute comparator route-event-list accepted."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm --filter @dnd/character-sheet-runtime typecheck",
+          "status": "pass"
+        },
+        {
+          "command": "flock /tmp/dnd-mbt-qnt.lock pnpm quality",
+          "status": "fail-unrelated-baseline",
+          "detail": "Reached repo-wide typecheck and failed outside the touched ownership surface: packages/character-creation-runtime/src/index.test.ts(10401,5): error TS2322: Type string is not assignable to type \"species_gnome_gnomish_lineage\"."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 verified RAW traceability, owner boundaries, no duplicate HP or Hit Dice capacity state, explicit Short Rest benefit-choice fills, and no remaining reasonable Task 100 findings."
+        }
+      ]
     }
   ]
 }

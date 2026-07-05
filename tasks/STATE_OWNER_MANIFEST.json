@@ -1,13 +1,37 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-027",
-  "durableFields": [],
+  "taskId": "CRP06-SRO-02",
+  "durableFields": [
+    {
+      "owner": "CharacterSheetHitPointOwner",
+      "fields": [
+        "CharacterSheet.hitPoints.current",
+        "CharacterSheet.hitPoints.tempHp",
+        "CharacterSheet.hitPointMaximumReduction"
+      ],
+      "notes": "Owns current Hit Points, Temporary Hit Points, Hit Point Maximum reduction, and Long Rest HP restoration. Normal Hit Point Maximum remains derived from CharacterBuild and Unit facts."
+    },
+    {
+      "owner": "CharacterSheetHitDiceOwner",
+      "fields": [
+        "CharacterSheet.spentHitDice"
+      ],
+      "notes": "Owns spent Hit Dice and Short Rest Hit Die spending. Hit Die capacity and die size remain derived from CharacterBuild through characterBuildHitPoints."
+    },
+    {
+      "owner": "CharacterSheetStateOwner",
+      "fields": [
+        "CharacterSheetLongRestStart.requiredRestTicks",
+        "CharacterSheetLongRestStart.nextLongRestStartWaitTicks",
+        "CharacterSheetLongRestCalendarGate.remainingTicks"
+      ],
+      "notes": "Owns rest duration and Long Rest calendar gates as workflow state, not alternate HP or Hit Dice ledgers."
+    }
+  ],
   "notes": [
-    "Task 69 introduced no new durable BattleState, BattleCreatureState, TurnState, action-resource, movement, condition, active-effect, Concentration, or interrupt-stack field.",
-    "RuleCoreAttackDamageDispositionOwner is component route ownership evidence, not runtime durable state.",
-    "Melee Knock Out projection remains existing BattleCreatureState Hit Points, conditions, and zero-HP lifecycle state.",
-    "Ranged Knock Out rejection remains existing typed attack kind and ResolutionResult invalid path; no duplicate acceptance flag is stored in durable state.",
-    "Component route behavior does not branch on authored spell names, QNT branch names, witness field names, connector filenames, or fixture labels.",
-    "qComponentRoute is a target replay boundary projection derived from the typed RuleCoreAttackDamageDispositionOwner route vocabulary."
+    "Task 100 introduced no duplicate stored normal Hit Point Maximum, Hit Die capacity, or Hit Die size.",
+    "Short Rest benefit choices remain explicit route fills through SheetRestBenefitChoiceHoleFamily.",
+    "qState is target replay semantic evidence derived from public Character Sheet rest entrypoints and projection helpers.",
+    "qRoute is target replay route evidence derived from the character-sheet reducer route vocabulary, not authored identity."
   ]
 }
