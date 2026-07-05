@@ -211,8 +211,7 @@
         "srd521:classes/wizard:level-1:class-feature-grant:wizard_ritual_adept runtimeProjection evidence reference points to missing symbol spellHasRitualTag: packages/character-sheet-runtime/src/spell-invocation.ts:spellHasRitualTag",
         "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery tests evidence reference must identify a test name symbol used by test()/it(): packages/character-sheet-runtime/src/rests.test.ts:wizardBuild",
         "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery tests evidence reference must identify a test name symbol used by test()/it(): packages/character-sheet-runtime/src/rests.test.ts:wizardWarlockBuild",
-        "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery tests evidence reference must identify a test name symbol used by test()/it(): packages/character-sheet-runtime/src/armor-class.test.ts:expectRight",
-        "srd521:classes/rogue:level-3:class-feature-grant:rogue_second_story_work tests evidence reference must identify a test name symbol used by test()/it(): packages/character-sheet-runtime/src/ability-checks.test.ts:expectSecondStoryWorkProjection"
+        "srd521:classes/wizard:level-1:class-feature-grant:wizard_arcane_recovery tests evidence reference must identify a test name symbol used by test()/it(): packages/character-sheet-runtime/src/armor-class.test.ts:expectRight"
       ]
     },
     "sharedAlgebraOwnerEvidence": {
@@ -255,32 +254,29 @@
     },
     "levelOneThreeBattleReadiness": {
       "denominator": 607,
-      "numerator": 606,
-      "percent": "99.8%",
+      "numerator": 607,
+      "percent": "100%",
       "rowsByStatus": {
-        "accepted": 446,
-        "accepted-no-battle-effect": 160,
-        "owner-evidence-required": 1
+        "accepted": 447,
+        "accepted-no-battle-effect": 160
       }
     },
     "levelOneFourBattleReadiness": {
       "denominator": 632,
-      "numerator": 631,
-      "percent": "99.8%",
+      "numerator": 632,
+      "percent": "100%",
       "rowsByStatus": {
-        "accepted": 447,
-        "accepted-no-battle-effect": 184,
-        "owner-evidence-required": 1
+        "accepted": 448,
+        "accepted-no-battle-effect": 184
       }
     },
     "levelThreeClassBattleReadiness": {
       "denominator": 51,
-      "numerator": 50,
-      "percent": "98%",
+      "numerator": 51,
+      "percent": "100%",
       "rowsByStatus": {
-        "accepted": 36,
-        "accepted-no-battle-effect": 14,
-        "owner-evidence-required": 1
+        "accepted": 37,
+        "accepted-no-battle-effect": 14
       }
     },
     "levelFourClassBattleReadiness": {
@@ -320,10 +316,9 @@
       "non-runtime": 12
     },
     "levelThreeClassRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 36,
+      "catalog-installed-owner-evidence-present": 37,
       "non-runtime": 12,
-      "catalog-only/dead-for-now": 2,
-      "catalog-installed-owner-evidence-required": 1
+      "catalog-only/dead-for-now": 2
     },
     "levelThreeClassRowsByCategory": {
       "class feature": 22,
@@ -368,13 +363,12 @@
       "character-creation or progression mechanic": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 501,
+      "catalog-installed-owner-evidence-present": 502,
       "non-runtime": 84,
       "catalog-only/dead-for-now": 211,
       "level-5-7-follow-up-required": 22,
       "catalog-authored-review-required": 49,
-      "missing-authored-record": 32,
-      "catalog-installed-owner-evidence-required": 1
+      "missing-authored-record": 32
     },
     "spellPressureRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 249,
@@ -26143,7 +26137,7 @@
         "unitId": "rogue_second_story_work"
       },
       "unitProfileDisposition": "supported-profile",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "ownerEvidence": [
         {
           "owner": "Unit catalog/admission",
@@ -26151,13 +26145,13 @@
           "status": "catalog evidence"
         },
         {
-          "owner": "character-sheet Speed projection plus movement/jump owner",
-          "evidence": "Promote Second-Story Work by projecting Climb Speed equal to Speed and by adding a jump-distance ability substitution that uses Dexterity rather than Strength, without storing duplicated climb or jump values beside the base Speed and Ability Score facts.",
-          "status": "owner evidence required"
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/character-sheet-owner-evidence.json records row-level runtime projection evidence; L13UG-A15 Character Sheet linked-Speed and jump-distance projections; Rogue Second-Story Work is read from the selected Thief subclass feature grants and projected by Character Sheet as a Climb Speed linked to walk Speed plus an optional Dexterity-for-Strength jump-distance ability substitution. The linked Speed remains a source link rather than a copied numeric Speed.",
+          "status": "owner evidence present"
         }
       ],
-      "nextAction": "Promote Second-Story Work by projecting Climb Speed equal to Speed and by adding a jump-distance ability substitution that uses Dexterity rather than Strength, without storing duplicated climb or jump values beside the base Speed and Ability Score facts.",
-      "battleReadinessStatus": "owner-evidence-required"
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
     },
     {
       "id": "srd521:classes/rogue:level-3:class-feature-grant:rogue_steady_aim",

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
-  "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+  "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
   "entries": [
     {
       "taskId": "CRPI-READY-001",
@@ -2473,6 +2473,203 @@
           "detail": "Round 1 verified RAW traceability, component-first architecture, adapter quarantine, no duplicate durable state, no authored-identity dispatch, and no remaining reasonable Task 69 findings."
         }
       ]
+    },
+    {
+      "taskId": "CRPI-READY-028",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "rules-core",
+      "status": "accepted",
+      "selectedDrivers": ["packages/battle-runtime/rule-core-features.mbt.qnt"],
+      "observedExistingSplitDrivers": [
+        "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+        "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+        "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+        "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "471a1580ca6f52eea9b0acc596e675d2b3c657700bcf36a86f2ccb167158c94c"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "db1f5f58bb496aedfb375b659c43df60d536756fa70f241e51dd7e0882804c79"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "d1afb782059192c59d2d312789f5ec5f23d1567c790f0fd8b74d42cb509cf9ca"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-READY-028/README.md",
+          "sha256": "56e7f34329fe76669040551081b4c5338e409ac7cde0be277bcd8194802e4830"
+        },
+        "aggregateDriver": {
+          "path": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "sha256": "a26a9141deaebe150c5748033358ad61bc946f3a48a2ba48a6cfc8d9e2f1a8ca"
+        },
+        "aggregateHarness": {
+          "path": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "sha256": "93f65b9ddb47ed90554aaaefeab5d1ace8fb19c55ef618c91f3751ad1a6163c8"
+        },
+        "battleFeatureSupport": {
+          "path": "packages/battle-runtime/src/unit-feature-support.ts",
+          "sha256": "6af43e400871867fa52e5cffd86ad6457593ea6da3ce2b6ceb7f254d9bc5f5f1"
+        },
+        "battleMovementSpeed": {
+          "path": "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
+          "sha256": "2fa4a2c02f66681ea9dfbc186a0d9e0fb44fda3b4669e25343e89933084da8a8"
+        },
+        "secondStoryWorkBattleTest": {
+          "path": "packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts",
+          "sha256": "98dc68bf1947745408789753f869ab98e8a56d76a9022acfde7381e6b529ddea"
+        },
+        "secondStoryWorkCharacterSheetTest": {
+          "path": "packages/character-sheet-runtime/src/ability-checks.test.ts",
+          "sha256": "321766fbdbcb0ac572c8fd1465ff023697e987fbc74692694ebc9eabc6463a8d"
+        },
+        "unitProfileCharacterSheetEvidence": {
+          "path": "plans/unit-profile-coverage/character-sheet-owner-evidence.json",
+          "sha256": "9c6bdb2a04c1cfce7dc3ca22c0596cf9ee8f7105586501d6f775818e37ab6c55"
+        },
+        "unitProfileUnitEvidence": {
+          "path": "plans/unit-profile-coverage/unit-evidence.jsonl",
+          "sha256": "1855c64b8f88cd440933808b7b859817d22ed2b855b723dc00adaf04360e9d94"
+        },
+        "unitProfileMatrix": {
+          "path": "plans/unit-profile-coverage/unit-matrix.json",
+          "sha256": "db97679d1c1394d0a7d0bea97153061a495eb2b2c1ddfd9a384e6a2a7956a404"
+        },
+        "unitProfileSrdInventory": {
+          "path": "plans/unit-profile-coverage/srd-unit-inventory.json",
+          "sha256": "a13210fa3c48ddfa3ab65c02fa5db969b864a3e94b328631b8309c5227bd650c"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-READY-028.json",
+          "sha256": "e30aa9831a387e0372f50b0890f6d383178dbef4e56541b9faaec8e9ab7784c7",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-READY-028.json#driver:packages/battle-runtime/rule-core-features.mbt.qnt#step:sampledTrace#trace:component-route=RuleCoreFeatureProfileSemanticsOwner qComponentRoute=feature-profile-semantics-component-route MBT_TRACES=1 MBT_STEPS=6",
+            "tasks/target-replay-evidence/CRPI-READY-028.json#owner:CharacterSheetLinkedSpeedGrantProjectionOwner#unit:rogue_second_story_work",
+            "tasks/target-replay-evidence/CRPI-READY-028.json#owner:CharacterSheetJumpDistanceAbilitySubstitutionOwner#unit:rogue_second_story_work",
+            "tasks/target-replay-evidence/CRPI-READY-028.json#owner:BattlePassiveSpeedKindGrantAdmissionOwner#unit:rogue_second_story_work",
+            "tasks/target-replay-evidence/CRPI-READY-028.json#owner:BattlePassiveSpeedKindGrantProjectionOwner#unit:rogue_second_story_work"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-reducer-full-lane-20260704T211636Z/integration && git log --oneline -1 HEAD && git merge-base --is-ancestor 5d418bba6a15834d7847f66f00deff3a8b2bd02e HEAD",
+          "status": "pass",
+          "detail": "Integration ref resolved to 84e17424b Merge Ralph route replay tasks 61-69; HEAD resolved to 5d418bba6 Mark Ralph task 69 done; Base SHA 5d418bba6a15834d7847f66f00deff3a8b2bd02e is an ancestor of HEAD."
+        },
+        {
+          "command": "Ralph plan/task-context review for letter-suffixed split task ids ids",
+          "status": "pass",
+          "detail": "The Ralph plan contains CRPI-READY-028 then CRPI-READY-029, so Task 70 artifacts describe split feature drivers as backlog entries only and do not claim letter-suffixed split task ids as Ralph plan tasks."
+        },
+        {
+          "command": "pnpm exec quint typecheck packages/battle-runtime/rule-core-features.mbt.qnt",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm check:mbt-driver-closure",
+          "status": "pass",
+          "detail": "Aggregate driver closure passed; the driver imports only rule-core-component-route and battle-runtime-witness-protocol leaf modules."
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep && ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "No existing vitest or quint_evaluator processes were running before the focused aggregate MBT run."
+        },
+        {
+          "command": "START=$(date +%s); cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=6 pnpm exec vitest run src/rule-core-features.mbt.test.ts -t \"aggregate feature family\" 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "1 test passed, 5 skipped; aggregate feature replay TOTAL: 11s."
+        },
+        {
+          "command": "RAW/ubiquitous-language review for rule-core feature component route vocabulary and UBIQUITOUS_LANGUAGE.md",
+          "status": "pass",
+          "detail": "Second-Story Work was checked against SRD 5.2.1 Climbing, Jumping, Long Jump, High Jump, and UBIQUITOUS_LANGUAGE.md Speed/Jump terms."
+        },
+        {
+          "command": "pnpm --filter @dnd/character-sheet-runtime exec vitest run src/ability-checks.test.ts -t \"Second-Story Work\"",
+          "status": "pass",
+          "detail": "1 test passed, 5 skipped."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec vitest run src/unit-profile-admission-extra-attack-and-speed-features.test.ts -t \"Second-Story Work|Roving\"",
+          "status": "pass",
+          "detail": "8 tests passed, 28 skipped."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec tsc --noEmit",
+          "status": "pass"
+        },
+        {
+          "command": "node scripts/unit-profile-coverage-check.cjs --write && pnpm unit-profile-coverage:check",
+          "status": "pass",
+          "detail": "Regenerated unit-profile coverage artifacts after adding CRPI-READY-028 evidence; final check reported 332 Units, 192 profiles."
+        },
+        {
+          "command": "node CRPI-READY-028 aggregate artifact sanity check",
+          "status": "pass",
+          "detail": "Evidence records accepted aggregate qComponentRoute sampled replay, does not claim all 27 step alternatives, records Second-Story Work owner evidence, and avoids letter-suffixed split task ids."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs."
+        },
+        {
+          "command": "pnpm quality",
+          "status": "fail",
+          "detail": "Decider integration run passed all gates through pnpm circular, then failed in final turbo typecheck on untouched baseline file packages/character-creation-runtime/src/index.test.ts(10401,5): Type 'string' is not assignable to type '\"species_gnome_gnomish_lineage\"'. Focused Task 70 battle-runtime and replay checks passed."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Revision round 9 verifies the task-specific Second-Story Work owner row and corrects aggregate replay coverage claims to sampled qComponentRoute evidence."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-READY-028",
+            "disposition": "unblocked"
+          },
+          {
+            "taskId": "backlog:split-rule-core-feature-action-economy",
+            "disposition": "left-unchanged"
+          },
+          {
+            "taskId": "backlog:split-rule-core-feature-attack-riders",
+            "disposition": "left-unchanged"
+          },
+          {
+            "taskId": "backlog:split-rule-core-feature-save-reactions",
+            "disposition": "left-unchanged"
+          },
+          {
+            "taskId": "backlog:split-rule-core-feature-passive-zero-hp",
+            "disposition": "left-unchanged"
+          }
+        ],
+        "observations": [
+          "The aggregate rule-core-features.mbt.qnt driver is restored and accepted for Task 70 qComponentRoute replay.",
+          "The Ralph plan does not contain letter-suffixed split task ids; split feature drivers are backlog entries, not scheduled Ralph plan task ids in this artifact.",
+          "The task-context rogue_second_story_work matrix row is resolved by deterministic owner projection tests.",
+          "The aggregate qComponentRoute replay is sampled evidence and is not represented as branch-complete evidence for all 27 step alternatives."
+        ],
+        "requiredPlanEdits": "none"
+      }
     }
   ]
 }

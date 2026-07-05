@@ -22325,6 +22325,11 @@
           "ownerPath": "packages/character-sheet-runtime/src/ability-checks.test.ts",
           "tag": "deterministic-admission-projection",
           "taskId": "L13UG-A15"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "CRPI-READY-028"
         }
       ],
       "executableMechanics": true,

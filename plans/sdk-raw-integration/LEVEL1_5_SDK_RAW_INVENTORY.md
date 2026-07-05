@@ -41,8 +41,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | closure-review-needed | 108 |
 | explicit-closure-needed | 48 |
 | explicit-closure-recorded | 12 |
-| future-owner-before-sdk | 66 |
-| sdk-scenario-needed | 399 |
+| future-owner-before-sdk | 65 |
+| sdk-scenario-needed | 400 |
 | seed-scenario-present | 111 |
 | table-only-closure-needed | 26 |
 
@@ -58,8 +58,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | character-sheet | 8 |
 | character-sheet-spell-access | 12 |
 | class-feature-closure-review | 2 |
-| future-runtime-owner-before-sdk | 66 |
-| multi-owner-sdk-split | 10 |
+| future-runtime-owner-before-sdk | 65 |
+| multi-owner-sdk-split | 11 |
 | spell-effect-owner-review | 106 |
 | table-only-closure | 26 |
 
@@ -92,8 +92,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | character-sheet-sdk | 7 |
 | explicit-closure | 60 |
 | feature-owner-review | 2 |
-| future-owner-before-sdk | 34 |
-| multi-owner-feature-sdk | 9 |
+| future-owner-before-sdk | 33 |
+| multi-owner-feature-sdk | 10 |
 | seed-present | 111 |
 | sheet-spell-access-sdk | 12 |
 | spell-effect-owner-review | 34 |
@@ -139,8 +139,8 @@ says what still needs SDK-level scenarios or explicit SDK-scope closure.
 | --- | --- | ---: | ---: | --- | --- | --- |
 | Character Level 1 | level-1, spell-level-0, spell-level-1 | 94 | 14 | 94/94 (100%) | 367/367 (100%) | plans/unit-profile-coverage/level1-full-support.json |
 | Character Levels 1-2 | level-1, level-2, spell-level-0, spell-level-1 | 115 | 19 | 115/115 (100%) | 400/400 (100%) | plans/unit-profile-coverage/level1-2-full-support.json |
-| Character Levels 1-3 | level-1, level-2, level-3, spell-level-0, spell-level-1, spell-level-2 | 197 | 51 | 197/197 (100%) | 606/607 (99.8%) | plans/unit-profile-coverage/level1-3-full-support.json |
-| Character Levels 1-4 | level-1, level-2, level-3, level-4, spell-level-0, spell-level-1, spell-level-2 | 210 | 63 | 210/210 (100%) | 631/632 (99.8%) | plans/unit-profile-coverage/level1-4-full-support.json |
+| Character Levels 1-3 | level-1, level-2, level-3, spell-level-0, spell-level-1, spell-level-2 | 197 | 51 | 197/197 (100%) | 607/607 (100%) | plans/unit-profile-coverage/level1-3-full-support.json |
+| Character Levels 1-4 | level-1, level-2, level-3, level-4, spell-level-0, spell-level-1, spell-level-2 | 210 | 63 | 210/210 (100%) | 632/632 (100%) | plans/unit-profile-coverage/level1-4-full-support.json |
 
 ## Existing SDK Seed Scenario Rows
 

@@ -32,11 +32,11 @@
       "spell-level": 558
     },
     "rowsByBattleReadinessStatus": {
-      "accepted": 484,
+      "accepted": 485,
       "accepted-no-battle-effect": 257,
       "battle-runtime-required": 32,
       "not-applicable": 77,
-      "owner-evidence-required": 50
+      "owner-evidence-required": 49
     },
     "rowsByCatalogAdmission": {
       "installed": 694,
@@ -54,8 +54,7 @@
     },
     "rowsByFinalDisposition": {
       "catalog-authored-review-required": 49,
-      "catalog-installed-owner-evidence-present": 501,
-      "catalog-installed-owner-evidence-required": 1,
+      "catalog-installed-owner-evidence-present": 502,
       "catalog-only/dead-for-now": 211,
       "level-5-7-follow-up-required": 22,
       "missing-authored-record": 32,
@@ -23952,7 +23951,7 @@
         "sourceInventoryRowId": "srd521:classes/rogue:level-3:class-feature-grant:rogue_second_story_work",
         "state": "present"
       },
-      "nextAction": "Promote Second-Story Work by projecting Climb Speed equal to Speed and by adding a jump-distance ability substitution that uses Dexterity rather than Strength, without storing duplicated climb or jump values beside the base Speed and Ability Score facts.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "rowId": "srd521:classes/rogue:level-3:class-feature-grant:rogue_second_story_work",
       "rowKind": "class-feature-grant",
       "source": {
@@ -23968,7 +23967,7 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "owner-evidence-required"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -23977,7 +23976,7 @@
           "state": "installed",
           "unitId": "rogue_second_story_work"
         },
-        "finalDisposition": "catalog-installed-owner-evidence-required",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
           "disposition": "supported-profile",
           "state": "recorded"

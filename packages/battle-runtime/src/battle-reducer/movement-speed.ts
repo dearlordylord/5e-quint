@@ -40,6 +40,7 @@ import {
   PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
   PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE,
   PASSIVE_SPEED_KIND_GRANT_KINDS,
+  type PassiveSpeedBonusProfile,
   type PassiveSpeedBonusCondition,
   type PassiveSpeedKindGrantKind,
 } from "../unit-feature-support.ts";
@@ -437,18 +438,20 @@ export function speedBonusDeltaForProfile(
   combatant: BattleCreatureState,
   profile: BattlePassiveSpeedProfile,
 ): readonly number[] {
-  const condition = profileSpeedBonusCondition(profile);
-  return passiveSpeedBonusConditionApplies(combatant, condition)
-    ? [Number(profileSpeedBonusDeltaFeet(profile))]
+  const speed = passiveSpeedBonusProfile(profile);
+  return speed !== null &&
+    passiveSpeedBonusConditionApplies(combatant, speed.condition)
+    ? [Number(speed.deltaFeet)]
     : [];
 }
 
-export function profileSpeedBonusCondition(
+function passiveSpeedBonusProfile(
   profile: BattlePassiveSpeedProfile,
-): PassiveSpeedBonusCondition {
-  return profile.kind === PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE
-    ? profile.speed.condition
-    : profile.condition;
+): PassiveSpeedBonusProfile | null {
+  if (profile.kind === PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE) {
+    return profile.speed ?? null;
+  }
+  return profile;
 }
 
 function passiveSpeedBonusConditionApplies(
@@ -475,10 +478,8 @@ function passiveSpeedBonusConditionApplies(
 
 export function profileSpeedBonusDeltaFeet(
   profile: BattlePassiveSpeedProfile,
-): MovementDeltaFeet {
-  return profile.kind === PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE
-    ? profile.speed.deltaFeet
-    : profile.deltaFeet;
+): MovementDeltaFeet | null {
+  return passiveSpeedBonusProfile(profile)?.deltaFeet ?? null;
 }
 
 export function combatantCanMoveInState(

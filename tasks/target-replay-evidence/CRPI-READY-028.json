@@ -1,0 +1,229 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "Task 70 aggregate qComponentRoute replay plus Second-Story Work owner evidence"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "acceptance": {
+    "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+    "connectorPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+    "routeClass": "component-first",
+    "durableOwner": "RuleCoreFeatureProfileSemanticsOwner",
+    "acceptedProjection": "qComponentRoute"
+  },
+  "status": "pass",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+      "qntFileSha256": "a26a9141deaebe150c5748033358ad61bc946f3a48a2ba48a6cfc8d9e2f1a8ca",
+      "componentConnectorSha256": "a26a9141deaebe150c5748033358ad61bc946f3a48a2ba48a6cfc8d9e2f1a8ca",
+      "branchFamily": "step",
+      "branchAction": "sampledTrace",
+      "observedActionTaken": "sampled aggregate trace; per-alternative branch coverage is not claimed by this artifact",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+      "traceId": "component-route=RuleCoreFeatureProfileSemanticsOwner qComponentRoute=feature-profile-semantics-component-route MBT_TRACES=1 MBT_STEPS=6",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "sampledTrace",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-features.mbt.test.ts#createRuleCoreFeatureDriver",
+        "componentOwner": "RuleCoreFeatureProfileSemanticsOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "a13e3078b8178da732df5467238822f62db7188006eddf95b44a57d1a5b43ebf",
+        "observedProjectionSha256": "a13e3078b8178da732df5467238822f62db7188006eddf95b44a57d1a5b43ebf",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": ["RuleCoreFeatureProfileSemanticsOwner"]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-features.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-features.mbt.test.ts#resolveBattleSubject|discoverBattleActs|resolveBattleInterrupt|resolveFailedAbilityCheckResourceBoost|snapshotBattle",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-features.mbt.test.ts#normalizeRuleCoreFeatureQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime feature procedure calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts#public battle-runtime reducer APIs"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreFeatureProfileSemanticsOwner"
+        ]
+      },
+      "coverageScope": {
+        "sampledTraceCount": 1,
+        "sampledStepCap": 6,
+        "branchAlternativesInDriver": 27,
+        "branchAlternativesClaimedCovered": false,
+        "note": "The sampled MBT run verifies aggregate qComponentRoute parity. It is not represented as branch-by-branch coverage for all step alternatives."
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "deterministic-owner-projection-test",
+      "owner": "CharacterSheetLinkedSpeedGrantProjectionOwner",
+      "harnessTestPath": "packages/character-sheet-runtime/src/ability-checks.test.ts",
+      "sourceUnitId": "rogue_second_story_work",
+      "stateCheck": {
+        "tag": "linked-speed-grant-projection",
+        "projection": "characterSheetLinkedSpeedGrants",
+        "expected": {
+          "sourceUnitId": "rogue_second_story_work",
+          "speedKind": "climb",
+          "feet": {
+            "kind": "walk_speed"
+          }
+        },
+        "observed": {
+          "sourceUnitId": "rogue_second_story_work",
+          "speedKind": "climb",
+          "feet": {
+            "kind": "walk_speed"
+          }
+        }
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "deterministic-owner-projection-test",
+      "owner": "CharacterSheetJumpDistanceAbilitySubstitutionOwner",
+      "harnessTestPath": "packages/character-sheet-runtime/src/ability-checks.test.ts",
+      "sourceUnitId": "rogue_second_story_work",
+      "stateCheck": {
+        "tag": "jump-distance-ability-substitution",
+        "projection": "characterSheetJumpDistanceAbility",
+        "expected": {
+          "sourceUnitId": "rogue_second_story_work",
+          "replaces": "str",
+          "use": "dex"
+        },
+        "observed": {
+          "sourceUnitId": "rogue_second_story_work",
+          "replaces": "str",
+          "use": "dex"
+        }
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "deterministic-owner-projection-test",
+      "owner": "BattlePassiveSpeedKindGrantAdmissionOwner",
+      "harnessTestPath": "packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts",
+      "sourceUnitId": "rogue_second_story_work",
+      "stateCheck": {
+        "tag": "battle-linked-speed-grant-admission",
+        "projection": "PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE",
+        "expected": {
+          "kind": "passiveSpeedKindGrants",
+          "grants": [
+            {
+              "speedKind": "climb",
+              "feet": {
+                "kind": "walkSpeed"
+              }
+            }
+          ]
+        },
+        "observed": {
+          "kind": "passiveSpeedKindGrants",
+          "grants": [
+            {
+              "speedKind": "climb",
+              "feet": {
+                "kind": "walkSpeed"
+              }
+            }
+          ]
+        }
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "deterministic-owner-projection-test",
+      "owner": "BattlePassiveSpeedKindGrantProjectionOwner",
+      "harnessTestPath": "packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts",
+      "sourceUnitId": "rogue_second_story_work",
+      "stateCheck": {
+        "tag": "battle-linked-speed-grant-projection",
+        "projection": "snapshotBattle.combatants[].movement.speedKinds",
+        "expected": [
+          {
+            "kind": "walk",
+            "speedFeet": 30,
+            "remainingFeet": 30
+          },
+          {
+            "kind": "climb",
+            "speedFeet": 30,
+            "remainingFeet": 30
+          }
+        ],
+        "observed": [
+          {
+            "kind": "walk",
+            "speedFeet": 30,
+            "remainingFeet": 30
+          },
+          {
+            "kind": "climb",
+            "speedFeet": 30,
+            "remainingFeet": 30
+          }
+        ],
+        "postMoveObserved": [
+          {
+            "kind": "walk",
+            "speedFeet": 30,
+            "remainingFeet": 15
+          },
+          {
+            "kind": "climb",
+            "speedFeet": 30,
+            "remainingFeet": 15
+          }
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ],
+  "matrixDisposition": {
+    "rowId": "rogue_second_story_work",
+    "status": "owner-evidence-recorded",
+    "owners": [
+      "CharacterSheetLinkedSpeedGrantProjectionOwner",
+      "CharacterSheetJumpDistanceAbilitySubstitutionOwner",
+      "BattlePassiveSpeedKindGrantAdmissionOwner",
+      "BattlePassiveSpeedKindGrantProjectionOwner"
+    ],
+    "noDuplicatedState": "Climb Speed is projected from the existing walk Speed through linked speed-grant semantics; Dexterity-for-jump-distance is projected from the existing passive mechanics grant."
+  }
+}

@@ -1,52 +1,37 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-027",
-  "productionModulesExtended": [],
-  "adapterModules": [
+  "taskId": "CRPI-READY-028",
+  "productionModulesExtended": [
     {
-      "path": "packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt",
-      "quarantinedWitnessNames": [
-        "qComponentRoute",
-        "RuleCoreAttackDamageDispositionOwner",
-        "componentRouteEvidence",
-        "RuleCoreComponentParseInput",
-        "RuleCoreComponentAdmitInput",
-        "RuleCoreComponentCall",
-        "RuleCoreComponentProjectResult"
-      ],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-027.json"
-      ]
+      "path": "packages/battle-runtime/src/unit-feature-support.ts",
+      "role": "admits passive linked Speed-kind grants such as Second-Story Work's Climb Speed equal to Speed"
     },
     {
-      "path": "packages/battle-runtime/src/rule-core-attack-damage-disposition.mbt.test.ts",
-      "quarantinedWitnessNames": [
-        "rule-core attack damage disposition deterministic QNT replay",
-        "createDriver",
-        "withRuleCoreComponentRoute",
-        "decodeRuleCoreComponentRoute",
-        "normalizeQuintState"
-      ],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-027.json"
-      ]
+      "path": "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
+      "role": "projects optional linked Speed-kind grants without requiring an accompanying Speed bonus"
     }
   ],
-  "accumulatorGrowth": [],
-  "expectedNextReuse": [
+  "adapterModules": [
     {
-      "driver": "packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt",
-      "module": "packages/battle-runtime/src/rule-core-component-route.ts",
-      "api": "ruleCoreComponentRoute and withRuleCoreComponentRoute remain the component-first route vocabulary for reusable rule-core parse/admit/call/project evidence."
+      "path": "packages/battle-runtime/rule-core-features.mbt.qnt",
+      "role": "aggregate literal projection witness for RuleCoreFeatureProfileSemanticsOwner qComponentRoute replay"
     },
     {
-      "driver": "packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt",
-      "module": "packages/battle-runtime/src/rule-core-attack-damage-disposition.mbt.test.ts",
-      "api": "Attack damage disposition scenario projections remain derived from public battle-runtime attack resolution before downstream attack route connectors consume RuleCoreAttackDamageDispositionOwner."
+      "path": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+      "role": "target MBT harness entrypoint for aggregate feature component-route replay"
     }
+  ],
+  "accumulatorGrowth": [
+    "Restored the Task 70 aggregate rule-core feature driver as a self-contained witness over the existing feature-family action set.",
+    "Added one aggregate harness test that reuses createRuleCoreFeatureDriver, featureStateCheck, and qComponentRoute comparison.",
+    "Extended existing passive Speed-kind grant admission so a passive class feature can project a single linked Climb Speed without a bundled Speed bonus."
+  ],
+  "expectedNextReuse": [
+    "Future feature-family split work can keep using the focused split drivers for narrower MBT runs while Task 70 evidence points at the required aggregate driver path.",
+    "Additional linked Speed-kind grants can reuse the same nonempty grant tuple and movement projection path without adding durable movement state."
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 69 observes copied qComponentRoute through RuleCoreAttackDamageDispositionOwner. No production module or durable BattleState field was introduced."
+    "notes": "Task 70 target replay is satisfied by packages/battle-runtime/rule-core-features.mbt.qnt aggregate qComponentRoute evidence. The task-specific rogue_second_story_work owner row is satisfied by deterministic character-sheet and battle-runtime linked Speed/jump projection evidence."
   }
 }
