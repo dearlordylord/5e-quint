@@ -1,5 +1,103 @@
 # Validation Report
 
+## CRP06-SRO-03
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Driver: `packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt`
+- Route connector: `packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+- Acceptance status: `accepted`
+
+Allowed inputs used:
+
+- `packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt`
+- `packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt`
+- `packages/character-sheet-runtime/character-sheet-reducer-route.qnt`
+- `packages/character-sheet-runtime/src/rests.ts`
+- `packages/character-sheet-runtime/src/spell-slots.ts`
+- `packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts`
+- `packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts`
+- `packages/character-sheet-runtime/README.md`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `.references/srd-5.2.1/Classes/Warlock.md`
+- `.references/srd-5.2.1/Classes/Wizard.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+The Character Sheet Spell Slot/Pact Slot replay now has accepted target evidence
+for both copied projections required by Task 101. The semantic replay compares
+`qState` against public Character Sheet sheet creation, Short Rest, Long Rest,
+interruption, slot conversion, and Magical Cunning entrypoints for ordinary
+Spell Slot capacity rejection, Pact Slot over-capacity rejection, Short Rest
+Pact Slot restoration, Arcane Recovery ordinary-slot refund, Long Rest ordinary
+and Pact Slot restoration, created Spell Slot clearing, no-benefit
+interruptions, Magical Cunning Pact Slot recovery, and named recovery
+rejections. The route replay compares copied `qRoute` against public
+character-sheet reducer route events for spell resource, feature resource,
+resource spend, rest duration, recovery selection, ordinary Spell Slot delta,
+Pact Slot delta, created-slot expiry, feature recovery state, and spell-resource
+rejection facts.
+
+No duplicate durable capacity state was introduced. Ordinary Spell Slot
+capacity, Pact Slot level, and Pact Slot count remain projections from
+`CharacterBuild`. `CharacterSheetSpellSlotOwner` owns nonzero ordinary Spell
+Slot expenditures, created Spell Slot delta state, created-slot expiry, and
+Arcane Recovery ordinary-slot refunds; `CharacterSheetPactSlotOwner` owns Pact
+Slot expenditure and recovery; `CharacterSheetFeatureResourceOwner` owns
+rest-triggered feature-use lockouts for Arcane Recovery and Magical Cunning.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Harness | Status |
+| --- | --- | --- | --- |
+| `packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doRejectMismatchedOrdinarySpellSlotCapacity` | `tasks/target-replay-evidence/CRP06-SRO-03.json#driver:packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doRejectMismatchedOrdinarySpellSlotCapacity#trace:semantic-qState=spell-slots-pact-slots action=doRejectMismatchedOrdinarySpellSlotCapacity` and `#trace:public-route=characterSheetSpellResource action=doRejectMismatchedOrdinarySpellSlotCapacity qRoute=spell-slots-pact-slots-public-route` | `packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts`, `packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts` | `covered` |
+| `packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doRejectPactSlotExpenditureOverCapacity` | `tasks/target-replay-evidence/CRP06-SRO-03.json#driver:packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doRejectPactSlotExpenditureOverCapacity` | same | `covered` |
+| `packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doShortRestRestoresPactSlotsOnly` | `tasks/target-replay-evidence/CRP06-SRO-03.json#driver:packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doShortRestRestoresPactSlotsOnly` | same | `covered` |
+| `packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doShortRestArcaneRecoveryRefundsOrdinarySpellSlot` | `tasks/target-replay-evidence/CRP06-SRO-03.json#driver:packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doShortRestArcaneRecoveryRefundsOrdinarySpellSlot` | same | `covered` |
+| `packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doCompleteLongRestRestoresOrdinaryPactAndClearsCreatedSlots` | `tasks/target-replay-evidence/CRP06-SRO-03.json#driver:packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doCompleteLongRestRestoresOrdinaryPactAndClearsCreatedSlots` | same | `covered` |
+| `packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doInterruptShortRestNoSlotBenefit` | `tasks/target-replay-evidence/CRP06-SRO-03.json#driver:packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doInterruptShortRestNoSlotBenefit` | same | `covered` |
+| `packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doInterruptLongRestBeforeOneHourNoSlotBenefit` | `tasks/target-replay-evidence/CRP06-SRO-03.json#driver:packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doInterruptLongRestBeforeOneHourNoSlotBenefit` | same | `covered` |
+| `packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doInterruptLongRestWithShortRestSlotBenefits` | `tasks/target-replay-evidence/CRP06-SRO-03.json#driver:packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doInterruptLongRestWithShortRestSlotBenefits` | same | `covered` |
+| `packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doMagicalCunningRecoversPactSlots` | `tasks/target-replay-evidence/CRP06-SRO-03.json#driver:packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doMagicalCunningRecoversPactSlots` | same | `covered` |
+| `packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doRejectMagicalCunningWithoutExpendedPactSlots` | `tasks/target-replay-evidence/CRP06-SRO-03.json#driver:packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doRejectMagicalCunningWithoutExpendedPactSlots` | same | `covered` |
+| `packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doRejectArcaneRecoveryPactSlotRefund` | `tasks/target-replay-evidence/CRP06-SRO-03.json#driver:packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doRejectArcaneRecoveryPactSlotRefund` | same | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRP06-SRO-03.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id patterns: `semantic-qState=spell-slots-pact-slots action=<branchAction>` and `public-route=characterSheetSpellResource action=<branchAction> qRoute=spell-slots-pact-slots-public-route`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRP06-SRO-03/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 101.
+
+Verification results:
+
+- Base check passed: `git log --oneline -1 ralph/cleanroom-character-sheet-lane-20260705/integration` and `git log --oneline -1 HEAD` both resolved to `7a9151265 Mark Ralph task 100 done`; `git merge-base --is-ancestor 7a9151265cdaeaca86c04e39ad32a1fe496f6bd8 HEAD` passed.
+- RAW/ubiquitous-language review passed against Spell Slots, Rules Glossary Short Rest and Long Rest, Warlock Pact Magic and Magical Cunning, Wizard Arcane Recovery, `UBIQUITOUS_LANGUAGE.md`, and `packages/character-sheet-runtime/README.md`.
+- Focused Character Sheet deterministic replay passed: `START=$(date +%s); pnpm --filter @dnd/character-sheet-runtime exec vitest run src/spell-slots-pact-slots.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "Spell Slot|Pact Slot" 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 2 files, 3 tests, semantic `qState` and route `qRoute` replay for 11 branch obligations; final timed run `TOTAL: 5s`.
+- Target evidence subset validation passed for CRP06-SRO-03: 11 covered obligations; semantic `qState` comparator `character-sheet-spell-slots-pact-slots-state` and `qRoute` comparator `route-event-list` accepted. Full target-evidence mode reports expected missing evidence for unrelated tasks when pointed at this one evidence file.
+- `pnpm cleanroom-branch-coverage:check` passed.
+- `git diff --check` passed.
+- `pnpm --filter @dnd/character-sheet-runtime typecheck` passed.
+- Requested broad verification `flock /tmp/dnd-mbt-qnt.lock pnpm quality` reached repo-wide typecheck and failed in unrelated baseline code: `packages/character-creation-runtime/src/index.test.ts(10401,5): error TS2322: Type 'string' is not assignable to type "species_gnome_gnomish_lineage".` No Task 101 files are in that ownership surface.
+- Reviewer-loop convergence passed: round 1 verified RAW traceability, ubiquitous-language/domain terms, no duplicate Spell Slot or Pact Slot capacity state, owner boundaries, no authored-identity dispatch in recovery execution, and no remaining reasonable code-review findings.
+
 ## CRP06-SRO-02
 
 - Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`

@@ -1,69 +1,65 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRP06-SRO-02",
+  "taskId": "CRP06-SRO-03",
   "productionModulesExtended": [],
   "adapterModules": [
     {
-      "path": "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt",
+      "path": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
       "quarantinedWitnessNames": [
         "qState",
-        "CharacterSheetHpRestHitDiceState",
-        "CharacterSheetHpRestHitDiceOutcome"
+        "CharacterSheetSpellSlotsPactSlotsState",
+        "CharacterSheetSpellSlotsPactSlotsOutcome"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRP06-SRO-02.json"
+        "tasks/target-replay-evidence/CRP06-SRO-03.json"
       ]
     },
     {
-      "path": "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.route.mbt.qnt",
+      "path": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
       "quarantinedWitnessNames": [
         "qRoute",
-        "SheetRestRouteSubject",
-        "SheetHitPointRouteSubject",
+        "SheetSpellResourceRouteSubject",
+        "SheetFeatureResourceRouteSubject",
+        "SheetResourceSpendFill",
         "SheetRestDurationFill",
-        "SheetHitDiceSpendFill",
-        "SheetRestBenefitChoiceHoleFamily",
-        "CharacterSheetHitPointOwner",
-        "CharacterSheetHitDiceOwner",
-        "CharacterSheetStateOwner"
+        "SheetRecoverySelectionFill",
+        "SheetOrdinarySpellSlotDeltaFact",
+        "SheetPactSlotDeltaFact",
+        "SheetCreatedSlotExpiryFact",
+        "SheetFeatureRecoveryStateFact",
+        "SheetSpellResourceRejectionFact"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRP06-SRO-02.json"
+        "tasks/target-replay-evidence/CRP06-SRO-03.json"
       ]
     },
     {
-      "path": "packages/character-sheet-runtime/src/hp-rest-hit-dice.mbt.test.ts",
+      "path": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "Character Sheet HP/rest/Hit Dice deterministic QNT replay",
-        "createHpRestHitDiceDriver",
-        "normalizeHpRestHitDiceQuintState"
+        "Character Sheet Spell Slot/Pact Slot deterministic QNT replay",
+        "createSlotDriver",
+        "normalizeSlotQuintState"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRP06-SRO-02.json"
+        "tasks/target-replay-evidence/CRP06-SRO-03.json"
       ]
     },
     {
       "path": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "routes HP rest and Hit Dice transitions through the sheet reducer surface",
-        "createIndexedRouteDriver",
+        "routes in-scope Spell Slot and Pact Slot transitions through the sheet reducer surface",
+        "createReadyRouteDriver",
         "normalizeCharacterSheetRouteQuintState"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRP06-SRO-02.json"
+        "tasks/target-replay-evidence/CRP06-SRO-03.json"
       ]
     }
   ],
   "accumulatorGrowth": [],
-  "expectedNextReuse": [
-    {
-      "driver": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
-      "module": "packages/character-sheet-runtime/src/rests.ts",
-      "api": "Task 101 can reuse the same public Short Rest, Long Rest, interruption, and route connector patterns for spell-slot and Pact Slot rest transitions."
-    }
-  ],
+  "expectedNextReuse": [],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 100 observes semantic qState and copied qRoute for Character Sheet HP/rest/Hit Dice through public character-sheet rest entrypoints. No production module or duplicate durable state was introduced."
+    "notes": "Task 101 observes semantic qState and copied qRoute for Character Sheet Spell Slot, Pact Slot, and rest-triggered recovery transitions through public character-sheet sheet creation, rest, recovery, and route entrypoints. No production module or duplicate durable capacity state was introduced."
   }
 }
