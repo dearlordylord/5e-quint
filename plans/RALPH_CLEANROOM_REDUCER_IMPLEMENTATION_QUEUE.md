@@ -391,7 +391,7 @@
     {
       "number": 65,
       "id": "CRPI-READY-024",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-weapon-mastery-selected-identity"
     },
     {
@@ -4362,7 +4362,7 @@ Plan Impact:
 
 ### Task 65 - CRPI-READY-024
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
