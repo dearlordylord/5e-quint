@@ -1,5 +1,99 @@
 # Validation Report
 
+## CRP05-SBE-01
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Driver: `packages/character-battle-runtime/character-battle-init-projection.mbt.qnt`
+- Route connectors:
+  `packages/character-battle-runtime/character-battle-init-projection.route.mbt.qnt`,
+  `packages/character-battle-runtime/character-battle-encounter-composition.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+- Acceptance status: `accepted`
+
+Allowed inputs used:
+
+- `packages/character-battle-runtime/character-battle-init-projection.mbt.qnt`
+- `packages/character-battle-runtime/character-battle-init-projection.route.mbt.qnt`
+- `packages/character-battle-runtime/character-battle-encounter-composition.route.mbt.qnt`
+- `packages/character-battle-runtime/character-battle-reducer-route.qnt`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Playing-the-Game.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`
+- `.references/srd-5.2.1/Classes/Warlock.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+Character-battle runtime now exposes typed route evidence for Character Sheet to
+battle init projection and composed sheet-plus-stat-block battle entry. Semantic
+init APIs remain intact, while cumulative init-projection `qRoute` evidence is
+owned by public production route replay functions that match the connector
+`replayIndex` semantics. The composed entrypoint creates a real `BattleState`
+through `startBattle`; participant membership, Encounter Side, Initiative order,
+and the first current actor are read from that state rather than stored in a
+driver-local cache. Encounter-composition route facts are produced only after
+the typed sheet-plus-stat-block entrypoint verifies the expected sheet-derived
+character combatant, non-sheet stat-block combatant, and current actor. Build
+init issue routing reuses the battle-init owner constant for the
+max-HP-exceeds-build-max failure so unrelated build projection failures cannot
+claim the hit-point projection branch.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Harness | Status |
+| --- | --- | --- | --- |
+| `packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doProjectSheetHitPointsArmorClassConditionsAndProfiles` | `tasks/target-replay-evidence/CRP05-SBE-01.json#driver:packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doProjectSheetHitPointsArmorClassConditionsAndProfiles#trace:semantic-qState action=doProjectSheetHitPointsArmorClassConditionsAndProfiles` | `packages/character-battle-runtime/src/character-battle-init-projection.mbt.test.ts` | `covered` |
+| `packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doProjectPurePactMagicSlot` | `tasks/target-replay-evidence/CRP05-SBE-01.json#driver:packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doProjectPurePactMagicSlot#trace:semantic-qState action=doProjectPurePactMagicSlot` | `packages/character-battle-runtime/src/character-battle-init-projection.mbt.test.ts` | `covered` |
+| `packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doRejectMixedSpellAndPactSlotInit` | `tasks/target-replay-evidence/CRP05-SBE-01.json#driver:packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doRejectMixedSpellAndPactSlotInit#trace:semantic-qState action=doRejectMixedSpellAndPactSlotInit` | `packages/character-battle-runtime/src/character-battle-init-projection.mbt.test.ts` | `covered` |
+| `packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doRejectBuildMaximumAboveBuildMaximum` | `tasks/target-replay-evidence/CRP05-SBE-01.json#driver:packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doRejectBuildMaximumAboveBuildMaximum#trace:semantic-qState action=doRejectBuildMaximumAboveBuildMaximum` | `packages/character-battle-runtime/src/character-battle-init-projection.mbt.test.ts` | `covered` |
+| `packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doRejectStableRecoveryProgressDuringInit` | `tasks/target-replay-evidence/CRP05-SBE-01.json#driver:packages/character-battle-runtime/character-battle-init-projection.mbt.qnt#step:doRejectStableRecoveryProgressDuringInit#trace:semantic-qState action=doRejectStableRecoveryProgressDuringInit` | `packages/character-battle-runtime/src/character-battle-init-projection.mbt.test.ts` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRP05-SBE-01.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id patterns:
+  `semantic-qState action=<branchAction>`,
+  `init-qRoute action=<branchAction>`,
+  `encounter-qRoute action=<branchAction>`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRP05-SBE-01/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 78.
+
+Verification results:
+
+- Base check passed: `git log --oneline -1 ralph/cleanroom-character-battle-lane-20260705/integration` and `git log --oneline -1 HEAD` both resolved to `84e17424b Merge Ralph route replay tasks 61-69`; `git merge-base --is-ancestor 84e17424ba5882f076783f4bd0780b34d2a0a58e HEAD` passed.
+- RAW/ubiquitous-language review passed against The Order of Combat, Initiative, Hit Points, Temporary Hit Points, Spell Slots, Warlock Pact Magic, and `UBIQUITOUS_LANGUAGE.md`.
+- `pnpm --filter @dnd/character-battle-runtime typecheck` passed.
+- `pnpm --filter @dnd/character-battle-runtime test` passed with 159 tests.
+- Focused MBT replay passed: `START=$(date +%s); MBT_TRACES=1 pnpm --filter @dnd/character-battle-runtime exec vitest run src/character-battle-init-projection.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "initialization deterministic|routes Character Sheet|routes sheet-derived encounter"; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 3 tests and 4 skipped; final revision-round-2 run was `TOTAL: 10s`. The route connector driver now imports the production route replay functions instead of test-local Task 78 route appenders.
+- `pnpm cleanroom-branch-coverage:check --target-replay-evidence tasks/target-replay-evidence/CRP05-SBE-01.json` was diagnostic only and failed because the CLI requires target evidence for every in-scope repository obligation, not only Task 78. The diagnostic run parsed the Task 78 evidence before reporting global missing evidence outside this task.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- `flock /tmp/dnd-mbt-qnt.lock pnpm quality` was diagnostic and failed at repo-wide `turbo typecheck` because `packages/character-creation-runtime/src/index.test.ts(10401,5)` has a pre-existing off-surface type error: `Type 'string' is not assignable to type '"species_gnome_gnomish_lineage"'`.
+- Reviewer-loop convergence passed: round 1 removed the test-local route event union in favor of production route vocabulary; round 2 moved Task 78 cumulative route replay into production, made the route MBT driver consume that production replay, tied build max-HP rejection routing to the battle-init owner constant, and constrained encounter-composition route facts to the typed composed-entry boundary.
+
+Plan Impact:
+
+- Status: `update-required`
+- Affected task: Task 78 / `CRP05-SBE-01` is unblocked by accepted semantic and route replay evidence.
+- Required plan edits: include
+  `packages/character-battle-runtime/character-battle-encounter-composition.route.mbt.qnt`
+  in the Task 78 connector/evidence list where only the init-projection route
+  connector is currently named.
+
+
 ## CRP06-SRO-02
 
 - Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`

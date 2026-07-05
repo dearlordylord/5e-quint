@@ -2535,7 +2535,33 @@
             ],
             "blockers": []
           },
-          "routeConnectorPath": "packages/character-battle-runtime/character-battle-init-projection.route.mbt.qnt"
+          "routeConnectorPath": "packages/character-battle-runtime/character-battle-init-projection.route.mbt.qnt",
+          "routeConnectorPaths": [
+            "packages/character-battle-runtime/character-battle-init-projection.route.mbt.qnt",
+            "packages/character-battle-runtime/character-battle-encounter-composition.route.mbt.qnt"
+          ],
+          "qntAcceptance": {
+            "required": [
+              {
+                "tag": "qnt-semantic",
+                "ownerPath": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt",
+                "projection": "qState",
+                "comparator": "battle-init-projection-state"
+              },
+              {
+                "tag": "qnt-route",
+                "connectorPath": "packages/character-battle-runtime/character-battle-init-projection.route.mbt.qnt",
+                "projection": "qRoute",
+                "comparator": "route-event-list"
+              },
+              {
+                "tag": "qnt-route",
+                "connectorPath": "packages/character-battle-runtime/character-battle-encounter-composition.route.mbt.qnt",
+                "projection": "qRoute",
+                "comparator": "route-event-list"
+              }
+            ]
+          }
         },
         {
           "driverPath": "packages/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt",
