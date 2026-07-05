@@ -168,14 +168,15 @@ function extractTableSelectedUnitIdentityReplays(text) {
     /const\s+selectedUnitIdentityReplays\s*=\s*\[([\s\S]*?)\]\s+as const satisfies/s,
   );
   if (!tableMatch) return [];
+  const constBindings = extractStringConstBindings([{ text }]);
   return [
     ...tableMatch[1].matchAll(
-      /\{\s*taskId:\s*"([^"]+)"[\s\S]*?unitId:\s*"([^"]+)"[\s\S]*?actions:\s*\[([\s\S]*?)\][\s\S]*?sequences:\s*\[/g,
+      /\{\s*taskId:\s*"([^"]+)"[\s\S]*?unitId:\s*(?:"([^"]+)"|([A-Za-z_]\w*))[\s\S]*?actions:\s*\[([\s\S]*?)\][\s\S]*?sequences:\s*\[/g,
     ),
   ].map((match) => ({
     taskId: match[1],
-    unitId: match[2],
-    actionNames: [...match[3].matchAll(/"([A-Za-z_]\w*)"/g)].map(
+    unitId: match[2] ?? constBindings.get(match[3]) ?? match[3],
+    actionNames: [...match[4].matchAll(/"([A-Za-z_]\w*)"/g)].map(
       (actionMatch) => actionMatch[1],
     ),
   }));

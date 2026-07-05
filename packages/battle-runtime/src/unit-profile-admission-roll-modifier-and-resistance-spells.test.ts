@@ -3,7 +3,9 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3SPELL-01-ENHANCE-ABILITY-UPCAST-PER-TARGET enhance_ability
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-ENTHRALL-PERCEPTION-RUNTIME enthrall
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-PROTECTION-FROM-POISON protection_from_poison
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L5-B08-PROTECTION-FROM-ENERGY protection_from_energy
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L5-B08-PROTECTION-FROM-ENERGY protection_from_energy
+// UNIT-IDENTITY-REPLAY: L5-B08-PROTECTION-FROM-ENERGY protection_from_energy doReplayProtectionFromEnergyChosenDamageResistance
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV30F resistance
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-roll-modifier spell.invocation-damage-reduction spell.invocation-condition-removal-protection spell.invocation-chosen-damage-resistance
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
@@ -83,6 +85,7 @@ import {
 } from "./battle-reducer/hole-helpers.ts";
 import { BattleHoleSchema, type BattleFill, type BattleHole } from "./index.ts";
 import { Either, Schema } from "effect";
+import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.ts";
 
 const protectionFromEnergyUnitId = "protection_from_energy";
 const protectionFromEnergyDurationTicks = elapsedTimeTicks(600);
@@ -2211,4 +2214,78 @@ describe("L5-B08 Protection from Energy deterministic Spell Unit admission", () 
       Hp(Number(requireCombatant(weaponBase, spellTargetId).hp) - 4),
     );
   });
+});
+
+defineSelectedIdentityReplayWitness({
+  describeLabel: "L5-B08-PROTECTION-FROM-ENERGY selected identity replay",
+  taskId: "L5-B08-PROTECTION-FROM-ENERGY",
+  initialProjection: {
+    unitId: protectionFromEnergyUnitId,
+    procedure: "initial",
+    damageType: "none",
+  },
+  units: [
+    {
+      unitId: protectionFromEnergyUnitId,
+      procedures: [
+        {
+          actionName: "doReplayProtectionFromEnergyChosenDamageResistance",
+          projectionAfter: {
+            unitId: protectionFromEnergyUnitId,
+            procedure: "chosenDamageResistance",
+            damageType: "fire",
+          },
+          discover: () => {
+            const spell = authoredProtectionFromEnergySpell();
+            const state = spellBattle({
+              preparedSpells: [spell],
+              spellSlots: [{ spellLevel: 3, count: 1 }],
+            });
+            const act = spellAct({
+              state,
+              spellId: protectionFromEnergyUnitId,
+              slotLevel: 3,
+            });
+            const resolved = resolveBattleSubject({
+              state,
+              subject: act.subject,
+              fills: [
+                knownWillingSpellTargetFill(
+                  requireHole(act.initialHoles, "targetChoice"),
+                  protectionFromEnergyUnitId,
+                  spellCasterId,
+                  spellTargetId,
+                ),
+                damageTypeChoiceFill(
+                  requireHole(act.initialHoles, "damageTypeChoice"),
+                  "fire",
+                ),
+              ],
+            });
+            if (resolved.tag !== "resolved") {
+              throw new Error(
+                "Expected selected Protection from Energy replay.",
+              );
+            }
+            const effect = requireCombatant(
+              resolved.state,
+              spellTargetId,
+            ).activeEffects.find(
+              (candidate) =>
+                candidate.kind === "damageResistance" &&
+                candidate.sourceSpellId === protectionFromEnergyUnitId,
+            );
+            return {
+              unitId: protectionFromEnergyUnitId,
+              procedure: "chosenDamageResistance",
+              damageType:
+                effect?.kind === "damageResistance"
+                  ? effect.damageType
+                  : "none",
+            };
+          },
+        },
+      ],
+    },
+  ],
 });

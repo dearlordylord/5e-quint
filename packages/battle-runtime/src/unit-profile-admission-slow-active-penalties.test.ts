@@ -1,5 +1,9 @@
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME slow
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME slow
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME slow
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME slow
+// UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME slow doReplaySlowActivePenalties
+// UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-SLOW-TURN-AND-SOMATIC-RUNTIME slow doReplaySlowTurnAndSomatic
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-slow-active-penalties
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 import {
@@ -56,6 +60,7 @@ import type {
 import { monsterMultiattackStatBlock } from "./battle-runtime-test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.ts";
 
 const slowExtraTargetId = combatantId("unit-profile-slow-extra-target");
 const slowMultiattackTargetId = combatantId(
@@ -762,6 +767,102 @@ function requireSpellSavingThrowOutcomeHole(
   }
   return hole;
 }
+
+defineSelectedIdentityReplayWitness({
+  describeLabel:
+    "L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME selected identity replay",
+  taskId: "L3-FOLLOWUP-SLOW-ACTIVE-PENALTIES-RUNTIME",
+  initialProjection: {
+    unitId: slowUnitId,
+    procedure: "initial",
+    targetHasSlow: false,
+    somaticFailureRequested: false,
+  },
+  units: [
+    {
+      unitId: slowUnitId,
+      procedures: [
+        {
+          actionName: "doReplaySlowActivePenalties",
+          projectionAfter: {
+            unitId: slowUnitId,
+            procedure: "slowActivePenalties",
+            targetHasSlow: true,
+            somaticFailureRequested: false,
+          },
+          discover: () => {
+            const state = castFailedSlow(
+              spellBattle({
+                preparedSpells: [spellRecord(slowUnitId)],
+                spellSlots: [{ spellLevel: 3, count: 1 }],
+              }),
+            );
+            return {
+              unitId: slowUnitId,
+              procedure: "slowActivePenalties",
+              targetHasSlow: requireCombatant(
+                state,
+                spellTargetId,
+              ).activeEffects.some(
+                (effect) =>
+                  effect.kind === "slowActivePenalties" &&
+                  effect.sourceSpellId === slowUnitId,
+              ),
+              somaticFailureRequested: false,
+            };
+          },
+        },
+        {
+          actionName: "doReplaySlowTurnAndSomatic",
+          projectionAfter: {
+            unitId: slowUnitId,
+            procedure: "slowTurnAndSomatic",
+            targetHasSlow: true,
+            somaticFailureRequested: true,
+          },
+          discover: () => {
+            const targetTurn = targetTurnAfterFailedSlow(
+              spellBattle({
+                preparedSpells: [spellRecord(slowUnitId)],
+                spellSlots: [{ spellLevel: 3, count: 1 }],
+                targetPreparedSpells: [spellRecord(expeditiousRetreatUnitId)],
+              }),
+            );
+            const act = spellActForActor(
+              targetTurn,
+              spellTargetId,
+              expeditiousRetreatUnitId,
+            );
+            const slowChance = requireSlowSomaticSpellFailureHole(
+              act.initialHoles,
+            );
+            const failed = resolveBattleSubject({
+              state: targetTurn,
+              subject: act.subject,
+              fills: [slowSomaticSpellFailureFill(slowChance, true)],
+            });
+            if (failed.tag !== "resolved") {
+              throw new Error("Expected selected Slow Somatic replay.");
+            }
+            return {
+              unitId: slowUnitId,
+              procedure: "slowTurnAndSomatic",
+              targetHasSlow: requireCombatant(
+                failed.state,
+                spellTargetId,
+              ).activeEffects.some(
+                (effect) =>
+                  effect.kind === "slowActivePenalties" &&
+                  effect.sourceSpellId === slowUnitId,
+              ),
+              somaticFailureRequested: true,
+            };
+          },
+        },
+      ],
+    },
+  ],
+});
 
 function requireSlowEndTurnSaveHole(holes: readonly BattleHole[]): Extract<
   BattleHole,

@@ -1200,12 +1200,34 @@ function taskClaimIncludesProfile(taskClaims, taskId, profileId) {
 
 function validateSelectedIdentityHardGate({
   inventory,
+  scannedClaims,
   unitClaims,
   unitEvidence,
 }) {
-  const selectedIdentityEvidenceUnitIds = new Set(
+  const scannedSelectedReplayEvidence = new Set(
+    (scannedClaims?.selectedUnitIdentityReplays ?? []).map((row) =>
+      unitEvidenceRowKey(
+        row.ownerPath,
+        selectedIdentityReplayEvidenceTag,
+        row.taskId,
+        row.unitId,
+      ),
+    ),
+  );
+  const replayBackedSelectedIdentityEvidenceUnitIds = new Set(
     unitEvidence
-      .filter((row) => row.evidence?.tag === selectedIdentityReplayEvidenceTag)
+      .filter(
+        (row) =>
+          row.evidence?.tag === selectedIdentityReplayEvidenceTag &&
+          scannedSelectedReplayEvidence.has(
+            unitEvidenceRowKey(
+              row.evidence.ownerPath,
+              row.evidence.tag,
+              row.evidence.taskId,
+              row.unitId,
+            ),
+          ),
+      )
       .map((row) => row.unitId),
   );
   const claimsByUnitId = new Map(
@@ -1222,7 +1244,7 @@ function validateSelectedIdentityHardGate({
     ) {
       continue;
     }
-    if (selectedIdentityEvidenceUnitIds.has(unit.unitId)) continue;
+    if (replayBackedSelectedIdentityEvidenceUnitIds.has(unit.unitId)) continue;
     if (hasSelectedIdentityNonApplicableDisposition(claim)) continue;
     issues.push(
       `Supported executable Unit ${unit.unitId} has no ${selectedIdentityReplayEvidenceTag} evidence and no selectedIdentityEvidenceDisposition not-applicable classification.`,
@@ -1275,6 +1297,7 @@ function validateCoverageInputs(
     issues.push(
       ...validateSelectedIdentityHardGate({
         inventory,
+        scannedClaims,
         unitClaims,
         unitEvidence,
       }),
