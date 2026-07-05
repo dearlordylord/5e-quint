@@ -1,0 +1,74 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/sorcerer-metamagic-heightened-selected-identity.mbt.test.ts Heightened Spell copied qRoute versus public reducer replay"
+  },
+  "cleanroomManifestSourceCommitSha": "10baec50712df61a7a45ac533f61d0536b6410dd",
+  "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-heightened-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      "qntFileSha256": "8e5d1d0725ad38b5183ce700f36656e548491723d32eaa5ab011b055f39d0f18",
+      "routeConnectorSha256": "b71d4e02d3cb1a1227fcdae7145b9066520abe0a8a25b4e9424c5583fcbb70c8",
+      "branchFamily": "step",
+      "branchAction": "doResolveHeightenedHideousLaughter",
+      "observedActionTaken": "doResolveHeightenedHideousLaughter",
+      "harnessTestPath": "packages/battle-runtime/src/sorcerer-metamagic-heightened-selected-identity.mbt.test.ts",
+      "traceId": "public-route=metamagicSavingThrowRollMode action=doResolveHeightenedHideousLaughter qRoute=metamagic-saving-throw-roll-mode-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "stepRouteSavingThrowRollMode",
+        "delegatedAction": "doRouteSavingThrowRollMode",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/sorcerer-metamagic-heightened-selected-identity.mbt.test.ts#createHeightenedMetamagicRouteReplayDriver"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "3b5778d67845fe5db709a1a3d5a099b4917a37807459db5d3ca6c1e0acf671a1",
+        "observedProjectionSha256": "3b5778d67845fe5db709a1a3d5a099b4917a37807459db5d3ca6c1e0acf671a1",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+          "stepAction": "stepRouteSavingThrowRollMode",
+          "delegatedAction": "doRouteSavingThrowRollMode",
+          "qntStateField": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "public-reducer-route-events",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(state), discoverBattleActs(state) act selection, and BattleResolutionResult.routeEvents during Heightened Spell Hideous Laughter saving-throw roll-mode resolution",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=metamagicSavingThrowRollMode",
+          "BattleReducerRouteEvent.owner=battleFeatureResource",
+          "BattleReducerRouteEvent.owner=battleSavingThrowRollMode",
+          "BattleReducerRouteEvent.owner=battleSavingThrowOutcome",
+          "BattleReducerRouteEvent.owner=battleConditionLifecycle",
+          "BattleSubject.actionSpell.metamagic.effectKind=saving_throw_disadvantage",
+          "BattleSubject.actionSpell.invocation.procedure=hideousLaughter",
+          "BattleSpellSavingThrowOutcomeHole.targetRollModes.rollMode=disadvantage",
+          "CharacterBattlePointPoolResourceState.pointsRemaining",
+          "BattleCreatureState.activeEffects"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}

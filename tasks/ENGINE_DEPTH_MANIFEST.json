@@ -1,16 +1,18 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-014",
+  "taskId": "CRPI-READY-018",
   "productionModulesExtended": [
     {
       "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "role": "domain-api",
       "domainApis": [
-        "BattleReducerRouteEvent.subject=metamagicSpellDurationProjection",
+        "BattleReducerRouteEvent.subject=metamagicBonusActionCastingTime",
         "BattleReducerRouteEvent.owner=battleFeatureResource",
-        "BattleReducerRouteEvent.owner=battleActiveEffect",
-        "BattleReducerRouteEvent.owner=battleConcentration",
-        "battleReducerRouteEventsForDiscoveredAct",
+        "BattleReducerRouteEvent.owner=battleActionEconomy",
+        "BattleReducerRouteEvent.owner=battleSpellSlotAndActionEconomy",
+        "BattleReducerRouteEvent.owner=battleTargetSelection",
+        "BattleReducerRouteEvent.owner=battleSpellAttackProcedure",
+        "BattleReducerRouteEvent.owner=battleTurnBoundary",
         "battleReducerRouteForResolution"
       ]
     }
@@ -20,53 +22,61 @@
       "path": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
       "quarantinedWitnessNames": [
         "qRoute",
-        "MetamagicSpellDurationProjectionRouteSubject",
+        "MetamagicBonusActionCastingTimeRouteSubject",
         "BattleFeatureResourceOwner",
-        "BattleActiveEffectOwner",
-        "BattleConcentrationOwner",
-        "doRouteSpellDurationProjection",
-        "stepRouteSpellDurationProjection"
+        "BattleActionEconomyOwner",
+        "BattleSpellSlotAndActionEconomyOwner",
+        "BattleTargetSelectionOwner",
+        "BattleSpellAttackProcedureOwner",
+        "BattleTurnBoundaryOwner",
+        "doRouteBonusActionCastingTime",
+        "stepRouteBonusActionCastingTime"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-014.json"
+        "tasks/target-replay-evidence/CRPI-READY-018.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/sorcerer-metamagic-extended-selected-identity.mbt.test.ts",
+      "path": "packages/battle-runtime/src/sorcerer-metamagic-spell-attack-selected-identity.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "doResolveExtendedCreatureSizeIncrease",
-        "compares Extended Spell duration-projection public reducer route to copied qRoute",
-        "createExtendedMetamagicRouteReplayDriver"
+        "doResolveQuickenedSpellAttack",
+        "compares Quickened Spell attack public reducer route to copied qRoute",
+        "createQuickenedSpellAttackRouteReplayDriver"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-014.json"
+        "tasks/target-replay-evidence/CRPI-READY-018.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/src/sorcerer-metamagic-selected-identity-support.ts",
+      "quarantinedWitnessNames": [
+        "observeQuickenedRayOfFrostRoute"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-READY-018.json"
       ]
     }
   ],
   "accumulatorGrowth": [
     {
-      "fieldPath": "AvailableBattleAct.routeEvents",
-      "reason": "Extended Spell diagnostics expose the public duration-projection discovery frontier through discoverBattleActs."
-    },
-    {
       "fieldPath": "BattleResolutionResult.routeEvents",
-      "reason": "Extended Spell diagnostics expose active Spell Effect and Concentration owner evidence through public subject resolution."
+      "reason": "Quickened Spell attack diagnostics expose bonus-action casting-time discovery, action-economy and spell-slot settlement, target-selection ownership, spell Attack Roll ownership, and turn-boundary lock ownership through public subject resolution."
     }
   ],
   "expectedNextReuse": [
     {
-      "driver": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-subtle-selected-identity.mbt.qnt",
+      "driver": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.qnt",
       "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "api": "Cast-property Metamagic projection through typed action-spell Metamagic facts and existing public route events"
+      "api": "Quickened Spell route projection remains derived from typed bonus-action casting-time facts and reducer-owned spell-attack holes/fills rather than selected option identity"
     },
     {
-      "driver": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-heightened-selected-identity.mbt.qnt",
-      "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "api": "Metamagic route projection remains derived from typed effect facts and reducer-owned holes/fills rather than selected option identity"
+      "driver": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      "module": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      "api": "stepRouteBonusActionCastingTime is a deterministic copied-route replay wrapper for doRouteBonusActionCastingTime"
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 45 observes the copied Metamagic spell-duration projection qRoute through public reducer route events for Extended Spell Enlarge/Reduce creature-size resolution. No new BattleState field was introduced."
+    "notes": "Task 49 observes the copied Quickened Spell attack qRoute through public reducer route events for Ray of Frost resolution. No new BattleState field was introduced."
   }
 }

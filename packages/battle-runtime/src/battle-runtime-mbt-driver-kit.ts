@@ -2062,6 +2062,7 @@ const metamagicRouteDriverSchema = {
   doRejectMetamagicResourceGovernor: {},
   doRouteBonusActionCastingTime: {},
   doRejectPriorLevelOnePlusSpell: {},
+  doResolveQuickenedSaveGatedDamage: {},
   doResolveQuickenedRestoration: {},
   doResolveQuickenedSaveGatedCondition: {},
   doResolveQuickenedSaveGatedConditionImmunity: {},
@@ -4282,6 +4283,44 @@ function metamagicPriorLevelOnePlusSpellRejectionRoute(): readonly ReducerRouteE
   ];
 }
 
+function metamagicQuickenedSaveGatedDamageRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicDiscoverRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: METAMAGIC_SAVING_THROW_HOLES,
+      owner: "battleFeatureResource",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: METAMAGIC_SAVING_THROW_HOLES,
+      owner: "battleActionEconomy",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: METAMAGIC_SAVING_THROW_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      fill: "savingThrowOutcome",
+      holes: METAMAGIC_DAMAGE_ROLL_HOLES,
+      owner: "battleSavingThrowOutcome",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      fill: "rolledDice",
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleDamageRoll",
+    }),
+    metamagicResolveWithoutFillRoute({
+      subject: METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT,
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleTurnBoundary",
+    }),
+  ];
+}
+
 function metamagicQuickenedRestorationRoute(): readonly ReducerRouteEvent[] {
   return [
     ...metamagicInitialRoute(),
@@ -4628,6 +4667,9 @@ export function createMetamagicRouteDriver() {
       },
       doRejectPriorLevelOnePlusSpell: () => {
         route = metamagicPriorLevelOnePlusSpellRejectionRoute();
+      },
+      doResolveQuickenedSaveGatedDamage: () => {
+        route = metamagicQuickenedSaveGatedDamageRoute();
       },
       doResolveQuickenedRestoration: () => {
         route = metamagicQuickenedRestorationRoute();

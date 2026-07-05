@@ -1,44 +1,36 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-014",
+  "taskId": "CRPI-READY-018",
   "durableFields": [
-    {
-      "fieldPath": "AvailableBattleAct.routeEvents",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "owner": "executable-boundary-projection",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject.actionSpell.metamagic.effectKind and BattleSubject.actionSpell.invocation.procedure",
-        "boundary": "discoverBattleActs public reducer boundary"
-      }
-    },
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject, BattleCreatureState.activeEffects, and BattleCreatureState.concentration",
+        "sourceField": "BattleSubject.bonusActionSpell metamagic Quickened effect fact, BattleSubject.bonusActionSpell.invocation.procedure=spellAttackDamage, targetChoice fill, attackRoll fill, and BattleResolutionResult hole frontier",
         "boundary": "resolveBattleSubject public reducer boundary"
       }
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=metamagicSpellDurationProjection",
+      "fieldPath": "BattleReducerRouteEvent.subject=metamagicBonusActionCastingTime",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject.actionSpell.metamagic.effectKind=duration_extension_and_concentration_save_advantage, creature-size spell procedure, active-effect state delta, and Concentration state",
-        "boundary": "battleReducerRouteEventsForDiscoveredAct and battleReducerRouteForResolution"
+        "sourceField": "BattleSubject.bonusActionSpell.metamagic.effectKind=action_casting_time_to_bonus_action_with_spell_turn_limit and BattleSubject.bonusActionSpell.invocation.procedure=spellAttackDamage",
+        "boundary": "battleReducerRouteForResolution"
       }
     }
   ],
   "notes": [
-    "Task 45 introduced no new BattleState, BattleCreatureState, character spellcasting, or table-state durable field.",
+    "Task 49 introduced no new BattleState, BattleCreatureState, character spellcasting, or table-state durable field.",
     "Sorcery Point ownership remains existing CharacterBattlePointPoolResourceState.pointsRemaining.",
-    "Extended duration ownership remains existing BattleCreatureState.activeEffects and BattleCreatureState.concentration.",
+    "Target choice, Attack Roll, and damage roll ownership remain existing table-supplied BattleFill values and reducer-owned hole frontiers.",
+    "Target Hit Point ownership remains existing BattleCreatureState.hp.",
+    "Ray of Frost Speed-reduction Spell Effect ownership remains existing BattleCreatureState.activeEffects.",
     "Selected Metamagic option identity remains at catalog, selection, admission, and fixture boundaries.",
-    "Route events are public reducer boundary projections derived from typed Metamagic effect facts, spell procedure facts, active-effect state deltas, and Concentration state.",
-    "The Extended Spell route does not dispatch on Sorcerer authored feature identity or the Extended Spell option name; production routing is admitted by typed duration_extension_and_concentration_save_advantage facts on a promoted duration-bearing spell procedure."
+    "Route events are public reducer boundary projections derived from typed Quickened Metamagic effect facts, promoted spell Attack damage procedure shape, target-choice and attack-roll fills, and turn-boundary spell-lock state.",
+    "The Quickened spell Attack route does not dispatch on Sorcerer authored feature identity or the Quickened Spell option name; production routing is admitted by typed action_casting_time_to_bonus_action_with_spell_turn_limit facts on promoted bonus-action spell subjects."
   ]
 }
