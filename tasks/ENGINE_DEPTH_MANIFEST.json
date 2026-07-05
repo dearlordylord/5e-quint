@@ -1,84 +1,49 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-031",
+  "taskId": "CRPI-BLOCK-048",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.route.mbt.qnt",
+      "path": "packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.route.mbt.qnt",
       "quarantinedWitnessNames": [
-        "qProtocol",
         "qRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-031.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-048.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/stat-block-size-gated-condition-rider.mbt.test.ts",
+      "path": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "SizeGatedConditionRiderProjection",
-        "SizeGatedConditionRiderRouteProjection",
-        "createSizeGatedConditionRiderRouteDriver",
-        "normalizeSizeGatedConditionRiderRouteQuintState",
-        "sizeGatedConditionRiderRouteStateCheck"
+        "abilityCheckRouteActions",
+        "projectPublicAbilityCheckRoute",
+        "normalizeCharacterSheetRouteQuintState",
+        "routeStateCheck"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-031.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-048.json"
       ]
     }
   ],
   "productionModulesExtended": [
     {
-      "path": "packages/battle-runtime/src/battle-reducer/actions.ts",
+      "path": "packages/character-sheet-runtime/src/ability-checks.ts",
       "owners": [
-        "BattleStatBlockActionOwner"
+        "CharacterSheetBuildProjectionOwner"
       ],
-      "notes": "Existing public BattleSubject action resolution is reused for Stat Block action dispatch; condition-rider source shape remains a Stat Block source fact."
+      "notes": "Public Ability Check Proficiency Bonus projection derives from CharacterBuild proficiencies, Expertise, Jack of All Trades feature grants, total level, and typed other-bonus gates. Task 94 adds characterSheetAbilityCheckProficiencyBonusProjection so the public projection path returns the semantic projection with its Ability Check qRoute event; it does not add production state."
     },
     {
-      "path": "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+      "path": "packages/character-sheet-runtime/src/sheet-types.ts",
       "owners": [
-        "BattleTargetSelectionOwner",
-        "BattleAttackRollOwner"
+        "CharacterSheetBuildProjectionOwner"
       ],
-      "notes": "Existing target-choice and attack-roll progression is reused for Stat Block size-gated condition rider route replay."
-    },
-    {
-      "path": "packages/battle-runtime/src/battle-reducer/statblock-attack-hit-condition-riders.ts",
-      "owners": [
-        "BattleConditionLifecycleOwner",
-        "BattleCreatureStateOwner"
-      ],
-      "notes": "Existing Stat Block attack-hit condition rider resolution reads target effective Size and condition-immunity input facts from BattleCreatureState before applying Prone through the condition lifecycle. No route-local Size or immunity state was added."
-    },
-    {
-      "path": "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
-      "owners": [
-        "BattleHitPointOwner"
-      ],
-      "notes": "Existing Hit Point damage application is reused for size-gated condition rider damage resolution after condition lifecycle handling."
-    },
-    {
-      "path": "packages/battle-runtime/src/battle-reducer/statblock-attacks.ts",
-      "owners": [
-        "BattleStatBlockActionOwner",
-        "BattleConditionLifecycleOwner",
-        "BattleHitPointOwner"
-      ],
-      "notes": "Existing Stat Block attack damage projection resolves damage and delegates supported attack-hit condition riders without adding a route-local condition, damage, or HP ledger."
-    },
-    {
-      "path": "packages/battle-runtime/src/statblock-attack-hit-condition-support.ts",
-      "owners": [
-        "BattleStatBlockActionOwner",
-        "BattleConditionLifecycleOwner"
-      ],
-      "notes": "Existing support-profile reader admits the typed Surface shape for Prone size-gated attack-hit condition riders by parsed effect shape rather than authored identity."
+      "notes": "Typed CharacterSheetAbilityCheckProficiencyBonus and CharacterSheetAbilityCheckOtherProficiencyBonusState boundaries are reused for route replay evidence. Task 94 adds a typed Ability Check Proficiency Bonus projection route event/result so the public projection path, not the adapter, owns the observed qRoute event."
     }
   ],
   "expectedNextReuse": [],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 59 observes copied qRoute for Stat Block size-gated condition riders through public battle-runtime reducer entrypoints. No duplicate durable target Size, condition-immunity, condition, damage, or Hit Point state was introduced."
+    "notes": "Task 94 observes copied qRoute for Ability Check Proficiency Bonus through the public Character Sheet projection-with-route entrypoint. No duplicate proficiency, Expertise, Jack of All Trades, or Proficiency Bonus ledger was introduced."
   }
 }

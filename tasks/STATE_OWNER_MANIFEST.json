@@ -1,58 +1,23 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-031",
+  "taskId": "CRPI-BLOCK-048",
   "durableFields": [
     {
-      "owner": "BattleStatBlockActionOwner",
+      "owner": "CharacterSheetBuildProjectionOwner",
       "fields": [
-        "BattleState.combatants",
-        "BattleHole.kind=targetChoice",
-        "BattleResolutionResult.tag"
+        "CharacterBuild.progression",
+        "CharacterBuild.proficiencyChoices",
+        "CharacterBuild.features",
+        "UnitRecord.mechanics.grants",
+        "CharacterSheetAbilityCheckOtherProficiencyBonusState.tag"
       ],
-      "notes": "Owns Stat Block action dispatch through existing combatant Stat Block source facts and the public BattleSubject action protocol. No authored-identity dispatch key or route-local action ledger was added."
-    },
-    {
-      "owner": "BattleTargetSelectionOwner",
-      "fields": [
-        "BattleHole.kind=targetChoice",
-        "BattleFill.kind=targetChoice",
-        "BattleResolutionResult.tag"
-      ],
-      "notes": "Owns target selection for Stat Block attacks through the existing public target-choice hole/fill protocol."
-    },
-    {
-      "owner": "BattleConditionLifecycleOwner",
-      "fields": [
-        "BattleHole.kind=attackRoll",
-        "BattleFill.kind=attackRoll",
-        "BattleCreatureState.conditions",
-        "BattleResolutionResult.tag"
-      ],
-      "notes": "Owns supported Stat Block attack-hit Prone rider application through the existing public attack-roll fill protocol and existing condition lifecycle state."
-    },
-    {
-      "owner": "BattleCreatureStateOwner",
-      "fields": [
-        "BattleCreatureState.origin.statBlock.statBlock.size",
-        "BattleCreatureState.origin.statBlock.statBlock.immunities.conditions"
-      ],
-      "notes": "Owns target Size and condition-immunity input facts. The route replay reads these facts from existing creature state and does not introduce route-local Size or immunity state."
-    },
-    {
-      "owner": "BattleHitPointOwner",
-      "fields": [
-        "BattleCreatureState.hp",
-        "BattleCreatureState.tempHp",
-        "BattleHole.kind=rolledDice",
-        "BattleFill.kind=rolledDice"
-      ],
-      "notes": "Owns Hit Point damage for the Stat Block attack through existing creature HP state and the existing rolled-dice fill projection. No duplicate HP ledger was added."
+      "notes": "Owns Ability Check Proficiency Bonus projection by deriving from existing CharacterBuild proficiency, Expertise, Jack of All Trades, total-level, and typed other-bonus facts. Character Sheet does not store a parallel proficiency or expertise ledger."
     }
   ],
   "notes": [
-    "Task 59 introduced no new durable state fields.",
-    "qRoute target replay evidence is derived from public battle-runtime startBattleRight and resolveBattleSubject entrypoints.",
-    "Authored Stat Block identity, action names, attack names, and condition-rider fixture labels remain catalog/source or test selection facts; production dispatch remains shape/protocol based.",
-    "No alternate target Size state, condition-immunity state, condition ledger, damage accumulator, target-selection ledger, attack-roll ledger, or Hit Point ledger was added."
+    "Task 94 introduced no new durable state fields.",
+    "qRoute target replay evidence is derived from public characterSheetAbilityCheckProficiencyBonusProjection route events and the copied route connector.",
+    "Bard Jack of All Trades identity remains an SRD catalog/source selection fact; production projection admits the typed jack_of_all_trades_ability_check_bonus grant shape rather than branching on authored names or prose.",
+    "No alternate Proficiency Bonus, skill proficiency, Expertise, Jack of All Trades, level, or other-bonus ledger was added."
   ]
 }

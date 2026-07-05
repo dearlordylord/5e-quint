@@ -129,6 +129,7 @@ const EXPECTED_EXPORTS = [
   "characterBuildHasSpellbookSpell",
   "characterSheetAbilityCheckAbility",
   "characterSheetAbilityCheckProficiencyBonus",
+  "characterSheetAbilityCheckProficiencyBonusProjection",
   "characterSheetArmorClass",
   "characterSheetArmorClassState",
   "characterSheetClassFeaturePreparedSpellAccessesForBuild",
@@ -201,6 +202,11 @@ const EXPECTED_EXPORT_RECONCILIATION_REASONS = [
     name: "replaceOrdinarySpellSlotExpenditure",
     reason:
       "Character Sheet owns ordinary Spell Slot expenditure state; battle handoff settlement reuses this canonical updater instead of duplicating the replacement/sort convention in character-battle-runtime.",
+  },
+  {
+    name: "characterSheetAbilityCheckProficiencyBonusProjection",
+    reason:
+      "Character Sheet owns Ability Check Proficiency Bonus projection from build facts; exposing the projection-with-route entrypoint lets route replay observe the qRoute event without maintaining an adapter-local route projection.",
   },
 ];
 

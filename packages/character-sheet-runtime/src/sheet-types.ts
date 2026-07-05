@@ -945,6 +945,19 @@ export type CharacterSheetAbilityCheckProficiencyBonus =
       readonly bonus: number;
     };
 
+export type CharacterSheetAbilityCheckProficiencyBonusRouteEvent = {
+  readonly kind: "projectCharacterSheetFacts";
+  readonly subject: "abilityCheckProjection";
+  readonly owner: "buildProjection";
+};
+
+export type CharacterSheetAbilityCheckProficiencyBonusProjection = {
+  readonly proficiencyBonus: CharacterSheetAbilityCheckProficiencyBonus;
+  readonly qRoute: readonly [
+    CharacterSheetAbilityCheckProficiencyBonusRouteEvent,
+  ];
+};
+
 export type CharacterSheetAbilityCheckAbilityInput = {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;

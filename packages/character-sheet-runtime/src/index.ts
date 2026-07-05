@@ -20,6 +20,7 @@ export {
 } from "./sheet-types.ts";
 export {
   characterSheetAbilityCheckAbility,
+  characterSheetAbilityCheckProficiencyBonusProjection,
   characterSheetAbilityCheckProficiencyBonus,
   characterSheetJumpDistanceAbility,
   characterSheetLinkedSpeedGrants,

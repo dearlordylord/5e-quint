@@ -565,7 +565,7 @@
     {
       "number": 94,
       "id": "CRPI-BLOCK-048",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: character-sheet-ability-check-proficiency-bonus"
     },
     {
@@ -6048,7 +6048,7 @@ Plan Impact:
 
 ### Task 94 - CRPI-BLOCK-048
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

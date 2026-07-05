@@ -1,5 +1,102 @@
 # Validation Report
 
+## CRPI-BLOCK-048
+
+Status: `pass`
+
+- Task: 94
+- Driver path: `packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt`
+- Route connector path: `packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.route.mbt.qnt`
+- Route class: `reducer-routed`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-048.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+
+Allowed inputs used:
+
+- `packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt`
+- `packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.route.mbt.qnt`
+- `packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts`
+- `packages/character-sheet-runtime/src/ability-checks.ts`
+- `packages/character-sheet-runtime/src/sheet-types.ts`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-convergence-backlog.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Playing-the-Game.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `.references/srd-5.2.1/Classes/Bard.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+Ability Check Proficiency Bonus route replay is accepted through the public
+Character Sheet projection-with-route entrypoint. The route harness now calls
+`characterSheetAbilityCheckProficiencyBonusProjection`, which derives the
+semantic projection through `characterSheetAbilityCheckProficiencyBonus` and
+returns the public `qRoute` event for Jack of All Trades, rounded
+half-Proficiency-Bonus, skill proficiency, Expertise, the typed
+other-Proficiency-Bonus exclusion, and missing Jack of All Trades feature cases.
+Production behavior continues to derive from `CharacterBuild` progression,
+proficiency choices, feature grants, total level, and typed other-bonus facts;
+no sheet-local proficiency, Expertise, Jack of All Trades, level, or Proficiency
+Bonus ledger was added.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt#step:doProjectExpertise` | `tasks/target-replay-evidence/CRPI-BLOCK-048.json#driver:packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt#step:doProjectExpertise#trace:reducer-route=SheetAbilityCheckProjectionRouteSubject action=doProjectExpertise qRoute=character-sheet-ability-check-proficiency-bonus-route` | `_none_` | `covered` |
+| `packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt#step:doProjectJackOfAllTradesLevelTwo` | `tasks/target-replay-evidence/CRPI-BLOCK-048.json#driver:packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt#step:doProjectJackOfAllTradesLevelTwo#trace:reducer-route=SheetAbilityCheckProjectionRouteSubject action=doProjectJackOfAllTradesLevelTwo qRoute=character-sheet-ability-check-proficiency-bonus-route` | `_none_` | `covered` |
+| `packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt#step:doProjectJackOfAllTradesRoundedDown` | `tasks/target-replay-evidence/CRPI-BLOCK-048.json#driver:packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt#step:doProjectJackOfAllTradesRoundedDown#trace:reducer-route=SheetAbilityCheckProjectionRouteSubject action=doProjectJackOfAllTradesRoundedDown qRoute=character-sheet-ability-check-proficiency-bonus-route` | `_none_` | `covered` |
+| `packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt#step:doProjectSkillProficiency` | `tasks/target-replay-evidence/CRPI-BLOCK-048.json#driver:packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt#step:doProjectSkillProficiency#trace:reducer-route=SheetAbilityCheckProjectionRouteSubject action=doProjectSkillProficiency qRoute=character-sheet-ability-check-proficiency-bonus-route` | `_none_` | `covered` |
+| `packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt#step:doRejectMissingBardLevelTwo` | `tasks/target-replay-evidence/CRPI-BLOCK-048.json#driver:packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt#step:doRejectMissingBardLevelTwo#trace:reducer-route=SheetAbilityCheckProjectionRouteSubject action=doRejectMissingBardLevelTwo qRoute=character-sheet-ability-check-proficiency-bonus-route` | `_none_` | `covered` |
+| `packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt#step:doRejectOtherProficiencyBonus` | `tasks/target-replay-evidence/CRPI-BLOCK-048.json#driver:packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt#step:doRejectOtherProficiencyBonus#trace:reducer-route=SheetAbilityCheckProjectionRouteSubject action=doRejectOtherProficiencyBonus qRoute=character-sheet-ability-check-proficiency-bonus-route` | `_none_` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-048.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id pattern: `reducer-route=SheetAbilityCheckProjectionRouteSubject action=<branchAction> qRoute=character-sheet-ability-check-proficiency-bonus-route`
+- The copied connector projection source is `packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.route.mbt.qnt#qRoute`; the observed projection source is the public Character Sheet projection-with-route entrypoint `packages/character-sheet-runtime/src/ability-checks.ts#characterSheetAbilityCheckProficiencyBonusProjection`, which returns the Ability Check Proficiency Bonus `qRoute` event after deriving the semantic projection through `packages/character-sheet-runtime/src/ability-checks.ts#characterSheetAbilityCheckProficiencyBonus`.
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-048/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 94.
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Playing-the-Game.md#Ability Checks` and `#Proficiency Bonus` define adding Proficiency Bonus to relevant ability checks and limiting duplicate/multiplied Proficiency Bonus application.
+- SRD 5.2.1 `Playing-the-Game.md#Skill Proficiencies` and `Rules-Glossary.md#Skill` define skill proficiency as a specialization that adds Proficiency Bonus to related ability checks.
+- SRD 5.2.1 `Rules-Glossary.md#Expertise` defines doubled Proficiency Bonus for a proficient skill check unless doubled by another feature.
+- SRD 5.2.1 `Classes/Bard.md#Level 2: Jack of All Trades` defines half Proficiency Bonus, rounded down, for ability checks using skill proficiencies the character lacks and that do not otherwise use Proficiency Bonus.
+- `UBIQUITOUS_LANGUAGE.md` defines Ability Check, Proficiency Bonus, Expertise, Skill, and Character Sheet terms used by the owner.
+
+Verification results:
+
+- Base check passed: declared base ref `master` resolved to `7aa3d93d5 Unblock character sheet route replay tasks`; `HEAD` resolved to `7aa3d93d5 Unblock character sheet route replay tasks`; Base SHA `7aa3d93d5d2f5ace00e7b2abbd5e4c19337cee34` is an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against SRD 5.2.1 Ability Checks, Proficiency Bonus, Skill Proficiencies, Expertise, Bard Jack of All Trades, and `UBIQUITOUS_LANGUAGE.md`.
+- Target replay evidence artifact for CRPI-BLOCK-048 covers 6 Ability Check Proficiency Bonus `qRoute` obligations and records the public Character Sheet projection-with-route entrypoint path that returns the observed route event.
+- JSON validation passed for `tasks/target-replay-evidence/CRPI-BLOCK-048.json`, `tasks/ENGINE_DEPTH_MANIFEST.json`, and `tasks/STATE_OWNER_MANIFEST.json`.
+- Scoped target evidence validation passed: `node scoped validateTargetReplayEvidence for CRPI-BLOCK-048 Ability Check Proficiency Bonus driver` covered 6 Task 94 obligations.
+- Focused MBT replay passed after the public projection-with-route update: `START=$(date +%s); ( pnpm --filter @dnd/character-sheet-runtime exec vitest run src/ability-check-proficiency-bonus.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "Ability Check Proficiency Bonus|Ability Check" ) 2>&1 & pid=$!; wait "$pid"; status=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"` passed with 2 tests in `TOTAL: 5s`.
+- `pnpm --filter @dnd/character-sheet-runtime typecheck` passed after adding `characterSheetAbilityCheckProficiencyBonusProjection`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- Requested broad verification passed: `pnpm quality`. App lint emitted 61 warnings and exited 0; all quality gates and typecheck passed.
+- Reviewer-loop convergence passed: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks found no remaining reasonable Task 94 findings after moving the observed Ability Check `qRoute` event into the public projection-with-route entrypoint.
+
 ## CRPI-BLOCK-031
 
 Status: `pass`
