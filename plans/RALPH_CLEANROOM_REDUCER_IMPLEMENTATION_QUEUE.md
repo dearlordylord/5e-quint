@@ -469,7 +469,7 @@
     {
       "number": 78,
       "id": "CRP05-SBE-01",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Character sheet projection and composed battle runtime entry"
     },
     {
@@ -5077,7 +5077,7 @@ Plan Impact:
 
 ### Task 78 - CRP05-SBE-01
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
