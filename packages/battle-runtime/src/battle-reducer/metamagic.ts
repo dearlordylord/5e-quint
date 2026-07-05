@@ -66,6 +66,7 @@ export {
   discoverDistantSpellMetamagicSelections,
   discoverExtendedSpellMetamagicSelections,
   discoverSpellMetamagicSelections,
+  discoverSubtleSpellMetamagicSelections,
   discoverTransmutedSpellMetamagicSelections,
   discoverTwinnedSpellMetamagicSelections,
   DISTANT_METAMAGIC_EFFECT_KIND,

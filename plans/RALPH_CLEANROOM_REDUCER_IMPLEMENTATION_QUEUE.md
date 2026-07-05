@@ -301,25 +301,25 @@
     {
       "number": 50,
       "id": "CRPI-READY-019",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-sorcerer-metamagic-spell-attack-sequence-selected-identity"
     },
     {
       "number": 51,
       "id": "CRPI-READY-020",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-sorcerer-metamagic-subtle-selected-identity"
     },
     {
       "number": 52,
       "id": "CRPI-READY-021",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-sorcerer-metamagic-transmuted-selected-identity"
     },
     {
       "number": 53,
       "id": "CRPI-READY-022",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-sorcerer-metamagic-twinned-selected-identity"
     },
     {
@@ -3531,7 +3531,7 @@ Plan Impact:
 
 ### Task 50 - CRPI-READY-019
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
@@ -3586,7 +3586,7 @@ Plan Impact:
 
 ### Task 51 - CRPI-READY-020
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
@@ -3641,7 +3641,7 @@ Plan Impact:
 
 ### Task 52 - CRPI-READY-021
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
@@ -3696,7 +3696,7 @@ Plan Impact:
 
 ### Task 53 - CRPI-READY-022
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

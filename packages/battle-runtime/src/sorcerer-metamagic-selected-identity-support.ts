@@ -286,7 +286,13 @@ function resolveSeekingRayOfFrostSubject(state: BattleState) {
       ],
     }),
   );
-  return { initialState: state, act, awaitingSeeking, awaitingDamage, resolved };
+  return {
+    initialState: state,
+    act,
+    awaitingSeeking,
+    awaitingDamage,
+    resolved,
+  };
 }
 
 export function resolveEmpoweredRayOfFrost(state: BattleState): BattleState {
@@ -385,6 +391,73 @@ export function resolveQuickenedEldritchBlast(state: BattleState): BattleState {
   ).state;
 }
 
+export function observeQuickenedEldritchBlastRoute(
+  state: BattleState,
+): readonly BattleReducerRouteEvent[] {
+  const act = quickenedEldritchBlastAct(state);
+  const targetHoles = targetChoiceHoles(act.initialHoles);
+  const firstTarget = eldritchBlastTargetFill(targetHoles[0]!);
+  const secondTarget = eldritchBlastTargetFill(targetHoles[1]!);
+  const targetFills: BattleFill[] = [firstTarget, secondTarget];
+  const awaitingFirstAttackRoll = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: targetFills,
+  });
+  const firstAttackRollHole = findHole(
+    awaitingFirstAttackRoll.tag === "needsHoles"
+      ? awaitingFirstAttackRoll.holes
+      : [],
+    "attackRoll",
+  );
+  const firstAttackRoll = attackRollFill(firstAttackRollHole, {
+    total: 15,
+    naturalD20: 10,
+  });
+  const awaitingFirstDamage = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [...targetFills, firstAttackRoll],
+  });
+  const firstDamageHole = findHole(
+    awaitingFirstDamage.tag === "needsHoles" ? awaitingFirstDamage.holes : [],
+    "rolledDice",
+  );
+  const firstDamage = damageRollFillWithGroups(firstDamageHole, [[4]]);
+  const awaitingSecondAttackRoll = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [...targetFills, firstAttackRoll, firstDamage],
+  });
+  const secondAttackRollHole = findHole(
+    awaitingSecondAttackRoll.tag === "needsHoles"
+      ? awaitingSecondAttackRoll.holes
+      : [],
+    "attackRoll",
+  );
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        ...targetFills,
+        firstAttackRoll,
+        firstDamage,
+        attackRollFill(secondAttackRollHole, { total: 1, naturalD20: 1 }),
+      ],
+    }),
+  );
+
+  return [
+    battleReducerStartRouteEvent(),
+    ...(act.routeEvents ?? []),
+    ...(awaitingFirstAttackRoll.routeEvents ?? []),
+    ...(awaitingFirstDamage.routeEvents ?? []),
+    ...(awaitingSecondAttackRoll.routeEvents ?? []),
+    ...(resolved.routeEvents ?? []),
+  ];
+}
+
 export function resolveCarefulBurningHands(state: BattleState): BattleState {
   const act = carefulBurningHandsAct(state);
   const protectedTargets = protectedTargetsFill(act.initialHoles);
@@ -475,9 +548,7 @@ export function observeCarefulSavingThrowProtectionRoute(
   if (awaitingSave.tag !== "needsHoles") {
     throw new Error("Expected Careful Burning Hands to request a save hole.");
   }
-  const savingThrowFill = carefulBurningHandsMixedSaveFill(
-    awaitingSave.holes,
-  );
+  const savingThrowFill = carefulBurningHandsMixedSaveFill(awaitingSave.holes);
   const awaitingDamage = resolveBattleSubject({
     state,
     subject: act.subject,
@@ -669,7 +740,9 @@ function resolveHeightenedHideousLaughterSubject(state: BattleState) {
   return { initialState: state, act, awaitingSave, resolved };
 }
 
-export function resolveHeightenedGreaseEntrySave(state: BattleState): BattleState {
+export function resolveHeightenedGreaseEntrySave(
+  state: BattleState,
+): BattleState {
   const act = heightenedGreaseAct(state);
   const heightenedTarget = targetFill(
     findHole(act.initialHoles, "targetChoice"),
@@ -796,8 +869,9 @@ export function resolveHeightenedGustOfWindEndTurnSave(
       ],
     }),
   ).state;
-  const targetTurn = requireResolved(endTurn({ state: cast, actorId: wizardId }))
-    .state;
+  const targetTurn = requireResolved(
+    endTurn({ state: cast, actorId: wizardId }),
+  ).state;
   const endTurnAct = discoverBattleActs(targetTurn).find(
     (candidate) =>
       candidate.subject.tag === "runtimeCommand" &&
@@ -840,7 +914,9 @@ export function resolveHeightenedGustOfWindEndTurnSave(
               affectedTargetIds: [endTurnAct.subject.actorId],
               creaturePushes: [],
             },
-            outcomes: [{ targetId: endTurnAct.subject.actorId, succeeded: true }],
+            outcomes: [
+              { targetId: endTurnAct.subject.actorId, succeeded: true },
+            ],
           },
         },
       ],
@@ -909,18 +985,19 @@ export function resolveHeightenedSaveGatedConditionEndTurnSave(
       ],
     }),
   ).state;
-  const targetTurn = requireResolved(endTurn({ state: cast, actorId: wizardId }))
-    .state;
-  const awaitingEndTurnSave = endTurn({ state: targetTurn, actorId: skeletonId });
+  const targetTurn = requireResolved(
+    endTurn({ state: cast, actorId: wizardId }),
+  ).state;
+  const awaitingEndTurnSave = endTurn({
+    state: targetTurn,
+    actorId: skeletonId,
+  });
   if (awaitingEndTurnSave.tag !== "needsHoles") {
     throw new Error(
       "Expected Heightened Blindness/Deafness end turn to request a save hole.",
     );
   }
-  const endTurnSave = findHole(
-    awaitingEndTurnSave.holes,
-    "savingThrowOutcome",
-  );
+  const endTurnSave = findHole(awaitingEndTurnSave.holes, "savingThrowOutcome");
   if (endTurnSave.kind !== "savingThrowOutcome") {
     throw new Error("Expected Heightened Blindness/Deafness repeat save hole.");
   }
@@ -932,7 +1009,8 @@ export function resolveHeightenedSaveGatedConditionEndTurnSave(
   if (
     !endTurnSave.targetRollModes.some(
       (projection) =>
-        projection.targetId === endTurnSave.spellConditionEndTurnSave.targetId &&
+        projection.targetId ===
+          endTurnSave.spellConditionEndTurnSave.targetId &&
         projection.rollMode === "disadvantage",
     )
   ) {
@@ -982,6 +1060,40 @@ export function resolveTransmutedBurningHandsToPoison(
       ],
     }),
   ).state;
+}
+
+export function observeTransmutedBurningHandsToPoisonRoute(
+  state: BattleState,
+): readonly BattleReducerRouteEvent[] {
+  const act = transmutedBurningHandsToPoisonAct(state);
+  const savingThrowFill = burningHandsSaveFill(act.initialHoles);
+  const awaitingDamage = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [savingThrowFill],
+  });
+  const damageHole = findHole(
+    awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+    "rolledDice",
+  );
+  assertTransmutedDamageHole(damageHole);
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        savingThrowFill,
+        damageRollFillWithGroups(damageHole, [[4, 3, 2]]),
+      ],
+    }),
+  );
+
+  return [
+    battleReducerStartRouteEvent(),
+    ...(act.routeEvents ?? []),
+    ...(awaitingDamage.routeEvents ?? []),
+    ...(resolved.routeEvents ?? []),
+  ];
 }
 
 export function resolveTransmutedRayOfFrostToPoison(
@@ -1046,6 +1158,36 @@ export function resolveTwinnedBless(state: BattleState): BattleState {
       ],
     }),
   ).state;
+}
+
+export function observeTwinnedBlessRoute(
+  state: BattleState,
+): readonly BattleReducerRouteEvent[] {
+  const act = twinnedBlessAct(state);
+  const targetHole = findHole(act.initialHoles, "spellTargetList");
+  if (targetHole.kind !== "spellTargetList") {
+    throw new Error("Expected Twinned Bless to request a target-list hole.");
+  }
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetListFill(act.initialHoles, "Bless targets", "bless", [
+          wizardId,
+          fighterId,
+          skeletonId,
+          secondSkeletonId,
+        ]),
+      ],
+    }),
+  );
+
+  return [
+    battleReducerStartRouteEvent(),
+    ...(act.routeEvents ?? []),
+    ...(resolved.routeEvents ?? []),
+  ];
 }
 
 export function projectBattleState(

@@ -638,6 +638,10 @@ module battleRuntimeSorcererMetamagicRouteMbt {
     ),
   }
 
+  action stepRouteDamageTypeSubstitution = any {
+    doRouteDamageTypeSubstitution,
+  }
+
   action doRouteEffectiveSpellLevel = all {
     qStage == Init,
     recordStage(
@@ -666,6 +670,10 @@ module battleRuntimeSorcererMetamagicRouteMbt {
           )
         ),
     ),
+  }
+
+  action stepRouteEffectiveSpellLevel = any {
+    doRouteEffectiveSpellLevel,
   }
 
   action doRouteSpellRangeProjection = all {
@@ -755,6 +763,10 @@ module battleRuntimeSorcererMetamagicRouteMbt {
           )
         ),
     ),
+  }
+
+  action stepRouteSpellComponentProjection = any {
+    doRouteSpellComponentProjection,
   }
 
   action doRouteMissedSpellAttackReroll = all {
