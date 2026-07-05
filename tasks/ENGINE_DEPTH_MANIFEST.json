@@ -1,82 +1,70 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRP04-CCF-02",
+  "taskId": "CRPI-READY-030",
   "productionModulesExtended": [
     {
-      "path": "packages/character-creation-runtime/src/fill-reducer.ts",
-      "role": "domain-engine",
-      "domainApis": [
-        "fillCreationHoles",
-        "creationFillIssues"
-      ]
+      "path": "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+      "owners": [
+        "RuleCoreMovementGrappleOwner"
+      ],
+      "notes": "Existing public movement reducer path reused as the target component call surface for copied qComponentRoute replay of movement spending, standing from Prone, turn handoff, and opportunity-attack interrupt setup."
+    },
+    {
+      "path": "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
+      "owners": [
+        "RuleCoreMovementGrappleOwner"
+      ],
+      "notes": "Existing movement speed, Dash, Disengage, Grapple, escape, release, and opportunity-attack rule helpers reused for the component-first target replay; no parallel movement or grapple state was added."
     }
   ],
   "adapterModules": [
     {
-      "path": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+      "path": "packages/battle-runtime/rule-core-movement.mbt.qnt",
       "quarantinedWitnessNames": [
-        "qState",
-        "CreationRuntimeWitnessState",
-        "CreationRejected",
-        "batchIssueCodes",
-        "fillIssues"
+        "qCurrentActor",
+        "qMovementSpentFeet",
+        "qDashBonusFeet",
+        "qProne",
+        "qDisengaged",
+        "qActionAvailable",
+        "qGrappleActive",
+        "qGrappleEscapeDc",
+        "qProtocol",
+        "qPendingOpportunityAttack",
+        "qComponentRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRP04-CCF-02.json"
+        "tasks/target-replay-evidence/CRPI-READY-030.json"
       ]
     },
     {
-      "path": "packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt",
+      "path": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "qRoute",
-        "RouteApplyCreationFillBatch",
-        "RouteDiscoverCreationHoles",
-        "RouteRecordCreationFacts",
-        "CreationStaleFillRejectionFact"
+        "RuleCoreMovementProjection",
+        "createRuleCoreMovementDriver",
+        "normalizeRuleCoreMovementQuintState",
+        "movementStateCheck"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRP04-CCF-02.json"
-      ]
-    },
-    {
-      "path": "packages/character-creation-runtime/src/character-creation-runtime.mbt.test.ts",
-      "quarantinedWitnessNames": [
-        "normalizeQuintState",
-        "RuntimeMbtState",
-        "character-creation-runtime-state",
-        "rejectedFillBatchSteps"
-      ],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRP04-CCF-02.json"
-      ]
-    },
-    {
-      "path": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
-      "quarantinedWitnessNames": [
-        "normalizeCharacterCreationRouteQuintState",
-        "RouteProjection",
-        "route-event-list"
-      ],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRP04-CCF-02.json"
+        "tasks/target-replay-evidence/CRPI-READY-030.json"
       ]
     }
   ],
   "accumulatorGrowth": [],
   "expectedNextReuse": [
     {
-      "driver": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
-      "module": "packages/character-creation-runtime/src/fill-reducer.ts",
-      "api": "fillCreationHoles remains the public atomic batch entrypoint for rejected creation fills; validation completes before draft mutation and rejected results derive holes and finalization from the unchanged draft."
+      "driver": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+      "module": "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+      "api": "Later reaction and battle route tasks can consume accepted Movement, Grapple, and Opportunity Attack component facts through the existing public battle reducer subject and interrupt APIs."
     },
     {
-      "driver": "packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt",
-      "module": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
-      "api": "Character creation route replay records rejection owners from public reducer entrypoints instead of adapter-local expected routes."
+      "driver": "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt",
+      "module": "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
+      "api": "Future battle movement routes should thread existing movement/grapple state rather than duplicate Speed, spent movement, or Grapple links."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 90 records rejected qState and qRoute replay evidence for stale revision, duplicate fill, wrong-kind fill, and non-open hole rejection. No duplicate durable open-hole, finalization, or issue store was introduced."
+    "notes": "Task 72 observes copied qComponentRoute for rule-core Movement/Grapple through public battle-runtime movement, action, grapple, release, and interrupt entrypoints. No duplicate durable state was introduced."
   }
 }

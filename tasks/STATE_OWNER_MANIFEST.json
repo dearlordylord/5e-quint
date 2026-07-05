@@ -1,68 +1,26 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRP04-CCF-02",
+  "taskId": "CRPI-READY-030",
   "durableFields": [
     {
-      "fieldPath": "CharacterDraft.revision",
-      "owner": "build-evidence",
-      "introducedIn": "packages/character-creation-runtime/src/types.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      }
-    },
-    {
-      "fieldPath": "CharacterDraft.selections",
-      "owner": "build-evidence",
-      "introducedIn": "packages/character-creation-runtime/src/types.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      }
-    },
-    {
-      "fieldPath": "CreationBatchFillResult.holes",
-      "owner": "executable-boundary-projection",
-      "introducedIn": "packages/character-creation-runtime/src/discovery.ts",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "CharacterDraft.selections plus UnitCatalog support-profile readers",
-        "boundary": "fillCreationHoles rejected result and discoverCreationHoles projection"
-      }
-    },
-    {
-      "fieldPath": "CreationBatchFillResult.finalization",
-      "owner": "executable-boundary-projection",
-      "introducedIn": "packages/character-creation-runtime/src/finalization.ts",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "CharacterDraft.selections plus UnitCatalog support-profile readers",
-        "boundary": "fillCreationHoles rejected result and finalizeCharacterDraft projection"
-      }
-    },
-    {
-      "fieldPath": "CreationBatchFillResult.issues",
-      "owner": "executable-boundary-projection",
-      "introducedIn": "packages/character-creation-runtime/src/fill-reducer.ts",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "submitted CreationFill batch, current CharacterDraft.revision, and currently derived Creation Hole Frontier",
-        "boundary": "fillCreationHoles rejected result"
-      }
-    },
-    {
-      "fieldPath": "CharacterBuild",
-      "owner": "build-evidence",
-      "introducedIn": "packages/character-creation-runtime/src/finalization.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      }
+      "owner": "RuleCoreMovementGrappleOwner",
+      "fields": [
+        "BattleCombatantMovement.spentFeet",
+        "BattleCombatantMovement.remainingFeet",
+        "BattleTurnState.dashMovementBonusFeet",
+        "BattleTurnState.disengaged",
+        "BattleTurnState.actionResources",
+        "BattleCreatureState.conditions",
+        "BattleState.grapples",
+        "BattleState.pendingInterrupt"
+      ],
+      "notes": "Owns reusable Movement, Dash, Disengage, Prone-standing, Grapple, escape/release, and Opportunity Attack trigger facts through existing battle state fields. The replay adds no alternate movement budget, grapple ledger, action-resource copy, or pending-reaction flag."
     }
   ],
   "notes": [
-    "Character Draft owns accepted source facts and draft revision.",
-    "Creation Hole Frontier is derived by discoverCreationHoles from the draft and support-profile readers; no durable open-hole ledger is stored.",
-    "Finalization is derived by finalizeCharacterDraft from the draft and support-profile admission; no durable finalization status ledger is stored beside the draft.",
-    "Rejected batch issues and fill issues are result projections at the fillCreationHoles boundary, not durable state beside the draft.",
-    "Closed and not-yet-open holes are rejected by comparing a fill against the derived Creation Hole Frontier; no closed-hole status field is stored.",
-    "Character Build is produced only by the finalization gate once holes are empty and the support profile admits the completed draft."
+    "Task 72 introduced no new durable state fields.",
+    "Speed remains the creature movement capacity; spent and remaining Movement remain existing battle movement projections.",
+    "Grapple state remains BattleState.grapples; Prone remains BattleCreatureState.conditions; Opportunity Attack prompting remains BattleState.pendingInterrupt.",
+    "qComponentRoute is target replay route evidence derived from typed rule-core component route vocabulary, not authored identity, branch names, witness labels, or connector filenames."
   ]
 }
