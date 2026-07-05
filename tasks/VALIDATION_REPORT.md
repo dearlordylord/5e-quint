@@ -2959,3 +2959,120 @@ Verification results:
   turn-start save hole-id projection with the hole producer to remove duplicated
   string-value connascence. No duplicate durable state or authored-identity
   dispatch was added.
+
+## CRP04-CCF-01
+
+- Manifest source commit SHA: `84e17424ba5882f076783f4bd0780b34d2a0a58e`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Driver: `packages/character-creation-runtime/character-creation-runtime.mbt.qnt`
+- Route connector: `packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+- Acceptance status: `accepted`
+
+Allowed inputs used:
+
+- `packages/character-creation-runtime/character-creation-runtime.mbt.qnt`
+- `packages/character-creation-runtime/character-creation-runtime-slice.qnt`
+- `packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt`
+- `packages/character-creation-runtime/character-creation-reducer-route.qnt`
+- `packages/character-creation-runtime/VOCABULARY.md`
+- `.references/srd-5.2.1/Character-Creation.md`
+- `.references/srd-5.2.1/Character-Origins.md`
+- `.references/srd-5.2.1/Classes/Fighter.md`
+- `.references/srd-5.2.1/Equipment.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+Task 89 extends the public character-creation reducer surface by making the
+accepted batch boundary explicit in `fill-reducer.ts`:
+`acceptedCreationBatchFillResult` now owns the accepted result projection after
+`fillCreationHoles` validates and applies the whole submitted batch. The helper
+derives the post-acceptance Creation Hole Frontier from `discoverCreationHoles`
+and the post-acceptance finalization from `finalizeCharacterDraft`, both from
+the accepted `CharacterDraft` plus Unit catalog/support profile facts.
+
+The quarantined runtime harness in
+`packages/character-creation-runtime/src/character-creation-runtime.mbt.test.ts`
+now includes a deterministic accepted-batch check for the Task 89 branches. It
+submits the independent initial accepted batches and the manifest-to-loadout
+finalization path through public reducer entrypoints, checks one draft revision
+increment per accepted batch, checks no accepted result carries an issue list,
+checks holes/finalization equal the derived projections after every accepted
+batch, and checks the loadout path reaches a ready finalization.
+
+No duplicate durable open-hole, finalization, or issue ledger was added.
+Character Draft remains the owner for accepted creation selections and draft
+revision; Character Build owns finalized build facts. Route replay observes
+draft creation, `RouteApplyCreationFillBatch`, `RouteDiscoverCreationHoles`
+after every accepted batch, partial draft/build fact records, and
+`RouteFinalizeCharacterDraft` only after the loadout batch reaches the
+finalized stage.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doFillAbilityScoresOnly` | `tasks/target-replay-evidence/CRP04-CCF-01.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doFillAbilityScoresOnly#trace:MBT_TRACES=1 MBT_STEPS=16 action=doFillAbilityScoresOnly projection=qState` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doFillInitialChoicesOnly` | `tasks/target-replay-evidence/CRP04-CCF-01.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doFillInitialChoicesOnly#trace:MBT_TRACES=1 MBT_STEPS=16 action=doFillInitialChoicesOnly projection=qState` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doFillInitialManifest` | `tasks/target-replay-evidence/CRP04-CCF-01.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doFillInitialManifest#trace:MBT_TRACES=1 MBT_STEPS=16 action=doFillInitialManifest projection=qState` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doFillManifestChoices` | `tasks/target-replay-evidence/CRP04-CCF-01.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doFillManifestChoices#trace:MBT_TRACES=1 MBT_STEPS=16 action=doFillManifestChoices projection=qState` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doFillManifestLoadout` | `tasks/target-replay-evidence/CRP04-CCF-01.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doFillManifestLoadout#trace:MBT_TRACES=1 MBT_STEPS=16 action=doFillManifestLoadout projection=qState` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doFillManifestPurchase` | `tasks/target-replay-evidence/CRP04-CCF-01.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doFillManifestPurchase#trace:MBT_TRACES=1 MBT_STEPS=16 action=doFillManifestPurchase projection=qState` | `_none_` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRP04-CCF-01.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id pattern: `MBT_TRACES=1 MBT_STEPS=16 action=<branchAction> projection=qState`
+- Route trace id pattern: `MBT_TRACES=1 MBT_STEPS=16 action=<branchAction> projection=qRoute`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRP04-CCF-01/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 89.
+
+Verification results:
+
+- Base check passed: declared base ref
+  `ralph/cleanroom-character-creation-lane-20260705/integration` and `HEAD`
+  both resolved to `84e17424b Merge Ralph route replay tasks 61-69`; Base SHA
+  `84e17424ba5882f076783f4bd0780b34d2a0a58e` is an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against Character Creation steps,
+  Character Origins background/species choices, Fighter level-1 creation facts,
+  Equipment starting-equipment/loadout facts, `UBIQUITOUS_LANGUAGE.md`, and
+  `packages/character-creation-runtime/VOCABULARY.md`.
+- MBT process precheck found no actual running `vitest` or
+  `quint_evaluator` test runner; the only match was an external monitoring
+  shell whose command text contained those names.
+- `START=$(date +%s); MBT_TRACES=1 MBT_STEPS=16 pnpm --filter @dnd/character-creation-runtime exec vitest run src/character-creation-runtime.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "character creation" 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 2 files and 9 tests; final timed run `TOTAL: 45s`.
+- `pnpm --filter @dnd/character-creation-runtime exec vitest run src/character-creation-runtime.mbt.test.ts -t "derives holes"` passed with 1 focused harness test and 1 skipped MBT replay test.
+- `pnpm --filter @dnd/character-creation-runtime typecheck` passed after the
+  Gnomish Lineage replay test narrowed the projected trait Unit id before
+  returning the literal-typed test evidence.
+- `START=$(date +%s); MBT_TRACES=1 MBT_STEPS=16 pnpm --filter @dnd/character-creation-runtime exec vitest run src/character-creation-runtime.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "character creation" 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed after the production/harness change with 2 files, 9 tests, 1 skipped deterministic test, and final timed run `TOTAL: 40s`.
+- `pnpm cleanroom-branch-coverage:check -- --target-replay-evidence tasks/target-replay-evidence/CRP04-CCF-01.json` was diagnostic only and failed because that mode requires evidence for the whole active denominator, not just Task 89.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24
+  sampled inputs after Task 89 artifact generation.
+- `git diff --check` passed after Task 89 artifact updates.
+- `flock /tmp/dnd-mbt-qnt.lock pnpm quality` passed after the round-3
+  production/harness changes.
+- Reviewer-loop convergence passed: round 3 verified RAW traceability, domain
+  language, atomic accepted-batch projection locality, derived
+  hole/finalization projections, no duplicate durable state, route event
+  ownership, and no authored-identity dispatch. No reasonable findings
+  remained.
+
+Plan Impact:
+
+- Status: `none`
+- Affected tasks: Task 89 / `CRP04-CCF-01` accepted; Task 90 /
+  `CRP04-CCF-02` and Task 91 / `CRP04-CCF-03` left unchanged.
+- Required plan edits: none.

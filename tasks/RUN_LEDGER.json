@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
-  "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+  "manifestSourceCommitSha": "84e17424ba5882f076783f4bd0780b34d2a0a58e",
+  "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
   "entries": [
     {
       "taskId": "CRPI-READY-001",
@@ -2472,6 +2472,115 @@
           "status": "pass",
           "detail": "Round 1 verified RAW traceability, component-first architecture, adapter quarantine, no duplicate durable state, no authored-identity dispatch, and no remaining reasonable Task 69 findings."
         }
+      ]
+    },
+    {
+      "taskId": "CRP04-CCF-01",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "character-creation",
+      "selectedDrivers": [
+        "packages/character-creation-runtime/character-creation-runtime.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "84e17424ba5882f076783f4bd0780b34d2a0a58e",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "103a562a0f0e77807cbd20b0e87a43e3fa1c544d090d1488cb7290d43972fde7"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "aaf28bf086654519af5f73049d026fbcae6e356c30ed1258107d74673ab499f9"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "db4c60fb96f90dc6e53021bb0d018dbcc2dabfcb79a54273b6781b32e971130a"
+        },
+        "history": {
+          "path": "tasks/history/CRP04-CCF-01/README.md",
+          "sha256": "66b17b3c63c2f35ba48052dee309e08917a03df5f34bf19454208730d8a5f48d"
+        }
+      },
+      "targetReplayEvidence": [
+      {
+        "path": "tasks/target-replay-evidence/CRP04-CCF-01.json",
+        "sha256": "595e7713e8683a29fa174a17985f7ce578814a12332992cb65db7d10477dcd04",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRP04-CCF-01.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doFillAbilityScoresOnly#trace:MBT_TRACES=1 MBT_STEPS=16 action=doFillAbilityScoresOnly projection=qState",
+            "tasks/target-replay-evidence/CRP04-CCF-01.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doFillAbilityScoresOnly#trace:MBT_TRACES=1 MBT_STEPS=16 action=doFillAbilityScoresOnly projection=qRoute",
+            "tasks/target-replay-evidence/CRP04-CCF-01.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doFillInitialChoicesOnly#trace:MBT_TRACES=1 MBT_STEPS=16 action=doFillInitialChoicesOnly projection=qState",
+            "tasks/target-replay-evidence/CRP04-CCF-01.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doFillInitialChoicesOnly#trace:MBT_TRACES=1 MBT_STEPS=16 action=doFillInitialChoicesOnly projection=qRoute",
+            "tasks/target-replay-evidence/CRP04-CCF-01.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doFillInitialManifest#trace:MBT_TRACES=1 MBT_STEPS=16 action=doFillInitialManifest projection=qState",
+            "tasks/target-replay-evidence/CRP04-CCF-01.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doFillInitialManifest#trace:MBT_TRACES=1 MBT_STEPS=16 action=doFillInitialManifest projection=qRoute",
+            "tasks/target-replay-evidence/CRP04-CCF-01.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doFillManifestChoices#trace:MBT_TRACES=1 MBT_STEPS=16 action=doFillManifestChoices projection=qState",
+            "tasks/target-replay-evidence/CRP04-CCF-01.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doFillManifestChoices#trace:MBT_TRACES=1 MBT_STEPS=16 action=doFillManifestChoices projection=qRoute",
+            "tasks/target-replay-evidence/CRP04-CCF-01.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doFillManifestLoadout#trace:MBT_TRACES=1 MBT_STEPS=16 action=doFillManifestLoadout projection=qState",
+            "tasks/target-replay-evidence/CRP04-CCF-01.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doFillManifestLoadout#trace:MBT_TRACES=1 MBT_STEPS=16 action=doFillManifestLoadout projection=qRoute",
+            "tasks/target-replay-evidence/CRP04-CCF-01.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doFillManifestPurchase#trace:MBT_TRACES=1 MBT_STEPS=16 action=doFillManifestPurchase projection=qState",
+            "tasks/target-replay-evidence/CRP04-CCF-01.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doFillManifestPurchase#trace:MBT_TRACES=1 MBT_STEPS=16 action=doFillManifestPurchase projection=qRoute"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-character-creation-lane-20260705/integration && git log --oneline -1 HEAD && git merge-base --is-ancestor 84e17424ba5882f076783f4bd0780b34d2a0a58e HEAD",
+          "status": "pass",
+          "detail": "Declared Ralph base ref and HEAD both resolved to 84e17424b Merge Ralph route replay tasks 61-69; Base SHA 84e17424ba5882f076783f4bd0780b34d2a0a58e is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language review against .references/srd-5.2.1/Character-Creation.md, Character-Origins.md, Classes/Fighter.md, Equipment.md, UBIQUITOUS_LANGUAGE.md, and packages/character-creation-runtime/VOCABULARY.md",
+          "status": "pass"
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "No actual vitest or quint_evaluator test runner was active before the timed focused MBT replay; the only match was an external monitoring shell whose command text contained those names."
+        },
+      {
+        "command": "START=$(date +%s); MBT_TRACES=1 MBT_STEPS=16 pnpm --filter @dnd/character-creation-runtime exec vitest run src/character-creation-runtime.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"character creation\" 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+        "status": "pass",
+        "detail": "2 test files passed with 9 tests; semantic qState and route qRoute replay matched; final timed run TOTAL: 45s."
+      },
+      {
+        "command": "pnpm --filter @dnd/character-creation-runtime exec vitest run src/character-creation-runtime.mbt.test.ts -t \"derives holes\"",
+        "status": "pass",
+        "detail": "Focused deterministic harness test passed for accepted fill batch hole rediscovery, revision advancement, issue absence, and finalization projection."
+      },
+      {
+        "command": "pnpm --filter @dnd/character-creation-runtime typecheck",
+        "status": "pass",
+        "detail": "Character creation runtime package typecheck passed after narrowing the Gnomish Lineage replay trait Unit id."
+      },
+      {
+        "command": "START=$(date +%s); MBT_TRACES=1 MBT_STEPS=16 pnpm --filter @dnd/character-creation-runtime exec vitest run src/character-creation-runtime.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"character creation\" 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+        "status": "pass",
+        "detail": "Round-3 focused MBT/reducer-route validation passed with 2 files, 9 tests, 1 skipped deterministic test, and TOTAL: 40s."
+      },
+      {
+        "command": "pnpm cleanroom-branch-coverage:check -- --target-replay-evidence tasks/target-replay-evidence/CRP04-CCF-01.json",
+        "status": "fail",
+        "detail": "Diagnostic-only full-denominator target evidence mode failed on unrelated missing evidence for other selected drivers; Task 89 evidence itself was generated and checked by the focused MBT replay."
+      },
+      {
+        "command": "pnpm cleanroom-branch-coverage:check",
+        "status": "pass",
+        "detail": "Cleanroom branch coverage passed with 738 obligations and 24 sampled inputs after Task 89 artifact generation."
+      },
+      {
+        "command": "git diff --check",
+        "status": "pass",
+        "detail": "No whitespace errors after Task 89 artifact updates."
+      },
+      {
+        "command": "flock /tmp/dnd-mbt-qnt.lock pnpm quality",
+        "status": "pass",
+        "detail": "Quality passed after the round-3 production/harness changes and package typecheck cleanup; turbo typecheck reported 9 successful tasks."
+      },
+      {
+        "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+        "status": "pass",
+        "detail": "Round 3 verified atomic accepted-batch projection locality, derived open-hole/finalization projections, route ownership, no duplicate durable state, and no authored-identity dispatch; no reasonable findings remained."
+      }
       ]
     }
   ]

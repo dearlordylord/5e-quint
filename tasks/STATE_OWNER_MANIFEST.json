@@ -1,13 +1,67 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-027",
-  "durableFields": [],
+  "taskId": "CRP04-CCF-01",
+  "durableFields": [
+    {
+      "fieldPath": "CharacterDraft.revision",
+      "owner": "build-evidence",
+      "introducedIn": "packages/character-creation-runtime/src/types.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      }
+    },
+    {
+      "fieldPath": "CharacterDraft.selections",
+      "owner": "build-evidence",
+      "introducedIn": "packages/character-creation-runtime/src/types.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      }
+    },
+    {
+      "fieldPath": "CreationBatchFillResult.holes",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/character-creation-runtime/src/discovery.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "CharacterDraft.selections plus UnitCatalog support-profile readers",
+        "boundary": "fillCreationHoles result and discoverCreationHoles projection"
+      }
+    },
+    {
+      "fieldPath": "CreationBatchFillResult.finalization",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/character-creation-runtime/src/finalization.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "CharacterDraft.selections plus UnitCatalog support-profile readers",
+        "boundary": "fillCreationHoles result and finalizeCharacterDraft projection"
+      }
+    },
+    {
+      "fieldPath": "CreationBatchFillResult.issues",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/character-creation-runtime/src/fill-reducer.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "submitted CreationFill batch and current CharacterDraft.revision",
+        "boundary": "fillCreationHoles rejected result"
+      }
+    },
+    {
+      "fieldPath": "CharacterBuild",
+      "owner": "build-evidence",
+      "introducedIn": "packages/character-creation-runtime/src/finalization.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      }
+    }
+  ],
   "notes": [
-    "Task 69 introduced no new durable BattleState, BattleCreatureState, TurnState, action-resource, movement, condition, active-effect, Concentration, or interrupt-stack field.",
-    "RuleCoreAttackDamageDispositionOwner is component route ownership evidence, not runtime durable state.",
-    "Melee Knock Out projection remains existing BattleCreatureState Hit Points, conditions, and zero-HP lifecycle state.",
-    "Ranged Knock Out rejection remains existing typed attack kind and ResolutionResult invalid path; no duplicate acceptance flag is stored in durable state.",
-    "Component route behavior does not branch on authored spell names, QNT branch names, witness field names, connector filenames, or fixture labels.",
-    "qComponentRoute is a target replay boundary projection derived from the typed RuleCoreAttackDamageDispositionOwner route vocabulary."
+    "Character Draft owns accepted source facts and draft revision.",
+    "Creation Hole Frontier is derived by discoverCreationHoles from the draft and support-profile readers; no durable open-hole ledger is stored.",
+    "Finalization is derived by finalizeCharacterDraft from the draft and support-profile admission; no durable finalization status ledger is stored beside the draft.",
+    "Character Build is produced only by the finalization gate once holes are empty and the support profile admits the completed draft.",
+    "Empty issue collections in qState are replay projections of an accepted or issue-free result, not a second durable issue store."
   ]
 }

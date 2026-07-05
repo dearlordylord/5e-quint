@@ -783,6 +783,19 @@ function hasChoice(
   );
 }
 
+type AcceptedFillBatchStep = {
+  readonly name: keyof Pick<
+    typeof driverSchema,
+    | "doFillInitialManifest"
+    | "doFillInitialChoicesOnly"
+    | "doFillAbilityScoresOnly"
+    | "doFillManifestChoices"
+    | "doFillManifestPurchase"
+    | "doFillManifestLoadout"
+  >;
+  readonly fills: (holes: readonly CreationHole[]) => readonly CreationFill[];
+};
+
 function holeVariantForId(holeId: string): HoleVariant {
   const entry = Object.entries(holeIds).find(([, id]) => id === holeId);
   if (entry == null) {
@@ -792,9 +805,81 @@ function holeVariantForId(holeId: string): HoleVariant {
   return entry[0] as HoleVariant;
 }
 
+const standaloneAcceptedFillBatchSteps = [
+  { name: "doFillInitialChoicesOnly", fills: initialChoicesOnlyFills },
+  { name: "doFillAbilityScoresOnly", fills: abilityScoresOnlyFills },
+] as const satisfies ReadonlyArray<AcceptedFillBatchStep>;
+
+const manifestToFinalizationAcceptedFillBatchSteps = [
+  { name: "doFillInitialManifest", fills: initialManifestFills },
+  { name: "doFillManifestChoices", fills: manifestChoiceFills },
+  { name: "doFillManifestPurchase", fills: manifestPurchaseFills },
+  { name: "doFillManifestLoadout", fills: manifestLoadoutFills },
+] as const satisfies ReadonlyArray<AcceptedFillBatchStep>;
+
 const runtimeStateCheck = stateCheck(normalizeQuintState, compareState);
 
 describe("Character creation runtime MBT", () => {
+  it("derives holes and finalization after each accepted creation fill batch", () => {
+    function submitAcceptedStep(
+      input: {
+        readonly draft: CharacterDraft;
+        readonly holes: readonly CreationHole[];
+      },
+      step: AcceptedFillBatchStep,
+    ): {
+      readonly draft: CharacterDraft;
+      readonly holes: readonly CreationHole[];
+    } {
+      const expectedRevision = input.draft.revision;
+      const result = fillCreationHoles({
+        draft: input.draft,
+        fills: step.fills(input.holes),
+        expectedRevision,
+        unitLibrary,
+      });
+
+      expect(result.tag).toBe("accepted");
+      if (result.tag !== "accepted") {
+        throw new Error(`${step.name} should be accepted.`);
+      }
+
+      expect(result.draft.revision).toBe(
+        draftRevision(Number(expectedRevision) + 1),
+      );
+      expect("issues" in result).toBe(false);
+      expect(result.holes).toEqual(
+        discoverCreationHoles({ draft: result.draft, unitLibrary }),
+      );
+      expect(result.finalization).toEqual(
+        finalizeCharacterDraft({ draft: result.draft, unitLibrary }),
+      );
+
+      return { draft: result.draft, holes: result.holes };
+    }
+
+    for (const step of standaloneAcceptedFillBatchSteps) {
+      const draft = newDraft();
+      const holes = discoverCreationHoles({ draft, unitLibrary });
+      submitAcceptedStep({ draft, holes }, step);
+    }
+
+    const manifestDraft = newDraft();
+    let acceptedState = {
+      draft: manifestDraft,
+      holes: discoverCreationHoles({ draft: manifestDraft, unitLibrary }),
+    };
+
+    for (const step of manifestToFinalizationAcceptedFillBatchSteps) {
+      acceptedState = submitAcceptedStep(acceptedState, step);
+    }
+
+    expect(acceptedState.holes).toEqual([]);
+    expect(
+      finalizeCharacterDraft({ draft: acceptedState.draft, unitLibrary }).tag,
+    ).toBe("ready");
+  });
+
   it("replays character creation fill traces against the runtime reducer", async () => {
     await run({
       spec: path.resolve(
