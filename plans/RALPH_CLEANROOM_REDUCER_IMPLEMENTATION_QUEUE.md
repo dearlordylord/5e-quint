@@ -415,7 +415,7 @@
     {
       "number": 69,
       "id": "CRPI-READY-027",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: rule-core-attack-damage-disposition"
     },
     {
@@ -4582,7 +4582,7 @@ Plan Impact:
 
 ### Task 69 - CRPI-READY-027
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
