@@ -409,7 +409,7 @@
     {
       "number": 68,
       "id": "CRPI-READY-026",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: rule-core-ability-skill-command"
     },
     {
@@ -4527,7 +4527,7 @@ Plan Impact:
 
 ### Task 68 - CRPI-READY-026
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
