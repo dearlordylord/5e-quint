@@ -93,6 +93,13 @@ export const CHARACTER_BATTLE_ENCOUNTER_COMPOSITION_ROUTE_ACTIONS = [
 export type CharacterBattleEncounterCompositionRouteAction =
   (typeof CHARACTER_BATTLE_ENCOUNTER_COMPOSITION_ROUTE_ACTIONS)[number];
 
+export const CHARACTER_SESSION_SHEET_DERIVED_BATTLE_ACTS_ROUTE_ACTIONS = [
+  "doEnterSheetDerivedSessionBattle",
+  "doSettleSheetDerivedSpellSlot",
+] as const;
+export type CharacterSessionSheetDerivedBattleActsRouteAction =
+  (typeof CHARACTER_SESSION_SHEET_DERIVED_BATTLE_ACTS_ROUTE_ACTIONS)[number];
+
 export type CharacterBattleRouteEvent =
   | {
       readonly kind: "projectCharacterSheetToBattle";
@@ -281,6 +288,25 @@ export function characterBattleEncounterCompositionRouteStep(
     ),
     Match.when("doEnterComposedBattleRuntime", () =>
       enterComposedBattleRuntimeRoute(route),
+    ),
+    Match.exhaustive,
+  );
+}
+
+export function initialCharacterSessionSheetDerivedBattleActsRoute(): readonly CharacterBattleRouteEvent[] {
+  return [];
+}
+
+export function characterSessionSheetDerivedBattleActsRouteStep(
+  route: readonly CharacterBattleRouteEvent[],
+  action: CharacterSessionSheetDerivedBattleActsRouteAction,
+): readonly CharacterBattleRouteEvent[] {
+  return Match.value(action).pipe(
+    Match.when("doEnterSheetDerivedSessionBattle", () =>
+      enterSheetDerivedSessionBattleRoute(route),
+    ),
+    Match.when("doSettleSheetDerivedSpellSlot", () =>
+      settleSheetDerivedSpellSlotRoute(route),
     ),
     Match.exhaustive,
   );
@@ -487,6 +513,70 @@ function enterComposedBattleRuntimeRoute(
     enterBattleRuntimeRoute({
       subject: "handoffEncounterComposition",
       owner: "characterBattleRuntime",
+    }),
+  ];
+}
+
+function enterSheetDerivedSessionBattleRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  return [
+    ...route,
+    projectCharacterSheetToBattleRoute({
+      subject: "sheetToBattleInit",
+      owner: "characterBattleInitProjection",
+    }),
+    composeBattleEncounterRoute({
+      subject: "handoffParticipantMembership",
+      facts: [
+        "encounterSideRelationshipOwnership",
+        "nonSheetParticipantMembership",
+        "sheetDerivedParticipantCandidate",
+      ],
+      owner: "characterBattleEncounterSetup",
+    }),
+    composeBattleEncounterRoute({
+      subject: "handoffSubjectProfileAvailability",
+      facts: ["subjectProfileAvailabilityOwnership"],
+      owner: "characterBattleSubjectProfile",
+    }),
+    composeBattleEncounterRoute({
+      subject: "handoffInitiativeCurrentActor",
+      facts: [
+        "currentActorOwnership",
+        "initiativeCountOwnership",
+        "stableInitiativeOrderOwnership",
+      ],
+      owner: "characterBattleInitiative",
+    }),
+    enterBattleRuntimeRoute({
+      subject: "handoffEncounterComposition",
+      owner: "characterBattleRuntime",
+    }),
+  ];
+}
+
+function settleSheetDerivedSpellSlotRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  return [
+    ...route,
+    settleBattleToCharacterSheetRoute({
+      subject: "battleToSheetSettlement",
+      fill: "battleDelta",
+      holes: ["hitPointProjection"],
+      owner: "characterBattleSettlement",
+    }),
+    settleBattleToCharacterSheetRoute({
+      subject: "handoffResourceProjection",
+      fill: "resourceDelta",
+      holes: ["spellResourceProjection"],
+      owner: "characterBattleResourceProjection",
+    }),
+    recordCharacterBattleHandoffFactsRoute({
+      subject: "handoffResourceProjection",
+      facts: ["sourceExactSpellSlotDelta"],
+      owner: "characterBattleResourceProjection",
     }),
   ];
 }

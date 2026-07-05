@@ -2582,6 +2582,113 @@
           "detail": "Round 1 moved route event shape from test-local duplication into production character-battle route vocabulary; round 2 moved Task 78 cumulative route replay into production, made the route MBT driver consume that production replay, tied build max-HP rejection routing to the battle-init owner constant, and constrained encounter-composition route facts to the typed composed-entry boundary."
         }
       ]
+    },
+    {
+      "taskId": "CRP05-SBE-02",
+      "assignmentId": "session-battle-entry",
+      "laneId": "handoff",
+      "selectedDrivers": [
+        "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "c84d674259969fed3da21201b9372471eeffa8faee4faade60c997427791cb26"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "29c025a0579fc96b7b4b4539f3411802dd7b11ef0ae38e3823dc0f72dd6f631f"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "1851108d5f8124383f212e26ace7d09f3019d931ae8180386ca3fb4c18122ad5"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRP05-SBE-02.json",
+          "sha256": "46205e5fff87766d6be37c207999015587ee402f1459fa839106239327fcc406",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRP05-SBE-02.json#driver:packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt#step:doAcceptSpellInvocationAndSpendOneSlot#trace:semantic-qState seed=1 action=doAcceptSpellInvocationAndSpendOneSlot",
+            "tasks/target-replay-evidence/CRP05-SBE-02.json#driver:packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt#step:doProjectResourceBackedSpellAttackCapability#trace:semantic-qState seed=1 action=doProjectResourceBackedSpellAttackCapability",
+            "tasks/target-replay-evidence/CRP05-SBE-02.json#driver:packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt#step:doProjectWeaponAttackCapability#trace:semantic-qState seed=1 action=doProjectWeaponAttackCapability",
+            "tasks/target-replay-evidence/CRP05-SBE-02.json#driver:packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt#step:doRejectEarlySpellFillWithoutSpend#trace:semantic-qState seed=1 action=doRejectEarlySpellFillWithoutSpend",
+            "tasks/target-replay-evidence/CRP05-SBE-02.json#driver:packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt#step:doRejectExhaustedSlotRediscovery#trace:semantic-qState seed=1 action=doRejectExhaustedSlotRediscovery",
+            "tasks/target-replay-evidence/CRP05-SBE-02.json#driver:packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt#step:doRejectMissingSelectedSpellAttackCapability#trace:semantic-qState seed=3 action=doRejectMissingSelectedSpellAttackCapability",
+            "tasks/target-replay-evidence/CRP05-SBE-02.json#driver:packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt#step:doRejectMissingWieldedWeaponCapability#trace:semantic-qState seed=6 action=doRejectMissingWieldedWeaponCapability",
+            "tasks/target-replay-evidence/CRP05-SBE-02.json#driver:packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt#step:doRejectStaleOpenActionAfterInvocation#trace:semantic-qState seed=1 action=doRejectStaleOpenActionAfterInvocation",
+            "tasks/target-replay-evidence/CRP05-SBE-02.json#driver:packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt#step:doRejectStaleSpellFillWithoutSecondSpend#trace:semantic-qState seed=1 action=doRejectStaleSpellFillWithoutSecondSpend",
+            "tasks/target-replay-evidence/CRP05-SBE-02.json#driver:packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt#step:doSettleSpellSlotExpenditure#trace:semantic-qState seed=1 action=doSettleSpellSlotExpenditure",
+            "tasks/target-replay-evidence/CRP05-SBE-02.json#driver:packages/character-battle-runtime/character-session-sheet-derived-battle-acts.route.mbt.qnt#step:doEnterSheetDerivedSessionBattle#trace:sheet-derived-qRoute action=doEnterSheetDerivedSessionBattle",
+            "tasks/target-replay-evidence/CRP05-SBE-02.json#driver:packages/character-battle-runtime/character-session-sheet-derived-battle-acts.route.mbt.qnt#step:doSettleSheetDerivedSpellSlot#trace:sheet-derived-qRoute action=doSettleSheetDerivedSpellSlot"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-character-battle-lane-20260705/integration && git log --oneline -1 HEAD && git merge-base --is-ancestor 59d4f37325ba82390470a247e15cdc5123dc7a96 HEAD",
+          "status": "pass",
+          "detail": "Declared Ralph base ref and HEAD both resolved to 59d4f3732 Mark Ralph task 78 done; Base SHA 59d4f37325ba82390470a247e15cdc5123dc7a96 is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language review against .references/srd-5.2.1/Equipment.md, .references/srd-5.2.1/Playing-the-Game.md, .references/srd-5.2.1/Rules-Glossary.md, .references/srd-5.2.1/Spells/Gaining-and-Casting.md, UBIQUITOUS_LANGUAGE.md, packages/character-battle-runtime/README.md, and plans/cleanroom-guidance/reducer-spine.md",
+          "status": "pass"
+        },
+        {
+          "command": "revision-round-2 static artifact review",
+          "status": "pass",
+          "detail": "Route evidence now uses route connector actions only; semantic rejection branches no longer claim settlement/sourceExactSpellSlotDelta route fields; validationReport SHA is refreshed in the ledger."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations and 24 sampled inputs passed after connector-action route evidence support."
+        },
+        {
+          "command": "node scripts/cleanroom-branch-coverage-check.cjs --self-test",
+          "status": "pass"
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Both process checks exited 1 before the final timed focused MBT replay; no evaluator cleanup was needed."
+        },
+        {
+          "command": "START=$(date +%s); (while true; do sleep 60; echo \"MBT still running: $(( $(date +%s) - START ))s\"; done) & PROGRESS=$!; trap 'kill \"$PROGRESS\" 2>/dev/null || true' EXIT; pnpm --filter @dnd/character-battle-runtime exec vitest run src/character-session-sheet-derived-battle-acts.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"sheet-derived\" 2>&1; STATUS=$?; kill \"$PROGRESS\" 2>/dev/null || true; wait \"$PROGRESS\" 2>/dev/null || true; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$STATUS\"",
+          "status": "pass",
+          "detail": "Revision-round-3 focused semantic qState and route qRoute replay passed with three branch-specific normal semantic `step` runs: seed 1 happy path, seed 6 missing wielded weapon, seed 3 missing selected spell; 5 tests passed, 5 skipped; TOTAL: 11s."
+        },
+        {
+          "command": "pnpm --filter @dnd/character-battle-runtime typecheck",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm check:mbt-script-inventory",
+          "status": "pass",
+          "detail": "Every MBT file is covered by an explicit test:mbt script or an accepted grouping rationale."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "revision-round-4 cleanup verification: pnpm --filter @dnd/character-battle-runtime typecheck && pnpm cleanroom-branch-coverage:check && git diff --check",
+          "status": "pass",
+          "detail": "Removed the unused full-route characterSessionSheetDerivedBattleActsRoute helper/export and removed duplicated SheetDerivedSession.target helper state while keeping the target combatant existence assertion."
+        },
+        {
+          "command": "flock /tmp/dnd-mbt-qnt.lock pnpm quality",
+          "status": "fail",
+          "detail": "Diagnostic only: passed Task 80-owned gates including MBT inventory, route connector checks, and cleanroom branch coverage; failed in repo-wide turbo typecheck on off-surface baseline error packages/character-creation-runtime/src/index.test.ts(10401,5): Type 'string' is not assignable to type '\"species_gnome_gnomish_lineage\"'."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 3 split semantic evidence into branch-specific seeded normal `step` replays so every claimed initial branch is actually observed by the public MBT target entrypoint; round 4 removed the unused route convenience export and duplicated test-helper target state; no remaining reasonable Task 80 findings were found after rerun."
+        }
+      ]
     }
   ]
 }
