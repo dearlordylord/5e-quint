@@ -1,0 +1,246 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/character-sheet-runtime/src/arcane-recovery-selected-identity.mbt.test.ts and reducer-route-connectors.mbt.test.ts Arcane Recovery copied qRoute versus public rest-with-route replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "acceptance": {
+    "driverPath": "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt",
+    "connectorPath": "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.route.mbt.qnt",
+    "routeClass": "reducer-routed",
+    "durableOwner": "CharacterSheetSpellSlotOwner owns ordinary Spell Slot refund and reset deltas; CharacterSheetFeatureResourceOwner owns Arcane Recovery use lockout; CharacterSheetPactSlotOwner owns the Pact Slot rejection boundary. Slot capacities stay build-derived projections, not duplicated sheet state.",
+    "acceptedProjection": "qRoute"
+  },
+  "status": "pass",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "59b45a618627202dbecdb09ebeee2e5a566f2c749e9b92248b268dad8f8196b0",
+      "routeConnectorSha256": "cfb82d7684a0ddc76abac4c638ccdcde55950b0c5beb61ed2a7b866ec4f445b9",
+      "branchFamily": "step",
+      "branchAction": "doRecoverSecondLevelSpellSlot",
+      "observedActionTaken": "doRecoverSecondLevelSpellSlot",
+      "harnessTestPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=characterSheetArcaneRecovery action=doRecoverSecondLevelSpellSlot qRoute=arcane-recovery-selected-identity-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRecoverSecondLevelSpellSlot",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#createReadyRouteDriver",
+        "routeSubject": "SheetSpellResourceRouteSubject",
+        "owners": [
+          "CharacterSheetSpellSlotOwner",
+          "CharacterSheetFeatureResourceOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "cf928fab2b691abbf39b40f80867ebf203f256a54645ba53d22dc2002a1bfc83",
+        "observedProjectionSha256": "cf928fab2b691abbf39b40f80867ebf203f256a54645ba53d22dc2002a1bfc83",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "SheetSpellResourceRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_sheet",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#arcaneRecoverySheet",
+            "start_short_rest",
+            "packages/character-sheet-runtime/src/rests.ts#startShortRest",
+            "finish_short_rest",
+            "packages/character-sheet-runtime/src/rests.ts#finishShortRest",
+            "complete_short_rest_arcane_recovery_with_route",
+            "packages/character-sheet-runtime/src/rests.ts#completeShortRestArcaneRecoveryWithRoute",
+            "complete_short_rest_arcane_recovery_benefits_with_owner",
+            "packages/character-sheet-runtime/src/healing-rest-benefit.ts#completeShortRestArcaneRecoveryBenefitsWithOwner",
+            "apply_arcane_recovery_owner_classification",
+            "packages/character-sheet-runtime/src/healing-rest-benefit.ts#applyArcaneRecovery",
+            "read_public_qRoute",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterSheetRouteQuintState"
+          ],
+          "routeEventSource": "Character Sheet qRoute event returned by public completeShortRestArcaneRecoveryWithRoute after completeShortRestArcaneRecoveryBenefitsWithOwner applies the ordinary Spell Slot refund, records the Arcane Recovery rest-feature lockout, and returns the spellSlot owner classification.",
+          "reducerPublicApiPath": "packages/character-sheet-runtime/src/rests.ts#completeShortRestArcaneRecoveryWithRoute"
+        },
+        "checkedTargetStateFields": [
+          "CharacterSheet.spellSlotExpenditures",
+          "CharacterSheet.restFeatureUses.tag=arcaneRecovery",
+          "CharacterSheet.restFeatureUses.usedSinceLongRest",
+          "characterBuildSpellcastingSlotCapacity projection",
+          "CharacterSheetRouteEvent.kind=completeCharacterSheetRest",
+          "CharacterSheetRouteEvent.subject=spellResource",
+          "CharacterSheetRouteEvent.fill=recoverySelection",
+          "CharacterSheetRouteEvent.owner=spellSlot",
+          "CharacterSheetArcaneRecoveryRestRouteResult.qRoute"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "A Short Rest Arcane Recovery selection restores an expended ordinary level 2 Spell Slot, marks the feature used until Long Rest, and exposes the copied Spell Resource recovery qRoute."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "59b45a618627202dbecdb09ebeee2e5a566f2c749e9b92248b268dad8f8196b0",
+      "routeConnectorSha256": "cfb82d7684a0ddc76abac4c638ccdcde55950b0c5beb61ed2a7b866ec4f445b9",
+      "branchFamily": "step",
+      "branchAction": "doResetArcaneRecoveryOnLongRest",
+      "observedActionTaken": "doResetArcaneRecoveryOnLongRest",
+      "harnessTestPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=characterSheetArcaneRecovery action=doResetArcaneRecoveryOnLongRest qRoute=arcane-recovery-selected-identity-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doResetArcaneRecoveryOnLongRest",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#createReadyRouteDriver",
+        "routeSubject": "SheetSpellResourceRouteSubject",
+        "owners": [
+          "CharacterSheetSpellSlotOwner",
+          "CharacterSheetFeatureResourceOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "cf928fab2b691abbf39b40f80867ebf203f256a54645ba53d22dc2002a1bfc83",
+        "observedProjectionSha256": "cf928fab2b691abbf39b40f80867ebf203f256a54645ba53d22dc2002a1bfc83",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "SheetSpellResourceRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_sheet",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#arcaneRecoverySheet",
+            "start_long_rest",
+            "packages/character-sheet-runtime/src/rests.ts#startLongRest",
+            "finish_long_rest",
+            "packages/character-sheet-runtime/src/rests.ts#finishLongRest",
+            "complete_long_rest_arcane_recovery_reset_with_route",
+            "packages/character-sheet-runtime/src/rests.ts#completeLongRestArcaneRecoveryResetWithRoute",
+            "complete_long_rest",
+            "packages/character-sheet-runtime/src/rests.ts#completeLongRest",
+            "read_public_qRoute",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterSheetRouteQuintState"
+          ],
+          "routeEventSource": "Character Sheet qRoute event returned by public completeLongRestArcaneRecoveryResetWithRoute after completeLongRest restores ordinary and Pact Slot expenditures and clears Arcane Recovery rest-feature lockout state.",
+          "reducerPublicApiPath": "packages/character-sheet-runtime/src/rests.ts#completeLongRestArcaneRecoveryResetWithRoute"
+        },
+        "checkedTargetStateFields": [
+          "CharacterSheet.spellSlotExpenditures",
+          "CharacterSheet.pactSlotExpenditure",
+          "CharacterSheet.restFeatureUses",
+          "CharacterSheetRouteEvent.kind=completeCharacterSheetRest",
+          "CharacterSheetRouteEvent.subject=spellResource",
+          "CharacterSheetRouteEvent.fill=recoverySelection",
+          "CharacterSheetRouteEvent.owner=spellSlot",
+          "CharacterSheetArcaneRecoveryRestRouteResult.qRoute"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "A Long Rest clears ordinary and Pact Slot expenditure plus Arcane Recovery use lockout, and exposes the copied reset qRoute."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "59b45a618627202dbecdb09ebeee2e5a566f2c749e9b92248b268dad8f8196b0",
+      "routeConnectorSha256": "cfb82d7684a0ddc76abac4c638ccdcde55950b0c5beb61ed2a7b866ec4f445b9",
+      "branchFamily": "step",
+      "branchAction": "doRejectPactSlotArcaneRecovery",
+      "observedActionTaken": "doRejectPactSlotArcaneRecovery",
+      "harnessTestPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=characterSheetArcaneRecovery action=doRejectPactSlotArcaneRecovery qRoute=arcane-recovery-selected-identity-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRejectPactSlotArcaneRecovery",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#createReadyRouteDriver",
+        "routeSubject": "SheetSpellResourceRouteSubject",
+        "owners": [
+          "CharacterSheetPactSlotOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "d46aa5d845ff717f577da665d0d436aedc31d99c531f08335b2099a9005465ee",
+        "observedProjectionSha256": "d46aa5d845ff717f577da665d0d436aedc31d99c531f08335b2099a9005465ee",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "SheetSpellResourceRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_sheet",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#arcaneRecoverySheet",
+            "start_short_rest",
+            "packages/character-sheet-runtime/src/rests.ts#startShortRest",
+            "finish_short_rest",
+            "packages/character-sheet-runtime/src/rests.ts#finishShortRest",
+            "complete_short_rest_arcane_recovery_with_route",
+            "packages/character-sheet-runtime/src/rests.ts#completeShortRestArcaneRecoveryWithRoute",
+            "complete_short_rest_arcane_recovery_benefits_with_owner",
+            "packages/character-sheet-runtime/src/healing-rest-benefit.ts#completeShortRestArcaneRecoveryBenefitsWithOwner",
+            "apply_arcane_recovery_owner_classification",
+            "packages/character-sheet-runtime/src/healing-rest-benefit.ts#applyArcaneRecovery",
+            "read_public_qRoute",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterSheetRouteQuintState"
+          ],
+          "routeEventSource": "Character Sheet qRoute event returned by public completeShortRestArcaneRecoveryWithRoute after completeShortRestArcaneRecoveryBenefitsWithOwner rejects a pact-slot-shaped recovery request and returns the pactSlot owner classification.",
+          "reducerPublicApiPath": "packages/character-sheet-runtime/src/rests.ts#completeShortRestArcaneRecoveryWithRoute"
+        },
+        "checkedTargetStateFields": [
+          "CharacterSheet.spellSlotExpenditures",
+          "CharacterSheet.pactSlotExpenditure",
+          "characterBuildSpellcastingSlotCapacity projection",
+          "characterBuildPactSlotCapacity projection",
+          "CharacterSheetIssue.message",
+          "CharacterSheetRouteEvent.kind=resolveCharacterSheetSubject",
+          "CharacterSheetRouteEvent.subject=spellResource",
+          "CharacterSheetRouteEvent.fill=recoverySelection",
+          "CharacterSheetRouteEvent.holes=recoveryChoice",
+          "CharacterSheetRouteEvent.owner=pactSlot",
+          "CharacterSheetArcaneRecoveryRestRouteResult.qRoute"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Arcane Recovery rejects a requested ordinary-slot refund when no ordinary Spell Slot is expended even if a Pact Slot is expended."
+      }
+    }
+  ]
+}

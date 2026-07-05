@@ -1,23 +1,37 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-048",
+  "taskId": "CRPI-BLOCK-049",
   "durableFields": [
     {
-      "owner": "CharacterSheetBuildProjectionOwner",
+      "owner": "CharacterSheetSpellSlotOwner",
       "fields": [
-        "CharacterBuild.progression",
-        "CharacterBuild.proficiencyChoices",
-        "CharacterBuild.features",
-        "UnitRecord.mechanics.grants",
-        "CharacterSheetAbilityCheckOtherProficiencyBonusState.tag"
+        "CharacterSheet.spellSlotExpenditures",
+        "CharacterSheet.createdSpellSlots",
+        "characterBuildSpellcastingSlotCapacity projection"
       ],
-      "notes": "Owns Ability Check Proficiency Bonus projection by deriving from existing CharacterBuild proficiency, Expertise, Jack of All Trades, total-level, and typed other-bonus facts. Character Sheet does not store a parallel proficiency or expertise ledger."
+      "notes": "Owns ordinary Spell Slot refund/reset deltas. Task 95 corrected the Arcane Recovery refund boundary to compare requested refunds against build-derived ordinary Spell Slot capacity plus current ordinary expenditure without adding a parallel slot-capacity field."
+    },
+    {
+      "owner": "CharacterSheetFeatureResourceOwner",
+      "fields": [
+        "CharacterSheet.restFeatureUses.tag=arcaneRecovery",
+        "CharacterSheet.restFeatureUses.usedSinceLongRest"
+      ],
+      "notes": "Owns Arcane Recovery use lockout state and use-lockout rejection routing. Short Rest Arcane Recovery adds the lockout; Long Rest clears it through the existing restFeatureUses reset. Public route projection emits a Feature Resource route for the already-used-until-Long-Rest boundary."
+    },
+    {
+      "owner": "CharacterSheetPactSlotOwner",
+      "fields": [
+        "CharacterSheet.pactSlotExpenditure",
+        "characterBuildPactSlotCapacity projection"
+      ],
+      "notes": "Owns the Pact Slot rejection boundary for Arcane Recovery: Pact Slots remain separate from ordinary Spell Slots and cannot satisfy ordinary-slot recovery. Public route projection emits a Pact Slot route only for pact-slot-shaped shortages, not generic ordinary over-refund failures."
     }
   ],
   "notes": [
-    "Task 94 introduced no new durable state fields.",
-    "qRoute target replay evidence is derived from public characterSheetAbilityCheckProficiencyBonusProjection route events and the copied route connector.",
-    "Bard Jack of All Trades identity remains an SRD catalog/source selection fact; production projection admits the typed jack_of_all_trades_ability_check_bonus grant shape rather than branching on authored names or prose.",
-    "No alternate Proficiency Bonus, skill proficiency, Expertise, Jack of All Trades, level, or other-bonus ledger was added."
+    "Task 95 introduced no new durable CharacterSheet state fields.",
+    "qRoute target replay evidence is derived from public completeShortRestArcaneRecoveryWithRoute and completeLongRestArcaneRecoveryResetWithRoute route projections and the copied route connector. Route-bearing results are distinct from no-route outcomes.",
+    "Arcane Recovery authored identity remains an SRD catalog/build ownership fact in tests and fixtures; production behavior admits the typed rest_spell_slot_recovery mechanics shape and explicit rest-feature state.",
+    "Slot capacities remain build-derived projections from CharacterBuild spellcasting slot pools and Pact Magic slot pools."
   ]
 }

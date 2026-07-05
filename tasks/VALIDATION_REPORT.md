@@ -1,5 +1,98 @@
 # Validation Report
 
+## CRPI-BLOCK-049
+
+Status: `pass`
+
+- Task: 95
+- Driver path: `packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt`
+- Route connector path: `packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.route.mbt.qnt`
+- Route class: `reducer-routed`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-049.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+
+Allowed inputs used:
+
+- `packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt`
+- `packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.route.mbt.qnt`
+- `packages/character-sheet-runtime/src/arcane-recovery-selected-identity.mbt.test.ts`
+- `packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts`
+- `packages/character-sheet-runtime/src/rests.test.ts`
+- `packages/character-sheet-runtime/src/test-support.ts`
+- `packages/character-sheet-runtime/src/rests.ts`
+- `packages/character-sheet-runtime/src/healing-rest-benefit.ts`
+- `packages/character-sheet-runtime/src/sheet-types.ts`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-convergence-backlog.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Classes/Wizard.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+Arcane Recovery selected-identity route replay is accepted through public
+Character Sheet rest-with-route entrypoints. `completeShortRestArcaneRecoveryWithRoute`
+uses the same Short Rest benefit pipeline as the existing reducer and consumes
+the Arcane Recovery typed owner classification before returning a copied
+`qRoute` projection. Feature-use lockout failures route to Feature Resource,
+ordinary refund failures route to Spell Slot, and only pact-slot-shaped
+shortages route to Pact Slot. `completeLongRestArcaneRecoveryResetWithRoute`
+calls the existing Long Rest reducer and returns the reset `qRoute` projection
+only when the starting sheet proves an Arcane Recovery spell-resource reset
+occurred; unrelated successful Long Rests return a no-route result.
+The ordinary Spell Slot over-refund boundary now treats a build-known but
+unexpended ordinary slot as "more Spell Slots than are expended" rather than an
+unknown slot level.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt#step:doRecoverSecondLevelSpellSlot` | `tasks/target-replay-evidence/CRPI-BLOCK-049.json#driver:packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt#step:doRecoverSecondLevelSpellSlot#trace:public-route=characterSheetArcaneRecovery action=doRecoverSecondLevelSpellSlot qRoute=arcane-recovery-selected-identity-public-route` | `_none_` | `covered` |
+| `packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt#step:doRejectPactSlotArcaneRecovery` | `tasks/target-replay-evidence/CRPI-BLOCK-049.json#driver:packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt#step:doRejectPactSlotArcaneRecovery#trace:public-route=characterSheetArcaneRecovery action=doRejectPactSlotArcaneRecovery qRoute=arcane-recovery-selected-identity-public-route` | `_none_` | `covered` |
+| `packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt#step:doResetArcaneRecoveryOnLongRest` | `tasks/target-replay-evidence/CRPI-BLOCK-049.json#driver:packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt#step:doResetArcaneRecoveryOnLongRest#trace:public-route=characterSheetArcaneRecovery action=doResetArcaneRecoveryOnLongRest qRoute=arcane-recovery-selected-identity-public-route` | `_none_` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-049.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id pattern: `public-route=characterSheetArcaneRecovery action=<branchAction> qRoute=arcane-recovery-selected-identity-public-route`
+- The copied connector projection source is `packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.route.mbt.qnt#qRoute`; the observed projection source is the public Character Sheet rest-with-route entrypoints `packages/character-sheet-runtime/src/rests.ts#completeShortRestArcaneRecoveryWithRoute` and `packages/character-sheet-runtime/src/rests.ts#completeLongRestArcaneRecoveryResetWithRoute`.
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-049/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 95.
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Classes/Wizard.md#Level 1: Arcane Recovery` defines recovering expended Spell Slots after a Short Rest, the half-Wizard-level rounded-up combined-level cap, the level 6+ exclusion, and Long Rest reset.
+- SRD 5.2.1 `Rules-Glossary.md#Short Rest` and `#Long Rest` define the rest completion boundaries and special-feature recharge hooks.
+- `UBIQUITOUS_LANGUAGE.md` defines Pool, Refund, Short Rest, Long Rest, Spell Slot, Pact Slot, and Character Sheet owner vocabulary used by this route.
+
+Verification results:
+
+- Base check passed: declared base ref `ralph/cleanroom-character-sheet-route-lane-20260705T2045Z/integration` resolved to `cbd50121f Mark Ralph task 94 done`; `HEAD` resolved to `cbd50121f Mark Ralph task 94 done`; Base SHA `cbd50121fdb591220bd3a097f418864357fa3ec3` is an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against SRD 5.2.1 Wizard Arcane Recovery, Short Rest, Long Rest, and `UBIQUITOUS_LANGUAGE.md`.
+- Focused route regression tests passed: `pnpm --filter @dnd/character-sheet-runtime exec vitest run src/rests.test.ts` passed with 21 tests.
+- Focused MBT replay passed: `START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/character-sheet-runtime exec vitest run src/arcane-recovery-selected-identity.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "Arcane Recovery|routes in-scope Arcane Recovery" ) 2>&1 & pid=$!; wait "$pid"; status=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"` passed with 3 tests in `TOTAL: 4s`.
+- `pnpm --filter @dnd/character-sheet-runtime typecheck` passed.
+- `pnpm cleanroom-branch-coverage:check`, `git diff --check`, and `pnpm quality` are recorded in the run ledger for this task.
+- Reviewer-loop convergence passed: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks found no remaining reasonable Task 95 findings after the over-refund boundary fix, public route projection update, and revision-round 3 owner-boundary tightening.
+
 ## CRPI-BLOCK-048
 
 Status: `pass`

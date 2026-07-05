@@ -945,6 +945,102 @@ export type CharacterSheetAbilityCheckProficiencyBonus =
       readonly bonus: number;
     };
 
+export const CHARACTER_SHEET_ROUTE_SUBJECTS = [
+  "sheetState",
+  "hitPoint",
+  "rest",
+  "featureResource",
+  "spellResource",
+  "buildFactsProjection",
+  "armorClassProjection",
+  "abilityCheckProjection",
+  "selectedReferenceProjection",
+] as const;
+export type CharacterSheetRouteSubject =
+  (typeof CHARACTER_SHEET_ROUTE_SUBJECTS)[number];
+
+export const CHARACTER_SHEET_ROUTE_HOLES = [
+  "hitDiceSpend",
+  "restBenefitChoice",
+  "resourceSpend",
+  "recoveryChoice",
+  "projectionChoice",
+] as const;
+export type CharacterSheetRouteHole =
+  (typeof CHARACTER_SHEET_ROUTE_HOLES)[number];
+
+export const CHARACTER_SHEET_ROUTE_FILLS = [
+  "hitDiceSpend",
+  "restDuration",
+  "resourceSpend",
+  "recoverySelection",
+  "projectionSelection",
+] as const;
+export type CharacterSheetRouteFill =
+  (typeof CHARACTER_SHEET_ROUTE_FILLS)[number];
+
+export const CHARACTER_SHEET_ROUTE_OWNERS = [
+  "characterSheetState",
+  "hitPoint",
+  "hitDice",
+  "spellSlot",
+  "pactSlot",
+  "featureResource",
+  "buildProjection",
+  "selectedReference",
+] as const;
+export type CharacterSheetRouteOwner =
+  (typeof CHARACTER_SHEET_ROUTE_OWNERS)[number];
+
+export const CHARACTER_SHEET_ROUTE_FACTS = [
+  "ordinarySpellSlotDelta",
+  "pactSlotDelta",
+  "createdSlotExpiry",
+  "restBenefitWindow",
+  "featureRecoveryState",
+  "featureResourceSpend",
+  "hitPointMaximumArithmeticInput",
+  "spellResourceRejection",
+] as const;
+export type CharacterSheetRouteFact =
+  (typeof CHARACTER_SHEET_ROUTE_FACTS)[number];
+
+export type CharacterSheetRouteEvent =
+  | {
+      readonly kind: "createCharacterSheet";
+      readonly owner: CharacterSheetRouteOwner;
+    }
+  | {
+      readonly kind: "projectCharacterSheetFacts";
+      readonly subject: CharacterSheetRouteSubject;
+      readonly owner: CharacterSheetRouteOwner;
+    }
+  | {
+      readonly kind: "retainCharacterSheetSelectedReferences";
+      readonly subject: CharacterSheetRouteSubject;
+      readonly owner: CharacterSheetRouteOwner;
+    }
+  | {
+      readonly kind: "resolveCharacterSheetSubject";
+      readonly subject: CharacterSheetRouteSubject;
+      readonly fill: CharacterSheetRouteFill;
+      readonly holes: readonly CharacterSheetRouteHole[];
+      readonly owner: CharacterSheetRouteOwner;
+    }
+  | {
+      readonly kind: "completeCharacterSheetRest";
+      readonly subject: CharacterSheetRouteSubject;
+      readonly fill: CharacterSheetRouteFill;
+      readonly holes: readonly CharacterSheetRouteHole[];
+      readonly owner: CharacterSheetRouteOwner;
+    }
+  | {
+      readonly kind: "recordCharacterSheetFacts";
+      readonly subject: CharacterSheetRouteSubject;
+      readonly facts: readonly CharacterSheetRouteFact[];
+      readonly owner: CharacterSheetRouteOwner;
+    };
+
 export type CharacterSheetAbilityCheckProficiencyBonusRouteEvent = {
   readonly kind: "projectCharacterSheetFacts";
   readonly subject: "abilityCheckProjection";
@@ -957,6 +1053,32 @@ export type CharacterSheetAbilityCheckProficiencyBonusProjection = {
     CharacterSheetAbilityCheckProficiencyBonusRouteEvent,
   ];
 };
+
+export type CharacterSheetArcaneRecoveryRestRouteResult =
+  | {
+      readonly tag: "accepted";
+      readonly route: "arcaneRecovery";
+      readonly sheet: CharacterSheet;
+      readonly qRoute: readonly [CharacterSheetRouteEvent];
+    }
+  | {
+      readonly tag: "accepted";
+      readonly route: "none";
+      readonly sheet: CharacterSheet;
+      readonly qRoute: readonly [];
+    }
+  | {
+      readonly tag: "rejected";
+      readonly route: "arcaneRecovery";
+      readonly issue: CharacterSheetIssue;
+      readonly qRoute: readonly [CharacterSheetRouteEvent];
+    }
+  | {
+      readonly tag: "rejected";
+      readonly route: "none";
+      readonly issue: CharacterSheetIssue;
+      readonly qRoute: readonly [];
+    };
 
 export type CharacterSheetAbilityCheckAbilityInput = {
   readonly build: CharacterBuild;

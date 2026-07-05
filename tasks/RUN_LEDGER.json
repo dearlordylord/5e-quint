@@ -4667,6 +4667,96 @@
           "detail": "No remaining reasonable Task 94 findings after moving the observed Ability Check qRoute event into the public projection-with-route entrypoint and updating artifacts."
         }
       ]
+    },
+    {
+      "taskId": "CRPI-BLOCK-049",
+      "assignmentId": "reducer-spine-diagnostic-character-sheet",
+      "laneId": "sheet",
+      "selectedDrivers": [
+        "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "060ab6af5d4288a61a8c773a3ae1ec1b352531214f04af242787e843b358ed5c"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "54320f9cf13d8b8b028abc29304b77d6f9f1a3a343e8decccf67c41139f70ae1"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "33e21f68aa89002d64400cad55f5f60a72fe881bcb3024db2d7120c58d3337c1"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-049.json",
+          "sha256": "59e288ecaa3ae5f5583c4320b0c01a1d67f59f9c3346273145755c05d17d29d4",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-049.json#driver:packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt#step:doRecoverSecondLevelSpellSlot#trace:public-route=characterSheetArcaneRecovery action=doRecoverSecondLevelSpellSlot qRoute=arcane-recovery-selected-identity-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-049.json#driver:packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt#step:doRejectPactSlotArcaneRecovery#trace:public-route=characterSheetArcaneRecovery action=doRejectPactSlotArcaneRecovery qRoute=arcane-recovery-selected-identity-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-049.json#driver:packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt#step:doResetArcaneRecoveryOnLongRest#trace:public-route=characterSheetArcaneRecovery action=doResetArcaneRecoveryOnLongRest qRoute=arcane-recovery-selected-identity-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "pnpm --filter @dnd/character-sheet-runtime typecheck",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm --filter @dnd/character-sheet-runtime exec vitest run src/rests.test.ts",
+          "status": "pass",
+          "detail": "21 tests passed, including revision-round 3 route/no-route owner-boundary regressions."
+        },
+        {
+          "command": "START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/character-sheet-runtime exec vitest run src/arcane-recovery-selected-identity.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"Arcane Recovery|routes in-scope Arcane Recovery\" ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "status": "pass",
+          "detail": "3 tests passed; TOTAL: 4s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "Passed with 738 obligations and 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass",
+          "detail": "Passed after final artifact updates."
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "Passed end to end; app lint emitted 61 warnings and exited 0."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 found the Arcane Recovery known-but-unexpended ordinary slot rejection mismatch. Round 2 rejected broad public route emission. Revision round 3 moved Short Rest route owner classification into the Arcane Recovery reducer result, limited Pact Slot routing to pact-slot-shaped shortages, routed use-lockout failures to Feature Resource, and made unrelated successful Long Rests return no route. Revision round 4 corrected the target replay evidence entrypoint sequence to name completeShortRestArcaneRecoveryBenefitsWithOwner and the Arcane Recovery owner classifier; no remaining reasonable Task 95 findings."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-049",
+            "disposition": "unblocked"
+          },
+          {
+            "taskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
+            "disposition": "left unchanged"
+          }
+        ],
+        "observations": [
+          "Arcane Recovery selected-identity qRoute is accepted through public Character Sheet rest-with-route entrypoints.",
+          "The selected route connector remains narrower than the broader spell-resource route connector; Feature Resource ownership is now also encoded in the public Short Rest Arcane Recovery route owner result for use-lockout failures.",
+          "A build-known but unexpended ordinary Spell Slot must report the Arcane Recovery over-refund boundary, not an unknown Spell Slot level boundary."
+        ],
+        "requiredPlanEdits": "none"
+      }
     }
   ]
 }

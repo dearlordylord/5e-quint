@@ -571,7 +571,7 @@
     {
       "number": 95,
       "id": "CRPI-BLOCK-049",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: character-sheet-arcane-recovery-selected-identity"
     },
     {
@@ -6108,7 +6108,7 @@ Plan Impact:
 
 ### Task 95 - CRPI-BLOCK-049
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

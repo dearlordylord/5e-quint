@@ -7,6 +7,7 @@ import {
   classUnitId,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
+import { Hp, resourceCount, spellSlotLevel } from "@dnd/shared/types";
 import {
   buildUnitCatalog,
   srdUnitCollection,
@@ -15,11 +16,27 @@ import { Either } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
+  CHARACTER_SHEET_SHORT_REST_TICKS,
   CHARACTER_SHEET_NO_OTHER_PROFICIENCY_BONUS,
   CHARACTER_SHEET_OTHER_PROFICIENCY_BONUS_APPLIES,
+  characterSheetId,
   characterSheetAbilityCheckProficiencyBonusProjection,
+  completeLongRestArcaneRecoveryResetWithRoute,
+  completeShortRestArcaneRecoveryWithRoute,
+  createFreshCharacterSheet,
+  finishLongRest,
+  finishShortRest,
+  startLongRest,
+  startShortRest,
   type CharacterSheetAbilityCheckOtherProficiencyBonusState,
   type CharacterSheetAbilityCheckProficiencyBonus,
+  type CharacterSheet,
+  type CharacterSheetRouteEvent,
+  type CharacterSheetRouteFact,
+  type CharacterSheetRouteFill,
+  type CharacterSheetRouteHole,
+  type CharacterSheetRouteOwner,
+  type CharacterSheetRouteSubject,
 } from "./index.ts";
 
 const MBT_TEST_TIMEOUT_MS = 120_000;
@@ -34,9 +51,7 @@ const SUBJECT_BY_TAG = {
   SheetArmorClassProjectionRouteSubject: "armorClassProjection",
   SheetAbilityCheckProjectionRouteSubject: "abilityCheckProjection",
   SheetSelectedReferenceProjectionRouteSubject: "selectedReferenceProjection",
-} as const;
-type CharacterSheetRouteSubject =
-  (typeof SUBJECT_BY_TAG)[keyof typeof SUBJECT_BY_TAG];
+} as const satisfies Record<string, CharacterSheetRouteSubject>;
 
 const HOLE_BY_TAG = {
   SheetHitDiceSpendHoleFamily: "hitDiceSpend",
@@ -44,9 +59,7 @@ const HOLE_BY_TAG = {
   SheetResourceSpendHoleFamily: "resourceSpend",
   SheetRecoveryChoiceHoleFamily: "recoveryChoice",
   SheetProjectionChoiceHoleFamily: "projectionChoice",
-} as const;
-type CharacterSheetRouteHole =
-  (typeof HOLE_BY_TAG)[keyof typeof HOLE_BY_TAG];
+} as const satisfies Record<string, CharacterSheetRouteHole>;
 
 const FILL_BY_TAG = {
   SheetHitDiceSpendFill: "hitDiceSpend",
@@ -54,9 +67,7 @@ const FILL_BY_TAG = {
   SheetResourceSpendFill: "resourceSpend",
   SheetRecoverySelectionFill: "recoverySelection",
   SheetProjectionSelectionFill: "projectionSelection",
-} as const;
-type CharacterSheetRouteFill =
-  (typeof FILL_BY_TAG)[keyof typeof FILL_BY_TAG];
+} as const satisfies Record<string, CharacterSheetRouteFill>;
 
 const OWNER_BY_TAG = {
   CharacterSheetStateOwner: "characterSheetState",
@@ -67,9 +78,7 @@ const OWNER_BY_TAG = {
   CharacterSheetFeatureResourceOwner: "featureResource",
   CharacterSheetBuildProjectionOwner: "buildProjection",
   CharacterSheetSelectedReferenceOwner: "selectedReference",
-} as const;
-type CharacterSheetRouteOwner =
-  (typeof OWNER_BY_TAG)[keyof typeof OWNER_BY_TAG];
+} as const satisfies Record<string, CharacterSheetRouteOwner>;
 type CharacterSheetSpellResourceSlotOwner = Extract<
   CharacterSheetRouteOwner,
   "spellSlot" | "pactSlot"
@@ -84,8 +93,7 @@ const FACT_BY_TAG = {
   SheetFeatureResourceSpendFact: "featureResourceSpend",
   SheetHitPointMaximumArithmeticInputFact: "hitPointMaximumArithmeticInput",
   SheetSpellResourceRejectionFact: "spellResourceRejection",
-} as const;
-type CharacterSheetRouteFact = (typeof FACT_BY_TAG)[keyof typeof FACT_BY_TAG];
+} as const satisfies Record<string, CharacterSheetRouteFact>;
 
 const SPELL_RESOURCE_DELTA_FACTS_BY_OWNER = {
   spellSlot: ["ordinarySpellSlotDelta"],
@@ -94,42 +102,6 @@ const SPELL_RESOURCE_DELTA_FACTS_BY_OWNER = {
   CharacterSheetSpellResourceSlotOwner,
   readonly CharacterSheetRouteFact[]
 >;
-
-type CharacterSheetRouteEvent =
-  | {
-      readonly kind: "createCharacterSheet";
-      readonly owner: CharacterSheetRouteOwner;
-    }
-  | {
-      readonly kind: "projectCharacterSheetFacts";
-      readonly subject: CharacterSheetRouteSubject;
-      readonly owner: CharacterSheetRouteOwner;
-    }
-  | {
-      readonly kind: "retainCharacterSheetSelectedReferences";
-      readonly subject: CharacterSheetRouteSubject;
-      readonly owner: CharacterSheetRouteOwner;
-    }
-  | {
-      readonly kind: "resolveCharacterSheetSubject";
-      readonly subject: CharacterSheetRouteSubject;
-      readonly fill: CharacterSheetRouteFill;
-      readonly holes: readonly CharacterSheetRouteHole[];
-      readonly owner: CharacterSheetRouteOwner;
-    }
-  | {
-      readonly kind: "completeCharacterSheetRest";
-      readonly subject: CharacterSheetRouteSubject;
-      readonly fill: CharacterSheetRouteFill;
-      readonly holes: readonly CharacterSheetRouteHole[];
-      readonly owner: CharacterSheetRouteOwner;
-    }
-  | {
-      readonly kind: "recordCharacterSheetFacts";
-      readonly subject: CharacterSheetRouteSubject;
-      readonly facts: readonly CharacterSheetRouteFact[];
-      readonly owner: CharacterSheetRouteOwner;
-    };
 
 type RouteProjection = {
   readonly route: readonly CharacterSheetRouteEvent[];
@@ -525,8 +497,8 @@ const healingResourceRouteActions = {
 } as const satisfies ReadyRouteActionMap<typeof healingResourceRouteDriverSchema>;
 
 const arcaneRecoveryRouteActions = {
-  doRecoverSecondLevelSpellSlot: resetArcaneRecoveryRoute,
-  doResetArcaneRecoveryOnLongRest: resetArcaneRecoveryRoute,
+  doRecoverSecondLevelSpellSlot: recoverSecondLevelSpellSlotRoute,
+  doResetArcaneRecoveryOnLongRest: resetArcaneRecoveryOnLongRestRoute,
   doRejectPactSlotArcaneRecovery: rejectPactSlotArcaneRecoveryRoute,
 } as const satisfies ReadyRouteActionMap<typeof arcaneRecoveryRouteDriverSchema>;
 
@@ -753,6 +725,139 @@ function spendHealingResourceRoute(
   ];
 }
 
+function recoverSecondLevelSpellSlotRoute(
+  route: readonly CharacterSheetRouteEvent[],
+): readonly CharacterSheetRouteEvent[] {
+  const sheet = arcaneRecoverySheet({
+    firstLevelSpellSlotsExpended: 2,
+    secondLevelSpellSlotsExpended: 1,
+    pactSlotsExpended: 1,
+    arcaneRecoveryUsedSinceLongRest: false,
+  });
+  const rest = requireRight(startShortRest({ sheet }));
+  const completion = requireRight(
+    finishShortRest({ rest, restedTicks: CHARACTER_SHEET_SHORT_REST_TICKS }),
+  );
+  const projected = completeShortRestArcaneRecoveryWithRoute({
+    completion,
+    unitLibrary,
+    arcaneRecovery: {
+      refundSpellSlots: [
+        { spellLevel: spellSlotLevel(2), count: resourceCount(1) },
+      ],
+    },
+  });
+  expect(projected.tag).toBe("accepted");
+  if (projected.tag !== "accepted") {
+    throw new Error(projected.issue.message);
+  }
+  expect(
+    projected.sheet.restFeatureUses.some(
+      (use) => use.tag === "arcaneRecovery" && use.usedSinceLongRest,
+    ),
+  ).toBe(true);
+  return [...route, ...projected.qRoute];
+}
+
+function resetArcaneRecoveryOnLongRestRoute(
+  route: readonly CharacterSheetRouteEvent[],
+): readonly CharacterSheetRouteEvent[] {
+  const sheet = arcaneRecoverySheet({
+    firstLevelSpellSlotsExpended: 1,
+    secondLevelSpellSlotsExpended: 1,
+    pactSlotsExpended: 1,
+    arcaneRecoveryUsedSinceLongRest: true,
+  });
+  const rest = requireRight(
+    startLongRest({ sheet, timing: { tag: "noPriorLongRest" } }),
+  );
+  const completion = requireRight(
+    finishLongRest({ rest, restedTicks: rest.requiredRestTicks }),
+  );
+  const projected = completeLongRestArcaneRecoveryResetWithRoute({
+    completion,
+    unitLibrary,
+  });
+  expect(projected.tag).toBe("accepted");
+  if (projected.tag !== "accepted") {
+    throw new Error(projected.issue.message);
+  }
+  expect(
+    projected.sheet.restFeatureUses.some(
+      (use) => use.tag === "arcaneRecovery" && use.usedSinceLongRest,
+    ),
+  ).toBe(false);
+  return [...route, ...projected.qRoute];
+}
+
+function arcaneRecoverySheet(input: {
+  readonly firstLevelSpellSlotsExpended: number;
+  readonly secondLevelSpellSlotsExpended: number;
+  readonly pactSlotsExpended: number;
+  readonly arcaneRecoveryUsedSinceLongRest: boolean;
+}): CharacterSheet {
+  return requireRight(
+    createFreshCharacterSheet({
+      characterId: characterSheetId("character:route-arcane-recovery"),
+      build: arcaneRecoveryBuildWithPactSlots(),
+      currentHp: Hp(18),
+      tempHp: Hp(0),
+      hitPointMaximumReduction: Hp(0),
+      conditions: [],
+      unitLibrary,
+      spellSlotExpenditures: [
+        {
+          spellLevel: spellSlotLevel(1),
+          expended: resourceCount(input.firstLevelSpellSlotsExpended),
+        },
+        {
+          spellLevel: spellSlotLevel(2),
+          expended: resourceCount(input.secondLevelSpellSlotsExpended),
+        },
+      ],
+      pactSlots: { expended: resourceCount(input.pactSlotsExpended) },
+      restFeatureUses: input.arcaneRecoveryUsedSinceLongRest
+        ? [{ tag: "arcaneRecovery", usedSinceLongRest: true }]
+        : [],
+    }),
+  );
+}
+
+function arcaneRecoveryBuildWithPactSlots(): CharacterBuild {
+  return {
+    ...baseBuild({
+      startingClass: "class_wizard",
+      advancements: ["class_wizard", "class_wizard", "class_wizard"],
+    }),
+    spellcasting: {
+      sources: [
+        {
+          sourceUnitId: "class_wizard",
+          spellcastingAbility: "int",
+          cantrips: [],
+          spellbook: [],
+          preparedSpells: [],
+          spellcastingFocuses: ["arcane_focus"],
+        },
+      ],
+      slotPools: {
+        spellcasting: {
+          kind: "spellcasting",
+          slots: [
+            { spellLevel: 1, count: 4 },
+            { spellLevel: 2, count: 3 },
+          ],
+        },
+        pactMagic: {
+          kind: "pactMagic",
+          slotLevel: 1,
+          count: 1,
+        },
+      },
+    },
+  };
+}
+
 function resetArcaneRecoveryRoute(
   route: readonly CharacterSheetRouteEvent[],
 ): readonly CharacterSheetRouteEvent[] {
@@ -788,15 +893,30 @@ function arcaneRecoverySpellSlotRoute(
 function rejectPactSlotArcaneRecoveryRoute(
   route: readonly CharacterSheetRouteEvent[],
 ): readonly CharacterSheetRouteEvent[] {
-  return [
-    ...route,
-    resolveCharacterSheetSubject({
-      subject: "spellResource",
-      fill: "recoverySelection",
-      holes: ["recoveryChoice"],
-      owner: "pactSlot",
-    }),
-  ];
+  const sheet = arcaneRecoverySheet({
+    firstLevelSpellSlotsExpended: 0,
+    secondLevelSpellSlotsExpended: 0,
+    pactSlotsExpended: 1,
+    arcaneRecoveryUsedSinceLongRest: false,
+  });
+  const rest = requireRight(startShortRest({ sheet }));
+  const completion = requireRight(
+    finishShortRest({ rest, restedTicks: CHARACTER_SHEET_SHORT_REST_TICKS }),
+  );
+  const projected = completeShortRestArcaneRecoveryWithRoute({
+    completion,
+    unitLibrary,
+    arcaneRecovery: {
+      refundSpellSlots: [
+        { spellLevel: spellSlotLevel(1), count: resourceCount(1) },
+      ],
+    },
+  });
+  expect(projected.tag).toBe("rejected");
+  if (projected.tag !== "rejected") {
+    throw new Error("Expected Arcane Recovery Pact Slot route rejection.");
+  }
+  return [...route, ...projected.qRoute];
 }
 
 function rejectRestRoute(owner: CharacterSheetRouteOwner): RouteAppender {
