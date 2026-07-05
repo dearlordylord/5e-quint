@@ -1,5 +1,108 @@
 # Validation Report
 
+## CRPI-BLOCK-050
+
+Status: `pass`
+
+- Task: 96
+- Driver path: `packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt`
+- Route connector path: `packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.route.mbt.qnt`
+- Route class: `reducer-routed`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-050.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+
+Allowed inputs used:
+
+- `packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt`
+- `packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.route.mbt.qnt`
+- `packages/character-sheet-runtime/src/armor-class-base-selected-identity.mbt.test.ts`
+- `packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts`
+- `packages/character-sheet-runtime/src/armor-class.test.ts`
+- `packages/character-sheet-runtime/src/test-support.ts`
+- `packages/character-sheet-runtime/src/armor-class.ts`
+- `packages/character-sheet-runtime/src/sheet-types.ts`
+- `packages/character-sheet-runtime/src/index.ts`
+- `scripts/audit-character-sheet-runtime-split.mjs`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-convergence-backlog.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Playing-the-Game.md`
+- `.references/srd-5.2.1/Character-Creation.md`
+- `.references/srd-5.2.1/Equipment.md`
+- `.references/srd-5.2.1/Classes/Barbarian.md`
+- `.references/srd-5.2.1/Classes/Monk.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+Armor Class base selected-identity route replay is accepted through the public
+Character Sheet projection-with-route entrypoint. `characterSheetArmorClassProjection`
+derives semantic Armor Class state through `characterSheetArmorClassState`,
+returns the current Armor Class, and exposes the public selected-reference
+retention plus Armor Class build-projection `qRoute` events. The route harness
+now calls that public projection for selected Barbarian Unarmored Defense,
+Barbarian Unarmored Defense with Shield, selected Monk Unarmored Defense, Light
+Armor, Medium Armor with Dexterity cap, and Heavy Armor with Shield. Selected
+identity remains retained reference evidence; production behavior derives from
+CharacterBuild progression, equipment loadout, ability scores, armor training,
+and typed Surface armor / class-feature mechanics.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt#step:doProjectHeavyArmorWithShield` | `tasks/target-replay-evidence/CRPI-BLOCK-050.json#driver:packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt#step:doProjectHeavyArmorWithShield#trace:public-route=characterSheetArmorClassProjection action=doProjectHeavyArmorWithShield qRoute=armor-class-base-selected-identity-public-route` | `_none_` | `covered` |
+| `packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt#step:doProjectLightArmor` | `tasks/target-replay-evidence/CRPI-BLOCK-050.json#driver:packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt#step:doProjectLightArmor#trace:public-route=characterSheetArmorClassProjection action=doProjectLightArmor qRoute=armor-class-base-selected-identity-public-route` | `_none_` | `covered` |
+| `packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt#step:doProjectMediumArmorDexCap` | `tasks/target-replay-evidence/CRPI-BLOCK-050.json#driver:packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt#step:doProjectMediumArmorDexCap#trace:public-route=characterSheetArmorClassProjection action=doProjectMediumArmorDexCap qRoute=armor-class-base-selected-identity-public-route` | `_none_` | `covered` |
+| `packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt#step:doSelectBarbarianUnarmoredDefense` | `tasks/target-replay-evidence/CRPI-BLOCK-050.json#driver:packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt#step:doSelectBarbarianUnarmoredDefense#trace:public-route=characterSheetArmorClassProjection action=doSelectBarbarianUnarmoredDefense qRoute=armor-class-base-selected-identity-public-route` | `_none_` | `covered` |
+| `packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt#step:doSelectBarbarianUnarmoredDefenseWithShield` | `tasks/target-replay-evidence/CRPI-BLOCK-050.json#driver:packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt#step:doSelectBarbarianUnarmoredDefenseWithShield#trace:public-route=characterSheetArmorClassProjection action=doSelectBarbarianUnarmoredDefenseWithShield qRoute=armor-class-base-selected-identity-public-route` | `_none_` | `covered` |
+| `packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt#step:doSelectMonkUnarmoredDefense` | `tasks/target-replay-evidence/CRPI-BLOCK-050.json#driver:packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt#step:doSelectMonkUnarmoredDefense#trace:public-route=characterSheetArmorClassProjection action=doSelectMonkUnarmoredDefense qRoute=armor-class-base-selected-identity-public-route` | `_none_` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-050.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id pattern: `public-route=characterSheetArmorClassProjection action=<branchAction> qRoute=armor-class-base-selected-identity-public-route`
+- The copied connector projection source is `packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.route.mbt.qnt#qRoute`; the observed projection source is the public Character Sheet projection-with-route entrypoint `packages/character-sheet-runtime/src/armor-class.ts#characterSheetArmorClassProjection`, which returns selected-reference retention and Armor Class projection `qRoute` after deriving the semantic projection through `packages/character-sheet-runtime/src/armor-class.ts#characterSheetArmorClassState`.
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-050/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 96.
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Playing-the-Game.md#Armor Class` defines Armor Class as the combat target number appearing on character sheets and stat blocks.
+- SRD 5.2.1 `Character-Creation.md#Armor Class` defines default unarmored Armor Class, Equipment-derived Armor Class, class-feature alternatives, and the one-base-calculation-at-a-time multiclass rule.
+- SRD 5.2.1 `Equipment.md#Armor Class (AC)` and `#Shield` define armor base AC formulas and the trained Shield benefit.
+- SRD 5.2.1 `Classes/Barbarian.md#Level 1: Unarmored Defense` and `Classes/Monk.md#Level 1: Unarmored Defense` define the class-feature base Armor Class formulas and Shield interaction.
+- `UBIQUITOUS_LANGUAGE.md` defines Armor Class, Armor Category, Unarmored Defense, and Character Sheet terms used by this owner.
+
+Verification results:
+
+- Base check passed: declared base ref `ralph/cleanroom-character-sheet-route-lane-20260705T2045Z/integration` resolved to `ccdc8a46f Mark Ralph task 95 done`; `HEAD` resolved to `ccdc8a46f Mark Ralph task 95 done`; Base SHA `ccdc8a46fcd4d04bfdf888faf602f524528cbc35` is an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against SRD 5.2.1 Armor Class, equipment Armor Class and Shield, Barbarian and Monk Unarmored Defense, and `UBIQUITOUS_LANGUAGE.md`.
+- Focused typecheck passed: `pnpm --filter @dnd/character-sheet-runtime typecheck`.
+- Focused replay passed: `START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/character-sheet-runtime exec vitest run src/armor-class.test.ts src/armor-class-base-selected-identity.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "Armor Class|routes Armor Class" ) 2>&1 & pid=$!; wait "$pid"; status=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"` passed with 10 tests and 12 skipped in `TOTAL: 4s`.
+- JSON validation passed for `tasks/target-replay-evidence/CRPI-BLOCK-050.json`, `tasks/ENGINE_DEPTH_MANIFEST.json`, and `tasks/STATE_OWNER_MANIFEST.json`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- First `pnpm quality` run found the Task 96 export surface was missing from `scripts/audit-character-sheet-runtime-split.mjs`; after adding the three export ownership records, `pnpm check:character-sheet-runtime-split` passed.
+- Requested broad verification passed: `pnpm quality`. App lint emitted 61 warnings and exited 0; all quality gates and typecheck passed.
+- `git diff --check` passed.
+- Reviewer-loop convergence passed: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks found no remaining reasonable Task 96 findings after moving observed Armor Class `qRoute` events into the public projection-with-route entrypoint and recording the split-audit export ownership.
+
 ## CRPI-BLOCK-049
 
 Status: `pass`

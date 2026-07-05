@@ -4,6 +4,8 @@ import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import type { SimpleActionMap, SimpleDriver } from "@firfi/quint-connect";
 import {
   abilityScoreAssignment,
+  characterEquipmentItemId,
+  characterEquipmentItemUnitId,
   classUnitId,
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
@@ -21,6 +23,7 @@ import {
   CHARACTER_SHEET_OTHER_PROFICIENCY_BONUS_APPLIES,
   characterSheetId,
   characterSheetAbilityCheckProficiencyBonusProjection,
+  characterSheetArmorClassProjection,
   completeLongRestArcaneRecoveryResetWithRoute,
   completeShortRestArcaneRecoveryWithRoute,
   createFreshCharacterSheet,
@@ -31,6 +34,7 @@ import {
   type CharacterSheetAbilityCheckOtherProficiencyBonusState,
   type CharacterSheetAbilityCheckProficiencyBonus,
   type CharacterSheet,
+  type CharacterSheetArmorClassBaseChoice,
   type CharacterSheetRouteEvent,
   type CharacterSheetRouteFact,
   type CharacterSheetRouteFill,
@@ -471,12 +475,63 @@ const hitPointMaximumRouteActions = indexedActions(
 );
 
 const armorClassRouteActions = {
-  doSelectBarbarianUnarmoredDefense: selectArmorClassBaseRoute,
-  doSelectBarbarianUnarmoredDefenseWithShield: selectArmorClassBaseRoute,
-  doSelectMonkUnarmoredDefense: selectArmorClassBaseRoute,
-  doProjectLightArmor: selectArmorClassBaseRoute,
-  doProjectMediumArmorDexCap: selectArmorClassBaseRoute,
-  doProjectHeavyArmorWithShield: selectArmorClassBaseRoute,
+  doSelectBarbarianUnarmoredDefense: projectPublicArmorClassRoute({
+    build: armorClassBuild({
+      startingClass: "class_barbarian",
+      advancements: ["class_monk"],
+    }),
+    baseChoice: {
+      kind: "class_feature",
+      unitId: "barbarian_unarmored_defense",
+    },
+    expectedArmorClass: 13,
+  }),
+  doSelectBarbarianUnarmoredDefenseWithShield: projectPublicArmorClassRoute({
+    build: armorClassBuild({
+      startingClass: "class_barbarian",
+      advancements: ["class_monk"],
+      shield: true,
+    }),
+    baseChoice: {
+      kind: "class_feature",
+      unitId: "barbarian_unarmored_defense",
+    },
+    expectedArmorClass: 15,
+  }),
+  doSelectMonkUnarmoredDefense: projectPublicArmorClassRoute({
+    build: armorClassBuild({
+      startingClass: "class_barbarian",
+      advancements: ["class_monk"],
+    }),
+    baseChoice: {
+      kind: "class_feature",
+      unitId: "monk_unarmored_defense",
+    },
+    expectedArmorClass: 15,
+  }),
+  doProjectLightArmor: projectPublicArmorClassRoute({
+    build: armorClassBuild({
+      startingClass: "class_fighter",
+      armor: "armor_leather",
+    }),
+    expectedArmorClass: 13,
+  }),
+  doProjectMediumArmorDexCap: projectPublicArmorClassRoute({
+    build: armorClassBuild({
+      startingClass: "class_fighter",
+      armor: "armor_chain_shirt",
+      dexterityScore: 16,
+    }),
+    expectedArmorClass: 15,
+  }),
+  doProjectHeavyArmorWithShield: projectPublicArmorClassRoute({
+    build: armorClassBuild({
+      startingClass: "class_fighter",
+      armor: "armor_chain_mail",
+      shield: true,
+    }),
+    expectedArmorClass: 18,
+  }),
 } as const satisfies ReadyRouteActionMap<typeof armorClassRouteDriverSchema>;
 
 const classFeatureSelectedReferenceRouteActions = {
@@ -673,20 +728,81 @@ function baseBuild(input: {
   };
 }
 
-function selectArmorClassBaseRoute(
-  route: readonly CharacterSheetRouteEvent[],
-): readonly CharacterSheetRouteEvent[] {
-  return [
-    ...route,
-    retainCharacterSheetSelectedReferences({
-      subject: "selectedReferenceProjection",
-      owner: "selectedReference",
+function projectPublicArmorClassRoute(input: {
+  readonly build: CharacterBuild;
+  readonly baseChoice?: CharacterSheetArmorClassBaseChoice;
+  readonly expectedArmorClass: number;
+}): RouteAppender {
+  return (route) => {
+    const projected = requireRight(
+      characterSheetArmorClassProjection({
+        build: input.build,
+        unitLibrary,
+        ...(input.baseChoice === undefined
+          ? {}
+          : { baseChoice: input.baseChoice }),
+      }),
+    );
+    expect(Number(projected.armorClass)).toBe(input.expectedArmorClass);
+    return [...route, ...projected.qRoute];
+  };
+}
+
+function armorClassBuild(input: {
+  readonly startingClass: string;
+  readonly advancements?: readonly string[];
+  readonly armor?: string;
+  readonly shield?: boolean;
+  readonly dexterityScore?: number;
+}): CharacterBuild {
+  const armorItemId =
+    input.armor === undefined
+      ? undefined
+      : characterEquipmentItemId({
+          slot: "armor",
+          unitId: requireRight(characterEquipmentItemUnitId(input.armor)),
+        });
+  const shieldItemId =
+    input.shield === true
+      ? characterEquipmentItemId({
+          slot: "shield",
+          unitId: requireRight(
+            characterEquipmentItemUnitId("equipment_shield"),
+          ),
+        })
+      : undefined;
+  return {
+    ...baseBuild({
+      startingClass: input.startingClass,
+      ...(input.advancements === undefined
+        ? {}
+        : { advancements: input.advancements }),
     }),
-    projectCharacterSheetFacts({
-      subject: "armorClassProjection",
-      owner: "buildProjection",
-    }),
-  ];
+    abilityScores: requireRight(
+      abilityScoreAssignment({
+        str: 13,
+        dex: input.dexterityScore ?? 14,
+        con: 13,
+        int: 8,
+        wis: 16,
+        cha: 10,
+      }),
+    ),
+    equipment: {
+      owned: [
+        ...(armorItemId === undefined || input.armor === undefined
+          ? []
+          : [{ itemId: armorItemId, unitId: input.armor }]),
+        ...(shieldItemId === undefined
+          ? []
+          : [{ itemId: shieldItemId, unitId: "equipment_shield" }]),
+      ],
+      loadout: {
+        ...(armorItemId === undefined ? {} : { armor: armorItemId }),
+        ...(shieldItemId === undefined ? {} : { shield: shieldItemId }),
+      },
+    },
+  };
 }
 
 function projectClassFeatureSelectedReferenceRoute(

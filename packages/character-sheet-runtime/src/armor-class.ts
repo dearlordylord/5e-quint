@@ -29,9 +29,23 @@ import {
   characterSheetIssue,
   getRequiredUnit,
   type CharacterSheetArmorClassBaseChoice,
+  type CharacterSheetArmorClassProjection,
   type CharacterSheetArmorClassStateInput,
   type CharacterSheetIssue,
 } from "./sheet-types.ts";
+
+const CHARACTER_SHEET_ARMOR_CLASS_ROUTE = [
+  {
+    kind: "retainCharacterSheetSelectedReferences",
+    subject: "selectedReferenceProjection",
+    owner: "selectedReference",
+  },
+  {
+    kind: "projectCharacterSheetFacts",
+    subject: "armorClassProjection",
+    owner: "buildProjection",
+  },
+] as const satisfies CharacterSheetArmorClassProjection["qRoute"];
 
 export function characterSheetArmorClassState(
   input: CharacterSheetArmorClassStateInput,
@@ -111,6 +125,16 @@ export function characterSheetArmorClass(
   return Either.isLeft(state)
     ? Either.left(state.left)
     : Either.right(currentArmorClass(state.right));
+}
+
+export function characterSheetArmorClassProjection(
+  input: CharacterSheetArmorClassStateInput,
+): Either.Either<CharacterSheetArmorClassProjection, CharacterSheetIssue> {
+  return Either.map(characterSheetArmorClassState(input), (state) => ({
+    state,
+    armorClass: currentArmorClass(state),
+    qRoute: CHARACTER_SHEET_ARMOR_CLASS_ROUTE,
+  }));
 }
 
 type CharacterSheetArmorClassBaseCandidate = {

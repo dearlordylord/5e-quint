@@ -33,6 +33,10 @@ import {
   type TimeSpanDuration,
 } from "@dnd/shared/elapsed-time";
 import type {
+  ArmorClass,
+  ArmorClassState,
+} from "@dnd/shared-algebras/armor-class-algebra";
+import type {
   DeathSaveCount,
   DeathSaves,
 } from "@dnd/shared-algebras/death-saves-algebra";
@@ -902,6 +906,25 @@ export type CharacterSheetArmorClassStateInput = {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
   readonly baseChoice?: CharacterSheetArmorClassBaseChoice;
+};
+
+export type CharacterSheetArmorClassProjectionRoute = readonly [
+  {
+    readonly kind: "retainCharacterSheetSelectedReferences";
+    readonly subject: "selectedReferenceProjection";
+    readonly owner: "selectedReference";
+  },
+  {
+    readonly kind: "projectCharacterSheetFacts";
+    readonly subject: "armorClassProjection";
+    readonly owner: "buildProjection";
+  },
+];
+
+export type CharacterSheetArmorClassProjection = {
+  readonly state: ArmorClassState;
+  readonly armorClass: ArmorClass;
+  readonly qRoute: CharacterSheetArmorClassProjectionRoute;
 };
 
 export type CharacterSheetAbilityCheckOtherProficiencyBonusState =
