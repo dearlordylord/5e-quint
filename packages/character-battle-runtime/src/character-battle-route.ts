@@ -100,6 +100,22 @@ export const CHARACTER_SESSION_SHEET_DERIVED_BATTLE_ACTS_ROUTE_ACTIONS = [
 export type CharacterSessionSheetDerivedBattleActsRouteAction =
   (typeof CHARACTER_SESSION_SHEET_DERIVED_BATTLE_ACTS_ROUTE_ACTIONS)[number];
 
+export const CHARACTER_BATTLE_SETTLEMENT_ROUTE_ACTIONS = [
+  "doSettleHitPointsConditionsSlotsAndPreservedSheetState",
+  "doSettlePurePactMagicSlotExpenditure",
+  "doRejectMixedSpellAndPactSlotSettlement",
+  "doSettleFeatureResourceExpenditure",
+  "doRejectAmbiguousCreatedSpellSlotSource",
+  "doRejectMismatchedCharacterIdentity",
+  "doRejectMaximumHpDrift",
+  "doRejectActiveWildShapeHandoff",
+  "doRejectActiveBattleStateHandoff",
+  "doRejectStableRecoveryProgressHandoff",
+  "doSettleZeroHpStableLifecycle",
+] as const;
+export type CharacterBattleSettlementRouteAction =
+  (typeof CHARACTER_BATTLE_SETTLEMENT_ROUTE_ACTIONS)[number];
+
 export type CharacterBattleRouteEvent =
   | {
       readonly kind: "projectCharacterSheetToBattle";
@@ -307,6 +323,62 @@ export function characterSessionSheetDerivedBattleActsRouteStep(
     ),
     Match.when("doSettleSheetDerivedSpellSlot", () =>
       settleSheetDerivedSpellSlotRoute(route),
+    ),
+    Match.exhaustive,
+  );
+}
+
+export function initialCharacterBattleSettlementRoute(): readonly CharacterBattleRouteEvent[] {
+  return [
+    projectCharacterSheetToBattleRoute({
+      subject: "sheetToBattleInit",
+      owner: "characterBattleSheet",
+    }),
+    enterBattleRuntimeRoute({
+      subject: "handoffBattleMutation",
+      owner: "characterBattleRuntime",
+    }),
+  ];
+}
+
+export function characterBattleSettlementRouteStep(
+  route: readonly CharacterBattleRouteEvent[],
+  action: CharacterBattleSettlementRouteAction,
+): readonly CharacterBattleRouteEvent[] {
+  return Match.value(action).pipe(
+    Match.when(
+      "doSettleHitPointsConditionsSlotsAndPreservedSheetState",
+      () => settleHitPointsConditionsSlotsAndPreservedSheetStateRoute(route),
+    ),
+    Match.when("doSettlePurePactMagicSlotExpenditure", () =>
+      settlePurePactMagicSlotExpenditureRoute(route),
+    ),
+    Match.when("doRejectMixedSpellAndPactSlotSettlement", () =>
+      rejectMixedSpellAndPactSlotSettlementRoute(route),
+    ),
+    Match.when("doSettleFeatureResourceExpenditure", () =>
+      settleFeatureResourceExpenditureRoute(route),
+    ),
+    Match.when("doRejectAmbiguousCreatedSpellSlotSource", () =>
+      rejectAmbiguousCreatedSpellSlotSourceRoute(route),
+    ),
+    Match.when("doRejectMismatchedCharacterIdentity", () =>
+      rejectIdentityMismatchRoute(route),
+    ),
+    Match.when("doRejectMaximumHpDrift", () =>
+      rejectMaximumHpDriftRoute(route),
+    ),
+    Match.when("doRejectActiveWildShapeHandoff", () =>
+      rejectSettlementConflictRoute(route),
+    ),
+    Match.when("doRejectActiveBattleStateHandoff", () =>
+      rejectSettlementConflictRoute(route),
+    ),
+    Match.when("doRejectStableRecoveryProgressHandoff", () =>
+      rejectSettlementConflictRoute(route),
+    ),
+    Match.when("doSettleZeroHpStableLifecycle", () =>
+      settleZeroHpStableLifecycleRoute(route),
     ),
     Match.exhaustive,
   );
@@ -577,6 +649,177 @@ function settleSheetDerivedSpellSlotRoute(
       subject: "handoffResourceProjection",
       facts: ["sourceExactSpellSlotDelta"],
       owner: "characterBattleResourceProjection",
+    }),
+  ];
+}
+
+function settleHitPointsConditionsSlotsAndPreservedSheetStateRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  return [
+    ...route,
+    settleBattleToCharacterSheetRoute({
+      subject: "battleToSheetSettlement",
+      fill: "battleDelta",
+      holes: [],
+      owner: "characterBattleSettlement",
+    }),
+    settleBattleToCharacterSheetRoute({
+      subject: "handoffResourceProjection",
+      fill: "resourceDelta",
+      holes: [],
+      owner: "characterBattleResourceProjection",
+    }),
+    recordCharacterBattleHandoffFactsRoute({
+      subject: "handoffResourceProjection",
+      facts: ["sourceExactPactSlotDelta", "sourceExactSpellSlotDelta"],
+      owner: "characterBattleResourceProjection",
+    }),
+    projectCharacterSheetToBattleRoute({
+      subject: "sheetToBattleInit",
+      owner: "characterBattleSheet",
+    }),
+  ];
+}
+
+function settleFeatureResourceExpenditureRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  return [
+    ...route,
+    settleBattleToCharacterSheetRoute({
+      subject: "handoffFeatureResourceProjection",
+      fill: "resourceDelta",
+      holes: [],
+      owner: "characterBattleResourceProjection",
+    }),
+    recordCharacterBattleHandoffFactsRoute({
+      subject: "handoffFeatureResourceProjection",
+      facts: ["featureResourceDelta"],
+      owner: "characterBattleResourceProjection",
+    }),
+  ];
+}
+
+function settlePurePactMagicSlotExpenditureRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  return [
+    ...route,
+    settleBattleToCharacterSheetRoute({
+      subject: "handoffResourceProjection",
+      fill: "resourceDelta",
+      holes: [],
+      owner: "characterBattleResourceProjection",
+    }),
+    recordCharacterBattleHandoffFactsRoute({
+      subject: "handoffResourceProjection",
+      facts: ["sourceExactPactSlotDelta"],
+      owner: "characterBattleResourceProjection",
+    }),
+  ];
+}
+
+function rejectMixedSpellAndPactSlotSettlementRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  return [
+    ...route,
+    rejectCharacterBattleHandoffRoute({
+      subject: "handoffResourceProjection",
+      fill: "settlementRejection",
+      holes: ["settlementConflict", "spellResourceProjection"],
+      owner: "characterBattleResourceProjection",
+    }),
+    recordCharacterBattleHandoffFactsRoute({
+      subject: "handoffResourceProjection",
+      facts: ["settlementConflict"],
+      owner: "characterBattleResourceProjection",
+    }),
+  ];
+}
+
+function rejectAmbiguousCreatedSpellSlotSourceRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  return [
+    ...route,
+    rejectCharacterBattleHandoffRoute({
+      subject: "handoffResourceProjection",
+      fill: "settlementRejection",
+      holes: ["spellResourceProjection", "settlementConflict"],
+      owner: "characterBattleResourceProjection",
+    }),
+    recordCharacterBattleHandoffFactsRoute({
+      subject: "handoffResourceProjection",
+      facts: ["settlementConflict"],
+      owner: "characterBattleResourceProjection",
+    }),
+  ];
+}
+
+function rejectIdentityMismatchRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  return [
+    ...route,
+    rejectCharacterBattleHandoffRoute({
+      subject: "battleToSheetSettlement",
+      fill: "settlementRejection",
+      holes: ["identityMatch"],
+      owner: "characterBattleSettlement",
+    }),
+  ];
+}
+
+function rejectMaximumHpDriftRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  return [
+    ...route,
+    rejectCharacterBattleHandoffRoute({
+      subject: "battleToSheetSettlement",
+      fill: "settlementRejection",
+      holes: ["hitPointProjection"],
+      owner: "characterBattleSettlement",
+    }),
+  ];
+}
+
+function rejectSettlementConflictRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  return [
+    ...route,
+    rejectCharacterBattleHandoffRoute({
+      subject: "battleToSheetSettlement",
+      fill: "settlementRejection",
+      holes: ["settlementConflict"],
+      owner: "characterBattleSettlement",
+    }),
+    recordCharacterBattleHandoffFactsRoute({
+      subject: "battleToSheetSettlement",
+      facts: ["settlementConflict"],
+      owner: "characterBattleSettlement",
+    }),
+  ];
+}
+
+function settleZeroHpStableLifecycleRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  return [
+    ...route,
+    settleBattleToCharacterSheetRoute({
+      subject: "battleToSheetSettlement",
+      fill: "battleDelta",
+      holes: [],
+      owner: "characterBattleSettlement",
+    }),
+    recordCharacterBattleHandoffFactsRoute({
+      subject: "battleToSheetSettlement",
+      facts: ["zeroHpStableLifecycle"],
+      owner: "characterBattleSettlement",
     }),
   ];
 }
