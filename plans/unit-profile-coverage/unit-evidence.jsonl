@@ -406,6 +406,7 @@
 {"unitId":"barbarian_primal_knowledge","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A15","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"barbarian_primal_knowledge","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A15","ownerPath":"packages/character-sheet-runtime/src/ability-checks.test.ts"}}
 {"unitId":"rogue_second_story_work","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A15","ownerPath":"packages/character-sheet-runtime/src/ability-checks.test.ts"}}
+{"unitId":"rogue_second_story_work","evidence":{"tag":"deterministic-admission-projection","taskId":"CRPI-READY-028","ownerPath":"packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts"}}
 {"unitId":"sorcerer_draconic_resilience","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A15","ownerPath":"packages/character-creation-runtime/src/index.test.ts"}}
 {"unitId":"sorcerer_draconic_resilience","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A15","ownerPath":"packages/character-sheet-runtime/src/armor-class.test.ts"}}
 {"unitId":"cleric_disciple_of_life","evidence":{"tag":"deterministic-admission-projection","taskId":"L13UG-A16","ownerPath":"packages/battle-runtime/src/unit-profile-admission-level3-heal-damage-features.test.ts"}}

@@ -558,13 +558,14 @@ export type SwimSpeedKindGrantProfile =
 export type PassiveSpeedKindGrantProfile =
   | ClimbSpeedKindGrantProfile
   | SwimSpeedKindGrantProfile;
+export type PassiveSpeedKindGrantProfiles = readonly [
+  PassiveSpeedKindGrantProfile,
+  ...PassiveSpeedKindGrantProfile[],
+];
 export type BattlePassiveSpeedKindGrantsSupportProfile = {
   readonly kind: typeof PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE;
-  readonly speed: PassiveSpeedBonusProfile;
-  readonly grants: readonly [
-    ClimbSpeedKindGrantProfile,
-    SwimSpeedKindGrantProfile,
-  ];
+  readonly speed?: PassiveSpeedBonusProfile;
+  readonly grants: PassiveSpeedKindGrantProfiles;
 };
 export type CreatureSpaceMovementPermissionProfile = {
   readonly moveThrough: {
@@ -1956,11 +1957,8 @@ export type PassiveSpeedBonusCondition =
   | PassiveUnarmoredUnshieldedSpeedBonusCondition;
 
 export type PassiveSpeedKindGrantsProfile = {
-  readonly speed: PassiveSpeedBonusProfile;
-  readonly grants: readonly [
-    ClimbSpeedKindGrantProfile,
-    SwimSpeedKindGrantProfile,
-  ];
+  readonly speed?: PassiveSpeedBonusProfile;
+  readonly grants: PassiveSpeedKindGrantProfiles;
 };
 
 export type WeaponDamageDiceRollChoiceProfile = {
@@ -3666,7 +3664,15 @@ function hasPassiveSpeedBonusMechanics(unit: UnitRecord): boolean {
 }
 
 function hasPassiveSpeedKindGrantsMechanics(unit: UnitRecord): boolean {
-  if (unit.kind !== "class_feature" || unit.mechanics.family !== "composite") {
+  if (unit.kind !== "class_feature") {
+    return false;
+  }
+  if (unit.mechanics.family === "passive") {
+    return unit.mechanics.grants.some(
+      (effect) => effect.kind === "grant_speed",
+    );
+  }
+  if (unit.mechanics.family !== "composite") {
     return false;
   }
   return unit.mechanics.parts.some(
@@ -4773,7 +4779,14 @@ export function passiveSpeedBonusProfileForUnit(
 export function passiveSpeedKindGrantsProfileForUnit(
   unit: UnitRecord,
 ): PassiveSpeedKindGrantsProfile | null {
-  if (unit.kind !== "class_feature" || unit.mechanics.family !== "composite") {
+  if (unit.kind !== "class_feature") {
+    return null;
+  }
+  if (unit.mechanics.family === "passive") {
+    const grants = passiveSpeedKindGrantsForPassiveMechanics(unit.mechanics);
+    return grants === null ? null : { grants };
+  }
+  if (unit.mechanics.family !== "composite") {
     return null;
   }
   const [speedPart, kindGrantPart, ...extraParts] = unit.mechanics.parts;
@@ -4903,35 +4916,33 @@ function passiveSpeedKindGrantsForPassiveMechanics(
   if (
     mechanics.condition !== undefined ||
     mechanics.operations !== undefined ||
-    mechanics.suppressedBy !== undefined ||
-    mechanics.grants.length !== 2
+    mechanics.suppressedBy !== undefined
   ) {
     return null;
   }
-  const grants = mechanics.grants.flatMap(
-    (effect): readonly PassiveSpeedKindGrantProfile[] => {
-      if (
-        effect.kind !== "grant_speed" ||
-        !isPassiveSpeedKindGrantKind(effect.speedKind) ||
-        typeof effect.feet === "number" ||
-        effect.feet.kind !== "walk_speed" ||
-        effect.hover !== undefined
-      ) {
-        return [];
-      }
-      return [{ speedKind: effect.speedKind, feet: { kind: "walkSpeed" } }];
-    },
-  );
-  if (grants.length !== 2) {
+
+  const grants: PassiveSpeedKindGrantProfile[] = [];
+  for (const effect of mechanics.grants) {
+    if (effect.kind === "offer_ability_substitution_for_jump_distance") {
+      continue;
+    }
+    if (
+      effect.kind !== "grant_speed" ||
+      !isPassiveSpeedKindGrantKind(effect.speedKind) ||
+      typeof effect.feet === "number" ||
+      effect.feet.kind !== "walk_speed" ||
+      effect.hover !== undefined
+    ) {
+      return null;
+    }
+    grants.push({ speedKind: effect.speedKind, feet: { kind: "walkSpeed" } });
+  }
+
+  const [firstGrant, ...remainingGrants] = grants;
+  if (firstGrant === undefined) {
     return null;
   }
-  const climb = grants.find(
-    (grant): grant is ClimbSpeedKindGrantProfile => grant.speedKind === "climb",
-  );
-  const swim = grants.find(
-    (grant): grant is SwimSpeedKindGrantProfile => grant.speedKind === "swim",
-  );
-  return climb === undefined || swim === undefined ? null : [climb, swim];
+  return [firstGrant, ...remainingGrants];
 }
 
 function isPassiveSpeedKindGrantKind(
@@ -6137,16 +6148,16 @@ export function battleDruidWildCompanionSpellCastSupportForUnit(
   return (
     // authored-id-dispatch-allow: battle-runtime-unit-feature-support-profile-boundary
     unit.mechanics.spellId === "find_familiar" &&
-    unit.mechanics.activationCost.kind === "standard_action" &&
-    unit.mechanics.activationCost.action === "magic" &&
-    unit.mechanics.componentOverride.material === "not_required" &&
-    unit.mechanics.spellModeOverride.kind ===
-      "fixed_creature_type_mode_option" &&
-    // authored-id-dispatch-allow: battle-runtime-unit-feature-support-profile-boundary
-    unit.mechanics.spellModeOverride.optionId === "fey"
-  )
-    ? DRUID_WILD_COMPANION_SPELL_CAST_SUPPORT_PROFILE
-    : "unsupported";
+      unit.mechanics.activationCost.kind === "standard_action" &&
+      unit.mechanics.activationCost.action === "magic" &&
+      unit.mechanics.componentOverride.material === "not_required" &&
+      unit.mechanics.spellModeOverride.kind ===
+        "fixed_creature_type_mode_option" &&
+      // authored-id-dispatch-allow: battle-runtime-unit-feature-support-profile-boundary
+      unit.mechanics.spellModeOverride.optionId === "fey"
+      ? DRUID_WILD_COMPANION_SPELL_CAST_SUPPORT_PROFILE
+      : "unsupported"
+  );
 }
 
 function battleDruidWildShapeKnownFormSupportForUnitAtClassLevels(
@@ -7360,7 +7371,9 @@ function spellSaveDcModifierBenefit(
     effect.delta.sign === "+" &&
     "spellSourceFilter" in effect
   ) {
-    const sourceClassName = spellSourceFilterClassName(effect.spellSourceFilter);
+    const sourceClassName = spellSourceFilterClassName(
+      effect.spellSourceFilter,
+    );
     return sourceClassName === null
       ? null
       : { sourceClassName, saveDcBonus: 1 };
@@ -7385,7 +7398,9 @@ function spellAttackRollModeModifierBenefit(
     effect.on[0] === "spell_attack_roll" &&
     "spellSourceFilter" in effect
   ) {
-    const sourceClassName = spellSourceFilterClassName(effect.spellSourceFilter);
+    const sourceClassName = spellSourceFilterClassName(
+      effect.spellSourceFilter,
+    );
     return sourceClassName === null
       ? null
       : { sourceClassName, attackRollMode: "advantage" };
@@ -7402,9 +7417,9 @@ const SPELL_ATTACK_ROLL_MODE_MODIFIER_BENEFIT_FIELDS = [
 const SPELL_ATTACK_ROLL_MODE_MODIFIER_BENEFIT_FIELD_SET: ReadonlySet<string> =
   new Set(SPELL_ATTACK_ROLL_MODE_MODIFIER_BENEFIT_FIELDS);
 
-function hasOnlySpellAttackRollModeModifierBenefitFields(
-  effect: { readonly kind: string },
-): boolean {
+function hasOnlySpellAttackRollModeModifierBenefitFields(effect: {
+  readonly kind: string;
+}): boolean {
   return Object.keys(effect).every((field) =>
     SPELL_ATTACK_ROLL_MODE_MODIFIER_BENEFIT_FIELD_SET.has(field),
   );

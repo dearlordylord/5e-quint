@@ -863,6 +863,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `rogue_expertise` | `character-creation.skill-expertise-choice` | AT-L1-07 | `packages/character-creation-runtime/src/index.test.ts` |
 | `rogue_expertise` | `character-creation.skill-expertise-choice` | L1C-ROGUE-EXPERTISE-LEVEL-6-GRANT | `packages/character-creation-runtime/src/rogue-expertise-level6.test.ts` |
 | `rogue_second_story_work` | `character-sheet.linked-speed-grant-projection`, `character-sheet.jump-distance-ability-substitution` | L13UG-A15 | `packages/character-sheet-runtime/src/ability-checks.test.ts` |
+| `rogue_second_story_work` | `character-sheet.linked-speed-grant-projection`, `character-sheet.jump-distance-ability-substitution` | CRPI-READY-028 | `packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts` |
 | `rogue_steady_aim` | `unit-feature.rogue-steady-aim` | L13UG-A18 | `packages/battle-runtime/src/unit-profile-admission-level3-attack-movement-features.test.ts` |
 | `rogue_sneak_attack` | `unit-feature.attack-damage-rider` | QMBT8 | `packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts` |
 | `rogue_cunning_strike` | `unit-feature.cunning-strike` | L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME | `packages/battle-runtime/src/battle-runtime-cunning-strike.test.ts` |

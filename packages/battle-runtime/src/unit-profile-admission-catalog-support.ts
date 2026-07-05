@@ -71,6 +71,8 @@ export const barbarianFastMovementUnitId = "barbarian_fast_movement";
 
 export const rangerRovingUnitId = "ranger_roving";
 
+export const rogueSecondStoryWorkUnitId = "rogue_second_story_work";
+
 export const orcAdrenalineRushUnitId = "orc_adrenaline_rush";
 
 export const orcRelentlessEnduranceUnitId = "orc_relentless_endurance";

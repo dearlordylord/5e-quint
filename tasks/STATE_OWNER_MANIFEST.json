@@ -1,13 +1,12 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-027",
+  "taskId": "CRPI-READY-028",
   "durableFields": [],
   "notes": [
-    "Task 69 introduced no new durable BattleState, BattleCreatureState, TurnState, action-resource, movement, condition, active-effect, Concentration, or interrupt-stack field.",
-    "RuleCoreAttackDamageDispositionOwner is component route ownership evidence, not runtime durable state.",
-    "Melee Knock Out projection remains existing BattleCreatureState Hit Points, conditions, and zero-HP lifecycle state.",
-    "Ranged Knock Out rejection remains existing typed attack kind and ResolutionResult invalid path; no duplicate acceptance flag is stored in durable state.",
-    "Component route behavior does not branch on authored spell names, QNT branch names, witness field names, connector filenames, or fixture labels.",
-    "qComponentRoute is a target replay boundary projection derived from the typed RuleCoreAttackDamageDispositionOwner route vocabulary."
+    "Task 70 introduced no new durable BattleState, BattleCreatureState, CharacterSheet, or CharacterBuild field.",
+    "The aggregate rule-core feature MBT driver stores only witness-local q* projection variables; no target runtime state owner changed.",
+    "Second-Story Work Climb Speed is a linked projection from existing walk Speed, not a copied climb-speed value.",
+    "Second-Story Work Dexterity-for-jump-distance is projected from the existing passive mechanics grant and existing character ability facts.",
+    "The existing split feature drivers remain available as focused backlog inventory and are not claimed as separate Ralph plan tasks by this artifact."
   ]
 }

@@ -3306,12 +3306,11 @@
   "metrics": {
     "productReadiness": {
       "denominator": 632,
-      "numerator": 631,
-      "percent": "99.8%",
+      "numerator": 632,
+      "percent": "100%",
       "rowsByStatus": {
-        "accepted": 447,
-        "accepted-no-battle-effect": 184,
-        "owner-evidence-required": 1
+        "accepted": 448,
+        "accepted-no-battle-effect": 184
       }
     },
     "rulesKernelCoveredProfileJoin": {

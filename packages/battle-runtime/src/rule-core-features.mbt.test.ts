@@ -1569,6 +1569,24 @@ describe("rule-core Feature focused MBT", () => {
   });
 
   it(
+    "replays QCORE9 aggregate feature family through battle-runtime reducers",
+    async () => {
+      await run({
+        spec: mbtSpecPath(import.meta.dirname, "rule-core-features.mbt.qnt"),
+        init: "init",
+        step: "step",
+        driver: createRuleCoreFeatureDriver(),
+        backend: "typescript",
+        seed: process.env["QUINT_SEED"],
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(ruleCoreFeatureDefaultMbtSteps),
+        stateCheck: featureStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
     "replays QCORE9 action economy feature family through battle-runtime reducers",
     async () => {
       await run({
