@@ -1,5 +1,112 @@
 # Validation Report
 
+## CRPI-READY-026
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Driver: `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt`
+- Component connector: `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt`
+- `packages/battle-runtime/rule-core-component-route.qnt`
+- `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts`
+- `packages/battle-runtime/src/rule-core-component-route.ts`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Playing-the-Game.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md`
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+The component-first replay for ability checks, skills, Search, Guidance,
+Enhance Ability, and Command now has accepted target evidence for the copied
+`qComponentRoute` projection. The target harness records the reusable
+component route sequence parse input, admit input, call `RuleCoreAbilitySkillCommandOwner`,
+and project result before downstream battle route tasks consume this owner. The
+observed runtime projections are produced through public battle-runtime Search,
+Guidance, Enhance Ability, and Command calls, then compared to the copied
+component connector route.
+
+No production reducer state was added. Search reveal state remains
+`BattleCreatureState.hidden`, skill and ability roll-modifier effects remain
+`BattleCreatureState.activeEffects`, Command pending/effect state remains
+active effects plus existing condition, movement, turn-resource, and
+interrupt-stack state. The component route is owned by typed route vocabulary,
+not authored spell identity, QNT branch names, witness field names, fixture
+labels, or connector filenames.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Harness | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandCastGrovel` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandCastGrovel#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandCastGrovel qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowApproachContinues` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowApproachContinues#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowApproachContinues qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowApproachNoMovement` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowApproachNoMovement#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowApproachNoMovement qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowApproachWithinFive` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowApproachWithinFive#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowApproachWithinFive qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowDrop` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowDrop#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowDrop qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowFlee` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowFlee#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowFlee qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowFleeNoMovement` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowFleeNoMovement#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowFleeNoMovement qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowFleeOpportunityAttack` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowFleeOpportunityAttack#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowFleeOpportunityAttack qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowFleePartialRejected` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowFleePartialRejected#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowFleePartialRejected qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowGrovel` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowGrovel#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowGrovel qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandHaltSuppresses` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandHaltSuppresses#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandHaltSuppresses qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doEnhanceAbilityChoice` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doEnhanceAbilityChoice#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doEnhanceAbilityChoice qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillAcrobatics` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillAcrobatics#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillAcrobatics qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillAnimalHandling` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillAnimalHandling#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillAnimalHandling qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillArcana` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillArcana#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillArcana qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillAthletics` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillAthletics#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillAthletics qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillDeception` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillDeception#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillDeception qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillHistory` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillHistory#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillHistory qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillInsight` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillInsight#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillInsight qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillIntimidation` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillIntimidation#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillIntimidation qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillInvestigation` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillInvestigation#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillInvestigation qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillMedicine` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillMedicine#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillMedicine qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillNature` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillNature#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillNature qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillPerception` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillPerception#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillPerception qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillPerformance` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillPerformance#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillPerformance qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillPersuasion` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillPersuasion#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillPersuasion qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillReligion` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillReligion#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillReligion qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillSleightOfHand` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillSleightOfHand#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillSleightOfHand qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillStealth` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillStealth#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillStealth qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillSurvival` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillSurvival#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillSurvival qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doSearchFails` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doSearchFails#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doSearchFails qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doSearchSucceeds` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doSearchSucceeds#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doSearchSucceeds qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-026.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id pattern: `component-route=RuleCoreAbilitySkillCommandOwner action=<branchAction> qComponentRoute=ability-skill-command-component-route`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-READY-026/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 68.
+
+Verification results:
+
+- Base check passed: `git log --oneline -1 codex/cleanroom-reducer-full-lane-20260704T211636Z` resolved to `10baec507 Mark Ralph task 45 done`; `git log --oneline -1 HEAD` resolved to `aa332e50c Mark Ralph task 66 done`; `git merge-base --is-ancestor aa332e50c603653b886e028c2c9844cbad43f1e2 HEAD` passed.
+- RAW/ubiquitous-language review passed against Ability Checks, Skill Proficiencies, Search [Action], Guidance, Enhance Ability, Command, and `UBIQUITOUS_LANGUAGE.md` terms Action, Spell Effect, Movement, Reaction, and Condition.
+- Focused MBT replay passed: `START=$(date +%s); MBT_TRACES=1 MBT_STEPS=32 pnpm --filter @dnd/battle-runtime exec vitest run src/rule-core-ability-skill-command.mbt.test.ts 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 1 test; final timed run `TOTAL: 46s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- `pnpm quality` passed end to end; app lint reported warnings only and exited 0.
+- Reviewer-loop convergence passed: round 1 verified RAW traceability, ubiquitous-language/domain terms, component-first architecture, adapter quarantine, no duplicate durable state, no authored-identity dispatch, and no remaining reasonable code-review findings; final verification commands passed.
+
 ## CRPI-READY-025
 
 - Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`

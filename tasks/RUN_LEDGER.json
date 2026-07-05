@@ -2287,6 +2287,114 @@
           "detail": "Round 1 added zeroHitPointSpellEffectTeardown route ownership and Concentration Saving Throw routing; round 2 aligned spell-attack-sequence route holes to copied qRoute procedure families; round 3 fixed task-base artifact wording; round 4 gated zeroHitPointSpellEffectTeardown on spell-effect Concentration and added readied-spell negative coverage."
         }
       ]
+    },
+    {
+      "taskId": "CRPI-READY-026",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "rules-core",
+      "selectedDrivers": [
+        "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "17213710aa44f50bfdc512d8ebc79406759a700ecf38b3410df84efd0335db08"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "2b850c46a0e945f5f62adc1b2c3d026f39a0d3464d3143ba7ae2186d33b7f941"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "04504be70f3a244c85943d90518fd914306dad76f2b25d5d99961ba840a92584"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-READY-026/README.md",
+          "sha256": "b2658c0b6cfc1a977ab3204c01431e684742a46324a989345d431f4d315c5cb1"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-READY-026.json",
+          "sha256": "07190d8d69388c9480569d9bedf262b9006c8af57c2972152cff9dfbfcae8eea",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandCastGrovel#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandCastGrovel qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowApproachContinues#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowApproachContinues qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowApproachNoMovement#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowApproachNoMovement qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowApproachWithinFive#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowApproachWithinFive qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowDrop#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowDrop qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowFlee#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowFlee qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowFleeNoMovement#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowFleeNoMovement qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowFleeOpportunityAttack#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowFleeOpportunityAttack qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowFleePartialRejected#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowFleePartialRejected qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowGrovel#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowGrovel qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandHaltSuppresses#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandHaltSuppresses qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doEnhanceAbilityChoice#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doEnhanceAbilityChoice qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillAcrobatics#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillAcrobatics qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillAnimalHandling#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillAnimalHandling qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillArcana#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillArcana qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillAthletics#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillAthletics qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillDeception#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillDeception qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillHistory#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillHistory qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillInsight#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillInsight qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillIntimidation#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillIntimidation qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillInvestigation#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillInvestigation qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillMedicine#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillMedicine qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillNature#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillNature qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillPerception#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillPerception qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillPerformance#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillPerformance qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillPersuasion#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillPersuasion qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillReligion#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillReligion qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillSleightOfHand#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillSleightOfHand qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillStealth#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillStealth qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillSurvival#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillSurvival qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doSearchFails#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doSearchFails qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doSearchSucceeds#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doSearchSucceeds qComponentRoute=ability-skill-command-component-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 codex/cleanroom-reducer-full-lane-20260704T211636Z && git log --oneline -1 HEAD && git merge-base --is-ancestor aa332e50c603653b886e028c2c9844cbad43f1e2 HEAD",
+          "status": "pass",
+          "detail": "Declared codex base ref resolved to 10baec507 Mark Ralph task 45 done; HEAD resolved to aa332e50c Mark Ralph task 66 done; Base SHA aa332e50c603653b886e028c2c9844cbad43f1e2 is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language review against .references/srd-5.2.1/Playing-the-Game.md, .references/srd-5.2.1/Rules-Glossary.md, .references/srd-5.2.1/Spells/Descriptions-A-D.md, .references/srd-5.2.1/Spells/Descriptions-E-L.md, and UBIQUITOUS_LANGUAGE.md",
+          "status": "pass"
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Both process checks exited 1 before the timed focused MBT replay, meaning no vitest or quint_evaluator process was running; no evaluator cleanup was needed."
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 MBT_STEPS=32 pnpm --filter @dnd/battle-runtime exec vitest run src/rule-core-ability-skill-command.mbt.test.ts 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "1 test passed; copied qComponentRoute was compared through RuleCoreAbilitySkillCommandOwner for all 32 step branch obligations; final timed run TOTAL: 46s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "Quality passed end to end; app lint reported warnings only and exited 0."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 verified RAW traceability, component-first architecture, adapter quarantine, no duplicate durable state, no authored-identity dispatch, and no remaining reasonable Task 68 findings."
+        }
+      ]
     }
   ]
 }

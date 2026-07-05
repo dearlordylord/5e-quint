@@ -1,66 +1,52 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-025",
-  "productionModulesExtended": [
-    {
-      "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "role": "domain-api",
-      "domainApis": [
-        "BattleReducerRouteEvent.subject=spellAttackProcedure",
-        "BattleReducerRouteEvent.subject=zeroHitPointSpellEffectTeardown",
-        "battleReducerRouteEventsForDiscoveredAct",
-        "battleReducerRouteForResolution"
-      ]
-    }
-  ],
+  "taskId": "CRPI-READY-026",
+  "productionModulesExtended": [],
   "adapterModules": [
     {
-      "path": "packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.route.mbt.qnt",
+      "path": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
       "quarantinedWitnessNames": [
-        "qRoute",
-        "SpellAttackProcedureRouteSubject",
-        "ZeroHitPointSpellEffectTeardownRouteSubject",
-        "doResolveEldritchBlast"
+        "qComponentRoute",
+        "RuleCoreAbilitySkillCommandOwner",
+        "componentRouteEvidence",
+        "RuleCoreComponentParseInput",
+        "RuleCoreComponentAdmitInput",
+        "RuleCoreComponentCall",
+        "RuleCoreComponentProjectResult"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-025.json"
+        "tasks/target-replay-evidence/CRPI-READY-026.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/zero-hit-point-mid-resolution.mbt.test.ts",
+      "path": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "observes the copied zero-Hit-Point qRoute through public reducer entrypoints",
-        "createZeroHitPointRouteReplayDriver",
-        "observeZeroHitPointMidResolutionPublicRoute"
+        "rule-core ability, skill, Search, and Command deterministic QNT replay",
+        "createDriver",
+        "withRuleCoreComponentRoute",
+        "decodeRuleCoreComponentRoute",
+        "projectState"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-025.json"
+        "tasks/target-replay-evidence/CRPI-READY-026.json"
       ]
     }
   ],
-  "accumulatorGrowth": [
-    {
-      "fieldPath": "AvailableBattleAct.routeEvents",
-      "reason": "Spell attack sequence discovery now exposes copied qRoute ownership through the public discover_battle_acts boundary."
-    },
-    {
-      "fieldPath": "BattleResolutionResult.routeEvents",
-      "reason": "Spell attack sequence target, Attack Roll, damage, Concentration Saving Throw, and zero-Hit-Point teardown frontiers now expose copied qRoute ownership without adding duplicate battle state."
-    },
-    {
-      "fieldPath": "BattleReducerRouteEvent.subject=zeroHitPointSpellEffectTeardown",
-      "reason": "The route subject records generic zero-Hit-Point Spell Effect teardown handoff to condition, Concentration, and active-effect owners."
-    }
-  ],
+  "accumulatorGrowth": [],
   "expectedNextReuse": [
     {
-      "driver": "packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.route.mbt.qnt",
-      "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "api": "zeroHitPointSpellEffectTeardown route events remain derived from typed spell attack sequence fills, route hole families, BattleCreatureState.hp, BattleCreatureState.conditions, BattleCreatureState.concentration, and BattleCreatureState.activeEffects."
+      "driver": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "module": "packages/battle-runtime/src/rule-core-component-route.ts",
+      "api": "ruleCoreComponentRoute and withRuleCoreComponentRoute remain the component-first route vocabulary for reusable rule-core parse/admit/call/project evidence."
+    },
+    {
+      "driver": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "module": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+      "api": "Ability, skill, Search, Guidance, Enhance Ability, and Command scenario projections remain derived from public battle-runtime calls before downstream battle route connectors consume RuleCoreAbilitySkillCommandOwner."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 66 observes copied zero-Hit-Point mid-resolution qRoute through public start_battle, discover_battle_acts, and resolve_battle_subject route events. No new BattleState field was introduced."
+    "notes": "Task 68 observes copied qComponentRoute through RuleCoreAbilitySkillCommandOwner. No production module or durable BattleState field was introduced."
   }
 }

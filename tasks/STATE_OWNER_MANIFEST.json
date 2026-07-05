@@ -1,45 +1,14 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-025",
-  "durableFields": [
-    {
-      "fieldPath": "AvailableBattleAct.routeEvents",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "owner": "executable-boundary-projection",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject actionSpell invocation procedure and BattleHole.kind",
-        "boundary": "discoverBattleActs public reducer boundary"
-      }
-    },
-    {
-      "fieldPath": "BattleResolutionResult.routeEvents",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "owner": "executable-boundary-projection",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject actionSpell invocation procedure, BattleFill.kind, BattleHole.kind, BattleCreatureState.hp, BattleCreatureState.conditions, BattleCreatureState.concentration, and BattleCreatureState.activeEffects",
-        "boundary": "resolveBattleSubject public reducer boundary"
-      }
-    },
-    {
-      "fieldPath": "BattleReducerRouteEvent.subject=zeroHitPointSpellEffectTeardown",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "owner": "executable-boundary-projection",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "typed Concentration Saving Throw fill plus existing before/after BattleCreatureState.hp, conditions, concentration, and activeEffects facts",
-        "boundary": "battleReducerRouteForResolution"
-      }
-    }
-  ],
+  "taskId": "CRPI-READY-026",
+  "durableFields": [],
   "notes": [
-    "Task 66 introduced no new BattleState, BattleCreatureState, Hit Point, condition, Concentration, or active-effect durable field.",
-    "Hit Points remain existing BattleCreatureState.hp facts owned by the Hit Point reducer.",
-    "Zero-Hit-Point Unconscious lifecycle remains existing BattleCreatureState.conditions state.",
-    "Concentration ownership remains existing BattleCreatureState.concentration state.",
-    "Dependent Spell Effect cleanup remains existing BattleCreatureState.activeEffects state.",
-    "Production route behavior does not branch on authored spell names, QNT branch names, witness field names, connector filenames, or fixture labels.",
-    "Route events are public reducer boundary projections derived from subject shape, fill kind, hole family, and existing battle-owned state transitions."
+    "Task 68 introduced no new durable BattleState, BattleCreatureState, TurnState, action-resource, movement, condition, active-effect, Concentration, or interrupt-stack field.",
+    "RuleCoreAbilitySkillCommandOwner is component route ownership evidence, not runtime durable state.",
+    "Search hidden-state projection remains existing BattleCreatureState.hidden.",
+    "Guidance and Enhance Ability roll-modifier projection remains existing BattleCreatureState.activeEffects.",
+    "Command pending option and next-turn consequences remain existing active effects, BattleCreatureState.conditions, BattleSnapshot movement projection, BattleState.currentTurnResources.commandHalt, and BattleState.interruptStack.",
+    "Component route behavior does not branch on authored spell names, QNT branch names, witness field names, connector filenames, or fixture labels.",
+    "qComponentRoute is a target replay boundary projection derived from the typed RuleCoreAbilitySkillCommandOwner route vocabulary."
   ]
 }

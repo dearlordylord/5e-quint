@@ -1,0 +1,2284 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts ability/skill/Command copied qComponentRoute versus component-first target replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "componentConnectorSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "branchFamily": "step",
+      "branchAction": "doCommandCastGrovel",
+      "observedActionTaken": "doCommandCastGrovel",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAbilitySkillCommandOwner action=doCommandCastGrovel qComponentRoute=ability-skill-command-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doCommandCastGrovel",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAbilitySkillCommandOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "observedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#applyScenario",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Search, Guidance, Enhance Ability, and Command scenario calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAbilitySkillCommandOwner",
+          "BattleSubject.action=search",
+          "BattleSubject.actionSpell.invocation.procedure=rollModifier",
+          "BattleSubject.actionSpell.invocation.procedure=command",
+          "BattleSubject.runtimeCommand.command",
+          "BattleCreatureState.hidden",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack",
+          "BattleSnapshot.turn.actionResources",
+          "BattleSnapshot.turn.bonusActionAvailable",
+          "BattleSnapshot.combatants.movement.spentFeet"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "componentConnectorSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "branchFamily": "step",
+      "branchAction": "doCommandFollowApproachContinues",
+      "observedActionTaken": "doCommandFollowApproachContinues",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowApproachContinues qComponentRoute=ability-skill-command-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doCommandFollowApproachContinues",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAbilitySkillCommandOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "observedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#applyScenario",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Search, Guidance, Enhance Ability, and Command scenario calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAbilitySkillCommandOwner",
+          "BattleSubject.action=search",
+          "BattleSubject.actionSpell.invocation.procedure=rollModifier",
+          "BattleSubject.actionSpell.invocation.procedure=command",
+          "BattleSubject.runtimeCommand.command",
+          "BattleCreatureState.hidden",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack",
+          "BattleSnapshot.turn.actionResources",
+          "BattleSnapshot.turn.bonusActionAvailable",
+          "BattleSnapshot.combatants.movement.spentFeet"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "componentConnectorSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "branchFamily": "step",
+      "branchAction": "doCommandFollowApproachNoMovement",
+      "observedActionTaken": "doCommandFollowApproachNoMovement",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowApproachNoMovement qComponentRoute=ability-skill-command-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doCommandFollowApproachNoMovement",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAbilitySkillCommandOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "observedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#applyScenario",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Search, Guidance, Enhance Ability, and Command scenario calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAbilitySkillCommandOwner",
+          "BattleSubject.action=search",
+          "BattleSubject.actionSpell.invocation.procedure=rollModifier",
+          "BattleSubject.actionSpell.invocation.procedure=command",
+          "BattleSubject.runtimeCommand.command",
+          "BattleCreatureState.hidden",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack",
+          "BattleSnapshot.turn.actionResources",
+          "BattleSnapshot.turn.bonusActionAvailable",
+          "BattleSnapshot.combatants.movement.spentFeet"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "componentConnectorSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "branchFamily": "step",
+      "branchAction": "doCommandFollowApproachWithinFive",
+      "observedActionTaken": "doCommandFollowApproachWithinFive",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowApproachWithinFive qComponentRoute=ability-skill-command-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doCommandFollowApproachWithinFive",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAbilitySkillCommandOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "observedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#applyScenario",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Search, Guidance, Enhance Ability, and Command scenario calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAbilitySkillCommandOwner",
+          "BattleSubject.action=search",
+          "BattleSubject.actionSpell.invocation.procedure=rollModifier",
+          "BattleSubject.actionSpell.invocation.procedure=command",
+          "BattleSubject.runtimeCommand.command",
+          "BattleCreatureState.hidden",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack",
+          "BattleSnapshot.turn.actionResources",
+          "BattleSnapshot.turn.bonusActionAvailable",
+          "BattleSnapshot.combatants.movement.spentFeet"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "componentConnectorSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "branchFamily": "step",
+      "branchAction": "doCommandFollowDrop",
+      "observedActionTaken": "doCommandFollowDrop",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowDrop qComponentRoute=ability-skill-command-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doCommandFollowDrop",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAbilitySkillCommandOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "observedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#applyScenario",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Search, Guidance, Enhance Ability, and Command scenario calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAbilitySkillCommandOwner",
+          "BattleSubject.action=search",
+          "BattleSubject.actionSpell.invocation.procedure=rollModifier",
+          "BattleSubject.actionSpell.invocation.procedure=command",
+          "BattleSubject.runtimeCommand.command",
+          "BattleCreatureState.hidden",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack",
+          "BattleSnapshot.turn.actionResources",
+          "BattleSnapshot.turn.bonusActionAvailable",
+          "BattleSnapshot.combatants.movement.spentFeet"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "componentConnectorSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "branchFamily": "step",
+      "branchAction": "doCommandFollowFlee",
+      "observedActionTaken": "doCommandFollowFlee",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowFlee qComponentRoute=ability-skill-command-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doCommandFollowFlee",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAbilitySkillCommandOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "observedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#applyScenario",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Search, Guidance, Enhance Ability, and Command scenario calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAbilitySkillCommandOwner",
+          "BattleSubject.action=search",
+          "BattleSubject.actionSpell.invocation.procedure=rollModifier",
+          "BattleSubject.actionSpell.invocation.procedure=command",
+          "BattleSubject.runtimeCommand.command",
+          "BattleCreatureState.hidden",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack",
+          "BattleSnapshot.turn.actionResources",
+          "BattleSnapshot.turn.bonusActionAvailable",
+          "BattleSnapshot.combatants.movement.spentFeet"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "componentConnectorSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "branchFamily": "step",
+      "branchAction": "doCommandFollowFleeNoMovement",
+      "observedActionTaken": "doCommandFollowFleeNoMovement",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowFleeNoMovement qComponentRoute=ability-skill-command-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doCommandFollowFleeNoMovement",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAbilitySkillCommandOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "observedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#applyScenario",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Search, Guidance, Enhance Ability, and Command scenario calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAbilitySkillCommandOwner",
+          "BattleSubject.action=search",
+          "BattleSubject.actionSpell.invocation.procedure=rollModifier",
+          "BattleSubject.actionSpell.invocation.procedure=command",
+          "BattleSubject.runtimeCommand.command",
+          "BattleCreatureState.hidden",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack",
+          "BattleSnapshot.turn.actionResources",
+          "BattleSnapshot.turn.bonusActionAvailable",
+          "BattleSnapshot.combatants.movement.spentFeet"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "componentConnectorSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "branchFamily": "step",
+      "branchAction": "doCommandFollowFleeOpportunityAttack",
+      "observedActionTaken": "doCommandFollowFleeOpportunityAttack",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowFleeOpportunityAttack qComponentRoute=ability-skill-command-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doCommandFollowFleeOpportunityAttack",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAbilitySkillCommandOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "observedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#applyScenario",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Search, Guidance, Enhance Ability, and Command scenario calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAbilitySkillCommandOwner",
+          "BattleSubject.action=search",
+          "BattleSubject.actionSpell.invocation.procedure=rollModifier",
+          "BattleSubject.actionSpell.invocation.procedure=command",
+          "BattleSubject.runtimeCommand.command",
+          "BattleCreatureState.hidden",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack",
+          "BattleSnapshot.turn.actionResources",
+          "BattleSnapshot.turn.bonusActionAvailable",
+          "BattleSnapshot.combatants.movement.spentFeet"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "componentConnectorSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "branchFamily": "step",
+      "branchAction": "doCommandFollowFleePartialRejected",
+      "observedActionTaken": "doCommandFollowFleePartialRejected",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowFleePartialRejected qComponentRoute=ability-skill-command-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doCommandFollowFleePartialRejected",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAbilitySkillCommandOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "observedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#applyScenario",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Search, Guidance, Enhance Ability, and Command scenario calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAbilitySkillCommandOwner",
+          "BattleSubject.action=search",
+          "BattleSubject.actionSpell.invocation.procedure=rollModifier",
+          "BattleSubject.actionSpell.invocation.procedure=command",
+          "BattleSubject.runtimeCommand.command",
+          "BattleCreatureState.hidden",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack",
+          "BattleSnapshot.turn.actionResources",
+          "BattleSnapshot.turn.bonusActionAvailable",
+          "BattleSnapshot.combatants.movement.spentFeet"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "componentConnectorSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "branchFamily": "step",
+      "branchAction": "doCommandFollowGrovel",
+      "observedActionTaken": "doCommandFollowGrovel",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowGrovel qComponentRoute=ability-skill-command-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doCommandFollowGrovel",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAbilitySkillCommandOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "observedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#applyScenario",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Search, Guidance, Enhance Ability, and Command scenario calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAbilitySkillCommandOwner",
+          "BattleSubject.action=search",
+          "BattleSubject.actionSpell.invocation.procedure=rollModifier",
+          "BattleSubject.actionSpell.invocation.procedure=command",
+          "BattleSubject.runtimeCommand.command",
+          "BattleCreatureState.hidden",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack",
+          "BattleSnapshot.turn.actionResources",
+          "BattleSnapshot.turn.bonusActionAvailable",
+          "BattleSnapshot.combatants.movement.spentFeet"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "componentConnectorSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "branchFamily": "step",
+      "branchAction": "doCommandHaltSuppresses",
+      "observedActionTaken": "doCommandHaltSuppresses",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAbilitySkillCommandOwner action=doCommandHaltSuppresses qComponentRoute=ability-skill-command-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doCommandHaltSuppresses",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAbilitySkillCommandOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "observedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#applyScenario",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Search, Guidance, Enhance Ability, and Command scenario calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAbilitySkillCommandOwner",
+          "BattleSubject.action=search",
+          "BattleSubject.actionSpell.invocation.procedure=rollModifier",
+          "BattleSubject.actionSpell.invocation.procedure=command",
+          "BattleSubject.runtimeCommand.command",
+          "BattleCreatureState.hidden",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack",
+          "BattleSnapshot.turn.actionResources",
+          "BattleSnapshot.turn.bonusActionAvailable",
+          "BattleSnapshot.combatants.movement.spentFeet"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "componentConnectorSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "branchFamily": "step",
+      "branchAction": "doEnhanceAbilityChoice",
+      "observedActionTaken": "doEnhanceAbilityChoice",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAbilitySkillCommandOwner action=doEnhanceAbilityChoice qComponentRoute=ability-skill-command-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doEnhanceAbilityChoice",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAbilitySkillCommandOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "observedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#applyScenario",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Search, Guidance, Enhance Ability, and Command scenario calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAbilitySkillCommandOwner",
+          "BattleSubject.action=search",
+          "BattleSubject.actionSpell.invocation.procedure=rollModifier",
+          "BattleSubject.actionSpell.invocation.procedure=command",
+          "BattleSubject.runtimeCommand.command",
+          "BattleCreatureState.hidden",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack",
+          "BattleSnapshot.turn.actionResources",
+          "BattleSnapshot.turn.bonusActionAvailable",
+          "BattleSnapshot.combatants.movement.spentFeet"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "componentConnectorSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "branchFamily": "step",
+      "branchAction": "doGuidanceSkillAcrobatics",
+      "observedActionTaken": "doGuidanceSkillAcrobatics",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillAcrobatics qComponentRoute=ability-skill-command-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doGuidanceSkillAcrobatics",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAbilitySkillCommandOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "observedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#applyScenario",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Search, Guidance, Enhance Ability, and Command scenario calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAbilitySkillCommandOwner",
+          "BattleSubject.action=search",
+          "BattleSubject.actionSpell.invocation.procedure=rollModifier",
+          "BattleSubject.actionSpell.invocation.procedure=command",
+          "BattleSubject.runtimeCommand.command",
+          "BattleCreatureState.hidden",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack",
+          "BattleSnapshot.turn.actionResources",
+          "BattleSnapshot.turn.bonusActionAvailable",
+          "BattleSnapshot.combatants.movement.spentFeet"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "componentConnectorSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "branchFamily": "step",
+      "branchAction": "doGuidanceSkillAnimalHandling",
+      "observedActionTaken": "doGuidanceSkillAnimalHandling",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillAnimalHandling qComponentRoute=ability-skill-command-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doGuidanceSkillAnimalHandling",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAbilitySkillCommandOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "observedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#applyScenario",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Search, Guidance, Enhance Ability, and Command scenario calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAbilitySkillCommandOwner",
+          "BattleSubject.action=search",
+          "BattleSubject.actionSpell.invocation.procedure=rollModifier",
+          "BattleSubject.actionSpell.invocation.procedure=command",
+          "BattleSubject.runtimeCommand.command",
+          "BattleCreatureState.hidden",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack",
+          "BattleSnapshot.turn.actionResources",
+          "BattleSnapshot.turn.bonusActionAvailable",
+          "BattleSnapshot.combatants.movement.spentFeet"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "componentConnectorSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "branchFamily": "step",
+      "branchAction": "doGuidanceSkillArcana",
+      "observedActionTaken": "doGuidanceSkillArcana",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillArcana qComponentRoute=ability-skill-command-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doGuidanceSkillArcana",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAbilitySkillCommandOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "observedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#applyScenario",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Search, Guidance, Enhance Ability, and Command scenario calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAbilitySkillCommandOwner",
+          "BattleSubject.action=search",
+          "BattleSubject.actionSpell.invocation.procedure=rollModifier",
+          "BattleSubject.actionSpell.invocation.procedure=command",
+          "BattleSubject.runtimeCommand.command",
+          "BattleCreatureState.hidden",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack",
+          "BattleSnapshot.turn.actionResources",
+          "BattleSnapshot.turn.bonusActionAvailable",
+          "BattleSnapshot.combatants.movement.spentFeet"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "componentConnectorSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "branchFamily": "step",
+      "branchAction": "doGuidanceSkillAthletics",
+      "observedActionTaken": "doGuidanceSkillAthletics",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillAthletics qComponentRoute=ability-skill-command-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doGuidanceSkillAthletics",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAbilitySkillCommandOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "observedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#applyScenario",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Search, Guidance, Enhance Ability, and Command scenario calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAbilitySkillCommandOwner",
+          "BattleSubject.action=search",
+          "BattleSubject.actionSpell.invocation.procedure=rollModifier",
+          "BattleSubject.actionSpell.invocation.procedure=command",
+          "BattleSubject.runtimeCommand.command",
+          "BattleCreatureState.hidden",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack",
+          "BattleSnapshot.turn.actionResources",
+          "BattleSnapshot.turn.bonusActionAvailable",
+          "BattleSnapshot.combatants.movement.spentFeet"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "componentConnectorSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "branchFamily": "step",
+      "branchAction": "doGuidanceSkillDeception",
+      "observedActionTaken": "doGuidanceSkillDeception",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillDeception qComponentRoute=ability-skill-command-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doGuidanceSkillDeception",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAbilitySkillCommandOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "observedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#applyScenario",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Search, Guidance, Enhance Ability, and Command scenario calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAbilitySkillCommandOwner",
+          "BattleSubject.action=search",
+          "BattleSubject.actionSpell.invocation.procedure=rollModifier",
+          "BattleSubject.actionSpell.invocation.procedure=command",
+          "BattleSubject.runtimeCommand.command",
+          "BattleCreatureState.hidden",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack",
+          "BattleSnapshot.turn.actionResources",
+          "BattleSnapshot.turn.bonusActionAvailable",
+          "BattleSnapshot.combatants.movement.spentFeet"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "componentConnectorSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "branchFamily": "step",
+      "branchAction": "doGuidanceSkillHistory",
+      "observedActionTaken": "doGuidanceSkillHistory",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillHistory qComponentRoute=ability-skill-command-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doGuidanceSkillHistory",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAbilitySkillCommandOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "observedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#applyScenario",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Search, Guidance, Enhance Ability, and Command scenario calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAbilitySkillCommandOwner",
+          "BattleSubject.action=search",
+          "BattleSubject.actionSpell.invocation.procedure=rollModifier",
+          "BattleSubject.actionSpell.invocation.procedure=command",
+          "BattleSubject.runtimeCommand.command",
+          "BattleCreatureState.hidden",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack",
+          "BattleSnapshot.turn.actionResources",
+          "BattleSnapshot.turn.bonusActionAvailable",
+          "BattleSnapshot.combatants.movement.spentFeet"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "componentConnectorSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "branchFamily": "step",
+      "branchAction": "doGuidanceSkillInsight",
+      "observedActionTaken": "doGuidanceSkillInsight",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillInsight qComponentRoute=ability-skill-command-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doGuidanceSkillInsight",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAbilitySkillCommandOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "observedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#applyScenario",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Search, Guidance, Enhance Ability, and Command scenario calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAbilitySkillCommandOwner",
+          "BattleSubject.action=search",
+          "BattleSubject.actionSpell.invocation.procedure=rollModifier",
+          "BattleSubject.actionSpell.invocation.procedure=command",
+          "BattleSubject.runtimeCommand.command",
+          "BattleCreatureState.hidden",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack",
+          "BattleSnapshot.turn.actionResources",
+          "BattleSnapshot.turn.bonusActionAvailable",
+          "BattleSnapshot.combatants.movement.spentFeet"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "componentConnectorSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "branchFamily": "step",
+      "branchAction": "doGuidanceSkillIntimidation",
+      "observedActionTaken": "doGuidanceSkillIntimidation",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillIntimidation qComponentRoute=ability-skill-command-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doGuidanceSkillIntimidation",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAbilitySkillCommandOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "observedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#applyScenario",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Search, Guidance, Enhance Ability, and Command scenario calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAbilitySkillCommandOwner",
+          "BattleSubject.action=search",
+          "BattleSubject.actionSpell.invocation.procedure=rollModifier",
+          "BattleSubject.actionSpell.invocation.procedure=command",
+          "BattleSubject.runtimeCommand.command",
+          "BattleCreatureState.hidden",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack",
+          "BattleSnapshot.turn.actionResources",
+          "BattleSnapshot.turn.bonusActionAvailable",
+          "BattleSnapshot.combatants.movement.spentFeet"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "componentConnectorSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "branchFamily": "step",
+      "branchAction": "doGuidanceSkillInvestigation",
+      "observedActionTaken": "doGuidanceSkillInvestigation",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillInvestigation qComponentRoute=ability-skill-command-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doGuidanceSkillInvestigation",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAbilitySkillCommandOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "observedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#applyScenario",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Search, Guidance, Enhance Ability, and Command scenario calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAbilitySkillCommandOwner",
+          "BattleSubject.action=search",
+          "BattleSubject.actionSpell.invocation.procedure=rollModifier",
+          "BattleSubject.actionSpell.invocation.procedure=command",
+          "BattleSubject.runtimeCommand.command",
+          "BattleCreatureState.hidden",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack",
+          "BattleSnapshot.turn.actionResources",
+          "BattleSnapshot.turn.bonusActionAvailable",
+          "BattleSnapshot.combatants.movement.spentFeet"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "componentConnectorSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "branchFamily": "step",
+      "branchAction": "doGuidanceSkillMedicine",
+      "observedActionTaken": "doGuidanceSkillMedicine",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillMedicine qComponentRoute=ability-skill-command-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doGuidanceSkillMedicine",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAbilitySkillCommandOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "observedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#applyScenario",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Search, Guidance, Enhance Ability, and Command scenario calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAbilitySkillCommandOwner",
+          "BattleSubject.action=search",
+          "BattleSubject.actionSpell.invocation.procedure=rollModifier",
+          "BattleSubject.actionSpell.invocation.procedure=command",
+          "BattleSubject.runtimeCommand.command",
+          "BattleCreatureState.hidden",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack",
+          "BattleSnapshot.turn.actionResources",
+          "BattleSnapshot.turn.bonusActionAvailable",
+          "BattleSnapshot.combatants.movement.spentFeet"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "componentConnectorSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "branchFamily": "step",
+      "branchAction": "doGuidanceSkillNature",
+      "observedActionTaken": "doGuidanceSkillNature",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillNature qComponentRoute=ability-skill-command-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doGuidanceSkillNature",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAbilitySkillCommandOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "observedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#applyScenario",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Search, Guidance, Enhance Ability, and Command scenario calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAbilitySkillCommandOwner",
+          "BattleSubject.action=search",
+          "BattleSubject.actionSpell.invocation.procedure=rollModifier",
+          "BattleSubject.actionSpell.invocation.procedure=command",
+          "BattleSubject.runtimeCommand.command",
+          "BattleCreatureState.hidden",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack",
+          "BattleSnapshot.turn.actionResources",
+          "BattleSnapshot.turn.bonusActionAvailable",
+          "BattleSnapshot.combatants.movement.spentFeet"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "componentConnectorSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "branchFamily": "step",
+      "branchAction": "doGuidanceSkillPerception",
+      "observedActionTaken": "doGuidanceSkillPerception",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillPerception qComponentRoute=ability-skill-command-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doGuidanceSkillPerception",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAbilitySkillCommandOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "observedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#applyScenario",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Search, Guidance, Enhance Ability, and Command scenario calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAbilitySkillCommandOwner",
+          "BattleSubject.action=search",
+          "BattleSubject.actionSpell.invocation.procedure=rollModifier",
+          "BattleSubject.actionSpell.invocation.procedure=command",
+          "BattleSubject.runtimeCommand.command",
+          "BattleCreatureState.hidden",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack",
+          "BattleSnapshot.turn.actionResources",
+          "BattleSnapshot.turn.bonusActionAvailable",
+          "BattleSnapshot.combatants.movement.spentFeet"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "componentConnectorSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "branchFamily": "step",
+      "branchAction": "doGuidanceSkillPerformance",
+      "observedActionTaken": "doGuidanceSkillPerformance",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillPerformance qComponentRoute=ability-skill-command-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doGuidanceSkillPerformance",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAbilitySkillCommandOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "observedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#applyScenario",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Search, Guidance, Enhance Ability, and Command scenario calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAbilitySkillCommandOwner",
+          "BattleSubject.action=search",
+          "BattleSubject.actionSpell.invocation.procedure=rollModifier",
+          "BattleSubject.actionSpell.invocation.procedure=command",
+          "BattleSubject.runtimeCommand.command",
+          "BattleCreatureState.hidden",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack",
+          "BattleSnapshot.turn.actionResources",
+          "BattleSnapshot.turn.bonusActionAvailable",
+          "BattleSnapshot.combatants.movement.spentFeet"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "componentConnectorSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "branchFamily": "step",
+      "branchAction": "doGuidanceSkillPersuasion",
+      "observedActionTaken": "doGuidanceSkillPersuasion",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillPersuasion qComponentRoute=ability-skill-command-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doGuidanceSkillPersuasion",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAbilitySkillCommandOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "observedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#applyScenario",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Search, Guidance, Enhance Ability, and Command scenario calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAbilitySkillCommandOwner",
+          "BattleSubject.action=search",
+          "BattleSubject.actionSpell.invocation.procedure=rollModifier",
+          "BattleSubject.actionSpell.invocation.procedure=command",
+          "BattleSubject.runtimeCommand.command",
+          "BattleCreatureState.hidden",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack",
+          "BattleSnapshot.turn.actionResources",
+          "BattleSnapshot.turn.bonusActionAvailable",
+          "BattleSnapshot.combatants.movement.spentFeet"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "componentConnectorSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "branchFamily": "step",
+      "branchAction": "doGuidanceSkillReligion",
+      "observedActionTaken": "doGuidanceSkillReligion",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillReligion qComponentRoute=ability-skill-command-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doGuidanceSkillReligion",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAbilitySkillCommandOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "observedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#applyScenario",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Search, Guidance, Enhance Ability, and Command scenario calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAbilitySkillCommandOwner",
+          "BattleSubject.action=search",
+          "BattleSubject.actionSpell.invocation.procedure=rollModifier",
+          "BattleSubject.actionSpell.invocation.procedure=command",
+          "BattleSubject.runtimeCommand.command",
+          "BattleCreatureState.hidden",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack",
+          "BattleSnapshot.turn.actionResources",
+          "BattleSnapshot.turn.bonusActionAvailable",
+          "BattleSnapshot.combatants.movement.spentFeet"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "componentConnectorSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "branchFamily": "step",
+      "branchAction": "doGuidanceSkillSleightOfHand",
+      "observedActionTaken": "doGuidanceSkillSleightOfHand",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillSleightOfHand qComponentRoute=ability-skill-command-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doGuidanceSkillSleightOfHand",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAbilitySkillCommandOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "observedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#applyScenario",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Search, Guidance, Enhance Ability, and Command scenario calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAbilitySkillCommandOwner",
+          "BattleSubject.action=search",
+          "BattleSubject.actionSpell.invocation.procedure=rollModifier",
+          "BattleSubject.actionSpell.invocation.procedure=command",
+          "BattleSubject.runtimeCommand.command",
+          "BattleCreatureState.hidden",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack",
+          "BattleSnapshot.turn.actionResources",
+          "BattleSnapshot.turn.bonusActionAvailable",
+          "BattleSnapshot.combatants.movement.spentFeet"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "componentConnectorSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "branchFamily": "step",
+      "branchAction": "doGuidanceSkillStealth",
+      "observedActionTaken": "doGuidanceSkillStealth",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillStealth qComponentRoute=ability-skill-command-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doGuidanceSkillStealth",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAbilitySkillCommandOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "observedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#applyScenario",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Search, Guidance, Enhance Ability, and Command scenario calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAbilitySkillCommandOwner",
+          "BattleSubject.action=search",
+          "BattleSubject.actionSpell.invocation.procedure=rollModifier",
+          "BattleSubject.actionSpell.invocation.procedure=command",
+          "BattleSubject.runtimeCommand.command",
+          "BattleCreatureState.hidden",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack",
+          "BattleSnapshot.turn.actionResources",
+          "BattleSnapshot.turn.bonusActionAvailable",
+          "BattleSnapshot.combatants.movement.spentFeet"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "componentConnectorSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "branchFamily": "step",
+      "branchAction": "doGuidanceSkillSurvival",
+      "observedActionTaken": "doGuidanceSkillSurvival",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillSurvival qComponentRoute=ability-skill-command-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doGuidanceSkillSurvival",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAbilitySkillCommandOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "observedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#applyScenario",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Search, Guidance, Enhance Ability, and Command scenario calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAbilitySkillCommandOwner",
+          "BattleSubject.action=search",
+          "BattleSubject.actionSpell.invocation.procedure=rollModifier",
+          "BattleSubject.actionSpell.invocation.procedure=command",
+          "BattleSubject.runtimeCommand.command",
+          "BattleCreatureState.hidden",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack",
+          "BattleSnapshot.turn.actionResources",
+          "BattleSnapshot.turn.bonusActionAvailable",
+          "BattleSnapshot.combatants.movement.spentFeet"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "componentConnectorSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "branchFamily": "step",
+      "branchAction": "doSearchFails",
+      "observedActionTaken": "doSearchFails",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAbilitySkillCommandOwner action=doSearchFails qComponentRoute=ability-skill-command-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doSearchFails",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAbilitySkillCommandOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "observedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#applyScenario",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Search, Guidance, Enhance Ability, and Command scenario calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAbilitySkillCommandOwner",
+          "BattleSubject.action=search",
+          "BattleSubject.actionSpell.invocation.procedure=rollModifier",
+          "BattleSubject.actionSpell.invocation.procedure=command",
+          "BattleSubject.runtimeCommand.command",
+          "BattleCreatureState.hidden",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack",
+          "BattleSnapshot.turn.actionResources",
+          "BattleSnapshot.turn.bonusActionAvailable",
+          "BattleSnapshot.combatants.movement.spentFeet"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "qntFileSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "componentConnectorSha256": "9793960071afc2e2b25789dc22830b32e251f70a8890c732698e4570caadc3e9",
+      "branchFamily": "step",
+      "branchAction": "doSearchSucceeds",
+      "observedActionTaken": "doSearchSucceeds",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAbilitySkillCommandOwner action=doSearchSucceeds qComponentRoute=ability-skill-command-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doSearchSucceeds",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAbilitySkillCommandOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "observedProjectionSha256": "8183269d4724b4dfb86f1761ff0129ee827b0579f22e064a3dfaf53f0f5fb5ea",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAbilitySkillCommandOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#applyScenario",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Search, Guidance, Enhance Ability, and Command scenario calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#projectState"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAbilitySkillCommandOwner",
+          "BattleSubject.action=search",
+          "BattleSubject.actionSpell.invocation.procedure=rollModifier",
+          "BattleSubject.actionSpell.invocation.procedure=command",
+          "BattleSubject.runtimeCommand.command",
+          "BattleCreatureState.hidden",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack",
+          "BattleSnapshot.turn.actionResources",
+          "BattleSnapshot.turn.bonusActionAvailable",
+          "BattleSnapshot.combatants.movement.spentFeet"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}
