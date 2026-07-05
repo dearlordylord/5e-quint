@@ -1,5 +1,97 @@
 # Validation Report
 
+## CRPI-READY-032
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Driver path: `packages/battle-runtime/rule-core-shove-outcome.mbt.qnt`
+- Component connector path: `packages/battle-runtime/rule-core-shove-outcome.mbt.qnt`
+- Route class: `component-first`
+- Durable owner: `RuleCoreShoveOutcomeOwner`
+- Accepted projection: `qComponentRoute`
+- Status: `accepted`
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-032.json`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/rule-core-shove-outcome.mbt.qnt`
+- `packages/battle-runtime/rule-core-component-route.qnt`
+- `packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts`
+- `packages/battle-runtime/src/rule-core-component-route.ts`
+- `packages/battle-runtime/src/battle-reducer/attack-resolution.ts`
+- `packages/battle-runtime/src/battle-runtime-test-support.ts`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-convergence-backlog.json`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+The component-first replay for rule-core Shove outcome now has accepted target
+evidence for the copied `qComponentRoute` projection. The target harness records
+the reusable component route sequence parse input, admit input, call
+`RuleCoreShoveOutcomeOwner`, and project result before downstream battle action and feature
+routes consume this owner.
+
+Runtime projections are produced through public battle-runtime Shove subject
+resolution via `resolveBattleSubject`, then compared to the copied component
+connector route. No production reducer state was added: action-resource spend,
+Prone condition application, accepted push disposition, blocked push disposition,
+and invalid push-distance rejection remain on existing battle state fields and
+public reducer result protocols.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Harness | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/rule-core-shove-outcome.mbt.qnt#step:doInvalidPushDistance` | `tasks/target-replay-evidence/CRPI-READY-032.json#driver:packages/battle-runtime/rule-core-shove-outcome.mbt.qnt#step:doInvalidPushDistance#trace:component-route=RuleCoreShoveOutcomeOwner action=doInvalidPushDistance qComponentRoute=shove-outcome-component-route` | `packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#replays Shove Prone and push dispositions against battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-shove-outcome.mbt.qnt#step:doSaveFailsProne` | `tasks/target-replay-evidence/CRPI-READY-032.json#driver:packages/battle-runtime/rule-core-shove-outcome.mbt.qnt#step:doSaveFailsProne#trace:component-route=RuleCoreShoveOutcomeOwner action=doSaveFailsProne qComponentRoute=shove-outcome-component-route` | `packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#replays Shove Prone and push dispositions against battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-shove-outcome.mbt.qnt#step:doSaveFailsPush` | `tasks/target-replay-evidence/CRPI-READY-032.json#driver:packages/battle-runtime/rule-core-shove-outcome.mbt.qnt#step:doSaveFailsPush#trace:component-route=RuleCoreShoveOutcomeOwner action=doSaveFailsPush qComponentRoute=shove-outcome-component-route` | `packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#replays Shove Prone and push dispositions against battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-shove-outcome.mbt.qnt#step:doSaveFailsPushBlocked` | `tasks/target-replay-evidence/CRPI-READY-032.json#driver:packages/battle-runtime/rule-core-shove-outcome.mbt.qnt#step:doSaveFailsPushBlocked#trace:component-route=RuleCoreShoveOutcomeOwner action=doSaveFailsPushBlocked qComponentRoute=shove-outcome-component-route` | `packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#replays Shove Prone and push dispositions against battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-shove-outcome.mbt.qnt#step:doSaveFailsPushNoLegalDestination` | `tasks/target-replay-evidence/CRPI-READY-032.json#driver:packages/battle-runtime/rule-core-shove-outcome.mbt.qnt#step:doSaveFailsPushNoLegalDestination#trace:component-route=RuleCoreShoveOutcomeOwner action=doSaveFailsPushNoLegalDestination qComponentRoute=shove-outcome-component-route` | `packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#replays Shove Prone and push dispositions against battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-shove-outcome.mbt.qnt#step:doSaveSucceeds` | `tasks/target-replay-evidence/CRPI-READY-032.json#driver:packages/battle-runtime/rule-core-shove-outcome.mbt.qnt#step:doSaveSucceeds#trace:component-route=RuleCoreShoveOutcomeOwner action=doSaveSucceeds qComponentRoute=shove-outcome-component-route` | `packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#replays Shove Prone and push dispositions against battle-runtime reducers` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-032.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id pattern: `component-route=RuleCoreShoveOutcomeOwner action=<branchAction> qComponentRoute=shove-outcome-component-route`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-READY-032/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 74.
+
+RAW / ubiquitous-language trace:
+
+- SRD 5.2.1 Rules Glossary: Unarmed Strike can damage, grapple, or shove a target within 5 feet.
+- SRD 5.2.1 Rules Glossary: Shove requires a target-chosen Strength or Dexterity saving throw; on failure the target is either pushed 5 feet away or gains the Prone condition.
+- SRD 5.2.1 Rules Glossary: Shove DC is 8 plus Strength modifier and Proficiency Bonus, and is possible only against a target no more than one size larger.
+- SRD 5.2.1 Rules Glossary: Prone restricts movement to crawling or standing by spending half Speed and affects attack rolls.
+- `UBIQUITOUS_LANGUAGE.md`: Shove is an Unarmed Strike option distinct from the Push mastery property; failure either knocks the target Prone or pushes it 5 feet.
+
+Verification results:
+
+- Base check passed: declared base ref `codex/cleanroom-reducer-full-lane-20260705-restart2` resolved to `5a3fb5554 Merge Ralph task 100 status`; `HEAD` resolved to `162b0b108 Mark Ralph task 73 done`; `git merge-base --is-ancestor 162b0b10817e406ef742d66b24f73a32b9cb85c7 HEAD` passed, so the Task Base SHA remains an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against SRD 5.2.1 Rules Glossary Unarmed Strike and Prone plus `UBIQUITOUS_LANGUAGE.md` Shove, Grapple, Unarmed Strike, and Push distinction.
+- JSON validation passed: `jq empty tasks/target-replay-evidence/CRPI-READY-032.json tasks/ENGINE_DEPTH_MANIFEST.json tasks/STATE_OWNER_MANIFEST.json tasks/RUN_LEDGER.json`.
+- Pre-MBT process check found no actual Vitest or `quint_evaluator` worker process; it only matched a Ralph monitor command text.
+- Focused MBT replay passed: `START=$(date +%s); cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=6 pnpm exec vitest run src/rule-core-shove-outcome.mbt.test.ts 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 1 test in `TOTAL: 9s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs after a first parallel attempt exited 143 without diagnostics.
+- Scoped target evidence validation passed: `node scoped validateTargetReplayEvidence for CRPI-READY-032 shove outcome driver` covered 6 Task 74 obligations.
+- `git diff --check` passed.
+- Requested broad verification passed: `flock /tmp/dnd-mbt-qnt.lock pnpm quality`.
+- Reviewer-loop convergence passed: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks found no remaining reasonable Task 74 findings.
+
 ## CRPI-READY-031
 
 - Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
