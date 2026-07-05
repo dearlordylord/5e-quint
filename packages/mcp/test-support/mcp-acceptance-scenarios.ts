@@ -166,6 +166,19 @@ const agentConversationScenarios = [
       "This is a known-good MCP scenario for level 5. It proves durable Wizard 5 sheet state, Fireball Spell Access, level-3 Spell Slot projection, and battle handoff while keeping tactical fills caller-owned.",
   },
   {
+    id: "create-level-six-rogue-expertise-and-steady-aim-battle-handoff",
+    name: "Create a level 6 Rogue with Expertise and use Steady Aim",
+    userSays:
+      "Create an Orc Soldier Rogue 6 with Expertise, then start battle and use Steady Aim.",
+    agentReads:
+      "After the Rogue 6 progression fill, discovery returns skill and Expertise holes. The finalized Character Sheet exposes the chosen skill proficiencies and Expertise choices before battle, and discover_battle_acts returns Steady Aim as a no-hole unit feature act.",
+    agentDecision:
+      "It selects only returned skill and Expertise option ids, finalizes after MCP reports no remaining holes, starts battle from the returned character id, copies the returned Steady Aim subject, and resolves the no-hole act to verify the battle handoff.",
+    executableCoverage: "verifyLevelSixRogueSteadyAimBattleHandoff",
+    insufficiency:
+      "This is a known-good MCP scenario for level 6. It proves durable Rogue 6 sheet state, Expertise projection, and Steady Aim battle handoff while keeping character and battle ids caller-owned.",
+  },
+  {
     id: "select-monsters",
     name: "Select monsters",
     userSays: "Fight a Goblin Warrior, then fight a Skeleton.",
@@ -2809,7 +2822,7 @@ function parseString(value: unknown, context: string) {
 }
 
 export function verifyAgentConversationScenarios() {
-  assert.equal(agentConversationScenarios.length, 16);
+  assert.equal(agentConversationScenarios.length, 17);
   const scenarioIds = new Set<string>();
   for (const scenario of agentConversationScenarios) {
     assert.match(scenario.id, /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/);

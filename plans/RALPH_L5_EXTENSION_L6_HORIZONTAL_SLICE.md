@@ -331,13 +331,13 @@
     {
       "number": 35,
       "id": "L6UG-MCP-04-LEVEL6-SCENARIO-REGISTRY",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Register the level-6 MCP scenario in acceptance coverage"
     },
     {
       "number": 36,
       "id": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Admit level-1-6 MCP scenario evidence"
     },
     {
@@ -485,8 +485,8 @@ Every Ralph task must run the task-base check before research or edits:
 |  32 | L6UG-MCP-01-LEVEL6-VERTICAL-DECISION - Choose the level-6 MCP vertical scenario | done | L6UG-PRE-01-L6-FULL-QUEUE-CLOSED | Selected the Rogue 6 Expertise plus Steady Aim battle handoff vertical. |
 |  33 | L6UG-MCP-02-LEVEL6-SHEET-SCENARIO - Implement level-6 MCP creation and sheet scenario coverage | done | L6UG-MCP-01-LEVEL6-VERTICAL-DECISION | Adds selected Rogue 6 Expertise creation/advancement and durable sheet evidence. |
 |  34 | L6UG-MCP-03-LEVEL6-BATTLE-HANDOFF - Extend the level-6 MCP scenario through battle handoff | done | L6UG-MCP-02-LEVEL6-SHEET-SCENARIO, L6UG-GATE-01-NON-MCP-LAYER-RECONCILIATION | Adds selected Rogue 6 Steady Aim battle handoff coverage. |
-|  35 | L6UG-MCP-04-LEVEL6-SCENARIO-REGISTRY - Register the level-6 MCP scenario in acceptance coverage | ready-for-research | L6UG-MCP-03-LEVEL6-BATTLE-HANDOFF | Ready to wire executable level-6 scenario into acceptance metadata. |
-|  36 | L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE - Admit level-1-6 MCP scenario evidence | blocked | L6UG-MCP-04-LEVEL6-SCENARIO-REGISTRY | Updates checker-owned MCP evidence after executable coverage exists. |
+|  35 | L6UG-MCP-04-LEVEL6-SCENARIO-REGISTRY - Register the level-6 MCP scenario in acceptance coverage | done | L6UG-MCP-03-LEVEL6-BATTLE-HANDOFF | Wires executable Rogue 6 Steady Aim scenario into acceptance metadata and protocol coverage. |
+|  36 | L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE - Admit level-1-6 MCP scenario evidence | ready-for-research | L6UG-MCP-04-LEVEL6-SCENARIO-REGISTRY | Ready to admit checker-owned MCP evidence for the registered level-6 scenario. |
 |  37 | L6UG-FINAL-01-ULTRA-GOLDEN-REFRESH - Refresh and verify the level-1-6 ultra-golden gate | blocked | L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE | Final generated refresh after scope, parity, and MCP evidence land. |
 
 ## Shared Verification
@@ -3405,7 +3405,7 @@ Verification:
 
 ### Task 35 - L6UG-MCP-04-LEVEL6-SCENARIO-REGISTRY
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: `L6UG-MCP-03-LEVEL6-BATTLE-HANDOFF`
 
@@ -3433,15 +3433,20 @@ Verification:
 - `pnpm --filter @dnd/mcp test:mcp-scenario-evidence`
 - `git diff --check`
 
+Plan Impact:
+
+- Applied. Registered
+  `create-level-six-rogue-expertise-and-steady-aim-battle-handoff` in MCP
+  acceptance scenario metadata and added protocol runner coverage for the
+  existing Rogue 6 Steady Aim verifier.
+- Task 36 is unblocked for checker-owned level-1-6 MCP scenario evidence
+  admission.
+
 ### Task 36 - L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `L6UG-MCP-04-LEVEL6-SCENARIO-REGISTRY`
-
-Blocker Type: dependency
-
-Blocker Detail: waiting for `L6UG-MCP-04-LEVEL6-SCENARIO-REGISTRY`.
 
 Inputs:
 
