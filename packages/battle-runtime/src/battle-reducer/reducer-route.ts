@@ -21,6 +21,7 @@ import {
   HEIGHTENED_METAMAGIC_EFFECT_KIND,
   QUICKENED_METAMAGIC_EFFECT_KIND,
   SEEKING_METAMAGIC_EFFECT_KIND,
+  SUBTLE_METAMAGIC_EFFECT_KIND,
 } from "./metamagic-support.ts";
 import { isHeightenedSpellTargetChoiceHoleId } from "./spells-damage-fills.ts";
 
@@ -38,6 +39,7 @@ export type BattleReducerRouteSubjectFamily =
   | "metamagicSpellGovernor"
   | "metamagicSpellRangeProjection"
   | "metamagicSpellDurationProjection"
+  | "metamagicSpellComponentProjection"
   | "reactionSpell"
   | "rollModifierEffect"
   | "saveGatedSpell"
@@ -185,6 +187,16 @@ export function battleReducerRouteEventsForDiscoveredAct(
   if (rollModifierRoute !== undefined) {
     return [rollModifierRoute];
   }
+  if (isSubtleSpellComponentProjectionSubject(act.subject)) {
+    return [
+      {
+        kind: "discoverBattleActs",
+        subject: "metamagicSpellComponentProjection",
+        holes: [],
+        owner: "battleFeatureResource",
+      },
+    ];
+  }
   const scalarBuffRoute = scalarBuffRouteForDiscoveredAct(act);
   if (scalarBuffRoute !== undefined) {
     return [scalarBuffRoute];
@@ -318,6 +330,11 @@ export function battleReducerRouteForResolution(
   const rollModifierRoute = rollModifierRouteForResolution(input, result);
   if (rollModifierRoute !== undefined) {
     return rollModifierRoute;
+  }
+  const metamagicSpellComponentProjectionRoute =
+    metamagicSpellComponentProjectionRouteForResolution(input, result);
+  if (metamagicSpellComponentProjectionRoute !== undefined) {
+    return metamagicSpellComponentProjectionRoute;
   }
   const scalarBuffRoute = scalarBuffRouteForResolution(input, result);
   if (scalarBuffRoute !== undefined) {
@@ -897,6 +914,26 @@ function combatantsActiveEffectsChanged(
   );
 }
 
+function metamagicSpellComponentProjectionRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  if (
+    result.tag !== "resolved" ||
+    !isSubtleSpellComponentProjectionSubject(input.subject)
+  ) {
+    return undefined;
+  }
+  return [
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "metamagicSpellComponentProjection",
+      holes: [],
+      owner: "battleSpellSlotAndActionEconomy",
+    },
+  ];
+}
+
 function metamagicDamageDiceRerollRouteForResolution(
   input: BattleResolutionInput,
   result: BattleResolutionResult,
@@ -1170,6 +1207,18 @@ function isExtendedSpellDurationProjectionSubject(
       subject.invocation.procedure === "creatureSizeDecrease") &&
     subject.metamagic?.some(
       (selection) => selection.effectKind === EXTENDED_METAMAGIC_EFFECT_KIND,
+    ) === true
+  );
+}
+
+function isSubtleSpellComponentProjectionSubject(
+  subject: BattleResolutionInput["subject"],
+): boolean {
+  return (
+    (subject.tag === "actionSpell" || subject.tag === "bonusActionSpell") &&
+    subject.mode.tag === "cast" &&
+    subject.metamagic?.some(
+      (selection) => selection.effectKind === SUBTLE_METAMAGIC_EFFECT_KIND,
     ) === true
   );
 }

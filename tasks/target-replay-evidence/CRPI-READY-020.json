@@ -1,0 +1,72 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/sorcerer-metamagic-subtle-selected-identity.mbt.test.ts Subtle Spell component projection copied qRoute versus public reducer replay"
+  },
+  "cleanroomManifestSourceCommitSha": "0da15bfe0871d5a45782c7ac355d622be8907d44",
+  "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-subtle-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      "qntFileSha256": "75b57a6ab3fe05d7dd87e418b7961c6b85cbd2674ba1332dac412aa36c3d9658",
+      "routeConnectorSha256": "a6712935d06df4c9aeed34457c45be3403f309a9c709f5c4c80e1408606866fb",
+      "branchFamily": "step",
+      "branchAction": "doResolveSubtleFalseLife",
+      "observedActionTaken": "doResolveSubtleFalseLife",
+      "harnessTestPath": "packages/battle-runtime/src/sorcerer-metamagic-subtle-selected-identity.mbt.test.ts",
+      "traceId": "public-route=metamagicSpellComponentProjection action=doResolveSubtleFalseLife qRoute=metamagic-subtle-component-projection-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "stepRouteSpellComponentProjection",
+        "delegatedAction": "doRouteSpellComponentProjection",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/sorcerer-metamagic-subtle-selected-identity.mbt.test.ts#createSubtleMetamagicRouteReplayDriver"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "1274019623a37a5a03dcb4fedecb21f0aa9018b9d68c2aa4bdba7f72a2024f39",
+        "observedProjectionSha256": "1274019623a37a5a03dcb4fedecb21f0aa9018b9d68c2aa4bdba7f72a2024f39",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+          "stepAction": "stepRouteSpellComponentProjection",
+          "delegatedAction": "doRouteSpellComponentProjection",
+          "qntStateField": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "public-reducer-route-events",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(state), AvailableBattleAct.routeEvents, and BattleResolutionResult.routeEvents during Subtle Spell False Life component-projection and temporary Hit Point resolution",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=metamagicSpellComponentProjection",
+          "BattleReducerRouteEvent.owner=battleFeatureResource",
+          "BattleReducerRouteEvent.owner=battleSpellSlotAndActionEconomy",
+          "BattleSubject.actionSpell.metamagic.effectKind=component_suppression",
+          "BattleSubject.actionSpell.invocation.procedure=scalarBuff",
+          "CharacterBattlePointPoolResourceState.pointsRemaining",
+          "BattleCreatureState.tempHp"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}

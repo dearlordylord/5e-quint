@@ -1779,6 +1779,89 @@
           "detail": "Round 1 identified and fixed the terminal Quickened spell Attack sequence route-owner gap; round 2 verified route admission is typed by Quickened Metamagic facts, spell Attack sequence procedure shape, target/attack/damage fills, and turn-boundary lock ownership. No duplicate durable state or authored-identity dispatch was added."
         }
       ]
+    },
+    {
+      "taskId": "CRPI-READY-020",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic-subtle-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "0da15bfe0871d5a45782c7ac355d622be8907d44",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "852a8d4771c7cd03c551d5f4383b9a9d3ea242529938d018a94f00fef0dacf6b"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "99969bc6d87aee5c3745d20036c64209f1d8c283d0ff68f4e80d5ad848f76db9"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "133fde04916f48813debbe33803949cbc22b9111d629d67f46b40c407c9ed455"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-READY-020.json",
+          "sha256": "c406f6efd920b82ef3a8e80b425cd92c36ca2aa26f32223c900797ea7cc41ade",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-READY-020.json#driver:packages/battle-runtime/battle-runtime-sorcerer-metamagic-subtle-selected-identity.mbt.qnt#step:doResolveSubtleFalseLife#trace:public-route=metamagicSpellComponentProjection action=doResolveSubtleFalseLife qRoute=metamagic-subtle-component-projection-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-reducer-full-lane-20260704T211636Z/integration && git log --oneline -1 HEAD && git merge-base --is-ancestor db714899788c80efc2c32127b1cc2d507ed28c24 HEAD",
+          "status": "pass",
+          "detail": "Declared base ref and HEAD were both db7148997 Land Ralph task 50 metamagic sequence replay; Base SHA db714899788c80efc2c32127b1cc2d507ed28c24 is an ancestor of HEAD."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime typecheck",
+          "status": "pass",
+          "detail": "Final typecheck passed after the revision-round subject-aware Subtle discovery and complete metamagic label map changes."
+        },
+        {
+          "command": "START=$(date +%s); cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=1 pnpm exec vitest run src/sorcerer-metamagic-subtle-selected-identity.mbt.test.ts 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "fail",
+          "detail": "Initial focused replay failed because public discoverBattleActs did not yet expose a Subtle False Life act; the pre-existing direct typed subject path was not enough for the required public entrypoint route evidence."
+        },
+        {
+          "command": "START=$(date +%s); cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=1 pnpm exec vitest run src/sorcerer-metamagic-subtle-selected-identity.mbt.test.ts 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "5 tests passed after scalar-buff Subtle discovery, route-owner changes, and revision-round regression coverage; deterministic stepRouteSpellComponentProjection executed copied doRouteSpellComponentProjection qRoute and compared it to the public reducer route; final timed run TOTAL: 7s."
+        },
+        {
+          "command": "cd packages/battle-runtime && pnpm exec vitest run src/sorcerer-metamagic-subtle-selected-identity.mbt.test.ts -t \"labels public Subtle|does not discover Subtle bonus-action\"",
+          "status": "pass",
+          "detail": "2 focused regression tests passed, covering the public Subtle label and the Barkskin bonus-action scalar-buff no-discovery boundary."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "Recorded after final verification."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "Recorded after final verification."
+        },
+        {
+          "command": "RAW/ubiquitous-language review against .references/srd-5.2.1/Classes/Sorcerer.md, .references/srd-5.2.1/Spells/Gaining-and-Casting.md, .references/srd-5.2.1/Spells/Descriptions-A-D.md, .references/srd-5.2.1/Spells/Descriptions-E-L.md, .references/srd-5.2.1/Rules-Glossary.md, and UBIQUITOUS_LANGUAGE.md",
+          "status": "pass"
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 added public metamagicSpellComponentProjection route ownership and scalar-buff Subtle act discovery; round 2 fixed the Subtle discovery/admission mismatch for bonus-action scalar buffs and replaced the label fallback with a complete metamagic effect-kind label map; round 3 verified route admission is typed by component_suppression Metamagic facts, spell component projection facts, scalar-buff procedure shape, rolledDice fills, and existing resource owners. No duplicate durable state or authored-identity dispatch was added."
+        }
+      ]
     }
   ]
 }

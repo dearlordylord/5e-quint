@@ -1,35 +1,46 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-019",
+  "taskId": "CRPI-READY-020",
   "durableFields": [
+    {
+      "fieldPath": "AvailableBattleAct.routeEvents",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "owner": "executable-boundary-projection",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleSubject.actionSpell.metamagic.effectKind=component_suppression and BattleSubject.actionSpell.invocation.procedure=scalarBuff",
+        "boundary": "discoverBattleActs public reducer boundary"
+      }
+    },
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject.bonusActionSpell metamagic Quickened effect fact, BattleSubject.bonusActionSpell.invocation.procedure=spellAttackSequence, targetChoice fills, attackRoll fills, damage roll fill, and BattleResolutionResult hole frontier",
+        "sourceField": "BattleSubject.actionSpell.metamagic.effectKind=component_suppression, BattleSubject.actionSpell.invocation.procedure=scalarBuff, rolledDice fill, and BattleResolutionResult resolved state",
         "boundary": "resolveBattleSubject public reducer boundary"
       }
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=metamagicBonusActionCastingTime",
+      "fieldPath": "BattleReducerRouteEvent.subject=metamagicSpellComponentProjection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject.bonusActionSpell.metamagic.effectKind=action_casting_time_to_bonus_action_with_spell_turn_limit and BattleSubject.bonusActionSpell.invocation.procedure=spellAttackSequence",
+        "sourceField": "BattleSubject.actionSpell.metamagic.effectKind=component_suppression and BattleSubject.actionSpell.invocation.procedure=scalarBuff",
         "boundary": "battleReducerRouteForResolution"
       }
     }
   ],
   "notes": [
-    "Task 50 introduced no new BattleState, BattleCreatureState, character spellcasting, or table-state durable field.",
+    "Task 51 introduced no new BattleState, BattleCreatureState, character spellcasting, or table-state durable field.",
     "Sorcery Point ownership remains existing CharacterBattlePointPoolResourceState.pointsRemaining.",
-    "Target choice, Attack Roll, and damage roll ownership remain existing table-supplied BattleFill values and reducer-owned hole frontiers.",
-    "Target Hit Point ownership remains existing BattleCreatureState.hp.",
+    "Spell-slot and action-economy ownership remain existing spell invocation resolver facts.",
+    "Damage roll ownership remains the existing table-supplied rolledDice BattleFill and reducer-owned hole frontier.",
+    "Temporary Hit Point ownership remains existing BattleCreatureState.tempHp.",
     "Selected Metamagic option identity remains at catalog, selection, admission, and fixture boundaries.",
-    "Route events are public reducer boundary projections derived from typed Quickened Metamagic effect facts, promoted spell Attack sequence procedure shape, target-choice, attack-roll, and damage-roll fills, and turn-boundary spell-lock state.",
-    "The Quickened spell Attack sequence route does not dispatch on Sorcerer authored feature identity or the Quickened Spell option name; production routing is admitted by typed action_casting_time_to_bonus_action_with_spell_turn_limit facts on promoted bonus-action spell subjects."
+    "Route events are public reducer boundary projections derived from typed Subtle Metamagic effect facts, promoted scalar-buff spell procedure shape, spell component projection facts, and rolledDice fills.",
+    "The Subtle component-projection route does not dispatch on Sorcerer authored feature identity, the Subtle Spell option name, False Life authored identity, QNT branch names, or fixture labels; production routing is admitted by typed component_suppression facts on promoted action-spell subjects."
   ]
 }

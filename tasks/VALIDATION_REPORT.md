@@ -2191,3 +2191,88 @@ Verification results:
 - `pnpm quality` passed end to end; app lint reported warnings only and exited 0.
 - RAW/ubiquitous-language review passed against Sorcerer Metamagic and Seeking Spell, Ray of Frost, and `UBIQUITOUS_LANGUAGE.md` terms Magic Action, Spell Invocation, Spell Attack, Attack Roll, Damage Roll, Pool, and Spend.
 - Reviewer-loop convergence passed: round 1 added public `metamagicMissedSpellAttackReroll` route ownership and deterministic copied-route replay; round 2 verified no duplicate durable state, no authored-identity dispatch, and no remaining reasonable RAW/domain, architecture/connascence, or code-review findings.
+
+## CRPI-READY-020
+
+- Manifest source commit SHA: `0da15bfe0871d5a45782c7ac355d622be8907d44`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Driver: `packages/battle-runtime/battle-runtime-sorcerer-metamagic-subtle-selected-identity.mbt.qnt`
+- Route connector: `packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/battle-runtime-sorcerer-metamagic-subtle-selected-identity.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Classes/Sorcerer.md`
+- `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md`
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+The route replay for Subtle Spell component projection now observes the copied
+`qRoute` projection through public battle reducer entrypoints. The replay starts
+from `battleReducerStartRouteEvent`, uses `discoverBattleActs` to obtain the
+Subtle False Life scalar-buff act, and resolves that subject with the existing
+rolled-dice fill. `AvailableBattleAct.routeEvents` exposes
+`metamagicSpellComponentProjection` discovery through the feature-resource
+owner, and `BattleResolutionResult.routeEvents` exposes spell-slot and
+action-economy ownership for the resolved cast. Public Subtle discovery now uses
+the same subject-aware component-projection admission predicate as resolution,
+so bonus-action scalar-buff spells such as Barkskin do not expose unsupported
+Subtle acts while Subtle remains action-time only.
+
+BattleState remains the durable owner. Sorcery Point spend remains
+`CharacterBattlePointPoolResourceState.pointsRemaining`, spell-slot and action
+economy remain in the spell invocation resolver, the damage roll remains a
+table-supplied fill, and Temporary Hit Points remain in
+`BattleCreatureState.tempHp`. No selected-option identity dispatch or duplicate
+component projection state was added.
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-020.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id: `public-route=metamagicSpellComponentProjection action=doResolveSubtleFalseLife qRoute=metamagic-subtle-component-projection-public-route`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-READY-020/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 51.
+
+Verification results:
+
+- `pnpm --filter @dnd/battle-runtime typecheck` passed.
+- First focused replay attempt failed because public `discoverBattleActs` did
+  not yet expose a Subtle False Life act; the typed subject could resolve when
+  constructed directly, but that did not satisfy the public-entrypoint route
+  requirement.
+- `cd packages/battle-runtime && pnpm exec vitest run src/sorcerer-metamagic-subtle-selected-identity.mbt.test.ts -t "labels public Subtle|does not discover Subtle bonus-action"` passed with 2 focused regression tests covering the public Subtle label and the Barkskin bonus-action no-discovery boundary.
+- `START=$(date +%s); cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=1 pnpm exec vitest run src/sorcerer-metamagic-subtle-selected-identity.mbt.test.ts 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 5 tests after the revision-round fix; deterministic `stepRouteSpellComponentProjection` executed copied `doRouteSpellComponentProjection` `qRoute` and compared it to the public reducer route; final timed run `TOTAL: 7s`.
+- `pnpm cleanroom-branch-coverage:check` result recorded in `tasks/RUN_LEDGER.json`.
+- `git diff --check` result recorded in `tasks/RUN_LEDGER.json`.
+- `pnpm quality` result recorded in `tasks/RUN_LEDGER.json`.
+- RAW/ubiquitous-language review passed against Sorcerer Metamagic and Subtle
+  Spell, spell Components and Casting Time, False Life, Barkskin, Temporary Hit Points, and
+  `UBIQUITOUS_LANGUAGE.md` terms Magic Action, Spell Invocation, Spell
+  Component, Pool, Spend, Spell Effect, and Temporary Hit Points.
+- Reviewer-loop convergence passed: round 1 added public
+  `metamagicSpellComponentProjection` route ownership and scalar-buff Subtle
+  act discovery; round 2 fixed the Subtle discovery/admission mismatch for
+  bonus-action scalar buffs and replaced the label fallback with a complete
+  metamagic effect-kind label map; round 3 verified no duplicate durable state,
+  no authored identity dispatch, and no remaining reasonable RAW/domain,
+  architecture/connascence, or code-review findings.
