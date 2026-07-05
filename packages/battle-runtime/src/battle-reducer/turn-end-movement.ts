@@ -946,7 +946,7 @@ function spellTurnStartSavingThrowOutcomeHole(
   >,
   targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[] = [],
 ): BattleSpellTurnStartSavingThrowOutcomeHole {
-  const key = `battle:spell-turn-start-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}`;
+  const key = spellTurnStartSavingThrowOutcomeHoleKey(targetId, effect);
   return {
     kind: "savingThrowOutcome",
     holeId: holeId(key),
@@ -964,6 +964,26 @@ function spellTurnStartSavingThrowOutcomeHole(
     targetRollModes: [],
     targetFlatBonuses,
   };
+}
+
+function spellTurnStartSavingThrowOutcomeHoleKey(
+  targetId: CombatantId,
+  effect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "spellTurnStartDamageAndSave" }
+  >,
+): string {
+  return `battle:spell-turn-start-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}`;
+}
+
+export function spellTurnStartSavingThrowOutcomeHoleId(
+  targetId: CombatantId,
+  effect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "spellTurnStartDamageAndSave" }
+  >,
+): BattleHoleId {
+  return holeId(spellTurnStartSavingThrowOutcomeHoleKey(targetId, effect));
 }
 
 function spellTurnStartSavingThrowOutcomeFor(

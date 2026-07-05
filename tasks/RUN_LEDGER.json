@@ -2017,6 +2017,462 @@
           "detail": "Round 1 added public metamagicEffectiveSpellLevel route ownership and deterministic copied-route replay; round 2 narrowed route admission to Twinned rollModifier cast subjects with spellTargetList holes/fills, corrected the base-check artifact, and verified no duplicate durable state or authored-identity dispatch was added."
         }
       ]
+    },
+    {
+      "taskId": "CRPI-READY-023",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "29485bc362498446c7bfdb5f93f2edf1935786dbdee095f5a5066d8c4583af14"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "2e46b2251ca8e7f570db1250bb869efd723da35cea16daf4d8604a6d812981ed"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "8f38524a19699e4f07ca530fb12133ddebdc34f2315645fd8baeedde8de0bce0"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-READY-023.json",
+          "sha256": "10e7a53876b4dc5b664d6b7c90c164a421dc3b2b751b3a88513b81fe60be9d1b",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-READY-023.json#driver:packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt#step:doResolveTargetStartTurn#trace:public-route=turnBoundaryEffectLifecycle action=doResolveTargetStartTurn qRoute=target-start-turn-boundary-public-route",
+            "tasks/target-replay-evidence/CRPI-READY-023.json#driver:packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt#step:doResolveSourceNextTurn#trace:public-route=turnBoundaryEffectLifecycle action=doResolveSourceNextTurn qRoute=source-next-turn-boundary-public-route",
+            "tasks/target-replay-evidence/CRPI-READY-023.json#diagnostic:public-route=mixed-death-save-turn-boundary-frontier route-ownership-split",
+            "tasks/target-replay-evidence/CRPI-READY-023.json#diagnostic:public-route=turn-boundary-damage-concentration-frontier route-ownership-split",
+            "tasks/target-replay-evidence/CRPI-READY-023.json#diagnostic:public-route=invalid-turn-boundary-damage-roll-fill no-hit-point-owner-overclaim",
+            "tasks/target-replay-evidence/CRPI-READY-023.json#diagnostic:public-route=mixed-non-boundary-save-turn-boundary-save no-active-effect-owner-overclaim",
+            "tasks/target-replay-evidence/CRPI-READY-023.json#diagnostic:public-route=mixed-repeat-save-turn-boundary-frontier route-ownership-split"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-reducer-full-lane-20260704T211636Z/integration && git log --oneline -1 HEAD && git merge-base --is-ancestor a2c638f04c0a79028080c528a193dabe4901797a HEAD",
+          "status": "pass",
+          "detail": "Current task packet base ref ralph/cleanroom-reducer-full-lane-20260704T211636Z/integration resolved to a2c638f04 Mark Ralph task 53 done; HEAD resolved to a2c638f04 Mark Ralph task 53 done; Base SHA a2c638f04c0a79028080c528a193dabe4901797a is an ancestor of HEAD. Round-4 reviewer merge note separately checked codex/cleanroom-reducer-full-lane-20260704T211636Z at 10baec507 Mark Ralph task 45 done."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime typecheck",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec vitest run src/turn-boundary-effect-lifecycle.mbt.test.ts -t \"splits mixed death-save\"",
+          "status": "pass",
+          "detail": "Mixed death-saving-throw plus turn-boundary damage/save discovery split route ownership correctly."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec vitest run src/turn-boundary-effect-lifecycle.mbt.test.ts -t \"splits concentration|does not route invalid\"",
+          "status": "pass",
+          "detail": "Turn-boundary damage concentration holes split to battleConcentration, and invalid duplicate turn-boundary damage roll fills emitted no battleHitPoint route."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec vitest run src/turn-boundary-effect-lifecycle.mbt.test.ts -t \"non-boundary end-turn save\"",
+          "status": "pass",
+          "detail": "Mixed spell condition end-turn save plus turn-start damage/save frontier did not route the non-turn-boundary save fill as turnBoundaryEffectLifecycle."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec vitest run src/turn-boundary-effect-lifecycle.mbt.test.ts -t \"mixed repeat-save\"",
+          "status": "pass",
+          "detail": "Mixed sleepPendingRepeatSave plus turn-start damage/save discovery split route ownership correctly."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec vitest run src/turn-boundary-effect-lifecycle.mbt.test.ts -t \"non-boundary end-turn save|mixed repeat-save\"",
+          "status": "pass",
+          "detail": "Route classifier still recognizes actual turn-start save fills through the centralized hole-id helper, and mixed repeat-save discovery remains split."
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 MBT_STEPS=2 pnpm --filter @dnd/battle-runtime exec vitest run src/turn-boundary-effect-lifecycle.mbt.test.ts 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "fail",
+          "detail": "Initial focused replay failed because the route replay tried to resolve the target save from partially-filled end-turn state; public endTurn expects accumulated fills for the same boundary subject."
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Both process checks exited 1 before the timed focused MBT replay, meaning no vitest or quint_evaluator process was running; no evaluator cleanup was needed."
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 MBT_STEPS=2 pnpm --filter @dnd/battle-runtime exec vitest run src/turn-boundary-effect-lifecycle.mbt.test.ts 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "8 tests passed; copied qRoute was compared to public endTurn route events for doResolveTargetStartTurn and doResolveSourceNextTurn, and the death-save, repeat-save, concentration, invalid-fill, and mixed non-boundary-save route regressions passed; final timed run TOTAL: 6s."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec vitest run src/turn-boundary-effect-lifecycle.mbt.test.ts",
+          "status": "pass",
+          "detail": "8 tests passed; copied qRoute was compared to public endTurn route events for both branches and all route regressions passed."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "Quality passed end to end; app lint reported warnings only and exited 0."
+        },
+        {
+          "command": "RAW/ubiquitous-language review against .references/srd-5.2.1/Playing-the-Game.md, .references/srd-5.2.1/Rules-Glossary.md, ASSUMPTIONS.md#A6, and UBIQUITOUS_LANGUAGE.md",
+          "status": "pass"
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 added public turnBoundaryEffectLifecycle route ownership and copied-route replay; round 2 constrained route admission to owned public hole shapes and added mixed death-save/turn-boundary frontier evidence; round 3 preserved concentration frontier ownership and guarded invalid rolled-dice fills; round 4 narrowed save-fill admission to the actual spellTurnStartSave hole id and added mixed non-boundary-save evidence; round 5 preserved same-frontier repeat-save and turn-boundary discovery ownership; round 6 centralized the turn-start save hole-id projection with the hole producer. No duplicate durable state or authored-identity dispatch was added."
+        }
+      ]
+    },
+    {
+      "taskId": "CRPI-READY-024",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "892adbb6352931ce8ea0e0d6064a19721b7b9d5b0c912f6558535282176dc9a7"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "c1ece5d6dbf12e5270fac74d2a6453127e64fe41181b1678bd3da10a9f4642a1"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "be8e9912fbbea676ccf55396de145e569fc97658d187b1c7b427751c01172564"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-READY-024.json",
+          "sha256": "058c0105a54afa576abb0deef455d88e517aeaab315718c5ed17559b4a5fdc15",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-READY-024.json#driver:packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt#step:doResolveSapMasteryPropertyHit#trace:public-route=weaponMasteryProperty action=doResolveSapMasteryPropertyHit qRoute=sap-active-effect-rider-public-route",
+            "tasks/target-replay-evidence/CRPI-READY-024.json#driver:packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt#step:doResolveToppleMasteryPropertyFailedSavingThrow#trace:public-route=weaponMasteryProperty action=doResolveToppleMasteryPropertyFailedSavingThrow qRoute=topple-condition-rider-public-route",
+            "tasks/target-replay-evidence/CRPI-READY-024.json#driver:packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt#step:doResolveCleaveMasteryPropertySecondTargetHit#trace:public-route=weaponMasteryProperty action=doResolveCleaveMasteryPropertySecondTargetHit qRoute=cleave-second-target-hit-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-reducer-full-lane-20260704T211636Z/integration && git log --oneline -1 HEAD && git merge-base --is-ancestor e0a4a98bf52475bb489fb8aee4c6fbb0779a96be HEAD",
+          "status": "pass",
+          "detail": "Base ref and HEAD both resolved to e0a4a98bf Mark Ralph task 61 done; Base SHA is an ancestor of HEAD."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime typecheck",
+          "status": "pass"
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/battle-runtime exec vitest run src/weapon-mastery-selected-identity.mbt.test.ts 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "3 tests passed; TOTAL: 10s"
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs"
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "All quality stages passed; app lint reported warnings only and exited 0."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 2 verified no duplicate durable state, no authored-identity dispatch, and no remaining reasonable Task 65 findings."
+        }
+      ]
+    },
+    {
+      "taskId": "CRPI-READY-025",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "60d11398f3d1248f2298fc99e0a5b581ad70a5a1afd9b0300c1a9b6808c922c8"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "adb567901b6ed2f3f47da52d2cc9369b7ae7770ccabba92789029e7cbaeccc0a"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "45e8dfed06bf28260fc8432cc81bd1dc65ae18b0dc7bc80053a66c234a19a6bf"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-READY-025.json",
+          "sha256": "46778a1997f520fee5dd78ade8964c768e2ae21a689b12facd4d4328fb2ad301",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-READY-025.json#driver:packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt#step:doResolveEldritchBlast#trace:public-route=zeroHitPointSpellEffectTeardown action=doResolveEldritchBlast qRoute=zero-hit-point-mid-resolution-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 codex/cleanroom-reducer-full-lane-20260704T211636Z && git log --oneline -1 HEAD && git merge-base --is-ancestor e000fb1829090dadff171c1a5ffc108c36aadf44 HEAD",
+          "status": "pass",
+          "detail": "Required codex base ref resolved to 10baec507 Mark Ralph task 45 done; HEAD resolved to e000fb182 Mark Ralph task 65 done; Base SHA is an ancestor of HEAD, and HEAD is exactly the Base SHA."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime typecheck",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec vitest run src/zero-hit-point-mid-resolution.mbt.test.ts -t \"does not route readied-spell\"",
+          "status": "pass",
+          "detail": "1 test passed; verifies readied-spell Concentration cleanup at 0 HP does not emit zeroHitPointSpellEffectTeardown."
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Both process checks exited 1 before each timed focused MBT replay, meaning no vitest or quint_evaluator process was running; no evaluator cleanup was needed."
+        },
+        {
+          "command": "START=$(date +%s); pnpm --filter @dnd/battle-runtime exec vitest run src/zero-hit-point-mid-resolution.mbt.test.ts 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "4 tests passed; copied qRoute was compared to public start_battle, discover_battle_acts, and resolve_battle_subject route events; readied-spell Concentration cleanup does not over-emit the spell-effect teardown route; final timed run TOTAL: 7s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "All quality stages passed; app lint reported warnings only and exited 0."
+        },
+        {
+          "command": "RAW/ubiquitous-language review against .references/srd-5.2.1/Playing-the-Game.md, .references/srd-5.2.1/Rules-Glossary.md, .references/srd-5.2.1/Spells/Descriptions-E-L.md, .references/srd-5.2.1/Spells/Descriptions-S-Z.md, and UBIQUITOUS_LANGUAGE.md",
+          "status": "pass"
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 added zeroHitPointSpellEffectTeardown route ownership and Concentration Saving Throw routing; round 2 aligned spell-attack-sequence route holes to copied qRoute procedure families; round 3 fixed task-base artifact wording; round 4 gated zeroHitPointSpellEffectTeardown on spell-effect Concentration and added readied-spell negative coverage."
+        }
+      ]
+    },
+    {
+      "taskId": "CRPI-READY-026",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "rules-core",
+      "selectedDrivers": [
+        "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "17213710aa44f50bfdc512d8ebc79406759a700ecf38b3410df84efd0335db08"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "2b850c46a0e945f5f62adc1b2c3d026f39a0d3464d3143ba7ae2186d33b7f941"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "04504be70f3a244c85943d90518fd914306dad76f2b25d5d99961ba840a92584"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-READY-026/README.md",
+          "sha256": "b2658c0b6cfc1a977ab3204c01431e684742a46324a989345d431f4d315c5cb1"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-READY-026.json",
+          "sha256": "07190d8d69388c9480569d9bedf262b9006c8af57c2972152cff9dfbfcae8eea",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandCastGrovel#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandCastGrovel qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowApproachContinues#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowApproachContinues qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowApproachNoMovement#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowApproachNoMovement qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowApproachWithinFive#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowApproachWithinFive qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowDrop#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowDrop qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowFlee#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowFlee qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowFleeNoMovement#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowFleeNoMovement qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowFleeOpportunityAttack#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowFleeOpportunityAttack qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowFleePartialRejected#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowFleePartialRejected qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowGrovel#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowGrovel qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandHaltSuppresses#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandHaltSuppresses qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doEnhanceAbilityChoice#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doEnhanceAbilityChoice qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillAcrobatics#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillAcrobatics qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillAnimalHandling#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillAnimalHandling qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillArcana#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillArcana qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillAthletics#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillAthletics qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillDeception#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillDeception qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillHistory#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillHistory qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillInsight#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillInsight qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillIntimidation#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillIntimidation qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillInvestigation#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillInvestigation qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillMedicine#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillMedicine qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillNature#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillNature qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillPerception#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillPerception qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillPerformance#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillPerformance qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillPersuasion#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillPersuasion qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillReligion#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillReligion qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillSleightOfHand#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillSleightOfHand qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillStealth#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillStealth qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillSurvival#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillSurvival qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doSearchFails#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doSearchFails qComponentRoute=ability-skill-command-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doSearchSucceeds#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doSearchSucceeds qComponentRoute=ability-skill-command-component-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 codex/cleanroom-reducer-full-lane-20260704T211636Z && git log --oneline -1 HEAD && git merge-base --is-ancestor aa332e50c603653b886e028c2c9844cbad43f1e2 HEAD",
+          "status": "pass",
+          "detail": "Declared codex base ref resolved to 10baec507 Mark Ralph task 45 done; HEAD resolved to aa332e50c Mark Ralph task 66 done; Base SHA aa332e50c603653b886e028c2c9844cbad43f1e2 is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language review against .references/srd-5.2.1/Playing-the-Game.md, .references/srd-5.2.1/Rules-Glossary.md, .references/srd-5.2.1/Spells/Descriptions-A-D.md, .references/srd-5.2.1/Spells/Descriptions-E-L.md, and UBIQUITOUS_LANGUAGE.md",
+          "status": "pass"
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Both process checks exited 1 before the timed focused MBT replay, meaning no vitest or quint_evaluator process was running; no evaluator cleanup was needed."
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 MBT_STEPS=32 pnpm --filter @dnd/battle-runtime exec vitest run src/rule-core-ability-skill-command.mbt.test.ts 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "1 test passed; copied qComponentRoute was compared through RuleCoreAbilitySkillCommandOwner for all 32 step branch obligations; final timed run TOTAL: 46s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "Quality passed end to end; app lint reported warnings only and exited 0."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 verified RAW traceability, component-first architecture, adapter quarantine, no duplicate durable state, no authored-identity dispatch, and no remaining reasonable Task 68 findings."
+        }
+      ]
+    },
+    {
+      "taskId": "CRPI-READY-027",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "rules-core",
+      "selectedDrivers": [
+        "packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "c84d674259969fed3da21201b9372471eeffa8faee4faade60c997427791cb26"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "29c025a0579fc96b7b4b4539f3411802dd7b11ef0ae38e3823dc0f72dd6f631f"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "f17daba033283c4868ffa197d8f4a5baa1bdf6eba6f843511473d5d65309dadd"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-READY-027/README.md",
+          "sha256": "dd016fa5e93a2f026bbfaaf0046688ca3c34dda24b83eb573a3100004d5c9595"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-READY-027.json",
+          "sha256": "89cb567768d947262e8eea3cc70ea9219c886e8c8de1e3a1898cdc64b6a759b4",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-READY-027.json#driver:packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt#step:doMeleeKnockOut#trace:component-route=RuleCoreAttackDamageDispositionOwner action=doMeleeKnockOut qComponentRoute=attack-damage-disposition-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-027.json#driver:packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt#step:doRejectRangedKnockOut#trace:component-route=RuleCoreAttackDamageDispositionOwner action=doRejectRangedKnockOut qComponentRoute=attack-damage-disposition-component-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-reducer-full-lane-20260704T211636Z/integration && git log --oneline -1 HEAD && git merge-base --is-ancestor 547d20c6c4d960c049c918d360aa704880ee4b3c HEAD",
+          "status": "pass",
+          "detail": "Declared Ralph base ref and HEAD both resolved to 547d20c6c Mark Ralph task 68 done; Base SHA 547d20c6c4d960c049c918d360aa704880ee4b3c is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language review against .references/srd-5.2.1/Playing-the-Game.md, .references/srd-5.2.1/Rules-Glossary.md, and UBIQUITOUS_LANGUAGE.md",
+          "status": "pass"
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Both process checks exited 1 before the timed focused MBT replay, meaning no vitest or quint_evaluator process was running; no evaluator cleanup was needed."
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 MBT_STEPS=2 pnpm --filter @dnd/battle-runtime exec vitest run src/rule-core-attack-damage-disposition.mbt.test.ts 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "1 test passed; copied qComponentRoute was compared through RuleCoreAttackDamageDispositionOwner for both step branch obligations; final timed run TOTAL: 7s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "Quality passed end to end; app lint reported warnings only and exited 0."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 verified RAW traceability, component-first architecture, adapter quarantine, no duplicate durable state, no authored-identity dispatch, and no remaining reasonable Task 69 findings."
+        }
+      ]
     }
   ]
 }

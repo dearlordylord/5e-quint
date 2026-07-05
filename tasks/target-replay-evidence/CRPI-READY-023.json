@@ -1,0 +1,304 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/turn-boundary-effect-lifecycle.mbt.test.ts turn-boundary copied qRoute versus public endTurn replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.route.mbt.qnt",
+      "qntFileSha256": "7d2db70e28bf5f48ddb7ee5a7118798384e67cc6526ee9281b174aa611586226",
+      "routeConnectorSha256": "18cb8604034e21257e61b6e52f5e3d4771c0b51b041632a20506ff9768ffb261",
+      "branchFamily": "step",
+      "branchAction": "doResolveTargetStartTurn",
+      "observedActionTaken": "doResolveTargetStartTurn",
+      "harnessTestPath": "packages/battle-runtime/src/turn-boundary-effect-lifecycle.mbt.test.ts",
+      "traceId": "public-route=turnBoundaryEffectLifecycle action=doResolveTargetStartTurn qRoute=target-start-turn-boundary-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doResolveTargetStartTurn",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/turn-boundary-effect-lifecycle.mbt.test.ts#createTurnBoundaryRouteReplayDriver"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "005787f6775d1d4880c1acbfb6bea2451c158cb71671925f335e957a7ff24f9d",
+        "observedProjectionSha256": "005787f6775d1d4880c1acbfb6bea2451c158cb71671925f335e957a7ff24f9d",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doResolveTargetStartTurn",
+          "qntStateField": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "turn_advancement",
+            "packages/battle-runtime/src/index.ts#endTurn"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(state) and BattleResolutionResult.routeEvents during endTurn target start-turn damage/save resolution",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#endTurn"
+        },
+        "checkedTargetStateFields": [
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=turnBoundaryEffectLifecycle",
+          "BattleReducerRouteEvent.owner=battleTurnBoundary",
+          "BattleReducerRouteEvent.owner=battleHitPoint",
+          "BattleReducerRouteEvent.owner=battleActiveEffect",
+          "BattleState.initiative",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.activeEffects"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.route.mbt.qnt",
+      "qntFileSha256": "7d2db70e28bf5f48ddb7ee5a7118798384e67cc6526ee9281b174aa611586226",
+      "routeConnectorSha256": "18cb8604034e21257e61b6e52f5e3d4771c0b51b041632a20506ff9768ffb261",
+      "branchFamily": "step",
+      "branchAction": "doResolveSourceNextTurn",
+      "observedActionTaken": "doResolveSourceNextTurn",
+      "harnessTestPath": "packages/battle-runtime/src/turn-boundary-effect-lifecycle.mbt.test.ts",
+      "traceId": "public-route=turnBoundaryEffectLifecycle action=doResolveSourceNextTurn qRoute=source-next-turn-boundary-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doResolveSourceNextTurn",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/turn-boundary-effect-lifecycle.mbt.test.ts#createTurnBoundaryRouteReplayDriver"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "58b247e63021cf5e66b72c57ac60db05309d470f62ac72c2c2d0ff1c447350ca",
+        "observedProjectionSha256": "58b247e63021cf5e66b72c57ac60db05309d470f62ac72c2c2d0ff1c447350ca",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doResolveSourceNextTurn",
+          "qntStateField": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "turn_advancement",
+            "packages/battle-runtime/src/index.ts#endTurn"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(state) and BattleResolutionResult.routeEvents during endTurn target end-turn damage, active-effect expiry, and turn-boundary advancement",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#endTurn"
+        },
+        "checkedTargetStateFields": [
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=turnBoundaryEffectLifecycle",
+          "BattleReducerRouteEvent.owner=battleTurnBoundary",
+          "BattleReducerRouteEvent.owner=battleHitPoint",
+          "BattleReducerRouteEvent.owner=battleActiveEffect",
+          "BattleState.initiative",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.activeEffects",
+          "BattleCreatureState.activeOngoingFeatureOccurrences"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ],
+  "diagnosticChecks": [
+    {
+      "evidenceKind": "target-public-route-regression",
+      "harnessTestPath": "packages/battle-runtime/src/turn-boundary-effect-lifecycle.mbt.test.ts",
+      "traceId": "public-route=mixed-death-save-turn-boundary-frontier route-ownership-split",
+      "targetEntrypointSequence": [
+        "start_battle",
+        "turn_advancement",
+        "packages/battle-runtime/src/index.ts#endTurn"
+      ],
+      "observedFrontier": {
+        "BattleResolutionResult.tag": "needsHoles",
+        "BattleResolutionResult.holes": [
+          "deathSavingThrow",
+          "rolledDice",
+          "savingThrowOutcome"
+        ]
+      },
+      "observedRouteEvents": [
+        {
+          "kind": "discoverBattleActs",
+          "subject": "deathSavingThrow",
+          "holes": [
+            "deathSavingThrow"
+          ],
+          "owner": "battleHitPointAndZeroHpLifecycle"
+        },
+        {
+          "kind": "discoverBattleActs",
+          "subject": "turnBoundaryEffectLifecycle",
+          "holes": [
+            "rolledDice",
+            "savingThrowOutcome"
+          ],
+          "owner": "battleTurnBoundary"
+        }
+      ],
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-public-route-regression",
+      "harnessTestPath": "packages/battle-runtime/src/turn-boundary-effect-lifecycle.mbt.test.ts",
+      "traceId": "public-route=turn-boundary-damage-concentration-frontier route-ownership-split",
+      "targetEntrypointSequence": [
+        "start_battle",
+        "turn_advancement",
+        "packages/battle-runtime/src/index.ts#endTurn"
+      ],
+      "observedFrontier": {
+        "BattleResolutionResult.tag": "needsHoles",
+        "BattleResolutionResult.holes": [
+          "concentrationSavingThrow"
+        ]
+      },
+      "observedRouteEvents": [
+        {
+          "kind": "resolveBattleSubject",
+          "subject": "turnBoundaryEffectLifecycle",
+          "fill": "rolledDice",
+          "holes": [],
+          "owner": "battleHitPoint"
+        },
+        {
+          "kind": "resolveBattleSubject",
+          "subject": "concentrationTeardown",
+          "fill": "rolledDice",
+          "holes": [
+            "concentrationSavingThrow"
+          ],
+          "owner": "battleConcentration"
+        }
+      ],
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-public-route-regression",
+      "harnessTestPath": "packages/battle-runtime/src/turn-boundary-effect-lifecycle.mbt.test.ts",
+      "traceId": "public-route=invalid-turn-boundary-damage-roll-fill no-hit-point-owner-overclaim",
+      "targetEntrypointSequence": [
+        "start_battle",
+        "turn_advancement",
+        "packages/battle-runtime/src/index.ts#endTurn"
+      ],
+      "observedFrontier": {
+        "BattleResolutionResult.tag": "invalid",
+        "BattleResolutionResult.reason": "invalidFill",
+        "BattleResolutionResult.routeEvents": "undefined"
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-public-route-regression",
+      "harnessTestPath": "packages/battle-runtime/src/turn-boundary-effect-lifecycle.mbt.test.ts",
+      "traceId": "public-route=mixed-non-boundary-save-turn-boundary-save no-active-effect-owner-overclaim",
+      "targetEntrypointSequence": [
+        "start_battle",
+        "turn_advancement",
+        "packages/battle-runtime/src/index.ts#endTurn"
+      ],
+      "observedInitialFrontier": {
+        "BattleResolutionResult.tag": "needsHoles",
+        "BattleResolutionResult.holes": [
+          "savingThrowOutcome:spellConditionEndTurnSave",
+          "rolledDice:spellTurnStartDamage",
+          "savingThrowOutcome:spellTurnStartSave"
+        ]
+      },
+      "resolvedFill": "savingThrowOutcome:spellConditionEndTurnSave",
+      "observedPostFillFrontier": {
+        "BattleResolutionResult.tag": "needsHoles",
+        "BattleResolutionResult.holes": [
+          "rolledDice:spellTurnStartDamage"
+        ]
+      },
+      "observedRouteEvents": [
+        {
+          "kind": "resolveBattleSubject",
+          "subject": "commandEffect",
+          "fill": "savingThrowOutcome",
+          "holes": [
+            "rolledDice"
+          ],
+          "owner": "battleActiveEffect"
+        }
+      ],
+      "negativeAssertion": "No route event with subject=turnBoundaryEffectLifecycle, fill=savingThrowOutcome, owner=battleActiveEffect was emitted for the non-turn-boundary save fill.",
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-public-route-regression",
+      "harnessTestPath": "packages/battle-runtime/src/turn-boundary-effect-lifecycle.mbt.test.ts",
+      "traceId": "public-route=mixed-repeat-save-turn-boundary-frontier route-ownership-split",
+      "targetEntrypointSequence": [
+        "start_battle",
+        "turn_advancement",
+        "packages/battle-runtime/src/index.ts#endTurn"
+      ],
+      "observedFrontier": {
+        "BattleResolutionResult.tag": "needsHoles",
+        "BattleResolutionResult.holes": [
+          "savingThrowOutcome:sleepRepeatSave",
+          "rolledDice:spellTurnStartDamage",
+          "savingThrowOutcome:spellTurnStartSave"
+        ]
+      },
+      "observedRouteEvents": [
+        {
+          "kind": "discoverBattleActs",
+          "subject": "repeatSaveConditionEffect",
+          "holes": [
+            "savingThrowOutcome"
+          ],
+          "owner": "battleTurnBoundary"
+        },
+        {
+          "kind": "discoverBattleActs",
+          "subject": "turnBoundaryEffectLifecycle",
+          "holes": [
+            "rolledDice",
+            "savingThrowOutcome"
+          ],
+          "owner": "battleTurnBoundary"
+        }
+      ],
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}

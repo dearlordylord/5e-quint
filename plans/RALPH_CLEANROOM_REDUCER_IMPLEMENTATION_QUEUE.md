@@ -367,7 +367,7 @@
     {
       "number": 61,
       "id": "CRPI-READY-023",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-turn-boundary-effect-lifecycle"
     },
     {
@@ -391,13 +391,13 @@
     {
       "number": 65,
       "id": "CRPI-READY-024",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-weapon-mastery-selected-identity"
     },
     {
       "number": 66,
       "id": "CRPI-READY-025",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-zero-hit-point-mid-resolution"
     },
     {
@@ -409,13 +409,13 @@
     {
       "number": 68,
       "id": "CRPI-READY-026",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: rule-core-ability-skill-command"
     },
     {
       "number": 69,
       "id": "CRPI-READY-027",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: rule-core-attack-damage-disposition"
     },
     {
@@ -4136,7 +4136,7 @@ Plan Impact:
 
 ### Task 61 - CRPI-READY-023
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
@@ -4362,7 +4362,7 @@ Plan Impact:
 
 ### Task 65 - CRPI-READY-024
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
@@ -4417,7 +4417,7 @@ Plan Impact:
 
 ### Task 66 - CRPI-READY-025
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
@@ -4527,7 +4527,7 @@ Plan Impact:
 
 ### Task 68 - CRPI-READY-026
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
@@ -4582,7 +4582,7 @@ Plan Impact:
 
 ### Task 69 - CRPI-READY-027
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

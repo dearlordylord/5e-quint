@@ -1,47 +1,13 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-022",
-  "durableFields": [
-    {
-      "fieldPath": "AvailableBattleAct.routeEvents",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "owner": "executable-boundary-projection",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject.actionSpell.metamagic.effectKind=effective_spell_level_increase_for_extra_target, BattleSubject.actionSpell.invocation.procedure=rollModifier, and AvailableBattleAct.initialHoles=spellTargetList",
-        "boundary": "discoverBattleActs public reducer boundary"
-      }
-    },
-    {
-      "fieldPath": "BattleResolutionResult.routeEvents",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "owner": "executable-boundary-projection",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject.actionSpell.metamagic.effectKind=effective_spell_level_increase_for_extra_target, spellTargetList fill, and BattleResolutionResult resolved state",
-        "boundary": "resolveBattleSubject public reducer boundary"
-      }
-    },
-    {
-      "fieldPath": "BattleReducerRouteEvent.subject=metamagicEffectiveSpellLevel",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "owner": "executable-boundary-projection",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject.actionSpell.metamagic.effectKind=effective_spell_level_increase_for_extra_target and spellTargetList fill",
-        "boundary": "battleReducerRouteEventsForDiscoveredAct and battleReducerRouteForResolution"
-      }
-    }
-  ],
+  "taskId": "CRPI-READY-027",
+  "durableFields": [],
   "notes": [
-    "Task 53 introduced no new BattleState, BattleCreatureState, character spellcasting, or table-state durable field.",
-    "Sorcery Point ownership remains existing CharacterBattlePointPoolResourceState.pointsRemaining.",
-    "Spell-slot and action-economy ownership remain existing spell invocation resolver facts.",
-    "The Twinned effective spell level remains a typed selected Metamagic application fact on the BattleSubject and an invocation targeting projection derived from catalog/selection/admission boundaries.",
-    "Target-list ownership remains the existing table-supplied spellTargetList BattleFill and reducer-owned hole frontier.",
-    "Active Spell Effect ownership remains existing BattleCreatureState.activeEffects.",
-    "Selected Metamagic option identity remains at catalog, selection, admission, and SRD fixture boundaries.",
-    "Route events are public reducer boundary projections derived from typed Twinned Metamagic effect facts, promoted rollModifier spell procedure shape, and spellTargetList fills.",
-    "The Twinned effective-level route does not dispatch on Sorcerer authored feature identity, the Twinned Spell option name, Bless authored identity, QNT branch names, or fixture labels; production routing is admitted by typed effective_spell_level_increase_for_extra_target facts on promoted action-spell subjects."
+    "Task 69 introduced no new durable BattleState, BattleCreatureState, TurnState, action-resource, movement, condition, active-effect, Concentration, or interrupt-stack field.",
+    "RuleCoreAttackDamageDispositionOwner is component route ownership evidence, not runtime durable state.",
+    "Melee Knock Out projection remains existing BattleCreatureState Hit Points, conditions, and zero-HP lifecycle state.",
+    "Ranged Knock Out rejection remains existing typed attack kind and ResolutionResult invalid path; no duplicate acceptance flag is stored in durable state.",
+    "Component route behavior does not branch on authored spell names, QNT branch names, witness field names, connector filenames, or fixture labels.",
+    "qComponentRoute is a target replay boundary projection derived from the typed RuleCoreAttackDamageDispositionOwner route vocabulary."
   ]
 }

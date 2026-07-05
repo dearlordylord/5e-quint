@@ -1,5 +1,375 @@
 # Validation Report
 
+## CRPI-READY-027
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Driver: `packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt`
+- Component connector: `packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt`
+- `packages/battle-runtime/rule-core-component-route.qnt`
+- `packages/battle-runtime/src/rule-core-attack-damage-disposition.mbt.test.ts`
+- `packages/battle-runtime/src/rule-core-component-route.ts`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Playing-the-Game.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+The component-first replay for attack damage disposition now has accepted target
+evidence for the copied `qComponentRoute` projection. The target harness records
+the reusable component route sequence parse input, admit input, call
+`RuleCoreAttackDamageDispositionOwner`, and project result before downstream attack route tasks consume
+this owner. The observed runtime projections are produced through public
+battle-runtime attack resolution for melee Knock Out acceptance and ranged Knock
+Out rejection, then compared to the copied component connector route.
+
+No production reducer state was added. Knock Out acceptance reuses existing
+`BattleCreatureState` Hit Points, Unconscious condition, and zero-HP lifecycle
+state. Ranged Knock Out rejection reuses the existing typed attack kind and
+invalid-resolution path. The component route is owned by typed route vocabulary,
+not authored spell identity, QNT branch names, witness field names, fixture
+labels, or connector filenames.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Harness | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt#step:doMeleeKnockOut` | `tasks/target-replay-evidence/CRPI-READY-027.json#driver:packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt#step:doMeleeKnockOut#trace:component-route=RuleCoreAttackDamageDispositionOwner action=doMeleeKnockOut qComponentRoute=attack-damage-disposition-component-route` | `packages/battle-runtime/src/rule-core-attack-damage-disposition.mbt.test.ts#replays Knock Out disposition acceptance and ranged rejection` | `covered` |
+| `packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt#step:doRejectRangedKnockOut` | `tasks/target-replay-evidence/CRPI-READY-027.json#driver:packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt#step:doRejectRangedKnockOut#trace:component-route=RuleCoreAttackDamageDispositionOwner action=doRejectRangedKnockOut qComponentRoute=attack-damage-disposition-component-route` | `packages/battle-runtime/src/rule-core-attack-damage-disposition.mbt.test.ts#replays Knock Out disposition acceptance and ranged rejection` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-027.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id pattern: `component-route=RuleCoreAttackDamageDispositionOwner action=<branchAction> qComponentRoute=attack-damage-disposition-component-route`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-READY-027/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 69.
+
+Verification results:
+
+- Base check passed: `git log --oneline -1 ralph/cleanroom-reducer-full-lane-20260704T211636Z/integration` and `git log --oneline -1 HEAD` both resolved to `547d20c6c Mark Ralph task 68 done`; `git merge-base --is-ancestor 547d20c6c4d960c049c918d360aa704880ee4b3c HEAD` passed.
+- RAW/ubiquitous-language review passed against Making an Attack, Damage Rolls, Hit Points, Knocking Out a Creature, Dropping to 0 Hit Points, and `UBIQUITOUS_LANGUAGE.md` terms Knock Out and Unconscious.
+- Focused MBT replay passed: `START=$(date +%s); MBT_TRACES=1 MBT_STEPS=2 pnpm --filter @dnd/battle-runtime exec vitest run src/rule-core-attack-damage-disposition.mbt.test.ts 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 1 test; final timed run `TOTAL: 7s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- `pnpm quality` passed end to end; app lint reported warnings only and exited 0.
+- Reviewer-loop convergence passed: round 1 verified RAW traceability, ubiquitous-language/domain terms, component-first architecture, adapter quarantine, no duplicate durable state, no authored-identity dispatch, and no remaining reasonable code-review findings.
+
+## CRPI-READY-026
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Driver: `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt`
+- Component connector: `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt`
+- `packages/battle-runtime/rule-core-component-route.qnt`
+- `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts`
+- `packages/battle-runtime/src/rule-core-component-route.ts`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Playing-the-Game.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md`
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+The component-first replay for ability checks, skills, Search, Guidance,
+Enhance Ability, and Command now has accepted target evidence for the copied
+`qComponentRoute` projection. The target harness records the reusable
+component route sequence parse input, admit input, call `RuleCoreAbilitySkillCommandOwner`,
+and project result before downstream battle route tasks consume this owner. The
+observed runtime projections are produced through public battle-runtime Search,
+Guidance, Enhance Ability, and Command calls, then compared to the copied
+component connector route.
+
+No production reducer state was added. Search reveal state remains
+`BattleCreatureState.hidden`, skill and ability roll-modifier effects remain
+`BattleCreatureState.activeEffects`, Command pending/effect state remains
+active effects plus existing condition, movement, turn-resource, and
+interrupt-stack state. The component route is owned by typed route vocabulary,
+not authored spell identity, QNT branch names, witness field names, fixture
+labels, or connector filenames.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Harness | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandCastGrovel` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandCastGrovel#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandCastGrovel qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowApproachContinues` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowApproachContinues#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowApproachContinues qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowApproachNoMovement` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowApproachNoMovement#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowApproachNoMovement qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowApproachWithinFive` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowApproachWithinFive#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowApproachWithinFive qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowDrop` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowDrop#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowDrop qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowFlee` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowFlee#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowFlee qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowFleeNoMovement` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowFleeNoMovement#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowFleeNoMovement qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowFleeOpportunityAttack` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowFleeOpportunityAttack#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowFleeOpportunityAttack qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowFleePartialRejected` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowFleePartialRejected#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowFleePartialRejected qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowGrovel` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandFollowGrovel#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandFollowGrovel qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandHaltSuppresses` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doCommandHaltSuppresses#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doCommandHaltSuppresses qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doEnhanceAbilityChoice` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doEnhanceAbilityChoice#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doEnhanceAbilityChoice qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillAcrobatics` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillAcrobatics#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillAcrobatics qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillAnimalHandling` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillAnimalHandling#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillAnimalHandling qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillArcana` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillArcana#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillArcana qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillAthletics` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillAthletics#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillAthletics qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillDeception` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillDeception#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillDeception qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillHistory` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillHistory#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillHistory qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillInsight` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillInsight#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillInsight qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillIntimidation` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillIntimidation#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillIntimidation qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillInvestigation` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillInvestigation#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillInvestigation qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillMedicine` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillMedicine#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillMedicine qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillNature` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillNature#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillNature qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillPerception` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillPerception#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillPerception qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillPerformance` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillPerformance#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillPerformance qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillPersuasion` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillPersuasion#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillPersuasion qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillReligion` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillReligion#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillReligion qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillSleightOfHand` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillSleightOfHand#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillSleightOfHand qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillStealth` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillStealth#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillStealth qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillSurvival` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doGuidanceSkillSurvival#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doGuidanceSkillSurvival qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doSearchFails` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doSearchFails#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doSearchFails qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+| `packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doSearchSucceeds` | `tasks/target-replay-evidence/CRPI-READY-026.json#driver:packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt#step:doSearchSucceeds#trace:component-route=RuleCoreAbilitySkillCommandOwner action=doSearchSucceeds qComponentRoute=ability-skill-command-component-route` | `packages/battle-runtime/src/rule-core-ability-skill-command.mbt.test.ts#replays closed reducer choices and Command next-turn consequences` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-026.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id pattern: `component-route=RuleCoreAbilitySkillCommandOwner action=<branchAction> qComponentRoute=ability-skill-command-component-route`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-READY-026/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 68.
+
+Verification results:
+
+- Base check passed: `git log --oneline -1 codex/cleanroom-reducer-full-lane-20260704T211636Z` resolved to `10baec507 Mark Ralph task 45 done`; `git log --oneline -1 HEAD` resolved to `aa332e50c Mark Ralph task 66 done`; `git merge-base --is-ancestor aa332e50c603653b886e028c2c9844cbad43f1e2 HEAD` passed.
+- RAW/ubiquitous-language review passed against Ability Checks, Skill Proficiencies, Search [Action], Guidance, Enhance Ability, Command, and `UBIQUITOUS_LANGUAGE.md` terms Action, Spell Effect, Movement, Reaction, and Condition.
+- Focused MBT replay passed: `START=$(date +%s); MBT_TRACES=1 MBT_STEPS=32 pnpm --filter @dnd/battle-runtime exec vitest run src/rule-core-ability-skill-command.mbt.test.ts 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 1 test; final timed run `TOTAL: 46s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- `pnpm quality` passed end to end; app lint reported warnings only and exited 0.
+- Reviewer-loop convergence passed: round 1 verified RAW traceability, ubiquitous-language/domain terms, component-first architecture, adapter quarantine, no duplicate durable state, no authored-identity dispatch, and no remaining reasonable code-review findings; final verification commands passed.
+
+## CRPI-READY-025
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Driver: `packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt`
+- Route connector: `packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+- Acceptance status: `accepted`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.route.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-reducer-route.qnt`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Playing-the-Game.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md`
+- `.references/srd-5.2.1/Spells/Descriptions-S-Z.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Files changed for the replay:
+
+- `packages/battle-runtime/src/battle-reducer/reducer-route.ts`
+- `packages/battle-runtime/src/zero-hit-point-mid-resolution.mbt.test.ts`
+- `tasks/target-replay-evidence/CRPI-READY-025.json`
+- `tasks/history/CRPI-READY-025/README.md`
+- `tasks/ENGINE_DEPTH_MANIFEST.json`
+- `tasks/STATE_OWNER_MANIFEST.json`
+- `tasks/RUN_LEDGER.json`
+- `tasks/VALIDATION_REPORT.md`
+
+The target route begins with `battleReducerStartRouteEvent`, discovers the spell
+attack sequence through `discoverBattleActs`, and observes copied `qRoute`
+events through public `resolveBattleSubject` calls. The replay covers Eldritch
+Blast target selection, first Attack Roll, first damage, the Concentration
+Saving Throw frontier, zero-Hit-Point Unconscious condition transition,
+Concentration teardown, dependent Spell Effect cleanup, and second-beam
+continuation against post-teardown state.
+
+No duplicate durable state was introduced. Hit Points remain
+`BattleCreatureState.hp`; zero-Hit-Point condition state remains
+`BattleCreatureState.conditions`; Concentration remains
+`BattleCreatureState.concentration`; dependent Spell Effect cleanup remains
+`BattleCreatureState.activeEffects`. Route admission is derived from typed spell
+attack sequence fills, route hole families, and before/after BattleState facts.
+No authored spell name, QNT branch name, witness field name, connector filename,
+or fixture label is used for production behavior dispatch.
+
+Branch evidence:
+
+| Obligation | Evidence | Harness | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt#step:doResolveEldritchBlast` | `tasks/target-replay-evidence/CRPI-READY-025.json#driver:packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt#step:doResolveEldritchBlast#trace:public-route=zeroHitPointSpellEffectTeardown action=doResolveEldritchBlast qRoute=zero-hit-point-mid-resolution-public-route` | `packages/battle-runtime/src/zero-hit-point-mid-resolution.mbt.test.ts#observes the copied zero-Hit-Point qRoute through public reducer entrypoints` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-025.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id: `public-route=zeroHitPointSpellEffectTeardown action=doResolveEldritchBlast qRoute=zero-hit-point-mid-resolution-public-route`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-READY-025/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 66.
+
+Plan Impact:
+
+- Status: `none`
+- Affected task: Task 66 / `CRPI-READY-025` is unblocked by accepted copied `qRoute` replay evidence.
+- Observations:
+  - `spellAttackProcedure` route holes for spell attack sequences represent remaining procedure families, not only the immediate public hole frontier.
+  - `zeroHitPointSpellEffectTeardown` is now a public reducer route subject derived from existing zero-Hit-Point, condition, Concentration, and active-effect state transitions.
+- Required plan edits: none.
+
+Verification results:
+
+- Base check passed: the required codex base ref `codex/cleanroom-reducer-full-lane-20260704T211636Z` resolved to `10baec507 Mark Ralph task 45 done`; `HEAD` resolved to `e000fb182 Mark Ralph task 65 done`; the task Base SHA `e000fb1829090dadff171c1a5ffc108c36aadf44` was an ancestor of `HEAD`, and `HEAD` is exactly the Base SHA.
+- RAW/ubiquitous-language review passed against SRD 5.2.1 `.references/srd-5.2.1/Playing-the-Game.md#Dropping to 0 Hit Points` and `#Falling Unconscious`, `.references/srd-5.2.1/Rules-Glossary.md#Concentration`, `#Incapacitated`, and `#Unconscious`, `.references/srd-5.2.1/Spells/Descriptions-E-L.md#Eldritch Blast`, `.references/srd-5.2.1/Spells/Descriptions-S-Z.md#Shield of Faith`, and `UBIQUITOUS_LANGUAGE.md` terms Hit Points, Unconscious, Incapacitated, Concentration, Spell Effect, and Spell Attack.
+- `pnpm --filter @dnd/battle-runtime typecheck` passed.
+- `pnpm --filter @dnd/battle-runtime exec vitest run src/zero-hit-point-mid-resolution.mbt.test.ts -t "does not route readied-spell"` passed with 1 test; readied-spell Concentration cleanup at 0 HP does not emit `zeroHitPointSpellEffectTeardown`.
+- Initial timed focused MBT replay failed because production route projection still exposed the immediate spell-attack-sequence hole frontier and object target boundary instead of the copied procedure-level route holes. The route projection was corrected before the passing run.
+- MBT process precheck passed before each timed focused replay: `ps aux | grep vitest | grep -v grep` and `ps aux | grep quint_evaluator | grep -v grep` found no running processes; no evaluator cleanup was needed.
+- `START=$(date +%s); pnpm --filter @dnd/battle-runtime exec vitest run src/zero-hit-point-mid-resolution.mbt.test.ts 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 4 tests; copied `qRoute` was compared to public `battleReducerStartRouteEvent`, `discoverBattleActs`, and `resolveBattleSubject` route events for `doResolveEldritchBlast`, and readied-spell Concentration cleanup stayed out of the spell-effect teardown route; final timed run `TOTAL: 7s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- `pnpm quality` passed end to end; app lint reported warnings only and exited 0.
+- Reviewer-loop convergence round 1 identified and fixed the missing production `zeroHitPointSpellEffectTeardown` route subject and Concentration Saving Throw ownership; round 2 identified and fixed spell-attack-sequence route hole projection so public replay matches copied `qRoute`; round 3 corrected task-base artifact wording; round 4 gated `zeroHitPointSpellEffectTeardown` on spell-effect Concentration and added readied-spell negative coverage.
+
+## CRPI-READY-024
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Driver: `packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt`
+- Route connector: `packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+- Acceptance status: `accepted`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.route.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-reducer-route.qnt`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Equipment.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+Weapon Mastery selected-identity replay now compares the copied
+`WeaponMasteryPropertyRouteSubject` `qRoute` to public reducer route events.
+The target driver derives its projection by calling public reducer entrypoints:
+the route begins with `battleReducerStartRouteEvent`, discovers the weapon
+Attack act through `discoverBattleActs`, then resolves target choice, Attack
+Roll, damage roll, Saving Throw outcome, Unit Feature decision, and Cleave
+second-attack fills through `resolveBattleSubject`.
+
+The runtime does not add a parallel mastery-property ledger. Selected mastery
+identity remains a catalog/admission reference; target Hit Points remain in
+`BattleCreatureState.hp`; Topple Prone lifecycle remains in
+`BattleCreatureState.conditions`; Sap next-Attack-Roll rider state remains in
+`BattleCreatureState.activeEffects`; Cleave once-per-turn use remains in
+`BattleState.currentTurnResources.weaponMasteryCleaveAttackersUsedThisTurn`.
+Route admission is derived from typed weapon Attack fills, mastery rider hole
+families, active-effect/condition state changes, and feature-resource
+settlement.
+
+Generated branch coverage:
+
+| Obligation | Target replay evidence | Diagnostic tests | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt#step:doResolveSapMasteryPropertyHit` | `tasks/target-replay-evidence/CRPI-READY-024.json#driver:packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt#step:doResolveSapMasteryPropertyHit#trace:public-route=weaponMasteryProperty action=doResolveSapMasteryPropertyHit qRoute=sap-active-effect-rider-public-route` | `packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts#compares Weapon Mastery property public reducer routes to copied qRoute` | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt#step:doResolveToppleMasteryPropertyFailedSavingThrow` | `tasks/target-replay-evidence/CRPI-READY-024.json#driver:packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt#step:doResolveToppleMasteryPropertyFailedSavingThrow#trace:public-route=weaponMasteryProperty action=doResolveToppleMasteryPropertyFailedSavingThrow qRoute=topple-condition-rider-public-route` | `packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts#compares Weapon Mastery property public reducer routes to copied qRoute` | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt#step:doResolveCleaveMasteryPropertySecondTargetHit` | `tasks/target-replay-evidence/CRPI-READY-024.json#driver:packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt#step:doResolveCleaveMasteryPropertySecondTargetHit#trace:public-route=weaponMasteryProperty action=doResolveCleaveMasteryPropertySecondTargetHit qRoute=cleave-second-target-hit-public-route` | `packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts#compares Weapon Mastery property public reducer routes to copied qRoute` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-024.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace ids:
+  - `public-route=weaponMasteryProperty action=doResolveSapMasteryPropertyHit qRoute=sap-active-effect-rider-public-route`
+  - `public-route=weaponMasteryProperty action=doResolveToppleMasteryPropertyFailedSavingThrow qRoute=topple-condition-rider-public-route`
+  - `public-route=weaponMasteryProperty action=doResolveCleaveMasteryPropertySecondTargetHit qRoute=cleave-second-target-hit-public-route`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-READY-024/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 65.
+
+Plan Impact:
+
+- Status: `none`
+- Affected tasks:
+  - Task 65 / `CRPI-READY-024`: `unblocked`; copied `qRoute` replay is accepted.
+  - Future Weapon Mastery property expansion tasks for Graze, Nick, Push, Slow, and Vex: `left unchanged`.
+- Observations:
+  - Public reducer-route vocabulary now includes `weaponMasteryProperty` plus `unitFeatureDecision` holes/fills so Cleave can be represented without a fixture-local route table.
+  - Existing BattleState owners already cover the durable facts required by the route: HP, active effects, conditions, and Cleave turn-use resources.
+- Required plan edits: none.
+
+Verification results:
+
+- Base check passed: declared base ref `ralph/cleanroom-reducer-full-lane-20260704T211636Z/integration` was `e0a4a98bf Mark Ralph task 61 done`, `HEAD` was `e0a4a98bf Mark Ralph task 61 done`, and `git merge-base --is-ancestor e0a4a98bf52475bb489fb8aee4c6fbb0779a96be HEAD` exited 0.
+- `pnpm --filter @dnd/battle-runtime typecheck` passed.
+- Initial focused route replay showed the deterministic Topple/Cleave route wrappers needed leaf action callbacks for the TS driver; the connector wrappers were changed to the existing `any { leaf }` pattern.
+- `START=$(date +%s); MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/battle-runtime exec vitest run src/weapon-mastery-selected-identity.mbt.test.ts 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 3 tests and `TOTAL: 10s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- `pnpm quality` passed end to end. The app lint stage reported warnings only and exited 0.
+- RAW/ubiquitous-language review passed against Equipment.md Mastery Properties, Sap, Topple, Cleave, and UBIQUITOUS_LANGUAGE.md terms for Mastery Property, Weapon Mastery, Attack Roll, Saving Throw, Condition, Rider, and Hit Points.
+- Reviewer-loop convergence round 1 identified and fixed missing public route projection for ordinary weapon attacks, `unitFeatureDecision` route holes/fills, and deterministic wrapper callback shape; round 2 verified no duplicate durable state, no authored-identity dispatch, and no remaining reasonable RAW/domain, architecture/connascence, or code-review findings in the touched surface.
+
 ## CRPI-READY-019
 
 - Manifest source commit SHA: `0da15bfe0871d5a45782c7ac355d622be8907d44`
@@ -2445,3 +2815,147 @@ Verification results:
   Twinned roll-modifier cast subjects with a `spellTargetList` fill. The run
   ledger base-check artifact was corrected to distinguish the revision prompt's
   Ralph base ref from the reviewer-feedback codex base ref.
+
+## CRPI-READY-023
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec`
+- Driver: `packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt`
+- Route connector: `packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.route.mbt.qnt`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Playing-the-Game.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `UBIQUITOUS_LANGUAGE.md`
+- `ASSUMPTIONS.md`
+
+Behavior implemented:
+
+The route replay for turn-boundary effect lifecycle now observes the copied
+`qRoute` projection through public battle reducer entrypoints. The replay starts
+from `battleReducerStartRouteEvent`, then uses `endTurn` to observe boundary
+discovery, rolled-dice Hit Point resolution, saving-throw active-effect
+resolution, target end-turn damage, active-effect expiry, and turn-boundary
+advancement.
+
+Revision round 2 constrained route admission to the actual public holes owned by
+each route subject. A mixed `endTurn` frontier with `deathSavingThrow`,
+turn-start damage, and turn-start save holes now emits one `deathSavingThrow`
+discovery event owned by `battleHitPointAndZeroHpLifecycle` and one
+`turnBoundaryEffectLifecycle` discovery event owned by `battleTurnBoundary`.
+
+Revision round 3 preserves non-turn-boundary route metadata after turn-boundary
+damage. If turn-boundary damage opens a `concentrationSavingThrow` frontier, the
+public route evidence now emits the Hit Point owner event for the consumed
+damage roll and a separate `concentrationTeardown` event owned by
+`battleConcentration`. Invalid turn-boundary rolled-dice fills return the
+typed invalid result without a `battleHitPoint` ownership event.
+
+Revision round 4 narrows turn-boundary save-fill route admission to the actual
+`spellTurnStartSave` hole id. A mixed `endTurn` frontier with a normal spell
+condition end-turn save and a turn-start damage/save lifecycle now resolves the
+non-turn-boundary save as the generic command route without emitting
+`turnBoundaryEffectLifecycle` / `battleActiveEffect` ownership for that fill.
+
+Revision round 5 preserves turn-boundary discovery when a repeat-save condition
+frontier is present at the same `endTurn` boundary. A mixed
+`sleepPendingRepeatSave` plus turn-start damage/save frontier now emits both the
+`repeatSaveConditionEffect` discovery and the `turnBoundaryEffectLifecycle`
+discovery through public route events.
+
+Revision round 6 removes the cross-module string-value connascence for
+turn-start save hole ids. The hole producer now owns
+`spellTurnStartSavingThrowOutcomeHoleId`, and the route classifier reuses that
+constructor when deciding whether a `savingThrowOutcome` fill belongs to
+`turnBoundaryEffectLifecycle`.
+
+BattleState remains the durable owner for Initiative order and round
+advancement. Hit Points remain in `BattleCreatureState.hp`; active Spell
+Effects remain in `BattleCreatureState.activeEffects`; ongoing feature
+occurrences remain in `BattleCreatureState.activeOngoingFeatureOccurrences`.
+Same-timing order remains at the public turn-boundary hole/fill frontier. No
+authored identity, QNT branch name, witness field name, connector filename, or
+fixture label dispatch was added.
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-023.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id: `public-route=turnBoundaryEffectLifecycle action=doResolveTargetStartTurn qRoute=target-start-turn-boundary-public-route`
+- Reproduction trace id: `public-route=turnBoundaryEffectLifecycle action=doResolveSourceNextTurn qRoute=source-next-turn-boundary-public-route`
+- Regression trace id: `public-route=mixed-death-save-turn-boundary-frontier route-ownership-split`
+- Regression trace id: `public-route=turn-boundary-damage-concentration-frontier route-ownership-split`
+- Regression trace id: `public-route=invalid-turn-boundary-damage-roll-fill no-hit-point-owner-overclaim`
+- Regression trace id: `public-route=mixed-non-boundary-save-turn-boundary-save no-active-effect-owner-overclaim`
+- Regression trace id: `public-route=mixed-repeat-save-turn-boundary-frontier route-ownership-split`
+
+Branch evidence:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt#step:doResolveTargetStartTurn` | `tasks/target-replay-evidence/CRPI-READY-023.json#driver:packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt#step:doResolveTargetStartTurn#trace:public-route=turnBoundaryEffectLifecycle action=doResolveTargetStartTurn qRoute=target-start-turn-boundary-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt#step:doResolveSourceNextTurn` | `tasks/target-replay-evidence/CRPI-READY-023.json#driver:packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt#step:doResolveSourceNextTurn#trace:public-route=turnBoundaryEffectLifecycle action=doResolveSourceNextTurn qRoute=source-next-turn-boundary-public-route` | `_none_` | `covered` |
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-READY-023/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 61.
+
+Verification results:
+
+- Base check passed: the current task packet's declared Ralph base ref
+  `ralph/cleanroom-reducer-full-lane-20260704T211636Z/integration` resolved to
+  `a2c638f04 Mark Ralph task 53 done`, `HEAD` resolved to
+  `a2c638f04 Mark Ralph task 53 done`, and the task Base SHA
+  `a2c638f04c0a79028080c528a193dabe4901797a` was an ancestor of `HEAD`.
+  The round-4 reviewer merge note separately checked
+  `codex/cleanroom-reducer-full-lane-20260704T211636Z`, which resolved to
+  `10baec507 Mark Ralph task 45 done`.
+- `pnpm --filter @dnd/battle-runtime typecheck` passed.
+- `pnpm --filter @dnd/battle-runtime exec vitest run src/turn-boundary-effect-lifecycle.mbt.test.ts -t "non-boundary end-turn save|mixed repeat-save"` passed; the route classifier still recognizes actual turn-start save fills through the centralized hole-id helper, and mixed repeat-save discovery remains split.
+- First focused replay attempt failed because the route replay tried to resolve
+  the target save from partially-filled end-turn state; the public reducer
+  protocol keeps the same boundary subject and expects accumulated fills.
+- `pnpm --filter @dnd/battle-runtime exec vitest run src/turn-boundary-effect-lifecycle.mbt.test.ts -t "splits mixed death-save"` passed; mixed Death Saving Throw plus turn-boundary damage/save discovery split route ownership correctly.
+- `pnpm --filter @dnd/battle-runtime exec vitest run src/turn-boundary-effect-lifecycle.mbt.test.ts -t "splits concentration|does not route invalid"` passed; turn-boundary damage concentration holes split to `battleConcentration`, and invalid duplicate turn-boundary damage roll fills emitted no `battleHitPoint` route.
+- `pnpm --filter @dnd/battle-runtime exec vitest run src/turn-boundary-effect-lifecycle.mbt.test.ts -t "non-boundary end-turn save"` passed; mixed spell condition end-turn save plus turn-start damage/save frontier did not route the non-turn-boundary save fill as `turnBoundaryEffectLifecycle`.
+- `pnpm --filter @dnd/battle-runtime exec vitest run src/turn-boundary-effect-lifecycle.mbt.test.ts -t "mixed repeat-save"` passed; mixed `sleepPendingRepeatSave` plus turn-start damage/save discovery split route ownership correctly.
+- MBT process precheck passed before the timed focused replay:
+  `ps aux | grep vitest | grep -v grep` and
+  `ps aux | grep quint_evaluator | grep -v grep` found no running processes; no
+  evaluator cleanup was needed.
+- `START=$(date +%s); MBT_TRACES=1 MBT_STEPS=2 pnpm --filter @dnd/battle-runtime exec vitest run src/turn-boundary-effect-lifecycle.mbt.test.ts 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 8 tests; copied `qRoute` was compared to public `endTurn` route events for both branches and all route regressions passed; final timed run `TOTAL: 6s`.
+- `pnpm --filter @dnd/battle-runtime exec vitest run src/turn-boundary-effect-lifecycle.mbt.test.ts` passed with 8 tests; copied `qRoute` was compared to public `endTurn` route events for both branches and all route regressions passed.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- `pnpm quality` passed end to end; app lint reported warnings only and exited 0.
+- RAW/ubiquitous-language review passed against SRD 5.2.1 The Order of Combat,
+  Simultaneous Effects, Reaction, Ready Action, Burning, `ASSUMPTIONS.md#A6`,
+  and `UBIQUITOUS_LANGUAGE.md` terms Boundary Crossing, Spell Effect, Timer,
+  Reaction, and Turn Structure.
+- Reviewer-loop convergence passed: round 1 added public
+  `turnBoundaryEffectLifecycle` route ownership and copied-route replay; round
+  2 verified route admission is typed by `runtimeCommand` `endTurn`, active
+  effect kind shape, public holes/fills, and existing BattleState, Hit Point,
+  active-effect, and ongoing-feature owners; round 3 verified concentration
+  frontier preservation and invalid-fill non-ownership; round 4 verified that
+  non-turn-boundary saving throw fills do not overclaim turn-boundary active
+  effect ownership; round 5 verified repeat-save discovery no longer hides
+  same-frontier turn-boundary lifecycle discovery; round 6 centralized the
+  turn-start save hole-id projection with the hole producer to remove duplicated
+  string-value connascence. No duplicate durable state or authored-identity
+  dispatch was added.

@@ -26,6 +26,7 @@ import {
   TWINNED_METAMAGIC_EFFECT_KIND,
 } from "./metamagic-support.ts";
 import { isHeightenedSpellTargetChoiceHoleId } from "./spells-damage-fills.ts";
+import { spellTurnStartSavingThrowOutcomeHoleId } from "./turn-end-movement.ts";
 
 export type BattleReducerRouteSubjectFamily =
   | "concentrationTeardown"
@@ -49,9 +50,12 @@ export type BattleReducerRouteSubjectFamily =
   | "saveGatedSpell"
   | "scalarBuffEffect"
   | "repeatSaveConditionEffect"
+  | "turnBoundaryEffectLifecycle"
+  | "zeroHitPointSpellEffectTeardown"
   | "slotSpell"
   | "spellAttackProcedure"
-  | "weaponAttack";
+  | "weaponAttack"
+  | "weaponMasteryProperty";
 
 export type BattleReducerRouteOwnerGroup =
   | "battleActionEconomy"
@@ -93,7 +97,8 @@ export type BattleReducerRouteHole =
   | "spellTargetAllocation"
   | "spellTargetList"
   | "targetAbilityChoices"
-  | "targetChoice";
+  | "targetChoice"
+  | "unitFeatureDecision";
 
 export type BattleReducerRouteFillKind =
   | "abilityChoice"
@@ -111,7 +116,8 @@ export type BattleReducerRouteFillKind =
   | "spellTargetAllocation"
   | "spellTargetList"
   | "targetAbilityChoices"
-  | "targetChoice";
+  | "targetChoice"
+  | "unitFeatureDecision";
 export type BattleReducerRouteFill =
   | BattleReducerRouteFillKind
   | {
@@ -218,6 +224,16 @@ export function battleReducerRouteEventsForDiscoveredAct(
   if (sleepRepeatSaveRoute !== undefined) {
     return [sleepRepeatSaveRoute];
   }
+  if (isWeaponAttackSubject(act.subject)) {
+    return [
+      {
+        kind: "discoverBattleActs",
+        subject: "weaponAttack",
+        holes: battleReducerRouteHoles(act.initialHoles),
+        owner: "battleActionEconomy",
+      },
+    ];
+  }
   if (isConcentrationTeardownDiscoverySubject(act.subject)) {
     return [
       {
@@ -318,15 +334,23 @@ export function battleReducerRouteEventsForDiscoveredAct(
     return undefined;
   }
   const actionOwner =
-    act.subject.invocation.tag === "spellSlot"
-      ? "battleSpellSlotAndActionEconomy"
-      : "battleActionEconomy";
+    act.subject.invocation.procedure === "spellAttackSequence"
+      ? "battleSpellAttackProcedure"
+      : act.subject.invocation.tag === "spellSlot"
+        ? "battleSpellSlotAndActionEconomy"
+        : "battleActionEconomy";
   const actionEconomyEvent: BattleReducerRouteEvent = {
     kind: "discoverBattleActs",
     subject: "spellAttackProcedure",
-    holes: battleReducerRouteHoles(act.initialHoles),
+    holes:
+      act.subject.invocation.procedure === "spellAttackSequence"
+        ? spellAttackSequenceRouteHoles(battleReducerRouteHoles(act.initialHoles))
+        : battleReducerRouteHoles(act.initialHoles),
     owner: actionOwner,
   };
+  if (act.subject.invocation.procedure === "spellAttackSequence") {
+    return [actionEconomyEvent];
+  }
   const hasObjectTargetBoundary = act.initialHoles.some(
     (hole) => hole.kind === "objectTargetChoice",
   );
@@ -386,6 +410,11 @@ export function battleReducerRouteForResolution(
   );
   if (deathSavingThrowRoute !== undefined) {
     return deathSavingThrowRoute;
+  }
+  const turnBoundaryEffectLifecycleRoute =
+    turnBoundaryEffectLifecycleRouteForResolution(input, result);
+  if (turnBoundaryEffectLifecycleRoute !== undefined) {
+    return turnBoundaryEffectLifecycleRoute;
   }
   const metamagicSpellDurationProjectionRoute =
     metamagicSpellDurationProjectionRouteForResolution(input, result);
@@ -452,12 +481,11 @@ export function battleReducerRouteForResolution(
   if (routeFill === undefined) {
     return undefined;
   }
-  const holes =
-    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
-  const [firstOwner, ...remainingOwners] = spellAttackProcedureRouteOwners(
-    input.subject,
+  const holes = spellAttackProcedureRouteHoles(input, result);
+  const [firstOwner, ...remainingOwners] = spellAttackProcedureRouteOwners({
     fill,
-  );
+    result,
+  });
   if (firstOwner === undefined) {
     return undefined;
   }
@@ -470,7 +498,11 @@ export function battleReducerRouteForResolution(
     holes,
     owner,
   });
-  return [eventForOwner(firstOwner), ...remainingOwners.map(eventForOwner)];
+  return [
+    eventForOwner(firstOwner),
+    ...remainingOwners.map(eventForOwner),
+    ...zeroHitPointSpellEffectTeardownRouteForResolution(input, fill, result),
+  ];
 }
 
 export function battleReducerRouteForInterrupt(
@@ -1397,35 +1429,49 @@ function deathSavingThrowRouteForResolution(
     if (result.tag === "invalid" && result.reason !== "wrongActor") {
       return undefined;
     }
-    return [
+    const turnBoundaryDiscovery =
+      turnBoundaryEffectLifecycleDiscoveryRouteForResolution(input, result);
+    return nonEmptyRouteEvents([
       {
         kind: "resolveBattleSubject",
         subject: "deathSavingThrow",
         fill: "deathSavingThrow",
         holes:
           result.tag === "needsHoles"
-            ? battleReducerRouteHoles(result.holes)
+            ? deathSavingThrowRouteHoles(result.holes)
             : [],
         owner: "battleHitPointAndZeroHpLifecycle",
       },
-    ];
+      ...(turnBoundaryDiscovery === undefined ? [] : [turnBoundaryDiscovery]),
+    ]);
   }
 
   if (
     result.tag !== "needsHoles" ||
-    !battleReducerRouteHoles(result.holes).includes("deathSavingThrow")
+    !deathSavingThrowRouteHoles(result.holes).includes("deathSavingThrow")
   ) {
     return undefined;
   }
 
-  return [
+  const turnBoundaryDiscovery =
+    turnBoundaryEffectLifecycleDiscoveryRouteForResolution(input, result);
+  return nonEmptyRouteEvents([
     {
       kind: "discoverBattleActs",
       subject: "deathSavingThrow",
-      holes: battleReducerRouteHoles(result.holes),
+      holes: deathSavingThrowRouteHoles(result.holes),
       owner: "battleHitPointAndZeroHpLifecycle",
     },
-  ];
+    ...(turnBoundaryDiscovery === undefined ? [] : [turnBoundaryDiscovery]),
+  ]);
+}
+
+function deathSavingThrowRouteHoles(
+  holes: readonly BattleHole[],
+): readonly BattleReducerRouteHole[] {
+  return battleReducerRouteHoles(
+    holes.filter((hole) => hole.kind === "deathSavingThrow"),
+  );
 }
 
 function concentrationRouteForResolution(
@@ -2188,16 +2234,21 @@ function sleepRepeatSaveTurnBoundaryRoute(
   if (fill === undefined) {
     if (result.tag === "needsHoles") {
       const holes = sleepRepeatSaveRouteHoles(result.holes);
+      const turnBoundaryDiscovery =
+        turnBoundaryEffectLifecycleDiscoveryRouteForResolution(input, result);
       return holes.length === 0
         ? undefined
-        : [
+        : nonEmptyRouteEvents([
             {
               kind: "discoverBattleActs",
               subject: "repeatSaveConditionEffect",
               holes,
               owner: "battleTurnBoundary",
             },
-          ];
+            ...(turnBoundaryDiscovery === undefined
+              ? []
+              : [turnBoundaryDiscovery]),
+          ]);
     }
     if (
       result.tag === "resolved" &&
@@ -2287,6 +2338,191 @@ function sleepRepeatSaveResolveWithoutFill(
     holes,
     owner,
   };
+}
+
+function turnBoundaryEffectLifecycleRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  if (!isEndTurnSubject(input.subject)) {
+    return undefined;
+  }
+  if (!battleHasTurnBoundaryLifecycleEffects(input.state)) {
+    return undefined;
+  }
+  if (result.tag === "invalid") {
+    return undefined;
+  }
+  const fill = input.fills.at(-1);
+  const holes =
+    result.tag === "needsHoles"
+      ? turnBoundaryEffectLifecycleRouteHoles(result.holes)
+      : [];
+  if (fill === undefined) {
+    const discovery = turnBoundaryEffectLifecycleDiscoveryRouteForResolution(
+      input,
+      result,
+    );
+    return discovery === undefined ? undefined : [discovery];
+  }
+
+  const routeFill = battleReducerRouteFill(fill);
+  if (routeFill === "rolledDice") {
+    const hitPointRoute: BattleReducerRouteEvent = {
+      kind: "resolveBattleSubject",
+      subject: "turnBoundaryEffectLifecycle",
+      fill: routeFill,
+      holes,
+      owner: "battleHitPoint",
+    };
+    const concentrationRoute =
+      turnBoundaryEffectLifecycleConcentrationRouteForResolution(
+        routeFill,
+        result,
+      );
+    return result.tag === "resolved" && holes.length === 0
+      ? [
+          hitPointRoute,
+          turnBoundaryEffectLifecycleResolveWithoutFill(
+            "battleActiveEffect",
+          ),
+          turnBoundaryEffectLifecycleResolveWithoutFill(
+            "battleTurnBoundary",
+          ),
+        ]
+      : nonEmptyRouteEvents([
+          hitPointRoute,
+          ...(concentrationRoute === undefined ? [] : [concentrationRoute]),
+        ]);
+  }
+  if (routeFill === "savingThrowOutcome") {
+    if (
+      fill.kind !== "savingThrowOutcome" ||
+      !isTurnBoundaryEffectLifecycleSavingThrowFill(input.state, fill)
+    ) {
+      return undefined;
+    }
+    return [
+      {
+        kind: "resolveBattleSubject",
+        subject: "turnBoundaryEffectLifecycle",
+        fill: routeFill,
+        holes,
+        owner: "battleActiveEffect",
+      },
+    ];
+  }
+  return undefined;
+}
+
+function turnBoundaryEffectLifecycleConcentrationRouteForResolution(
+  fill: BattleReducerRouteFill,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvent | undefined {
+  if (result.tag !== "needsHoles") {
+    return undefined;
+  }
+  const holes = concentrationSavingThrowRouteHoles(result.holes);
+  if (holes.length === 0) {
+    return undefined;
+  }
+  return {
+    kind: "resolveBattleSubject",
+    subject: "concentrationTeardown",
+    fill,
+    holes,
+    owner: "battleConcentration",
+  };
+}
+
+function turnBoundaryEffectLifecycleDiscoveryRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvent | undefined {
+  if (!isEndTurnSubject(input.subject)) {
+    return undefined;
+  }
+  if (!battleHasTurnBoundaryLifecycleEffects(input.state)) {
+    return undefined;
+  }
+  if (result.tag !== "needsHoles") {
+    return undefined;
+  }
+  const holes = turnBoundaryEffectLifecycleRouteHoles(result.holes);
+  if (holes.length === 0) {
+    return undefined;
+  }
+  return {
+    kind: "discoverBattleActs",
+    subject: "turnBoundaryEffectLifecycle",
+    holes,
+    owner: "battleTurnBoundary",
+  };
+}
+
+function turnBoundaryEffectLifecycleResolveWithoutFill(
+  owner: BattleReducerRouteOwnerGroup,
+): BattleReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubjectWithoutFill",
+    subject: "turnBoundaryEffectLifecycle",
+    holes: [],
+    owner,
+  };
+}
+
+function battleHasTurnBoundaryLifecycleEffects(state: BattleState): boolean {
+  return [...state.combatants.values()].some((combatant) =>
+    combatant.activeEffects.some(isTurnBoundaryLifecycleEffect),
+  );
+}
+
+function isTurnBoundaryLifecycleEffect(effect: BattleActiveEffect): boolean {
+  return (
+    effect.kind === "spellTurnStartDamageAndSave" ||
+    effect.kind === "spellTurnEndDamage"
+  );
+}
+
+function isTurnBoundaryEffectLifecycleSavingThrowFill(
+  state: BattleState,
+  fill: Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>,
+): boolean {
+  return [...state.combatants.values()].some((combatant) =>
+    combatant.activeEffects.some(
+      (effect) =>
+        effect.kind === "spellTurnStartDamageAndSave" &&
+        fill.holeId ===
+          spellTurnStartSavingThrowOutcomeHoleId(
+            combatant.combatantId,
+            effect,
+          ),
+    ),
+  );
+}
+
+function turnBoundaryEffectLifecycleRouteHoles(
+  holes: readonly BattleHole[],
+): readonly BattleReducerRouteHole[] {
+  return battleReducerRouteHoles(
+    holes.filter(isTurnBoundaryEffectLifecycleHole),
+  );
+}
+
+function concentrationSavingThrowRouteHoles(
+  holes: readonly BattleHole[],
+): readonly BattleReducerRouteHole[] {
+  return battleReducerRouteHoles(
+    holes.filter((hole) => hole.kind === "concentrationSavingThrow"),
+  );
+}
+
+function isTurnBoundaryEffectLifecycleHole(hole: BattleHole): boolean {
+  return (
+    (hole.kind === "rolledDice" &&
+      ("spellTurnStartDamage" in hole || "spellTurnEndDamage" in hole)) ||
+    (hole.kind === "savingThrowOutcome" && "spellTurnStartSave" in hole)
+  );
 }
 
 function sleepRepeatSaveSavingThrowFill(
@@ -2478,13 +2714,10 @@ function weaponAttackRouteForResolution(
   input: BattleResolutionInput,
   result: BattleResolutionResult,
 ): BattleReducerRouteEvents | undefined {
-  if (input.state.interruptStack.at(-1)?.kind !== "replayContinuation") {
-    return undefined;
-  }
   if (!isWeaponAttackSubject(input.subject)) {
     return undefined;
   }
-  if (result.tag !== "resolved") {
+  if (result.tag === "invalid") {
     return undefined;
   }
 
@@ -2493,24 +2726,108 @@ function weaponAttackRouteForResolution(
     return undefined;
   }
   const routeFill = battleReducerRouteFill(fill);
+  if (routeFill === undefined) {
+    return undefined;
+  }
+  const holes =
+    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
+  const event = (
+    subject: BattleReducerRouteSubjectFamily,
+    owner: BattleReducerRouteOwnerGroup,
+  ): BattleReducerRouteEvent => ({
+    kind: "resolveBattleSubject",
+    subject,
+    fill: routeFill,
+    holes,
+    owner,
+  });
+
+  if (weaponMasteryCleaveRouteStarted(input.fills)) {
+    return weaponMasteryCleaveRouteForResolution(input, result, event);
+  }
+
+  if (routeFill === "targetChoice") {
+    return [event("weaponAttack", "battleTargetSelection")];
+  }
+  if (routeFill === "attackRoll") {
+    return holes.includes("savingThrowOutcome")
+      ? [event("weaponMasteryProperty", "battleConditionLifecycle")]
+      : [event("weaponAttack", "battleAttackRoll")];
+  }
+  if (routeFill === "savingThrowOutcome") {
+    return [event("weaponMasteryProperty", "battleConditionLifecycle")];
+  }
   if (routeFill !== "rolledDice") {
     return undefined;
   }
 
-  const weaponDamageRoute: BattleReducerRouteEvent = {
-    kind: "resolveBattleSubject",
-    subject: "weaponAttack",
-    fill: routeFill,
-    holes: [],
-    owner: "battleHitPoint",
-  };
-  return [
-    weaponDamageRoute,
-    {
+  const weaponDamageRoute = event("weaponAttack", "battleHitPoint");
+  const routeTail: BattleReducerRouteEvent[] = [];
+  if (holes.includes("unitFeatureDecision")) {
+    routeTail.push({
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "weaponMasteryProperty",
+      holes,
+      owner: "battleFeatureResource",
+    });
+  } else if (combatantsActiveEffectsChanged(input.state, result.state)) {
+    routeTail.push({
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "weaponMasteryProperty",
+      holes,
+      owner: "battleActiveEffect",
+    });
+  }
+  if (
+    input.state.interruptStack.at(-1)?.kind === "replayContinuation" &&
+    result.tag === "resolved"
+  ) {
+    routeTail.push({
       kind: "resolveBattleSubjectWithoutFill",
       subject: "interruptStackResume",
       holes: [],
       owner: "battleInterruptStack",
+    });
+  }
+  return [weaponDamageRoute, ...routeTail];
+}
+
+function weaponMasteryCleaveRouteStarted(fills: readonly BattleFill[]): boolean {
+  return fills.some((fill) => fill.kind === "unitFeatureDecision");
+}
+
+function weaponMasteryCleaveRouteForResolution(
+  input: BattleResolutionInput,
+  result: Exclude<BattleResolutionResult, { readonly tag: "invalid" }>,
+  event: (
+    subject: BattleReducerRouteSubjectFamily,
+    owner: BattleReducerRouteOwnerGroup,
+  ) => BattleReducerRouteEvent,
+): BattleReducerRouteEvents | undefined {
+  const fill = input.fills.at(-1);
+  if (fill === undefined) {
+    return undefined;
+  }
+  const routeFill = battleReducerRouteFill(fill);
+  if (routeFill === "unitFeatureDecision") {
+    return [event("weaponMasteryProperty", "battleFeatureResource")];
+  }
+  if (routeFill === "targetChoice") {
+    return [event("weaponMasteryProperty", "battleTargetSelection")];
+  }
+  if (routeFill === "attackRoll") {
+    return [event("weaponMasteryProperty", "battleAttackRoll")];
+  }
+  if (routeFill !== "rolledDice" || result.tag !== "resolved") {
+    return undefined;
+  }
+  return [
+    event("weaponMasteryProperty", "battleHitPoint"),
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "weaponMasteryProperty",
+      holes: [],
+      owner: "battleFeatureResource",
     },
   ];
 }
@@ -2822,6 +3139,7 @@ function battleReducerRouteHole(
   if (family === "spellTargetAllocation") return ["spellTargetAllocation"];
   if (family === "spellTargetList") return ["spellTargetList"];
   if (family === "targetChoice") return ["targetChoice"];
+  if (family === "unitFeatureDecision") return ["unitFeatureDecision"];
   return [];
 }
 
@@ -2843,28 +3161,153 @@ function battleReducerRouteFill(
   if (kind === "spellTargetAllocation") return "spellTargetAllocation";
   if (kind === "spellTargetList") return "spellTargetList";
   if (kind === "targetChoice") return "targetChoice";
+  if (kind === "unitFeatureDecision") return "unitFeatureDecision";
   return undefined;
 }
 
-function spellAttackProcedureRouteOwners(
-  subject: BattleResolutionInput["subject"],
+function spellAttackProcedureRouteOwners(input: {
   fill: BattleFill,
-): readonly BattleReducerRouteOwnerGroup[] {
-  const kind = battleFillKind(fill);
+  result: BattleResolutionResult,
+}): readonly BattleReducerRouteOwnerGroup[] {
+  const kind = battleFillKind(input.fill);
   if (kind === "attackRoll") {
-    return subject.tag === "actionSpell" &&
-      subject.invocation.procedure === "spellAttackSequence"
-      ? ["battleAttackRoll", "battleSpellAttackProcedure"]
-      : ["battleAttackRoll"];
+    return ["battleAttackRoll"];
   }
   if (kind === "damageTypeChoice") return ["battleSpellAttackProcedure"];
   if (kind === "rolledDice") {
-    return ["battleHitPoint", "battleSpellAttackProcedure"];
+    return input.result.tag === "needsHoles" &&
+      input.result.holes.some(
+        (hole) => hole.kind === "concentrationSavingThrow",
+      )
+      ? ["battleHitPointAndZeroHpLifecycle"]
+      : ["battleHitPoint"];
   }
   if (kind === "targetChoice") {
-    return ["battleTargetSelection", "battleSpellAttackProcedure"];
+    return ["battleTargetSelection"];
   }
+  if (kind === "concentrationSavingThrow") return ["battleConcentration"];
   return [];
+}
+
+function spellAttackProcedureRouteHoles(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): readonly BattleReducerRouteHole[] {
+  if (result.tag !== "needsHoles") {
+    return [];
+  }
+  const holes = battleReducerRouteHoles(result.holes);
+  return input.subject.tag === "actionSpell" &&
+    input.subject.invocation.procedure === "spellAttackSequence"
+    ? spellAttackSequenceRouteHoles(holes)
+    : holes;
+}
+
+function spellAttackSequenceRouteHoles(
+  holes: readonly BattleReducerRouteHole[],
+): readonly BattleReducerRouteHole[] {
+  if (holes.includes("targetChoice")) {
+    return ["attackRoll", "rolledDice", "targetChoice"];
+  }
+  if (holes.includes("attackRoll")) {
+    return ["attackRoll", "rolledDice"];
+  }
+  if (holes.includes("rolledDice")) {
+    return ["rolledDice"];
+  }
+  return holes;
+}
+
+function zeroHitPointSpellEffectTeardownRouteForResolution(
+  input: BattleResolutionInput,
+  fill: BattleFill,
+  result: BattleResolutionResult,
+): readonly BattleReducerRouteEvent[] {
+  if (battleFillKind(fill) !== "concentrationSavingThrow") {
+    return [];
+  }
+  if (result.tag === "invalid") {
+    return [];
+  }
+  const teardown = zeroHitPointConcentrationTeardown(
+    input.state,
+    result.state,
+  );
+  if (teardown === undefined) {
+    return [];
+  }
+  return [
+    zeroHitPointSpellEffectTeardownRoute("battleConditionLifecycle"),
+    zeroHitPointSpellEffectTeardownRoute("battleConcentration"),
+    ...(teardown.concentratingEffectRemoved
+      ? [zeroHitPointSpellEffectTeardownRoute("battleActiveEffect")]
+      : []),
+  ];
+}
+
+function zeroHitPointSpellEffectTeardownRoute(
+  owner: BattleReducerRouteOwnerGroup,
+): BattleReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubjectWithoutFill",
+    subject: "zeroHitPointSpellEffectTeardown",
+    holes: [],
+    owner,
+  };
+}
+
+function zeroHitPointConcentrationTeardown(
+  before: BattleState,
+  after: BattleState,
+): { readonly concentratingEffectRemoved: boolean } | undefined {
+  for (const beforeCombatant of before.combatants.values()) {
+    const afterCombatant = after.combatants.get(beforeCombatant.combatantId);
+    if (afterCombatant === undefined) {
+      continue;
+    }
+    if (
+      beforeCombatant.concentration === null ||
+      beforeCombatant.concentration.effectKind !== "spellEffect" ||
+      beforeCombatant.conditions.unconscious === true ||
+      Number(afterCombatant.hp) !== 0 ||
+      afterCombatant.conditions.unconscious !== true ||
+      afterCombatant.concentration !== null
+    ) {
+      continue;
+    }
+    return {
+      concentratingEffectRemoved: concentratingActiveEffectCount(
+        before,
+        beforeCombatant.combatantId,
+      ) > concentratingActiveEffectCount(after, beforeCombatant.combatantId),
+    };
+  }
+  return undefined;
+}
+
+function concentratingActiveEffectCount(
+  state: BattleState,
+  combatantId: CombatantId,
+): number {
+  return [...state.combatants.values()].reduce(
+    (count, combatant) =>
+      count +
+      combatant.activeEffects.filter((effect) =>
+        activeEffectExpiresWithCombatantConcentration(effect, combatantId),
+      ).length,
+    0,
+  );
+}
+
+function activeEffectExpiresWithCombatantConcentration(
+  effect: BattleActiveEffect,
+  combatantId: CombatantId,
+): boolean {
+  return (
+    "expiresAt" in effect &&
+    effect.expiresAt.kind === "concentration" &&
+    effect.expiresAt.combatantId === combatantId
+  );
 }
 
 function interruptResolutionAddedArmorClassEffect(

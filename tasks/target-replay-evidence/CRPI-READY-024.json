@@ -1,0 +1,197 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts Weapon Mastery property copied qRoute versus public reducer replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "0f40ef79c960317754c984786b7dd6d99f1571df37fedae16fef299f51570e52",
+      "routeConnectorSha256": "38ab5490083d00d7f1d500c024fc5785f527f5e170958ec97a191e5545aa5a18",
+      "branchFamily": "step",
+      "branchAction": "doResolveSapMasteryPropertyHit",
+      "observedActionTaken": "doResolveSapMasteryPropertyHit",
+      "harnessTestPath": "packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts",
+      "traceId": "public-route=weaponMasteryProperty action=doResolveSapMasteryPropertyHit qRoute=sap-active-effect-rider-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "stepRouteSapPropertyActiveEffectRider",
+        "delegatedAction": "doRouteSapPropertyActiveEffectRider",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts#createWeaponMasteryPropertyRouteReplayDriver"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "9cd92f8ee2824da1391ad8cff00a515ab9c1c3ce122f3f61ecb7359593ca74d0",
+        "observedProjectionSha256": "9cd92f8ee2824da1391ad8cff00a515ab9c1c3ce122f3f61ecb7359593ca74d0",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.route.mbt.qnt",
+          "stepAction": "stepRouteSapPropertyActiveEffectRider",
+          "delegatedAction": "doRouteSapPropertyActiveEffectRider",
+          "qntStateField": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(state), AvailableBattleAct.routeEvents, and BattleResolutionResult.routeEvents during Sap on-hit damage and active-effect rider resolution",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=weaponAttack",
+          "BattleReducerRouteEvent.subject=weaponMasteryProperty",
+          "BattleReducerRouteEvent.owner=battleActionEconomy",
+          "BattleReducerRouteEvent.owner=battleTargetSelection",
+          "BattleReducerRouteEvent.owner=battleAttackRoll",
+          "BattleReducerRouteEvent.owner=battleHitPoint",
+          "BattleReducerRouteEvent.owner=battleActiveEffect",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.activeEffects"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "0f40ef79c960317754c984786b7dd6d99f1571df37fedae16fef299f51570e52",
+      "routeConnectorSha256": "38ab5490083d00d7f1d500c024fc5785f527f5e170958ec97a191e5545aa5a18",
+      "branchFamily": "step",
+      "branchAction": "doResolveToppleMasteryPropertyFailedSavingThrow",
+      "observedActionTaken": "doResolveToppleMasteryPropertyFailedSavingThrow",
+      "harnessTestPath": "packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts",
+      "traceId": "public-route=weaponMasteryProperty action=doResolveToppleMasteryPropertyFailedSavingThrow qRoute=topple-condition-rider-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "stepRouteTopplePropertyConditionRider",
+        "delegatedAction": "doRouteTopplePropertyConditionRiderReplay",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts#createWeaponMasteryPropertyRouteReplayDriver"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "83ad82b123ed863bcdf083c51ddf5866b3fccd2b21be656cd1c4f8009803d88b",
+        "observedProjectionSha256": "83ad82b123ed863bcdf083c51ddf5866b3fccd2b21be656cd1c4f8009803d88b",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.route.mbt.qnt",
+          "stepAction": "stepRouteTopplePropertyConditionRider",
+          "delegatedAction": "doRouteTopplePropertyConditionRiderReplay",
+          "qntStateField": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(state), AvailableBattleAct.routeEvents, and BattleResolutionResult.routeEvents during Topple Attack Roll, Saving Throw, and condition rider resolution",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=weaponAttack",
+          "BattleReducerRouteEvent.subject=weaponMasteryProperty",
+          "BattleReducerRouteEvent.owner=battleActionEconomy",
+          "BattleReducerRouteEvent.owner=battleTargetSelection",
+          "BattleReducerRouteEvent.owner=battleConditionLifecycle",
+          "BattleCreatureState.conditions"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "0f40ef79c960317754c984786b7dd6d99f1571df37fedae16fef299f51570e52",
+      "routeConnectorSha256": "38ab5490083d00d7f1d500c024fc5785f527f5e170958ec97a191e5545aa5a18",
+      "branchFamily": "step",
+      "branchAction": "doResolveCleaveMasteryPropertySecondTargetHit",
+      "observedActionTaken": "doResolveCleaveMasteryPropertySecondTargetHit",
+      "harnessTestPath": "packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts",
+      "traceId": "public-route=weaponMasteryProperty action=doResolveCleaveMasteryPropertySecondTargetHit qRoute=cleave-second-target-hit-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "stepRouteCleavePropertySecondDamage",
+        "delegatedAction": "doRouteCleavePropertySecondDamageReplay",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts#createWeaponMasteryPropertyRouteReplayDriver"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "b2287dbdf2d4a5ed26320015b54433fb22e3455fc62c4dc659ab265d1e0f5d2e",
+        "observedProjectionSha256": "b2287dbdf2d4a5ed26320015b54433fb22e3455fc62c4dc659ab265d1e0f5d2e",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.route.mbt.qnt",
+          "stepAction": "stepRouteCleavePropertySecondDamage",
+          "delegatedAction": "doRouteCleavePropertySecondDamageReplay",
+          "qntStateField": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(state), AvailableBattleAct.routeEvents, and BattleResolutionResult.routeEvents during Cleave decision, second target, second Attack Roll, second damage, and once-per-turn resource settlement",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=weaponAttack",
+          "BattleReducerRouteEvent.subject=weaponMasteryProperty",
+          "BattleReducerRouteEvent.holes=unitFeatureDecision",
+          "BattleReducerRouteEvent.fill=unitFeatureDecision",
+          "BattleReducerRouteEvent.owner=battleActionEconomy",
+          "BattleReducerRouteEvent.owner=battleTargetSelection",
+          "BattleReducerRouteEvent.owner=battleAttackRoll",
+          "BattleReducerRouteEvent.owner=battleHitPoint",
+          "BattleReducerRouteEvent.owner=battleFeatureResource",
+          "BattleCreatureState.hp",
+          "BattleState.currentTurnResources.weaponMasteryCleaveAttackersUsedThisTurn"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}

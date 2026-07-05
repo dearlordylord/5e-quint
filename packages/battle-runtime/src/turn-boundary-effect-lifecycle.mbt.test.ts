@@ -21,9 +21,11 @@ import {
   MBT_TEST_TIMEOUT_MS,
   assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeReducerRoute,
   decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
+  quintField,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
@@ -32,20 +34,26 @@ import {
   quintVariantTag,
   run,
   stateCheck,
+  type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import {
+  characterSeed,
   damageRollFillWithGroups,
   fighterId,
   fighterVsGoblinBattle,
   findHole,
   goblinId,
   savingThrowOutcomeFill,
+  startBattleRight,
 } from "./battle-runtime-test-support.ts";
 import {
+  battleReducerStartRouteEvent,
+  battleId,
   endTurn,
   type ActiveOngoingFeatureOccurrence,
   type BattleActiveEffect,
   type BattleCreatureState,
+  type BattleResolutionResult,
   type BattleHole,
   type BattleState,
   type OngoingFeatureSourceKey,
@@ -133,6 +141,22 @@ type TurnBoundaryLifecycleReplaySequence = {
   readonly actions: readonly TurnBoundaryLifecycleDriverAction[];
   readonly expected: TurnBoundaryLifecycleProjection;
 };
+
+type TurnBoundaryRouteSurface =
+  | "fresh"
+  | "targetStartTurnResolved"
+  | "sourceNextTurnResolved";
+
+type TurnBoundaryRouteProjection = {
+  readonly surface: TurnBoundaryRouteSurface;
+  readonly route: readonly ReducerRouteEvent[];
+};
+
+const turnBoundaryRouteSurfaceByQuintTag = {
+  FreshRouteSurface: "fresh",
+  TargetStartTurnResolvedRouteSurface: "targetStartTurnResolved",
+  SourceNextTurnResolvedRouteSurface: "sourceNextTurnResolved",
+} as const satisfies Readonly<Record<string, TurnBoundaryRouteSurface>>;
 
 const turnStartDamageSpellId = syntheticSpellId(
   "synthetic_turn_boundary_start_damage",
@@ -247,6 +271,222 @@ describe("turn-boundary effect lifecycle MBT", () => {
   });
 
   it(
+    "compares turn-boundary public reducer route to copied qRoute",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-turn-boundary-effect-lifecycle.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createTurnBoundaryRouteReplayDriver(),
+        backend: "typescript",
+        nTraces: 1,
+        maxSteps: focusedMbtMaxSteps(2),
+        stateCheck: turnBoundaryRouteStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it("splits mixed death-save and turn-boundary discovery route ownership", () => {
+    const awaitingBoundary = endTurn({
+      state: battleWithTurnBoundaryEffectsAndDeathSave(),
+      actorId: fighterId,
+    });
+    assertNeedsHoles(awaitingBoundary, "mixed death-save route discovery");
+    expect(awaitingBoundary.holes.map((hole) => hole.kind)).toEqual([
+      "deathSavingThrow",
+      "rolledDice",
+      "savingThrowOutcome",
+    ]);
+    expect(
+      routeEventsOf(awaitingBoundary, "mixed death-save route discovery"),
+    ).toEqual([
+      {
+        kind: "discoverBattleActs",
+        subject: "deathSavingThrow",
+        holes: ["deathSavingThrow"],
+        owner: "battleHitPointAndZeroHpLifecycle",
+      },
+      {
+        kind: "discoverBattleActs",
+        subject: "turnBoundaryEffectLifecycle",
+        holes: ["rolledDice", "savingThrowOutcome"],
+        owner: "battleTurnBoundary",
+      },
+    ]);
+  });
+
+  it("splits mixed repeat-save and turn-boundary discovery route ownership", () => {
+    const awaitingBoundary = endTurn({
+      state: battleWithTurnBoundaryEffectsAndSleepRepeatSave(),
+      actorId: fighterId,
+    });
+    assertNeedsHoles(awaitingBoundary, "mixed repeat-save route discovery");
+    expect(awaitingBoundary.holes.map((hole) => hole.kind)).toEqual([
+      "savingThrowOutcome",
+      "rolledDice",
+      "savingThrowOutcome",
+    ]);
+    expect(
+      awaitingBoundary.holes.some(
+        (hole) =>
+          hole.kind === "savingThrowOutcome" && "sleepRepeatSave" in hole,
+      ),
+    ).toBe(true);
+    expect(
+      awaitingBoundary.holes.some(
+        (hole) =>
+          hole.kind === "savingThrowOutcome" && "spellTurnStartSave" in hole,
+      ),
+    ).toBe(true);
+    expect(
+      routeEventsOf(awaitingBoundary, "mixed repeat-save route discovery"),
+    ).toEqual([
+      {
+        kind: "discoverBattleActs",
+        subject: "repeatSaveConditionEffect",
+        holes: ["savingThrowOutcome"],
+        owner: "battleTurnBoundary",
+      },
+      {
+        kind: "discoverBattleActs",
+        subject: "turnBoundaryEffectLifecycle",
+        holes: ["rolledDice", "savingThrowOutcome"],
+        owner: "battleTurnBoundary",
+      },
+    ]);
+  });
+
+  it("splits concentration holes after turn-boundary damage route ownership", () => {
+    const awaitingBoundary = endTurn({
+      state: battleWithCurrentActorEndTurnDamageAndConcentration(),
+      actorId: fighterId,
+    });
+    assertNeedsHoles(awaitingBoundary, "end-turn concentration route setup");
+    expect(awaitingBoundary.holes.map((hole) => hole.kind)).toEqual([
+      "rolledDice",
+    ]);
+    const damageResolved = endTurn({
+      state: awaitingBoundary.state,
+      actorId: fighterId,
+      fills: [
+        damageRollFillWithGroups(
+          findHole(awaitingBoundary.holes, "rolledDice"),
+          [[turnEndDamageRoll]],
+        ),
+      ],
+    });
+    assertNeedsHoles(damageResolved, "turn-boundary concentration route");
+    expect(damageResolved.holes.map((hole) => hole.kind)).toEqual([
+      "concentrationSavingThrow",
+    ]);
+    expect(
+      routeEventsOf(damageResolved, "turn-boundary concentration route"),
+    ).toEqual([
+      {
+        kind: "resolveBattleSubject",
+        subject: "turnBoundaryEffectLifecycle",
+        fill: "rolledDice",
+        holes: [],
+        owner: "battleHitPoint",
+      },
+      {
+        kind: "resolveBattleSubject",
+        subject: "concentrationTeardown",
+        fill: "rolledDice",
+        holes: ["concentrationSavingThrow"],
+        owner: "battleConcentration",
+      },
+    ]);
+  });
+
+  it("does not route non-boundary end-turn save fills as turn-boundary lifecycle", () => {
+    const awaitingBoundary = endTurn({
+      state: battleWithTurnBoundaryEffectsAndConditionSave(),
+      actorId: fighterId,
+    });
+    assertNeedsHoles(awaitingBoundary, "mixed saving throw route discovery");
+    expect(awaitingBoundary.holes.map((hole) => hole.kind)).toEqual([
+      "savingThrowOutcome",
+      "rolledDice",
+      "savingThrowOutcome",
+    ]);
+    expect(
+      awaitingBoundary.holes.some(
+        (hole) =>
+          hole.kind === "savingThrowOutcome" && "spellTurnStartSave" in hole,
+      ),
+    ).toBe(true);
+
+    const conditionSaveHole = findSpellConditionEndTurnSaveHole(
+      awaitingBoundary.holes,
+    );
+    const conditionSaveResolved = endTurn({
+      state: awaitingBoundary.state,
+      actorId: fighterId,
+      fills: [
+        savingThrowOutcomeFill(conditionSaveHole, [
+          { targetId: fighterId, succeeded: false },
+        ]),
+      ],
+    });
+    assertNeedsHoles(
+      conditionSaveResolved,
+      "non-boundary save before turn-boundary save",
+    );
+    expect(conditionSaveResolved.holes.map((hole) => hole.kind)).toEqual([
+      "rolledDice",
+    ]);
+    const routeEvents = routeEventsOf(
+      conditionSaveResolved,
+      "non-boundary save before turn-boundary save",
+    );
+    expect(routeEvents).toEqual([
+      {
+        kind: "resolveBattleSubject",
+        subject: "commandEffect",
+        fill: "savingThrowOutcome",
+        holes: ["rolledDice"],
+        owner: "battleActiveEffect",
+      },
+    ]);
+    expect(routeEvents).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          subject: "turnBoundaryEffectLifecycle",
+          fill: "savingThrowOutcome",
+          owner: "battleActiveEffect",
+        }),
+      ]),
+    );
+  });
+
+  it("does not route invalid turn-boundary damage roll fills as hit-point ownership", () => {
+    const awaitingBoundary = endTurn({
+      state: battleWithTurnBoundaryEffects(),
+      actorId: fighterId,
+    });
+    assertNeedsHoles(awaitingBoundary, "invalid rolled-dice route discovery");
+    const damageFill = damageRollFillWithGroups(
+      findHole(awaitingBoundary.holes, "rolledDice"),
+      [[turnStartDamageRoll]],
+    );
+    const invalid = endTurn({
+      state: awaitingBoundary.state,
+      actorId: fighterId,
+      fills: [damageFill, damageFill],
+    });
+    expect(invalid).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+    expect(invalid.routeEvents).toBeUndefined();
+  });
+
+  it(
     "matches focused turn-boundary lifecycle traces against Quint",
     async () => {
       await run({
@@ -286,6 +526,33 @@ function createTurnBoundaryLifecycleDriver() {
   });
 }
 
+function createTurnBoundaryRouteReplayDriver() {
+  return defineDriver(driverSchema, () => {
+    let state = initialTurnBoundaryRouteProjection();
+
+    function reset(): void {
+      state = initialTurnBoundaryRouteProjection();
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doResolveTargetStartTurn: () => {
+        state = resolveTargetStartTurnRoute(state);
+      },
+      doResolveSourceNextTurn: () => {
+        state = resolveSourceNextTurnRoute(state);
+      },
+      step: () => {},
+      getState: (): TurnBoundaryRouteProjection => ({
+        surface: state.surface,
+        route: state.route,
+      }),
+    };
+  });
+}
+
 function initialRuntimeState(): TurnBoundaryLifecycleRuntimeState {
   return {
     battle: battleWithTurnBoundaryEffects(),
@@ -297,6 +564,82 @@ function initialRuntimeState(): TurnBoundaryLifecycleRuntimeState {
     startTurnOngoingExpiredAtSourceStart: false,
     turnStartDurationExpiredAfterRoundTick: false,
     lastHoleOrder: "noBoundaryHoles",
+  };
+}
+
+function initialTurnBoundaryRouteProjection(): TurnBoundaryRouteProjection & {
+  readonly battle: BattleState;
+} {
+  const battle = battleWithTurnBoundaryEffects();
+  return {
+    battle,
+    surface: "fresh",
+    route: [battleReducerStartRouteEvent()],
+  };
+}
+
+function resolveTargetStartTurnRoute(
+  state: TurnBoundaryRouteProjection & { readonly battle: BattleState },
+): TurnBoundaryRouteProjection & { readonly battle: BattleState } {
+  expect(state.surface).toBe("fresh");
+  const awaitingBoundary = endTurn({ state: state.battle, actorId: fighterId });
+  assertNeedsHoles(awaitingBoundary, "target start-turn route discovery");
+  const damageFill = damageRollFillWithGroups(
+    findHole(awaitingBoundary.holes, "rolledDice"),
+    [[turnStartDamageRoll]],
+  );
+  const damageResolved = endTurn({
+    state: awaitingBoundary.state,
+    actorId: fighterId,
+    fills: [damageFill],
+  });
+  assertNeedsHoles(damageResolved, "target start-turn damage route");
+  const saveFill = savingThrowOutcomeFill(
+    findHole(damageResolved.holes, "savingThrowOutcome"),
+    [{ targetId: goblinId, succeeded: false }],
+  );
+  const saveResolved = endTurn({
+    state: awaitingBoundary.state,
+    actorId: fighterId,
+    fills: [damageFill, saveFill],
+  });
+  assertResolved(saveResolved, "target start-turn save route");
+  return {
+    battle: saveResolved.state,
+    surface: "targetStartTurnResolved",
+    route: [
+      ...state.route,
+      ...routeEventsOf(awaitingBoundary, "target start-turn route discovery"),
+      ...routeEventsOf(damageResolved, "target start-turn damage route"),
+      ...routeEventsOf(saveResolved, "target start-turn save route"),
+    ],
+  };
+}
+
+function resolveSourceNextTurnRoute(
+  state: TurnBoundaryRouteProjection & { readonly battle: BattleState },
+): TurnBoundaryRouteProjection & { readonly battle: BattleState } {
+  expect(state.surface).toBe("targetStartTurnResolved");
+  const awaitingBoundary = endTurn({ state: state.battle, actorId: goblinId });
+  assertNeedsHoles(awaitingBoundary, "source next-turn route discovery");
+  const damageResolved = endTurn({
+    state: awaitingBoundary.state,
+    actorId: goblinId,
+    fills: [
+      damageRollFillWithGroups(findHole(awaitingBoundary.holes, "rolledDice"), [
+        [turnEndDamageRoll],
+      ]),
+    ],
+  });
+  assertResolved(damageResolved, "source next-turn damage route");
+  return {
+    battle: damageResolved.state,
+    surface: "sourceNextTurnResolved",
+    route: [
+      ...state.route,
+      ...routeEventsOf(awaitingBoundary, "source next-turn route discovery"),
+      ...routeEventsOf(damageResolved, "source next-turn damage route"),
+    ],
   };
 }
 
@@ -391,8 +734,11 @@ function resolveSourceNextTurn(
   };
 }
 
-function battleWithTurnBoundaryEffects(): BattleState {
-  const battle = fighterVsGoblinBattle();
+function battleWithTurnBoundaryEffects(input?: {
+  readonly baseBattle?: BattleState;
+  readonly targetHp?: number;
+}): BattleState {
+  const battle = input?.baseBattle ?? fighterVsGoblinBattle();
   const fighter = requireCombatant(battle, fighterId);
   const goblin = requireCombatant(battle, goblinId);
   if (fighter.origin.kind !== "character") {
@@ -434,7 +780,7 @@ function battleWithTurnBoundaryEffects(): BattleState {
       })
       .set(goblinId, {
         ...goblin,
-        hp: Hp(initialTargetHp),
+        hp: Hp(input?.targetHp ?? initialTargetHp),
         maxHp: Hp(initialTargetHp),
         positiveHpUnconscious: null,
         activeEffects: [
@@ -443,6 +789,126 @@ function battleWithTurnBoundaryEffects(): BattleState {
           turnEndDamageEffect(),
         ],
       }),
+  };
+}
+
+function battleWithTurnBoundaryEffectsAndDeathSave(): BattleState {
+  return battleWithTurnBoundaryEffects({
+    baseBattle: startBattleRight({
+      battleId: battleId("battle-turn-boundary-death-save-frontier"),
+      combatants: [
+        characterSeed({ combatantId: fighterId, initiative: 20 }),
+        characterSeed({
+          combatantId: goblinId,
+          displayName: "Target Fighter",
+          initiative: 10,
+          currentHp: 0,
+          maxHp: initialTargetHp,
+          attack: null,
+          zeroHpLifecycle: {
+            policy: "usesDeathSavingThrows",
+            deathSaves: {
+              deathSaves: { successes: 0, failures: 0 },
+              stable: false,
+              dead: false,
+              hpRegained: false,
+            },
+          },
+        }),
+      ],
+    }),
+    targetHp: 0,
+  });
+}
+
+function battleWithTurnBoundaryEffectsAndConditionSave(): BattleState {
+  const battle = battleWithTurnBoundaryEffects();
+  const fighter = requireCombatant(battle, fighterId);
+  return {
+    ...battle,
+    combatants: new Map(battle.combatants).set(fighterId, {
+      ...fighter,
+      activeEffects: [
+        ...fighter.activeEffects,
+        fighterSpellConditionEndTurnSaveEffect(),
+      ],
+    }),
+  };
+}
+
+function battleWithTurnBoundaryEffectsAndSleepRepeatSave(): BattleState {
+  const battle = battleWithTurnBoundaryEffects();
+  const fighter = requireCombatant(battle, fighterId);
+  return {
+    ...battle,
+    combatants: new Map(battle.combatants).set(fighterId, {
+      ...fighter,
+      activeEffects: [...fighter.activeEffects, sleepPendingRepeatSaveEffect()],
+    }),
+  };
+}
+
+function battleWithCurrentActorEndTurnDamageAndConcentration(): BattleState {
+  const battle = fighterVsGoblinBattle();
+  const fighter = requireCombatant(battle, fighterId);
+  return {
+    ...battle,
+    combatants: new Map(battle.combatants).set(fighterId, {
+      ...fighter,
+      concentration: {
+        sourceSpellId: syntheticSpellId(
+          "synthetic_turn_boundary_target_concentration",
+        ),
+        effectKind: "spellEffect",
+      },
+      activeEffects: [...fighter.activeEffects, fighterTurnEndDamageEffect()],
+    }),
+  };
+}
+
+function sleepPendingRepeatSaveEffect(): BattleActiveEffect {
+  return {
+    kind: "sleepPendingRepeatSave",
+    sourceSpellId: syntheticSpellId("synthetic_turn_boundary_sleep_repeat"),
+    sourceCombatantId: goblinId,
+    conditionHadNonSpellSource: false,
+    save: {
+      ability: "wis",
+      dc: { kind: "fixed", dc: difficultyClass(10) },
+    },
+    repeatAt: { kind: "endOfTurn", combatantId: fighterId, round: Round(1) },
+    expiresAt: { kind: "concentration", combatantId: goblinId },
+  };
+}
+
+function fighterSpellConditionEndTurnSaveEffect(): BattleActiveEffect {
+  return {
+    kind: "spellConditionEndTurnSave",
+    sourceSpellId: syntheticSpellId(
+      "synthetic_turn_boundary_condition_end_save",
+    ),
+    sourceCombatantId: goblinId,
+    condition: "poisoned",
+    conditionHadNonSpellSource: false,
+    heightenedSpellTargetDisadvantage: null,
+    save: {
+      ability: "con",
+      dc: { kind: "fixed", dc: difficultyClass(11) },
+    },
+    expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
+  };
+}
+
+function fighterTurnEndDamageEffect(): BattleActiveEffect {
+  return {
+    kind: "spellTurnEndDamage",
+    sourceSpellId: turnEndDamageSpellId,
+    sourceCombatantId: goblinId,
+    damage: {
+      expr: { dice: 1, dieSize: 6 },
+      damageType: "fire",
+    },
+    expiresAt: { kind: "endOfTurn", combatantId: fighterId, round: Round(1) },
   };
 }
 
@@ -592,12 +1058,82 @@ function turnBoundaryLifecycleProjection(
   };
 }
 
+function assertNeedsHoles(
+  result: BattleResolutionResult,
+  label: string,
+): asserts result is Extract<
+  BattleResolutionResult,
+  { readonly tag: "needsHoles" }
+> {
+  if (result.tag !== "needsHoles") {
+    throw new Error(`Expected ${label} to need holes.`);
+  }
+}
+
+function assertResolved(
+  result: BattleResolutionResult,
+  label: string,
+): asserts result is Extract<
+  BattleResolutionResult,
+  { readonly tag: "resolved" }
+> {
+  if (result.tag !== "resolved") {
+    throw new Error(`Expected ${label} to resolve.`);
+  }
+}
+
+function routeEventsOf(
+  result: BattleResolutionResult,
+  label: string,
+): readonly ReducerRouteEvent[] {
+  if (result.routeEvents === undefined) {
+    throw new Error(`Expected public reducer route events for ${label}.`);
+  }
+  return result.routeEvents;
+}
+
+function findSpellConditionEndTurnSaveHole(
+  holes: readonly BattleHole[],
+): Extract<
+  BattleHole,
+  {
+    readonly kind: "savingThrowOutcome";
+    readonly spellConditionEndTurnSave: unknown;
+  }
+> {
+  const hole = holes.find(
+    (
+      candidate,
+    ): candidate is Extract<
+      BattleHole,
+      {
+        readonly kind: "savingThrowOutcome";
+        readonly spellConditionEndTurnSave: unknown;
+      }
+    > =>
+      candidate.kind === "savingThrowOutcome" &&
+      "spellConditionEndTurnSave" in candidate,
+  );
+  if (hole === undefined) {
+    throw new Error("Expected spell condition end-turn save hole.");
+  }
+  return hole;
+}
+
 const turnBoundaryLifecycleStateCheck = stateCheck(
   turnBoundaryLifecycleProjectionFromQuint,
   (
     spec: TurnBoundaryLifecycleProjection,
     impl: TurnBoundaryLifecycleProjection,
   ) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+
+const turnBoundaryRouteStateCheck = stateCheck(
+  turnBoundaryRouteProjectionFromQuint,
+  (spec: TurnBoundaryRouteProjection, impl: TurnBoundaryRouteProjection) => {
     expect(impl).toEqual(spec);
     return true;
   },
@@ -668,6 +1204,20 @@ function turnBoundaryLifecycleProjectionFromQuint(
       "qLastHoleOrder",
       holeOrderByQuintTag,
     ),
+  };
+}
+
+function turnBoundaryRouteProjectionFromQuint(
+  rawState: unknown,
+): TurnBoundaryRouteProjection {
+  const state = quintStateRecord(rawState);
+  return {
+    surface: variantValue(
+      quintField(state, "qSurface"),
+      "qSurface",
+      turnBoundaryRouteSurfaceByQuintTag,
+    ),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
   };
 }
 
