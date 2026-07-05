@@ -1,65 +1,56 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRP06-SRO-03",
-  "productionModulesExtended": [],
+  "taskId": "CRPI-READY-029",
+  "productionModulesExtended": [
+    {
+      "path": "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+      "owners": [
+        "RuleCoreHitPointDamageOwner"
+      ],
+      "notes": "Existing public Hit Point damage reducer API reused as the target component call surface for copied qComponentRoute replay."
+    }
+  ],
   "adapterModules": [
     {
-      "path": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "path": "packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt",
       "quarantinedWitnessNames": [
-        "qState",
-        "CharacterSheetSpellSlotsPactSlotsState",
-        "CharacterSheetSpellSlotsPactSlotsOutcome"
+        "qLastScenario",
+        "qHitPoints",
+        "qHitPointMaximum",
+        "qTemporaryHitPoints",
+        "qDead",
+        "qUnconscious",
+        "qDamageToHitPoints",
+        "qRemainingDamageAtZero",
+        "qReplayIndex",
+        "qComponentRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRP06-SRO-03.json"
+        "tasks/target-replay-evidence/CRPI-READY-029.json"
       ]
     },
     {
-      "path": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+      "path": "packages/battle-runtime/src/rule-core-hit-point-damage.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "qRoute",
-        "SheetSpellResourceRouteSubject",
-        "SheetFeatureResourceRouteSubject",
-        "SheetResourceSpendFill",
-        "SheetRestDurationFill",
-        "SheetRecoverySelectionFill",
-        "SheetOrdinarySpellSlotDeltaFact",
-        "SheetPactSlotDeltaFact",
-        "SheetCreatedSlotExpiryFact",
-        "SheetFeatureRecoveryStateFact",
-        "SheetSpellResourceRejectionFact"
+        "HitPointDamageProjection",
+        "createHitPointDamageDriver",
+        "normalizeHitPointDamageQuintState"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRP06-SRO-03.json"
-      ]
-    },
-    {
-      "path": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts",
-      "quarantinedWitnessNames": [
-        "Character Sheet Spell Slot/Pact Slot deterministic QNT replay",
-        "createSlotDriver",
-        "normalizeSlotQuintState"
-      ],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRP06-SRO-03.json"
-      ]
-    },
-    {
-      "path": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
-      "quarantinedWitnessNames": [
-        "routes in-scope Spell Slot and Pact Slot transitions through the sheet reducer surface",
-        "createReadyRouteDriver",
-        "normalizeCharacterSheetRouteQuintState"
-      ],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRP06-SRO-03.json"
+        "tasks/target-replay-evidence/CRPI-READY-029.json"
       ]
     }
   ],
   "accumulatorGrowth": [],
-  "expectedNextReuse": [],
+  "expectedNextReuse": [
+    {
+      "driver": "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt",
+      "module": "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+      "api": "Later exact-damage projection tasks can reuse RuleCoreHitPointDamageOwner evidence through the same public applyBattleHitPointDamage and hpDamageProjection surface."
+    }
+  ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 101 observes semantic qState and copied qRoute for Character Sheet Spell Slot, Pact Slot, and rest-triggered recovery transitions through public character-sheet sheet creation, rest, recovery, and route entrypoints. No production module or duplicate durable capacity state was introduced."
+    "notes": "Task 71 observes copied qComponentRoute for rule-core Hit Point damage through public battle-runtime Hit Point damage entrypoints. No duplicate durable state was introduced."
   }
 }

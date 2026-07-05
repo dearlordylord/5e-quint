@@ -3105,6 +3105,120 @@
           "detail": "Round 1 verified RAW traceability, owner boundaries, no duplicate Spell Slot or Pact Slot capacity state, no authored-identity dispatch, and no remaining reasonable Task 101 findings."
         }
       ]
+    },
+    {
+      "taskId": "CRPI-READY-029",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "de757f09b94d2489faff19c941ed1e3fc290970af9bb1ff4fc5a0331e0586f4c"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "7d6879cf6cac55688cbbe4feab2cf72dafc1302dc8bb091d6aa37907bf74a86c"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "da4143f780d27c73bea1dccfb33029facfeee53d1d2c52433e5328492faa49d2"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-READY-029/README.md",
+          "sha256": "7e64a6b2faf0c7106c48caa990c5f21de6b279e701de965783a97d95a63bb4ba"
+        },
+        "reducerRouteInventory": {
+          "path": "plans/cleanroom-branch-coverage/reducer-route-inventory.json",
+          "sha256": "9ded20737a7a2750fa8999d7e6650e7167429d70a6200e98ef93d4930d8447b9"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-READY-029.json",
+          "sha256": "f741b0773a27ec5d94f6618c38c5fbe39889d029b8b28a94d8c71d6410c4516a",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-READY-029.json#driver:packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt#step:doTemporaryHitPointsAbsorbFirst#trace:component-route=RuleCoreHitPointDamageOwner action=doTemporaryHitPointsAbsorbFirst qComponentRoute=hit-point-damage-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-029.json#driver:packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt#step:doMonsterDiesAtZero#trace:component-route=RuleCoreHitPointDamageOwner action=doMonsterDiesAtZero qComponentRoute=hit-point-damage-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-029.json#driver:packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt#step:doPlayerCharacterFallsUnconscious#trace:component-route=RuleCoreHitPointDamageOwner action=doPlayerCharacterFallsUnconscious qComponentRoute=hit-point-damage-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-029.json#driver:packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt#step:doPlayerCharacterDiesFromMassiveDamage#trace:component-route=RuleCoreHitPointDamageOwner action=doPlayerCharacterDiesFromMassiveDamage qComponentRoute=hit-point-damage-component-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 codex/cleanroom-reducer-full-lane-20260705-restart2 && git log --oneline -1 HEAD && git merge-base --is-ancestor 5a3fb555472b3a1adbb66da59d5c161b91e8f954 HEAD",
+          "status": "pass",
+          "detail": "Declared codex base ref and HEAD both resolved to 5a3fb5554 Merge Ralph task 100 status; Base SHA 5a3fb555472b3a1adbb66da59d5c161b91e8f954 is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language review against .references/srd-5.2.1/Playing-the-Game.md#Hit Points, #Dropping to 0 Hit Points, #Temporary Hit Points, .references/srd-5.2.1/Rules-Glossary.md#Hit Points, #Temporary Hit Points, #Unconscious, and UBIQUITOUS_LANGUAGE.md",
+          "status": "pass"
+        },
+        {
+          "command": "jq empty tasks/target-replay-evidence/CRPI-READY-029.json tasks/ENGINE_DEPTH_MANIFEST.json tasks/STATE_OWNER_MANIFEST.json",
+          "status": "pass"
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Both process checks exited 1 before the timed focused MBT replay, meaning no vitest or quint_evaluator process was running; no evaluator cleanup was needed."
+        },
+        {
+          "command": "START=$(date +%s); cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=4 pnpm exec vitest run src/rule-core-hit-point-damage.mbt.test.ts 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "1 test passed; copied qComponentRoute was compared through RuleCoreHitPointDamageOwner for all 4 step branch obligations; final timed run TOTAL: 9s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs."
+        },
+        {
+          "command": "pnpm cleanroom-harness:check",
+          "status": "pass"
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "flock /tmp/dnd-mbt-qnt.lock pnpm quality",
+          "status": "pass",
+          "detail": "Quality passed end to end; app lint reported warnings only and exited 0."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 verified RAW traceability for Hit Points, Temporary Hit Points, monster death, falling Unconscious, and Massive Damage; component-first architecture; adapter quarantine; no duplicate durable HP state; no authored-identity dispatch; and no remaining reasonable Task 71 findings."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-READY-029",
+            "disposition": "unblocked"
+          },
+          {
+            "taskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
+            "disposition": "left unchanged"
+          },
+          {
+            "taskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
+            "disposition": "left unchanged"
+          }
+        ],
+        "observations": [
+          "RuleCoreHitPointDamageOwner is accepted through copied qComponentRoute replay before downstream attack, stat-block, and spell-effect routes consume the owner.",
+          "No new durable HP state was required; existing BattleCreatureState Hit Points, Temporary Hit Points, conditions, and zero-HP lifecycle fields carry the runtime facts."
+        ],
+        "requiredPlanEdits": "none"
+      }
     }
   ]
 }

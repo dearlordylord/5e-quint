@@ -402,6 +402,96 @@ Verification results:
 - Requested broad verification `flock /tmp/dnd-mbt-qnt.lock pnpm quality` reached repo-wide typecheck and failed in unrelated baseline code: `packages/character-creation-runtime/src/index.test.ts(10401,5): error TS2322: Type 'string' is not assignable to type "species_gnome_gnomish_lineage".` No Task 100 files are in that ownership surface.
 - Reviewer-loop convergence passed: round 1 verified RAW traceability, ubiquitous-language/domain terms, no duplicate HP or Hit Dice capacity state, rest owner boundaries, explicit Short Rest benefit-choice fills, and no remaining reasonable code-review findings.
 
+## CRPI-READY-029
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Driver path: `packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt`
+- Component connector path: `packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt`
+- Route class: `component-first`
+- Durable owner: `RuleCoreHitPointDamageOwner`
+- Accepted projection: `qComponentRoute`
+- Status: `accepted`
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-029.json`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt`
+- `packages/battle-runtime/rule-core-component-route.qnt`
+- `packages/battle-runtime/src/rule-core-hit-point-damage.mbt.test.ts`
+- `packages/battle-runtime/src/rule-core-component-route.ts`
+- `packages/battle-runtime/src/battle-reducer/damage-apply.ts`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-convergence-backlog.json`
+- `.references/srd-5.2.1/Playing-the-Game.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+The component-first replay for rule-core Hit Point damage now has accepted target
+evidence for the copied `qComponentRoute` projection. The target harness records
+the reusable component route sequence parse input, admit input, call
+`RuleCoreHitPointDamageOwner`, and project result before downstream attack,
+stat-block, and spell-effect routes consume this owner.
+
+Runtime projections are produced through public battle-runtime Hit Point damage
+application via `applyBattleHitPointDamage` and `hpDamageProjection`, then
+compared to the copied component connector route. No production reducer state
+was added: current Hit Points, Hit Point Maximum, Temporary Hit Points,
+Unconscious condition, and zero-HP lifecycle facts remain on existing
+`BattleCreatureState` fields.
+
+Generated branch coverage:
+
+| Obligation                                                                                         | Evidence                                                                                                                                                                                                                                                                                                 | Harness                                                                                                                                | Status    |
+| -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| `packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt#step:doTemporaryHitPointsAbsorbFirst`  | `tasks/target-replay-evidence/CRPI-READY-029.json#driver:packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt#step:doTemporaryHitPointsAbsorbFirst#trace:component-route=RuleCoreHitPointDamageOwner action=doTemporaryHitPointsAbsorbFirst qComponentRoute=hit-point-damage-component-route`  | `packages/battle-runtime/src/rule-core-hit-point-damage.mbt.test.ts#replays positive-HP resolved damage against battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt#step:doMonsterDiesAtZero`              | `tasks/target-replay-evidence/CRPI-READY-029.json#driver:packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt#step:doMonsterDiesAtZero#trace:component-route=RuleCoreHitPointDamageOwner action=doMonsterDiesAtZero qComponentRoute=hit-point-damage-component-route`                          | `packages/battle-runtime/src/rule-core-hit-point-damage.mbt.test.ts#replays positive-HP resolved damage against battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt#step:doPlayerCharacterFallsUnconscious` | `tasks/target-replay-evidence/CRPI-READY-029.json#driver:packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt#step:doPlayerCharacterFallsUnconscious#trace:component-route=RuleCoreHitPointDamageOwner action=doPlayerCharacterFallsUnconscious qComponentRoute=hit-point-damage-component-route` | `packages/battle-runtime/src/rule-core-hit-point-damage.mbt.test.ts#replays positive-HP resolved damage against battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt#step:doPlayerCharacterDiesFromMassiveDamage` | `tasks/target-replay-evidence/CRPI-READY-029.json#driver:packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt#step:doPlayerCharacterDiesFromMassiveDamage#trace:component-route=RuleCoreHitPointDamageOwner action=doPlayerCharacterDiesFromMassiveDamage qComponentRoute=hit-point-damage-component-route` | `packages/battle-runtime/src/rule-core-hit-point-damage.mbt.test.ts#replays positive-HP resolved damage against battle-runtime reducers` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-029.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id pattern: `component-route=RuleCoreHitPointDamageOwner action=<branchAction> qComponentRoute=hit-point-damage-component-route`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-READY-029/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 71.
+
+RAW / ubiquitous-language trace:
+
+- SRD 5.2.1 Playing the Game: Hit Points cannot go below 0 and damage is subtracted from Hit Points.
+- SRD 5.2.1 Playing the Game: Temporary Hit Points are lost before actual Hit Points.
+- SRD 5.2.1 Playing the Game: monsters die when they drop to 0 Hit Points unless the GM treats one like a character.
+- SRD 5.2.1 Playing the Game: a character at 0 Hit Points falls Unconscious unless Instant Death applies.
+- SRD 5.2.1 Playing the Game: Massive Damage kills a character when remaining damage at 0 equals or exceeds Hit Point Maximum.
+- `UBIQUITOUS_LANGUAGE.md`: Temporary Hit Points are absorbed before HP, and Instant Death is the 0-HP remaining-damage threshold.
+
+Verification results:
+
+- Base check passed: `git log --oneline -1 codex/cleanroom-reducer-full-lane-20260705-restart2` and `git log --oneline -1 HEAD` both resolved to `5a3fb5554 Merge Ralph task 100 status`; `git merge-base --is-ancestor 5a3fb555472b3a1adbb66da59d5c161b91e8f954 HEAD` passed.
+- JSON validation passed: `jq empty tasks/target-replay-evidence/CRPI-READY-029.json tasks/ENGINE_DEPTH_MANIFEST.json tasks/STATE_OWNER_MANIFEST.json`.
+- Pre-MBT process checks passed: no existing `vitest` or `quint_evaluator` processes were running.
+- Focused MBT replay passed: `START=$(date +%s); cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=4 pnpm exec vitest run src/rule-core-hit-point-damage.mbt.test.ts 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 1 test in `TOTAL: 9s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `pnpm cleanroom-harness:check` passed.
+- `git diff --check` passed.
+- Requested broad verification passed: `flock /tmp/dnd-mbt-qnt.lock pnpm quality`.
+- Reviewer-loop convergence passed: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks found no remaining reasonable Task 71 findings.
+
 ## CRPI-READY-028
 
 - Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`

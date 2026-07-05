@@ -1,34 +1,23 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRP06-SRO-03",
+  "taskId": "CRPI-READY-029",
   "durableFields": [
     {
-      "owner": "CharacterSheetSpellSlotOwner",
+      "owner": "RuleCoreHitPointDamageOwner",
       "fields": [
-        "CharacterSheet.spellSlotExpenditures",
-        "CharacterSheet.createdSpellSlots"
+        "BattleCreatureState.hp",
+        "BattleCreatureState.maxHp",
+        "BattleCreatureState.tempHp",
+        "BattleCreatureState.conditions",
+        "BattleCreatureState.zeroHpLifecycle",
+        "BattleCreatureState.positiveHpUnconscious"
       ],
-      "notes": "Owns nonzero ordinary Spell Slot expenditure deltas, created Spell Slot delta state, created-slot expiry on Long Rest, and Arcane Recovery ordinary-slot refunds. Ordinary Spell Slot capacity remains derived from CharacterBuild spellcasting slot tables."
-    },
-    {
-      "owner": "CharacterSheetPactSlotOwner",
-      "fields": [
-        "CharacterSheet.pactSlotExpenditure"
-      ],
-      "notes": "Owns spent Pact Slot state, Short Rest and Long Rest Pact Slot restoration, and Magical Cunning Pact Slot recovery. Pact Slot level and count remain derived from CharacterBuild Pact Magic facts."
-    },
-    {
-      "owner": "CharacterSheetFeatureResourceOwner",
-      "fields": [
-        "CharacterSheet.restFeatureUses"
-      ],
-      "notes": "Owns rest-triggered feature-use lockouts for Arcane Recovery and Magical Cunning. The feature-use fact is distinct from the slot delta owned by the Spell Slot or Pact Slot owner."
+      "notes": "Owns applying resolved damage to current Hit Points, Temporary Hit Points, and zero-HP consequences. Hit Point Maximum is consumed from existing creature state; the replay adds no alternate HP ledger."
     }
   ],
   "notes": [
-    "Task 101 introduced no duplicate ordinary Spell Slot capacity, Pact Slot capacity, or Pact Slot level state.",
-    "Invalid stored ordinary Spell Slot and Pact Slot expenditures are rejected against build-derived capacity instead of normalized into a fresh table.",
-    "qState is target replay semantic evidence derived from public Character Sheet sheet creation, rest, slot conversion, and Magical Cunning entrypoints with helper projections.",
-    "qRoute is target replay route evidence derived from the character-sheet reducer route vocabulary, not authored identity."
+    "Task 71 introduced no new durable state fields.",
+    "Temporary Hit Points remain BattleCreatureState.tempHp and are projected through hpDamageProjection rather than duplicated in adapter state.",
+    "qComponentRoute is target replay route evidence derived from typed rule-core component route vocabulary, not authored identity."
   ]
 }
