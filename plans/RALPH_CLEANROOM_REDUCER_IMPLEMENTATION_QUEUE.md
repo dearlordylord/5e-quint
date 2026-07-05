@@ -439,7 +439,7 @@
     {
       "number": 73,
       "id": "CRPI-READY-031",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: rule-core-reactions"
     },
     {
@@ -725,7 +725,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRPI-READY-028` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-029` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-READY-030` | `done` | none | target replay evidence and owner implementation |
-| `CRPI-READY-031` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-READY-031` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-032` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-READY-033` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-037` | `blocked` | blocked by task body | blocker resolution before implementation |
@@ -4802,7 +4802,7 @@ Plan Impact:
 
 ### Task 73 - CRPI-READY-031
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

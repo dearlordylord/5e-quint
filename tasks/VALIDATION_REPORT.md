@@ -1,5 +1,109 @@
 # Validation Report
 
+## CRPI-READY-031
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Driver path: `packages/battle-runtime/rule-core-reactions.mbt.qnt`
+- Component connector path: `packages/battle-runtime/rule-core-reactions.mbt.qnt`
+- Route class: `component-first`
+- Durable owner: `RuleCoreReactionContinuationConcentrationOwner`
+- Accepted projection: `qComponentRoute`
+- Status: `accepted`
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-031.json`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/rule-core-reactions.mbt.qnt`
+- `packages/battle-runtime/rule-core-component-route.qnt`
+- `packages/battle-runtime/src/rule-core-reactions.mbt.test.ts`
+- `packages/battle-runtime/src/rule-core-component-route.ts`
+- `packages/battle-runtime/src/battle-reducer/dispatcher.ts`
+- `packages/battle-runtime/src/battle-reducer/attack-resolution.ts`
+- `packages/battle-runtime/src/battle-reducer/readied-release.ts`
+- `packages/battle-runtime/src/battle-reducer/damage-apply.ts`
+- `packages/battle-runtime/src/battle-reducer/domain-helpers.ts`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-convergence-backlog.json`
+- `.references/srd-5.2.1/Playing-the-Game.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+The component-first replay for rule-core Reaction, continuation, Readied Movement,
+and Concentration now has accepted target evidence for the copied
+`qComponentRoute` projection. The target harness records the reusable component
+route sequence parse input, admit input, call `RuleCoreReactionContinuationConcentrationOwner`, and project
+result before downstream battle spell-effect and feature routes consume this
+owner.
+
+Runtime projections are produced through public battle-runtime Reaction, Ready,
+Readied Movement, interrupt, and Concentration damage entrypoints via
+`resolveBattleSubject`, `resolveBattleInterrupt`, and
+`resolveBattleConcentrationDamage`, then compared to the copied component
+connector route. No production reducer state was added: reaction availability,
+pending interrupt stack, readied responses, movement spend, concentration, and
+save DC projection remain on existing battle state fields and helper APIs.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Harness | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doBreakReactorConcentrationAfterLargeDamage` | `tasks/target-replay-evidence/CRPI-READY-031.json#driver:packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doBreakReactorConcentrationAfterLargeDamage#trace:component-route=RuleCoreReactionContinuationConcentrationOwner action=doBreakReactorConcentrationAfterLargeDamage qComponentRoute=reaction-continuation-concentration-component-route` | `packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#replays QCORE8 Reaction, continuation, Readied Movement, and Concentration parity` | `covered` |
+| `packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doDeclineOpportunityAttack` | `tasks/target-replay-evidence/CRPI-READY-031.json#driver:packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doDeclineOpportunityAttack#trace:component-route=RuleCoreReactionContinuationConcentrationOwner action=doDeclineOpportunityAttack qComponentRoute=reaction-continuation-concentration-component-route` | `packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#replays QCORE8 Reaction, continuation, Readied Movement, and Concentration parity` | `covered` |
+| `packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doDeclineReadiedMovement` | `tasks/target-replay-evidence/CRPI-READY-031.json#driver:packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doDeclineReadiedMovement#trace:component-route=RuleCoreReactionContinuationConcentrationOwner action=doDeclineReadiedMovement qComponentRoute=reaction-continuation-concentration-component-route` | `packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#replays QCORE8 Reaction, continuation, Readied Movement, and Concentration parity` | `covered` |
+| `packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doHoldReactorConcentrationAfterSmallDamage` | `tasks/target-replay-evidence/CRPI-READY-031.json#driver:packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doHoldReactorConcentrationAfterSmallDamage#trace:component-route=RuleCoreReactionContinuationConcentrationOwner action=doHoldReactorConcentrationAfterSmallDamage qComponentRoute=reaction-continuation-concentration-component-route` | `packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#replays QCORE8 Reaction, continuation, Readied Movement, and Concentration parity` | `covered` |
+| `packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doOfferOpportunityAttack` | `tasks/target-replay-evidence/CRPI-READY-031.json#driver:packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doOfferOpportunityAttack#trace:component-route=RuleCoreReactionContinuationConcentrationOwner action=doOfferOpportunityAttack qComponentRoute=reaction-continuation-concentration-component-route` | `packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#replays QCORE8 Reaction, continuation, Readied Movement, and Concentration parity` | `covered` |
+| `packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doOfferReadiedMovement` | `tasks/target-replay-evidence/CRPI-READY-031.json#driver:packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doOfferReadiedMovement#trace:component-route=RuleCoreReactionContinuationConcentrationOwner action=doOfferReadiedMovement qComponentRoute=reaction-continuation-concentration-component-route` | `packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#replays QCORE8 Reaction, continuation, Readied Movement, and Concentration parity` | `covered` |
+| `packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doReadyMovementFixture` | `tasks/target-replay-evidence/CRPI-READY-031.json#driver:packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doReadyMovementFixture#trace:component-route=RuleCoreReactionContinuationConcentrationOwner action=doReadyMovementFixture qComponentRoute=reaction-continuation-concentration-component-route` | `packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#replays QCORE8 Reaction, continuation, Readied Movement, and Concentration parity` | `covered` |
+| `packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doRejectReadiedMovementZero` | `tasks/target-replay-evidence/CRPI-READY-031.json#driver:packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doRejectReadiedMovementZero#trace:component-route=RuleCoreReactionContinuationConcentrationOwner action=doRejectReadiedMovementZero qComponentRoute=reaction-continuation-concentration-component-route` | `packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#replays QCORE8 Reaction, continuation, Readied Movement, and Concentration parity` | `covered` |
+| `packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doStartReactorConcentrationFixture` | `tasks/target-replay-evidence/CRPI-READY-031.json#driver:packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doStartReactorConcentrationFixture#trace:component-route=RuleCoreReactionContinuationConcentrationOwner action=doStartReactorConcentrationFixture qComponentRoute=reaction-continuation-concentration-component-route` | `packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#replays QCORE8 Reaction, continuation, Readied Movement, and Concentration parity` | `covered` |
+| `packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doTakeReadiedMovementFill` | `tasks/target-replay-evidence/CRPI-READY-031.json#driver:packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doTakeReadiedMovementFill#trace:component-route=RuleCoreReactionContinuationConcentrationOwner action=doTakeReadiedMovementFill qComponentRoute=reaction-continuation-concentration-component-route` | `packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#replays QCORE8 Reaction, continuation, Readied Movement, and Concentration parity` | `covered` |
+| `packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doTakeReadiedMovementShort` | `tasks/target-replay-evidence/CRPI-READY-031.json#driver:packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doTakeReadiedMovementShort#trace:component-route=RuleCoreReactionContinuationConcentrationOwner action=doTakeReadiedMovementShort qComponentRoute=reaction-continuation-concentration-component-route` | `packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#replays QCORE8 Reaction, continuation, Readied Movement, and Concentration parity` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-031.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id pattern: `component-route=RuleCoreReactionContinuationConcentrationOwner action=<branchAction> qComponentRoute=reaction-continuation-concentration-component-route`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-READY-031/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 73.
+
+RAW / ubiquitous-language trace:
+
+- SRD 5.2.1 Playing the Game: a Reaction is an instant response to a trigger and can occur on another creature's turn.
+- SRD 5.2.1 Rules Glossary: taking a Reaction spends the Reaction until the start of the reactor's next turn.
+- SRD 5.2.1 Rules Glossary: Ready creates a held response that can be taken as a Reaction before the start of the actor's next turn; Readied Movement can move up to Speed.
+- SRD 5.2.1 Playing the Game and Rules Glossary: Opportunity Attacks trigger when a visible creature leaves reach using movement/action/Bonus Action/Reaction/Speed, and are made by taking a Reaction.
+- SRD 5.2.1 Rules Glossary: Readied spells require Concentration while held, and damage requires a Constitution saving throw to maintain Concentration with DC max(10, half damage), capped at 30.
+- `UBIQUITOUS_LANGUAGE.md`: Reaction, Ready Action, Readied Response, Readied Movement Response, Opportunity Attack, Concentration, Movement, Speed, and Damage terms match the modeled domain language.
+
+Verification results:
+
+- Base check passed: declared base ref `ralph/cleanroom-reducer-full-lane-20260705-restart3/integration` resolved to `a0b81ec24 Mark Ralph task 72 done`; `HEAD` resolved to `a0b81ec24 Mark Ralph task 72 done`; `git merge-base --is-ancestor a0b81ec24888d94c8b478c879423525c1f501cae HEAD` passed, so the Task Base SHA remains an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against SRD 5.2.1 Playing the Game Reactions, Ready, Opportunity Attacks; Rules Glossary Reaction, Ready, Opportunity Attacks, Concentration; and `UBIQUITOUS_LANGUAGE.md`.
+- JSON validation passed: `jq empty tasks/target-replay-evidence/CRPI-READY-031.json tasks/ENGINE_DEPTH_MANIFEST.json tasks/STATE_OWNER_MANIFEST.json tasks/RUN_LEDGER.json`.
+- Pre-MBT process check found no actual Vitest or `quint_evaluator` worker process; it only matched the Ralph monitor command text.
+- Focused MBT replay passed: `START=$(date +%s); cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=6 pnpm exec vitest run src/rule-core-reactions.mbt.test.ts 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 1 test in `TOTAL: 19s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- Scoped target evidence validation passed: `node scoped validateTargetReplayEvidence for CRPI-READY-031 reaction driver` covered 11 Task 73 obligations.
+- `git diff --check` passed.
+- Requested broad verification passed: `flock /tmp/dnd-mbt-qnt.lock pnpm quality`. App lint reported warnings only and exited 0; turbo typecheck passed all 9 packages from cache.
+- Reviewer-loop convergence passed: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks found no remaining reasonable Task 73 findings before verification.
+
 ## CRP04-CCF-03 - Character Creation Choice Cardinality and Support-Profile Rejection
 
 - Manifest source commit SHA: `84e17424ba5882f076783f4bd0780b34d2a0a58e`

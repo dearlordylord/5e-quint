@@ -1,88 +1,85 @@
 {
-  "schemaVersion": 1,
-  "taskId": "CRP04-CCF-03",
-  "productionModulesExtended": [
-    {
-      "path": "packages/character-creation-runtime/src/fill-reducer.ts",
-      "role": "domain-engine",
-      "domainApis": [
-        "fillCreationHoles",
-        "creationFillIssues"
-      ]
-    }
-  ],
+  "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+      "path": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
       "quarantinedWitnessNames": [
-        "qState",
-        "CreationRuntimeWitnessState",
-        "CreationRejected",
-        "batchIssueCodes",
-        "fillIssues"
+        "qInterruptedMovementSpentFeet",
+        "qReactorReactionAvailable",
+        "qReactorReadiedMovementHeld",
+        "qReactorReadiedSpellHeld",
+        "qReactorMovementSpentFeet",
+        "qInterruptedConcentration",
+        "qReactorConcentration",
+        "qReactionWindow",
+        "qPendingTrigger",
+        "qProtocol",
+        "qLastConcentrationSaveDc",
+        "qComponentRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRP04-CCF-03.json"
+        "tasks/target-replay-evidence/CRPI-READY-031.json"
       ]
     },
     {
-      "path": "packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt",
+      "path": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "qRoute",
-        "RouteApplyCreationFillBatch",
-        "RouteDiscoverCreationHoles",
-        "CreationSupportProfileAdmissionOwner",
-        "CharacterDraftOwner"
+        "RuleCoreReactionProjection",
+        "createRuleCoreReactionDriver",
+        "normalizeRuleCoreReactionQuintState",
+        "reactionStateCheck"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRP04-CCF-03.json"
+        "tasks/target-replay-evidence/CRPI-READY-031.json"
       ]
-    },
-    {
-      "path": "packages/character-creation-runtime/src/character-creation-runtime.mbt.test.ts",
-      "quarantinedWitnessNames": [
-        "normalizeQuintState",
-        "RuntimeMbtState",
-        "character-creation-runtime-state",
-        "rejectedFillBatchSteps",
-        "doRejectUnsupportedLanguage",
-        "doRejectDuplicateLanguage",
-        "doRejectTooFewLanguages",
-        "doRejectTooManyLanguages",
-        "doRejectUnsupportedClassEquipment"
-      ],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRP04-CCF-03.json"
-      ]
-    },
-    {
-      "path": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
-      "quarantinedWitnessNames": [
-        "normalizeCharacterCreationRouteQuintState",
-        "RouteProjection",
-        "route-event-list",
-        "routes language and equipment fill rejections to draft or support-profile owners"
-      ],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRP04-CCF-03.json"
-      ]
-    }
-  ],
-  "accumulatorGrowth": [],
-  "expectedNextReuse": [
-    {
-      "driver": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
-      "module": "packages/character-creation-runtime/src/fill-reducer.ts",
-      "api": "fillCreationHoles remains the public atomic batch entrypoint for rejected creation fills; validation completes before draft mutation, choice cardinality is read from the discovered hole shape, support-profile admission remains a separate rejection owner, and rejected results derive holes and finalization from the unchanged draft."
-    },
-    {
-      "driver": "packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt",
-      "module": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
-      "api": "Character creation route replay records cardinality and duplicate-choice rejection under CharacterDraftOwner while valid unsupported choices route to CreationSupportProfileAdmissionOwner."
     }
   ],
   "completion": {
-    "tag": "accepted",
-    "notes": "Task 91 records rejected qState and qRoute replay evidence for language choice cardinality, duplicate options, valid unsupported language choices, and valid unsupported class equipment choices. No duplicate durable required-count, open-hole, finalization, or issue store was introduced."
-  }
+    "notes": "Task 73 observes copied qComponentRoute for rule-core Reaction, continuation, Readied Movement, and Concentration through public battle-runtime subject, interrupt, and concentration-damage entrypoints. No duplicate durable state was introduced.",
+    "tag": "accepted"
+  },
+  "expectedNextReuse": [
+    {
+      "api": "Future reaction spell routes can consume accepted Reaction, pending interrupt, reaction-spend, and continuation component facts through existing public battle subject and interrupt APIs.",
+      "driver": "packages/battle-runtime/battle-runtime-reaction-spell-selected-identity.mbt.qnt",
+      "module": "packages/battle-runtime/src/battle-reducer/dispatcher.ts"
+    },
+    {
+      "api": "Future readied-response and movement-triggered routes should thread existing readied response and pending interrupt state rather than duplicate Reaction or continuation ledgers.",
+      "driver": "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt",
+      "module": "packages/battle-runtime/src/battle-reducer/readied-release.ts"
+    }
+  ],
+  "productionModulesExtended": [
+    {
+      "notes": "Existing public battle reducer subject and interrupt dispatch paths reused as the target component call surface for copied qComponentRoute replay of Reaction offers, declines, reaction spend, pending interrupt stack depth, and Ready/Readied Movement continuation.",
+      "owners": [
+        "RuleCoreReactionContinuationConcentrationOwner"
+      ],
+      "path": "packages/battle-runtime/src/battle-reducer/dispatcher.ts"
+    },
+    {
+      "notes": "Existing Ready action reducer path reused for readied movement setup; no alternate readied response state was added.",
+      "owners": [
+        "RuleCoreReactionContinuationConcentrationOwner"
+      ],
+      "path": "packages/battle-runtime/src/battle-reducer/attack-resolution.ts"
+    },
+    {
+      "notes": "Existing Readied Movement release reducer path reused for target replay of resolve and invalid-fill outcomes through the public interrupt API.",
+      "owners": [
+        "RuleCoreReactionContinuationConcentrationOwner"
+      ],
+      "path": "packages/battle-runtime/src/battle-reducer/readied-release.ts"
+    },
+    {
+      "notes": "Existing Concentration damage reducer path reused for target replay of saving throw DC projection and concentration retention/break behavior.",
+      "owners": [
+        "RuleCoreReactionContinuationConcentrationOwner"
+      ],
+      "path": "packages/battle-runtime/src/battle-reducer/damage-apply.ts"
+    }
+  ],
+  "schemaVersion": 1,
+  "taskId": "CRPI-READY-031"
 }
