@@ -289,7 +289,7 @@
     {
       "number": 48,
       "id": "CRPI-READY-017",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-sorcerer-metamagic-selected-identity"
     },
     {
@@ -3421,7 +3421,7 @@ Plan Impact:
 
 ### Task 48 - CRPI-READY-017
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
