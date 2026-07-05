@@ -1,36 +1,45 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-023",
+  "taskId": "CRPI-READY-024",
   "durableFields": [
+    {
+      "fieldPath": "AvailableBattleAct.routeEvents",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "owner": "executable-boundary-projection",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleSubject action attack and BattleHole.kind",
+        "boundary": "discoverBattleActs public reducer boundary"
+      }
+    },
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "runtimeCommand endTurn subject, BattleHole.kind, BattleFill.kind, and BattleState combatant activeEffects",
-        "boundary": "endTurn public reducer boundary"
+        "sourceField": "BattleSubject action attack, BattleFill.kind, BattleHole.kind, BattleCreatureState.hp, BattleCreatureState.activeEffects, BattleCreatureState.conditions, and BattleState.currentTurnResources.weaponMasteryCleaveAttackersUsedThisTurn",
+        "boundary": "resolveBattleSubject public reducer boundary"
       }
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=turnBoundaryEffectLifecycle",
+      "fieldPath": "BattleReducerRouteEvent.subject=weaponMasteryProperty",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "runtimeCommand endTurn subject with rolledDice and savingThrowOutcome holes/fills for active turn-boundary Spell Effects",
+        "sourceField": "typed Weapon Attack fills, unitFeatureDecision holes/fills, active-effect state changes, condition lifecycle frontiers, and Cleave turn resource settlement",
         "boundary": "battleReducerRouteForResolution"
       }
     }
   ],
   "notes": [
-    "Task 61 introduced no new BattleState, BattleCreatureState, HP, active-effect, ongoing-feature, or initiative durable field.",
-    "Initiative order and round advancement remain existing BattleState.initiative facts owned by the turn-boundary reducer.",
+    "Task 65 introduced no new BattleState, BattleCreatureState, Hit Point, condition, active-effect, or feature-resource durable field.",
+    "Selected Weapon Mastery identity remains an admitted source reference on character weapon mastery selection and Unit support-profile facts; production route behavior does not branch on authored mastery ids, weapon names, QNT branch names, or fixture labels.",
     "Hit Points remain existing BattleCreatureState.hp facts owned by the Hit Point reducer.",
-    "Active Spell Effects remain existing BattleCreatureState.activeEffects facts owned by the active-effect lifecycle reducer.",
-    "Ongoing Feature occurrences remain existing BattleCreatureState.activeOngoingFeatureOccurrences facts owned by the ongoing-feature lifecycle reducer.",
-    "Same-timing order remains at the public turn-boundary hole/fill frontier; no fixture-local ordering ledger was added.",
-    "Route events are public reducer boundary projections derived from endTurn subject shape, active-effect kind shape, and typed holes/fills.",
-    "The route does not dispatch on authored spell identity, QNT branch names, witness field names, connector filenames, or fixture labels."
+    "Topple Prone condition lifecycle remains existing BattleCreatureState.conditions state.",
+    "Sap next-Attack-Roll rider remains existing BattleCreatureState.activeEffects state.",
+    "Cleave once-per-turn use remains existing BattleState.currentTurnResources.weaponMasteryCleaveAttackersUsedThisTurn state.",
+    "Route events are public reducer boundary projections derived from subject shape, fill kind, hole family, and existing battle-owned state transitions."
   ]
 }

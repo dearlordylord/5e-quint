@@ -1,5 +1,97 @@
 # Validation Report
 
+## CRPI-READY-024
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Driver: `packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt`
+- Route connector: `packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+- Acceptance status: `accepted`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.route.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-reducer-route.qnt`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Equipment.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+Weapon Mastery selected-identity replay now compares the copied
+`WeaponMasteryPropertyRouteSubject` `qRoute` to public reducer route events.
+The target driver derives its projection by calling public reducer entrypoints:
+the route begins with `battleReducerStartRouteEvent`, discovers the weapon
+Attack act through `discoverBattleActs`, then resolves target choice, Attack
+Roll, damage roll, Saving Throw outcome, Unit Feature decision, and Cleave
+second-attack fills through `resolveBattleSubject`.
+
+The runtime does not add a parallel mastery-property ledger. Selected mastery
+identity remains a catalog/admission reference; target Hit Points remain in
+`BattleCreatureState.hp`; Topple Prone lifecycle remains in
+`BattleCreatureState.conditions`; Sap next-Attack-Roll rider state remains in
+`BattleCreatureState.activeEffects`; Cleave once-per-turn use remains in
+`BattleState.currentTurnResources.weaponMasteryCleaveAttackersUsedThisTurn`.
+Route admission is derived from typed weapon Attack fills, mastery rider hole
+families, active-effect/condition state changes, and feature-resource
+settlement.
+
+Generated branch coverage:
+
+| Obligation | Target replay evidence | Diagnostic tests | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt#step:doResolveSapMasteryPropertyHit` | `tasks/target-replay-evidence/CRPI-READY-024.json#driver:packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt#step:doResolveSapMasteryPropertyHit#trace:public-route=weaponMasteryProperty action=doResolveSapMasteryPropertyHit qRoute=sap-active-effect-rider-public-route` | `packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts#compares Weapon Mastery property public reducer routes to copied qRoute` | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt#step:doResolveToppleMasteryPropertyFailedSavingThrow` | `tasks/target-replay-evidence/CRPI-READY-024.json#driver:packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt#step:doResolveToppleMasteryPropertyFailedSavingThrow#trace:public-route=weaponMasteryProperty action=doResolveToppleMasteryPropertyFailedSavingThrow qRoute=topple-condition-rider-public-route` | `packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts#compares Weapon Mastery property public reducer routes to copied qRoute` | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt#step:doResolveCleaveMasteryPropertySecondTargetHit` | `tasks/target-replay-evidence/CRPI-READY-024.json#driver:packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt#step:doResolveCleaveMasteryPropertySecondTargetHit#trace:public-route=weaponMasteryProperty action=doResolveCleaveMasteryPropertySecondTargetHit qRoute=cleave-second-target-hit-public-route` | `packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts#compares Weapon Mastery property public reducer routes to copied qRoute` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-024.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace ids:
+  - `public-route=weaponMasteryProperty action=doResolveSapMasteryPropertyHit qRoute=sap-active-effect-rider-public-route`
+  - `public-route=weaponMasteryProperty action=doResolveToppleMasteryPropertyFailedSavingThrow qRoute=topple-condition-rider-public-route`
+  - `public-route=weaponMasteryProperty action=doResolveCleaveMasteryPropertySecondTargetHit qRoute=cleave-second-target-hit-public-route`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-READY-024/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 65.
+
+Plan Impact:
+
+- Status: `none`
+- Affected tasks:
+  - Task 65 / `CRPI-READY-024`: `unblocked`; copied `qRoute` replay is accepted.
+  - Future Weapon Mastery property expansion tasks for Graze, Nick, Push, Slow, and Vex: `left unchanged`.
+- Observations:
+  - Public reducer-route vocabulary now includes `weaponMasteryProperty` plus `unitFeatureDecision` holes/fills so Cleave can be represented without a fixture-local route table.
+  - Existing BattleState owners already cover the durable facts required by the route: HP, active effects, conditions, and Cleave turn-use resources.
+- Required plan edits: none.
+
+Verification results:
+
+- Base check passed: declared base ref `ralph/cleanroom-reducer-full-lane-20260704T211636Z/integration` was `e0a4a98bf Mark Ralph task 61 done`, `HEAD` was `e0a4a98bf Mark Ralph task 61 done`, and `git merge-base --is-ancestor e0a4a98bf52475bb489fb8aee4c6fbb0779a96be HEAD` exited 0.
+- `pnpm --filter @dnd/battle-runtime typecheck` passed.
+- Initial focused route replay showed the deterministic Topple/Cleave route wrappers needed leaf action callbacks for the TS driver; the connector wrappers were changed to the existing `any { leaf }` pattern.
+- `START=$(date +%s); MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/battle-runtime exec vitest run src/weapon-mastery-selected-identity.mbt.test.ts 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 3 tests and `TOTAL: 10s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- `pnpm quality` passed end to end. The app lint stage reported warnings only and exited 0.
+- RAW/ubiquitous-language review passed against Equipment.md Mastery Properties, Sap, Topple, Cleave, and UBIQUITOUS_LANGUAGE.md terms for Mastery Property, Weapon Mastery, Attack Roll, Saving Throw, Condition, Rider, and Hit Points.
+- Reviewer-loop convergence round 1 identified and fixed missing public route projection for ordinary weapon attacks, `unitFeatureDecision` route holes/fills, and deterministic wrapper callback shape; round 2 verified no duplicate durable state, no authored-identity dispatch, and no remaining reasonable RAW/domain, architecture/connascence, or code-review findings in the touched surface.
+
 ## CRPI-READY-019
 
 - Manifest source commit SHA: `0da15bfe0871d5a45782c7ac355d622be8907d44`

@@ -121,6 +121,10 @@ module battleRuntimeWeaponMasterySelectedIdentityRouteMbt {
     ),
   }
 
+  action stepRouteSapPropertyActiveEffectRider = any {
+    doRouteSapPropertyActiveEffectRider,
+  }
+
   action doRouteTopplePropertySaveGate = all {
     qStage == Init,
     recordStage(
@@ -149,6 +153,34 @@ module battleRuntimeWeaponMasterySelectedIdentityRouteMbt {
         )
       ),
     ),
+  }
+
+  action doRouteTopplePropertyConditionRiderReplay = all {
+    qStage == Init,
+    recordStage(
+      TopplePropertyConditionRider,
+      weaponAttackRollRoute
+        .append(
+          resolveRoute(
+            WeaponMasteryPropertyRouteSubject,
+            AttackRollFillKind,
+            Set(SavingThrowOutcomeHoleKind),
+            BattleConditionLifecycleOwner,
+          )
+        )
+        .append(
+          resolveRoute(
+            WeaponMasteryPropertyRouteSubject,
+            SavingThrowOutcomeFillKind,
+            weaponDamageHoles,
+            BattleConditionLifecycleOwner,
+          )
+        ),
+    ),
+  }
+
+  action stepRouteTopplePropertyConditionRider = any {
+    doRouteTopplePropertyConditionRiderReplay,
   }
 
   action doRouteCleavePropertyDecision = all {
@@ -233,6 +265,72 @@ module battleRuntimeWeaponMasterySelectedIdentityRouteMbt {
           )
         ),
     ),
+  }
+
+  action doRouteCleavePropertySecondDamageReplay = all {
+    qStage == Init,
+    recordStage(
+      CleavePropertySecondDamage,
+      weaponHitDamageRoute
+        .append(
+          resolveRoute(
+            WeaponAttackRouteSubject,
+            RolledDiceFillKind,
+            Set(UnitFeatureDecisionHoleKind),
+            BattleHitPointOwner,
+          )
+        )
+        .append(
+          resolveRouteWithoutFill(
+            WeaponMasteryPropertyRouteSubject,
+            Set(UnitFeatureDecisionHoleKind),
+            BattleFeatureResourceOwner,
+          )
+        )
+        .append(
+          resolveRoute(
+            WeaponMasteryPropertyRouteSubject,
+            UnitFeatureDecisionFillKind,
+            Set(TargetChoiceHoleKind),
+            BattleFeatureResourceOwner,
+          )
+        )
+        .append(
+          resolveRoute(
+            WeaponMasteryPropertyRouteSubject,
+            TargetChoiceFillKind,
+            weaponAttackRollHoles,
+            BattleTargetSelectionOwner,
+          )
+        )
+        .append(
+          resolveRoute(
+            WeaponMasteryPropertyRouteSubject,
+            AttackRollFillKind,
+            weaponDamageHoles,
+            BattleAttackRollOwner,
+          )
+        )
+        .append(
+          resolveRoute(
+            WeaponMasteryPropertyRouteSubject,
+            RolledDiceFillKind,
+            noHoles,
+            BattleHitPointOwner,
+          )
+        )
+        .append(
+          resolveRouteWithoutFill(
+            WeaponMasteryPropertyRouteSubject,
+            noHoles,
+            BattleFeatureResourceOwner,
+          )
+        ),
+    ),
+  }
+
+  action stepRouteCleavePropertySecondDamage = any {
+    doRouteCleavePropertySecondDamageReplay,
   }
 
   action step = any {

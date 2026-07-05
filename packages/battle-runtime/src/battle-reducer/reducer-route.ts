@@ -53,7 +53,8 @@ export type BattleReducerRouteSubjectFamily =
   | "turnBoundaryEffectLifecycle"
   | "slotSpell"
   | "spellAttackProcedure"
-  | "weaponAttack";
+  | "weaponAttack"
+  | "weaponMasteryProperty";
 
 export type BattleReducerRouteOwnerGroup =
   | "battleActionEconomy"
@@ -95,7 +96,8 @@ export type BattleReducerRouteHole =
   | "spellTargetAllocation"
   | "spellTargetList"
   | "targetAbilityChoices"
-  | "targetChoice";
+  | "targetChoice"
+  | "unitFeatureDecision";
 
 export type BattleReducerRouteFillKind =
   | "abilityChoice"
@@ -113,7 +115,8 @@ export type BattleReducerRouteFillKind =
   | "spellTargetAllocation"
   | "spellTargetList"
   | "targetAbilityChoices"
-  | "targetChoice";
+  | "targetChoice"
+  | "unitFeatureDecision";
 export type BattleReducerRouteFill =
   | BattleReducerRouteFillKind
   | {
@@ -221,6 +224,16 @@ export function battleReducerRouteEventsForDiscoveredAct(
   const sleepRepeatSaveRoute = sleepRepeatSaveRouteForDiscoveredAct(act);
   if (sleepRepeatSaveRoute !== undefined) {
     return [sleepRepeatSaveRoute];
+  }
+  if (isWeaponAttackSubject(act.subject)) {
+    return [
+      {
+        kind: "discoverBattleActs",
+        subject: "weaponAttack",
+        holes: battleReducerRouteHoles(act.initialHoles),
+        owner: "battleActionEconomy",
+      },
+    ];
   }
   if (isConcentrationTeardownDiscoverySubject(act.subject)) {
     return [
@@ -2691,13 +2704,10 @@ function weaponAttackRouteForResolution(
   input: BattleResolutionInput,
   result: BattleResolutionResult,
 ): BattleReducerRouteEvents | undefined {
-  if (input.state.interruptStack.at(-1)?.kind !== "replayContinuation") {
-    return undefined;
-  }
   if (!isWeaponAttackSubject(input.subject)) {
     return undefined;
   }
-  if (result.tag !== "resolved") {
+  if (result.tag === "invalid") {
     return undefined;
   }
 
@@ -2706,24 +2716,108 @@ function weaponAttackRouteForResolution(
     return undefined;
   }
   const routeFill = battleReducerRouteFill(fill);
+  if (routeFill === undefined) {
+    return undefined;
+  }
+  const holes =
+    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
+  const event = (
+    subject: BattleReducerRouteSubjectFamily,
+    owner: BattleReducerRouteOwnerGroup,
+  ): BattleReducerRouteEvent => ({
+    kind: "resolveBattleSubject",
+    subject,
+    fill: routeFill,
+    holes,
+    owner,
+  });
+
+  if (weaponMasteryCleaveRouteStarted(input.fills)) {
+    return weaponMasteryCleaveRouteForResolution(input, result, event);
+  }
+
+  if (routeFill === "targetChoice") {
+    return [event("weaponAttack", "battleTargetSelection")];
+  }
+  if (routeFill === "attackRoll") {
+    return holes.includes("savingThrowOutcome")
+      ? [event("weaponMasteryProperty", "battleConditionLifecycle")]
+      : [event("weaponAttack", "battleAttackRoll")];
+  }
+  if (routeFill === "savingThrowOutcome") {
+    return [event("weaponMasteryProperty", "battleConditionLifecycle")];
+  }
   if (routeFill !== "rolledDice") {
     return undefined;
   }
 
-  const weaponDamageRoute: BattleReducerRouteEvent = {
-    kind: "resolveBattleSubject",
-    subject: "weaponAttack",
-    fill: routeFill,
-    holes: [],
-    owner: "battleHitPoint",
-  };
-  return [
-    weaponDamageRoute,
-    {
+  const weaponDamageRoute = event("weaponAttack", "battleHitPoint");
+  const routeTail: BattleReducerRouteEvent[] = [];
+  if (holes.includes("unitFeatureDecision")) {
+    routeTail.push({
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "weaponMasteryProperty",
+      holes,
+      owner: "battleFeatureResource",
+    });
+  } else if (combatantsActiveEffectsChanged(input.state, result.state)) {
+    routeTail.push({
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "weaponMasteryProperty",
+      holes,
+      owner: "battleActiveEffect",
+    });
+  }
+  if (
+    input.state.interruptStack.at(-1)?.kind === "replayContinuation" &&
+    result.tag === "resolved"
+  ) {
+    routeTail.push({
       kind: "resolveBattleSubjectWithoutFill",
       subject: "interruptStackResume",
       holes: [],
       owner: "battleInterruptStack",
+    });
+  }
+  return [weaponDamageRoute, ...routeTail];
+}
+
+function weaponMasteryCleaveRouteStarted(fills: readonly BattleFill[]): boolean {
+  return fills.some((fill) => fill.kind === "unitFeatureDecision");
+}
+
+function weaponMasteryCleaveRouteForResolution(
+  input: BattleResolutionInput,
+  result: Exclude<BattleResolutionResult, { readonly tag: "invalid" }>,
+  event: (
+    subject: BattleReducerRouteSubjectFamily,
+    owner: BattleReducerRouteOwnerGroup,
+  ) => BattleReducerRouteEvent,
+): BattleReducerRouteEvents | undefined {
+  const fill = input.fills.at(-1);
+  if (fill === undefined) {
+    return undefined;
+  }
+  const routeFill = battleReducerRouteFill(fill);
+  if (routeFill === "unitFeatureDecision") {
+    return [event("weaponMasteryProperty", "battleFeatureResource")];
+  }
+  if (routeFill === "targetChoice") {
+    return [event("weaponMasteryProperty", "battleTargetSelection")];
+  }
+  if (routeFill === "attackRoll") {
+    return [event("weaponMasteryProperty", "battleAttackRoll")];
+  }
+  if (routeFill !== "rolledDice" || result.tag !== "resolved") {
+    return undefined;
+  }
+  return [
+    event("weaponMasteryProperty", "battleHitPoint"),
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "weaponMasteryProperty",
+      holes: [],
+      owner: "battleFeatureResource",
     },
   ];
 }
@@ -3035,6 +3129,7 @@ function battleReducerRouteHole(
   if (family === "spellTargetAllocation") return ["spellTargetAllocation"];
   if (family === "spellTargetList") return ["spellTargetList"];
   if (family === "targetChoice") return ["targetChoice"];
+  if (family === "unitFeatureDecision") return ["unitFeatureDecision"];
   return [];
 }
 
@@ -3056,6 +3151,7 @@ function battleReducerRouteFill(
   if (kind === "spellTargetAllocation") return "spellTargetAllocation";
   if (kind === "spellTargetList") return "spellTargetList";
   if (kind === "targetChoice") return "targetChoice";
+  if (kind === "unitFeatureDecision") return "unitFeatureDecision";
   return undefined;
 }
 
