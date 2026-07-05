@@ -607,7 +607,7 @@
     {
       "number": 101,
       "id": "CRP06-SRO-03",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Character Sheet Spell Slot, Pact Slot, and rest-triggered recovery owners"
     },
     {
@@ -6417,7 +6417,7 @@ Plan Impact:
 
 ### Task 101 - CRP06-SRO-03
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

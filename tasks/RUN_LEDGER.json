@@ -3000,6 +3000,111 @@
           "detail": "Round 3 verified atomic accepted-batch projection locality, derived open-hole/finalization projections, route ownership, no duplicate durable state, and no authored-identity dispatch; no reasonable findings remained."
         }
       ]
+    },
+    {
+      "taskId": "CRP06-SRO-03",
+      "assignmentId": "settlement-rest-owner-sheet",
+      "laneId": "sheet",
+      "selectedDrivers": [
+        "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "e0551c03d33ad32da0d8c51cffb26042488759c7aeb50b5a8ed25946fe490d91"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "96cfe5455a06adaa2b5430351cfa6ff4f19391312f0f34588bf4c6294fd64b5d"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "0e7f5dc3f8d5f342ce3a52bcc23ecdc51166fd04f70c3d16d6b90ba8dd132699"
+        },
+        "history": {
+          "path": "tasks/history/CRP06-SRO-03/README.md",
+          "sha256": "bf4c5ade36b0d1cc65b9ddb6a9620c35e35fad1150e2ce1dff17577c43ab3b45"
+        },
+        "reducerRouteInventory": {
+          "path": "plans/cleanroom-branch-coverage/reducer-route-inventory.json",
+          "sha256": "60869854bb77446b86e242136f1961e1cd0f68d16f4a13d72259d5e39d6ddfbd"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRP06-SRO-03.json",
+          "sha256": "e94b3b9845a422227fd42b02ce3af8ffa94b73f7e721fa16598af46b4d988aba",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRP06-SRO-03.json#driver:packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doRejectMismatchedOrdinarySpellSlotCapacity#trace:semantic-qState=spell-slots-pact-slots action=doRejectMismatchedOrdinarySpellSlotCapacity",
+            "tasks/target-replay-evidence/CRP06-SRO-03.json#driver:packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doRejectMismatchedOrdinarySpellSlotCapacity#trace:public-route=characterSheetSpellResource action=doRejectMismatchedOrdinarySpellSlotCapacity qRoute=spell-slots-pact-slots-public-route",
+            "tasks/target-replay-evidence/CRP06-SRO-03.json#driver:packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doRejectPactSlotExpenditureOverCapacity#trace:semantic-qState=spell-slots-pact-slots action=doRejectPactSlotExpenditureOverCapacity",
+            "tasks/target-replay-evidence/CRP06-SRO-03.json#driver:packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doRejectPactSlotExpenditureOverCapacity#trace:public-route=characterSheetSpellResource action=doRejectPactSlotExpenditureOverCapacity qRoute=spell-slots-pact-slots-public-route",
+            "tasks/target-replay-evidence/CRP06-SRO-03.json#driver:packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doShortRestRestoresPactSlotsOnly#trace:semantic-qState=spell-slots-pact-slots action=doShortRestRestoresPactSlotsOnly",
+            "tasks/target-replay-evidence/CRP06-SRO-03.json#driver:packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doShortRestRestoresPactSlotsOnly#trace:public-route=characterSheetSpellResource action=doShortRestRestoresPactSlotsOnly qRoute=spell-slots-pact-slots-public-route",
+            "tasks/target-replay-evidence/CRP06-SRO-03.json#driver:packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doShortRestArcaneRecoveryRefundsOrdinarySpellSlot#trace:semantic-qState=spell-slots-pact-slots action=doShortRestArcaneRecoveryRefundsOrdinarySpellSlot",
+            "tasks/target-replay-evidence/CRP06-SRO-03.json#driver:packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doShortRestArcaneRecoveryRefundsOrdinarySpellSlot#trace:public-route=characterSheetSpellResource action=doShortRestArcaneRecoveryRefundsOrdinarySpellSlot qRoute=spell-slots-pact-slots-public-route",
+            "tasks/target-replay-evidence/CRP06-SRO-03.json#driver:packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doCompleteLongRestRestoresOrdinaryPactAndClearsCreatedSlots#trace:semantic-qState=spell-slots-pact-slots action=doCompleteLongRestRestoresOrdinaryPactAndClearsCreatedSlots",
+            "tasks/target-replay-evidence/CRP06-SRO-03.json#driver:packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doCompleteLongRestRestoresOrdinaryPactAndClearsCreatedSlots#trace:public-route=characterSheetSpellResource action=doCompleteLongRestRestoresOrdinaryPactAndClearsCreatedSlots qRoute=spell-slots-pact-slots-public-route",
+            "tasks/target-replay-evidence/CRP06-SRO-03.json#driver:packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doInterruptShortRestNoSlotBenefit#trace:semantic-qState=spell-slots-pact-slots action=doInterruptShortRestNoSlotBenefit",
+            "tasks/target-replay-evidence/CRP06-SRO-03.json#driver:packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doInterruptShortRestNoSlotBenefit#trace:public-route=characterSheetSpellResource action=doInterruptShortRestNoSlotBenefit qRoute=spell-slots-pact-slots-public-route",
+            "tasks/target-replay-evidence/CRP06-SRO-03.json#driver:packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doInterruptLongRestBeforeOneHourNoSlotBenefit#trace:semantic-qState=spell-slots-pact-slots action=doInterruptLongRestBeforeOneHourNoSlotBenefit",
+            "tasks/target-replay-evidence/CRP06-SRO-03.json#driver:packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doInterruptLongRestBeforeOneHourNoSlotBenefit#trace:public-route=characterSheetSpellResource action=doInterruptLongRestBeforeOneHourNoSlotBenefit qRoute=spell-slots-pact-slots-public-route",
+            "tasks/target-replay-evidence/CRP06-SRO-03.json#driver:packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doInterruptLongRestWithShortRestSlotBenefits#trace:semantic-qState=spell-slots-pact-slots action=doInterruptLongRestWithShortRestSlotBenefits",
+            "tasks/target-replay-evidence/CRP06-SRO-03.json#driver:packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doInterruptLongRestWithShortRestSlotBenefits#trace:public-route=characterSheetSpellResource action=doInterruptLongRestWithShortRestSlotBenefits qRoute=spell-slots-pact-slots-public-route",
+            "tasks/target-replay-evidence/CRP06-SRO-03.json#driver:packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doMagicalCunningRecoversPactSlots#trace:semantic-qState=spell-slots-pact-slots action=doMagicalCunningRecoversPactSlots",
+            "tasks/target-replay-evidence/CRP06-SRO-03.json#driver:packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doMagicalCunningRecoversPactSlots#trace:public-route=characterSheetSpellResource action=doMagicalCunningRecoversPactSlots qRoute=spell-slots-pact-slots-public-route",
+            "tasks/target-replay-evidence/CRP06-SRO-03.json#driver:packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doRejectMagicalCunningWithoutExpendedPactSlots#trace:semantic-qState=spell-slots-pact-slots action=doRejectMagicalCunningWithoutExpendedPactSlots",
+            "tasks/target-replay-evidence/CRP06-SRO-03.json#driver:packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doRejectMagicalCunningWithoutExpendedPactSlots#trace:public-route=characterSheetSpellResource action=doRejectMagicalCunningWithoutExpendedPactSlots qRoute=spell-slots-pact-slots-public-route",
+            "tasks/target-replay-evidence/CRP06-SRO-03.json#driver:packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doRejectArcaneRecoveryPactSlotRefund#trace:semantic-qState=spell-slots-pact-slots action=doRejectArcaneRecoveryPactSlotRefund",
+            "tasks/target-replay-evidence/CRP06-SRO-03.json#driver:packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt#step:doRejectArcaneRecoveryPactSlotRefund#trace:public-route=characterSheetSpellResource action=doRejectArcaneRecoveryPactSlotRefund qRoute=spell-slots-pact-slots-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-character-sheet-lane-20260705/integration && git log --oneline -1 HEAD && git merge-base --is-ancestor 7a9151265cdaeaca86c04e39ad32a1fe496f6bd8 HEAD",
+          "status": "pass",
+          "detail": "Declared Ralph base ref and HEAD both resolved to 7a9151265 Mark Ralph task 100 done; Base SHA 7a9151265cdaeaca86c04e39ad32a1fe496f6bd8 is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language review against .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Spell Slots, .references/srd-5.2.1/Rules-Glossary.md#Short Rest, #Long Rest, .references/srd-5.2.1/Classes/Warlock.md#Level 1: Pact Magic, #Level 2: Magical Cunning, .references/srd-5.2.1/Classes/Wizard.md#Level 1: Arcane Recovery, UBIQUITOUS_LANGUAGE.md, and packages/character-sheet-runtime/README.md",
+          "status": "pass"
+        },
+        {
+          "command": "START=$(date +%s); pnpm --filter @dnd/character-sheet-runtime exec vitest run src/spell-slots-pact-slots.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"Spell Slot|Pact Slot\" 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "2 files passed; 3 tests passed; semantic qState and route qRoute replay covered 11 Spell Slot/Pact Slot branch obligations; final timed run TOTAL: 5s."
+        },
+        {
+          "command": "node target replay evidence subset validation for CRP06-SRO-03",
+          "status": "pass",
+          "detail": "11 covered obligations; semantic qState comparator character-sheet-spell-slots-pact-slots-state and qRoute comparator route-event-list accepted."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass"
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm --filter @dnd/character-sheet-runtime typecheck",
+          "status": "pass"
+        },
+        {
+          "command": "flock /tmp/dnd-mbt-qnt.lock pnpm quality",
+          "status": "fail-unrelated-baseline",
+          "detail": "Reached repo-wide typecheck and failed outside the touched ownership surface: packages/character-creation-runtime/src/index.test.ts(10401,5): error TS2322: Type string is not assignable to type \"species_gnome_gnomish_lineage\"."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 verified RAW traceability, owner boundaries, no duplicate Spell Slot or Pact Slot capacity state, no authored-identity dispatch, and no remaining reasonable Task 101 findings."
+        }
+      ]
     }
   ]
 }

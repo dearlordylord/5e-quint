@@ -1,84 +1,65 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRP04-CCF-01",
-  "productionModulesExtended": [
-    {
-      "path": "packages/character-creation-runtime/src/fill-reducer.ts",
-      "role": "domain-engine",
-      "domainApis": [
-        "fillCreationHoles",
-        "acceptedCreationBatchFillResult",
-        "creationFillIssues"
-      ]
-    }
-  ],
+  "taskId": "CRP06-SRO-03",
+  "productionModulesExtended": [],
   "adapterModules": [
     {
-      "path": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+      "path": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
       "quarantinedWitnessNames": [
         "qState",
-        "CreationRuntimeWitnessState",
-        "CreationAccepted",
-        "CreationRejected",
-        "batchIssueCodes",
-        "fillIssues"
+        "CharacterSheetSpellSlotsPactSlotsState",
+        "CharacterSheetSpellSlotsPactSlotsOutcome"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRP04-CCF-01.json"
+        "tasks/target-replay-evidence/CRP06-SRO-03.json"
       ]
     },
     {
-      "path": "packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt",
+      "path": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
       "quarantinedWitnessNames": [
         "qRoute",
-        "RouteApplyCreationFillBatch",
-        "RouteDiscoverCreationHoles",
-        "RouteRecordCreationFacts",
-        "RouteFinalizeCharacterDraft"
+        "SheetSpellResourceRouteSubject",
+        "SheetFeatureResourceRouteSubject",
+        "SheetResourceSpendFill",
+        "SheetRestDurationFill",
+        "SheetRecoverySelectionFill",
+        "SheetOrdinarySpellSlotDeltaFact",
+        "SheetPactSlotDeltaFact",
+        "SheetCreatedSlotExpiryFact",
+        "SheetFeatureRecoveryStateFact",
+        "SheetSpellResourceRejectionFact"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRP04-CCF-01.json"
+        "tasks/target-replay-evidence/CRP06-SRO-03.json"
       ]
     },
     {
-      "path": "packages/character-creation-runtime/src/character-creation-runtime.mbt.test.ts",
+      "path": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "normalizeQuintState",
-        "RuntimeMbtState",
-        "character-creation-runtime-state",
-        "acceptedFillBatchSteps"
+        "Character Sheet Spell Slot/Pact Slot deterministic QNT replay",
+        "createSlotDriver",
+        "normalizeSlotQuintState"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRP04-CCF-01.json"
+        "tasks/target-replay-evidence/CRP06-SRO-03.json"
       ]
     },
     {
-      "path": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "path": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "normalizeCharacterCreationRouteQuintState",
-        "RouteProjection",
-        "route-event-list"
+        "routes in-scope Spell Slot and Pact Slot transitions through the sheet reducer surface",
+        "createReadyRouteDriver",
+        "normalizeCharacterSheetRouteQuintState"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRP04-CCF-01.json"
+        "tasks/target-replay-evidence/CRP06-SRO-03.json"
       ]
     }
   ],
   "accumulatorGrowth": [],
-  "expectedNextReuse": [
-    {
-      "driver": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
-      "module": "packages/character-creation-runtime/src/fill-reducer.ts",
-      "api": "fillCreationHoles remains the public atomic batch entrypoint for accepted creation fills, hole rediscovery, and finalization projection; later rejection tasks reuse the same validation boundary."
-    },
-    {
-      "driver": "packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt",
-      "module": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
-      "api": "Character creation route replay remains derived from createCharacterDraft, fillCreationHoles, discoverCreationHoles, and finalizeCharacterDraft rather than an adapter-local state ledger."
-    }
-  ],
+  "expectedNextReuse": [],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 89 records accepted qState and qRoute replay evidence for character creation fill batches. No duplicate durable open-hole or finalization store was introduced."
+    "notes": "Task 101 observes semantic qState and copied qRoute for Character Sheet Spell Slot, Pact Slot, and rest-triggered recovery transitions through public character-sheet sheet creation, rest, recovery, and route entrypoints. No production module or duplicate durable capacity state was introduced."
   }
 }

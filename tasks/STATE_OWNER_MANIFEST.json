@@ -1,67 +1,34 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRP04-CCF-01",
+  "taskId": "CRP06-SRO-03",
   "durableFields": [
     {
-      "fieldPath": "CharacterDraft.revision",
-      "owner": "build-evidence",
-      "introducedIn": "packages/character-creation-runtime/src/types.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      }
+      "owner": "CharacterSheetSpellSlotOwner",
+      "fields": [
+        "CharacterSheet.spellSlotExpenditures",
+        "CharacterSheet.createdSpellSlots"
+      ],
+      "notes": "Owns nonzero ordinary Spell Slot expenditure deltas, created Spell Slot delta state, created-slot expiry on Long Rest, and Arcane Recovery ordinary-slot refunds. Ordinary Spell Slot capacity remains derived from CharacterBuild spellcasting slot tables."
     },
     {
-      "fieldPath": "CharacterDraft.selections",
-      "owner": "build-evidence",
-      "introducedIn": "packages/character-creation-runtime/src/types.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      }
+      "owner": "CharacterSheetPactSlotOwner",
+      "fields": [
+        "CharacterSheet.pactSlotExpenditure"
+      ],
+      "notes": "Owns spent Pact Slot state, Short Rest and Long Rest Pact Slot restoration, and Magical Cunning Pact Slot recovery. Pact Slot level and count remain derived from CharacterBuild Pact Magic facts."
     },
     {
-      "fieldPath": "CreationBatchFillResult.holes",
-      "owner": "executable-boundary-projection",
-      "introducedIn": "packages/character-creation-runtime/src/discovery.ts",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "CharacterDraft.selections plus UnitCatalog support-profile readers",
-        "boundary": "fillCreationHoles result and discoverCreationHoles projection"
-      }
-    },
-    {
-      "fieldPath": "CreationBatchFillResult.finalization",
-      "owner": "executable-boundary-projection",
-      "introducedIn": "packages/character-creation-runtime/src/finalization.ts",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "CharacterDraft.selections plus UnitCatalog support-profile readers",
-        "boundary": "fillCreationHoles result and finalizeCharacterDraft projection"
-      }
-    },
-    {
-      "fieldPath": "CreationBatchFillResult.issues",
-      "owner": "executable-boundary-projection",
-      "introducedIn": "packages/character-creation-runtime/src/fill-reducer.ts",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "submitted CreationFill batch and current CharacterDraft.revision",
-        "boundary": "fillCreationHoles rejected result"
-      }
-    },
-    {
-      "fieldPath": "CharacterBuild",
-      "owner": "build-evidence",
-      "introducedIn": "packages/character-creation-runtime/src/finalization.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      }
+      "owner": "CharacterSheetFeatureResourceOwner",
+      "fields": [
+        "CharacterSheet.restFeatureUses"
+      ],
+      "notes": "Owns rest-triggered feature-use lockouts for Arcane Recovery and Magical Cunning. The feature-use fact is distinct from the slot delta owned by the Spell Slot or Pact Slot owner."
     }
   ],
   "notes": [
-    "Character Draft owns accepted source facts and draft revision.",
-    "Creation Hole Frontier is derived by discoverCreationHoles from the draft and support-profile readers; no durable open-hole ledger is stored.",
-    "Finalization is derived by finalizeCharacterDraft from the draft and support-profile admission; no durable finalization status ledger is stored beside the draft.",
-    "Character Build is produced only by the finalization gate once holes are empty and the support profile admits the completed draft.",
-    "Empty issue collections in qState are replay projections of an accepted or issue-free result, not a second durable issue store."
+    "Task 101 introduced no duplicate ordinary Spell Slot capacity, Pact Slot capacity, or Pact Slot level state.",
+    "Invalid stored ordinary Spell Slot and Pact Slot expenditures are rejected against build-derived capacity instead of normalized into a fresh table.",
+    "qState is target replay semantic evidence derived from public Character Sheet sheet creation, rest, slot conversion, and Magical Cunning entrypoints with helper projections.",
+    "qRoute is target replay route evidence derived from the character-sheet reducer route vocabulary, not authored identity."
   ]
 }

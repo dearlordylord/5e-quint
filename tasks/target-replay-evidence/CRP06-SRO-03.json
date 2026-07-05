@@ -1,0 +1,1536 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts and reducer-route-connectors.mbt.test.ts Character Sheet Spell Slot/Pact Slot qState/qRoute replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+      "qntFileSha256": "bf105dbf0be5a6ea00db2f94e1fbcc84aba545f6c52e2694060ddab9c2dd34e2",
+      "routeConnectorSha256": "762f2365e3719885192e23dbf82d929e05018348a860eb4825cf68fabb0c6453",
+      "branchFamily": "step",
+      "branchAction": "doRejectMismatchedOrdinarySpellSlotCapacity",
+      "observedActionTaken": "doRejectMismatchedOrdinarySpellSlotCapacity",
+      "harnessTestPath": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts",
+      "traceId": "semantic-qState=spell-slots-pact-slots action=doRejectMismatchedOrdinarySpellSlotCapacity",
+      "sampledInputs": [],
+      "semanticReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRejectMismatchedOrdinarySpellSlotCapacity",
+        "qntStateField": "qState",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#createSlotDriver"
+      },
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qState",
+        "comparator": "character-sheet-spell-slots-pact-slots-state",
+        "expectedProjectionSha256": "4d7c5661703ee02f5ee5cf719dccad36d95532210a8c440e9fd946aab7723bb3",
+        "observedProjectionSha256": "4d7c5661703ee02f5ee5cf719dccad36d95532210a8c440e9fd946aab7723bb3",
+        "qntAcceptance": {
+          "tag": "qnt-semantic",
+          "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-semantic-qState",
+          "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qState"
+        },
+        "observedProjectionSource": {
+          "tag": "semantic-projection",
+          "targetEntrypointSequence": [
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts",
+            "create_fresh_character_sheet",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#createFreshCharacterSheet",
+            "start_short_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#startShortRest",
+            "finish_short_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#finishShortRest",
+            "complete_short_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#completeShortRest",
+            "start_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#startLongRest",
+            "finish_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#finishLongRest",
+            "complete_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#completeLongRest",
+            "interrupt_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#interruptShortRest",
+            "interrupt_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#interruptLongRest",
+            "complete_magical_cunning_rite",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#completeMagicalCunningRite"
+          ],
+          "semanticProjectionSource": "Character Sheet Spell Slot/Pact Slot projection returned by public sheet creation, rest, slot conversion, and Magical Cunning entrypoints with helper projections in spell-slots-pact-slots.mbt.test.ts.",
+          "targetPublicApiPath": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts"
+        },
+        "checkedTargetStateFields": [
+          "CharacterSheet.spellSlotExpenditures",
+          "characterBuildSpellcastingSlotCapacity projection",
+          "CharacterSheetIssue.message"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+      "qntFileSha256": "bf105dbf0be5a6ea00db2f94e1fbcc84aba545f6c52e2694060ddab9c2dd34e2",
+      "routeConnectorSha256": "762f2365e3719885192e23dbf82d929e05018348a860eb4825cf68fabb0c6453",
+      "branchFamily": "step",
+      "branchAction": "doRejectMismatchedOrdinarySpellSlotCapacity",
+      "observedActionTaken": "doRejectMismatchedOrdinarySpellSlotCapacity",
+      "harnessTestPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=characterSheetSpellResource action=doRejectMismatchedOrdinarySpellSlotCapacity qRoute=spell-slots-pact-slots-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRejectMismatchedOrdinarySpellSlotCapacity",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#createReadyRouteDriver"
+      },
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "3b189daea5475c77b50eb1c27ed1cb95392fff200390f059ed6f89b3f912cc6b",
+        "observedProjectionSha256": "3b189daea5475c77b50eb1c27ed1cb95392fff200390f059ed6f89b3f912cc6b",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+            "create_character_sheet",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "project_build_facts",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "resolve_spell_resource_subject",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#rejectSpellResourceRoute",
+            "complete_spell_resource_rest",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#completeRestoredSlotRoute",
+            "complete_spell_resource_long_rest",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#completeLongRestSpellResourceRoute",
+            "resolve_feature_resource_recovery",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#pactSlotRecoveryRoute"
+          ],
+          "routeEventSource": "Public Character Sheet spell resource and rest route events from creation/build projection, rest completion, recovery selection, resource spend, rejection, and fact recording entrypoints as normalized by reducer-route-connectors.mbt.test.ts.",
+          "reducerPublicApiPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts"
+        },
+        "checkedTargetStateFields": [
+          "SheetSpellResourceRouteSubject",
+          "SheetResourceSpendFill",
+          "SheetResourceSpendHoleFamily",
+          "CharacterSheetSpellSlotOwner",
+          "SheetSpellResourceRejectionFact"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+      "qntFileSha256": "bf105dbf0be5a6ea00db2f94e1fbcc84aba545f6c52e2694060ddab9c2dd34e2",
+      "routeConnectorSha256": "762f2365e3719885192e23dbf82d929e05018348a860eb4825cf68fabb0c6453",
+      "branchFamily": "step",
+      "branchAction": "doRejectPactSlotExpenditureOverCapacity",
+      "observedActionTaken": "doRejectPactSlotExpenditureOverCapacity",
+      "harnessTestPath": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts",
+      "traceId": "semantic-qState=spell-slots-pact-slots action=doRejectPactSlotExpenditureOverCapacity",
+      "sampledInputs": [],
+      "semanticReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRejectPactSlotExpenditureOverCapacity",
+        "qntStateField": "qState",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#createSlotDriver"
+      },
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qState",
+        "comparator": "character-sheet-spell-slots-pact-slots-state",
+        "expectedProjectionSha256": "0332c9bbe460f8fc43844390c55e1f9d8811588484d0ee89f9305cd1d64fce83",
+        "observedProjectionSha256": "0332c9bbe460f8fc43844390c55e1f9d8811588484d0ee89f9305cd1d64fce83",
+        "qntAcceptance": {
+          "tag": "qnt-semantic",
+          "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-semantic-qState",
+          "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qState"
+        },
+        "observedProjectionSource": {
+          "tag": "semantic-projection",
+          "targetEntrypointSequence": [
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts",
+            "create_fresh_character_sheet",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#createFreshCharacterSheet",
+            "start_short_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#startShortRest",
+            "finish_short_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#finishShortRest",
+            "complete_short_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#completeShortRest",
+            "start_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#startLongRest",
+            "finish_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#finishLongRest",
+            "complete_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#completeLongRest",
+            "interrupt_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#interruptShortRest",
+            "interrupt_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#interruptLongRest",
+            "complete_magical_cunning_rite",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#completeMagicalCunningRite"
+          ],
+          "semanticProjectionSource": "Character Sheet Spell Slot/Pact Slot projection returned by public sheet creation, rest, slot conversion, and Magical Cunning entrypoints with helper projections in spell-slots-pact-slots.mbt.test.ts.",
+          "targetPublicApiPath": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts"
+        },
+        "checkedTargetStateFields": [
+          "CharacterSheet.pactSlotExpenditure",
+          "characterBuildPactSlotCapacity projection",
+          "CharacterSheetIssue.message"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+      "qntFileSha256": "bf105dbf0be5a6ea00db2f94e1fbcc84aba545f6c52e2694060ddab9c2dd34e2",
+      "routeConnectorSha256": "762f2365e3719885192e23dbf82d929e05018348a860eb4825cf68fabb0c6453",
+      "branchFamily": "step",
+      "branchAction": "doRejectPactSlotExpenditureOverCapacity",
+      "observedActionTaken": "doRejectPactSlotExpenditureOverCapacity",
+      "harnessTestPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=characterSheetSpellResource action=doRejectPactSlotExpenditureOverCapacity qRoute=spell-slots-pact-slots-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRejectPactSlotExpenditureOverCapacity",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#createReadyRouteDriver"
+      },
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "17e90fc6f9213c637ce5b435e7985b69a84131d37dc0e504a0c6dda67364efa8",
+        "observedProjectionSha256": "17e90fc6f9213c637ce5b435e7985b69a84131d37dc0e504a0c6dda67364efa8",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+            "create_character_sheet",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "project_build_facts",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "resolve_spell_resource_subject",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#rejectSpellResourceRoute",
+            "complete_spell_resource_rest",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#completeRestoredSlotRoute",
+            "complete_spell_resource_long_rest",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#completeLongRestSpellResourceRoute",
+            "resolve_feature_resource_recovery",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#pactSlotRecoveryRoute"
+          ],
+          "routeEventSource": "Public Character Sheet spell resource and rest route events from creation/build projection, rest completion, recovery selection, resource spend, rejection, and fact recording entrypoints as normalized by reducer-route-connectors.mbt.test.ts.",
+          "reducerPublicApiPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts"
+        },
+        "checkedTargetStateFields": [
+          "SheetSpellResourceRouteSubject",
+          "SheetResourceSpendFill",
+          "SheetResourceSpendHoleFamily",
+          "CharacterSheetPactSlotOwner",
+          "SheetSpellResourceRejectionFact"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+      "qntFileSha256": "bf105dbf0be5a6ea00db2f94e1fbcc84aba545f6c52e2694060ddab9c2dd34e2",
+      "routeConnectorSha256": "762f2365e3719885192e23dbf82d929e05018348a860eb4825cf68fabb0c6453",
+      "branchFamily": "step",
+      "branchAction": "doShortRestRestoresPactSlotsOnly",
+      "observedActionTaken": "doShortRestRestoresPactSlotsOnly",
+      "harnessTestPath": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts",
+      "traceId": "semantic-qState=spell-slots-pact-slots action=doShortRestRestoresPactSlotsOnly",
+      "sampledInputs": [],
+      "semanticReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doShortRestRestoresPactSlotsOnly",
+        "qntStateField": "qState",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#createSlotDriver"
+      },
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qState",
+        "comparator": "character-sheet-spell-slots-pact-slots-state",
+        "expectedProjectionSha256": "c98ee35a49e076be65c7ee26a5cb2b161b6842263e6c47ff6ef5449d3e49c934",
+        "observedProjectionSha256": "c98ee35a49e076be65c7ee26a5cb2b161b6842263e6c47ff6ef5449d3e49c934",
+        "qntAcceptance": {
+          "tag": "qnt-semantic",
+          "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-semantic-qState",
+          "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qState"
+        },
+        "observedProjectionSource": {
+          "tag": "semantic-projection",
+          "targetEntrypointSequence": [
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts",
+            "create_fresh_character_sheet",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#createFreshCharacterSheet",
+            "start_short_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#startShortRest",
+            "finish_short_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#finishShortRest",
+            "complete_short_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#completeShortRest",
+            "start_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#startLongRest",
+            "finish_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#finishLongRest",
+            "complete_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#completeLongRest",
+            "interrupt_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#interruptShortRest",
+            "interrupt_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#interruptLongRest",
+            "complete_magical_cunning_rite",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#completeMagicalCunningRite"
+          ],
+          "semanticProjectionSource": "Character Sheet Spell Slot/Pact Slot projection returned by public sheet creation, rest, slot conversion, and Magical Cunning entrypoints with helper projections in spell-slots-pact-slots.mbt.test.ts.",
+          "targetPublicApiPath": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts"
+        },
+        "checkedTargetStateFields": [
+          "CharacterSheet.spellSlotExpenditures",
+          "CharacterSheet.pactSlotExpenditure",
+          "characterBuildPactSlotCapacity projection"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+      "qntFileSha256": "bf105dbf0be5a6ea00db2f94e1fbcc84aba545f6c52e2694060ddab9c2dd34e2",
+      "routeConnectorSha256": "762f2365e3719885192e23dbf82d929e05018348a860eb4825cf68fabb0c6453",
+      "branchFamily": "step",
+      "branchAction": "doShortRestRestoresPactSlotsOnly",
+      "observedActionTaken": "doShortRestRestoresPactSlotsOnly",
+      "harnessTestPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=characterSheetSpellResource action=doShortRestRestoresPactSlotsOnly qRoute=spell-slots-pact-slots-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doShortRestRestoresPactSlotsOnly",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#createReadyRouteDriver"
+      },
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "ee8abc26fec7ec2ec68612c35e97ec36085d70c96982002fb4e926c4e99e6f2e",
+        "observedProjectionSha256": "ee8abc26fec7ec2ec68612c35e97ec36085d70c96982002fb4e926c4e99e6f2e",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+            "create_character_sheet",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "project_build_facts",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "resolve_spell_resource_subject",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#rejectSpellResourceRoute",
+            "complete_spell_resource_rest",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#completeRestoredSlotRoute",
+            "complete_spell_resource_long_rest",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#completeLongRestSpellResourceRoute",
+            "resolve_feature_resource_recovery",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#pactSlotRecoveryRoute"
+          ],
+          "routeEventSource": "Public Character Sheet spell resource and rest route events from creation/build projection, rest completion, recovery selection, resource spend, rejection, and fact recording entrypoints as normalized by reducer-route-connectors.mbt.test.ts.",
+          "reducerPublicApiPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts"
+        },
+        "checkedTargetStateFields": [
+          "SheetSpellResourceRouteSubject",
+          "SheetRestDurationFill",
+          "CharacterSheetPactSlotOwner",
+          "SheetPactSlotDeltaFact"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+      "qntFileSha256": "bf105dbf0be5a6ea00db2f94e1fbcc84aba545f6c52e2694060ddab9c2dd34e2",
+      "routeConnectorSha256": "762f2365e3719885192e23dbf82d929e05018348a860eb4825cf68fabb0c6453",
+      "branchFamily": "step",
+      "branchAction": "doShortRestArcaneRecoveryRefundsOrdinarySpellSlot",
+      "observedActionTaken": "doShortRestArcaneRecoveryRefundsOrdinarySpellSlot",
+      "harnessTestPath": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts",
+      "traceId": "semantic-qState=spell-slots-pact-slots action=doShortRestArcaneRecoveryRefundsOrdinarySpellSlot",
+      "sampledInputs": [],
+      "semanticReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doShortRestArcaneRecoveryRefundsOrdinarySpellSlot",
+        "qntStateField": "qState",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#createSlotDriver"
+      },
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qState",
+        "comparator": "character-sheet-spell-slots-pact-slots-state",
+        "expectedProjectionSha256": "a05ca84329dc6f97a5e6047ea4fd4e89b01da8ccb69ccb15807eba8a1491576a",
+        "observedProjectionSha256": "a05ca84329dc6f97a5e6047ea4fd4e89b01da8ccb69ccb15807eba8a1491576a",
+        "qntAcceptance": {
+          "tag": "qnt-semantic",
+          "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-semantic-qState",
+          "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qState"
+        },
+        "observedProjectionSource": {
+          "tag": "semantic-projection",
+          "targetEntrypointSequence": [
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts",
+            "create_fresh_character_sheet",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#createFreshCharacterSheet",
+            "start_short_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#startShortRest",
+            "finish_short_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#finishShortRest",
+            "complete_short_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#completeShortRest",
+            "start_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#startLongRest",
+            "finish_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#finishLongRest",
+            "complete_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#completeLongRest",
+            "interrupt_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#interruptShortRest",
+            "interrupt_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#interruptLongRest",
+            "complete_magical_cunning_rite",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#completeMagicalCunningRite"
+          ],
+          "semanticProjectionSource": "Character Sheet Spell Slot/Pact Slot projection returned by public sheet creation, rest, slot conversion, and Magical Cunning entrypoints with helper projections in spell-slots-pact-slots.mbt.test.ts.",
+          "targetPublicApiPath": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts"
+        },
+        "checkedTargetStateFields": [
+          "CharacterSheet.spellSlotExpenditures",
+          "CharacterSheet.pactSlotExpenditure",
+          "CharacterSheet.restFeatureUses",
+          "Wizard Arcane Recovery class level projection"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+      "qntFileSha256": "bf105dbf0be5a6ea00db2f94e1fbcc84aba545f6c52e2694060ddab9c2dd34e2",
+      "routeConnectorSha256": "762f2365e3719885192e23dbf82d929e05018348a860eb4825cf68fabb0c6453",
+      "branchFamily": "step",
+      "branchAction": "doShortRestArcaneRecoveryRefundsOrdinarySpellSlot",
+      "observedActionTaken": "doShortRestArcaneRecoveryRefundsOrdinarySpellSlot",
+      "harnessTestPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=characterSheetSpellResource action=doShortRestArcaneRecoveryRefundsOrdinarySpellSlot qRoute=spell-slots-pact-slots-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doShortRestArcaneRecoveryRefundsOrdinarySpellSlot",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#createReadyRouteDriver"
+      },
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "0ab87d57004ab70cd8a99210205ae44cd3f4b17060deb15786d9dab51ed185eb",
+        "observedProjectionSha256": "0ab87d57004ab70cd8a99210205ae44cd3f4b17060deb15786d9dab51ed185eb",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+            "create_character_sheet",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "project_build_facts",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "resolve_spell_resource_subject",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#rejectSpellResourceRoute",
+            "complete_spell_resource_rest",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#completeRestoredSlotRoute",
+            "complete_spell_resource_long_rest",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#completeLongRestSpellResourceRoute",
+            "resolve_feature_resource_recovery",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#pactSlotRecoveryRoute"
+          ],
+          "routeEventSource": "Public Character Sheet spell resource and rest route events from creation/build projection, rest completion, recovery selection, resource spend, rejection, and fact recording entrypoints as normalized by reducer-route-connectors.mbt.test.ts.",
+          "reducerPublicApiPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts"
+        },
+        "checkedTargetStateFields": [
+          "SheetSpellResourceRouteSubject",
+          "SheetFeatureResourceRouteSubject",
+          "SheetRecoverySelectionFill",
+          "CharacterSheetSpellSlotOwner",
+          "CharacterSheetFeatureResourceOwner",
+          "SheetOrdinarySpellSlotDeltaFact",
+          "SheetFeatureRecoveryStateFact"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+      "qntFileSha256": "bf105dbf0be5a6ea00db2f94e1fbcc84aba545f6c52e2694060ddab9c2dd34e2",
+      "routeConnectorSha256": "762f2365e3719885192e23dbf82d929e05018348a860eb4825cf68fabb0c6453",
+      "branchFamily": "step",
+      "branchAction": "doCompleteLongRestRestoresOrdinaryPactAndClearsCreatedSlots",
+      "observedActionTaken": "doCompleteLongRestRestoresOrdinaryPactAndClearsCreatedSlots",
+      "harnessTestPath": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts",
+      "traceId": "semantic-qState=spell-slots-pact-slots action=doCompleteLongRestRestoresOrdinaryPactAndClearsCreatedSlots",
+      "sampledInputs": [],
+      "semanticReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doCompleteLongRestRestoresOrdinaryPactAndClearsCreatedSlots",
+        "qntStateField": "qState",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#createSlotDriver"
+      },
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qState",
+        "comparator": "character-sheet-spell-slots-pact-slots-state",
+        "expectedProjectionSha256": "e443c4d2a726416b64a86935a5f28c5d2608fef50513d64e4b9c72e25bcd46e3",
+        "observedProjectionSha256": "e443c4d2a726416b64a86935a5f28c5d2608fef50513d64e4b9c72e25bcd46e3",
+        "qntAcceptance": {
+          "tag": "qnt-semantic",
+          "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-semantic-qState",
+          "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qState"
+        },
+        "observedProjectionSource": {
+          "tag": "semantic-projection",
+          "targetEntrypointSequence": [
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts",
+            "create_fresh_character_sheet",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#createFreshCharacterSheet",
+            "start_short_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#startShortRest",
+            "finish_short_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#finishShortRest",
+            "complete_short_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#completeShortRest",
+            "start_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#startLongRest",
+            "finish_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#finishLongRest",
+            "complete_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#completeLongRest",
+            "interrupt_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#interruptShortRest",
+            "interrupt_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#interruptLongRest",
+            "complete_magical_cunning_rite",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#completeMagicalCunningRite"
+          ],
+          "semanticProjectionSource": "Character Sheet Spell Slot/Pact Slot projection returned by public sheet creation, rest, slot conversion, and Magical Cunning entrypoints with helper projections in spell-slots-pact-slots.mbt.test.ts.",
+          "targetPublicApiPath": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts"
+        },
+        "checkedTargetStateFields": [
+          "CharacterSheet.spellSlotExpenditures",
+          "CharacterSheet.createdSpellSlots",
+          "CharacterSheet.pactSlotExpenditure",
+          "CharacterSheet.restFeatureUses"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+      "qntFileSha256": "bf105dbf0be5a6ea00db2f94e1fbcc84aba545f6c52e2694060ddab9c2dd34e2",
+      "routeConnectorSha256": "762f2365e3719885192e23dbf82d929e05018348a860eb4825cf68fabb0c6453",
+      "branchFamily": "step",
+      "branchAction": "doCompleteLongRestRestoresOrdinaryPactAndClearsCreatedSlots",
+      "observedActionTaken": "doCompleteLongRestRestoresOrdinaryPactAndClearsCreatedSlots",
+      "harnessTestPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=characterSheetSpellResource action=doCompleteLongRestRestoresOrdinaryPactAndClearsCreatedSlots qRoute=spell-slots-pact-slots-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doCompleteLongRestRestoresOrdinaryPactAndClearsCreatedSlots",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#createReadyRouteDriver"
+      },
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "d546d27b0f755abddf7c2be33dd9f6c36b0baf0401dc00109e6130b0ab83c8aa",
+        "observedProjectionSha256": "d546d27b0f755abddf7c2be33dd9f6c36b0baf0401dc00109e6130b0ab83c8aa",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+            "create_character_sheet",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "project_build_facts",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "resolve_spell_resource_subject",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#rejectSpellResourceRoute",
+            "complete_spell_resource_rest",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#completeRestoredSlotRoute",
+            "complete_spell_resource_long_rest",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#completeLongRestSpellResourceRoute",
+            "resolve_feature_resource_recovery",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#pactSlotRecoveryRoute"
+          ],
+          "routeEventSource": "Public Character Sheet spell resource and rest route events from creation/build projection, rest completion, recovery selection, resource spend, rejection, and fact recording entrypoints as normalized by reducer-route-connectors.mbt.test.ts.",
+          "reducerPublicApiPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts"
+        },
+        "checkedTargetStateFields": [
+          "SheetSpellResourceRouteSubject",
+          "SheetRestDurationFill",
+          "CharacterSheetSpellSlotOwner",
+          "CharacterSheetPactSlotOwner",
+          "SheetOrdinarySpellSlotDeltaFact",
+          "SheetPactSlotDeltaFact",
+          "SheetCreatedSlotExpiryFact"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+      "qntFileSha256": "bf105dbf0be5a6ea00db2f94e1fbcc84aba545f6c52e2694060ddab9c2dd34e2",
+      "routeConnectorSha256": "762f2365e3719885192e23dbf82d929e05018348a860eb4825cf68fabb0c6453",
+      "branchFamily": "step",
+      "branchAction": "doInterruptShortRestNoSlotBenefit",
+      "observedActionTaken": "doInterruptShortRestNoSlotBenefit",
+      "harnessTestPath": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts",
+      "traceId": "semantic-qState=spell-slots-pact-slots action=doInterruptShortRestNoSlotBenefit",
+      "sampledInputs": [],
+      "semanticReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doInterruptShortRestNoSlotBenefit",
+        "qntStateField": "qState",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#createSlotDriver"
+      },
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qState",
+        "comparator": "character-sheet-spell-slots-pact-slots-state",
+        "expectedProjectionSha256": "ad27c9ce54d0565a5494831d4c8242c8b6e130dcd73be55a08bed47888140ee0",
+        "observedProjectionSha256": "ad27c9ce54d0565a5494831d4c8242c8b6e130dcd73be55a08bed47888140ee0",
+        "qntAcceptance": {
+          "tag": "qnt-semantic",
+          "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-semantic-qState",
+          "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qState"
+        },
+        "observedProjectionSource": {
+          "tag": "semantic-projection",
+          "targetEntrypointSequence": [
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts",
+            "create_fresh_character_sheet",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#createFreshCharacterSheet",
+            "start_short_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#startShortRest",
+            "finish_short_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#finishShortRest",
+            "complete_short_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#completeShortRest",
+            "start_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#startLongRest",
+            "finish_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#finishLongRest",
+            "complete_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#completeLongRest",
+            "interrupt_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#interruptShortRest",
+            "interrupt_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#interruptLongRest",
+            "complete_magical_cunning_rite",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#completeMagicalCunningRite"
+          ],
+          "semanticProjectionSource": "Character Sheet Spell Slot/Pact Slot projection returned by public sheet creation, rest, slot conversion, and Magical Cunning entrypoints with helper projections in spell-slots-pact-slots.mbt.test.ts.",
+          "targetPublicApiPath": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts"
+        },
+        "checkedTargetStateFields": [
+          "CharacterSheet.spellSlotExpenditures",
+          "CharacterSheet.pactSlotExpenditure",
+          "CharacterSheet.restFeatureUses"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+      "qntFileSha256": "bf105dbf0be5a6ea00db2f94e1fbcc84aba545f6c52e2694060ddab9c2dd34e2",
+      "routeConnectorSha256": "762f2365e3719885192e23dbf82d929e05018348a860eb4825cf68fabb0c6453",
+      "branchFamily": "step",
+      "branchAction": "doInterruptShortRestNoSlotBenefit",
+      "observedActionTaken": "doInterruptShortRestNoSlotBenefit",
+      "harnessTestPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=characterSheetSpellResource action=doInterruptShortRestNoSlotBenefit qRoute=spell-slots-pact-slots-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doInterruptShortRestNoSlotBenefit",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#createReadyRouteDriver"
+      },
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "311309303609e8b48bc4cdf1e57d2a37be8bb5e7ee24e6580d4ef17f9102b27c",
+        "observedProjectionSha256": "311309303609e8b48bc4cdf1e57d2a37be8bb5e7ee24e6580d4ef17f9102b27c",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+            "create_character_sheet",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "project_build_facts",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "resolve_spell_resource_subject",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#rejectSpellResourceRoute",
+            "complete_spell_resource_rest",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#completeRestoredSlotRoute",
+            "complete_spell_resource_long_rest",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#completeLongRestSpellResourceRoute",
+            "resolve_feature_resource_recovery",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#pactSlotRecoveryRoute"
+          ],
+          "routeEventSource": "Public Character Sheet spell resource and rest route events from creation/build projection, rest completion, recovery selection, resource spend, rejection, and fact recording entrypoints as normalized by reducer-route-connectors.mbt.test.ts.",
+          "reducerPublicApiPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts"
+        },
+        "checkedTargetStateFields": [
+          "SheetRestRouteSubject",
+          "SheetRestDurationFill",
+          "SheetRestBenefitChoiceHoleFamily",
+          "CharacterSheetSpellSlotOwner",
+          "SheetRestBenefitWindowFact"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+      "qntFileSha256": "bf105dbf0be5a6ea00db2f94e1fbcc84aba545f6c52e2694060ddab9c2dd34e2",
+      "routeConnectorSha256": "762f2365e3719885192e23dbf82d929e05018348a860eb4825cf68fabb0c6453",
+      "branchFamily": "step",
+      "branchAction": "doInterruptLongRestBeforeOneHourNoSlotBenefit",
+      "observedActionTaken": "doInterruptLongRestBeforeOneHourNoSlotBenefit",
+      "harnessTestPath": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts",
+      "traceId": "semantic-qState=spell-slots-pact-slots action=doInterruptLongRestBeforeOneHourNoSlotBenefit",
+      "sampledInputs": [],
+      "semanticReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doInterruptLongRestBeforeOneHourNoSlotBenefit",
+        "qntStateField": "qState",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#createSlotDriver"
+      },
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qState",
+        "comparator": "character-sheet-spell-slots-pact-slots-state",
+        "expectedProjectionSha256": "1deef29d831a20b85fc07803c7b6947609e24d3bfd7ba360bb6b3741d7c07169",
+        "observedProjectionSha256": "1deef29d831a20b85fc07803c7b6947609e24d3bfd7ba360bb6b3741d7c07169",
+        "qntAcceptance": {
+          "tag": "qnt-semantic",
+          "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-semantic-qState",
+          "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qState"
+        },
+        "observedProjectionSource": {
+          "tag": "semantic-projection",
+          "targetEntrypointSequence": [
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts",
+            "create_fresh_character_sheet",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#createFreshCharacterSheet",
+            "start_short_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#startShortRest",
+            "finish_short_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#finishShortRest",
+            "complete_short_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#completeShortRest",
+            "start_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#startLongRest",
+            "finish_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#finishLongRest",
+            "complete_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#completeLongRest",
+            "interrupt_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#interruptShortRest",
+            "interrupt_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#interruptLongRest",
+            "complete_magical_cunning_rite",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#completeMagicalCunningRite"
+          ],
+          "semanticProjectionSource": "Character Sheet Spell Slot/Pact Slot projection returned by public sheet creation, rest, slot conversion, and Magical Cunning entrypoints with helper projections in spell-slots-pact-slots.mbt.test.ts.",
+          "targetPublicApiPath": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts"
+        },
+        "checkedTargetStateFields": [
+          "CharacterSheet.spellSlotExpenditures",
+          "CharacterSheet.pactSlotExpenditure",
+          "CharacterSheetLongRestStart.requiredRestTicks"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+      "qntFileSha256": "bf105dbf0be5a6ea00db2f94e1fbcc84aba545f6c52e2694060ddab9c2dd34e2",
+      "routeConnectorSha256": "762f2365e3719885192e23dbf82d929e05018348a860eb4825cf68fabb0c6453",
+      "branchFamily": "step",
+      "branchAction": "doInterruptLongRestBeforeOneHourNoSlotBenefit",
+      "observedActionTaken": "doInterruptLongRestBeforeOneHourNoSlotBenefit",
+      "harnessTestPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=characterSheetSpellResource action=doInterruptLongRestBeforeOneHourNoSlotBenefit qRoute=spell-slots-pact-slots-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doInterruptLongRestBeforeOneHourNoSlotBenefit",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#createReadyRouteDriver"
+      },
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "c46cc2cb0124bc66292b28d75a022482a70137cccecc003413dc74477e49dd5f",
+        "observedProjectionSha256": "c46cc2cb0124bc66292b28d75a022482a70137cccecc003413dc74477e49dd5f",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+            "create_character_sheet",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "project_build_facts",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "resolve_spell_resource_subject",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#rejectSpellResourceRoute",
+            "complete_spell_resource_rest",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#completeRestoredSlotRoute",
+            "complete_spell_resource_long_rest",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#completeLongRestSpellResourceRoute",
+            "resolve_feature_resource_recovery",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#pactSlotRecoveryRoute"
+          ],
+          "routeEventSource": "Public Character Sheet spell resource and rest route events from creation/build projection, rest completion, recovery selection, resource spend, rejection, and fact recording entrypoints as normalized by reducer-route-connectors.mbt.test.ts.",
+          "reducerPublicApiPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts"
+        },
+        "checkedTargetStateFields": [
+          "SheetRestRouteSubject",
+          "SheetRestDurationFill",
+          "SheetRestBenefitChoiceHoleFamily",
+          "CharacterSheetSpellSlotOwner",
+          "SheetRestBenefitWindowFact"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+      "qntFileSha256": "bf105dbf0be5a6ea00db2f94e1fbcc84aba545f6c52e2694060ddab9c2dd34e2",
+      "routeConnectorSha256": "762f2365e3719885192e23dbf82d929e05018348a860eb4825cf68fabb0c6453",
+      "branchFamily": "step",
+      "branchAction": "doInterruptLongRestWithShortRestSlotBenefits",
+      "observedActionTaken": "doInterruptLongRestWithShortRestSlotBenefits",
+      "harnessTestPath": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts",
+      "traceId": "semantic-qState=spell-slots-pact-slots action=doInterruptLongRestWithShortRestSlotBenefits",
+      "sampledInputs": [],
+      "semanticReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doInterruptLongRestWithShortRestSlotBenefits",
+        "qntStateField": "qState",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#createSlotDriver"
+      },
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qState",
+        "comparator": "character-sheet-spell-slots-pact-slots-state",
+        "expectedProjectionSha256": "c0e841fd890d7959ec71162d2b64bb2e24ba09d35eca4f12bb7e21798ed2c9d2",
+        "observedProjectionSha256": "c0e841fd890d7959ec71162d2b64bb2e24ba09d35eca4f12bb7e21798ed2c9d2",
+        "qntAcceptance": {
+          "tag": "qnt-semantic",
+          "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-semantic-qState",
+          "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qState"
+        },
+        "observedProjectionSource": {
+          "tag": "semantic-projection",
+          "targetEntrypointSequence": [
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts",
+            "create_fresh_character_sheet",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#createFreshCharacterSheet",
+            "start_short_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#startShortRest",
+            "finish_short_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#finishShortRest",
+            "complete_short_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#completeShortRest",
+            "start_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#startLongRest",
+            "finish_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#finishLongRest",
+            "complete_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#completeLongRest",
+            "interrupt_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#interruptShortRest",
+            "interrupt_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#interruptLongRest",
+            "complete_magical_cunning_rite",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#completeMagicalCunningRite"
+          ],
+          "semanticProjectionSource": "Character Sheet Spell Slot/Pact Slot projection returned by public sheet creation, rest, slot conversion, and Magical Cunning entrypoints with helper projections in spell-slots-pact-slots.mbt.test.ts.",
+          "targetPublicApiPath": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts"
+        },
+        "checkedTargetStateFields": [
+          "CharacterSheet.spellSlotExpenditures",
+          "CharacterSheet.pactSlotExpenditure",
+          "CharacterSheetLongRestStart.requiredRestTicks"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+      "qntFileSha256": "bf105dbf0be5a6ea00db2f94e1fbcc84aba545f6c52e2694060ddab9c2dd34e2",
+      "routeConnectorSha256": "762f2365e3719885192e23dbf82d929e05018348a860eb4825cf68fabb0c6453",
+      "branchFamily": "step",
+      "branchAction": "doInterruptLongRestWithShortRestSlotBenefits",
+      "observedActionTaken": "doInterruptLongRestWithShortRestSlotBenefits",
+      "harnessTestPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=characterSheetSpellResource action=doInterruptLongRestWithShortRestSlotBenefits qRoute=spell-slots-pact-slots-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doInterruptLongRestWithShortRestSlotBenefits",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#createReadyRouteDriver"
+      },
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "6f48c999190e1926fe6a7baed37fdff9c5aeb6d56c72cb32eef6c8c5ec2342b6",
+        "observedProjectionSha256": "6f48c999190e1926fe6a7baed37fdff9c5aeb6d56c72cb32eef6c8c5ec2342b6",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+            "create_character_sheet",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "project_build_facts",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "resolve_spell_resource_subject",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#rejectSpellResourceRoute",
+            "complete_spell_resource_rest",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#completeRestoredSlotRoute",
+            "complete_spell_resource_long_rest",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#completeLongRestSpellResourceRoute",
+            "resolve_feature_resource_recovery",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#pactSlotRecoveryRoute"
+          ],
+          "routeEventSource": "Public Character Sheet spell resource and rest route events from creation/build projection, rest completion, recovery selection, resource spend, rejection, and fact recording entrypoints as normalized by reducer-route-connectors.mbt.test.ts.",
+          "reducerPublicApiPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts"
+        },
+        "checkedTargetStateFields": [
+          "SheetSpellResourceRouteSubject",
+          "SheetRestDurationFill",
+          "CharacterSheetPactSlotOwner",
+          "SheetPactSlotDeltaFact"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+      "qntFileSha256": "bf105dbf0be5a6ea00db2f94e1fbcc84aba545f6c52e2694060ddab9c2dd34e2",
+      "routeConnectorSha256": "762f2365e3719885192e23dbf82d929e05018348a860eb4825cf68fabb0c6453",
+      "branchFamily": "step",
+      "branchAction": "doMagicalCunningRecoversPactSlots",
+      "observedActionTaken": "doMagicalCunningRecoversPactSlots",
+      "harnessTestPath": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts",
+      "traceId": "semantic-qState=spell-slots-pact-slots action=doMagicalCunningRecoversPactSlots",
+      "sampledInputs": [],
+      "semanticReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doMagicalCunningRecoversPactSlots",
+        "qntStateField": "qState",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#createSlotDriver"
+      },
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qState",
+        "comparator": "character-sheet-spell-slots-pact-slots-state",
+        "expectedProjectionSha256": "960e4fdafd53649966e579d7b2b51f9d7859044f50cdede32d6c6b645d07424f",
+        "observedProjectionSha256": "960e4fdafd53649966e579d7b2b51f9d7859044f50cdede32d6c6b645d07424f",
+        "qntAcceptance": {
+          "tag": "qnt-semantic",
+          "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-semantic-qState",
+          "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qState"
+        },
+        "observedProjectionSource": {
+          "tag": "semantic-projection",
+          "targetEntrypointSequence": [
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts",
+            "create_fresh_character_sheet",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#createFreshCharacterSheet",
+            "start_short_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#startShortRest",
+            "finish_short_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#finishShortRest",
+            "complete_short_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#completeShortRest",
+            "start_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#startLongRest",
+            "finish_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#finishLongRest",
+            "complete_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#completeLongRest",
+            "interrupt_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#interruptShortRest",
+            "interrupt_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#interruptLongRest",
+            "complete_magical_cunning_rite",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#completeMagicalCunningRite"
+          ],
+          "semanticProjectionSource": "Character Sheet Spell Slot/Pact Slot projection returned by public sheet creation, rest, slot conversion, and Magical Cunning entrypoints with helper projections in spell-slots-pact-slots.mbt.test.ts.",
+          "targetPublicApiPath": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts"
+        },
+        "checkedTargetStateFields": [
+          "CharacterSheet.pactSlotExpenditure",
+          "CharacterSheet.restFeatureUses",
+          "Pact Slot recovery Surface mechanics projection"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+      "qntFileSha256": "bf105dbf0be5a6ea00db2f94e1fbcc84aba545f6c52e2694060ddab9c2dd34e2",
+      "routeConnectorSha256": "762f2365e3719885192e23dbf82d929e05018348a860eb4825cf68fabb0c6453",
+      "branchFamily": "step",
+      "branchAction": "doMagicalCunningRecoversPactSlots",
+      "observedActionTaken": "doMagicalCunningRecoversPactSlots",
+      "harnessTestPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=characterSheetSpellResource action=doMagicalCunningRecoversPactSlots qRoute=spell-slots-pact-slots-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doMagicalCunningRecoversPactSlots",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#createReadyRouteDriver"
+      },
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "55fe2a80a2b1416e5811a8f1bcdd09332d7a5c895a57836b0f2fbbd8af98b8b3",
+        "observedProjectionSha256": "55fe2a80a2b1416e5811a8f1bcdd09332d7a5c895a57836b0f2fbbd8af98b8b3",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+            "create_character_sheet",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "project_build_facts",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "resolve_spell_resource_subject",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#rejectSpellResourceRoute",
+            "complete_spell_resource_rest",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#completeRestoredSlotRoute",
+            "complete_spell_resource_long_rest",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#completeLongRestSpellResourceRoute",
+            "resolve_feature_resource_recovery",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#pactSlotRecoveryRoute"
+          ],
+          "routeEventSource": "Public Character Sheet spell resource and rest route events from creation/build projection, rest completion, recovery selection, resource spend, rejection, and fact recording entrypoints as normalized by reducer-route-connectors.mbt.test.ts.",
+          "reducerPublicApiPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts"
+        },
+        "checkedTargetStateFields": [
+          "SheetFeatureResourceRouteSubject",
+          "SheetSpellResourceRouteSubject",
+          "SheetRecoverySelectionFill",
+          "CharacterSheetFeatureResourceOwner",
+          "CharacterSheetPactSlotOwner",
+          "SheetFeatureRecoveryStateFact",
+          "SheetPactSlotDeltaFact"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+      "qntFileSha256": "bf105dbf0be5a6ea00db2f94e1fbcc84aba545f6c52e2694060ddab9c2dd34e2",
+      "routeConnectorSha256": "762f2365e3719885192e23dbf82d929e05018348a860eb4825cf68fabb0c6453",
+      "branchFamily": "step",
+      "branchAction": "doRejectMagicalCunningWithoutExpendedPactSlots",
+      "observedActionTaken": "doRejectMagicalCunningWithoutExpendedPactSlots",
+      "harnessTestPath": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts",
+      "traceId": "semantic-qState=spell-slots-pact-slots action=doRejectMagicalCunningWithoutExpendedPactSlots",
+      "sampledInputs": [],
+      "semanticReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRejectMagicalCunningWithoutExpendedPactSlots",
+        "qntStateField": "qState",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#createSlotDriver"
+      },
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qState",
+        "comparator": "character-sheet-spell-slots-pact-slots-state",
+        "expectedProjectionSha256": "7877538ecf1f5d829a9416f74bd53b94aafd4ea591efc4bf5399f0a5b846c1f3",
+        "observedProjectionSha256": "7877538ecf1f5d829a9416f74bd53b94aafd4ea591efc4bf5399f0a5b846c1f3",
+        "qntAcceptance": {
+          "tag": "qnt-semantic",
+          "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-semantic-qState",
+          "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qState"
+        },
+        "observedProjectionSource": {
+          "tag": "semantic-projection",
+          "targetEntrypointSequence": [
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts",
+            "create_fresh_character_sheet",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#createFreshCharacterSheet",
+            "start_short_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#startShortRest",
+            "finish_short_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#finishShortRest",
+            "complete_short_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#completeShortRest",
+            "start_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#startLongRest",
+            "finish_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#finishLongRest",
+            "complete_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#completeLongRest",
+            "interrupt_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#interruptShortRest",
+            "interrupt_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#interruptLongRest",
+            "complete_magical_cunning_rite",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#completeMagicalCunningRite"
+          ],
+          "semanticProjectionSource": "Character Sheet Spell Slot/Pact Slot projection returned by public sheet creation, rest, slot conversion, and Magical Cunning entrypoints with helper projections in spell-slots-pact-slots.mbt.test.ts.",
+          "targetPublicApiPath": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts"
+        },
+        "checkedTargetStateFields": [
+          "CharacterSheet.pactSlotExpenditure",
+          "CharacterSheet.restFeatureUses",
+          "CharacterSheetIssue.message"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+      "qntFileSha256": "bf105dbf0be5a6ea00db2f94e1fbcc84aba545f6c52e2694060ddab9c2dd34e2",
+      "routeConnectorSha256": "762f2365e3719885192e23dbf82d929e05018348a860eb4825cf68fabb0c6453",
+      "branchFamily": "step",
+      "branchAction": "doRejectMagicalCunningWithoutExpendedPactSlots",
+      "observedActionTaken": "doRejectMagicalCunningWithoutExpendedPactSlots",
+      "harnessTestPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=characterSheetSpellResource action=doRejectMagicalCunningWithoutExpendedPactSlots qRoute=spell-slots-pact-slots-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRejectMagicalCunningWithoutExpendedPactSlots",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#createReadyRouteDriver"
+      },
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "93ecd3f09d1234fc87eae5ec6bf9efd91822e153ce0adfac8e284b0fabc49d88",
+        "observedProjectionSha256": "93ecd3f09d1234fc87eae5ec6bf9efd91822e153ce0adfac8e284b0fabc49d88",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+            "create_character_sheet",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "project_build_facts",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "resolve_spell_resource_subject",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#rejectSpellResourceRoute",
+            "complete_spell_resource_rest",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#completeRestoredSlotRoute",
+            "complete_spell_resource_long_rest",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#completeLongRestSpellResourceRoute",
+            "resolve_feature_resource_recovery",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#pactSlotRecoveryRoute"
+          ],
+          "routeEventSource": "Public Character Sheet spell resource and rest route events from creation/build projection, rest completion, recovery selection, resource spend, rejection, and fact recording entrypoints as normalized by reducer-route-connectors.mbt.test.ts.",
+          "reducerPublicApiPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts"
+        },
+        "checkedTargetStateFields": [
+          "SheetSpellResourceRouteSubject",
+          "SheetRecoverySelectionFill",
+          "SheetRecoveryChoiceHoleFamily",
+          "CharacterSheetPactSlotOwner",
+          "SheetSpellResourceRejectionFact"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+      "qntFileSha256": "bf105dbf0be5a6ea00db2f94e1fbcc84aba545f6c52e2694060ddab9c2dd34e2",
+      "routeConnectorSha256": "762f2365e3719885192e23dbf82d929e05018348a860eb4825cf68fabb0c6453",
+      "branchFamily": "step",
+      "branchAction": "doRejectArcaneRecoveryPactSlotRefund",
+      "observedActionTaken": "doRejectArcaneRecoveryPactSlotRefund",
+      "harnessTestPath": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts",
+      "traceId": "semantic-qState=spell-slots-pact-slots action=doRejectArcaneRecoveryPactSlotRefund",
+      "sampledInputs": [],
+      "semanticReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRejectArcaneRecoveryPactSlotRefund",
+        "qntStateField": "qState",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#createSlotDriver"
+      },
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qState",
+        "comparator": "character-sheet-spell-slots-pact-slots-state",
+        "expectedProjectionSha256": "c81169ba9fa0c13e1b79cd80ff2909b3a57947a5900f262f0a3bdc5566de8fb0",
+        "observedProjectionSha256": "c81169ba9fa0c13e1b79cd80ff2909b3a57947a5900f262f0a3bdc5566de8fb0",
+        "qntAcceptance": {
+          "tag": "qnt-semantic",
+          "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-semantic-qState",
+          "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qState"
+        },
+        "observedProjectionSource": {
+          "tag": "semantic-projection",
+          "targetEntrypointSequence": [
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts",
+            "create_fresh_character_sheet",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#createFreshCharacterSheet",
+            "start_short_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#startShortRest",
+            "finish_short_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#finishShortRest",
+            "complete_short_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#completeShortRest",
+            "start_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#startLongRest",
+            "finish_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#finishLongRest",
+            "complete_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#completeLongRest",
+            "interrupt_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#interruptShortRest",
+            "interrupt_long_rest",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#interruptLongRest",
+            "complete_magical_cunning_rite",
+            "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts#completeMagicalCunningRite"
+          ],
+          "semanticProjectionSource": "Character Sheet Spell Slot/Pact Slot projection returned by public sheet creation, rest, slot conversion, and Magical Cunning entrypoints with helper projections in spell-slots-pact-slots.mbt.test.ts.",
+          "targetPublicApiPath": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts"
+        },
+        "checkedTargetStateFields": [
+          "CharacterSheet.spellSlotExpenditures",
+          "CharacterSheet.pactSlotExpenditure",
+          "CharacterSheetIssue.message"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+      "qntFileSha256": "bf105dbf0be5a6ea00db2f94e1fbcc84aba545f6c52e2694060ddab9c2dd34e2",
+      "routeConnectorSha256": "762f2365e3719885192e23dbf82d929e05018348a860eb4825cf68fabb0c6453",
+      "branchFamily": "step",
+      "branchAction": "doRejectArcaneRecoveryPactSlotRefund",
+      "observedActionTaken": "doRejectArcaneRecoveryPactSlotRefund",
+      "harnessTestPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=characterSheetSpellResource action=doRejectArcaneRecoveryPactSlotRefund qRoute=spell-slots-pact-slots-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRejectArcaneRecoveryPactSlotRefund",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#createReadyRouteDriver"
+      },
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "9a8cbcf9c23730f4e4b7f9805c049d53b88d2604caa7e88d98802d445add6572",
+        "observedProjectionSha256": "9a8cbcf9c23730f4e4b7f9805c049d53b88d2604caa7e88d98802d445add6572",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+            "create_character_sheet",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "project_build_facts",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "resolve_spell_resource_subject",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#rejectSpellResourceRoute",
+            "complete_spell_resource_rest",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#completeRestoredSlotRoute",
+            "complete_spell_resource_long_rest",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#completeLongRestSpellResourceRoute",
+            "resolve_feature_resource_recovery",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#pactSlotRecoveryRoute"
+          ],
+          "routeEventSource": "Public Character Sheet spell resource and rest route events from creation/build projection, rest completion, recovery selection, resource spend, rejection, and fact recording entrypoints as normalized by reducer-route-connectors.mbt.test.ts.",
+          "reducerPublicApiPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts"
+        },
+        "checkedTargetStateFields": [
+          "SheetSpellResourceRouteSubject",
+          "SheetRecoverySelectionFill",
+          "SheetRecoveryChoiceHoleFamily",
+          "CharacterSheetPactSlotOwner",
+          "SheetSpellResourceRejectionFact"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}

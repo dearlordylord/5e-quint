@@ -3046,7 +3046,23 @@
             ],
             "blockers": []
           },
-          "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt"
+          "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+          "qntAcceptance": {
+            "required": [
+              {
+                "tag": "qnt-semantic",
+                "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+                "projection": "qState",
+                "comparator": "character-sheet-spell-slots-pact-slots-state"
+              },
+              {
+                "tag": "qnt-route",
+                "connectorPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt",
+                "projection": "qRoute",
+                "comparator": "route-event-list"
+              }
+            ]
+          }
         },
         {
           "driverPath": "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt",
