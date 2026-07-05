@@ -427,7 +427,7 @@
     {
       "number": 71,
       "id": "CRPI-READY-029",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: rule-core-hit-point-damage"
     },
     {
@@ -4692,7 +4692,7 @@ Plan Impact:
 
 ### Task 71 - CRPI-READY-029
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
