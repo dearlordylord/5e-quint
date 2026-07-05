@@ -1,0 +1,405 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts Shove outcome copied qComponentRoute versus component-first target replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "acceptance": {
+    "driverPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
+    "connectorPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
+    "routeClass": "component-first",
+    "durableOwner": "RuleCoreShoveOutcomeOwner",
+    "acceptedProjection": "qComponentRoute"
+  },
+  "status": "pass",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
+      "qntFileSha256": "b7e9cfe8284a802387096c97b9e8375172e51c131a564113f94c8607845f8961",
+      "componentConnectorSha256": "b7e9cfe8284a802387096c97b9e8375172e51c131a564113f94c8607845f8961",
+      "branchFamily": "step",
+      "branchAction": "doInvalidPushDistance",
+      "observedActionTaken": "doInvalidPushDistance",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts",
+      "traceId": "component-route=RuleCoreShoveOutcomeOwner action=doInvalidPushDistance qComponentRoute=shove-outcome-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doInvalidPushDistance",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#createShoveOutcomeDriver",
+        "componentOwner": "RuleCoreShoveOutcomeOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "3adc21685c3efe2baf8cb4a733767da9e72f14826b1c3de30596840709d27417",
+        "observedProjectionSha256": "3adc21685c3efe2baf8cb4a733767da9e72f14826b1c3de30596840709d27417",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreShoveOutcomeOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#resolveBattleSubject",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#normalizeShoveOutcomeQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Shove subject calls produce runtime projections for save success, Prone, push, blocked push, and invalid push distance outcomes.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreShoveOutcomeOwner",
+          "BattleResolutionResult.tag=invalid",
+          "BattleTurnState.actionResources remains available",
+          "BattleCreatureState.conditions excludes prone"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
+      "qntFileSha256": "b7e9cfe8284a802387096c97b9e8375172e51c131a564113f94c8607845f8961",
+      "componentConnectorSha256": "b7e9cfe8284a802387096c97b9e8375172e51c131a564113f94c8607845f8961",
+      "branchFamily": "step",
+      "branchAction": "doSaveFailsProne",
+      "observedActionTaken": "doSaveFailsProne",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts",
+      "traceId": "component-route=RuleCoreShoveOutcomeOwner action=doSaveFailsProne qComponentRoute=shove-outcome-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doSaveFailsProne",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#createShoveOutcomeDriver",
+        "componentOwner": "RuleCoreShoveOutcomeOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "3adc21685c3efe2baf8cb4a733767da9e72f14826b1c3de30596840709d27417",
+        "observedProjectionSha256": "3adc21685c3efe2baf8cb4a733767da9e72f14826b1c3de30596840709d27417",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreShoveOutcomeOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#resolveBattleSubject",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#normalizeShoveOutcomeQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Shove subject calls produce runtime projections for save success, Prone, push, blocked push, and invalid push distance outcomes.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreShoveOutcomeOwner",
+          "BattleResolutionResult.tag=resolved",
+          "BattleTurnState.actionResources spent",
+          "BattleCreatureState.conditions includes prone",
+          "BattleShovePushOutcome absent"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
+      "qntFileSha256": "b7e9cfe8284a802387096c97b9e8375172e51c131a564113f94c8607845f8961",
+      "componentConnectorSha256": "b7e9cfe8284a802387096c97b9e8375172e51c131a564113f94c8607845f8961",
+      "branchFamily": "step",
+      "branchAction": "doSaveFailsPush",
+      "observedActionTaken": "doSaveFailsPush",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts",
+      "traceId": "component-route=RuleCoreShoveOutcomeOwner action=doSaveFailsPush qComponentRoute=shove-outcome-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doSaveFailsPush",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#createShoveOutcomeDriver",
+        "componentOwner": "RuleCoreShoveOutcomeOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "3adc21685c3efe2baf8cb4a733767da9e72f14826b1c3de30596840709d27417",
+        "observedProjectionSha256": "3adc21685c3efe2baf8cb4a733767da9e72f14826b1c3de30596840709d27417",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreShoveOutcomeOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#resolveBattleSubject",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#normalizeShoveOutcomeQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Shove subject calls produce runtime projections for save success, Prone, push, blocked push, and invalid push distance outcomes.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreShoveOutcomeOwner",
+          "BattleResolutionResult.tag=resolved",
+          "BattleTurnState.actionResources spent",
+          "BattleCreatureState.conditions excludes prone",
+          "BattleShovePushOutcome.disposition.kind=pushed",
+          "BattleShovePushOutcome.disposition.distanceFeet=5",
+          "BattleShovePushOutcome.disposition.provokesOpportunityAttacks=false"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
+      "qntFileSha256": "b7e9cfe8284a802387096c97b9e8375172e51c131a564113f94c8607845f8961",
+      "componentConnectorSha256": "b7e9cfe8284a802387096c97b9e8375172e51c131a564113f94c8607845f8961",
+      "branchFamily": "step",
+      "branchAction": "doSaveFailsPushBlocked",
+      "observedActionTaken": "doSaveFailsPushBlocked",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts",
+      "traceId": "component-route=RuleCoreShoveOutcomeOwner action=doSaveFailsPushBlocked qComponentRoute=shove-outcome-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doSaveFailsPushBlocked",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#createShoveOutcomeDriver",
+        "componentOwner": "RuleCoreShoveOutcomeOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "3adc21685c3efe2baf8cb4a733767da9e72f14826b1c3de30596840709d27417",
+        "observedProjectionSha256": "3adc21685c3efe2baf8cb4a733767da9e72f14826b1c3de30596840709d27417",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreShoveOutcomeOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#resolveBattleSubject",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#normalizeShoveOutcomeQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Shove subject calls produce runtime projections for save success, Prone, push, blocked push, and invalid push distance outcomes.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreShoveOutcomeOwner",
+          "BattleResolutionResult.tag=resolved",
+          "BattleTurnState.actionResources spent",
+          "BattleCreatureState.conditions excludes prone",
+          "BattleShovePushOutcome.disposition.kind=blocked",
+          "BattleShovePushOutcome.disposition.distanceFeet=5",
+          "BattleShovePushOutcome.disposition.reason=blocked",
+          "BattleShovePushOutcome.disposition.provokesOpportunityAttacks=false"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
+      "qntFileSha256": "b7e9cfe8284a802387096c97b9e8375172e51c131a564113f94c8607845f8961",
+      "componentConnectorSha256": "b7e9cfe8284a802387096c97b9e8375172e51c131a564113f94c8607845f8961",
+      "branchFamily": "step",
+      "branchAction": "doSaveFailsPushNoLegalDestination",
+      "observedActionTaken": "doSaveFailsPushNoLegalDestination",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts",
+      "traceId": "component-route=RuleCoreShoveOutcomeOwner action=doSaveFailsPushNoLegalDestination qComponentRoute=shove-outcome-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doSaveFailsPushNoLegalDestination",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#createShoveOutcomeDriver",
+        "componentOwner": "RuleCoreShoveOutcomeOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "3adc21685c3efe2baf8cb4a733767da9e72f14826b1c3de30596840709d27417",
+        "observedProjectionSha256": "3adc21685c3efe2baf8cb4a733767da9e72f14826b1c3de30596840709d27417",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreShoveOutcomeOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#resolveBattleSubject",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#normalizeShoveOutcomeQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Shove subject calls produce runtime projections for save success, Prone, push, blocked push, and invalid push distance outcomes.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreShoveOutcomeOwner",
+          "BattleResolutionResult.tag=resolved",
+          "BattleTurnState.actionResources spent",
+          "BattleCreatureState.conditions excludes prone",
+          "BattleShovePushOutcome.disposition.kind=blocked",
+          "BattleShovePushOutcome.disposition.distanceFeet=5",
+          "BattleShovePushOutcome.disposition.reason=noLegalDestination",
+          "BattleShovePushOutcome.disposition.provokesOpportunityAttacks=false"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
+      "qntFileSha256": "b7e9cfe8284a802387096c97b9e8375172e51c131a564113f94c8607845f8961",
+      "componentConnectorSha256": "b7e9cfe8284a802387096c97b9e8375172e51c131a564113f94c8607845f8961",
+      "branchFamily": "step",
+      "branchAction": "doSaveSucceeds",
+      "observedActionTaken": "doSaveSucceeds",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts",
+      "traceId": "component-route=RuleCoreShoveOutcomeOwner action=doSaveSucceeds qComponentRoute=shove-outcome-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doSaveSucceeds",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#createShoveOutcomeDriver",
+        "componentOwner": "RuleCoreShoveOutcomeOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "3adc21685c3efe2baf8cb4a733767da9e72f14826b1c3de30596840709d27417",
+        "observedProjectionSha256": "3adc21685c3efe2baf8cb4a733767da9e72f14826b1c3de30596840709d27417",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreShoveOutcomeOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#resolveBattleSubject",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#normalizeShoveOutcomeQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Shove subject calls produce runtime projections for save success, Prone, push, blocked push, and invalid push distance outcomes.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreShoveOutcomeOwner",
+          "BattleResolutionResult.tag=resolved",
+          "BattleTurnState.actionResources spent",
+          "BattleCreatureState.conditions excludes prone",
+          "BattleShovePushOutcome absent"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}

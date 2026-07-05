@@ -445,7 +445,7 @@
     {
       "number": 74,
       "id": "CRPI-READY-032",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: rule-core-shove-outcome"
     },
     {
@@ -4857,7 +4857,7 @@ Plan Impact:
 
 ### Task 74 - CRPI-READY-032
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
