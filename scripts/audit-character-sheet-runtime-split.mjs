@@ -38,6 +38,8 @@ const EXPECTED_EXPORTS = [
   "CharacterSheetBookOfShadowsPresence",
   "CharacterSheetBookOfShadowsRitualInvocation",
   "CharacterSheetClassFeaturePreparedSpellAccess",
+  "CharacterSheetClassFeatureSelectedReferenceProjection",
+  "CharacterSheetClassFeatureSelectedReferenceProjectionRoute",
   "CharacterSheetCompanion",
   "CharacterSheetCompanionCreatureTypeOverride",
   "CharacterSheetCompanionFormSelection",
@@ -143,6 +145,7 @@ const EXPECTED_EXPORTS = [
   "characterSheetArmorClassProjection",
   "characterSheetArmorClassState",
   "characterSheetClassFeaturePreparedSpellAccessesForBuild",
+  "characterSheetClassFeatureSelectedReferenceProjection",
   "characterSheetCompanion",
   "characterSheetCurrentHp",
   "characterSheetDruidCircleLandPreparedSpellAccess",
@@ -234,6 +237,21 @@ const EXPECTED_EXPORT_RECONCILIATION_REASONS = [
     name: "CharacterSheetArmorClassProjectionRoute",
     reason:
       "Character Sheet owns the Armor Class selected-reference retention and build-projection route shape; exporting it keeps the route event tuple typed at the projection boundary.",
+  },
+  {
+    name: "characterSheetClassFeatureSelectedReferenceProjection",
+    reason:
+      "Character Sheet owns selected class-feature and subclass reference projection from existing sheet build facts; exposing the projection-with-route entrypoint lets route replay observe selected-reference qRoute events without maintaining an adapter-local route projection.",
+  },
+  {
+    name: "CharacterSheetClassFeatureSelectedReferenceProjection",
+    reason:
+      "Character Sheet owns the typed class-feature selected-reference projection result so retained reference evidence and qRoute events remain explicit without adding duplicated durable sheet state.",
+  },
+  {
+    name: "CharacterSheetClassFeatureSelectedReferenceProjectionRoute",
+    reason:
+      "Character Sheet owns the selected-reference retention and selected-reference build-projection route shape; exporting it keeps the route event tuple typed at the projection boundary.",
   },
   {
     name: "completeShortRestArcaneRecoveryWithRoute",

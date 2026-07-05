@@ -4,6 +4,86 @@
   "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
   "entries": [
     {
+      "taskId": "CRPI-BLOCK-051",
+      "assignmentId": "reducer-spine-diagnostic-character-sheet",
+      "laneId": "sheet",
+      "selectedDrivers": [
+        "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "aeb62e5b90131c5fd4d61cbc45153b94fb2f22b1af993b75eda104525855039a"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "b7706fa7b436c4980e2710e8f8e4f0817ccc6c8492174f7b95d23f5d1ace7024"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "bf0f4531ff897ddcf9bc178fdc5470d8eb01dd092a9fd3c987a7bbfc37682fa9"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-051.json",
+          "sha256": "181ded688ab5e200e760813411d807ba6ae99dcb9218f296b059cd59046697ee",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-051.json#driver:packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectBardJackOfAllTrades#trace:public-route=characterSheetClassFeatureSelectedReferenceProjection action=doProjectBardJackOfAllTrades qRoute=class-feature-selected-identity-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-051.json#driver:packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectClericLifeDomainSpells#trace:public-route=characterSheetClassFeatureSelectedReferenceProjection action=doProjectClericLifeDomainSpells qRoute=class-feature-selected-identity-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-051.json#driver:packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectDruidCircleLandSpells#trace:public-route=characterSheetClassFeatureSelectedReferenceProjection action=doProjectDruidCircleLandSpells qRoute=class-feature-selected-identity-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-051.json#driver:packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectPaladinOathDevotionSpells#trace:public-route=characterSheetClassFeatureSelectedReferenceProjection action=doProjectPaladinOathDevotionSpells qRoute=class-feature-selected-identity-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-051.json#driver:packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectPaladinsSmite#trace:public-route=characterSheetClassFeatureSelectedReferenceProjection action=doProjectPaladinsSmite qRoute=class-feature-selected-identity-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-051.json#driver:packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectRangerFavoredEnemy#trace:public-route=characterSheetClassFeatureSelectedReferenceProjection action=doProjectRangerFavoredEnemy qRoute=class-feature-selected-identity-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-051.json#driver:packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectSorcererDraconicSpells#trace:public-route=characterSheetClassFeatureSelectedReferenceProjection action=doProjectSorcererDraconicSpells qRoute=class-feature-selected-identity-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-051.json#driver:packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectWarlockFiendSpells#trace:public-route=characterSheetClassFeatureSelectedReferenceProjection action=doProjectWarlockFiendSpells qRoute=class-feature-selected-identity-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "pnpm --filter @dnd/character-sheet-runtime typecheck",
+          "status": "pass"
+        },
+        {
+          "command": "START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/character-sheet-runtime exec vitest run src/class-feature-selected-identity.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"class-feature selected identity|routes in-scope class-feature\" ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "status": "pass",
+          "detail": "2 files passed; 4 tests passed, 9 skipped; TOTAL: 9s"
+        },
+        {
+          "command": "node JSON parse check for CRPI-BLOCK-051 artifacts",
+          "status": "pass",
+          "detail": "Evidence, run ledger, engine depth manifest, and state owner manifest parsed."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs"
+        },
+        {
+          "command": "pnpm check:character-sheet-runtime-split",
+          "status": "pass",
+          "detail": "Expected export surface updated for characterSheetClassFeatureSelectedReferenceProjection and projection types."
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "All quality gates passed; app lint emitted 61 warnings and exited 0."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "No remaining reasonable Task 97 findings after moving class-feature selected-reference qRoute observation to public characterSheetClassFeatureSelectedReferenceProjection and recording split-audit export ownership."
+        }
+      ]
+    },
+    {
       "taskId": "CRPI-BLOCK-050",
       "assignmentId": "reducer-spine-diagnostic-character-sheet",
       "laneId": "sheet",
