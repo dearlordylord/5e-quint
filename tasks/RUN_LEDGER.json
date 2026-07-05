@@ -4148,6 +4148,116 @@
         ],
         "requiredPlanEdits": "Replace Task 75 driver/connector path packages/battle-runtime/rule-core-spells.mbt.qnt with the four split connector paths, or split the queue item into CRPI-READY-033A through CRPI-READY-033D and mark them satisfied by this owner-level evidence."
       }
+    },
+    {
+      "taskId": "CRPI-READY-034",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "6d3045e078f6ee2626350c9593b88e1221095e56fe3f050cdab7bf3f8df3190f"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "2bc63eefcfe6a90edf5d8d3a0c4e7f47ed397f5fe5d12d9dd8e36f27b03201af"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "410d8cc3d7505c6c2a2980af1ca2469f1a1c58aa734ea8be5047071811b05537"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-READY-034/README.md",
+          "sha256": "777b2096a67c7659131bfb880d74cd09fdc260dc7fc8ae94e92e80403b162206"
+        },
+        "reducerRouteInventory": {
+          "path": "plans/cleanroom-branch-coverage/reducer-route-inventory.json",
+          "sha256": "9ded20737a7a2750fa8999d7e6650e7167429d70a6200e98ef93d4930d8447b9"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-READY-034.json",
+          "sha256": "fe6085275e5a9461662eecf298ceb4578375db69a500e51cb768e7123870ea31",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-READY-034.json#driver:packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt#step:doEndTurnClosesDispatches#trace:component-route=RuleCoreStatBlockControlOwner action=doEndTurnClosesDispatches qComponentRoute=stat-block-control-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-034.json#driver:packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt#step:doMoveDuringDispatch#trace:component-route=RuleCoreStatBlockControlOwner action=doMoveDuringDispatch qComponentRoute=stat-block-control-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-034.json#driver:packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt#step:doRejectBonusActionDuringDispatch#trace:component-route=RuleCoreStatBlockControlOwner action=doRejectBonusActionDuringDispatch qComponentRoute=stat-block-control-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-034.json#driver:packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt#step:doRejectOrdinaryActionDuringDispatch#trace:component-route=RuleCoreStatBlockControlOwner action=doRejectOrdinaryActionDuringDispatch qComponentRoute=stat-block-control-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-034.json#driver:packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt#step:doResolvePrimaryDispatch#trace:component-route=RuleCoreStatBlockControlOwner action=doResolvePrimaryDispatch qComponentRoute=stat-block-control-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-034.json#driver:packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt#step:doResolveSecondaryDispatch#trace:component-route=RuleCoreStatBlockControlOwner action=doResolveSecondaryDispatch qComponentRoute=stat-block-control-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-034.json#driver:packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt#step:doStartMultiattack#trace:component-route=RuleCoreStatBlockControlOwner action=doStartMultiattack qComponentRoute=stat-block-control-component-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-reducer-full-lane-20260705-restart3/integration; git log --oneline -1 codex/cleanroom-reducer-full-lane-20260705-restart2; git log --oneline -1 HEAD; git merge-base --is-ancestor 52407cf5632e9272a6f97a2d8c604f9dee6d3374 HEAD",
+          "status": "pass",
+          "detail": "Required round-2 base ref ralph/cleanroom-reducer-full-lane-20260705-restart3/integration resolved to 52407cf56 Mark Task 75 spell replay done; reviewer-feedback audit ref codex/cleanroom-reducer-full-lane-20260705-restart2 resolved to 5a3fb5554 Merge Ralph task 100 status; HEAD resolved to 52407cf56 Mark Task 75 spell replay done; Base SHA 52407cf5632e9272a6f97a2d8c604f9dee6d3374 is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language review against SRD 5.2.1 Stat Block, Attack [Action], Creature, Monster, local Multiattack examples, and UBIQUITOUS_LANGUAGE.md",
+          "status": "pass"
+        },
+        {
+          "command": "jq empty tasks/target-replay-evidence/CRPI-READY-034.json tasks/ENGINE_DEPTH_MANIFEST.json tasks/STATE_OWNER_MANIFEST.json",
+          "status": "pass"
+        },
+        {
+          "command": "node scoped validateTargetReplayEvidence for CRPI-READY-034 stat-block-control driver",
+          "status": "pass",
+          "detail": "Selected packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt from source inventory and validated tasks/target-replay-evidence/CRPI-READY-034.json with scripts/cleanroom-branch-coverage-check.cjs#validateTargetReplayEvidence; 7 obligations covered."
+        },
+        {
+          "command": "START=$(date +%s); ( cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=6 pnpm exec vitest run src/rule-core-stat-block-controls.mbt.test.ts ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "status": "pass",
+          "detail": "1 test passed: QCORE11 Multiattack dispatch parity through RuleCoreStatBlockControlOwner; TOTAL: 16s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "Passed with 738 obligations and 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass",
+          "detail": "Passed."
+        },
+        {
+          "command": "flock /tmp/dnd-mbt-qnt.lock pnpm quality",
+          "status": "pass",
+          "detail": "Passed end to end."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Rounds 1-2 verified RAW traceability, component-first architecture, adapter quarantine, no duplicate durable Stat Block control state, no authored-identity dispatch, command/report consistency, and no remaining reasonable Task 77 findings."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-READY-034",
+            "disposition": "unblocked"
+          },
+          {
+            "taskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
+            "disposition": "left unchanged"
+          }
+        ],
+        "observations": [
+          "RuleCoreStatBlockControlOwner is accepted through copied qComponentRoute replay before downstream battle action, attack, and Stat Block routes consume the owner.",
+          "No new durable Stat Block control state was required; existing action-resource, bonus-action, movement, hole, and BattleResolutionResult facts carry the runtime behavior."
+        ],
+        "requiredPlanEdits": "none"
+      }
     }
   ]
 }
