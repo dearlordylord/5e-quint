@@ -1,5 +1,95 @@
 # Validation Report
 
+## CRPI-BLOCK-030
+
+Status: `pass`
+
+- Task: 58
+- Driver path: `packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt`
+- Route connector path: `packages/battle-runtime/battle-runtime-stat-block-multi-damage.route.mbt.qnt`
+- Route class: `reducer-routed`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-030.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-stat-block-multi-damage.route.mbt.qnt`
+- `packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts`
+- `packages/battle-runtime/src/battle-reducer/actions.ts`
+- `packages/battle-runtime/src/battle-reducer/attack-main.ts`
+- `packages/battle-runtime/src/battle-reducer/damage-apply.ts`
+- `packages/battle-runtime/src/battle-reducer/statblock-attacks.ts`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-convergence-backlog.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Playing-the-Game.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `.references/srd-5.2.1/Monsters/Overview.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+Stat Block multi-damage route replay is accepted through the existing public
+battle reducer route for `StatBlockActionRouteSubject`. The target harness
+records copied connector `qRoute` events from `startBattleRight`,
+`discoverBattleActs`, and `resolveBattleSubject` while resolving target choice, hit attack roll, rolled
+damage dice, static damage notation, and target Hit Point updates. Production
+behavior reuses existing Stat Block action dispatch, target-selection,
+attack-roll, and Hit Point owners; no alternate damage accumulator or HP ledger
+was added.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt#step:doFillHitAttackRoll` | `tasks/target-replay-evidence/CRPI-BLOCK-030.json#driver:packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt#step:doFillHitAttackRoll#trace:reducer-route=StatBlockActionRouteSubject action=doFillHitAttackRoll mode=rolled qRoute=stat-block-multi-damage-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt#step:doFillTargetChoice` | `tasks/target-replay-evidence/CRPI-BLOCK-030.json#driver:packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt#step:doFillTargetChoice#trace:reducer-route=StatBlockActionRouteSubject action=doFillTargetChoice mode=rolled qRoute=stat-block-multi-damage-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt#step:doResolveRolledDamage` | `tasks/target-replay-evidence/CRPI-BLOCK-030.json#driver:packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt#step:doResolveRolledDamage#trace:reducer-route=StatBlockActionRouteSubject action=doResolveRolledDamage mode=rolled qRoute=stat-block-multi-damage-route` | `_none_` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-030.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id pattern: `reducer-route=StatBlockActionRouteSubject action=<branchAction> mode=<rolled|static> qRoute=stat-block-multi-damage-route`
+- The copied connector projection source is `packages/battle-runtime/battle-runtime-stat-block-multi-damage.route.mbt.qnt#qRoute`; the observed projection source is the target route driver `packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts#createStatBlockMultiDamageRouteDriver`, which calls `discoverBattleActs` before `resolveBattleSubject`.
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-030/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 58.
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Playing-the-Game.md#Attack Rolls` defines attack-roll resolution after the attack procedure chooses a target.
+- SRD 5.2.1 `Playing-the-Game.md#Damage Rolls` and `#Hit Points` define damage reducing a creature's Hit Points after damage is determined.
+- SRD 5.2.1 `Rules-Glossary.md#Stat Block` and `Monsters/Overview.md#Parts of a Stat Block` define monster Actions, Attack Notation, Damage Notation, Multiattack, and Recharge notation.
+- `UBIQUITOUS_LANGUAGE.md` defines Creature, Attack Roll, Damage, Hit Points, Stat Block, Multiattack, Recharge, and Condition terms used by the route owners.
+
+Verification results:
+
+- Base check passed: required base ref `ralph/cleanroom-stat-block-route-lane-20260705T1152Z/integration` resolved to `846a9df52 Mark Ralph task 57 done`; `HEAD` resolved to `846a9df52 Mark Ralph task 57 done`; Base SHA `846a9df52073aa9ca974a265bd03a4402aca1604` is an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against SRD 5.2.1 attack, damage, Hit Points, Stat Block, Attack Notation, Damage Notation, Multiattack, Recharge, and `UBIQUITOUS_LANGUAGE.md`.
+- Target replay evidence artifact for CRPI-BLOCK-030 covers 3 route-required Stat Block multi-damage `qRoute` obligations and records both rolled and static `doFillHitAttackRoll` paths.
+- JSON validation passed for `tasks/target-replay-evidence/CRPI-BLOCK-030.json`, `tasks/ENGINE_DEPTH_MANIFEST.json`, and `tasks/STATE_OWNER_MANIFEST.json`.
+- Focused MBT replay passed: `START=$(date +%s); ( cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=3 pnpm exec vitest run src/stat-block-multi-damage.mbt.test.ts ) 2>&1 & pid=$!; wait "$pid"; status=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"` passed with 4 tests in `TOTAL: 12s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- Requested broad verification passed: `pnpm quality`. App lint emitted 61 warnings and exited 0; all quality gates and typecheck passed.
+- Reviewer-loop convergence passed: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks found no remaining reasonable Task 58 findings before broad verification.
+
 ## CRPI-BLOCK-029
 
 Status: `pass`

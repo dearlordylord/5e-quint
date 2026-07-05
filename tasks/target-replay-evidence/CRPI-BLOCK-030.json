@@ -1,0 +1,318 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts Stat Block multi-damage copied qRoute versus reducer-routed target replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "acceptance": {
+    "driverPath": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt",
+    "connectorPath": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.route.mbt.qnt",
+    "routeClass": "reducer-routed",
+    "durableOwner": "BattleState owns Stat Block action dispatch, target selection, attack-roll resolution, and Hit Point updates for rolled and static damage notation through BattleStatBlockActionOwner, BattleTargetSelectionOwner, BattleAttackRollOwner, and BattleHitPointOwner. Damage notation remains a Stat Block source fact; the target must not add an alternate damage or HP ledger.",
+    "acceptedProjection": "qRoute"
+  },
+  "status": "pass",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.route.mbt.qnt",
+      "qntFileSha256": "1d3e5de3bbda66b7c47e3d885a377dc5ceb66a249c24cd3738dcaacef274eb18",
+      "routeConnectorSha256": "0b34d5e2a2546a0647bbb1795041a3499a4516baf717389da9865f4f447148b8",
+      "branchFamily": "step",
+      "branchAction": "doFillTargetChoice",
+      "observedActionTaken": "doFillTargetChoice",
+      "harnessTestPath": "packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts",
+      "traceId": "reducer-route=StatBlockActionRouteSubject action=doFillTargetChoice mode=rolled qRoute=stat-block-multi-damage-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doFillTargetChoice",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts#createStatBlockMultiDamageRouteDriver",
+        "routeSubject": "StatBlockActionRouteSubject",
+        "damageMode": "rolled",
+        "owners": [
+          "BattleStatBlockActionOwner",
+          "BattleTargetSelectionOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "fc778bd40a6292bd0ba4bbfe67a9a15df514130868731973ff3fb04bd4bc4f56",
+        "observedProjectionSha256": "fc778bd40a6292bd0ba4bbfe67a9a15df514130868731973ff3fb04bd4bc4f56",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.route.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "StatBlockActionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts#statBlockMultiDamageBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts#requireDiscoveredStatBlockAttackSubject",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts#resolveBattleSubject",
+            "project_qRoute",
+            "packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts#normalizeStatBlockMultiDamageRouteQuintState"
+          ],
+          "routeEventSource": "Reducer route events emitted by createStatBlockMultiDamageRouteDriver after public battle-runtime startBattleRight, discoverBattleActs, and resolveBattleSubject calls produce StatBlockActionRouteSubject target-choice, attack-roll, rolled-dice, and Hit Point projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=startBattle",
+          "ReducerRouteEvent.tag=discoverBattleActs",
+          "ReducerRouteEvent.tag=resolveBattleSubject",
+          "ReducerRouteEvent.subject=statBlockAction",
+          "BattleResolutionResult.tag",
+          "ReducerRouteEvent.owner=battleStatBlockAction",
+          "ReducerRouteEvent.owner=battleTargetSelection",
+          "BattleHole.kind=targetChoice",
+          "BattleHole.kind=attackRoll"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Target choice fill routes from Stat Block action discovery to attack-roll frontier through public resolveBattleSubject."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.route.mbt.qnt",
+      "qntFileSha256": "1d3e5de3bbda66b7c47e3d885a377dc5ceb66a249c24cd3738dcaacef274eb18",
+      "routeConnectorSha256": "0b34d5e2a2546a0647bbb1795041a3499a4516baf717389da9865f4f447148b8",
+      "branchFamily": "step",
+      "branchAction": "doFillHitAttackRoll",
+      "observedActionTaken": "doFillHitAttackRoll",
+      "harnessTestPath": "packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts",
+      "traceId": "reducer-route=StatBlockActionRouteSubject action=doFillHitAttackRoll mode=rolled qRoute=stat-block-multi-damage-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doFillHitAttackRoll",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts#createStatBlockMultiDamageRouteDriver",
+        "routeSubject": "StatBlockActionRouteSubject",
+        "damageMode": "rolled",
+        "owners": [
+          "BattleAttackRollOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "d554c48ae7fdcb8f256d4deeabfb3cc0845298d41005196264b5522d0041da21",
+        "observedProjectionSha256": "d554c48ae7fdcb8f256d4deeabfb3cc0845298d41005196264b5522d0041da21",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.route.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "StatBlockActionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts#statBlockMultiDamageBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts#requireDiscoveredStatBlockAttackSubject",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts#resolveBattleSubject",
+            "project_qRoute",
+            "packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts#normalizeStatBlockMultiDamageRouteQuintState"
+          ],
+          "routeEventSource": "Reducer route events emitted by createStatBlockMultiDamageRouteDriver after public battle-runtime startBattleRight, discoverBattleActs, and resolveBattleSubject calls produce StatBlockActionRouteSubject target-choice, attack-roll, rolled-dice, and Hit Point projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=startBattle",
+          "ReducerRouteEvent.tag=discoverBattleActs",
+          "ReducerRouteEvent.tag=resolveBattleSubject",
+          "ReducerRouteEvent.subject=statBlockAction",
+          "BattleResolutionResult.tag",
+          "ReducerRouteEvent.owner=battleAttackRoll",
+          "BattleHole.kind=attackRoll",
+          "BattleHole.kind=rolledDice",
+          "BattleFill.kind=attackRoll"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Rolled damage notation routes a hit attack roll to a rolled-dice damage frontier through public resolveBattleSubject."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.route.mbt.qnt",
+      "qntFileSha256": "1d3e5de3bbda66b7c47e3d885a377dc5ceb66a249c24cd3738dcaacef274eb18",
+      "routeConnectorSha256": "0b34d5e2a2546a0647bbb1795041a3499a4516baf717389da9865f4f447148b8",
+      "branchFamily": "step",
+      "branchAction": "doFillHitAttackRoll",
+      "observedActionTaken": "doFillHitAttackRoll",
+      "harnessTestPath": "packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts",
+      "traceId": "reducer-route=StatBlockActionRouteSubject action=doFillHitAttackRoll mode=static qRoute=stat-block-multi-damage-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doFillHitAttackRoll",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts#createStatBlockMultiDamageRouteDriver",
+        "routeSubject": "StatBlockActionRouteSubject",
+        "damageMode": "static",
+        "owners": [
+          "BattleAttackRollOwner",
+          "BattleHitPointOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "232f3fc69e1c27feba4813d2de24368811f9340295c56621fa9a35bd08cc55ab",
+        "observedProjectionSha256": "232f3fc69e1c27feba4813d2de24368811f9340295c56621fa9a35bd08cc55ab",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.route.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "StatBlockActionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts#statBlockMultiDamageBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts#requireDiscoveredStatBlockAttackSubject",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts#resolveBattleSubject",
+            "project_qRoute",
+            "packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts#normalizeStatBlockMultiDamageRouteQuintState"
+          ],
+          "routeEventSource": "Reducer route events emitted by createStatBlockMultiDamageRouteDriver after public battle-runtime startBattleRight, discoverBattleActs, and resolveBattleSubject calls produce StatBlockActionRouteSubject target-choice, attack-roll, rolled-dice, and Hit Point projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=startBattle",
+          "ReducerRouteEvent.tag=discoverBattleActs",
+          "ReducerRouteEvent.tag=resolveBattleSubject",
+          "ReducerRouteEvent.subject=statBlockAction",
+          "BattleResolutionResult.tag",
+          "ReducerRouteEvent.owner=battleHitPoint",
+          "BattleHole.kind=attackRoll",
+          "BattleFill.kind=attackRoll",
+          "BattleCreatureState.hp"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Static damage notation routes a hit attack roll directly to Hit Point application with no alternate HP ledger."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.route.mbt.qnt",
+      "qntFileSha256": "1d3e5de3bbda66b7c47e3d885a377dc5ceb66a249c24cd3738dcaacef274eb18",
+      "routeConnectorSha256": "0b34d5e2a2546a0647bbb1795041a3499a4516baf717389da9865f4f447148b8",
+      "branchFamily": "step",
+      "branchAction": "doResolveRolledDamage",
+      "observedActionTaken": "doResolveRolledDamage",
+      "harnessTestPath": "packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts",
+      "traceId": "reducer-route=StatBlockActionRouteSubject action=doResolveRolledDamage mode=rolled qRoute=stat-block-multi-damage-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doResolveRolledDamage",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts#createStatBlockMultiDamageRouteDriver",
+        "routeSubject": "StatBlockActionRouteSubject",
+        "damageMode": "rolled",
+        "owners": [
+          "BattleHitPointOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "9d00aac8b70d3e41caacbdf949019663c92dea03feb20ed0cdf5b096786015d2",
+        "observedProjectionSha256": "9d00aac8b70d3e41caacbdf949019663c92dea03feb20ed0cdf5b096786015d2",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.route.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "StatBlockActionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts#statBlockMultiDamageBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts#requireDiscoveredStatBlockAttackSubject",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts#resolveBattleSubject",
+            "project_qRoute",
+            "packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts#normalizeStatBlockMultiDamageRouteQuintState"
+          ],
+          "routeEventSource": "Reducer route events emitted by createStatBlockMultiDamageRouteDriver after public battle-runtime startBattleRight, discoverBattleActs, and resolveBattleSubject calls produce StatBlockActionRouteSubject target-choice, attack-roll, rolled-dice, and Hit Point projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=startBattle",
+          "ReducerRouteEvent.tag=discoverBattleActs",
+          "ReducerRouteEvent.tag=resolveBattleSubject",
+          "ReducerRouteEvent.subject=statBlockAction",
+          "BattleResolutionResult.tag",
+          "ReducerRouteEvent.owner=battleHitPoint",
+          "BattleHole.kind=rolledDice",
+          "BattleFill.kind=rolledDice",
+          "BattleCreatureState.hp"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Rolled damage fill routes to Hit Point application through public resolveBattleSubject."
+      }
+    }
+  ]
+}

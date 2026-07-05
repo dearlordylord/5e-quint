@@ -1,16 +1,15 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-029",
+  "taskId": "CRPI-BLOCK-030",
   "durableFields": [
     {
       "owner": "BattleStatBlockActionOwner",
       "fields": [
         "BattleState.combatants",
-        "BattleTurnState.actionResources",
         "BattleHole.kind=targetChoice",
-        "BattleHole.kind=statBlockRechargeRoll"
+        "BattleResolutionResult.tag"
       ],
-      "notes": "Owns Stat Block action dispatch and Recharge frontiers through existing battle state, turn action resources, and public hole protocol state. The replay adds no route-local Stat Block action ledger, authored-identity dispatch key, recharge availability cache, or support marker."
+      "notes": "Owns Stat Block action dispatch through existing combatant Stat Block source facts and the public BattleSubject action protocol. No authored-identity dispatch key or route-local action ledger was added."
     },
     {
       "owner": "BattleTargetSelectionOwner",
@@ -19,7 +18,7 @@
         "BattleFill.kind=targetChoice",
         "BattleResolutionResult.tag"
       ],
-      "notes": "Owns the target-selection frontier for Stat Block attacks through the existing public target-choice hole/fill protocol."
+      "notes": "Owns target selection for Stat Block attacks through the existing public target-choice hole/fill protocol."
     },
     {
       "owner": "BattleAttackRollOwner",
@@ -28,41 +27,23 @@
         "BattleFill.kind=attackRoll",
         "BattleResolutionResult.tag"
       ],
-      "notes": "Owns attack-roll progression for Stat Block attacks through the existing public attack-roll hole/fill protocol."
+      "notes": "Owns hit attack-roll resolution for rolled and static Stat Block damage notation through the existing public attack-roll hole/fill protocol."
     },
     {
       "owner": "BattleHitPointOwner",
       "fields": [
         "BattleCreatureState.hp",
         "BattleCreatureState.tempHp",
-        "BattleCreatureState.zeroHpLifecycle",
         "BattleHole.kind=rolledDice",
         "BattleFill.kind=rolledDice"
       ],
-      "notes": "Owns Hit Point damage for rolled and static Stat Block damage notation through existing creature HP state and damage fill projection. Static damage notation remains a Stat Block source fact, not a duplicate HP ledger."
-    },
-    {
-      "owner": "BattleHoleFrontierOwner",
-      "fields": [
-        "BattleResolutionResult.tag=invalid",
-        "BattleResolutionResult.reason=invalidFill",
-        "BattleHole.kind"
-      ],
-      "notes": "Owns stale/rejected hole-frontier evidence for out-of-order Stat Block attack roll and damage fills through typed invalid reducer results."
-    },
-    {
-      "owner": "RuleCoreStatBlockControlOwner",
-      "fields": [
-        "BattleTurnState.actionResources",
-        "BattleHole.kind=targetChoice"
-      ],
-      "notes": "Reusable Multiattack dispatch control facts are consumed from the already accepted rule-core Stat Block control owner; Task 57 adds no alternate Multiattack dispatch state."
+      "notes": "Owns Hit Point damage for rolled and static Stat Block damage notation through existing creature HP state and the existing rolled-dice fill projection. Static damage notation remains a Stat Block source fact, not a duplicate HP ledger."
     }
   ],
   "notes": [
-    "Task 57 introduced no new durable state fields.",
-    "qRoute target replay evidence is derived from public battle-runtime startBattleRight, discoverBattleActs, and resolveBattleSubject entrypoints.",
-    "Authored Stat Block identity, action names, and attack/damage notation remain catalog/source facts and test selection facts; production dispatch remains shape/protocol based.",
-    "No duplicate target-selection, attack-roll, Hit Point, Recharge, or Multiattack state was added."
+    "Task 58 introduced no new durable state fields.",
+    "qRoute target replay evidence is derived from public battle-runtime startBattleRight and resolveBattleSubject entrypoints.",
+    "Authored Stat Block identity, action names, attack names, and damage notation remain catalog/source or test selection facts; production dispatch remains shape/protocol based.",
+    "No alternate damage accumulator, target-selection ledger, attack-roll ledger, or Hit Point ledger was added."
   ]
 }
