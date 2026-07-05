@@ -1,32 +1,27 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-033",
+  "taskId": "CRPI-READY-034",
   "durableFields": [
     {
-      "owner": "RuleCoreSpellProcedureProfileOwner",
+      "owner": "RuleCoreStatBlockControlOwner",
       "fields": [
         "BattleTurnState.actionResources",
         "BattleTurnState.bonusActionAvailable",
-        "BattleCreatureState.reactionAvailable",
-        "BattleCreatureState.hp",
-        "BattleCreatureState.zeroHpLifecycle.deathSaves",
-        "BattleCreatureState.origin.spellcasting.spellSlots",
-        "BattleCreatureState.activeEffects",
-        "BattleState.readiedSpells",
-        "BattleCreatureState.concentration",
+        "BattleCombatantMovement.spentFeet",
+        "BattleCombatantMovement.remainingFeet",
         "BattleHole.kind",
         "BattleResolutionResult"
       ],
-      "notes": "Owns reusable spell procedure profile runtime facts through existing battle state fields, public hole kinds, and public reducer result protocols. The replay adds no alternate spell-slot cache, HP ledger, active-effect copy, readied-spell copy, Concentration flag, or support marker."
+      "notes": "Owns reusable Stat Block Multiattack control facts through existing turn action resources, bonus-action availability, movement accounting, public hole kinds, and public reducer result protocols. The replay adds no alternate Multiattack dispatch ledger, movement copy, action-availability cache, or support marker."
     }
   ],
   "notes": [
-    "Task 75 introduced no new durable state fields.",
-    "Action and Bonus Action spend remain BattleTurnState facts through the existing spell resolution path.",
-    "Hit Point damage/restoration and zero-Hit-Point recovery remain BattleCreatureState facts.",
-    "Spell Slot expenditure remains BattleCreatureState.origin.spellcasting.spellSlots plus current-turn spell-slot-use facts.",
-    "Mage Armor and Ray of Frost ongoing projections remain BattleCreatureState.activeEffects.",
-    "Readied Spell hold/release remains BattleState.readiedSpells and BattleCreatureState.concentration/reactionAvailable.",
+    "Task 77 introduced no new durable state fields.",
+    "Stat Block Multiattack dispatch availability remains BattleTurnState.actionResources.",
+    "Bonus Action rejection during an open dispatch remains BattleTurnState.bonusActionAvailable plus typed invalid result facts.",
+    "Interleaved movement remains BattleCombatantMovement spent/remaining feet.",
+    "Target choice and attack roll sequencing remains public BattleHole.kind protocol state.",
+    "End Turn dispatch cleanup remains the existing public runtime command resolution.",
     "qComponentRoute is target replay route evidence derived from typed rule-core component route vocabulary, not authored identity, branch names, witness labels, or connector filenames."
   ]
 }

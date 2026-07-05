@@ -1,5 +1,100 @@
 # Validation Report
 
+## CRPI-READY-034
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Driver path: `packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt`
+- Component connector path: `packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt`
+- Route class: `component-first`
+- Durable owner: `RuleCoreStatBlockControlOwner`
+- Accepted projection: `qComponentRoute`
+- Status: `accepted`
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-034.json`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt`
+- `packages/battle-runtime/rule-core-component-route.qnt`
+- `packages/battle-runtime/src/rule-core-stat-block-controls.mbt.test.ts`
+- `packages/battle-runtime/src/rule-core-component-route.ts`
+- `packages/battle-runtime/src/battle-reducer/actions.ts`
+- `packages/battle-runtime/src/battle-reducer/movement.ts`
+- `packages/battle-runtime/src/battle-reducer/turn-end.ts`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-convergence-backlog.json`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+The component-first replay for rule-core Stat Block controls now has accepted
+target evidence for the copied `qComponentRoute` projection. The target harness
+records the reusable component route sequence parse input, admit input, call
+`RuleCoreStatBlockControlOwner`, and project result before downstream battle
+action, attack, and Stat Block routes consume this owner.
+
+Runtime projections are produced through public battle-runtime Stat Block
+Multiattack, movement, attack dispatch, action rejection, and End Turn
+entrypoints via `resolveBattleSubject`, then compared to the copied component
+connector route. No production reducer state was added: Multiattack dispatch
+resources, action availability, bonus-action availability, movement
+spent/remaining, target-choice holes, attack-roll holes, and reducer result
+state remain on existing battle state fields and public reducer protocols.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Harness | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt#step:doEndTurnClosesDispatches` | `tasks/target-replay-evidence/CRPI-READY-034.json#driver:packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt#step:doEndTurnClosesDispatches#trace:component-route=RuleCoreStatBlockControlOwner action=doEndTurnClosesDispatches qComponentRoute=stat-block-control-component-route` | `packages/battle-runtime/src/rule-core-stat-block-controls.mbt.test.ts#replays QCORE11 Multiattack dispatch parity through battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt#step:doMoveDuringDispatch` | `tasks/target-replay-evidence/CRPI-READY-034.json#driver:packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt#step:doMoveDuringDispatch#trace:component-route=RuleCoreStatBlockControlOwner action=doMoveDuringDispatch qComponentRoute=stat-block-control-component-route` | `packages/battle-runtime/src/rule-core-stat-block-controls.mbt.test.ts#replays QCORE11 Multiattack dispatch parity through battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt#step:doRejectBonusActionDuringDispatch` | `tasks/target-replay-evidence/CRPI-READY-034.json#driver:packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt#step:doRejectBonusActionDuringDispatch#trace:component-route=RuleCoreStatBlockControlOwner action=doRejectBonusActionDuringDispatch qComponentRoute=stat-block-control-component-route` | `packages/battle-runtime/src/rule-core-stat-block-controls.mbt.test.ts#replays QCORE11 Multiattack dispatch parity through battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt#step:doRejectOrdinaryActionDuringDispatch` | `tasks/target-replay-evidence/CRPI-READY-034.json#driver:packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt#step:doRejectOrdinaryActionDuringDispatch#trace:component-route=RuleCoreStatBlockControlOwner action=doRejectOrdinaryActionDuringDispatch qComponentRoute=stat-block-control-component-route` | `packages/battle-runtime/src/rule-core-stat-block-controls.mbt.test.ts#replays QCORE11 Multiattack dispatch parity through battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt#step:doResolvePrimaryDispatch` | `tasks/target-replay-evidence/CRPI-READY-034.json#driver:packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt#step:doResolvePrimaryDispatch#trace:component-route=RuleCoreStatBlockControlOwner action=doResolvePrimaryDispatch qComponentRoute=stat-block-control-component-route` | `packages/battle-runtime/src/rule-core-stat-block-controls.mbt.test.ts#replays QCORE11 Multiattack dispatch parity through battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt#step:doResolveSecondaryDispatch` | `tasks/target-replay-evidence/CRPI-READY-034.json#driver:packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt#step:doResolveSecondaryDispatch#trace:component-route=RuleCoreStatBlockControlOwner action=doResolveSecondaryDispatch qComponentRoute=stat-block-control-component-route` | `packages/battle-runtime/src/rule-core-stat-block-controls.mbt.test.ts#replays QCORE11 Multiattack dispatch parity through battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt#step:doStartMultiattack` | `tasks/target-replay-evidence/CRPI-READY-034.json#driver:packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt#step:doStartMultiattack#trace:component-route=RuleCoreStatBlockControlOwner action=doStartMultiattack qComponentRoute=stat-block-control-component-route` | `packages/battle-runtime/src/rule-core-stat-block-controls.mbt.test.ts#replays QCORE11 Multiattack dispatch parity through battle-runtime reducers` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-034.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id pattern: `component-route=RuleCoreStatBlockControlOwner action=<branchAction> qComponentRoute=stat-block-control-component-route`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-READY-034/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 77.
+
+RAW / ubiquitous-language trace:
+
+- SRD 5.2.1 Rules Glossary: Stat Block is the rules record for a monster's statistics, including Actions and Bonus Actions.
+- SRD 5.2.1 Rules Glossary and local SRD monster entries: Multiattack is a Stat Block action entry that makes multiple named attacks as one Stat Block action.
+- SRD 5.2.1 Rules Glossary: Attack action rules, target choice, attack roll, and damage sequencing define the ordinary attack-control path reused by Stat Block attacks.
+- `UBIQUITOUS_LANGUAGE.md`: Stat Block is monster-authored, Character Sheet is PC-derived, and Multiattack is a Stat Block entry defining what constitutes the monster's Attack action rather than a separate extra action.
+
+Verification results:
+
+- Base check passed: required round-2 base ref `ralph/cleanroom-reducer-full-lane-20260705-restart3/integration` resolved to `52407cf56 Mark Task 75 spell replay done`; reviewer-feedback audit ref `codex/cleanroom-reducer-full-lane-20260705-restart2` resolved to `5a3fb5554 Merge Ralph task 100 status`; `HEAD` resolved to `52407cf56 Mark Task 75 spell replay done`; `git merge-base --is-ancestor 52407cf5632e9272a6f97a2d8c604f9dee6d3374 HEAD` passed, so the Task Base SHA remains an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against SRD 5.2.1 Rules Glossary Stat Block, Attack [Action], Creature, Monster, local SRD Multiattack examples, and `UBIQUITOUS_LANGUAGE.md`.
+- Target replay evidence artifact for CRPI-READY-034 covers 7 route-required rule-core Stat Block control `qComponentRoute` obligations.
+- JSON validation passed: `jq empty tasks/target-replay-evidence/CRPI-READY-034.json tasks/ENGINE_DEPTH_MANIFEST.json tasks/STATE_OWNER_MANIFEST.json`.
+- Scoped target evidence validation passed: `node scoped validateTargetReplayEvidence for CRPI-READY-034 stat-block-control driver` covered 7 Task 77 obligations.
+- Pre-MBT process check found no actual Vitest or `quint_evaluator` worker process.
+- Focused MBT replay passed: `START=$(date +%s); ( cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=6 pnpm exec vitest run src/rule-core-stat-block-controls.mbt.test.ts ) 2>&1 & pid=$!; wait "$pid"; status=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"` passed with 1 test in `TOTAL: 16s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- Requested broad verification passed: `flock /tmp/dnd-mbt-qnt.lock pnpm quality`.
+- Reviewer-loop convergence passed: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks found no remaining reasonable Task 77 findings before verification.
+
 ## CRPI-READY-032
 
 - Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
