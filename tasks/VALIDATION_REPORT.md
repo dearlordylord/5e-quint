@@ -1,5 +1,101 @@
 # Validation Report
 
+## CRPI-BLOCK-031
+
+Status: `pass`
+
+- Task: 59
+- Driver path: `packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt`
+- Route connector path: `packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.route.mbt.qnt`
+- Route class: `reducer-routed`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-031.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.route.mbt.qnt`
+- `packages/battle-runtime/src/stat-block-size-gated-condition-rider.mbt.test.ts`
+- `packages/battle-runtime/src/battle-reducer/actions.ts`
+- `packages/battle-runtime/src/battle-reducer/attack-main.ts`
+- `packages/battle-runtime/src/battle-reducer/statblock-attacks.ts`
+- `packages/battle-runtime/src/battle-reducer/statblock-attack-hit-condition-riders.ts`
+- `packages/battle-runtime/src/battle-reducer/damage-apply.ts`
+- `packages/battle-runtime/src/statblock-attack-hit-condition-support.ts`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-convergence-backlog.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Playing-the-Game.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `.references/srd-5.2.1/Monsters/Overview.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+Stat Block size-gated condition rider route replay is accepted through the
+existing public battle reducer route for `StatBlockActionRouteSubject`. The
+target harness records copied connector `qRoute` events from
+`startBattleRight` and `resolveBattleSubject` while resolving target choice, hit
+attack roll, Prone condition-rider lifecycle, rolled damage dice, and target
+Hit Point updates. Production behavior reuses existing Stat Block action
+dispatch, target-selection, condition-lifecycle, creature-state input facts,
+and Hit Point owners; no alternate target Size, immunity, condition, damage, or
+HP ledger was added.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt#step:doFillHitAttackRoll` | `tasks/target-replay-evidence/CRPI-BLOCK-031.json#driver:packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt#step:doFillHitAttackRoll#trace:reducer-route=StatBlockActionRouteSubject action=doFillHitAttackRoll target=mediumOrSmaller qRoute=stat-block-size-gated-condition-rider-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt#step:doFillTargetChoice` | `tasks/target-replay-evidence/CRPI-BLOCK-031.json#driver:packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt#step:doFillTargetChoice#trace:reducer-route=StatBlockActionRouteSubject action=doFillTargetChoice target=mediumOrSmaller qRoute=stat-block-size-gated-condition-rider-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt#step:doResolveDamage` | `tasks/target-replay-evidence/CRPI-BLOCK-031.json#driver:packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt#step:doResolveDamage#trace:reducer-route=StatBlockActionRouteSubject action=doResolveDamage target=mediumOrSmaller qRoute=stat-block-size-gated-condition-rider-route` | `_none_` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-031.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id pattern: `reducer-route=StatBlockActionRouteSubject action=<branchAction> target=<targetSizeGate> qRoute=stat-block-size-gated-condition-rider-route`
+- The copied connector projection source is `packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.route.mbt.qnt#qRoute`; the observed projection source is the target route driver `packages/battle-runtime/src/stat-block-size-gated-condition-rider.mbt.test.ts#createSizeGatedConditionRiderRouteDriver`, which calls `resolveBattleSubject` through the public battle reducer surface.
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-031/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 59.
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Playing-the-Game.md#Attack Rolls` defines attack-roll resolution after target choice.
+- SRD 5.2.1 `Playing-the-Game.md#Creature Size` and `Rules-Glossary.md#Size` define creature Size as a creature combat fact.
+- SRD 5.2.1 `Rules-Glossary.md#Prone [Condition]` defines Prone as a condition on a creature.
+- SRD 5.2.1 `Playing-the-Game.md#Damage Rolls` and `#Hit Points` define damage reducing a creature's Hit Points after damage is determined.
+- SRD 5.2.1 `Rules-Glossary.md#Stat Block` and `Monsters/Overview.md#Parts of a Stat Block` define monster Actions, Attack Notation, Damage Notation, Multiattack, and Recharge notation.
+- `UBIQUITOUS_LANGUAGE.md` defines Creature, Attack Roll, Damage, Hit Points, Stat Block, Multiattack, Recharge, and Condition terms used by the route owners.
+
+Verification results:
+
+- Base check passed: declared base ref `master` resolved to `831184e64 Merge Ralph task 58`; `HEAD` resolved to `d2a5f13f2 Mark Ralph task 58 done`; Base SHA `d2a5f13f219e20a540396278a75bcb1d37dad799` is an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against SRD 5.2.1 attack, damage, Hit Points, Creature Size, Prone, Stat Block, Attack Notation, Damage Notation, Multiattack, Recharge, and `UBIQUITOUS_LANGUAGE.md`.
+- Target replay evidence artifact for CRPI-BLOCK-031 covers 3 route-required Stat Block size-gated condition rider `qRoute` obligations and records public reducer route owners for target selection, condition lifecycle, and HP updates.
+- JSON validation passed for `tasks/target-replay-evidence/CRPI-BLOCK-031.json`, `tasks/ENGINE_DEPTH_MANIFEST.json`, and `tasks/STATE_OWNER_MANIFEST.json`.
+- Scoped target evidence validation passed: `node scoped validateTargetReplayEvidence for CRPI-BLOCK-031 stat-block size-gated condition rider driver` covered 3 Task 59 obligations.
+- Focused MBT replay passed: `START=$(date +%s); ( cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=3 pnpm exec vitest run src/stat-block-size-gated-condition-rider.mbt.test.ts ) 2>&1 & pid=$!; wait "$pid"; status=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"` passed with 6 tests in `TOTAL: 16s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- Requested broad verification passed: `pnpm quality`. App lint emitted 61 warnings and exited 0; all quality gates and typecheck passed.
+- Reviewer-loop convergence passed: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks found no remaining reasonable Task 59 findings before broad verification.
+
 ## CRPI-BLOCK-030
 
 Status: `pass`

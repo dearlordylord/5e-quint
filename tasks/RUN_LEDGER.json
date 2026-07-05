@@ -4485,6 +4485,114 @@
         ],
         "requiredPlanEdits": "none"
       }
+    },
+    {
+      "taskId": "CRPI-BLOCK-031",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "410a06d8f99783f44cb97bffbf65c831edef7d0e38e46633cd681d8925e26f6c"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "d55b8ac5a86f9bcf00b918ef20eda004b560a2ce91ed0f76d786959630e6eb61"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "4b8324764f9f38bace719728ae5d55232e1f58525000dc0d36ea0bf5d19456f1"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-BLOCK-031/README.md",
+          "sha256": "78651399e0fc682819c2f485f257745d3fdf7300f906f122e55e69b56bafeb8a"
+        },
+        "reducerRouteInventory": {
+          "path": "plans/cleanroom-branch-coverage/reducer-route-inventory.json",
+          "sha256": "34928a31a371557d67949227d9981af247cf31738a828998ac248f82cb871ee2"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-031.json",
+          "sha256": "a17556681023bb62d5eacfbd00f4418b51cd6c6785d67e2fefe2cc51d872deff",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-031.json#driver:packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt#step:doFillTargetChoice#trace:reducer-route=StatBlockActionRouteSubject action=doFillTargetChoice target=mediumOrSmaller qRoute=stat-block-size-gated-condition-rider-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-031.json#driver:packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt#step:doFillHitAttackRoll#trace:reducer-route=StatBlockActionRouteSubject action=doFillHitAttackRoll target=mediumOrSmaller qRoute=stat-block-size-gated-condition-rider-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-031.json#driver:packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt#step:doResolveDamage#trace:reducer-route=StatBlockActionRouteSubject action=doResolveDamage target=mediumOrSmaller qRoute=stat-block-size-gated-condition-rider-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 master; git log --oneline -1 HEAD; git merge-base --is-ancestor d2a5f13f219e20a540396278a75bcb1d37dad799 HEAD",
+          "status": "pass",
+          "detail": "master resolved to 831184e64 Merge Ralph task 58; HEAD resolved to d2a5f13f2 Mark Ralph task 58 done; Base SHA is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language review against SRD 5.2.1 attack, damage, Hit Points, Creature Size, Prone, Stat Block, Attack Notation, Damage Notation, Multiattack, Recharge, and UBIQUITOUS_LANGUAGE.md",
+          "status": "pass"
+        },
+        {
+          "command": "jq empty tasks/target-replay-evidence/CRPI-BLOCK-031.json tasks/ENGINE_DEPTH_MANIFEST.json tasks/STATE_OWNER_MANIFEST.json plans/cleanroom-branch-coverage/reducer-route-inventory.json",
+          "status": "pass",
+          "detail": "Passed."
+        },
+        {
+          "command": "node scoped validateTargetReplayEvidence for CRPI-BLOCK-031 stat-block size-gated condition rider driver",
+          "status": "pass",
+          "detail": "Task 59 target replay evidence OK: 3 obligations covered."
+        },
+        {
+          "command": "START=$(date +%s); ( cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=3 pnpm exec vitest run src/stat-block-size-gated-condition-rider.mbt.test.ts ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "status": "pass",
+          "detail": "6 tests passed, including the three reducer route MBT cases; TOTAL: 16s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "Passed with 738 obligations and 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass",
+          "detail": "Passed after final artifact updates."
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "Passed end to end; app lint emitted 61 warnings and exited 0."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Verified qRoute acceptance, no duplicate durable target Size, condition-immunity, condition, damage, or HP state, no authored-identity dispatch, and no remaining reasonable Task 59 findings before broad verification."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-031",
+            "disposition": "unblocked"
+          },
+          {
+            "taskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
+            "disposition": "left unchanged"
+          }
+        ],
+        "observations": [
+          "Stat Block size-gated condition rider qRoute is accepted through public startBattleRight and resolveBattleSubject reducer entrypoints.",
+          "No new durable state was required; existing BattleState combatants, public hole/fill kinds, BattleResolutionResult facts, BattleCreatureState Size and condition-immunity input facts, condition lifecycle state, and Hit Point fields carry the behavior.",
+          "The route inventory now explicitly records the required qRoute acceptance for packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.route.mbt.qnt, matching the task acceptance and the prior Stat Block route evidence pattern."
+        ],
+        "requiredPlanEdits": "none"
+      }
     }
   ]
 }
