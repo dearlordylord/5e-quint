@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { characterDraftId } from "@dnd/character-creation-runtime";
+import type { Skill } from "@dnd/shared/game-facts";
 import { characterIdFromDraftId } from "../src/session-store.ts";
 
 import {
@@ -59,6 +60,16 @@ const levelFiveWizardFireballDraftId =
   "draft:stdio-level-five-elf-soldier-wizard-fireball";
 const levelFiveWizardFireballCombatantId = "wizard-level-5";
 const levelFiveWizardFireballBattleId = "battle:stdio-level-five-fireball";
+const levelSixRogueExpertiseDraftId =
+  "draft:stdio-level-six-orc-soldier-rogue-expertise";
+const levelSixRogueProgressionOptionId =
+  "11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue:level_6:fixed_hp_gain";
+const levelSixRogueExpertiseSkills = [
+  "acrobatics",
+  "athletics",
+  "perception",
+  "stealth",
+] as const satisfies ReadonlyArray<Skill>;
 
 const agentConversationScenarios = [
   {
@@ -1262,6 +1273,60 @@ export async function verifyLevelFiveWizardFireballBattleHandoff(
   );
 }
 
+export async function verifyLevelSixRogueExpertiseSheetScenario(
+  client: Client,
+) {
+  const workflow = await callTool(client, "describe_mcp_workflow", {});
+  assert.equal(get(workflow, "resultPaths.creationHoles"), "holes");
+  assert.equal(
+    get(workflow, "resultPaths.draftRevision"),
+    "draft.revision or storedDraft.revision",
+  );
+
+  const units = await callTool(client, "list_catalog_units", {});
+  assert.ok(
+    unitSummaries(units, "class").some((unit) => unit.id === "class_rogue"),
+  );
+  assert.ok(
+    unitSummaries(units, "class_feature").some(
+      (unit) => unit.id === "rogue_expertise",
+    ),
+  );
+
+  const finalizedRogue = await createAndFinalizeOrcRogueSixWithExpertise(
+    client,
+    levelSixRogueExpertiseDraftId,
+  );
+  assert.equal(get(finalizedRogue, "finalization.tag"), "ready");
+  assert.equal(
+    get(finalizedRogue, "finalization.build.species"),
+    "species_orc",
+  );
+  assert.deepEqual(get(finalizedRogue, "finalization.build.abilityScores"), {
+    str: 8,
+    dex: 19,
+    con: 15,
+    int: 12,
+    wis: 10,
+    cha: 13,
+  });
+  assertLevelSixRogueExpertiseBuild(
+    finalizedRogue,
+    "finalization.build.proficiencyChoices",
+  );
+
+  const listedBeforeBattle = await callTool(client, "list_characters", {});
+  const rogue = characterRow(
+    listedBeforeBattle,
+    testCharacterId(levelSixRogueExpertiseDraftId),
+  );
+  assert.equal(get(rogue, "status"), "available");
+  assert.equal(get(rogue, "displayName"), "Orc Soldier Rogue 6");
+  assert.equal(get(rogue, "hitPoints.current"), 45);
+  assert.equal(get(rogue, "hitPoints.maximum"), 45);
+  assertLevelSixRogueExpertiseBuild(rogue, "build.proficiencyChoices");
+}
+
 async function createAndFinalizeFighterTwo(client: Client, draftId: string) {
   await callTool(client, "create_character_draft", { draftId });
   await fillBaseOrcSoldier(
@@ -1657,6 +1722,201 @@ async function createAndFinalizeElfWizardFive(client: Client, draftId: string) {
   });
 }
 
+async function createAndFinalizeOrcRogueSixWithExpertise(
+  client: Client,
+  draftId: string,
+) {
+  const created = await callTool(client, "create_character_draft", { draftId });
+  const initialFill = await callTool(client, "fill_creation_holes", {
+    draftId,
+    expectedRevision: returnedDraftRevision(created),
+    fills: [
+      choiceFillFromReturnedHole(
+        created,
+        "cc:draft:draft.progression.initial",
+        levelSixRogueProgressionOptionId,
+      ),
+      choiceFillFromReturnedHole(
+        created,
+        "cc:draft:draft.background",
+        "background_soldier",
+      ),
+      choiceFillFromReturnedHole(
+        created,
+        "cc:draft:draft.species",
+        "species_orc",
+      ),
+      abilityScoresFillFromReturnedHole(
+        created,
+        "cc:draft:draft.abilityScoreGeneration",
+        {
+          str: 8,
+          dex: 15,
+          con: 14,
+          int: 12,
+          wis: 10,
+          cha: 13,
+        },
+      ),
+      choiceFillFromReturnedHole(
+        created,
+        "cc:draft:draft.languages",
+        "Dwarvish",
+        "Goblin",
+      ),
+      choiceFillFromReturnedHole(
+        created,
+        "cc:draft:draft.alignment",
+        "lawful_good",
+      ),
+    ],
+  });
+  const afterInitialRevision = acceptedFillDraftRevision(initialFill);
+
+  const classChoices = await callTool(client, "discover_creation_holes", {
+    draftId,
+  });
+  assert.equal(returnedDraftRevision(classChoices), afterInitialRevision);
+  assert.deepEqual(holeIds(classChoices), [
+    unitHoleId("class_rogue", "class_skill_proficiency_choice"),
+    unitHoleId("rogue_thieves_cant", "class_feature_language_choice"),
+    unitHoleId("rogue_weapon_mastery", "weapon_mastery_options"),
+    unitHoleId(
+      "rogue_ability_score_improvement_l4",
+      "class_feature_feat_choice",
+    ),
+    unitHoleId("class_rogue", "class_subclass_choice"),
+    unitHoleId("class_rogue", "class_equipment_choice"),
+    unitHoleId("background_soldier", "background_ability_score_increase"),
+    unitHoleId("background_soldier", "background_tool_choice"),
+    unitHoleId("background_soldier", "background_equipment_choice"),
+  ]);
+
+  const classFill = await callTool(client, "fill_creation_holes", {
+    draftId,
+    expectedRevision: returnedDraftRevision(classChoices),
+    fills: [
+      choiceFillFromReturnedHole(
+        classChoices,
+        unitHoleId("class_rogue", "class_skill_proficiency_choice"),
+        ...levelSixRogueExpertiseSkills,
+      ),
+      choiceFillFromReturnedHole(
+        classChoices,
+        unitHoleId("rogue_thieves_cant", "class_feature_language_choice"),
+        "Orc",
+      ),
+      choiceFillFromReturnedHole(
+        classChoices,
+        unitHoleId("rogue_weapon_mastery", "weapon_mastery_options"),
+        "weapon_dagger",
+        "weapon_shortsword",
+      ),
+      choiceFillFromReturnedHole(
+        classChoices,
+        unitHoleId(
+          "rogue_ability_score_improvement_l4",
+          "class_feature_feat_choice",
+        ),
+        "feat_ability_score_improvement",
+      ),
+      choiceFillFromReturnedHole(
+        classChoices,
+        unitHoleId("class_rogue", "class_subclass_choice"),
+        "subclass_rogue_thief",
+      ),
+      choiceFillFromReturnedHole(
+        classChoices,
+        unitHoleId("class_rogue", "class_equipment_choice"),
+        "option_b",
+      ),
+      choiceFillFromReturnedHole(
+        classChoices,
+        unitHoleId("background_soldier", "background_ability_score_increase"),
+        "two_and_one:dex:con",
+      ),
+      choiceFillFromReturnedHole(
+        classChoices,
+        unitHoleId("background_soldier", "background_tool_choice"),
+        "tool_dice_set",
+      ),
+      choiceFillFromReturnedHole(
+        classChoices,
+        unitHoleId("background_soldier", "background_equipment_choice"),
+        "option_b",
+      ),
+    ],
+  });
+  const afterClassRevision = acceptedFillDraftRevision(classFill);
+
+  const featureChoices = await callTool(client, "discover_creation_holes", {
+    draftId,
+  });
+  assert.equal(returnedDraftRevision(featureChoices), afterClassRevision);
+  assert.deepEqual(holeIds(featureChoices), [
+    unitHoleId("rogue_expertise", "class_feature_proficiency_choice"),
+    unitHoleId(
+      "rogue_ability_score_improvement_l4",
+      "class_feature_ability_score_increase_choice",
+    ),
+    unitHoleId("class_rogue", "equipment_purchase"),
+  ]);
+
+  const featureFill = await callTool(client, "fill_creation_holes", {
+    draftId,
+    expectedRevision: returnedDraftRevision(featureChoices),
+    fills: [
+      choiceFillFromReturnedHole(
+        featureChoices,
+        unitHoleId("rogue_expertise", "class_feature_proficiency_choice"),
+        ...levelSixRogueExpertiseSkills,
+      ),
+      choiceFillFromReturnedHole(
+        featureChoices,
+        unitHoleId(
+          "rogue_ability_score_improvement_l4",
+          "class_feature_ability_score_increase_choice",
+        ),
+        "ability_score:dex:+2:max20",
+      ),
+      choiceFillFromReturnedHole(
+        featureChoices,
+        unitHoleId("class_rogue", "equipment_purchase"),
+        "weapon_quarterstaff",
+      ),
+    ],
+  });
+  const afterFeatureRevision = acceptedFillDraftRevision(featureFill);
+
+  const loadoutChoices = await callTool(client, "discover_creation_holes", {
+    draftId,
+  });
+  assert.equal(returnedDraftRevision(loadoutChoices), afterFeatureRevision);
+  assert.deepEqual(holeIds(loadoutChoices), [
+    loadoutHoleId("weapon_quarterstaff", "weapon"),
+  ]);
+
+  const loadoutFill = await callTool(client, "fill_creation_holes", {
+    draftId,
+    expectedRevision: returnedDraftRevision(loadoutChoices),
+    fills: [
+      choiceFillFromReturnedHole(
+        loadoutChoices,
+        loadoutHoleId("weapon_quarterstaff", "weapon"),
+        "wielded_one_handed",
+      ),
+    ],
+  });
+  const afterLoadoutRevision = acceptedFillDraftRevision(loadoutFill);
+
+  const complete = await callTool(client, "discover_creation_holes", {
+    draftId,
+  });
+  assert.equal(returnedDraftRevision(complete), afterLoadoutRevision);
+  assert.deepEqual(holeIds(complete), []);
+  return callTool(client, "finalize_character", { draftId });
+}
+
 async function createAndFinalizeElfSoldierWizardWithAsi(
   client: Client,
   draftId: string,
@@ -1981,10 +2241,27 @@ function choiceFillFromReturnedHole(
   return choiceFill(hole.holeId, ...optionIds);
 }
 
+function abilityScoresFillFromReturnedHole(
+  payload: JsonObject,
+  holeId: string,
+  value: JsonObject,
+) {
+  const hole = returnedCreationHole(payload, holeId);
+  assert.equal(hole.kind, "abilityScores");
+  assert.ok(
+    stringArrayAt(hole, "methods").includes("standardArray"),
+    `Expected returned hole ${holeId} to include Standard Array`,
+  );
+  return {
+    kind: "abilityScores",
+    holeId: parseString(hole.holeId, `${holeId}.holeId`),
+    method: "standardArray",
+    value,
+  };
+}
+
 function returnedChoiceHole(payload: JsonObject, holeId: string) {
-  const holes = jsonObjectArrayAt(payload, "holes");
-  const hole = holes.find((candidate) => candidate.holeId === holeId);
-  assert.ok(hole, `Expected returned creation hole ${holeId}`);
+  const hole = returnedCreationHole(payload, holeId);
   assert.equal(hole.kind, "choice");
   const options = jsonObjectArrayAt(hole, "options");
   return {
@@ -1996,6 +2273,13 @@ function returnedChoiceHole(payload: JsonObject, holeId: string) {
       ),
     })),
   };
+}
+
+function returnedCreationHole(payload: JsonObject, holeId: string) {
+  const holes = jsonObjectArrayAt(payload, "holes");
+  const hole = holes.find((candidate) => candidate.holeId === holeId);
+  assert.ok(hole, `Expected returned creation hole ${holeId}`);
+  return hole;
 }
 
 function choiceFill(holeId: string, ...optionIds: readonly string[]) {
@@ -2314,6 +2598,33 @@ function characterRow(payload: JsonObject, characterId: string) {
 
 function unitSummaries(payload: JsonObject, kind: string) {
   return get(payload, `unitsByKind.${kind}`) as Array<{ readonly id: string }>;
+}
+
+function assertLevelSixRogueExpertiseBuild(payload: JsonObject, path: string) {
+  const skillProficiencies = proficiencyChoiceSkills(payload, path, "skill");
+  const expertise = proficiencyChoiceSkills(payload, path, "skill_expertise");
+  assert.deepEqual(
+    [...expertise].sort(),
+    [...levelSixRogueExpertiseSkills].sort(),
+  );
+  assert.equal(new Set(expertise).size, levelSixRogueExpertiseSkills.length);
+  for (const skill of expertise) {
+    assert.ok(
+      skillProficiencies.includes(skill),
+      `${skill} Expertise must be over an owned skill proficiency`,
+    );
+  }
+}
+
+function proficiencyChoiceSkills(
+  payload: JsonObject,
+  path: string,
+  kind: "skill" | "skill_expertise",
+) {
+  return jsonObjectArrayAt(payload, path).flatMap((choice, index) => {
+    if (choice.kind !== kind) return [];
+    return [parseString(choice.skill, `${path}.${index}.skill`)];
+  });
 }
 
 function get(value: unknown, path: string): unknown {

@@ -12,7 +12,7 @@
     "circular": "madge --extensions ts --circular src",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:mcp-scenario-evidence": "vitest run src/mcp-scenario-evidence.test.ts src/mcp-protocol.test.ts src/mcp-level-five-sheet-scenario.test.ts"
+    "test:mcp-scenario-evidence": "vitest run src/mcp-scenario-evidence.test.ts src/mcp-protocol.test.ts src/mcp-level-five-sheet-scenario.test.ts src/mcp-level-six-sheet-scenario.test.ts"
   },
   "dependencies": {
     "@dnd/battle-runtime": "workspace:*",

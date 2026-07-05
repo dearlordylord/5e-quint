@@ -319,13 +319,13 @@
     {
       "number": 33,
       "id": "L6UG-MCP-02-LEVEL6-SHEET-SCENARIO",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement level-6 MCP creation and sheet scenario coverage"
     },
     {
       "number": 34,
       "id": "L6UG-MCP-03-LEVEL6-BATTLE-HANDOFF",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Extend the level-6 MCP scenario through battle handoff"
     },
     {
@@ -483,8 +483,8 @@ Every Ralph task must run the task-base check before research or edits:
 |  30 | L6UG-SCOPE-02-ULTRA-GOLDEN-SCOPE - Wire level-1-6 into the ultra-golden aggregate | done | L6UG-SCOPE-01-LEVEL16-REPORT-PLUMBING | Extends aggregate scope without weakening older scopes. |
 |  31 | L6UG-GATE-01-NON-MCP-LAYER-RECONCILIATION - Reconcile level-1-6 non-MCP ultra-golden layers | done | L6UG-SCOPE-02-ULTRA-GOLDEN-SCOPE | Support, QNT/generator, and parity layers before MCP closeout. |
 |  32 | L6UG-MCP-01-LEVEL6-VERTICAL-DECISION - Choose the level-6 MCP vertical scenario | done | L6UG-PRE-01-L6-FULL-QUEUE-CLOSED | Selected the Rogue 6 Expertise plus Steady Aim battle handoff vertical. |
-|  33 | L6UG-MCP-02-LEVEL6-SHEET-SCENARIO - Implement level-6 MCP creation and sheet scenario coverage | ready-for-research | L6UG-MCP-01-LEVEL6-VERTICAL-DECISION | Proves selected Rogue 6 Expertise creation/advancement and durable sheet state. |
-|  34 | L6UG-MCP-03-LEVEL6-BATTLE-HANDOFF - Extend the level-6 MCP scenario through battle handoff | blocked | L6UG-MCP-02-LEVEL6-SHEET-SCENARIO, L6UG-GATE-01-NON-MCP-LAYER-RECONCILIATION | Battle handoff only after non-MCP blockers are known. |
+|  33 | L6UG-MCP-02-LEVEL6-SHEET-SCENARIO - Implement level-6 MCP creation and sheet scenario coverage | done | L6UG-MCP-01-LEVEL6-VERTICAL-DECISION | Adds selected Rogue 6 Expertise creation/advancement and durable sheet evidence. |
+|  34 | L6UG-MCP-03-LEVEL6-BATTLE-HANDOFF - Extend the level-6 MCP scenario through battle handoff | ready-for-research | L6UG-MCP-02-LEVEL6-SHEET-SCENARIO, L6UG-GATE-01-NON-MCP-LAYER-RECONCILIATION | Ready to extend the Task 33 helper through battle handoff. |
 |  35 | L6UG-MCP-04-LEVEL6-SCENARIO-REGISTRY - Register the level-6 MCP scenario in acceptance coverage | blocked | L6UG-MCP-03-LEVEL6-BATTLE-HANDOFF | Wires executable scenario into acceptance metadata. |
 |  36 | L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE - Admit level-1-6 MCP scenario evidence | blocked | L6UG-MCP-04-LEVEL6-SCENARIO-REGISTRY | Updates checker-owned MCP evidence after executable coverage exists. |
 |  37 | L6UG-FINAL-01-ULTRA-GOLDEN-REFRESH - Refresh and verify the level-1-6 ultra-golden gate | blocked | L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE | Final generated refresh after scope, parity, and MCP evidence land. |
@@ -3331,7 +3331,7 @@ Plan Impact:
 
 ### Task 33 - L6UG-MCP-02-LEVEL6-SHEET-SCENARIO
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: `L6UG-MCP-01-LEVEL6-VERTICAL-DECISION`
 
@@ -3362,16 +3362,19 @@ Verification:
 - `pnpm --filter @dnd/mcp test:mcp-scenario-evidence`
 - L6 shared verification.
 
+Plan Impact:
+
+- Applied. Added the executable Rogue 6 Expertise MCP sheet helper and focused
+  `@dnd/mcp` scenario test, proving creation/finalization and durable
+  `list_characters` Character Sheet projection before battle.
+- Task 34 is unblocked for the selected Steady Aim battle handoff extension.
+
 ### Task 34 - L6UG-MCP-03-LEVEL6-BATTLE-HANDOFF
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `L6UG-MCP-02-LEVEL6-SHEET-SCENARIO`,
 `L6UG-GATE-01-NON-MCP-LAYER-RECONCILIATION`
-
-Blocker Type: dependency
-
-Blocker Detail: waiting for `L6UG-MCP-02-LEVEL6-SHEET-SCENARIO`.
 
 Inputs:
 
