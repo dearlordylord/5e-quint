@@ -18,8 +18,11 @@ import {
   DISTANT_METAMAGIC_EFFECT_KIND,
   EMPOWERED_METAMAGIC_EFFECT_KIND,
   EXTENDED_METAMAGIC_EFFECT_KIND,
+  HEIGHTENED_METAMAGIC_EFFECT_KIND,
   QUICKENED_METAMAGIC_EFFECT_KIND,
+  SEEKING_METAMAGIC_EFFECT_KIND,
 } from "./metamagic-support.ts";
+import { isHeightenedSpellTargetChoiceHoleId } from "./spells-damage-fills.ts";
 
 export type BattleReducerRouteSubjectFamily =
   | "concentrationTeardown"
@@ -29,7 +32,9 @@ export type BattleReducerRouteSubjectFamily =
   | "interruptStackResume"
   | "metamagicBonusActionCastingTime"
   | "metamagicDamageDiceReroll"
+  | "metamagicMissedSpellAttackReroll"
   | "metamagicSavingThrowProtection"
+  | "metamagicSavingThrowRollMode"
   | "metamagicSpellGovernor"
   | "metamagicSpellRangeProjection"
   | "metamagicSpellDurationProjection"
@@ -51,6 +56,7 @@ export type BattleReducerRouteOwnerGroup =
   | "battleAttackRoll"
   | "battleSpellAttackProcedure"
   | "battleSavingThrowOutcome"
+  | "battleSavingThrowRollMode"
   | "battleHitPointAndZeroHpLifecycle"
   | "battleHitPoint"
   | "battleDamageRoll"
@@ -518,6 +524,12 @@ function metamagicRouteForResolution(
     return (
       metamagicSpellRangeProjectionRouteForResolution(input, result, fill) ??
       metamagicSavingThrowProtectionRouteForResolution(input, result, fill) ??
+      metamagicSavingThrowRollModeRouteForResolution(input, result, fill) ??
+      metamagicMissedSpellAttackRerollRouteForResolution(
+        input,
+        result,
+        fill,
+      ) ??
       metamagicDamageDiceRerollRouteForResolution(input, result, fill)
     );
   }
@@ -573,6 +585,32 @@ function metamagicRouteForResolution(
       },
     ];
   }
+  if (
+    routeFill === "savingThrowOutcome" &&
+    input.subject.invocation.procedure === "saveGatedDamage" &&
+    result.tag !== "invalid"
+  ) {
+    return [
+      ...metamagicBonusActionTimingRoutes(["savingThrowOutcome"]),
+      {
+        kind: "resolveBattleSubject",
+        subject: "metamagicBonusActionCastingTime",
+        fill: routeFill,
+        holes,
+        owner: "battleSavingThrowOutcome",
+      },
+      ...(result.tag === "resolved"
+        ? [
+            {
+              kind: "resolveBattleSubjectWithoutFill" as const,
+              subject: "metamagicBonusActionCastingTime" as const,
+              holes: [],
+              owner: metamagicSaveGatedFinalOwner(input.state, result.state),
+            },
+          ]
+        : []),
+    ];
+  }
   if (routeFill === "savingThrowOutcome" && result.tag === "resolved") {
     return [
       ...metamagicBonusActionTimingRoutes(["savingThrowOutcome"]),
@@ -600,6 +638,23 @@ function metamagicRouteForResolution(
           fill: routeFill,
           holes,
           owner: "battleHitPointAndZeroHpLifecycle",
+        },
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "metamagicBonusActionCastingTime",
+          holes: [],
+          owner: "battleTurnBoundary",
+        },
+      ];
+    }
+    if (input.subject.invocation.procedure === "saveGatedDamage") {
+      return [
+        {
+          kind: "resolveBattleSubject",
+          subject: "metamagicBonusActionCastingTime",
+          fill: routeFill,
+          holes,
+          owner: "battleDamageRoll",
         },
         {
           kind: "resolveBattleSubjectWithoutFill",
@@ -683,6 +738,61 @@ function metamagicSavingThrowProtectionRouteForResolution(
         subject: "metamagicSavingThrowProtection",
         holes: [],
         owner: "battleFeatureResource",
+      },
+    ];
+  }
+  return undefined;
+}
+
+function metamagicSavingThrowRollModeRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+  fill: BattleFill | undefined,
+): BattleReducerRouteEvents | undefined {
+  if (!isHeightenedSavingThrowRollModeSubject(input.subject)) {
+    return undefined;
+  }
+  if (fill === undefined || result.tag === "invalid") {
+    return undefined;
+  }
+  const routeFill = battleReducerRouteFill(fill);
+  if (
+    routeFill === "targetChoice" &&
+    fill.kind === "targetChoice" &&
+    isHeightenedSpellTargetChoiceHoleId(fill.holeId) &&
+    result.tag === "needsHoles" &&
+    battleReducerRouteHoles(result.holes).includes("savingThrowOutcome")
+  ) {
+    const holes = battleReducerRouteHoles(result.holes);
+    return [
+      {
+        kind: "discoverBattleActs",
+        subject: "metamagicSavingThrowRollMode",
+        holes,
+        owner: "battleFeatureResource",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "metamagicSavingThrowRollMode",
+        holes,
+        owner: "battleSavingThrowRollMode",
+      },
+    ];
+  }
+  if (routeFill === "savingThrowOutcome" && result.tag === "resolved") {
+    return [
+      {
+        kind: "resolveBattleSubject",
+        subject: "metamagicSavingThrowRollMode",
+        fill: routeFill,
+        holes: [],
+        owner: "battleSavingThrowOutcome",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "metamagicSavingThrowRollMode",
+        holes: [],
+        owner: "battleConditionLifecycle",
       },
     ];
   }
@@ -830,6 +940,100 @@ function metamagicDamageDiceRerollRouteForResolution(
   ];
 }
 
+function metamagicMissedSpellAttackRerollRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+  fill: BattleFill | undefined,
+): BattleReducerRouteEvents | undefined {
+  if (!isSpellAttackDamageSubject(input.subject)) {
+    return undefined;
+  }
+  if (fill === undefined || result.tag === "invalid") {
+    return undefined;
+  }
+  const routeFill = battleReducerRouteFill(fill);
+  if (routeFill !== "attackRoll") {
+    return metamagicMissedSpellAttackRerollCompletionRoute(input, result, fill);
+  }
+  const holes =
+    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
+  if (
+    result.tag === "needsHoles" &&
+    hasSeekingSpellAttackRerollHole(result.holes)
+  ) {
+    return [
+      {
+        kind: "discoverBattleActs",
+        subject: "metamagicMissedSpellAttackReroll",
+        holes,
+        owner: "battleFeatureResource",
+      },
+      {
+        kind: "resolveBattleSubject",
+        subject: "metamagicMissedSpellAttackReroll",
+        fill: routeFill,
+        holes,
+        owner: "battleAttackRoll",
+      },
+    ];
+  }
+  if (
+    fill.kind !== "attackRoll" ||
+    fill.value.spellAttackReroll?.effectKind !== SEEKING_METAMAGIC_EFFECT_KIND
+  ) {
+    return undefined;
+  }
+  return [
+    {
+      kind: "resolveBattleSubject",
+      subject: "metamagicMissedSpellAttackReroll",
+      fill: routeFill,
+      holes,
+      owner: "battleAttackRoll",
+    },
+  ];
+}
+
+function metamagicMissedSpellAttackRerollCompletionRoute(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+  fill: BattleFill,
+): BattleReducerRouteEvents | undefined {
+  if (
+    result.tag !== "resolved" ||
+    battleReducerRouteFill(fill) !== "rolledDice" ||
+    !input.fills.some(
+      (candidate) =>
+        candidate.kind === "attackRoll" &&
+        candidate.value.spellAttackReroll?.effectKind ===
+          SEEKING_METAMAGIC_EFFECT_KIND,
+    )
+  ) {
+    return undefined;
+  }
+  return [
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "metamagicMissedSpellAttackReroll",
+      holes: [],
+      owner: "battleFeatureResource",
+    },
+  ];
+}
+
+function hasSeekingSpellAttackRerollHole(
+  holes: readonly BattleHole[],
+): boolean {
+  return holes.some(
+    (hole) =>
+      hole.kind === "attackRoll" &&
+      "spellAttackRerolls" in hole &&
+      hole.spellAttackRerolls?.some(
+        (option) => option.effectKind === SEEKING_METAMAGIC_EFFECT_KIND,
+      ) === true,
+  );
+}
+
 function hasEmpoweredSpellDamageRerollHole(
   holes: readonly BattleHole[],
 ): boolean {
@@ -926,6 +1130,17 @@ function isDistantSpellRangeProjectionSubject(
     subject.invocation.procedure === "objectLight" &&
     subject.metamagic?.some(
       (selection) => selection.effectKind === DISTANT_METAMAGIC_EFFECT_KIND,
+    ) === true
+  );
+}
+
+function isHeightenedSavingThrowRollModeSubject(
+  subject: BattleResolutionInput["subject"],
+): boolean {
+  return (
+    subject.tag === "actionSpell" &&
+    subject.metamagic?.some(
+      (selection) => selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
     ) === true
   );
 }

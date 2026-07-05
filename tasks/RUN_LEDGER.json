@@ -1398,6 +1398,314 @@
           "detail": "Round 1 added public metamagicSpellDurationProjection route ownership; round 2 verified route admission is typed by Extended Metamagic facts, promoted creature-size procedure shape, active-effect state delta, and Concentration state. No duplicate durable state or authored-identity dispatch was added."
         }
       ]
+    },
+    {
+      "taskId": "CRPI-READY-015",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic-heightened-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "10baec50712df61a7a45ac533f61d0536b6410dd",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "4b93d4b872bd5d6855dc7e0a496e6709747331631967bf17bbb110137970b015"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "4af3b01ba812aa5cb6e5dcfc2e1b2dbe94938fbb6763d459c808ab58316927cb"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "7ab924bcb4ec1039c1d3347083834abeaae91fcbd826a6ff42cbbb0d7cc7e76b"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-READY-015.json",
+          "sha256": "e352a0d6597943718c30361ae215e0be1f310a7342dbe235ee8eda9b888af169",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-READY-015.json#driver:packages/battle-runtime/battle-runtime-sorcerer-metamagic-heightened-selected-identity.mbt.qnt#step:doResolveHeightenedHideousLaughter#trace:public-route=metamagicSavingThrowRollMode action=doResolveHeightenedHideousLaughter qRoute=metamagic-saving-throw-roll-mode-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-reducer-full-lane-20260704T211636Z/integration && git log --oneline -1 HEAD && git merge-base --is-ancestor 10baec50712df61a7a45ac533f61d0536b6410dd HEAD",
+          "status": "pass",
+          "detail": "Integration and HEAD were 10baec507; base SHA is an ancestor."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime typecheck",
+          "status": "pass"
+        },
+        {
+          "command": "START=$(date +%s); cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=1 pnpm exec vitest run src/sorcerer-metamagic-heightened-selected-identity.mbt.test.ts -t \"Heightened Spell saving-throw roll-mode|Sorcerer Metamagic Heightened\" 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "3 tests passed; deterministic stepRouteSavingThrowRollMode executed copied doRouteSavingThrowRollMode qRoute and compared it to the public reducer route; final timed run TOTAL: 8s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "Quality passed end to end; app lint reported warnings only and exited 0."
+        },
+        {
+          "command": "RAW/ubiquitous-language review against .references/srd-5.2.1/Classes/Sorcerer.md, .references/srd-5.2.1/Spells/Descriptions-E-L.md, and UBIQUITOUS_LANGUAGE.md",
+          "status": "pass"
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 added public metamagicSavingThrowRollMode route ownership and deterministic copied-route replay; round 2 verified route admission is typed by Heightened Metamagic facts, target-choice/saving-throw fills, saving-throw roll-mode projection, and condition lifecycle resolution. No duplicate durable state or authored-identity dispatch was added."
+        }
+      ]
+    },
+    {
+      "taskId": "CRPI-READY-016",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic-seeking-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "0da15bfe0871d5a45782c7ac355d622be8907d44",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "77524e196d52f5de61c23ee88e0ccf721527a0e74a412e373b04ca4c5e6c549e"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "67852c01521ceca31918333d04a08665ba6dd487b6c53698be3e2607c46a2f11"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "27c7e9122de262b9741c3f984fed55c0f21a82df5dd90538a843043175e20359"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-READY-016.json",
+          "sha256": "0c54499a810d35e96c1b4c683d6bd8ec8bc876bc0d2b8dc3345046bccd0694c7",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-READY-016.json#driver:packages/battle-runtime/battle-runtime-sorcerer-metamagic-seeking-selected-identity.mbt.qnt#step:doResolveSeekingSpellAttackReroll#trace:public-route=metamagicMissedSpellAttackReroll action=doResolveSeekingSpellAttackReroll qRoute=metamagic-missed-spell-attack-reroll-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-reducer-full-lane-20260704T211636Z/integration && git log --oneline -1 HEAD && git merge-base --is-ancestor 0da15bfe0871d5a45782c7ac355d622be8907d44 HEAD",
+          "status": "pass",
+          "detail": "Integration and HEAD were 0da15bfe0; base SHA is an ancestor."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime typecheck",
+          "status": "pass"
+        },
+        {
+          "command": "START=$(date +%s); cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=1 pnpm exec vitest run src/sorcerer-metamagic-seeking-selected-identity.mbt.test.ts -t \"Seeking Spell missed-attack reroll|Sorcerer Metamagic Seeking\" 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "fail",
+          "detail": "Initial direct doRouteMissedSpellAttackReroll step left the implementation projection at the initial route because the copied connector branch lacked the deterministic stepRoute wrapper used by adjacent metamagic route replays; final timed run TOTAL: 8s."
+        },
+        {
+          "command": "START=$(date +%s); cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=1 pnpm exec vitest run src/sorcerer-metamagic-seeking-selected-identity.mbt.test.ts -t \"Seeking Spell missed-attack reroll|Sorcerer Metamagic Seeking\" 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "fail",
+          "detail": "Generic step driver alias also left the implementation projection at the initial route; final timed run TOTAL: 8s."
+        },
+        {
+          "command": "START=$(date +%s); cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=1 pnpm exec vitest run src/sorcerer-metamagic-seeking-selected-identity.mbt.test.ts -t \"Seeking Spell missed-attack reroll|Sorcerer Metamagic Seeking\" 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "3 tests passed after adding stepRouteMissedSpellAttackReroll; deterministic stepRouteMissedSpellAttackReroll executed copied doRouteMissedSpellAttackReroll qRoute and compared it to the public reducer route; final timed run TOTAL: 8s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "Quality passed end to end; app lint reported warnings only and exited 0."
+        },
+        {
+          "command": "RAW/ubiquitous-language review against .references/srd-5.2.1/Classes/Sorcerer.md, .references/srd-5.2.1/Spells/Descriptions-Q-R.md, and UBIQUITOUS_LANGUAGE.md",
+          "status": "pass"
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 added public metamagicMissedSpellAttackReroll route ownership and deterministic copied-route replay; round 2 verified route admission is typed by Seeking Metamagic attack-roll hole/fill facts, spell Attack damage procedure shape, and damage completion. No duplicate durable state or authored-identity dispatch was added."
+        }
+      ]
+    },
+    {
+      "taskId": "CRPI-READY-017",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "0da15bfe0871d5a45782c7ac355d622be8907d44",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "ea819f81f32c6d905d06ea1588da15d5390230f3fe907750a78f4a7d66acd332"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "45b8b5e59b9b2cefd3bf4c53f66b7719d62a104444df7f5cdce414a973bde9ac"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "95147b6a22d137e27e58393266c572de5040c8bf523699daea2c7878a3052032"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-READY-017.json",
+          "sha256": "4413719d4140b37fcc33931d730d035244511c835726df109afc0b443715c97b",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-READY-017.json#driver:packages/battle-runtime/battle-runtime-sorcerer-metamagic-selected-identity.mbt.qnt#step:doResolveQuickenedSaveGatedDamage#trace:public-route=metamagicBonusActionCastingTime action=doResolveQuickenedSaveGatedDamage qRoute=metamagic-quickened-save-gated-damage-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 codex/cleanroom-reducer-full-lane-20260704T211636Z && git log --oneline -1 HEAD && git merge-base --is-ancestor 24768ffd24e479b66db931927e70f17cefb64ce6 HEAD",
+          "status": "pass",
+          "detail": "Declared base ref was 10baec507 Mark Ralph task 45 done; HEAD was 24768ffd2 Mark Ralph task 47 done; Base SHA 24768ffd24e479b66db931927e70f17cefb64ce6 is an ancestor of HEAD."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime typecheck",
+          "status": "pass"
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/battle-runtime exec vitest run src/sorcerer-metamagic-selected-identity.mbt.test.ts 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "3 tests passed; deterministic stepRouteQuickenedSaveGatedDamage executed copied doResolveQuickenedSaveGatedDamage qRoute and compared it to the public reducer route; final timed run TOTAL: 7s."
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/battle-runtime exec vitest run src/reducer-route-connectors.mbt.test.ts -t \"Metamagic\" 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "1 filtered connector test passed; final timed run TOTAL: 7s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "Quality passed end to end; app lint reported warnings only and exited 0."
+        },
+        {
+          "command": "RAW/ubiquitous-language review against .references/srd-5.2.1/Classes/Sorcerer.md, .references/srd-5.2.1/Spells/Descriptions-A-D.md, and UBIQUITOUS_LANGUAGE.md",
+          "status": "pass"
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 added copied Quickened save-gated damage route connector evidence and public route ownership; round 2 verified route admission is typed by Quickened Metamagic facts, save-gated damage procedure shape, save/damage fills, and turn-boundary lock ownership. No duplicate durable state or authored-identity dispatch was added."
+        }
+      ]
+    },
+    {
+      "taskId": "CRPI-READY-018",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "0da15bfe0871d5a45782c7ac355d622be8907d44",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "1ae7cfc4d9057a22caf3a28b59bef5b21052f0bac1839a494f42d5035e0ee79a"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "c326a6bc413b8e4d7ab4bef79cd82ff58584ac38da512f4e3ac995d06b7cde1a"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "13045554ac34d18e78c46bf2b53c51999c35a1d5b187daf5385936750e34e2a7"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-READY-018.json",
+          "sha256": "b4df0ff5af8abe009a147ddf9ba05d4876b8860029b56e82d98e98702a8448fa",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-READY-018.json#driver:packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-selected-identity.mbt.qnt#step:doResolveQuickenedSpellAttack#trace:public-route=metamagicBonusActionCastingTime action=doResolveQuickenedSpellAttack qRoute=metamagic-quickened-spell-attack-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-reducer-full-lane-20260704T211636Z/integration && git log --oneline -1 HEAD && git merge-base --is-ancestor e64b0f77ec0eaa1c813c3565afc6d934a118dcce HEAD",
+          "status": "pass",
+          "detail": "Declared base ref and HEAD were both e64b0f77e Mark Ralph task 48 done; Base SHA e64b0f77ec0eaa1c813c3565afc6d934a118dcce is an ancestor of HEAD."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime typecheck",
+          "status": "pass"
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/battle-runtime exec vitest run src/sorcerer-metamagic-spell-attack-selected-identity.mbt.test.ts 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "3 tests passed; deterministic stepRouteBonusActionCastingTime executed copied doRouteBonusActionCastingTime qRoute and compared it to the public reducer route; final timed run TOTAL: 8s."
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/battle-runtime exec vitest run src/reducer-route-connectors.mbt.test.ts -t \"Metamagic\" 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "1 filtered connector test passed; final timed run TOTAL: 6s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "Quality passed end to end; app lint reported warnings only and exited 0."
+        },
+        {
+          "command": "RAW/ubiquitous-language review against .references/srd-5.2.1/Classes/Sorcerer.md, .references/srd-5.2.1/Spells/Descriptions-Q-R.md, and UBIQUITOUS_LANGUAGE.md",
+          "status": "pass"
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 added copied Quickened spell Attack route connector evidence and public route ownership; round 2 verified route admission is typed by Quickened Metamagic facts, spell Attack damage procedure shape, target/attack/damage fills, and turn-boundary lock ownership. No duplicate durable state or authored-identity dispatch was added."
+        }
+      ]
     }
   ]
 }

@@ -10,13 +10,37 @@
 //   Burning Hands is an action-cast Dexterity Saving Throw damage spell.
 // - UBIQUITOUS_LANGUAGE.md: Magic Action, Bonus Action, Spell Invocation,
 //   Saving Throw, Sorcery Points as a Pool, and Spend.
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
+import { it } from "vitest";
+
+import {
+  defineDriver,
+  focusedMbtMaxSteps,
+  MBT_TEST_TIMEOUT_MS,
+  mbtSpecPath,
+  reducerRoutedMetamagicStateCheck,
+  run,
+} from "./battle-runtime-mbt-driver-kit.ts";
+import {
+  battleReducerStartRouteEvent,
+  type BattleReducerRouteEvent,
+} from "./index.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import {
+  observeQuickenedBurningHandsRoute,
   projectBattleState,
   resolveQuickenedBurningHands,
   sorcererMetamagicBattle,
 } from "./sorcerer-metamagic-selected-identity-support.ts";
+
+const quickenedSaveGatedDamageRouteReplayDriverSchema = {
+  init: {},
+  doResolveQuickenedSaveGatedDamage: {},
+  stepRouteQuickenedSaveGatedDamage: {},
+} as const;
+
+type QuickenedSaveGatedDamageRouteReplayProjection = {
+  readonly route: readonly BattleReducerRouteEvent[];
+};
 
 defineSelectedIdentityWitness({
   describeLabel: "Sorcerer Metamagic selected identity MBT",
@@ -74,3 +98,55 @@ defineSelectedIdentityWitness({
     },
   ],
 });
+
+it(
+  "compares Quickened Spell save-gated damage public reducer route to copied qRoute",
+  async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "stepRouteQuickenedSaveGatedDamage",
+      driver: createQuickenedSaveGatedDamageRouteReplayDriver(),
+      backend: "typescript",
+      nTraces: 1,
+      maxSteps: focusedMbtMaxSteps(1),
+      stateCheck: reducerRoutedMetamagicStateCheck,
+    });
+  },
+  MBT_TEST_TIMEOUT_MS,
+);
+
+function createQuickenedSaveGatedDamageRouteReplayDriver() {
+  return defineDriver(quickenedSaveGatedDamageRouteReplayDriverSchema, () => {
+    let route: readonly BattleReducerRouteEvent[] =
+      observeQuickenedBurningHandsInitialRoute();
+
+    function reset(): void {
+      route = observeQuickenedBurningHandsInitialRoute();
+    }
+
+    function recordResolvedRoute(): void {
+      route = observeQuickenedBurningHandsRoute(sorcererMetamagicBattle());
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doResolveQuickenedSaveGatedDamage: recordResolvedRoute,
+      stepRouteQuickenedSaveGatedDamage: recordResolvedRoute,
+      getState: (): QuickenedSaveGatedDamageRouteReplayProjection => ({
+        route,
+      }),
+    };
+  });
+}
+
+function observeQuickenedBurningHandsInitialRoute() {
+  return [
+    battleReducerStartRouteEvent(sorcererMetamagicBattle()),
+  ] as const;
+}
