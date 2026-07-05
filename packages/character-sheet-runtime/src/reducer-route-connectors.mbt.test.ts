@@ -2,7 +2,25 @@ import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import type { SimpleActionMap, SimpleDriver } from "@firfi/quint-connect";
+import {
+  abilityScoreAssignment,
+  classUnitId,
+  type CharacterBuild,
+} from "@dnd/character-creation-runtime";
+import {
+  buildUnitCatalog,
+  srdUnitCollection,
+} from "@dnd/surface/surface/unit-catalog";
+import { Either } from "effect";
 import { describe, expect, it } from "vitest";
+
+import {
+  CHARACTER_SHEET_NO_OTHER_PROFICIENCY_BONUS,
+  CHARACTER_SHEET_OTHER_PROFICIENCY_BONUS_APPLIES,
+  characterSheetAbilityCheckProficiencyBonusProjection,
+  type CharacterSheetAbilityCheckOtherProficiencyBonusState,
+  type CharacterSheetAbilityCheckProficiencyBonus,
+} from "./index.ts";
 
 const MBT_TEST_TIMEOUT_MS = 120_000;
 
@@ -144,6 +162,14 @@ const abilityCheckRouteDriverSchema = {
   doRejectMissingBardLevelTwo: {},
   step: {},
 } as const;
+
+const unitCatalogResult = buildUnitCatalog({
+  collections: [srdUnitCollection],
+});
+if (unitCatalogResult.tag !== "ok") {
+  throw new Error("Character Sheet route connector Unit catalog must build.");
+}
+const unitLibrary = unitCatalogResult.catalog;
 
 const hitPointMaximumRouteDriverSchema = {
   init: {},
@@ -378,17 +404,85 @@ describe("character sheet reducer route connector MBT", () => {
   }, MBT_TEST_TIMEOUT_MS);
 });
 
-const abilityCheckRouteActions = indexedActions(
+const abilityCheckRouteActions = indexedActionEntries(
   abilityCheckRouteDriverSchema,
   [
-    "doProjectJackOfAllTradesLevelTwo",
-    "doProjectJackOfAllTradesRoundedDown",
-    "doProjectSkillProficiency",
-    "doProjectExpertise",
-    "doRejectOtherProficiencyBonus",
-    "doRejectMissingBardLevelTwo",
+    [
+      "doProjectJackOfAllTradesLevelTwo",
+      projectPublicAbilityCheckRoute({
+        build: bardAbilityCheckBuild({ totalLevel: 2 }),
+        expectedProjection: {
+          tag: "jackOfAllTrades",
+          sourceUnitId: "bard_jack_of_all_trades",
+          skill: "performance",
+          bonus: 1,
+        },
+      }),
+    ],
+    [
+      "doProjectJackOfAllTradesRoundedDown",
+      projectPublicAbilityCheckRoute({
+        build: bardAbilityCheckBuild({ totalLevel: 5 }),
+        expectedProjection: {
+          tag: "jackOfAllTrades",
+          sourceUnitId: "bard_jack_of_all_trades",
+          skill: "performance",
+          bonus: 1,
+        },
+      }),
+    ],
+    [
+      "doProjectSkillProficiency",
+      projectPublicAbilityCheckRoute({
+        build: bardAbilityCheckBuild({
+          totalLevel: 5,
+          proficiencyChoices: [{ kind: "skill", skill: "performance" }],
+        }),
+        expectedProjection: {
+          tag: "skillProficiency",
+          skill: "performance",
+          bonus: 3,
+        },
+      }),
+    ],
+    [
+      "doProjectExpertise",
+      projectPublicAbilityCheckRoute({
+        build: bardAbilityCheckBuild({
+          totalLevel: 5,
+          proficiencyChoices: [
+            { kind: "skill_expertise", skill: "performance" },
+          ],
+        }),
+        expectedProjection: {
+          tag: "expertise",
+          skill: "performance",
+          bonus: 6,
+        },
+      }),
+    ],
+    [
+      "doRejectOtherProficiencyBonus",
+      projectPublicAbilityCheckRoute({
+        build: bardAbilityCheckBuild({ totalLevel: 5 }),
+        otherProficiencyBonus: CHARACTER_SHEET_OTHER_PROFICIENCY_BONUS_APPLIES,
+        expectedProjection: {
+          tag: "none",
+          bonus: 0,
+        },
+      }),
+    ],
+    [
+      "doRejectMissingBardLevelTwo",
+      projectPublicAbilityCheckRoute({
+        build: bardAbilityCheckBuild({ totalLevel: 1 }),
+        expectedProjection: {
+          tag: "none",
+          bonus: 0,
+        },
+      }),
+    ],
   ],
-  projectAbilityCheckRoute,
 );
 
 const hitPointMaximumRouteActions = indexedActions(
@@ -517,16 +611,25 @@ function initialCharacterSheetRoute(): readonly CharacterSheetRouteEvent[] {
   ];
 }
 
-function projectAbilityCheckRoute(
-  route: readonly CharacterSheetRouteEvent[],
-): readonly CharacterSheetRouteEvent[] {
-  return [
-    ...route,
-    projectCharacterSheetFacts({
-      subject: "abilityCheckProjection",
-      owner: "buildProjection",
-    }),
-  ];
+function projectPublicAbilityCheckRoute(input: {
+  readonly build: CharacterBuild;
+  readonly otherProficiencyBonus?: CharacterSheetAbilityCheckOtherProficiencyBonusState;
+  readonly expectedProjection: CharacterSheetAbilityCheckProficiencyBonus;
+}): RouteAppender {
+  return (route) => {
+    const projectedRoute = requireRight(
+      characterSheetAbilityCheckProficiencyBonusProjection({
+        build: input.build,
+        unitLibrary,
+        skill: "performance",
+        otherProficiencyBonus:
+          input.otherProficiencyBonus ??
+          CHARACTER_SHEET_NO_OTHER_PROFICIENCY_BONUS,
+      }),
+    );
+    expect(projectedRoute.proficiencyBonus).toEqual(input.expectedProjection);
+    return [...route, ...projectedRoute.qRoute];
+  };
 }
 
 function projectHitPointMaximumRoute(
@@ -544,6 +647,58 @@ function projectHitPointMaximumRoute(
       owner: "buildProjection",
     }),
   ];
+}
+
+function bardAbilityCheckBuild(input: {
+  readonly totalLevel: 1 | 2 | 5;
+  readonly proficiencyChoices?: CharacterBuild["proficiencyChoices"];
+}): CharacterBuild {
+  return {
+    ...baseBuild({
+      startingClass: "class_bard",
+      advancements: Array.from(
+        { length: input.totalLevel - 1 },
+        () => "class_bard",
+      ),
+    }),
+    proficiencyChoices: input.proficiencyChoices ?? [],
+  };
+}
+
+function baseBuild(input: {
+  readonly startingClass: string;
+  readonly advancements?: readonly string[];
+}): CharacterBuild {
+  return {
+    progression: {
+      startingClass: classUnitId(input.startingClass),
+      advancements: (input.advancements ?? []).map((classId) => ({
+        classUnitId: classUnitId(classId),
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+      })),
+    },
+    background: "background_soldier",
+    species: "species_orc",
+    originLanguages: ["Common", "Dwarvish", "Goblin"],
+    classFeatureLanguages: [],
+    alignment: { order: "lawful", morality: "good" },
+    abilityScores: requireRight(
+      abilityScoreAssignment({
+        str: 13,
+        dex: 14,
+        con: 13,
+        int: 8,
+        wis: 16,
+        cha: 10,
+      }),
+    ),
+    proficiencyChoices: [],
+    features: [],
+    equipment: {
+      owned: [],
+      loadout: {},
+    },
+  };
 }
 
 function selectArmorClassBaseRoute(
@@ -1088,6 +1243,20 @@ function numberFromEnv(name: string, fallback: number): number {
   if (raw === undefined) return fallback;
   const parsed = Number(raw);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function requireRight<T, E>(result: Either.Either<T, E>): T {
+  if (Either.isRight(result)) return result.right;
+  const left = result.left;
+  if (
+    left !== null &&
+    typeof left === "object" &&
+    "message" in left &&
+    typeof left.message === "string"
+  ) {
+    throw new Error(left.message);
+  }
+  throw new Error(JSON.stringify(left));
 }
 
 function normalizeCharacterSheetRouteQuintState(raw: unknown): RouteProjection {
