@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { resolve } from "node:path";
 
 import { describe, expect, test } from "vitest";
@@ -16,6 +17,7 @@ type McpRequiredFlow = {
 };
 
 type McpScenarioEvidenceRow = {
+  readonly kind: string;
   readonly flowId: string;
   readonly scopeIds: readonly string[];
   readonly scenarioId: string;
@@ -36,6 +38,13 @@ type McpScenarioEvidenceManifest = {
   readonly evidence: readonly McpScenarioEvidenceRow[];
 };
 
+type UltraGoldenGateModule = {
+  readonly validateMcpScenarioEvidence: (
+    manifest: McpScenarioEvidenceManifest,
+    context: { readonly root: string },
+  ) => readonly string[];
+};
+
 const repoRoot = resolve(import.meta.dirname, "../../..");
 const manifestPath = resolve(
   repoRoot,
@@ -43,6 +52,15 @@ const manifestPath = resolve(
 );
 const packageJsonPath = resolve(repoRoot, "packages/mcp/package.json");
 const taskIdPattern = /^(?:C\d+|L13UG-A\d+|L14G-\d+|L5UG|L6UG)-[A-Z0-9-]+$/;
+const require = createRequire(import.meta.url);
+// This local CJS checker has no TypeScript declaration; type it at the import
+// boundary so this test exercises the same manifest validator used by the
+// ultra-golden evidence gate. The validator checks repo-relative owner/test
+// paths, keeping admitted evidence local to this worktree.
+const ultraGoldenGateModule: UltraGoldenGateModule = require(
+  "../../../scripts/ultra-golden-gate.cjs",
+);
+const { validateMcpScenarioEvidence } = ultraGoldenGateModule;
 
 function readJson<T>(path: string): T {
   return JSON.parse(readFileSync(path, "utf8")) as T;
@@ -61,6 +79,9 @@ describe("MCP scenario evidence manifest", () => {
       manifest.requiredFlows.map((flow) => flow.flowId),
     );
 
+    expect(validateMcpScenarioEvidence(manifest, { root: repoRoot })).toEqual(
+      [],
+    );
     expect(manifest.schema).toBe("dnd.mcp-scenario-evidence.v1");
     expect(manifest.ownerPackage).toBe("@dnd/mcp");
     expect(manifest.check).toEqual({
@@ -83,6 +104,7 @@ describe("MCP scenario evidence manifest", () => {
     }
 
     for (const row of manifest.evidence) {
+      expect(row.kind).toBe("mcp-scenario");
       expect(requiredFlowIds.has(row.flowId)).toBe(true);
       expect(row.scopeIds.length).toBeGreaterThan(0);
       expect(scenarioIds.has(row.scenarioId)).toBe(true);

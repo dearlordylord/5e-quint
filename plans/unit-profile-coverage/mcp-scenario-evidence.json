@@ -270,6 +270,46 @@
     },
     {
       "kind": "mcp-scenario",
+      "flowId": "mcp-workflow-discovery",
+      "scopeIds": ["level-1-6"],
+      "scenarioId": "create-level-six-rogue-expertise-and-steady-aim-battle-handoff",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-level-six-sheet-scenario.test.ts",
+      "taskId": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE",
+      "summary": "The level-6 Rogue scenario reads the workflow guide result paths and catalog units before following returned Rogue 6 creation holes, durable Character Sheet state, and battle act subjects."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-creation",
+      "scopeIds": ["level-1-6"],
+      "scenarioId": "create-level-six-rogue-expertise-and-steady-aim-battle-handoff",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-level-six-sheet-scenario.test.ts",
+      "taskId": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE",
+      "summary": "The level-6 Rogue scenario creates and finalizes an Orc Soldier Rogue 6 by selecting only returned progression, class, background, Ability Score Improvement, equipment, loadout, and Expertise option ids."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-sheet",
+      "scopeIds": ["level-1-6"],
+      "scenarioId": "create-level-six-rogue-expertise-and-steady-aim-battle-handoff",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-level-six-sheet-scenario.test.ts",
+      "taskId": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE",
+      "summary": "The level-6 Rogue scenario reads list_characters after finalization and verifies the durable Rogue 6 Character Sheet exposes Hit Points, owned skill proficiencies, and the four selected Expertise proficiencies."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "battle",
+      "scopeIds": ["level-1-6"],
+      "scenarioId": "create-level-six-rogue-expertise-and-steady-aim-battle-handoff",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE",
+      "summary": "The level-6 Rogue scenario starts battle from the finalized Rogue 6 Character Sheet, discovers the Steady Aim unit-feature act, resolves the no-hole subject, and verifies the returned battle state spends the Bonus Action and zeros movement for that combatant."
+    },
+    {
+      "kind": "mcp-scenario",
       "flowId": "battle",
       "scopeIds": ["level-1", "level-1-2"],
       "scenarioId": "select-monsters",
@@ -379,16 +419,14 @@
     {
       "scopeId": "level-1-6",
       "auditTaskId": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE",
-      "result": "new-scenario-required",
-      "reason": "Level-1-6 is now in the ultra-golden aggregate, but no executable level-6 MCP scenario evidence has been admitted yet.",
-      "reusedFlowIds": [],
-      "requiredEvidence": {
-        "scenarioGoal": "Admit a registered executable level-6 MCP acceptance scenario that covers workflow discovery, character creation, Character Sheet durability, and battle handoff for the level-1-6 scope.",
-        "inputs": [
-          "Registered scenario id from L6UG-MCP-04-LEVEL6-SCENARIO-REGISTRY",
-          "Executable @dnd/mcp test evidence covering mcp-workflow-discovery, character-creation, character-sheet, and battle for level-1-6"
-        ]
-      }
+      "result": "reuse-existing-evidence",
+      "reason": "Task 35 registered the executable create-level-six-rogue-expertise-and-steady-aim-battle-handoff MCP acceptance scenario. It covers workflow discovery, Rogue 6 character creation through returned holes, durable Character Sheet Expertise projection, and Steady Aim battle handoff through returned battle act subjects.",
+      "reusedFlowIds": [
+        "mcp-workflow-discovery",
+        "character-creation",
+        "character-sheet",
+        "battle"
+      ]
     }
   ]
 }
