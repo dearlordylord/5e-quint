@@ -22,6 +22,7 @@ import {
   QUICKENED_METAMAGIC_EFFECT_KIND,
   SEEKING_METAMAGIC_EFFECT_KIND,
   SUBTLE_METAMAGIC_EFFECT_KIND,
+  TRANSMUTED_METAMAGIC_EFFECT_KIND,
 } from "./metamagic-support.ts";
 import { isHeightenedSpellTargetChoiceHoleId } from "./spells-damage-fills.ts";
 
@@ -33,6 +34,7 @@ export type BattleReducerRouteSubjectFamily =
   | "interruptStackResume"
   | "metamagicBonusActionCastingTime"
   | "metamagicDamageDiceReroll"
+  | "metamagicDamageTypeSubstitution"
   | "metamagicMissedSpellAttackReroll"
   | "metamagicSavingThrowProtection"
   | "metamagicSavingThrowRollMode"
@@ -62,6 +64,7 @@ export type BattleReducerRouteOwnerGroup =
   | "battleHitPointAndZeroHpLifecycle"
   | "battleHitPoint"
   | "battleDamageRoll"
+  | "battleDamageType"
   | "battleConcentration"
   | "battleActiveEffect"
   | "battleConditionLifecycle"
@@ -257,6 +260,16 @@ export function battleReducerRouteEventsForDiscoveredAct(
         kind: "discoverBattleActs",
         subject: "metamagicSavingThrowProtection",
         holes: battleReducerRouteHoles(act.initialHoles),
+        owner: "battleFeatureResource",
+      },
+    ];
+  }
+  if (isTransmutedDamageTypeSubstitutionSubject(act.subject)) {
+    return [
+      {
+        kind: "discoverBattleActs",
+        subject: "metamagicDamageTypeSubstitution",
+        holes: ["damageTypeChoice"],
         owner: "battleFeatureResource",
       },
     ];
@@ -544,6 +557,11 @@ function metamagicRouteForResolution(
       metamagicSpellRangeProjectionRouteForResolution(input, result, fill) ??
       metamagicSavingThrowProtectionRouteForResolution(input, result, fill) ??
       metamagicSavingThrowRollModeRouteForResolution(input, result, fill) ??
+      metamagicDamageTypeSubstitutionRouteForResolution(
+        input,
+        result,
+        fill,
+      ) ??
       metamagicMissedSpellAttackRerollRouteForResolution(
         input,
         result,
@@ -770,6 +788,55 @@ function metamagicSavingThrowProtectionRouteForResolution(
         subject: "metamagicSavingThrowProtection",
         holes: [],
         owner: "battleFeatureResource",
+      },
+    ];
+  }
+  return undefined;
+}
+
+function metamagicDamageTypeSubstitutionRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+  fill: BattleFill | undefined,
+): BattleReducerRouteEvents | undefined {
+  if (
+    !isTransmutedDamageTypeSubstitutionSubject(input.subject) ||
+    fill === undefined ||
+    result.tag === "invalid"
+  ) {
+    return undefined;
+  }
+  const routeFill = battleReducerRouteFill(fill);
+  const holes =
+    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
+  if (
+    (routeFill === "savingThrowOutcome" || routeFill === "attackRoll") &&
+    holes.includes("rolledDice")
+  ) {
+    return [
+      {
+        kind: "resolveBattleSubject",
+        subject: "metamagicDamageTypeSubstitution",
+        fill: "damageTypeChoice",
+        holes,
+        owner: "battleDamageType",
+      },
+    ];
+  }
+  if (routeFill === "rolledDice" && result.tag === "resolved") {
+    return [
+      {
+        kind: "resolveBattleSubject",
+        subject: "metamagicDamageTypeSubstitution",
+        fill: routeFill,
+        holes: [],
+        owner: "battleDamageRoll",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "metamagicDamageTypeSubstitution",
+        holes: [],
+        owner: "battleHitPoint",
       },
     ];
   }
@@ -1193,6 +1260,19 @@ function isHeightenedSavingThrowRollModeSubject(
     subject.tag === "actionSpell" &&
     subject.metamagic?.some(
       (selection) => selection.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND,
+    ) === true
+  );
+}
+
+function isTransmutedDamageTypeSubstitutionSubject(
+  subject: BattleResolutionInput["subject"],
+): boolean {
+  return (
+    subject.tag === "actionSpell" &&
+    (subject.invocation.procedure === "saveGatedDamage" ||
+      subject.invocation.procedure === "spellAttackDamage") &&
+    subject.metamagic?.some(
+      (selection) => selection.effectKind === TRANSMUTED_METAMAGIC_EFFECT_KIND,
     ) === true
   );
 }

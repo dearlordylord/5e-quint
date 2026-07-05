@@ -2276,3 +2276,80 @@ Verification results:
   metamagic effect-kind label map; round 3 verified no duplicate durable state,
   no authored identity dispatch, and no remaining reasonable RAW/domain,
   architecture/connascence, or code-review findings.
+
+## CRPI-READY-021
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec`
+- Driver: `packages/battle-runtime/battle-runtime-sorcerer-metamagic-transmuted-selected-identity.mbt.qnt`
+- Route connector: `packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/battle-runtime-sorcerer-metamagic-transmuted-selected-identity.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Classes/Sorcerer.md`
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md`
+- `.references/srd-5.2.1/Spells/Descriptions-Q-R.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+The route replay for Transmuted Spell damage-type substitution now observes the
+copied `qRoute` projection through public battle reducer entrypoints. The
+replay starts from `battleReducerStartRouteEvent`, uses `discoverBattleActs` to
+obtain the Transmuted Burning Hands save-gated damage act, then resolves that
+subject through the saving-throw and rolled-dice fills. `AvailableBattleAct`
+route events expose `metamagicDamageTypeSubstitution` discovery through the
+feature-resource owner. `BattleResolutionResult.routeEvents` expose the
+selected replacement Damage Type projection, damage-roll ownership, and
+Hit Point ownership.
+
+BattleState remains the durable owner. Sorcery Point spend remains
+`CharacterBattlePointPoolResourceState.pointsRemaining`, spell-slot and action
+economy remain in the spell invocation resolver, the replacement Damage Type
+remains a typed selected Metamagic application fact on the `BattleSubject`, the
+damage roll remains a table-supplied fill, and target Hit Points remain in
+`BattleCreatureState.hp`. No selected-option identity dispatch or duplicate
+damage-type state was added.
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-021.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id: `public-route=metamagicDamageTypeSubstitution action=doResolveTransmutedSaveGatedDamage qRoute=metamagic-damage-type-substitution-public-route`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-READY-021/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 52.
+
+Verification results:
+
+- `pnpm --filter @dnd/battle-runtime typecheck` passed.
+- `START=$(date +%s); MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/battle-runtime exec vitest run src/sorcerer-metamagic-transmuted-selected-identity.mbt.test.ts 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 3 tests; deterministic `stepRouteDamageTypeSubstitution` executed copied `doRouteDamageTypeSubstitution` `qRoute` and compared it to the public reducer route; final timed run `TOTAL: 8s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- `pnpm quality` passed end to end; app lint reported warnings only and exited 0.
+- RAW/ubiquitous-language review passed against Sorcerer Metamagic and
+  Transmuted Spell, Burning Hands, Ray of Frost, and
+  `UBIQUITOUS_LANGUAGE.md` terms Magic Action, Spell Invocation, Damage,
+  Damage Type, Pool, and Spend.
+- Reviewer-loop convergence passed: round 1 added public
+  `metamagicDamageTypeSubstitution` route ownership and deterministic
+  copied-route replay; round 2 verified route admission is typed by
+  `damage_type_substitution` Metamagic facts, promoted save-gated damage
+  procedure shape, savingThrowOutcome fills, rolledDice fills, and existing
+  resource and HP owners. No duplicate durable state or authored-identity
+  dispatch was added.

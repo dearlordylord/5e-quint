@@ -1051,6 +1051,40 @@ export function resolveTransmutedBurningHandsToPoison(
   ).state;
 }
 
+export function observeTransmutedBurningHandsToPoisonRoute(
+  state: BattleState,
+): readonly BattleReducerRouteEvent[] {
+  const act = transmutedBurningHandsToPoisonAct(state);
+  const savingThrowFill = burningHandsSaveFill(act.initialHoles);
+  const awaitingDamage = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [savingThrowFill],
+  });
+  const damageHole = findHole(
+    awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+    "rolledDice",
+  );
+  assertTransmutedDamageHole(damageHole);
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        savingThrowFill,
+        damageRollFillWithGroups(damageHole, [[4, 3, 2]]),
+      ],
+    }),
+  );
+
+  return [
+    battleReducerStartRouteEvent(state),
+    ...(act.routeEvents ?? []),
+    ...(awaitingDamage.routeEvents ?? []),
+    ...(resolved.routeEvents ?? []),
+  ];
+}
+
 export function resolveTransmutedRayOfFrostToPoison(
   state: BattleState,
 ): BattleState {

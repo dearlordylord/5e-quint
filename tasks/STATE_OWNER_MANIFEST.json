@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-020",
+  "taskId": "CRPI-READY-021",
   "durableFields": [
     {
       "fieldPath": "AvailableBattleAct.routeEvents",
@@ -8,7 +8,7 @@
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject.actionSpell.metamagic.effectKind=component_suppression and BattleSubject.actionSpell.invocation.procedure=scalarBuff",
+        "sourceField": "BattleSubject.actionSpell.metamagic.effectKind=damage_type_substitution, BattleSubject.actionSpell.metamagic.targetDamageType, and BattleSubject.actionSpell.invocation.procedure=saveGatedDamage",
         "boundary": "discoverBattleActs public reducer boundary"
       }
     },
@@ -18,29 +18,30 @@
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject.actionSpell.metamagic.effectKind=component_suppression, BattleSubject.actionSpell.invocation.procedure=scalarBuff, rolledDice fill, and BattleResolutionResult resolved state",
+        "sourceField": "BattleSubject.actionSpell.metamagic.effectKind=damage_type_substitution, BattleSubject.actionSpell.metamagic.targetDamageType, savingThrowOutcome fill, rolledDice fill, and BattleResolutionResult resolved state",
         "boundary": "resolveBattleSubject public reducer boundary"
       }
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=metamagicSpellComponentProjection",
+      "fieldPath": "BattleReducerRouteEvent.subject=metamagicDamageTypeSubstitution",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject.actionSpell.metamagic.effectKind=component_suppression and BattleSubject.actionSpell.invocation.procedure=scalarBuff",
-        "boundary": "battleReducerRouteForResolution"
+        "sourceField": "BattleSubject.actionSpell.metamagic.effectKind=damage_type_substitution and BattleSubject.actionSpell.invocation.procedure=saveGatedDamage",
+        "boundary": "battleReducerRouteEventsForDiscoveredAct and battleReducerRouteForResolution"
       }
     }
   ],
   "notes": [
-    "Task 51 introduced no new BattleState, BattleCreatureState, character spellcasting, or table-state durable field.",
+    "Task 52 introduced no new BattleState, BattleCreatureState, character spellcasting, or table-state durable field.",
     "Sorcery Point ownership remains existing CharacterBattlePointPoolResourceState.pointsRemaining.",
     "Spell-slot and action-economy ownership remain existing spell invocation resolver facts.",
+    "The Transmuted replacement Damage Type remains a typed selected Metamagic application fact on the BattleSubject, derived from catalog/selection/admission boundaries.",
     "Damage roll ownership remains the existing table-supplied rolledDice BattleFill and reducer-owned hole frontier.",
-    "Temporary Hit Point ownership remains existing BattleCreatureState.tempHp.",
-    "Selected Metamagic option identity remains at catalog, selection, admission, and fixture boundaries.",
-    "Route events are public reducer boundary projections derived from typed Subtle Metamagic effect facts, promoted scalar-buff spell procedure shape, spell component projection facts, and rolledDice fills.",
-    "The Subtle component-projection route does not dispatch on Sorcerer authored feature identity, the Subtle Spell option name, False Life authored identity, QNT branch names, or fixture labels; production routing is admitted by typed component_suppression facts on promoted action-spell subjects."
+    "Hit Point ownership remains existing BattleCreatureState.hp.",
+    "Selected Metamagic option identity remains at catalog, selection, admission, and SRD fixture boundaries.",
+    "Route events are public reducer boundary projections derived from typed Transmuted Metamagic effect facts, promoted save-gated damage spell procedure shape, savingThrowOutcome fills, and rolledDice fills.",
+    "The Transmuted damage-type substitution route does not dispatch on Sorcerer authored feature identity, the Transmuted Spell option name, Burning Hands authored identity, QNT branch names, or fixture labels; production routing is admitted by typed damage_type_substitution facts on promoted action-spell subjects."
   ]
 }

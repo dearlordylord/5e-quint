@@ -1,24 +1,18 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-020",
+  "taskId": "CRPI-READY-021",
   "productionModulesExtended": [
     {
       "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "role": "domain-api",
       "domainApis": [
-        "BattleReducerRouteEvent.subject=metamagicSpellComponentProjection",
+        "BattleReducerRouteEvent.subject=metamagicDamageTypeSubstitution",
         "BattleReducerRouteEvent.owner=battleFeatureResource",
-        "BattleReducerRouteEvent.owner=battleSpellSlotAndActionEconomy",
+        "BattleReducerRouteEvent.owner=battleDamageType",
+        "BattleReducerRouteEvent.owner=battleDamageRoll",
+        "BattleReducerRouteEvent.owner=battleHitPoint",
+        "battleReducerRouteEventsForDiscoveredAct",
         "battleReducerRouteForResolution"
-      ]
-    },
-    {
-      "path": "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/scalar-buff.ts",
-      "role": "domain-api",
-      "domainApis": [
-        "discoverScalarBuffCastAct",
-        "discoverSubtleSpellMetamagicSelections",
-        "BattleSubject.actionSpell.metamagic.effectKind=component_suppression"
       ]
     }
   ],
@@ -27,52 +21,63 @@
       "path": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
       "quarantinedWitnessNames": [
         "qRoute",
-        "MetamagicSpellComponentProjectionRouteSubject",
+        "MetamagicDamageTypeSubstitutionRouteSubject",
         "BattleFeatureResourceOwner",
-        "BattleSpellSlotAndActionEconomyOwner",
-        "doRouteSpellComponentProjection",
-        "stepRouteSpellComponentProjection"
+        "BattleDamageTypeOwner",
+        "BattleDamageRollOwner",
+        "BattleHitPointOwner",
+        "doRouteDamageTypeSubstitution",
+        "stepRouteDamageTypeSubstitution"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-020.json"
+        "tasks/target-replay-evidence/CRPI-READY-021.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/sorcerer-metamagic-subtle-selected-identity.mbt.test.ts",
+      "path": "packages/battle-runtime/src/sorcerer-metamagic-transmuted-selected-identity.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "doResolveSubtleFalseLife",
-        "compares Subtle Spell component-projection public reducer route to copied qRoute",
-        "createSubtleMetamagicRouteReplayDriver"
+        "doResolveTransmutedSaveGatedDamage",
+        "compares Transmuted Spell damage-type substitution public reducer route to copied qRoute",
+        "createTransmutedMetamagicRouteReplayDriver"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-020.json"
+        "tasks/target-replay-evidence/CRPI-READY-021.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/src/sorcerer-metamagic-selected-identity-support.ts",
+      "quarantinedWitnessNames": [
+        "observeTransmutedBurningHandsToPoisonRoute"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-READY-021.json"
       ]
     }
   ],
   "accumulatorGrowth": [
     {
       "fieldPath": "AvailableBattleAct.routeEvents",
-      "reason": "Subtle Spell component-projection diagnostics expose typed component_suppression Metamagic discovery through the public battle act list."
+      "reason": "Transmuted Spell damage-type substitution diagnostics expose typed damage_type_substitution Metamagic discovery through the public battle act list."
     },
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
-      "reason": "Subtle Spell component-projection diagnostics expose spell-slot and action-economy ownership through public subject resolution."
+      "reason": "Transmuted Spell damage-type substitution diagnostics expose selected replacement damage-type, damage-roll, and hit-point ownership through public subject resolution."
     }
   ],
   "expectedNextReuse": [
     {
-      "driver": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-transmuted-selected-identity.mbt.qnt",
+      "driver": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-twinned-selected-identity.mbt.qnt",
       "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "api": "Metamagic route projection remains derived from typed effectKind facts and promoted spell procedure shape rather than selected option identity"
     },
     {
       "driver": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
       "module": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
-      "api": "stepRouteSpellComponentProjection is a deterministic copied-route replay wrapper for doRouteSpellComponentProjection"
+      "api": "stepRouteDamageTypeSubstitution is a deterministic copied-route replay wrapper for doRouteDamageTypeSubstitution"
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 51 observes the copied Subtle Spell component projection qRoute through public reducer route events for False Life resolution. No new BattleState field was introduced."
+    "notes": "Task 52 observes the copied Transmuted Spell damage-type substitution qRoute through public reducer route events for Burning Hands resolution. No new BattleState field was introduced."
   }
 }

@@ -638,6 +638,10 @@ module battleRuntimeSorcererMetamagicRouteMbt {
     ),
   }
 
+  action stepRouteDamageTypeSubstitution = any {
+    doRouteDamageTypeSubstitution,
+  }
+
   action doRouteEffectiveSpellLevel = all {
     qStage == Init,
     recordStage(
