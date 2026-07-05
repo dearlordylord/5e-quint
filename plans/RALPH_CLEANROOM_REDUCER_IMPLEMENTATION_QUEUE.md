@@ -547,7 +547,7 @@
     {
       "number": 91,
       "id": "CRP04-CCF-03",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Character creation choice cardinality and support-profile rejection"
     },
     {
@@ -743,7 +743,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRPI-BLOCK-045` | `blocked` | blocked by task body | blocker resolution before implementation |
 | `CRP04-CCF-01` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRP04-CCF-02` | `done` | none | target replay evidence and owner implementation |
-| `CRP04-CCF-03` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRP04-CCF-03` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-046` | `blocked` | blocked by task body | blocker resolution before implementation |
 | `CRPI-BLOCK-047` | `blocked` | blocked by task body | blocker resolution before implementation |
 | `CRPI-BLOCK-048` | `blocked` | blocked by task body | blocker resolution before implementation |
@@ -5845,7 +5845,7 @@ Plan Impact:
 
 ### Task 91 - CRP04-CCF-03
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

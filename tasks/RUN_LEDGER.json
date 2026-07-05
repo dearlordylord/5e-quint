@@ -3447,6 +3447,104 @@
         ],
         "requiredPlanEdits": "none"
       }
+    },
+    {
+      "taskId": "CRP04-CCF-03",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "character-creation",
+      "selectedDrivers": [
+        "packages/character-creation-runtime/character-creation-runtime.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "84e17424ba5882f076783f4bd0780b34d2a0a58e",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "2b1dcc0ae9adf941a8bb825a0524f86ff3a580fe636a12da5ee9abce82b652d6"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "3b7f3fc7bd93cf6c383e29fd2379a5b2faf44e3a62a32a61bdba34129a98690c"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "79a2d024d29cebbce225d5047116ff6f375e15f1e37bd7d59ff61b9cbcb0acde"
+        },
+        "history": {
+          "path": "tasks/history/CRP04-CCF-03/README.md",
+          "sha256": "4e6ac0423f770666e21a803b8ac0bfb997cd39e66c519e21d3b8f6d60b86189b"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRP04-CCF-03.json",
+          "sha256": "27b3ae3fecb34c1b0062704f7946ae360746cddc4aff42ad29ac68be7fb4066a",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRP04-CCF-03.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectUnsupportedLanguage#trace:deterministic-rejection-contract action=doRejectUnsupportedLanguage projection=qState",
+            "tasks/target-replay-evidence/CRP04-CCF-03.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectUnsupportedLanguage#trace:deterministic-rejection-contract action=doRejectUnsupportedLanguage projection=qRoute",
+            "tasks/target-replay-evidence/CRP04-CCF-03.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectDuplicateLanguage#trace:deterministic-rejection-contract action=doRejectDuplicateLanguage projection=qState",
+            "tasks/target-replay-evidence/CRP04-CCF-03.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectDuplicateLanguage#trace:deterministic-rejection-contract action=doRejectDuplicateLanguage projection=qRoute",
+            "tasks/target-replay-evidence/CRP04-CCF-03.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectTooFewLanguages#trace:deterministic-rejection-contract action=doRejectTooFewLanguages projection=qState",
+            "tasks/target-replay-evidence/CRP04-CCF-03.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectTooFewLanguages#trace:deterministic-rejection-contract action=doRejectTooFewLanguages projection=qRoute",
+            "tasks/target-replay-evidence/CRP04-CCF-03.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectTooManyLanguages#trace:deterministic-rejection-contract action=doRejectTooManyLanguages projection=qState",
+            "tasks/target-replay-evidence/CRP04-CCF-03.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectTooManyLanguages#trace:deterministic-rejection-contract action=doRejectTooManyLanguages projection=qRoute",
+            "tasks/target-replay-evidence/CRP04-CCF-03.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectUnsupportedClassEquipment#trace:deterministic-rejection-contract action=doRejectUnsupportedClassEquipment projection=qState",
+            "tasks/target-replay-evidence/CRP04-CCF-03.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectUnsupportedClassEquipment#trace:deterministic-rejection-contract action=doRejectUnsupportedClassEquipment projection=qRoute"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-character-creation-lane-20260705/integration && git log --oneline -1 HEAD && git merge-base --is-ancestor cf0b972e7b49b98cfe16d6bdc5bf0e582bc31d57 HEAD",
+          "status": "pass",
+          "detail": "Declared Ralph base ref and HEAD both resolved to cf0b972e7 Mark character creation rejection replay done; Base SHA cf0b972e7b49b98cfe16d6bdc5bf0e582bc31d57 is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language review against .references/srd-5.2.1/Character-Creation.md, Character-Origins.md, Classes/Fighter.md, Equipment.md, UBIQUITOUS_LANGUAGE.md, and packages/character-creation-runtime/VOCABULARY.md",
+          "status": "pass",
+          "detail": "Verified the SRD language count, valid Standard Languages, character creation choice steps, Fighter level-1 choice counts, and support-profile vocabulary boundaries."
+        },
+        {
+          "command": "pnpm --filter @dnd/character-creation-runtime exec vitest run src/character-creation-runtime.mbt.test.ts -t \"rejects invalid creation fill batches\"",
+          "status": "pass",
+          "detail": "Focused deterministic qState rejection contract passed with 1 test and 2 skipped MBT tests."
+        },
+        {
+          "command": "pnpm --filter @dnd/character-creation-runtime exec vitest run src/reducer-route-connectors.mbt.test.ts -t \"routes language and equipment fill rejections\"",
+          "status": "pass",
+          "detail": "Focused deterministic qRoute owner contract passed with 1 test and 8 skipped MBT tests."
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 MBT_STEPS=16 pnpm --filter @dnd/character-creation-runtime exec vitest run src/character-creation-runtime.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"character creation\" 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "Focused semantic qState and route qRoute MBT replay passed with 2 files, 10 tests, 2 skipped tests, and TOTAL: 43s."
+        },
+        {
+          "command": "pnpm --filter @dnd/character-creation-runtime typecheck",
+          "status": "pass",
+          "detail": "Character creation runtime package typecheck passed after replacing findLast with a typed local route event scan."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "Cleanroom branch coverage passed with 738 obligations and 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass",
+          "detail": "No whitespace errors after Task 91 updates."
+        },
+        {
+          "command": "flock /tmp/dnd-mbt-qnt.lock pnpm quality",
+          "status": "pass",
+          "detail": "Quality passed end to end; app lint reported warnings only and exited 0."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 verified RAW traceability, domain language, hole-derived cardinality, support-profile owner split, unchanged rejected draft state, no duplicate durable state, and no authored-identity dispatch. Round 2 rechecked after artifacts and typecheck fix; no reasonable findings remained."
+        }
+      ]
     }
   ]
 }

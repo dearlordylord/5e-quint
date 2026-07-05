@@ -1,3 +1,82 @@
+# Validation Report
+
+## CRP04-CCF-03 - Character Creation Choice Cardinality and Support-Profile Rejection
+
+- Manifest source commit SHA: `84e17424ba5882f076783f4bd0780b34d2a0a58e`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+- Selected driver: `packages/character-creation-runtime/character-creation-runtime.mbt.qnt`
+- Route connector: `packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt`
+
+Task 91 target replay covers language choice cardinality, duplicate language
+options inside one fill, and valid-but-unsupported language and class equipment
+choices through public character-creation reducer entrypoints. Semantic `qState`
+evidence uses the `character-creation-runtime-state` comparator; route `qRoute`
+evidence uses `route-event-list` from
+`packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt`.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectUnsupportedLanguage` | `tasks/target-replay-evidence/CRP04-CCF-03.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectUnsupportedLanguage#trace:deterministic-rejection-contract action=doRejectUnsupportedLanguage projection=qState` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectDuplicateLanguage` | `tasks/target-replay-evidence/CRP04-CCF-03.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectDuplicateLanguage#trace:deterministic-rejection-contract action=doRejectDuplicateLanguage projection=qState` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectTooFewLanguages` | `tasks/target-replay-evidence/CRP04-CCF-03.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectTooFewLanguages#trace:deterministic-rejection-contract action=doRejectTooFewLanguages projection=qState` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectTooManyLanguages` | `tasks/target-replay-evidence/CRP04-CCF-03.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectTooManyLanguages#trace:deterministic-rejection-contract action=doRejectTooManyLanguages projection=qState` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectUnsupportedClassEquipment` | `tasks/target-replay-evidence/CRP04-CCF-03.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectUnsupportedClassEquipment#trace:deterministic-rejection-contract action=doRejectUnsupportedClassEquipment projection=qState` | `_none_` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRP04-CCF-03.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id pattern: `deterministic-rejection-contract action=<branchAction> projection=qState`
+- Route trace id pattern: `deterministic-rejection-contract action=<branchAction> projection=qRoute`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRP04-CCF-03/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 91.
+
+Verification results:
+
+- Base check passed: declared base ref
+  `ralph/cleanroom-character-creation-lane-20260705/integration` and `HEAD`
+  both resolved to `cf0b972e7 Mark character creation rejection replay done`;
+  Base SHA `cf0b972e7b49b98cfe16d6bdc5bf0e582bc31d57` is an ancestor of
+  `HEAD`.
+- RAW/ubiquitous-language review passed against Character Creation language
+  selection, Standard Array and Fighter suggestions, Character Origins
+  background/species facts, Fighter level-1 choice counts, Equipment
+  proficiency/equipment facts, `UBIQUITOUS_LANGUAGE.md`, and
+  `packages/character-creation-runtime/VOCABULARY.md`.
+- `pnpm --filter @dnd/character-creation-runtime exec vitest run src/character-creation-runtime.mbt.test.ts -t "rejects invalid creation fill batches"` passed with 1 focused deterministic test and 2 skipped MBT tests.
+- `pnpm --filter @dnd/character-creation-runtime exec vitest run src/reducer-route-connectors.mbt.test.ts -t "routes language and equipment fill rejections"` passed with 1 focused deterministic route test and 8 skipped MBT tests.
+- `START=$(date +%s); MBT_TRACES=1 MBT_STEPS=16 pnpm --filter @dnd/character-creation-runtime exec vitest run src/character-creation-runtime.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "character creation" 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 2 files, 10 tests, 2 skipped tests, and `TOTAL: 43s`.
+- `pnpm --filter @dnd/character-creation-runtime typecheck` passed.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- `flock /tmp/dnd-mbt-qnt.lock pnpm quality` passed end to end; app lint reported warnings only and exited 0.
+- Reviewer-loop convergence round 1 verified RAW traceability, domain language,
+  choice cardinality from discovered hole shape, support-profile admission as a
+  package-private runtime boundary, unchanged rejected draft state, route owner
+  split, no duplicate durable required-count/open-hole/finalization/issue state,
+  and no authored-identity dispatch. Round 2 rechecked after artifact updates,
+  the typecheck fix, and final verification; no reasonable findings remained.
+
+Plan Impact:
+
+- Status: `none`
+- Affected tasks: Task 91 / `CRP04-CCF-03` accepted; future tasks left
+  unchanged.
+- Required plan edits: none.
+
 ## CRPI-READY-030
 
 - Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
