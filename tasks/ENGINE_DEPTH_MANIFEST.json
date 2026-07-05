@@ -1,37 +1,69 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-028",
-  "productionModulesExtended": [
-    {
-      "path": "packages/battle-runtime/src/unit-feature-support.ts",
-      "role": "admits passive linked Speed-kind grants such as Second-Story Work's Climb Speed equal to Speed"
-    },
-    {
-      "path": "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
-      "role": "projects optional linked Speed-kind grants without requiring an accompanying Speed bonus"
-    }
-  ],
+  "taskId": "CRP06-SRO-02",
+  "productionModulesExtended": [],
   "adapterModules": [
     {
-      "path": "packages/battle-runtime/rule-core-features.mbt.qnt",
-      "role": "aggregate literal projection witness for RuleCoreFeatureProfileSemanticsOwner qComponentRoute replay"
+      "path": "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt",
+      "quarantinedWitnessNames": [
+        "qState",
+        "CharacterSheetHpRestHitDiceState",
+        "CharacterSheetHpRestHitDiceOutcome"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRP06-SRO-02.json"
+      ]
     },
     {
-      "path": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-      "role": "target MBT harness entrypoint for aggregate feature component-route replay"
+      "path": "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.route.mbt.qnt",
+      "quarantinedWitnessNames": [
+        "qRoute",
+        "SheetRestRouteSubject",
+        "SheetHitPointRouteSubject",
+        "SheetRestDurationFill",
+        "SheetHitDiceSpendFill",
+        "SheetRestBenefitChoiceHoleFamily",
+        "CharacterSheetHitPointOwner",
+        "CharacterSheetHitDiceOwner",
+        "CharacterSheetStateOwner"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRP06-SRO-02.json"
+      ]
+    },
+    {
+      "path": "packages/character-sheet-runtime/src/hp-rest-hit-dice.mbt.test.ts",
+      "quarantinedWitnessNames": [
+        "Character Sheet HP/rest/Hit Dice deterministic QNT replay",
+        "createHpRestHitDiceDriver",
+        "normalizeHpRestHitDiceQuintState"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRP06-SRO-02.json"
+      ]
+    },
+    {
+      "path": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "quarantinedWitnessNames": [
+        "routes HP rest and Hit Dice transitions through the sheet reducer surface",
+        "createIndexedRouteDriver",
+        "normalizeCharacterSheetRouteQuintState"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRP06-SRO-02.json"
+      ]
     }
   ],
-  "accumulatorGrowth": [
-    "Restored the Task 70 aggregate rule-core feature driver as a self-contained witness over the existing feature-family action set.",
-    "Added one aggregate harness test that reuses createRuleCoreFeatureDriver, featureStateCheck, and qComponentRoute comparison.",
-    "Extended existing passive Speed-kind grant admission so a passive class feature can project a single linked Climb Speed without a bundled Speed bonus."
-  ],
+  "accumulatorGrowth": [],
   "expectedNextReuse": [
-    "Future feature-family split work can keep using the focused split drivers for narrower MBT runs while Task 70 evidence points at the required aggregate driver path.",
-    "Additional linked Speed-kind grants can reuse the same nonempty grant tuple and movement projection path without adding durable movement state."
+    {
+      "driver": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "module": "packages/character-sheet-runtime/src/rests.ts",
+      "api": "Task 101 can reuse the same public Short Rest, Long Rest, interruption, and route connector patterns for spell-slot and Pact Slot rest transitions."
+    }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 70 target replay is satisfied by packages/battle-runtime/rule-core-features.mbt.qnt aggregate qComponentRoute evidence. The task-specific rogue_second_story_work owner row is satisfied by deterministic character-sheet and battle-runtime linked Speed/jump projection evidence."
+    "notes": "Task 100 observes semantic qState and copied qRoute for Character Sheet HP/rest/Hit Dice through public character-sheet rest entrypoints. No production module or duplicate durable state was introduced."
   }
 }
