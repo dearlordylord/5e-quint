@@ -3989,6 +3989,165 @@
           "detail": "Round 1 moved settlement route action ordering to exported production CHARACTER_BATTLE_SETTLEMENT_ROUTE_ACTIONS so the connector test no longer owns a second order list; round 2 found no remaining reasonable Task 81 findings."
         }
       ]
+    },
+    {
+      "taskId": "CRPI-READY-033",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+        "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+        "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+        "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "80497d2469c9d582ec17e3fec3a6c1ccbe256f2e53763f39fa4ce2a01bf1d12f"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "521a1c25aea0dddcb57d45bb38b92274c9c6c321abc2c6f245e572dc08e98dd9"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "c5e52558e6a97ef9e1f670218324f67cf8434c9625189cdfaafc10e3d6b426f9"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-READY-033/README.md",
+          "sha256": "69523558bca0a1bc384858909815ffc8283d2a2c7e34275dd0fea3b8d61b8029"
+        },
+        "reducerRouteInventory": {
+          "path": "plans/cleanroom-branch-coverage/reducer-route-inventory.json",
+          "sha256": "9ded20737a7a2750fa8999d7e6650e7167429d70a6200e98ef93d4930d8447b9"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-READY-033.json",
+          "sha256": "3c0ded1021769194318cb7fd43f77d2201f010cf11bd8179883f47632870951b",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doAcidSplashAllSuccess#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doAcidSplashAllSuccess qComponentRoute=spell-procedure-profile-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doAcidSplashNeedsDamageRoll#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doAcidSplashNeedsDamageRoll qComponentRoute=spell-procedure-profile-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doAcidSplashNeedsSavingThrow#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doAcidSplashNeedsSavingThrow qComponentRoute=spell-procedure-profile-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doAcidSplashOneFail#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doAcidSplashOneFail qComponentRoute=spell-procedure-profile-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doMagicMissileLow#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doMagicMissileLow qComponentRoute=spell-procedure-profile-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doMagicMissileNeedsAllocation#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doMagicMissileNeedsAllocation qComponentRoute=spell-procedure-profile-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doRayOfFrostCritical#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doRayOfFrostCritical qComponentRoute=spell-procedure-profile-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doRayOfFrostHit#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doRayOfFrostHit qComponentRoute=spell-procedure-profile-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doRayOfFrostMiss#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doRayOfFrostMiss qComponentRoute=spell-procedure-profile-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doRayOfFrostNeedsAttackRoll#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doRayOfFrostNeedsAttackRoll qComponentRoute=spell-procedure-profile-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doRayOfFrostNeedsDamageRoll#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doRayOfFrostNeedsDamageRoll qComponentRoute=spell-procedure-profile-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doRayOfFrostNeedsTarget#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doRayOfFrostNeedsTarget qComponentRoute=spell-procedure-profile-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt#step:doMageArmor#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-defensive-effect action=doMageArmor qComponentRoute=spell-procedure-profile-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt#step:doMageArmorNeedsTarget#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-defensive-effect action=doMageArmorNeedsTarget qComponentRoute=spell-procedure-profile-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt#step:doReadySpellHold#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-readied-response action=doReadySpellHold qComponentRoute=spell-procedure-profile-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt#step:doRejectSecondSlotSpell#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-readied-response action=doRejectSecondSlotSpell qComponentRoute=spell-procedure-profile-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt#step:doReleaseReadiedSpell#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-readied-response action=doReleaseReadiedSpell qComponentRoute=spell-procedure-profile-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doCureWoundsNeedsHealingRoll#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-restoration action=doCureWoundsNeedsHealingRoll qComponentRoute=spell-procedure-profile-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doCureWoundsNeedsTarget#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-restoration action=doCureWoundsNeedsTarget qComponentRoute=spell-procedure-profile-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doCureWoundsWounded#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-restoration action=doCureWoundsWounded qComponentRoute=spell-procedure-profile-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doHealingWordNeedsHealingRoll#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-restoration action=doHealingWordNeedsHealingRoll qComponentRoute=spell-procedure-profile-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doHealingWordNeedsTarget#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-restoration action=doHealingWordNeedsTarget qComponentRoute=spell-procedure-profile-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doHealingWordWounded#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-restoration action=doHealingWordWounded qComponentRoute=spell-procedure-profile-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doHealingWordZeroHp#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-restoration action=doHealingWordZeroHp qComponentRoute=spell-procedure-profile-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doMassHealingWordNeedsHealingRoll#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-restoration action=doMassHealingWordNeedsHealingRoll qComponentRoute=spell-procedure-profile-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doMassHealingWordNeedsTargetList#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-restoration action=doMassHealingWordNeedsTargetList qComponentRoute=spell-procedure-profile-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doMassHealingWordWounded#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-restoration action=doMassHealingWordWounded qComponentRoute=spell-procedure-profile-component-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-reducer-full-lane-20260705-restart3/integration; git log --oneline -1 codex/cleanroom-reducer-full-lane-20260705-restart2; git log --oneline -1 HEAD; git merge-base --is-ancestor 064d06e0daeaf82d26c3db3c7b70c4d3bc845286 HEAD",
+          "status": "pass",
+          "detail": "Current revision prompt base ref ralph/cleanroom-reducer-full-lane-20260705-restart3/integration resolved to 064d06e0d Mark Ralph task 74 done; reviewer-feedback audit ref codex/cleanroom-reducer-full-lane-20260705-restart2 resolved to 5a3fb5554 Merge Ralph task 100 status; HEAD resolved to 064d06e0d Mark Ralph task 74 done; Base SHA 064d06e0daeaf82d26c3db3c7b70c4d3bc845286 is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language review against SRD 5.2.1 spell procedure passages and UBIQUITOUS_LANGUAGE.md",
+          "status": "pass"
+        },
+        {
+          "command": "target replay evidence artifact for CRPI-READY-033 covers 27 route-required split rule-core Spell qComponentRoute obligations",
+          "status": "pass",
+          "detail": "Existing rule-core-spells harness compares copied qComponentRoute through RuleCoreSpellProcedureProfileOwner before downstream battle spell routes consume the owner; round 2 adds the three in-denominator Mass Healing Word restoration branches from the route inventory."
+        },
+        {
+          "command": "node scoped validateTargetReplayEvidence for CRPI-READY-033 split rule-core Spell drivers with route-in-denominator Mass Healing Word branches",
+          "status": "pass",
+          "detail": "Selected the four split rule-core Spell connector drivers from source inventory, promoted the three route-in-denominator Mass Healing Word obligations for Task 75 validation, and validated tasks/target-replay-evidence/CRPI-READY-033.json with scripts/cleanroom-branch-coverage-check.cjs#validateTargetReplayEvidence; 27 route-required obligations covered."
+        },
+        {
+          "command": "START=$(date +%s); ( cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=6 pnpm exec vitest run src/rule-core-spells.mbt.test.ts ) 2>&1 & pid=$!; while kill -0 \"$pid\" 2>/dev/null; do sleep 1; done; wait \"$pid\"; status=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "status": "pass",
+          "detail": "5 tests passed, including QCORE10 damage, Hit Point restoration, defensive effect, and readied response spell procedure MBT replays through RuleCoreSpellProcedureProfileOwner; final timed round-2 run TOTAL: 21s. An earlier 5/5 run printed passing test output but the outer wrapper exited 143 before TOTAL, so it was not counted as the clean protocol run."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check; node scripts/cleanroom-branch-coverage-check.cjs",
+          "status": "pass",
+          "detail": "Round-2 pnpm wrapper attempt exited 143 without diagnostics or leftover processes. Direct node scripts/cleanroom-branch-coverage-check.cjs then passed with 738 obligations and 24 sampled inputs, and the pnpm cleanroom-branch-coverage:check gate also passed inside the final pnpm quality run. Route-in-denominator Mass Healing Word evidence rows do not change the source inventory denominator."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass",
+          "detail": "Passed."
+        },
+        {
+          "command": "flock /tmp/dnd-mbt-qnt.lock pnpm quality",
+          "status": "pass",
+          "detail": "Passed end to end. cleanroom-branch-coverage:check passed in-line with 738 obligations and 24 sampled inputs; app lint reported 61 warnings only and exited 0; circular checks passed; turbo typecheck passed 9 packages from cache."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Rounds 1-2 verified RAW traceability, component-first architecture, adapter quarantine, no duplicate durable Spell procedure state, no authored-identity dispatch, Mass Healing Word route-in-denominator evidence coverage, base-check audit accuracy, command/report consistency, and no remaining reasonable Task 75 findings."
+        }
+      ],
+      "planImpact": {
+        "status": "update-required",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-READY-033",
+            "disposition": "unblocked"
+          },
+          {
+            "taskId": "CRPI-READY-033A",
+            "disposition": "revised"
+          },
+          {
+            "taskId": "CRPI-READY-033B",
+            "disposition": "revised"
+          },
+          {
+            "taskId": "CRPI-READY-033C",
+            "disposition": "revised"
+          },
+          {
+            "taskId": "CRPI-READY-033D",
+            "disposition": "revised"
+          },
+          {
+            "taskId": "CRPI-BLOCK-037",
+            "disposition": "left unchanged"
+          },
+          {
+            "taskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
+            "disposition": "left unchanged"
+          },
+          {
+            "taskId": "L15-RR12-LEVEL5-SCOPE-PROMOTION",
+            "disposition": "left unchanged"
+          }
+        ],
+        "observations": [
+          "RuleCoreSpellProcedureProfileOwner is accepted through copied qComponentRoute replay across the split rule-core Spell connector corpus before downstream battle spell/effect routes consume the owner.",
+          "The Task 75 plan entry still names packages/battle-runtime/rule-core-spells.mbt.qnt, which is absent from the worktree; source inventory and route inventory now use rule-core-spell-damage/restoration/defensive-effect/readied-response connector paths.",
+          "No new durable Spell procedure state was required; existing action-resource, spell-slot, Hit Point, active-effect, readied-spell, Concentration, hole, and BattleResolutionResult facts carry the runtime behavior."
+        ],
+        "requiredPlanEdits": "Replace Task 75 driver/connector path packages/battle-runtime/rule-core-spells.mbt.qnt with the four split connector paths, or split the queue item into CRPI-READY-033A through CRPI-READY-033D and mark them satisfied by this owner-level evidence."
+      }
     }
   ]
 }
