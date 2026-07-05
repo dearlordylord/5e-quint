@@ -1855,7 +1855,17 @@
             ],
             "blockers": []
           },
-          "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt"
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt",
+          "qntAcceptance": {
+            "required": [
+              {
+                "tag": "qnt-route",
+                "connectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt",
+                "projection": "qRoute",
+                "comparator": "route-event-list"
+              }
+            ]
+          }
         },
         {
           "driverPath": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt",

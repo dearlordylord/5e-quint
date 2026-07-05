@@ -1,5 +1,84 @@
 # Validation Report
 
+## CRPI-BLOCK-029
+
+Status: `pass`
+
+- Task: 57
+- Driver path: `packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt`
+- Route connector path: `packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt`
+- Route class: `reducer-routed`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-029.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+
+Durable ownership:
+
+BattleState owns Stat Block action dispatch, target-selection frontier,
+attack-roll progression, Hit Point damage, and hole-frontier stale/rejection
+state through `BattleStatBlockActionOwner`, `BattleTargetSelectionOwner`,
+`BattleAttackRollOwner`, `BattleHitPointOwner`, and `BattleHoleFrontierOwner`.
+`RuleCoreStatBlockControlOwner` owns reusable Multiattack dispatch control
+facts. Authored Stat Block identity and attack notation stay catalog/source
+facts, not reducer dispatch keys.
+
+Target replay:
+
+The copied connector projection `qRoute` is observed from
+`packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt`
+through the target driver in
+`packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts`. Runtime
+route projection is produced from public battle reducer entrypoints:
+`startBattleRight`, `discoverBattleActs`, and `resolveBattleSubject`.
+The route-event source is the existing `ReducerRouteEvent` vocabulary emitted
+by `createStatBlockActionOrderingRouteDriver`; the replay does not use
+adapter-local expected routes, fixture labels, branch names, connector
+filenames, or authored monster identity as production behavior.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doDiscoverRolledActionAttackControl` | `tasks/target-replay-evidence/CRPI-BLOCK-029.json#driver:packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doDiscoverRolledActionAttackControl#trace:reducer-route=StatBlockActionRouteSubject action=doDiscoverRolledActionAttackControl qRoute=stat-block-action-ordering-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doDiscoverStaticActionAttackControl` | `tasks/target-replay-evidence/CRPI-BLOCK-029.json#driver:packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doDiscoverStaticActionAttackControl#trace:reducer-route=StatBlockActionRouteSubject action=doDiscoverStaticActionAttackControl qRoute=stat-block-action-ordering-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doFillAttackRollMiss` | `tasks/target-replay-evidence/CRPI-BLOCK-029.json#driver:packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doFillAttackRollMiss#trace:reducer-route=StatBlockActionRouteSubject action=doFillAttackRollMiss qRoute=stat-block-action-ordering-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doFillDamageDice` | `tasks/target-replay-evidence/CRPI-BLOCK-029.json#driver:packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doFillDamageDice#trace:reducer-route=StatBlockActionRouteSubject action=doFillDamageDice qRoute=stat-block-action-ordering-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doFillRechargeRoll` | `tasks/target-replay-evidence/CRPI-BLOCK-029.json#driver:packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doFillRechargeRoll#trace:reducer-route=StatBlockActionRouteSubject action=doFillRechargeRoll qRoute=stat-block-action-ordering-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doFillRolledAttackRollHit` | `tasks/target-replay-evidence/CRPI-BLOCK-029.json#driver:packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doFillRolledAttackRollHit#trace:reducer-route=StatBlockActionRouteSubject action=doFillRolledAttackRollHit qRoute=stat-block-action-ordering-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doFillStaticAttackRollHit` | `tasks/target-replay-evidence/CRPI-BLOCK-029.json#driver:packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doFillStaticAttackRollHit#trace:reducer-route=StatBlockActionRouteSubject action=doFillStaticAttackRollHit qRoute=stat-block-action-ordering-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doFillTargetChoice` | `tasks/target-replay-evidence/CRPI-BLOCK-029.json#driver:packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doFillTargetChoice#trace:reducer-route=StatBlockActionRouteSubject action=doFillTargetChoice qRoute=stat-block-action-ordering-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doRejectAttackRollBeforeTargetChoice` | `tasks/target-replay-evidence/CRPI-BLOCK-029.json#driver:packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doRejectAttackRollBeforeTargetChoice#trace:reducer-route=StatBlockActionRouteSubject action=doRejectAttackRollBeforeTargetChoice qRoute=stat-block-action-ordering-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doRejectDamageBeforeAttackRoll` | `tasks/target-replay-evidence/CRPI-BLOCK-029.json#driver:packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doRejectDamageBeforeAttackRoll#trace:reducer-route=StatBlockActionRouteSubject action=doRejectDamageBeforeAttackRoll qRoute=stat-block-action-ordering-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doSpendRechargeGatedRolledAttack` | `tasks/target-replay-evidence/CRPI-BLOCK-029.json#driver:packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doSpendRechargeGatedRolledAttack#trace:reducer-route=StatBlockActionRouteSubject action=doSpendRechargeGatedRolledAttack qRoute=stat-block-action-ordering-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doStartMultiattackControl` | `tasks/target-replay-evidence/CRPI-BLOCK-029.json#driver:packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doStartMultiattackControl#trace:reducer-route=StatBlockActionRouteSubject action=doStartMultiattackControl qRoute=stat-block-action-ordering-route` | `_none_` | `covered` |
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-029/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Playing-the-Game.md#Making an Attack` and `#Attack Rolls` define target choice before attack roll and hit resolution.
+- SRD 5.2.1 `Playing-the-Game.md#Damage Rolls` and `#Hit Points` define damage reducing Hit Points after damage is determined.
+- SRD 5.2.1 `Rules-Glossary.md#Stat Block` and `Monsters/Overview.md#Parts of a Stat Block` define monster Actions, Attack Notation, Damage Notation, Multiattack, and Recharge notation.
+- `UBIQUITOUS_LANGUAGE.md` defines Creature, Attack Roll, Damage, Hit Points, Stat Block, Multiattack, Recharge, and Condition terms used by the route owners.
+
+Verification results:
+
+- Base check passed: `master` resolved to `6c18388a4 Unblock stat block route replay tasks`; `HEAD` resolved to `6c18388a4 Unblock stat block route replay tasks`; Base SHA `6c18388a45b92b5903027b9ed44d7efe4bf498e1` is an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against SRD 5.2.1 attack, damage, Hit Points, Stat Block, Attack Notation, Damage Notation, Multiattack, Recharge, and `UBIQUITOUS_LANGUAGE.md`.
+- Target replay evidence artifact for CRPI-BLOCK-029 covers 12 route-required Stat Block action-ordering `qRoute` obligations.
+- JSON validation passed for `tasks/target-replay-evidence/CRPI-BLOCK-029.json`, `tasks/ENGINE_DEPTH_MANIFEST.json`, and `tasks/STATE_OWNER_MANIFEST.json`.
+- Focused MBT replay passed: `START=$(date +%s); ( cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=4 pnpm exec vitest run src/stat-block-action-ordering.mbt.test.ts ) 2>&1 & pid=$!; wait "$pid"; status=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"` passed with 6 tests in `TOTAL: 12s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- Requested broad verification passed: `pnpm quality`. App lint emitted 61 warnings and exited 0; all quality gates and typecheck passed.
+- Reviewer-loop convergence passed: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks found no remaining reasonable Task 57 findings after verification.
+
 ## CRPI-READY-034
 
 - Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`

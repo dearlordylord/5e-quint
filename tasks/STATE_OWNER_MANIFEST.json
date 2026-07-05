@@ -1,27 +1,68 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-034",
+  "taskId": "CRPI-BLOCK-029",
   "durableFields": [
+    {
+      "owner": "BattleStatBlockActionOwner",
+      "fields": [
+        "BattleState.combatants",
+        "BattleTurnState.actionResources",
+        "BattleHole.kind=targetChoice",
+        "BattleHole.kind=statBlockRechargeRoll"
+      ],
+      "notes": "Owns Stat Block action dispatch and Recharge frontiers through existing battle state, turn action resources, and public hole protocol state. The replay adds no route-local Stat Block action ledger, authored-identity dispatch key, recharge availability cache, or support marker."
+    },
+    {
+      "owner": "BattleTargetSelectionOwner",
+      "fields": [
+        "BattleHole.kind=targetChoice",
+        "BattleFill.kind=targetChoice",
+        "BattleResolutionResult.tag"
+      ],
+      "notes": "Owns the target-selection frontier for Stat Block attacks through the existing public target-choice hole/fill protocol."
+    },
+    {
+      "owner": "BattleAttackRollOwner",
+      "fields": [
+        "BattleHole.kind=attackRoll",
+        "BattleFill.kind=attackRoll",
+        "BattleResolutionResult.tag"
+      ],
+      "notes": "Owns attack-roll progression for Stat Block attacks through the existing public attack-roll hole/fill protocol."
+    },
+    {
+      "owner": "BattleHitPointOwner",
+      "fields": [
+        "BattleCreatureState.hp",
+        "BattleCreatureState.tempHp",
+        "BattleCreatureState.zeroHpLifecycle",
+        "BattleHole.kind=rolledDice",
+        "BattleFill.kind=rolledDice"
+      ],
+      "notes": "Owns Hit Point damage for rolled and static Stat Block damage notation through existing creature HP state and damage fill projection. Static damage notation remains a Stat Block source fact, not a duplicate HP ledger."
+    },
+    {
+      "owner": "BattleHoleFrontierOwner",
+      "fields": [
+        "BattleResolutionResult.tag=invalid",
+        "BattleResolutionResult.reason=invalidFill",
+        "BattleHole.kind"
+      ],
+      "notes": "Owns stale/rejected hole-frontier evidence for out-of-order Stat Block attack roll and damage fills through typed invalid reducer results."
+    },
     {
       "owner": "RuleCoreStatBlockControlOwner",
       "fields": [
         "BattleTurnState.actionResources",
-        "BattleTurnState.bonusActionAvailable",
-        "BattleCombatantMovement.spentFeet",
-        "BattleCombatantMovement.remainingFeet",
-        "BattleHole.kind",
-        "BattleResolutionResult"
+        "BattleHole.kind=targetChoice"
       ],
-      "notes": "Owns reusable Stat Block Multiattack control facts through existing turn action resources, bonus-action availability, movement accounting, public hole kinds, and public reducer result protocols. The replay adds no alternate Multiattack dispatch ledger, movement copy, action-availability cache, or support marker."
+      "notes": "Reusable Multiattack dispatch control facts are consumed from the already accepted rule-core Stat Block control owner; Task 57 adds no alternate Multiattack dispatch state."
     }
   ],
   "notes": [
-    "Task 77 introduced no new durable state fields.",
-    "Stat Block Multiattack dispatch availability remains BattleTurnState.actionResources.",
-    "Bonus Action rejection during an open dispatch remains BattleTurnState.bonusActionAvailable plus typed invalid result facts.",
-    "Interleaved movement remains BattleCombatantMovement spent/remaining feet.",
-    "Target choice and attack roll sequencing remains public BattleHole.kind protocol state.",
-    "End Turn dispatch cleanup remains the existing public runtime command resolution.",
-    "qComponentRoute is target replay route evidence derived from typed rule-core component route vocabulary, not authored identity, branch names, witness labels, or connector filenames."
+    "Task 57 introduced no new durable state fields.",
+    "qRoute target replay evidence is derived from public battle-runtime startBattleRight, discoverBattleActs, and resolveBattleSubject entrypoints.",
+    "Authored Stat Block identity, action names, and attack/damage notation remain catalog/source facts and test selection facts; production dispatch remains shape/protocol based.",
+    "No duplicate target-selection, attack-roll, Hit Point, Recharge, or Multiattack state was added."
   ]
 }

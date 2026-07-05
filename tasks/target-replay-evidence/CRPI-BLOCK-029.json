@@ -1,0 +1,861 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts Stat Block action ordering copied qRoute versus reducer-routed target replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "acceptance": {
+    "driverPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt",
+    "connectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt",
+    "routeClass": "reducer-routed",
+    "durableOwner": "BattleState owns Stat Block action dispatch, target-selection frontier, attack-roll progression, Hit Point damage, and hole-frontier stale/rejection state through BattleStatBlockActionOwner, BattleTargetSelectionOwner, BattleAttackRollOwner, BattleHitPointOwner, and BattleHoleFrontierOwner. RuleCoreStatBlockControlOwner owns reusable Multiattack dispatch control facts; authored Stat Block identity and attack notation stay catalog/source facts, not reducer dispatch keys.",
+    "acceptedProjection": "qRoute"
+  },
+  "status": "pass",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt",
+      "qntFileSha256": "894f194d3d71a2d3e0636e8948b66432ac35d29463ce78cd46fdba2301b37f5c",
+      "routeConnectorSha256": "f7a5c7042cd69ac417472c59be88304b5d52c1d0af5b225ed6a68bc43f6d25a9",
+      "branchFamily": "step",
+      "branchAction": "doDiscoverRolledActionAttackControl",
+      "observedActionTaken": "doDiscoverRolledActionAttackControl",
+      "harnessTestPath": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts",
+      "traceId": "reducer-route=StatBlockActionRouteSubject action=doDiscoverRolledActionAttackControl qRoute=stat-block-action-ordering-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doDiscoverRolledActionAttackControl",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#createStatBlockActionOrderingRouteDriver",
+        "routeSubject": "StatBlockActionRouteSubject",
+        "owners": [
+          "BattleStatBlockActionOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "922e71fd89f0439c77c31398274e05a2077f2cd815b3f875f3e77039365f26d0",
+        "observedProjectionSha256": "922e71fd89f0439c77c31398274e05a2077f2cd815b3f875f3e77039365f26d0",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "StatBlockActionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#statBlockActionOrderingBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#resolveBattleSubject",
+            "project_qRoute",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#normalizeStatBlockActionOrderingRouteQuintState"
+          ],
+          "routeEventSource": "Reducer route events emitted by createStatBlockActionOrderingRouteDriver after public battle-runtime startBattleRight, discoverBattleActs, and resolveBattleSubject calls produce Stat Block action ordering projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=startBattle",
+          "ReducerRouteEvent.tag=discoverBattleActs",
+          "ReducerRouteEvent.tag=resolveBattleSubject",
+          "ReducerRouteEvent.subject=statBlockAction",
+          "ReducerRouteEvent.owner=battleStatBlockAction",
+          "BattleHole.kind=targetChoice",
+          "BattleResolutionResult.tag=needsHoles"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt",
+      "qntFileSha256": "894f194d3d71a2d3e0636e8948b66432ac35d29463ce78cd46fdba2301b37f5c",
+      "routeConnectorSha256": "f7a5c7042cd69ac417472c59be88304b5d52c1d0af5b225ed6a68bc43f6d25a9",
+      "branchFamily": "step",
+      "branchAction": "doDiscoverStaticActionAttackControl",
+      "observedActionTaken": "doDiscoverStaticActionAttackControl",
+      "harnessTestPath": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts",
+      "traceId": "reducer-route=StatBlockActionRouteSubject action=doDiscoverStaticActionAttackControl qRoute=stat-block-action-ordering-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doDiscoverStaticActionAttackControl",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#createStatBlockActionOrderingRouteDriver",
+        "routeSubject": "StatBlockActionRouteSubject",
+        "owners": [
+          "BattleStatBlockActionOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "922e71fd89f0439c77c31398274e05a2077f2cd815b3f875f3e77039365f26d0",
+        "observedProjectionSha256": "922e71fd89f0439c77c31398274e05a2077f2cd815b3f875f3e77039365f26d0",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "StatBlockActionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#statBlockActionOrderingBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#resolveBattleSubject",
+            "project_qRoute",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#normalizeStatBlockActionOrderingRouteQuintState"
+          ],
+          "routeEventSource": "Reducer route events emitted by createStatBlockActionOrderingRouteDriver after public battle-runtime startBattleRight, discoverBattleActs, and resolveBattleSubject calls produce Stat Block action ordering projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=startBattle",
+          "ReducerRouteEvent.tag=discoverBattleActs",
+          "ReducerRouteEvent.tag=resolveBattleSubject",
+          "ReducerRouteEvent.subject=statBlockAction",
+          "ReducerRouteEvent.owner=battleStatBlockAction",
+          "BattleHole.kind=targetChoice",
+          "BattleResolutionResult.tag=needsHoles"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt",
+      "qntFileSha256": "894f194d3d71a2d3e0636e8948b66432ac35d29463ce78cd46fdba2301b37f5c",
+      "routeConnectorSha256": "f7a5c7042cd69ac417472c59be88304b5d52c1d0af5b225ed6a68bc43f6d25a9",
+      "branchFamily": "step",
+      "branchAction": "doFillAttackRollMiss",
+      "observedActionTaken": "doFillAttackRollMiss",
+      "harnessTestPath": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts",
+      "traceId": "reducer-route=StatBlockActionRouteSubject action=doFillAttackRollMiss qRoute=stat-block-action-ordering-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doFillAttackRollMiss",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#createStatBlockActionOrderingRouteDriver",
+        "routeSubject": "StatBlockActionRouteSubject",
+        "owners": [
+          "BattleAttackRollOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "922e71fd89f0439c77c31398274e05a2077f2cd815b3f875f3e77039365f26d0",
+        "observedProjectionSha256": "922e71fd89f0439c77c31398274e05a2077f2cd815b3f875f3e77039365f26d0",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "StatBlockActionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#statBlockActionOrderingBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#resolveBattleSubject",
+            "project_qRoute",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#normalizeStatBlockActionOrderingRouteQuintState"
+          ],
+          "routeEventSource": "Reducer route events emitted by createStatBlockActionOrderingRouteDriver after public battle-runtime startBattleRight, discoverBattleActs, and resolveBattleSubject calls produce Stat Block action ordering projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=startBattle",
+          "ReducerRouteEvent.tag=resolveBattleSubject",
+          "ReducerRouteEvent.subject=statBlockAction",
+          "ReducerRouteEvent.fill=attackRoll",
+          "ReducerRouteEvent.owner=battleAttackRoll",
+          "BattleHole.kind=attackRoll",
+          "BattleResolutionResult.tag=resolved"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt",
+      "qntFileSha256": "894f194d3d71a2d3e0636e8948b66432ac35d29463ce78cd46fdba2301b37f5c",
+      "routeConnectorSha256": "f7a5c7042cd69ac417472c59be88304b5d52c1d0af5b225ed6a68bc43f6d25a9",
+      "branchFamily": "step",
+      "branchAction": "doFillDamageDice",
+      "observedActionTaken": "doFillDamageDice",
+      "harnessTestPath": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts",
+      "traceId": "reducer-route=StatBlockActionRouteSubject action=doFillDamageDice qRoute=stat-block-action-ordering-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doFillDamageDice",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#createStatBlockActionOrderingRouteDriver",
+        "routeSubject": "StatBlockActionRouteSubject",
+        "owners": [
+          "BattleHitPointOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "922e71fd89f0439c77c31398274e05a2077f2cd815b3f875f3e77039365f26d0",
+        "observedProjectionSha256": "922e71fd89f0439c77c31398274e05a2077f2cd815b3f875f3e77039365f26d0",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "StatBlockActionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#statBlockActionOrderingBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#resolveBattleSubject",
+            "project_qRoute",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#normalizeStatBlockActionOrderingRouteQuintState"
+          ],
+          "routeEventSource": "Reducer route events emitted by createStatBlockActionOrderingRouteDriver after public battle-runtime startBattleRight, discoverBattleActs, and resolveBattleSubject calls produce Stat Block action ordering projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=startBattle",
+          "ReducerRouteEvent.tag=resolveBattleSubject",
+          "ReducerRouteEvent.subject=statBlockAction",
+          "ReducerRouteEvent.fill=rolledDice",
+          "ReducerRouteEvent.owner=battleHitPoint",
+          "BattleHole.kind=rolledDice",
+          "BattleResolutionResult.tag=resolved"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt",
+      "qntFileSha256": "894f194d3d71a2d3e0636e8948b66432ac35d29463ce78cd46fdba2301b37f5c",
+      "routeConnectorSha256": "f7a5c7042cd69ac417472c59be88304b5d52c1d0af5b225ed6a68bc43f6d25a9",
+      "branchFamily": "step",
+      "branchAction": "doFillRechargeRoll",
+      "observedActionTaken": "doFillRechargeRoll",
+      "harnessTestPath": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts",
+      "traceId": "reducer-route=StatBlockActionRouteSubject action=doFillRechargeRoll qRoute=stat-block-action-ordering-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doFillRechargeRoll",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#createStatBlockActionOrderingRouteDriver",
+        "routeSubject": "StatBlockActionRouteSubject",
+        "owners": [
+          "BattleStatBlockActionOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "922e71fd89f0439c77c31398274e05a2077f2cd815b3f875f3e77039365f26d0",
+        "observedProjectionSha256": "922e71fd89f0439c77c31398274e05a2077f2cd815b3f875f3e77039365f26d0",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "StatBlockActionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#statBlockActionOrderingBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#resolveBattleSubject",
+            "project_qRoute",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#normalizeStatBlockActionOrderingRouteQuintState"
+          ],
+          "routeEventSource": "Reducer route events emitted by createStatBlockActionOrderingRouteDriver after public battle-runtime startBattleRight, discoverBattleActs, and resolveBattleSubject calls produce Stat Block action ordering projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=startBattle",
+          "ReducerRouteEvent.tag=discoverBattleActs",
+          "ReducerRouteEvent.tag=resolveBattleSubject",
+          "ReducerRouteEvent.subject=statBlockAction",
+          "ReducerRouteEvent.fill=statBlockRechargeRoll",
+          "ReducerRouteEvent.owner=battleStatBlockAction",
+          "BattleHole.kind=statBlockRechargeRoll"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt",
+      "qntFileSha256": "894f194d3d71a2d3e0636e8948b66432ac35d29463ce78cd46fdba2301b37f5c",
+      "routeConnectorSha256": "f7a5c7042cd69ac417472c59be88304b5d52c1d0af5b225ed6a68bc43f6d25a9",
+      "branchFamily": "step",
+      "branchAction": "doFillRolledAttackRollHit",
+      "observedActionTaken": "doFillRolledAttackRollHit",
+      "harnessTestPath": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts",
+      "traceId": "reducer-route=StatBlockActionRouteSubject action=doFillRolledAttackRollHit qRoute=stat-block-action-ordering-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doFillRolledAttackRollHit",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#createStatBlockActionOrderingRouteDriver",
+        "routeSubject": "StatBlockActionRouteSubject",
+        "owners": [
+          "BattleAttackRollOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "922e71fd89f0439c77c31398274e05a2077f2cd815b3f875f3e77039365f26d0",
+        "observedProjectionSha256": "922e71fd89f0439c77c31398274e05a2077f2cd815b3f875f3e77039365f26d0",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "StatBlockActionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#statBlockActionOrderingBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#resolveBattleSubject",
+            "project_qRoute",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#normalizeStatBlockActionOrderingRouteQuintState"
+          ],
+          "routeEventSource": "Reducer route events emitted by createStatBlockActionOrderingRouteDriver after public battle-runtime startBattleRight, discoverBattleActs, and resolveBattleSubject calls produce Stat Block action ordering projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=startBattle",
+          "ReducerRouteEvent.tag=resolveBattleSubject",
+          "ReducerRouteEvent.subject=statBlockAction",
+          "ReducerRouteEvent.fill=attackRoll",
+          "ReducerRouteEvent.owner=battleAttackRoll",
+          "BattleHole.kind=rolledDice",
+          "BattleResolutionResult.tag=needsHoles"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt",
+      "qntFileSha256": "894f194d3d71a2d3e0636e8948b66432ac35d29463ce78cd46fdba2301b37f5c",
+      "routeConnectorSha256": "f7a5c7042cd69ac417472c59be88304b5d52c1d0af5b225ed6a68bc43f6d25a9",
+      "branchFamily": "step",
+      "branchAction": "doFillStaticAttackRollHit",
+      "observedActionTaken": "doFillStaticAttackRollHit",
+      "harnessTestPath": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts",
+      "traceId": "reducer-route=StatBlockActionRouteSubject action=doFillStaticAttackRollHit qRoute=stat-block-action-ordering-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doFillStaticAttackRollHit",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#createStatBlockActionOrderingRouteDriver",
+        "routeSubject": "StatBlockActionRouteSubject",
+        "owners": [
+          "BattleHitPointOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "922e71fd89f0439c77c31398274e05a2077f2cd815b3f875f3e77039365f26d0",
+        "observedProjectionSha256": "922e71fd89f0439c77c31398274e05a2077f2cd815b3f875f3e77039365f26d0",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "StatBlockActionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#statBlockActionOrderingBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#resolveBattleSubject",
+            "project_qRoute",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#normalizeStatBlockActionOrderingRouteQuintState"
+          ],
+          "routeEventSource": "Reducer route events emitted by createStatBlockActionOrderingRouteDriver after public battle-runtime startBattleRight, discoverBattleActs, and resolveBattleSubject calls produce Stat Block action ordering projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=startBattle",
+          "ReducerRouteEvent.tag=resolveBattleSubject",
+          "ReducerRouteEvent.subject=statBlockAction",
+          "ReducerRouteEvent.fill=attackRoll",
+          "ReducerRouteEvent.owner=battleHitPoint",
+          "BattleCreatureState.hp",
+          "BattleResolutionResult.tag=resolved"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt",
+      "qntFileSha256": "894f194d3d71a2d3e0636e8948b66432ac35d29463ce78cd46fdba2301b37f5c",
+      "routeConnectorSha256": "f7a5c7042cd69ac417472c59be88304b5d52c1d0af5b225ed6a68bc43f6d25a9",
+      "branchFamily": "step",
+      "branchAction": "doFillTargetChoice",
+      "observedActionTaken": "doFillTargetChoice",
+      "harnessTestPath": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts",
+      "traceId": "reducer-route=StatBlockActionRouteSubject action=doFillTargetChoice qRoute=stat-block-action-ordering-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doFillTargetChoice",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#createStatBlockActionOrderingRouteDriver",
+        "routeSubject": "StatBlockActionRouteSubject",
+        "owners": [
+          "BattleTargetSelectionOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "922e71fd89f0439c77c31398274e05a2077f2cd815b3f875f3e77039365f26d0",
+        "observedProjectionSha256": "922e71fd89f0439c77c31398274e05a2077f2cd815b3f875f3e77039365f26d0",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "StatBlockActionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#statBlockActionOrderingBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#resolveBattleSubject",
+            "project_qRoute",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#normalizeStatBlockActionOrderingRouteQuintState"
+          ],
+          "routeEventSource": "Reducer route events emitted by createStatBlockActionOrderingRouteDriver after public battle-runtime startBattleRight, discoverBattleActs, and resolveBattleSubject calls produce Stat Block action ordering projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=startBattle",
+          "ReducerRouteEvent.tag=resolveBattleSubject",
+          "ReducerRouteEvent.subject=statBlockAction",
+          "ReducerRouteEvent.fill=targetChoice",
+          "ReducerRouteEvent.owner=battleTargetSelection",
+          "BattleHole.kind=attackRoll",
+          "BattleResolutionResult.tag=needsHoles"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt",
+      "qntFileSha256": "894f194d3d71a2d3e0636e8948b66432ac35d29463ce78cd46fdba2301b37f5c",
+      "routeConnectorSha256": "f7a5c7042cd69ac417472c59be88304b5d52c1d0af5b225ed6a68bc43f6d25a9",
+      "branchFamily": "step",
+      "branchAction": "doRejectAttackRollBeforeTargetChoice",
+      "observedActionTaken": "doRejectAttackRollBeforeTargetChoice",
+      "harnessTestPath": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts",
+      "traceId": "reducer-route=StatBlockActionRouteSubject action=doRejectAttackRollBeforeTargetChoice qRoute=stat-block-action-ordering-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRejectAttackRollBeforeTargetChoice",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#createStatBlockActionOrderingRouteDriver",
+        "routeSubject": "StatBlockActionRouteSubject",
+        "owners": [
+          "BattleHoleFrontierOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "922e71fd89f0439c77c31398274e05a2077f2cd815b3f875f3e77039365f26d0",
+        "observedProjectionSha256": "922e71fd89f0439c77c31398274e05a2077f2cd815b3f875f3e77039365f26d0",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "StatBlockActionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#statBlockActionOrderingBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#resolveBattleSubject",
+            "project_qRoute",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#normalizeStatBlockActionOrderingRouteQuintState"
+          ],
+          "routeEventSource": "Reducer route events emitted by createStatBlockActionOrderingRouteDriver after public battle-runtime startBattleRight, discoverBattleActs, and resolveBattleSubject calls produce Stat Block action ordering projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=startBattle",
+          "ReducerRouteEvent.tag=resolveBattleSubject",
+          "ReducerRouteEvent.subject=statBlockAction",
+          "ReducerRouteEvent.fill=attackRoll",
+          "ReducerRouteEvent.owner=battleHoleFrontier",
+          "BattleResolutionResult.tag=invalid",
+          "BattleResolutionResult.reason=invalidFill"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt",
+      "qntFileSha256": "894f194d3d71a2d3e0636e8948b66432ac35d29463ce78cd46fdba2301b37f5c",
+      "routeConnectorSha256": "f7a5c7042cd69ac417472c59be88304b5d52c1d0af5b225ed6a68bc43f6d25a9",
+      "branchFamily": "step",
+      "branchAction": "doRejectDamageBeforeAttackRoll",
+      "observedActionTaken": "doRejectDamageBeforeAttackRoll",
+      "harnessTestPath": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts",
+      "traceId": "reducer-route=StatBlockActionRouteSubject action=doRejectDamageBeforeAttackRoll qRoute=stat-block-action-ordering-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRejectDamageBeforeAttackRoll",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#createStatBlockActionOrderingRouteDriver",
+        "routeSubject": "StatBlockActionRouteSubject",
+        "owners": [
+          "BattleHoleFrontierOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "922e71fd89f0439c77c31398274e05a2077f2cd815b3f875f3e77039365f26d0",
+        "observedProjectionSha256": "922e71fd89f0439c77c31398274e05a2077f2cd815b3f875f3e77039365f26d0",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "StatBlockActionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#statBlockActionOrderingBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#resolveBattleSubject",
+            "project_qRoute",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#normalizeStatBlockActionOrderingRouteQuintState"
+          ],
+          "routeEventSource": "Reducer route events emitted by createStatBlockActionOrderingRouteDriver after public battle-runtime startBattleRight, discoverBattleActs, and resolveBattleSubject calls produce Stat Block action ordering projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=startBattle",
+          "ReducerRouteEvent.tag=resolveBattleSubject",
+          "ReducerRouteEvent.subject=statBlockAction",
+          "ReducerRouteEvent.fill=rolledDice",
+          "ReducerRouteEvent.owner=battleHoleFrontier",
+          "BattleResolutionResult.tag=invalid",
+          "BattleResolutionResult.reason=invalidFill"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt",
+      "qntFileSha256": "894f194d3d71a2d3e0636e8948b66432ac35d29463ce78cd46fdba2301b37f5c",
+      "routeConnectorSha256": "f7a5c7042cd69ac417472c59be88304b5d52c1d0af5b225ed6a68bc43f6d25a9",
+      "branchFamily": "step",
+      "branchAction": "doSpendRechargeGatedRolledAttack",
+      "observedActionTaken": "doSpendRechargeGatedRolledAttack",
+      "harnessTestPath": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts",
+      "traceId": "reducer-route=StatBlockActionRouteSubject action=doSpendRechargeGatedRolledAttack qRoute=stat-block-action-ordering-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doSpendRechargeGatedRolledAttack",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#createStatBlockActionOrderingRouteDriver",
+        "routeSubject": "StatBlockActionRouteSubject",
+        "owners": [
+          "BattleStatBlockActionOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "922e71fd89f0439c77c31398274e05a2077f2cd815b3f875f3e77039365f26d0",
+        "observedProjectionSha256": "922e71fd89f0439c77c31398274e05a2077f2cd815b3f875f3e77039365f26d0",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "StatBlockActionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#statBlockActionOrderingBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#resolveBattleSubject",
+            "project_qRoute",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#normalizeStatBlockActionOrderingRouteQuintState"
+          ],
+          "routeEventSource": "Reducer route events emitted by createStatBlockActionOrderingRouteDriver after public battle-runtime startBattleRight, discoverBattleActs, and resolveBattleSubject calls produce Stat Block action ordering projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=startBattle",
+          "ReducerRouteEvent.tag=discoverBattleActs",
+          "ReducerRouteEvent.subject=statBlockAction",
+          "ReducerRouteEvent.owner=battleStatBlockAction",
+          "BattleHole.kind=statBlockRechargeRoll",
+          "BattleResolutionResult.tag=needsHoles",
+          "StatBlockRechargeRollFill.kind=statBlockRechargeRoll"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt",
+      "qntFileSha256": "894f194d3d71a2d3e0636e8948b66432ac35d29463ce78cd46fdba2301b37f5c",
+      "routeConnectorSha256": "f7a5c7042cd69ac417472c59be88304b5d52c1d0af5b225ed6a68bc43f6d25a9",
+      "branchFamily": "step",
+      "branchAction": "doStartMultiattackControl",
+      "observedActionTaken": "doStartMultiattackControl",
+      "harnessTestPath": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts",
+      "traceId": "reducer-route=StatBlockActionRouteSubject action=doStartMultiattackControl qRoute=stat-block-action-ordering-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doStartMultiattackControl",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#createStatBlockActionOrderingRouteDriver",
+        "routeSubject": "StatBlockActionRouteSubject",
+        "owners": [
+          "BattleStatBlockActionOwner",
+          "RuleCoreStatBlockControlOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "922e71fd89f0439c77c31398274e05a2077f2cd815b3f875f3e77039365f26d0",
+        "observedProjectionSha256": "922e71fd89f0439c77c31398274e05a2077f2cd815b3f875f3e77039365f26d0",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt"
+        },
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "StatBlockActionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#statBlockActionOrderingBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#resolveBattleSubject",
+            "project_qRoute",
+            "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#normalizeStatBlockActionOrderingRouteQuintState"
+          ],
+          "routeEventSource": "Reducer route events emitted by createStatBlockActionOrderingRouteDriver after public battle-runtime startBattleRight, discoverBattleActs, and resolveBattleSubject calls produce Stat Block action ordering projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=startBattle",
+          "ReducerRouteEvent.tag=discoverBattleActs",
+          "ReducerRouteEvent.subject=statBlockAction",
+          "ReducerRouteEvent.owner=battleStatBlockAction",
+          "BattleTurnState.actionResources",
+          "BattleHole.kind=targetChoice",
+          "BattleResolutionResult.tag=needsHoles"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}

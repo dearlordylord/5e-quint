@@ -4258,6 +4258,125 @@
         ],
         "requiredPlanEdits": "none"
       }
+    },
+    {
+      "taskId": "CRPI-BLOCK-029",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "631f8cc6483e0a07e5f250eb4fc1a589207d9c35a872c23e78d22a84a7c48e95"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "6077a03dc4796cc36e8d130f7a81988814a12ce12c3648d85de8b9a72c1a9bd8"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "fb396b7a3819026b392b743ccfc4a58eac0b3deebb5e2fc9918b12e94859d3c3"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-BLOCK-029/README.md",
+          "sha256": "9bf8ac8d8b7ca132e51ded9920fda25b9ee21027b4ebc834d43d26e32a0b976e"
+        },
+        "reducerRouteInventory": {
+          "path": "plans/cleanroom-branch-coverage/reducer-route-inventory.json",
+          "sha256": "39e41985b8ecc7087ad5042909c115a923322ea559f9dbda52eb1ee7c66b5292"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-029.json",
+          "sha256": "3a6e19fb19f353c4e4ec4271099cebd4c3e813e116ae5c181b8a80e76b4191b2",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-029.json#driver:packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doDiscoverRolledActionAttackControl#trace:reducer-route=StatBlockActionRouteSubject action=doDiscoverRolledActionAttackControl qRoute=stat-block-action-ordering-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-029.json#driver:packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doDiscoverStaticActionAttackControl#trace:reducer-route=StatBlockActionRouteSubject action=doDiscoverStaticActionAttackControl qRoute=stat-block-action-ordering-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-029.json#driver:packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doFillAttackRollMiss#trace:reducer-route=StatBlockActionRouteSubject action=doFillAttackRollMiss qRoute=stat-block-action-ordering-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-029.json#driver:packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doFillDamageDice#trace:reducer-route=StatBlockActionRouteSubject action=doFillDamageDice qRoute=stat-block-action-ordering-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-029.json#driver:packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doFillRechargeRoll#trace:reducer-route=StatBlockActionRouteSubject action=doFillRechargeRoll qRoute=stat-block-action-ordering-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-029.json#driver:packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doFillRolledAttackRollHit#trace:reducer-route=StatBlockActionRouteSubject action=doFillRolledAttackRollHit qRoute=stat-block-action-ordering-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-029.json#driver:packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doFillStaticAttackRollHit#trace:reducer-route=StatBlockActionRouteSubject action=doFillStaticAttackRollHit qRoute=stat-block-action-ordering-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-029.json#driver:packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doFillTargetChoice#trace:reducer-route=StatBlockActionRouteSubject action=doFillTargetChoice qRoute=stat-block-action-ordering-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-029.json#driver:packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doRejectAttackRollBeforeTargetChoice#trace:reducer-route=StatBlockActionRouteSubject action=doRejectAttackRollBeforeTargetChoice qRoute=stat-block-action-ordering-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-029.json#driver:packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doRejectDamageBeforeAttackRoll#trace:reducer-route=StatBlockActionRouteSubject action=doRejectDamageBeforeAttackRoll qRoute=stat-block-action-ordering-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-029.json#driver:packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doSpendRechargeGatedRolledAttack#trace:reducer-route=StatBlockActionRouteSubject action=doSpendRechargeGatedRolledAttack qRoute=stat-block-action-ordering-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-029.json#driver:packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt#step:doStartMultiattackControl#trace:reducer-route=StatBlockActionRouteSubject action=doStartMultiattackControl qRoute=stat-block-action-ordering-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 master; git log --oneline -1 HEAD; git merge-base --is-ancestor 6c18388a45b92b5903027b9ed44d7efe4bf498e1 HEAD",
+          "status": "pass",
+          "detail": "master and HEAD both resolved to 6c18388a4 Unblock stat block route replay tasks; Base SHA is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language review against SRD 5.2.1 attack, damage, Hit Points, Stat Block, Attack Notation, Damage Notation, Multiattack, Recharge, and UBIQUITOUS_LANGUAGE.md",
+          "status": "pass"
+        },
+        {
+          "command": "jq empty tasks/target-replay-evidence/CRPI-BLOCK-029.json tasks/ENGINE_DEPTH_MANIFEST.json tasks/STATE_OWNER_MANIFEST.json",
+          "status": "pass"
+        },
+        {
+          "command": "START=$(date +%s); ( cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=4 pnpm exec vitest run src/stat-block-action-ordering.mbt.test.ts ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "status": "pass",
+          "detail": "6 tests passed, including the reducer route MBT case; TOTAL: 12s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "Passed with 738 obligations and 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass",
+          "detail": "Passed."
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "Passed end to end; app lint emitted 61 warnings and exited 0."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Verified qRoute acceptance, no duplicate durable Stat Block action state, no authored-identity dispatch, and no remaining reasonable Task 57 findings."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-029",
+            "disposition": "unblocked"
+          },
+          {
+            "taskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
+            "disposition": "left unchanged"
+          },
+          {
+            "taskId": "CRPI-BLOCK-030",
+            "disposition": "left unchanged"
+          },
+          {
+            "taskId": "CRPI-BLOCK-031",
+            "disposition": "left unchanged"
+          }
+        ],
+        "observations": [
+          "Stat Block action ordering qRoute is accepted through public startBattleRight, discoverBattleActs, and resolveBattleSubject reducer entrypoints.",
+          "No new durable state was required; existing BattleState combatants, turn action resources, public hole/fill kinds, BattleResolutionResult facts, and BattleCreatureState Hit Point fields carry the behavior.",
+          "Downstream Stat Block multi-damage and size-gated condition rider route tasks can reuse StatBlockActionRouteSubject without adding route-local target, attack-roll, or Hit Point state."
+        ],
+        "requiredPlanEdits": "none"
+      }
     }
   ]
 }
