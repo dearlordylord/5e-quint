@@ -1,0 +1,779 @@
+{
+  "acceptance": {
+    "acceptedProjection": "qComponentRoute",
+    "connectorPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+    "driverPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+    "durableOwner": "RuleCoreReactionContinuationConcentrationOwner",
+    "routeClass": "component-first"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "generatedBy": {
+    "name": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts Reaction/continuation/concentration copied qComponentRoute versus component-first target replay",
+    "tag": "target-harness"
+  },
+  "runs": [
+    {
+      "branchAction": "doBreakReactorConcentrationAfterLargeDamage",
+      "branchFamily": "step",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+      "componentConnectorSha256": "7a5758425ed53864578360caaff906d35179770a41054c2b2d5c2ce3093042ef",
+      "driverPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+      "evidenceKind": "target-qnt-mbt-replay",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
+      "observedActionTaken": "doBreakReactorConcentrationAfterLargeDamage",
+      "qntFileSha256": "7a5758425ed53864578360caaff906d35179770a41054c2b2d5c2ce3093042ef",
+      "result": {
+        "tag": "pass"
+      },
+      "routeConnectorReplay": {
+        "componentOwner": "RuleCoreReactionContinuationConcentrationOwner",
+        "delegatedAction": "doBreakReactorConcentrationAfterLargeDamage",
+        "qntStateField": "qComponentRoute",
+        "stepAction": "step",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#createRuleCoreReactionDriver"
+      },
+      "sampledInputs": [],
+      "stateCheck": {
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreReactionContinuationConcentrationOwner",
+          "BattleCreatureState.reactionAvailable",
+          "BattleState.pendingInterrupt.trigger",
+          "BattleState.pendingInterrupt.stackDepth",
+          "BattleState.readiedMovements",
+          "BattleState.readiedSpells",
+          "BattleCombatantMovement.spentFeet",
+          "BattleCreatureState.concentration",
+          "concentrationSavingThrowDc(damageAmount)",
+          "BattleResolutionResult.tag",
+          "BattleHole.kind=interruptDecision|rolledDice|movement"
+        ],
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "b161e3c8d7a8941d275da75b00cdff2c1b3b5724495d1fcd229afba7e938b670",
+        "expectedProjectionSource": {
+          "componentConnectorPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+          "componentOwners": [
+            "RuleCoreReactionContinuationConcentrationOwner"
+          ],
+          "qntStateField": "qComponentRoute",
+          "stepAction": "step",
+          "tag": "copied-component-connector-qComponentRoute"
+        },
+        "observedProjectionSha256": "b161e3c8d7a8941d275da75b00cdff2c1b3b5724495d1fcd229afba7e938b670",
+        "observedProjectionSource": {
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt|resolveBattleConcentrationDamage",
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Reaction, Ready, Readied Movement, interrupt, and Concentration damage calls produce runtime projections.",
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt|resolveBattleConcentrationDamage",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#normalizeRuleCoreReactionQuintState"
+          ]
+        },
+        "projection": "qComponentRoute",
+        "tag": "projection-match"
+      },
+      "traceId": "component-route=RuleCoreReactionContinuationConcentrationOwner action=doBreakReactorConcentrationAfterLargeDamage qComponentRoute=reaction-continuation-concentration-component-route"
+    },
+    {
+      "branchAction": "doDeclineOpportunityAttack",
+      "branchFamily": "step",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+      "componentConnectorSha256": "7a5758425ed53864578360caaff906d35179770a41054c2b2d5c2ce3093042ef",
+      "driverPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+      "evidenceKind": "target-qnt-mbt-replay",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
+      "observedActionTaken": "doDeclineOpportunityAttack",
+      "qntFileSha256": "7a5758425ed53864578360caaff906d35179770a41054c2b2d5c2ce3093042ef",
+      "result": {
+        "tag": "pass"
+      },
+      "routeConnectorReplay": {
+        "componentOwner": "RuleCoreReactionContinuationConcentrationOwner",
+        "delegatedAction": "doDeclineOpportunityAttack",
+        "qntStateField": "qComponentRoute",
+        "stepAction": "step",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#createRuleCoreReactionDriver"
+      },
+      "sampledInputs": [],
+      "stateCheck": {
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreReactionContinuationConcentrationOwner",
+          "BattleCreatureState.reactionAvailable",
+          "BattleState.pendingInterrupt.trigger",
+          "BattleState.pendingInterrupt.stackDepth",
+          "BattleState.readiedMovements",
+          "BattleState.readiedSpells",
+          "BattleCombatantMovement.spentFeet",
+          "BattleCreatureState.concentration",
+          "concentrationSavingThrowDc(damageAmount)",
+          "BattleResolutionResult.tag",
+          "BattleHole.kind=interruptDecision|rolledDice|movement"
+        ],
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "b161e3c8d7a8941d275da75b00cdff2c1b3b5724495d1fcd229afba7e938b670",
+        "expectedProjectionSource": {
+          "componentConnectorPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+          "componentOwners": [
+            "RuleCoreReactionContinuationConcentrationOwner"
+          ],
+          "qntStateField": "qComponentRoute",
+          "stepAction": "step",
+          "tag": "copied-component-connector-qComponentRoute"
+        },
+        "observedProjectionSha256": "b161e3c8d7a8941d275da75b00cdff2c1b3b5724495d1fcd229afba7e938b670",
+        "observedProjectionSource": {
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt|resolveBattleConcentrationDamage",
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Reaction, Ready, Readied Movement, interrupt, and Concentration damage calls produce runtime projections.",
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt|resolveBattleConcentrationDamage",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#normalizeRuleCoreReactionQuintState"
+          ]
+        },
+        "projection": "qComponentRoute",
+        "tag": "projection-match"
+      },
+      "traceId": "component-route=RuleCoreReactionContinuationConcentrationOwner action=doDeclineOpportunityAttack qComponentRoute=reaction-continuation-concentration-component-route"
+    },
+    {
+      "branchAction": "doDeclineReadiedMovement",
+      "branchFamily": "step",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+      "componentConnectorSha256": "7a5758425ed53864578360caaff906d35179770a41054c2b2d5c2ce3093042ef",
+      "driverPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+      "evidenceKind": "target-qnt-mbt-replay",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
+      "observedActionTaken": "doDeclineReadiedMovement",
+      "qntFileSha256": "7a5758425ed53864578360caaff906d35179770a41054c2b2d5c2ce3093042ef",
+      "result": {
+        "tag": "pass"
+      },
+      "routeConnectorReplay": {
+        "componentOwner": "RuleCoreReactionContinuationConcentrationOwner",
+        "delegatedAction": "doDeclineReadiedMovement",
+        "qntStateField": "qComponentRoute",
+        "stepAction": "step",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#createRuleCoreReactionDriver"
+      },
+      "sampledInputs": [],
+      "stateCheck": {
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreReactionContinuationConcentrationOwner",
+          "BattleCreatureState.reactionAvailable",
+          "BattleState.pendingInterrupt.trigger",
+          "BattleState.pendingInterrupt.stackDepth",
+          "BattleState.readiedMovements",
+          "BattleState.readiedSpells",
+          "BattleCombatantMovement.spentFeet",
+          "BattleCreatureState.concentration",
+          "concentrationSavingThrowDc(damageAmount)",
+          "BattleResolutionResult.tag",
+          "BattleHole.kind=interruptDecision|rolledDice|movement"
+        ],
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "b161e3c8d7a8941d275da75b00cdff2c1b3b5724495d1fcd229afba7e938b670",
+        "expectedProjectionSource": {
+          "componentConnectorPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+          "componentOwners": [
+            "RuleCoreReactionContinuationConcentrationOwner"
+          ],
+          "qntStateField": "qComponentRoute",
+          "stepAction": "step",
+          "tag": "copied-component-connector-qComponentRoute"
+        },
+        "observedProjectionSha256": "b161e3c8d7a8941d275da75b00cdff2c1b3b5724495d1fcd229afba7e938b670",
+        "observedProjectionSource": {
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt|resolveBattleConcentrationDamage",
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Reaction, Ready, Readied Movement, interrupt, and Concentration damage calls produce runtime projections.",
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt|resolveBattleConcentrationDamage",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#normalizeRuleCoreReactionQuintState"
+          ]
+        },
+        "projection": "qComponentRoute",
+        "tag": "projection-match"
+      },
+      "traceId": "component-route=RuleCoreReactionContinuationConcentrationOwner action=doDeclineReadiedMovement qComponentRoute=reaction-continuation-concentration-component-route"
+    },
+    {
+      "branchAction": "doHoldReactorConcentrationAfterSmallDamage",
+      "branchFamily": "step",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+      "componentConnectorSha256": "7a5758425ed53864578360caaff906d35179770a41054c2b2d5c2ce3093042ef",
+      "driverPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+      "evidenceKind": "target-qnt-mbt-replay",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
+      "observedActionTaken": "doHoldReactorConcentrationAfterSmallDamage",
+      "qntFileSha256": "7a5758425ed53864578360caaff906d35179770a41054c2b2d5c2ce3093042ef",
+      "result": {
+        "tag": "pass"
+      },
+      "routeConnectorReplay": {
+        "componentOwner": "RuleCoreReactionContinuationConcentrationOwner",
+        "delegatedAction": "doHoldReactorConcentrationAfterSmallDamage",
+        "qntStateField": "qComponentRoute",
+        "stepAction": "step",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#createRuleCoreReactionDriver"
+      },
+      "sampledInputs": [],
+      "stateCheck": {
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreReactionContinuationConcentrationOwner",
+          "BattleCreatureState.reactionAvailable",
+          "BattleState.pendingInterrupt.trigger",
+          "BattleState.pendingInterrupt.stackDepth",
+          "BattleState.readiedMovements",
+          "BattleState.readiedSpells",
+          "BattleCombatantMovement.spentFeet",
+          "BattleCreatureState.concentration",
+          "concentrationSavingThrowDc(damageAmount)",
+          "BattleResolutionResult.tag",
+          "BattleHole.kind=interruptDecision|rolledDice|movement"
+        ],
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "b161e3c8d7a8941d275da75b00cdff2c1b3b5724495d1fcd229afba7e938b670",
+        "expectedProjectionSource": {
+          "componentConnectorPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+          "componentOwners": [
+            "RuleCoreReactionContinuationConcentrationOwner"
+          ],
+          "qntStateField": "qComponentRoute",
+          "stepAction": "step",
+          "tag": "copied-component-connector-qComponentRoute"
+        },
+        "observedProjectionSha256": "b161e3c8d7a8941d275da75b00cdff2c1b3b5724495d1fcd229afba7e938b670",
+        "observedProjectionSource": {
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt|resolveBattleConcentrationDamage",
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Reaction, Ready, Readied Movement, interrupt, and Concentration damage calls produce runtime projections.",
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt|resolveBattleConcentrationDamage",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#normalizeRuleCoreReactionQuintState"
+          ]
+        },
+        "projection": "qComponentRoute",
+        "tag": "projection-match"
+      },
+      "traceId": "component-route=RuleCoreReactionContinuationConcentrationOwner action=doHoldReactorConcentrationAfterSmallDamage qComponentRoute=reaction-continuation-concentration-component-route"
+    },
+    {
+      "branchAction": "doOfferOpportunityAttack",
+      "branchFamily": "step",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+      "componentConnectorSha256": "7a5758425ed53864578360caaff906d35179770a41054c2b2d5c2ce3093042ef",
+      "driverPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+      "evidenceKind": "target-qnt-mbt-replay",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
+      "observedActionTaken": "doOfferOpportunityAttack",
+      "qntFileSha256": "7a5758425ed53864578360caaff906d35179770a41054c2b2d5c2ce3093042ef",
+      "result": {
+        "tag": "pass"
+      },
+      "routeConnectorReplay": {
+        "componentOwner": "RuleCoreReactionContinuationConcentrationOwner",
+        "delegatedAction": "doOfferOpportunityAttack",
+        "qntStateField": "qComponentRoute",
+        "stepAction": "step",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#createRuleCoreReactionDriver"
+      },
+      "sampledInputs": [],
+      "stateCheck": {
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreReactionContinuationConcentrationOwner",
+          "BattleCreatureState.reactionAvailable",
+          "BattleState.pendingInterrupt.trigger",
+          "BattleState.pendingInterrupt.stackDepth",
+          "BattleState.readiedMovements",
+          "BattleState.readiedSpells",
+          "BattleCombatantMovement.spentFeet",
+          "BattleCreatureState.concentration",
+          "concentrationSavingThrowDc(damageAmount)",
+          "BattleResolutionResult.tag",
+          "BattleHole.kind=interruptDecision|rolledDice|movement"
+        ],
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "b161e3c8d7a8941d275da75b00cdff2c1b3b5724495d1fcd229afba7e938b670",
+        "expectedProjectionSource": {
+          "componentConnectorPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+          "componentOwners": [
+            "RuleCoreReactionContinuationConcentrationOwner"
+          ],
+          "qntStateField": "qComponentRoute",
+          "stepAction": "step",
+          "tag": "copied-component-connector-qComponentRoute"
+        },
+        "observedProjectionSha256": "b161e3c8d7a8941d275da75b00cdff2c1b3b5724495d1fcd229afba7e938b670",
+        "observedProjectionSource": {
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt|resolveBattleConcentrationDamage",
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Reaction, Ready, Readied Movement, interrupt, and Concentration damage calls produce runtime projections.",
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt|resolveBattleConcentrationDamage",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#normalizeRuleCoreReactionQuintState"
+          ]
+        },
+        "projection": "qComponentRoute",
+        "tag": "projection-match"
+      },
+      "traceId": "component-route=RuleCoreReactionContinuationConcentrationOwner action=doOfferOpportunityAttack qComponentRoute=reaction-continuation-concentration-component-route"
+    },
+    {
+      "branchAction": "doOfferReadiedMovement",
+      "branchFamily": "step",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+      "componentConnectorSha256": "7a5758425ed53864578360caaff906d35179770a41054c2b2d5c2ce3093042ef",
+      "driverPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+      "evidenceKind": "target-qnt-mbt-replay",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
+      "observedActionTaken": "doOfferReadiedMovement",
+      "qntFileSha256": "7a5758425ed53864578360caaff906d35179770a41054c2b2d5c2ce3093042ef",
+      "result": {
+        "tag": "pass"
+      },
+      "routeConnectorReplay": {
+        "componentOwner": "RuleCoreReactionContinuationConcentrationOwner",
+        "delegatedAction": "doOfferReadiedMovement",
+        "qntStateField": "qComponentRoute",
+        "stepAction": "step",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#createRuleCoreReactionDriver"
+      },
+      "sampledInputs": [],
+      "stateCheck": {
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreReactionContinuationConcentrationOwner",
+          "BattleCreatureState.reactionAvailable",
+          "BattleState.pendingInterrupt.trigger",
+          "BattleState.pendingInterrupt.stackDepth",
+          "BattleState.readiedMovements",
+          "BattleState.readiedSpells",
+          "BattleCombatantMovement.spentFeet",
+          "BattleCreatureState.concentration",
+          "concentrationSavingThrowDc(damageAmount)",
+          "BattleResolutionResult.tag",
+          "BattleHole.kind=interruptDecision|rolledDice|movement"
+        ],
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "b161e3c8d7a8941d275da75b00cdff2c1b3b5724495d1fcd229afba7e938b670",
+        "expectedProjectionSource": {
+          "componentConnectorPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+          "componentOwners": [
+            "RuleCoreReactionContinuationConcentrationOwner"
+          ],
+          "qntStateField": "qComponentRoute",
+          "stepAction": "step",
+          "tag": "copied-component-connector-qComponentRoute"
+        },
+        "observedProjectionSha256": "b161e3c8d7a8941d275da75b00cdff2c1b3b5724495d1fcd229afba7e938b670",
+        "observedProjectionSource": {
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt|resolveBattleConcentrationDamage",
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Reaction, Ready, Readied Movement, interrupt, and Concentration damage calls produce runtime projections.",
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt|resolveBattleConcentrationDamage",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#normalizeRuleCoreReactionQuintState"
+          ]
+        },
+        "projection": "qComponentRoute",
+        "tag": "projection-match"
+      },
+      "traceId": "component-route=RuleCoreReactionContinuationConcentrationOwner action=doOfferReadiedMovement qComponentRoute=reaction-continuation-concentration-component-route"
+    },
+    {
+      "branchAction": "doReadyMovementFixture",
+      "branchFamily": "step",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+      "componentConnectorSha256": "7a5758425ed53864578360caaff906d35179770a41054c2b2d5c2ce3093042ef",
+      "driverPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+      "evidenceKind": "target-qnt-mbt-replay",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
+      "observedActionTaken": "doReadyMovementFixture",
+      "qntFileSha256": "7a5758425ed53864578360caaff906d35179770a41054c2b2d5c2ce3093042ef",
+      "result": {
+        "tag": "pass"
+      },
+      "routeConnectorReplay": {
+        "componentOwner": "RuleCoreReactionContinuationConcentrationOwner",
+        "delegatedAction": "doReadyMovementFixture",
+        "qntStateField": "qComponentRoute",
+        "stepAction": "step",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#createRuleCoreReactionDriver"
+      },
+      "sampledInputs": [],
+      "stateCheck": {
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreReactionContinuationConcentrationOwner",
+          "BattleCreatureState.reactionAvailable",
+          "BattleState.pendingInterrupt.trigger",
+          "BattleState.pendingInterrupt.stackDepth",
+          "BattleState.readiedMovements",
+          "BattleState.readiedSpells",
+          "BattleCombatantMovement.spentFeet",
+          "BattleCreatureState.concentration",
+          "concentrationSavingThrowDc(damageAmount)",
+          "BattleResolutionResult.tag",
+          "BattleHole.kind=interruptDecision|rolledDice|movement"
+        ],
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "b161e3c8d7a8941d275da75b00cdff2c1b3b5724495d1fcd229afba7e938b670",
+        "expectedProjectionSource": {
+          "componentConnectorPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+          "componentOwners": [
+            "RuleCoreReactionContinuationConcentrationOwner"
+          ],
+          "qntStateField": "qComponentRoute",
+          "stepAction": "step",
+          "tag": "copied-component-connector-qComponentRoute"
+        },
+        "observedProjectionSha256": "b161e3c8d7a8941d275da75b00cdff2c1b3b5724495d1fcd229afba7e938b670",
+        "observedProjectionSource": {
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt|resolveBattleConcentrationDamage",
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Reaction, Ready, Readied Movement, interrupt, and Concentration damage calls produce runtime projections.",
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt|resolveBattleConcentrationDamage",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#normalizeRuleCoreReactionQuintState"
+          ]
+        },
+        "projection": "qComponentRoute",
+        "tag": "projection-match"
+      },
+      "traceId": "component-route=RuleCoreReactionContinuationConcentrationOwner action=doReadyMovementFixture qComponentRoute=reaction-continuation-concentration-component-route"
+    },
+    {
+      "branchAction": "doRejectReadiedMovementZero",
+      "branchFamily": "step",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+      "componentConnectorSha256": "7a5758425ed53864578360caaff906d35179770a41054c2b2d5c2ce3093042ef",
+      "driverPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+      "evidenceKind": "target-qnt-mbt-replay",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
+      "observedActionTaken": "doRejectReadiedMovementZero",
+      "qntFileSha256": "7a5758425ed53864578360caaff906d35179770a41054c2b2d5c2ce3093042ef",
+      "result": {
+        "tag": "pass"
+      },
+      "routeConnectorReplay": {
+        "componentOwner": "RuleCoreReactionContinuationConcentrationOwner",
+        "delegatedAction": "doRejectReadiedMovementZero",
+        "qntStateField": "qComponentRoute",
+        "stepAction": "step",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#createRuleCoreReactionDriver"
+      },
+      "sampledInputs": [],
+      "stateCheck": {
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreReactionContinuationConcentrationOwner",
+          "BattleCreatureState.reactionAvailable",
+          "BattleState.pendingInterrupt.trigger",
+          "BattleState.pendingInterrupt.stackDepth",
+          "BattleState.readiedMovements",
+          "BattleState.readiedSpells",
+          "BattleCombatantMovement.spentFeet",
+          "BattleCreatureState.concentration",
+          "concentrationSavingThrowDc(damageAmount)",
+          "BattleResolutionResult.tag",
+          "BattleHole.kind=interruptDecision|rolledDice|movement"
+        ],
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "b161e3c8d7a8941d275da75b00cdff2c1b3b5724495d1fcd229afba7e938b670",
+        "expectedProjectionSource": {
+          "componentConnectorPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+          "componentOwners": [
+            "RuleCoreReactionContinuationConcentrationOwner"
+          ],
+          "qntStateField": "qComponentRoute",
+          "stepAction": "step",
+          "tag": "copied-component-connector-qComponentRoute"
+        },
+        "observedProjectionSha256": "b161e3c8d7a8941d275da75b00cdff2c1b3b5724495d1fcd229afba7e938b670",
+        "observedProjectionSource": {
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt|resolveBattleConcentrationDamage",
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Reaction, Ready, Readied Movement, interrupt, and Concentration damage calls produce runtime projections.",
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt|resolveBattleConcentrationDamage",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#normalizeRuleCoreReactionQuintState"
+          ]
+        },
+        "projection": "qComponentRoute",
+        "tag": "projection-match"
+      },
+      "traceId": "component-route=RuleCoreReactionContinuationConcentrationOwner action=doRejectReadiedMovementZero qComponentRoute=reaction-continuation-concentration-component-route"
+    },
+    {
+      "branchAction": "doStartReactorConcentrationFixture",
+      "branchFamily": "step",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+      "componentConnectorSha256": "7a5758425ed53864578360caaff906d35179770a41054c2b2d5c2ce3093042ef",
+      "driverPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+      "evidenceKind": "target-qnt-mbt-replay",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
+      "observedActionTaken": "doStartReactorConcentrationFixture",
+      "qntFileSha256": "7a5758425ed53864578360caaff906d35179770a41054c2b2d5c2ce3093042ef",
+      "result": {
+        "tag": "pass"
+      },
+      "routeConnectorReplay": {
+        "componentOwner": "RuleCoreReactionContinuationConcentrationOwner",
+        "delegatedAction": "doStartReactorConcentrationFixture",
+        "qntStateField": "qComponentRoute",
+        "stepAction": "step",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#createRuleCoreReactionDriver"
+      },
+      "sampledInputs": [],
+      "stateCheck": {
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreReactionContinuationConcentrationOwner",
+          "BattleCreatureState.reactionAvailable",
+          "BattleState.pendingInterrupt.trigger",
+          "BattleState.pendingInterrupt.stackDepth",
+          "BattleState.readiedMovements",
+          "BattleState.readiedSpells",
+          "BattleCombatantMovement.spentFeet",
+          "BattleCreatureState.concentration",
+          "concentrationSavingThrowDc(damageAmount)",
+          "BattleResolutionResult.tag",
+          "BattleHole.kind=interruptDecision|rolledDice|movement"
+        ],
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "b161e3c8d7a8941d275da75b00cdff2c1b3b5724495d1fcd229afba7e938b670",
+        "expectedProjectionSource": {
+          "componentConnectorPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+          "componentOwners": [
+            "RuleCoreReactionContinuationConcentrationOwner"
+          ],
+          "qntStateField": "qComponentRoute",
+          "stepAction": "step",
+          "tag": "copied-component-connector-qComponentRoute"
+        },
+        "observedProjectionSha256": "b161e3c8d7a8941d275da75b00cdff2c1b3b5724495d1fcd229afba7e938b670",
+        "observedProjectionSource": {
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt|resolveBattleConcentrationDamage",
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Reaction, Ready, Readied Movement, interrupt, and Concentration damage calls produce runtime projections.",
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt|resolveBattleConcentrationDamage",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#normalizeRuleCoreReactionQuintState"
+          ]
+        },
+        "projection": "qComponentRoute",
+        "tag": "projection-match"
+      },
+      "traceId": "component-route=RuleCoreReactionContinuationConcentrationOwner action=doStartReactorConcentrationFixture qComponentRoute=reaction-continuation-concentration-component-route"
+    },
+    {
+      "branchAction": "doTakeReadiedMovementFill",
+      "branchFamily": "step",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+      "componentConnectorSha256": "7a5758425ed53864578360caaff906d35179770a41054c2b2d5c2ce3093042ef",
+      "driverPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+      "evidenceKind": "target-qnt-mbt-replay",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
+      "observedActionTaken": "doTakeReadiedMovementFill",
+      "qntFileSha256": "7a5758425ed53864578360caaff906d35179770a41054c2b2d5c2ce3093042ef",
+      "result": {
+        "tag": "pass"
+      },
+      "routeConnectorReplay": {
+        "componentOwner": "RuleCoreReactionContinuationConcentrationOwner",
+        "delegatedAction": "doTakeReadiedMovementFill",
+        "qntStateField": "qComponentRoute",
+        "stepAction": "step",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#createRuleCoreReactionDriver"
+      },
+      "sampledInputs": [],
+      "stateCheck": {
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreReactionContinuationConcentrationOwner",
+          "BattleCreatureState.reactionAvailable",
+          "BattleState.pendingInterrupt.trigger",
+          "BattleState.pendingInterrupt.stackDepth",
+          "BattleState.readiedMovements",
+          "BattleState.readiedSpells",
+          "BattleCombatantMovement.spentFeet",
+          "BattleCreatureState.concentration",
+          "concentrationSavingThrowDc(damageAmount)",
+          "BattleResolutionResult.tag",
+          "BattleHole.kind=interruptDecision|rolledDice|movement"
+        ],
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "b161e3c8d7a8941d275da75b00cdff2c1b3b5724495d1fcd229afba7e938b670",
+        "expectedProjectionSource": {
+          "componentConnectorPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+          "componentOwners": [
+            "RuleCoreReactionContinuationConcentrationOwner"
+          ],
+          "qntStateField": "qComponentRoute",
+          "stepAction": "step",
+          "tag": "copied-component-connector-qComponentRoute"
+        },
+        "observedProjectionSha256": "b161e3c8d7a8941d275da75b00cdff2c1b3b5724495d1fcd229afba7e938b670",
+        "observedProjectionSource": {
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt|resolveBattleConcentrationDamage",
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Reaction, Ready, Readied Movement, interrupt, and Concentration damage calls produce runtime projections.",
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt|resolveBattleConcentrationDamage",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#normalizeRuleCoreReactionQuintState"
+          ]
+        },
+        "projection": "qComponentRoute",
+        "tag": "projection-match"
+      },
+      "traceId": "component-route=RuleCoreReactionContinuationConcentrationOwner action=doTakeReadiedMovementFill qComponentRoute=reaction-continuation-concentration-component-route"
+    },
+    {
+      "branchAction": "doTakeReadiedMovementShort",
+      "branchFamily": "step",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+      "componentConnectorSha256": "7a5758425ed53864578360caaff906d35179770a41054c2b2d5c2ce3093042ef",
+      "driverPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+      "evidenceKind": "target-qnt-mbt-replay",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts",
+      "observedActionTaken": "doTakeReadiedMovementShort",
+      "qntFileSha256": "7a5758425ed53864578360caaff906d35179770a41054c2b2d5c2ce3093042ef",
+      "result": {
+        "tag": "pass"
+      },
+      "routeConnectorReplay": {
+        "componentOwner": "RuleCoreReactionContinuationConcentrationOwner",
+        "delegatedAction": "doTakeReadiedMovementShort",
+        "qntStateField": "qComponentRoute",
+        "stepAction": "step",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#createRuleCoreReactionDriver"
+      },
+      "sampledInputs": [],
+      "stateCheck": {
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreReactionContinuationConcentrationOwner",
+          "BattleCreatureState.reactionAvailable",
+          "BattleState.pendingInterrupt.trigger",
+          "BattleState.pendingInterrupt.stackDepth",
+          "BattleState.readiedMovements",
+          "BattleState.readiedSpells",
+          "BattleCombatantMovement.spentFeet",
+          "BattleCreatureState.concentration",
+          "concentrationSavingThrowDc(damageAmount)",
+          "BattleResolutionResult.tag",
+          "BattleHole.kind=interruptDecision|rolledDice|movement"
+        ],
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "b161e3c8d7a8941d275da75b00cdff2c1b3b5724495d1fcd229afba7e938b670",
+        "expectedProjectionSource": {
+          "componentConnectorPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+          "componentOwners": [
+            "RuleCoreReactionContinuationConcentrationOwner"
+          ],
+          "qntStateField": "qComponentRoute",
+          "stepAction": "step",
+          "tag": "copied-component-connector-qComponentRoute"
+        },
+        "observedProjectionSha256": "b161e3c8d7a8941d275da75b00cdff2c1b3b5724495d1fcd229afba7e938b670",
+        "observedProjectionSource": {
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt|resolveBattleConcentrationDamage",
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Reaction, Ready, Readied Movement, interrupt, and Concentration damage calls produce runtime projections.",
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt|resolveBattleConcentrationDamage",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-reactions.mbt.test.ts#normalizeRuleCoreReactionQuintState"
+          ]
+        },
+        "projection": "qComponentRoute",
+        "tag": "projection-match"
+      },
+      "traceId": "component-route=RuleCoreReactionContinuationConcentrationOwner action=doTakeReadiedMovementShort qComponentRoute=reaction-continuation-concentration-component-route"
+    }
+  ],
+  "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+  "status": "pass",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4"
+}

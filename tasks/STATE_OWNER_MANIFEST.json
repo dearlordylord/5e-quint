@@ -1,26 +1,27 @@
 {
-  "schemaVersion": 1,
-  "taskId": "CRPI-READY-030",
   "durableFields": [
     {
-      "owner": "RuleCoreMovementGrappleOwner",
       "fields": [
+        "BattleCreatureState.reactionAvailable",
+        "BattleState.pendingInterrupt",
+        "BattleState.readiedMovements",
+        "BattleState.readiedSpells",
         "BattleCombatantMovement.spentFeet",
-        "BattleCombatantMovement.remainingFeet",
-        "BattleTurnState.dashMovementBonusFeet",
-        "BattleTurnState.disengaged",
-        "BattleTurnState.actionResources",
-        "BattleCreatureState.conditions",
-        "BattleState.grapples",
-        "BattleState.pendingInterrupt"
+        "BattleCreatureState.concentration",
+        "BattleResolutionResult",
+        "BattleHole"
       ],
-      "notes": "Owns reusable Movement, Dash, Disengage, Prone-standing, Grapple, escape/release, and Opportunity Attack trigger facts through existing battle state fields. The replay adds no alternate movement budget, grapple ledger, action-resource copy, or pending-reaction flag."
+      "notes": "Owns reusable Reaction, Ready/Readied Response, interrupt continuation, reaction spend, readied movement release, and damage-triggered Concentration facts through existing battle state fields and public reducer result protocols. The replay adds no alternate reaction availability flag, pending trigger copy, readied response ledger, movement-spend copy, concentration flag, or save-DC cache.",
+      "owner": "RuleCoreReactionContinuationConcentrationOwner"
     }
   ],
   "notes": [
-    "Task 72 introduced no new durable state fields.",
-    "Speed remains the creature movement capacity; spent and remaining Movement remain existing battle movement projections.",
-    "Grapple state remains BattleState.grapples; Prone remains BattleCreatureState.conditions; Opportunity Attack prompting remains BattleState.pendingInterrupt.",
+    "Task 73 introduced no new durable state fields.",
+    "Reaction availability remains BattleCreatureState.reactionAvailable and resets through existing turn lifecycle code.",
+    "Pending Reaction/interrupt decisions remain BattleState.pendingInterrupt; readied responses remain BattleState.readiedMovements and BattleState.readiedSpells.",
+    "Movement spent by Readied Movement remains BattleCombatantMovement.spentFeet; Concentration remains BattleCreatureState.concentration and concentrationSavingThrowDc remains a derived helper projection.",
     "qComponentRoute is target replay route evidence derived from typed rule-core component route vocabulary, not authored identity, branch names, witness labels, or connector filenames."
-  ]
+  ],
+  "schemaVersion": 1,
+  "taskId": "CRPI-READY-031"
 }

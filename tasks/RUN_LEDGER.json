@@ -3032,6 +3032,128 @@
         ],
         "requiredPlanEdits": "none"
       }
+    },
+    {
+      "taskId": "CRPI-READY-031",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/rule-core-reactions.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "d7935362a9a942f3a7e07abfaff14cbcff005b7d27f2a3a70650d55b11b2c7f6"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "17fd9492a64a9e835edec4b70964c67b59e36e0e05318e13e5aaaec804057d2b"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "efbff80235a90d6204986f665ffa8ef1b53c4d825f7df09a5ade009a77fd7bf9"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-READY-031/README.md",
+          "sha256": "2f02e7e1a5e82824062ce7ef911043797d9052ffd8bcb97073b325ea6b80d458"
+        },
+        "reducerRouteInventory": {
+          "path": "plans/cleanroom-branch-coverage/reducer-route-inventory.json",
+          "sha256": "9ded20737a7a2750fa8999d7e6650e7167429d70a6200e98ef93d4930d8447b9"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-READY-031.json",
+          "sha256": "4873f6a1cb2c24d99afe2117b03bb6b13d37fec1de751d058f50a850c84b6b93",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-READY-031.json#driver:packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doBreakReactorConcentrationAfterLargeDamage#trace:component-route=RuleCoreReactionContinuationConcentrationOwner action=doBreakReactorConcentrationAfterLargeDamage qComponentRoute=reaction-continuation-concentration-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-031.json#driver:packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doDeclineOpportunityAttack#trace:component-route=RuleCoreReactionContinuationConcentrationOwner action=doDeclineOpportunityAttack qComponentRoute=reaction-continuation-concentration-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-031.json#driver:packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doDeclineReadiedMovement#trace:component-route=RuleCoreReactionContinuationConcentrationOwner action=doDeclineReadiedMovement qComponentRoute=reaction-continuation-concentration-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-031.json#driver:packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doHoldReactorConcentrationAfterSmallDamage#trace:component-route=RuleCoreReactionContinuationConcentrationOwner action=doHoldReactorConcentrationAfterSmallDamage qComponentRoute=reaction-continuation-concentration-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-031.json#driver:packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doOfferOpportunityAttack#trace:component-route=RuleCoreReactionContinuationConcentrationOwner action=doOfferOpportunityAttack qComponentRoute=reaction-continuation-concentration-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-031.json#driver:packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doOfferReadiedMovement#trace:component-route=RuleCoreReactionContinuationConcentrationOwner action=doOfferReadiedMovement qComponentRoute=reaction-continuation-concentration-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-031.json#driver:packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doReadyMovementFixture#trace:component-route=RuleCoreReactionContinuationConcentrationOwner action=doReadyMovementFixture qComponentRoute=reaction-continuation-concentration-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-031.json#driver:packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doRejectReadiedMovementZero#trace:component-route=RuleCoreReactionContinuationConcentrationOwner action=doRejectReadiedMovementZero qComponentRoute=reaction-continuation-concentration-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-031.json#driver:packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doStartReactorConcentrationFixture#trace:component-route=RuleCoreReactionContinuationConcentrationOwner action=doStartReactorConcentrationFixture qComponentRoute=reaction-continuation-concentration-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-031.json#driver:packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doTakeReadiedMovementFill#trace:component-route=RuleCoreReactionContinuationConcentrationOwner action=doTakeReadiedMovementFill qComponentRoute=reaction-continuation-concentration-component-route",
+            "tasks/target-replay-evidence/CRPI-READY-031.json#driver:packages/battle-runtime/rule-core-reactions.mbt.qnt#step:doTakeReadiedMovementShort#trace:component-route=RuleCoreReactionContinuationConcentrationOwner action=doTakeReadiedMovementShort qComponentRoute=reaction-continuation-concentration-component-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-reducer-full-lane-20260705-restart3/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor a0b81ec24888d94c8b478c879423525c1f501cae HEAD",
+          "status": "pass",
+          "detail": "Declared Ralph base ref and HEAD both resolved to a0b81ec24 Mark Ralph task 72 done; Base SHA a0b81ec24888d94c8b478c879423525c1f501cae is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language review against SRD 5.2.1 Playing-the-Game.md Reactions, Ready, Opportunity Attacks; Rules-Glossary.md Reaction, Ready, Opportunity Attacks, Concentration; and UBIQUITOUS_LANGUAGE.md",
+          "status": "pass"
+        },
+        {
+          "command": "jq empty tasks/target-replay-evidence/CRPI-READY-031.json tasks/ENGINE_DEPTH_MANIFEST.json tasks/STATE_OWNER_MANIFEST.json tasks/RUN_LEDGER.json",
+          "status": "pass"
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "The required grep checks matched only a Ralph monitor command whose text contains vitest/quint_evaluator; no actual Vitest or quint_evaluator worker process was running, and no evaluator cleanup was needed."
+        },
+        {
+          "command": "START=$(date +%s); cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=6 pnpm exec vitest run src/rule-core-reactions.mbt.test.ts 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "1 test passed; copied qComponentRoute was compared through RuleCoreReactionContinuationConcentrationOwner for all 11 step branch obligations; final timed run TOTAL: 19s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "Full cleanroom branch coverage check passed with 738 obligations and 24 sampled inputs."
+        },
+        {
+          "command": "node scoped validateTargetReplayEvidence for CRPI-READY-031 reaction driver",
+          "status": "pass",
+          "detail": "Selected packages/battle-runtime/rule-core-reactions.mbt.qnt from source inventory and validated tasks/target-replay-evidence/CRPI-READY-031.json with scripts/cleanroom-branch-coverage-check.cjs#validateTargetReplayEvidence; 11 obligations covered."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "flock /tmp/dnd-mbt-qnt.lock pnpm quality",
+          "status": "pass",
+          "detail": "Quality passed end to end. App lint reported warnings only and exited 0; turbo typecheck passed 9 packages from cache."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Rounds 1-2 verified RAW traceability for Reaction, Ready/Readied Response, Opportunity Attack, Readied Movement, and Concentration damage; component-first architecture; adapter quarantine; no duplicate durable reaction/continuation/concentration state; no authored-identity dispatch; command/report consistency; and no remaining reasonable Task 73 findings."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-READY-031",
+            "disposition": "unblocked"
+          },
+          {
+            "taskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
+            "disposition": "left unchanged"
+          },
+          {
+            "taskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+            "disposition": "left unchanged"
+          }
+        ],
+        "observations": [
+          "RuleCoreReactionContinuationConcentrationOwner is accepted through copied qComponentRoute replay before downstream spell-effect and feature routes consume the owner.",
+          "No new durable reaction, readied response, movement, or concentration state was required; existing battle state fields and public reducer result protocols carry the runtime facts."
+        ],
+        "requiredPlanEdits": "none"
+      }
     }
   ]
 }
