@@ -577,7 +577,7 @@
     {
       "number": 96,
       "id": "CRPI-BLOCK-050",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: character-sheet-armor-class-base-selected-identity"
     },
     {
@@ -6168,7 +6168,7 @@ Plan Impact:
 
 ### Task 96 - CRPI-BLOCK-050
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

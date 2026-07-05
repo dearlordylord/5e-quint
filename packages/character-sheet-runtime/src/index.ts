@@ -28,6 +28,7 @@ export {
 } from "./ability-checks.ts";
 export {
   characterSheetArmorClass,
+  characterSheetArmorClassProjection,
   characterSheetArmorClassState,
 } from "./armor-class.ts";
 export { characterSheetClassFeaturePreparedSpellAccessesForBuild } from "./class-feature-spells.ts";
@@ -101,6 +102,8 @@ export type {
   CharacterSheetArcaneRecoverySlotRefund,
   CharacterSheetArcaneRecoveryRestRouteResult,
   CharacterSheetArmorClassBaseChoice,
+  CharacterSheetArmorClassProjection,
+  CharacterSheetArmorClassProjectionRoute,
   CharacterSheetArmorClassStateInput,
   CharacterSheetBookOfShadowsPresence,
   CharacterSheetBookOfShadowsRitualInvocation,

@@ -32,6 +32,8 @@ const EXPECTED_EXPORTS = [
   "CharacterSheetArcaneRecoveryRestRouteResult",
   "CharacterSheetArcaneRecoverySlotRefund",
   "CharacterSheetArmorClassBaseChoice",
+  "CharacterSheetArmorClassProjection",
+  "CharacterSheetArmorClassProjectionRoute",
   "CharacterSheetArmorClassStateInput",
   "CharacterSheetBookOfShadowsPresence",
   "CharacterSheetBookOfShadowsRitualInvocation",
@@ -138,6 +140,7 @@ const EXPECTED_EXPORTS = [
   "characterSheetAbilityCheckProficiencyBonus",
   "characterSheetAbilityCheckProficiencyBonusProjection",
   "characterSheetArmorClass",
+  "characterSheetArmorClassProjection",
   "characterSheetArmorClassState",
   "characterSheetClassFeaturePreparedSpellAccessesForBuild",
   "characterSheetCompanion",
@@ -216,6 +219,21 @@ const EXPECTED_EXPORT_RECONCILIATION_REASONS = [
     name: "characterSheetAbilityCheckProficiencyBonusProjection",
     reason:
       "Character Sheet owns Ability Check Proficiency Bonus projection from build facts; exposing the projection-with-route entrypoint lets route replay observe the qRoute event without maintaining an adapter-local route projection.",
+  },
+  {
+    name: "characterSheetArmorClassProjection",
+    reason:
+      "Character Sheet owns Armor Class projection from build, loadout, armor training, ability scores, and Surface Unit mechanics; exposing the projection-with-route entrypoint lets route replay observe selected-reference and Armor Class qRoute events without maintaining an adapter-local route projection.",
+  },
+  {
+    name: "CharacterSheetArmorClassProjection",
+    reason:
+      "Character Sheet owns the typed Armor Class projection-with-route result so derived Armor Class state and qRoute evidence remain explicit without adding duplicated durable sheet state.",
+  },
+  {
+    name: "CharacterSheetArmorClassProjectionRoute",
+    reason:
+      "Character Sheet owns the Armor Class selected-reference retention and build-projection route shape; exporting it keeps the route event tuple typed at the projection boundary.",
   },
   {
     name: "completeShortRestArcaneRecoveryWithRoute",

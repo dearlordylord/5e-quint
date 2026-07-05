@@ -4,6 +4,84 @@
   "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
   "entries": [
     {
+      "taskId": "CRPI-BLOCK-050",
+      "assignmentId": "reducer-spine-diagnostic-character-sheet",
+      "laneId": "sheet",
+      "selectedDrivers": [
+        "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "0225c29879c47f022cad33362d4097c0041c11524b350556081c4ae3468226a0"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "da2398db1855f8995d139fc08ba593ba098fee19cb1ec07f167556b0b1ba7497"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "7c43fdd3549d86fef89fab2091c9a531bd1fe44ef4d048ab1146d1aec470c744"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-050.json",
+          "sha256": "220c0f7945665c3112483592302b2c4f06bef26d617ffe57cbacc006d2e1e531",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-050.json#driver:packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt#step:doProjectHeavyArmorWithShield#trace:public-route=characterSheetArmorClassProjection action=doProjectHeavyArmorWithShield qRoute=armor-class-base-selected-identity-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-050.json#driver:packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt#step:doProjectLightArmor#trace:public-route=characterSheetArmorClassProjection action=doProjectLightArmor qRoute=armor-class-base-selected-identity-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-050.json#driver:packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt#step:doProjectMediumArmorDexCap#trace:public-route=characterSheetArmorClassProjection action=doProjectMediumArmorDexCap qRoute=armor-class-base-selected-identity-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-050.json#driver:packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt#step:doSelectBarbarianUnarmoredDefense#trace:public-route=characterSheetArmorClassProjection action=doSelectBarbarianUnarmoredDefense qRoute=armor-class-base-selected-identity-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-050.json#driver:packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt#step:doSelectBarbarianUnarmoredDefenseWithShield#trace:public-route=characterSheetArmorClassProjection action=doSelectBarbarianUnarmoredDefenseWithShield qRoute=armor-class-base-selected-identity-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-050.json#driver:packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt#step:doSelectMonkUnarmoredDefense#trace:public-route=characterSheetArmorClassProjection action=doSelectMonkUnarmoredDefense qRoute=armor-class-base-selected-identity-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "pnpm --filter @dnd/character-sheet-runtime typecheck",
+          "status": "pass"
+        },
+        {
+          "command": "START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/character-sheet-runtime exec vitest run src/armor-class.test.ts src/armor-class-base-selected-identity.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"Armor Class|routes Armor Class\" ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "status": "pass",
+          "detail": "3 files passed; 10 tests passed, 12 skipped; TOTAL: 4s"
+        },
+        {
+          "command": "node JSON parse check for CRPI-BLOCK-050 artifacts",
+          "status": "pass",
+          "detail": "Evidence, engine depth manifest, and state owner manifest parsed."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs"
+        },
+        {
+          "command": "pnpm check:character-sheet-runtime-split",
+          "status": "pass",
+          "detail": "Expected export surface updated for characterSheetArmorClassProjection and projection types."
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "All quality gates passed; app lint emitted 61 warnings and exited 0."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "No remaining reasonable Task 96 findings after moving Armor Class qRoute observation to public characterSheetArmorClassProjection and recording split-audit export ownership."
+        }
+      ]
+    },
+    {
       "taskId": "CRPI-READY-001",
       "assignmentId": "reducer-spine-diagnostic-battle",
       "laneId": "battle",

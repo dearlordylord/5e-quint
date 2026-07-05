@@ -1,99 +1,93 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-049",
+  "taskId": "CRPI-BLOCK-050",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.route.mbt.qnt",
+      "path": "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.route.mbt.qnt",
       "quarantinedWitnessNames": [
         "qRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-049.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-050.json"
       ]
     },
     {
       "path": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "arcaneRecoveryRouteActions",
-        "recoverSecondLevelSpellSlotRoute",
-        "resetArcaneRecoveryOnLongRestRoute",
-        "rejectPactSlotArcaneRecoveryRoute",
+        "armorClassRouteActions",
+        "projectPublicArmorClassRoute",
         "normalizeCharacterSheetRouteQuintState",
         "routeStateCheck"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-049.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-050.json"
+      ]
+    },
+    {
+      "path": "packages/character-sheet-runtime/src/armor-class-base-selected-identity.mbt.test.ts",
+      "quarantinedWitnessNames": [
+        "createArmorClassBaseSelectedIdentityDriver",
+        "armorClassBaseSelectedIdentityStateCheck"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-050.json"
+      ]
+    },
+    {
+      "path": "packages/character-sheet-runtime/src/armor-class.test.ts",
+      "quarantinedWitnessNames": [
+        "projects Armor Class selected-reference qRoute through the public projection entrypoint"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-050.json"
       ]
     },
     {
       "path": "packages/character-sheet-runtime/src/test-support.ts",
       "quarantinedWitnessNames": [
-        "completeShortRestArcaneRecoveryWithRoute",
-        "completeLongRestArcaneRecoveryResetWithRoute"
+        "characterSheetArmorClassProjection"
       ],
       "targetReplayEvidence": [
-        "packages/character-sheet-runtime/src/rests.test.ts",
-        "tasks/target-replay-evidence/CRPI-BLOCK-049.json"
-      ]
-    },
-    {
-      "path": "packages/character-sheet-runtime/src/rests.test.ts",
-      "quarantinedWitnessNames": [
-        "Arcane Recovery route wrapper reports Feature Resource owner for use lockout rejection",
-        "Long Rest Arcane Recovery route wrapper omits qRoute when no Arcane Recovery reset occurred"
-      ],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-049.json"
+        "packages/character-sheet-runtime/src/armor-class.test.ts",
+        "tasks/target-replay-evidence/CRPI-BLOCK-050.json"
       ]
     }
   ],
   "productionModulesExtended": [
     {
-      "path": "packages/character-sheet-runtime/src/rests.ts",
+      "path": "packages/character-sheet-runtime/src/armor-class.ts",
       "owners": [
-        "CharacterSheetSpellSlotOwner",
-        "CharacterSheetPactSlotOwner",
-        "CharacterSheetFeatureResourceOwner"
+        "CharacterSheetSelectedReferenceOwner",
+        "CharacterSheetBuildProjectionOwner"
       ],
-      "notes": "Task 95 adds public Arcane Recovery rest-with-route projection entrypoints around the existing Short Rest and Long Rest reducers. They return copied qRoute events only when typed Arcane Recovery owner-boundary state proves a route was observed; broad Long Rest success without an Arcane Recovery reset returns no qRoute."
-    },
-    {
-      "path": "packages/character-sheet-runtime/src/healing-rest-benefit.ts",
-      "owners": [
-        "CharacterSheetSpellSlotOwner",
-        "CharacterSheetPactSlotOwner",
-        "CharacterSheetFeatureResourceOwner"
-      ],
-      "notes": "Arcane Recovery returns a typed Short Rest owner classification for route replay. Feature-use lockout failures belong to CharacterSheetFeatureResourceOwner, ordinary refund failures belong to CharacterSheetSpellSlotOwner, and only pact-slot-shaped shortages belong to CharacterSheetPactSlotOwner. The over-refund rejection distinguishes build-derived ordinary Spell Slot levels from nonzero expenditure source state."
+      "notes": "Task 96 adds the public characterSheetArmorClassProjection entrypoint. It derives Armor Class through characterSheetArmorClassState, returns the current Armor Class, and exposes copied selected-reference retention plus Armor Class build-projection qRoute events. No durable CharacterSheet state field is added."
     },
     {
       "path": "packages/character-sheet-runtime/src/sheet-types.ts",
       "owners": [
-        "CharacterSheetSpellSlotOwner",
-        "CharacterSheetPactSlotOwner",
-        "CharacterSheetFeatureResourceOwner"
+        "CharacterSheetSelectedReferenceOwner",
+        "CharacterSheetBuildProjectionOwner"
       ],
-      "notes": "Task 95 introduces typed Character Sheet route-event vocabulary and CharacterSheetArcaneRecoveryRestRouteResult as runtime projections. The result distinguishes observed Arcane Recovery routes from no-route outcomes. No durable sheet state fields are added."
+      "notes": "Task 96 adds the typed CharacterSheetArmorClassProjection and its two-event qRoute projection shape. The type records route projection evidence, not duplicated sheet state."
     },
     {
       "path": "packages/character-sheet-runtime/src/index.ts",
       "owners": [
-        "CharacterSheetSpellSlotOwner",
-        "CharacterSheetPactSlotOwner",
-        "CharacterSheetFeatureResourceOwner"
+        "CharacterSheetSelectedReferenceOwner",
+        "CharacterSheetBuildProjectionOwner"
       ],
-      "notes": "Exports the public Arcane Recovery rest-with-route projection entrypoints and typed route projection result."
+      "notes": "Exports the public Armor Class projection-with-route entrypoint and projection types."
     }
   ],
   "expectedNextReuse": [
     {
-      "path": "packages/character-sheet-runtime/src/sheet-types.ts",
-      "notes": "Shared CharacterSheetRouteEvent vocabulary can replace remaining adapter-local route event type duplication in future Character Sheet route replay tasks."
+      "path": "packages/character-sheet-runtime/src/armor-class.ts",
+      "notes": "Future Character Sheet Armor Class routes should reuse characterSheetArmorClassProjection instead of adapter-local route event assembly."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 95 observes copied qRoute for Arcane Recovery selected identity through public Character Sheet rest-with-route entrypoints. Route metadata is constrained by typed Arcane Recovery owner-boundary state. Slot capacities remain build-derived; no duplicate Spell Slot, Pact Slot, or feature-use ledger was introduced."
+    "notes": "Task 96 observes copied qRoute for Armor Class base selected identity through public Character Sheet projection-with-route entrypoints. Selected identity remains retained reference evidence; Armor Class remains derived from CharacterBuild, loadout, Surface Unit mechanics, ability scores, armor training, and Shield facts."
   }
 }
