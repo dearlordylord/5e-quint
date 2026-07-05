@@ -343,7 +343,7 @@
     {
       "number": 57,
       "id": "CRPI-BLOCK-029",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-stat-block-action-ordering"
     },
     {
@@ -3916,7 +3916,7 @@ Plan Impact:
 
 ### Task 57 - CRPI-BLOCK-029
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
