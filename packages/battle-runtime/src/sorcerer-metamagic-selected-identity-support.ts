@@ -94,6 +94,39 @@ export function resolveQuickenedBurningHands(state: BattleState): BattleState {
   ).state;
 }
 
+export function observeQuickenedBurningHandsRoute(
+  state: BattleState,
+): readonly BattleReducerRouteEvent[] {
+  const act = quickenedBurningHandsAct(state);
+  const savingThrowFill = burningHandsSaveFill(act.initialHoles);
+  const awaitingDamage = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [savingThrowFill],
+  });
+  const damageHole = findHole(
+    awaitingDamage.tag === "needsHoles" ? awaitingDamage.holes : [],
+    "rolledDice",
+  );
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        savingThrowFill,
+        damageRollFillWithGroups(damageHole, [[4, 3, 2]]),
+      ],
+    }),
+  );
+
+  return [
+    battleReducerStartRouteEvent(state),
+    ...(act.routeEvents ?? []),
+    ...(awaitingDamage.routeEvents ?? []),
+    ...(resolved.routeEvents ?? []),
+  ];
+}
+
 export function resolveQuickenedRayOfFrost(state: BattleState): BattleState {
   const act = quickenedRayOfFrostAct(state);
   const targetHole = findHole(act.initialHoles, "targetChoice");

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-016",
+  "taskId": "CRPI-READY-017",
   "durableFields": [
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
@@ -8,27 +8,28 @@
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject.actionSpell invocation, BattleAttackRollHole.spellAttackRerolls, BattleFill attackRoll.value.spellAttackReroll, and BattleResolutionResult hole frontier",
+        "sourceField": "BattleSubject.bonusActionSpell metamagic Quickened effect fact, BattleSubject.bonusActionSpell.invocation.procedure=saveGatedDamage, savingThrowOutcome fill, rolledDice fill, and BattleResolutionResult hole frontier",
         "boundary": "resolveBattleSubject public reducer boundary"
       }
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=metamagicMissedSpellAttackReroll",
+      "fieldPath": "BattleReducerRouteEvent.subject=metamagicBonusActionCastingTime",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "owner": "executable-boundary-projection",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject.actionSpell.invocation.procedure=spellAttackDamage, BattleAttackRollHole.spellAttackRerolls.effectKind=missed_spell_attack_reroll, BattleFill.attackRoll.value.spellAttackReroll.effectKind=missed_spell_attack_reroll, and rolledDice completion",
+        "sourceField": "BattleSubject.bonusActionSpell.metamagic.effectKind=action_casting_time_to_bonus_action_with_spell_turn_limit and BattleSubject.bonusActionSpell.invocation.procedure=saveGatedDamage",
         "boundary": "battleReducerRouteForResolution"
       }
     }
   ],
   "notes": [
-    "Task 47 introduced no new BattleState, BattleCreatureState, character spellcasting, or table-state durable field.",
+    "Task 48 introduced no new BattleState, BattleCreatureState, character spellcasting, or table-state durable field.",
     "Sorcery Point ownership remains existing CharacterBattlePointPoolResourceState.pointsRemaining.",
-    "Seeking reroll ownership remains the existing attack-roll hole option and attack-roll fill decision; no duplicate pending reroll ledger was added.",
+    "Save outcome and damage roll ownership remain existing table-supplied BattleFill values and reducer-owned hole frontiers.",
+    "Target Hit Point ownership remains existing BattleCreatureState.hp.",
     "Selected Metamagic option identity remains at catalog, selection, admission, and fixture boundaries.",
-    "Route events are public reducer boundary projections derived from typed Metamagic effect facts, attack-roll hole/fill facts, and spell attack damage completion.",
-    "The Seeking Spell route does not dispatch on Sorcerer authored feature identity or the Seeking Spell option name; production routing is admitted by typed missed_spell_attack_reroll facts on promoted spell Attack procedure holes and fills."
+    "Route events are public reducer boundary projections derived from typed Quickened Metamagic effect facts, promoted save-gated damage procedure shape, saving-throw and damage-roll fills, and turn-boundary spell-lock state.",
+    "The Quickened save-gated damage route does not dispatch on Sorcerer authored feature identity or the Quickened Spell option name; production routing is admitted by typed action_casting_time_to_bonus_action_with_spell_turn_limit facts on promoted bonus-action spell subjects."
   ]
 }

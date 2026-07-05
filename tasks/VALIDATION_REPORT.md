@@ -1,5 +1,98 @@
 # Validation Report
 
+## CRPI-READY-017
+
+- Manifest source commit SHA: `0da15bfe0871d5a45782c7ac355d622be8907d44`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Driver: `packages/battle-runtime/battle-runtime-sorcerer-metamagic-selected-identity.mbt.qnt`
+- Route connector: `packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+- Acceptance status: `accepted`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/battle-runtime-sorcerer-metamagic-selected-identity.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-reducer-route.qnt`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Classes/Sorcerer.md`
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+Quickened Spell save-gated damage selected-identity replay now compares the
+copied `MetamagicBonusActionCastingTimeRouteSubject` `qRoute` to public reducer
+route events. The MBT replay executes the connector's deterministic
+`stepRouteQuickenedSaveGatedDamage` wrapper, which delegates to the copied
+`doResolveQuickenedSaveGatedDamage` action and updates `qRoute`. The target
+driver derives its projection by calling public reducer entrypoints: the route
+begins with `battleReducerStartRouteEvent`, discovers the Quickened Burning
+Hands act through `discoverBattleActs`, then resolves the Saving Throw outcome
+and damage roll through `resolveBattleSubject`.
+
+The runtime does not add a parallel Quickened Spell ledger. Sorcery Point spend
+remains in `CharacterBattlePointPoolResourceState.pointsRemaining`, the
+selected Metamagic identity remains a catalog/selection/admission boundary,
+target Hit Point changes remain in `BattleCreatureState.hp`, and route
+admission is derived from typed Quickened Metamagic facts plus the promoted
+save-gated damage procedure shape and fill frontier.
+
+Generated branch coverage:
+
+| Obligation | Target replay evidence | Diagnostic tests | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-sorcerer-metamagic-selected-identity.mbt.qnt#step:doResolveQuickenedSaveGatedDamage` | `tasks/target-replay-evidence/CRPI-READY-017.json#driver:packages/battle-runtime/battle-runtime-sorcerer-metamagic-selected-identity.mbt.qnt#step:doResolveQuickenedSaveGatedDamage#trace:public-route=metamagicBonusActionCastingTime action=doResolveQuickenedSaveGatedDamage qRoute=metamagic-quickened-save-gated-damage-public-route` | `packages/battle-runtime/src/sorcerer-metamagic-selected-identity.mbt.test.ts#compares Quickened Spell save-gated damage public reducer route to copied qRoute` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-017.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id: `public-route=metamagicBonusActionCastingTime action=doResolveQuickenedSaveGatedDamage qRoute=metamagic-quickened-save-gated-damage-public-route`
+- Copied connector replay assertion:
+  - `packages/battle-runtime/src/sorcerer-metamagic-selected-identity.mbt.test.ts#compares Quickened Spell save-gated damage public reducer route to copied qRoute`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-READY-017/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 48.
+
+Plan Impact:
+
+- Status: `none`
+- Affected tasks:
+  - Task 48 / `CRPI-READY-017`: `unblocked`; copied `qRoute` replay is accepted.
+  - Future metamagic route tasks: `left unchanged`.
+- Observations:
+  - Quickened save-gated damage is a bonus-action casting-time route whose
+    intermediate save fill can open a damage-roll frontier before final
+    turn-boundary lock ownership.
+  - The route should stay derived from typed
+    `action_casting_time_to_bonus_action_with_spell_turn_limit` facts and the
+    save-gated damage procedure shape, not selected option identity.
+- Required plan edits: none.
+
+Verification results:
+
+- Base check passed: declared base ref `codex/cleanroom-reducer-full-lane-20260704T211636Z` was `10baec507 Mark Ralph task 45 done`, `HEAD` was `24768ffd2 Mark Ralph task 47 done`, and `git merge-base --is-ancestor 24768ffd24e479b66db931927e70f17cefb64ce6 HEAD` exited 0.
+- `pnpm --filter @dnd/battle-runtime typecheck` passed.
+- `START=$(date +%s); MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/battle-runtime exec vitest run src/sorcerer-metamagic-selected-identity.mbt.test.ts 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 3 tests passed and `TOTAL: 7s`.
+- `START=$(date +%s); MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/battle-runtime exec vitest run src/reducer-route-connectors.mbt.test.ts -t "Metamagic" 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 1 test passed and `TOTAL: 7s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- `pnpm quality` passed. The app lint stage reported warnings only and exited 0.
+- RAW/ubiquitous-language review passed against Sorcerer Metamagic, Quickened Spell, Sorcery Points, Burning Hands, and UBIQUITOUS_LANGUAGE.md terms for Magic Action, Bonus Action, Spell Invocation, Saving Throw, Pool, and Spend.
+- Reviewer-loop convergence passed: round 1 added the copied route connector branch and public Quickened save-gated route ownership; round 2 verified route admission is based on typed Quickened Metamagic facts, promoted save-gated damage procedure shape, save/damage fills, and turn-boundary lock ownership, with no duplicate durable state or authored-identity dispatch.
+
 ## CRPI-READY-014
 
 - Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`

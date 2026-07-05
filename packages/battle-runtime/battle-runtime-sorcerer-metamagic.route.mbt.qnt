@@ -26,6 +26,7 @@ module battleRuntimeSorcererMetamagicRouteMbt {
     | ResourceGovernorRejected
     | BonusActionCastingTimeRouted
     | PriorLevelOnePlusSpellRejected
+    | QuickenedSaveGatedDamageRouted
     | QuickenedRestorationRouted
     | QuickenedSaveGatedConditionRouted
     | QuickenedSaveGatedConditionImmunityRouted
@@ -179,6 +180,58 @@ module battleRuntimeSorcererMetamagicRouteMbt {
     recordStage(
       PriorLevelOnePlusSpellRejected,
       initialRoute
+        .append(
+          resolveRouteWithoutFill(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            noHoles,
+            BattleTurnBoundaryOwner,
+          )
+        ),
+    ),
+  }
+
+  action doResolveQuickenedSaveGatedDamage = all {
+    qStage == Init,
+    recordStage(
+      QuickenedSaveGatedDamageRouted,
+      initialRoute
+        .append(
+          discoverRoute(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            savingThrowHoles,
+            BattleFeatureResourceOwner,
+          )
+        )
+        .append(
+          resolveRouteWithoutFill(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            savingThrowHoles,
+            BattleActionEconomyOwner,
+          )
+        )
+        .append(
+          resolveRouteWithoutFill(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            savingThrowHoles,
+            BattleSpellSlotAndActionEconomyOwner,
+          )
+        )
+        .append(
+          resolveRoute(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            SavingThrowOutcomeFillKind,
+            damageRollHoles,
+            BattleSavingThrowOutcomeOwner,
+          )
+        )
+        .append(
+          resolveRoute(
+            MetamagicBonusActionCastingTimeRouteSubject,
+            RolledDiceFillKind,
+            noHoles,
+            BattleDamageRollOwner,
+          )
+        )
         .append(
           resolveRouteWithoutFill(
             MetamagicBonusActionCastingTimeRouteSubject,
@@ -788,11 +841,16 @@ module battleRuntimeSorcererMetamagicRouteMbt {
     doRouteDamageDiceReroll,
   }
 
+  action stepRouteQuickenedSaveGatedDamage = any {
+    doResolveQuickenedSaveGatedDamage,
+  }
+
   action step = any {
     doRouteMetamagicResourceGovernor,
     doRejectMetamagicResourceGovernor,
     doRouteBonusActionCastingTime,
     doRejectPriorLevelOnePlusSpell,
+    doResolveQuickenedSaveGatedDamage,
     doResolveQuickenedRestoration,
     doResolveQuickenedSaveGatedCondition,
     doResolveQuickenedSaveGatedConditionImmunity,

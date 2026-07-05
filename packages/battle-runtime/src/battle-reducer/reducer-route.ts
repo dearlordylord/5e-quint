@@ -587,6 +587,32 @@ function metamagicRouteForResolution(
       },
     ];
   }
+  if (
+    routeFill === "savingThrowOutcome" &&
+    input.subject.invocation.procedure === "saveGatedDamage" &&
+    result.tag !== "invalid"
+  ) {
+    return [
+      ...metamagicBonusActionTimingRoutes(["savingThrowOutcome"]),
+      {
+        kind: "resolveBattleSubject",
+        subject: "metamagicBonusActionCastingTime",
+        fill: routeFill,
+        holes,
+        owner: "battleSavingThrowOutcome",
+      },
+      ...(result.tag === "resolved"
+        ? [
+            {
+              kind: "resolveBattleSubjectWithoutFill" as const,
+              subject: "metamagicBonusActionCastingTime" as const,
+              holes: [],
+              owner: metamagicSaveGatedFinalOwner(input.state, result.state),
+            },
+          ]
+        : []),
+    ];
+  }
   if (routeFill === "savingThrowOutcome" && result.tag === "resolved") {
     return [
       ...metamagicBonusActionTimingRoutes(["savingThrowOutcome"]),
@@ -614,6 +640,23 @@ function metamagicRouteForResolution(
           fill: routeFill,
           holes,
           owner: "battleHitPointAndZeroHpLifecycle",
+        },
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "metamagicBonusActionCastingTime",
+          holes: [],
+          owner: "battleTurnBoundary",
+        },
+      ];
+    }
+    if (input.subject.invocation.procedure === "saveGatedDamage") {
+      return [
+        {
+          kind: "resolveBattleSubject",
+          subject: "metamagicBonusActionCastingTime",
+          fill: routeFill,
+          holes,
+          owner: "battleDamageRoll",
         },
         {
           kind: "resolveBattleSubjectWithoutFill",
