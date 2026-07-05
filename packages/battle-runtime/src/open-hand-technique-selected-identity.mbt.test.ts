@@ -1,9 +1,9 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.open-hand-technique
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3PUTB-06-MONK-OPEN-HAND-TECHNIQUE-RUNTIME monk_open_hand_technique
-// UNIT-IDENTITY-MBT-REPLAY: L3PUTB-06-MONK-OPEN-HAND-TECHNIQUE-RUNTIME monk_open_hand_technique doDecline doDenyOpportunityAttacks doPushAwaySaveSucceeded doPushAwaySaveFailed doApplyProneSaveSucceeded doApplyProneSaveFailed doRejectNonFlurry doRejectPushTooFar doRejectApplyPronePushDisposition
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3PUTB-06-MONK-OPEN-HAND-TECHNIQUE-RUNTIME monk_open_hand_technique
+// UNIT-IDENTITY-REPLAY: L3PUTB-06-MONK-OPEN-HAND-TECHNIQUE-RUNTIME monk_open_hand_technique doDecline doDenyOpportunityAttacks doPushAwaySaveSucceeded doPushAwaySaveFailed doApplyProneSaveSucceeded doApplyProneSaveFailed doRejectNonFlurry doRejectPushTooFar doRejectApplyPronePushDisposition
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { battleTablePositionId } from "./index.ts";
 import type { BattleResolutionResult } from "./index.ts";
 import type { BattleShovePushOutcome } from "./battle-reducer.ts";
@@ -47,8 +47,8 @@ const openHandTechniqueUnit = unitLibrary.requireUnit(
 );
 const openHandTechniqueUnitRef = supportedBattleUnitRef(openHandTechniqueUnit);
 
-defineSelectedIdentityWitness({
-  describeLabel: "Open Hand Technique selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Open Hand Technique selected identity replay",
   taskId: "L3PUTB-06-MONK-OPEN-HAND-TECHNIQUE-RUNTIME",
   specFile: mbtSpecPath(
     import.meta.dirname,

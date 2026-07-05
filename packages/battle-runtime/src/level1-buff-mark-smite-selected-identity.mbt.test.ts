@@ -1,26 +1,26 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-DIVINE-FAVOR divine_favor
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-DIVINE-SMITE divine_smite
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-ENSNARING-STRIKE ensnaring_strike
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-FALSE-LIFE false_life
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-HEROISM heroism
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-HUNTERS-MARK hunters_mark
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-HEX hex
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-LONGSTRIDER longstrider
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-SEARING-SMITE searing_smite
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-SHILLELAGH shillelagh
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-TRUE-STRIKE true_strike
-// UNIT-IDENTITY-MBT-REPLAY: L1E-DIVINE-FAVOR divine_favor doDivineFavorWeaponDamageRider
-// UNIT-IDENTITY-MBT-REPLAY: L1E-DIVINE-SMITE divine_smite doDivineSmiteAfterHitDamage
-// UNIT-IDENTITY-MBT-REPLAY: L1E-ENSNARING-STRIKE ensnaring_strike doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape
-// UNIT-IDENTITY-MBT-REPLAY: L1E-FALSE-LIFE false_life doFalseLifeTemporaryHitPoints
-// UNIT-IDENTITY-MBT-REPLAY: L1E-HEROISM heroism doHeroismFrightenedImmunityTurnStartTemporaryHitPoints doHeroismFrightenedImmunityTurnStartTemporaryHitPointsCleanup
-// UNIT-IDENTITY-MBT-REPLAY: L1E-HUNTERS-MARK hunters_mark doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer
-// UNIT-IDENTITY-MBT-REPLAY: L1E-HEX hex doHexMarkedDamageRiderAndLaterTurnTransfer
-// UNIT-IDENTITY-MBT-REPLAY: L1E-LONGSTRIDER longstrider doLongstriderSpeedIncrease
-// UNIT-IDENTITY-MBT-REPLAY: L1E-SEARING-SMITE searing_smite doSearingSmiteAfterHitTimedDamageAndSaveCleanup
-// UNIT-IDENTITY-MBT-REPLAY: L1E-SHILLELAGH shillelagh doShillelaghWeaponAttackOverride
-// UNIT-IDENTITY-MBT-REPLAY: L1E-TRUE-STRIKE true_strike doTrueStrikeSpellHostedWeaponAttack
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1E-DIVINE-FAVOR divine_favor
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1E-DIVINE-SMITE divine_smite
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1E-ENSNARING-STRIKE ensnaring_strike
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1E-FALSE-LIFE false_life
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1E-HEROISM heroism
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1E-HUNTERS-MARK hunters_mark
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1E-HEX hex
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1E-LONGSTRIDER longstrider
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1E-SEARING-SMITE searing_smite
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1E-SHILLELAGH shillelagh
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1E-TRUE-STRIKE true_strike
+// UNIT-IDENTITY-REPLAY: L1E-DIVINE-FAVOR divine_favor doDivineFavorWeaponDamageRider
+// UNIT-IDENTITY-REPLAY: L1E-DIVINE-SMITE divine_smite doDivineSmiteAfterHitDamage
+// UNIT-IDENTITY-REPLAY: L1E-ENSNARING-STRIKE ensnaring_strike doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape
+// UNIT-IDENTITY-REPLAY: L1E-FALSE-LIFE false_life doFalseLifeTemporaryHitPoints
+// UNIT-IDENTITY-REPLAY: L1E-HEROISM heroism doHeroismFrightenedImmunityTurnStartTemporaryHitPoints doHeroismFrightenedImmunityTurnStartTemporaryHitPointsCleanup
+// UNIT-IDENTITY-REPLAY: L1E-HUNTERS-MARK hunters_mark doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer
+// UNIT-IDENTITY-REPLAY: L1E-HEX hex doHexMarkedDamageRiderAndLaterTurnTransfer
+// UNIT-IDENTITY-REPLAY: L1E-LONGSTRIDER longstrider doLongstriderSpeedIncrease
+// UNIT-IDENTITY-REPLAY: L1E-SEARING-SMITE searing_smite doSearingSmiteAfterHitTimedDamageAndSaveCleanup
+// UNIT-IDENTITY-REPLAY: L1E-SHILLELAGH shillelagh doShillelaghWeaponAttackOverride
+// UNIT-IDENTITY-REPLAY: L1E-TRUE-STRIKE true_strike doTrueStrikeSpellHostedWeaponAttack
 import { Either } from "effect";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
@@ -96,7 +96,7 @@ import {
   quintStateRecord,
   quintVariantTag,
 } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 
 type Level1BuffMarkSmiteSelectedIdentityAction =
   | "doDivineFavorWeaponDamageRider"
@@ -819,8 +819,8 @@ const selectedUnitIdentityReplays = [
   },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
-defineSelectedIdentityWitness({
-  describeLabel: "Level 1 buff mark smite selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Level 1 buff mark smite selected identity replay",
   taskId: "level1-buff-mark-smite-selected-identity",
   specFile: mbtSpecPath(
     import.meta.dirname,

@@ -3,7 +3,7 @@
 ## Decision
 
 Fast Hands remains a deterministic battle-admission profile only. Task
-L3CF-05 does not promote a reducer, QNT witness, or selected-identity MBT
+L3CF-05 does not promote a reducer, QNT witness, or selected-identity replay
 because there is no battle-owned Bonus Action shell independent of the concrete
 delegated procedures.
 

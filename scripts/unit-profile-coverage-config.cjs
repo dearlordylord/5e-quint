@@ -155,11 +155,11 @@ const battleReadinessClosureKinds = new Set(
 );
 const deterministicAdmissionProjectionEvidenceTag =
   "deterministic-admission-projection";
-const selectedIdentityMbtEvidenceTag = "selected-identity-mbt";
+const selectedIdentityReplayEvidenceTag = "selected-identity-replay";
 const selectedIdentityNonApplicableDispositionTag = "not-applicable";
 const unitEvidenceTags = new Set([
   deterministicAdmissionProjectionEvidenceTag,
-  selectedIdentityMbtEvidenceTag,
+  selectedIdentityReplayEvidenceTag,
 ]);
 const unitProfileOwnerClaimKinds = new Set([
   "qnt-owner",
@@ -361,7 +361,7 @@ module.exports = {
   rulesKernelProfileKindClassifications,
   rulesKernelProfileKinds,
   mcpScenarioWitnessKind,
-  selectedIdentityMbtEvidenceTag,
+  selectedIdentityReplayEvidenceTag,
   selectedIdentityNonApplicableDispositionTag,
   skippedClaimScanDirs,
   surfaceUnitKinds,

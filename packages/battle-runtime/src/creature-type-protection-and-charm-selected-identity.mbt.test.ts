@@ -1,7 +1,7 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-ANIMAL-FRIENDSHIP animal_friendship
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-PROTECTION-EVIL-GOOD protection_from_evil_and_good
-// UNIT-IDENTITY-MBT-REPLAY: L1H-ANIMAL-FRIENDSHIP animal_friendship doDiscoverAnimalFriendshipBeastTargetAdmission doResolveAnimalFriendshipFailedSaveCharmed doResolveAnimalFriendshipCasterDamageBreak
-// UNIT-IDENTITY-MBT-REPLAY: L1H-PROTECTION-EVIL-GOOD protection_from_evil_and_good doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage doPreventProtectionFromEvilAndGoodScopedCharmAndPossession doResolveProtectionFromEvilAndGoodRelevantCharmSaveAdvantage
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-ANIMAL-FRIENDSHIP animal_friendship
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-PROTECTION-EVIL-GOOD protection_from_evil_and_good
+// UNIT-IDENTITY-REPLAY: L1H-ANIMAL-FRIENDSHIP animal_friendship doDiscoverAnimalFriendshipBeastTargetAdmission doResolveAnimalFriendshipFailedSaveCharmed doResolveAnimalFriendshipCasterDamageBreak
+// UNIT-IDENTITY-REPLAY: L1H-PROTECTION-EVIL-GOOD protection_from_evil_and_good doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage doPreventProtectionFromEvilAndGoodScopedCharmAndPossession doResolveProtectionFromEvilAndGoodRelevantCharmSaveAdvantage
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
 import { Either } from "effect";
 
@@ -57,7 +57,7 @@ import {
   selectFailedSaveConditionEffect,
 } from "./battle-reducer/spells-active-effects.ts";
 import { applyPreparedSlotSpellDamage } from "./battle-reducer/spells-damage-fills.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 
 type CreatureTypeProtectionAndCharmSelectedIdentityLastResult =
@@ -376,8 +376,8 @@ const creatureTypeProtectionAndCharmDiscoveries = {
   () => CreatureTypeProtectionAndCharmSelectedIdentityProjection
 >;
 
-defineSelectedIdentityWitness({
-  describeLabel: "Creature Type Protection and Charm selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Creature Type Protection and Charm selected identity replay",
   taskId: "creature-type-protection-and-charm-selected-identity",
   specFile: mbtSpecPath(
     import.meta.dirname,

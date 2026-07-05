@@ -1,7 +1,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.enemy-zero-hit-point-temporary-hit-points
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3PUTB-02 warlock_dark_ones_blessing
-// UNIT-IDENTITY-MBT-REPLAY: L3PUTB-02 warlock_dark_ones_blessing doSelfKill doNearbyOtherKill doSameSideOtherKill doRejectOutOfRangeOtherKill doRejectNonEnemyKill doMinimumTemporaryHitPoints doTemporaryHitPointReplacement
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3PUTB-02 warlock_dark_ones_blessing
+// UNIT-IDENTITY-REPLAY: L3PUTB-02 warlock_dark_ones_blessing doSelfKill doNearbyOtherKill doSameSideOtherKill doRejectOutOfRangeOtherKill doRejectNonEnemyKill doMinimumTemporaryHitPoints doTemporaryHitPointReplacement
 import { Hp, movementFeet } from "@dnd/shared/types";
 
 import {
@@ -18,7 +18,7 @@ import {
   unitLibrary,
 } from "./battle-runtime-test-support.ts";
 import type { BattleTargetSpatialFact } from "./battle-reducer.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { battleEnemyZeroHitPointTemporaryHitPointsSupportForUnit } from "./unit-feature-support.ts";
 
@@ -62,8 +62,8 @@ const unitId = "warlock_dark_ones_blessing";
 const unit = unitLibrary.requireUnit(unitId);
 const supportProfile = requireDarkOnesBlessingSupportProfile();
 
-defineSelectedIdentityWitness({
-  describeLabel: "Dark One's Blessing selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Dark One's Blessing selected identity replay",
   taskId: "L3PUTB-02",
   specFile: mbtSpecPath(
     import.meta.dirname,

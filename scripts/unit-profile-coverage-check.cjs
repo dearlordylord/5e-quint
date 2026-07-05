@@ -5,7 +5,7 @@ const {
   deterministicAdmissionProjectionEvidenceTag,
   executableProfileKinds,
   isUnitFeatureProfileId,
-  selectedIdentityMbtEvidenceTag,
+  selectedIdentityReplayEvidenceTag,
 } = require("./unit-profile-coverage-config.cjs");
 const {
   discoverAuthoredSurfaceUnits,
@@ -228,7 +228,7 @@ function main() {
     {
       executableProfileKinds,
       deterministicAdmissionProjectionEvidenceTag,
-      selectedIdentityMbtEvidenceTag,
+      selectedIdentityReplayEvidenceTag,
     },
   );
   const level1FullSupport = buildLevel1FullSupport(matrix, srdUnitInventory, {
@@ -252,7 +252,7 @@ function main() {
     level14FullSupport,
     mcpScenarioEvidence,
     rulesKernelMatrix: rulesKernelCoverage.matrix,
-    selectedIdentityMbtEvidenceTag,
+    selectedIdentityReplayEvidenceTag,
     unitMatrix: matrix,
   });
   const level12QntMbtJoin = buildLevel12QntMbtJoin({
@@ -296,7 +296,7 @@ function main() {
     renderReport(matrix, {
       executableProfileKinds,
       deterministicAdmissionProjectionEvidenceTag,
-      selectedIdentityMbtEvidenceTag,
+      selectedIdentityReplayEvidenceTag,
     }),
   );
   writeOrCompare(

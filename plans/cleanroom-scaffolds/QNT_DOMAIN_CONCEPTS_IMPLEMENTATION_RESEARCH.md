@@ -49,7 +49,7 @@ owner.
 | ---------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------- |
 | Hole, Fill, And Witness Ownership              | Partly modeled            | Keep semantic-frontier vocabulary in leaf QNT; keep table facts in inventory/classification | `fill_battle_hole`, battle result payloads, app demo fills                                           | Add concept tags and table-fact owner checks  |
 | Source Fact, Table Witness, Runtime Projection | Partly modeled            | Source-fact lifecycles in focused QNT; witnesses in MBT projections                         | MCP fills; snapshots/visualizer show source/projection facts                                         | Split state-owner categories                  |
-| Support-Profile Admission                      | Mostly modeled            | Rule-core profile QNT plus selected-identity MBT                                            | Catalog selection + discovery/admission tools                                                        | Require target support-gate evidence per task |
+| Support-Profile Admission                      | Mostly modeled            | Rule-core profile QNT plus selected-identity replay                                            | Catalog selection + discovery/admission tools                                                        | Require target support-gate evidence per task |
 | Result Taxonomy                                | Strong, but not universal | Use typed replay protocol/result records where a witness needs outcome state                 | MCP returns resolved/needsHoles/invalid; creation returns accepted/rejected/ready/incomplete/invalid | Require replay evidence result classification |
 | Procedure Lifecycle And Replay Protocol        | Strong in battle          | Ordering/reaction/replay QNT plus lifecycle-stage metadata                                  | MCP transient fills and pending sessions                                                             | Add lifecycle stage tags to source inventory  |
 | Runtime Occurrence State                       | Partly modeled            | Focus lifecycle/cleanup QNT on occurrence state, not names                                  | Battle snapshots and MCP battle state                                                                | Add occurrence-state manifest expectations    |
@@ -200,14 +200,14 @@ but too coarse for this concept.
 ### QNT Implementation Or Discovery Route
 
 Support-profile admission should be discovered from existing profile QNT and
-selected-identity MBT, not from authored names. The rule-core QNT proves the
+selected-identity replay, not from authored names. The rule-core QNT proves the
 mechanics profile. The selected-identity witness proves that an authored Surface
 record is admitted through parsed shape and typed facts into that profile.
 
 When adding support:
 
 - add or reuse a profile fact in rule-core QNT;
-- add package-local runtime integration or selected-identity MBT only where the
+- add package-local runtime integration or selected-identity replay only where the
   Surface record admission path matters;
 - do not add a QNT branch whose semantic distinction is just a spell, feature,
   class, or monster id.

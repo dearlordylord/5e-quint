@@ -1,9 +1,9 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B4-CLASS-FEATURE-IDENTITY-BATCH-1 barbarian_danger_sense
-// UNIT-IDENTITY-MBT-REPLAY: B4-CLASS-FEATURE-IDENTITY-BATCH-1 barbarian_danger_sense doProjectDangerSenseDexterityAdvantage doSuppressDangerSenseWhileIncapacitated
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay B4-CLASS-FEATURE-IDENTITY-BATCH-1 barbarian_danger_sense
+// UNIT-IDENTITY-REPLAY: B4-CLASS-FEATURE-IDENTITY-BATCH-1 barbarian_danger_sense doProjectDangerSenseDexterityAdvantage doSuppressDangerSenseWhileIncapacitated
 import { describe, expect, it } from "vitest";
 
 import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
   MBT_TEST_TIMEOUT_MS,
   decodeReducerRoute,
@@ -59,8 +59,8 @@ const DANGER_SENSE_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
   DangerSenseIncapacitatedSuppressed: "danger-sense-incapacitated-suppressed",
 } as const;
 
-defineSelectedIdentityWitness({
-  describeLabel: "Battle Runtime Danger Sense selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Battle Runtime Danger Sense selected identity replay",
   taskId: "B4-CLASS-FEATURE-IDENTITY-BATCH-1",
   specFile: mbtSpecPath(
     import.meta.dirname,

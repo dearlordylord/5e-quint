@@ -37,7 +37,7 @@ boundaries, not promoted Unit tracer bullets.
   Effect, not ruby-dust stock or component-spend state.
 - Task 4: Continual Flame light projection is already represented by
   `spell.invocation-object-light`. Surface content, QNT, production reducer
-  admission/resolution, deterministic admission tests, selected-identity MBT
+  admission/resolution, deterministic admission tests, selected-identity replay
   replay, and generated ledgers all point at the shared object-light path.
 - Task 5: Enlarge/Reduce creature support remains promoted under
   `spell.invocation-creature-size-change`. Object Size-category lifecycle,

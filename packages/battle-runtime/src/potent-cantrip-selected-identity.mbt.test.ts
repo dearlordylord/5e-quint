@@ -1,9 +1,9 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.potent-cantrip
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3PUTB-05 wizard_potent_cantrip
-// UNIT-IDENTITY-MBT-REPLAY: L3PUTB-05 wizard_potent_cantrip doAttackMissHalfDamage doAttackMissNoAdditionalEffect doAttackMissNoLightEmitter doSaveSuccessHalfDamage doSaveSuccessNoAdditionalEffect doRejectObjectMissHalfDamage
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3PUTB-05 wizard_potent_cantrip
+// UNIT-IDENTITY-REPLAY: L3PUTB-05 wizard_potent_cantrip doAttackMissHalfDamage doAttackMissNoAdditionalEffect doAttackMissNoLightEmitter doSaveSuccessHalfDamage doSaveSuccessNoAdditionalEffect doRejectObjectMissHalfDamage
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
   armorClass,
   attackRollFill,
@@ -57,8 +57,8 @@ type PotentCantripProjection = {
 const potentCantripUnit = unitLibrary.requireUnit("wizard_potent_cantrip");
 const potentCantripUnitRef = supportedBattleUnitRef(potentCantripUnit);
 
-defineSelectedIdentityWitness({
-  describeLabel: "Potent Cantrip selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Potent Cantrip selected identity replay",
   taskId: "L3PUTB-05",
   specFile: mbtSpecPath(
     import.meta.dirname,

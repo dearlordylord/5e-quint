@@ -36,7 +36,7 @@ Diagnostic product readiness remains a separate lower-layer accounting view, not
 
 ## QNT, Generator, And Parity
 
-Level 1-2 QNT/MBT join open gaps: **0**.
+Level 1-2 parity witness join open gaps: **0**.
 
 | Join metric | Result |
 | --- | ---: |

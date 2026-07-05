@@ -1,6 +1,6 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-ongoing-spell-ending
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B21-DISPEL-MAGIC-IDENTITY-WITNESS dispel_magic
-// UNIT-IDENTITY-MBT-REPLAY: B21-DISPEL-MAGIC-IDENTITY-WITNESS dispel_magic doEndObjectAttachedSpellLight doEndSelectedMagicalEffectActiveEffect doRejectOutOfRangeObjectTarget
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay B21-DISPEL-MAGIC-IDENTITY-WITNESS dispel_magic
+// UNIT-IDENTITY-REPLAY: B21-DISPEL-MAGIC-IDENTITY-WITNESS dispel_magic doEndObjectAttachedSpellLight doEndSelectedMagicalEffectActiveEffect doRejectOutOfRangeObjectTarget
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet, Round } from "@dnd/shared/types";
@@ -8,7 +8,7 @@ import { expect } from "vitest";
 
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 import { battleSpellEffectOccurrenceId } from "./identity.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import {
   continualFlameUnitId,
@@ -78,8 +78,8 @@ const retainedActiveEffectId = battleSpellEffectOccurrenceId(
   `${spellTargetId}:${heatMetalUnitId}:${selectedObjectId}:retained`,
 );
 
-defineSelectedIdentityWitness({
-  describeLabel: "Dispel Magic selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Dispel Magic selected identity replay",
   taskId: "B21-DISPEL-MAGIC-IDENTITY-WITNESS",
   specFile: mbtSpecPath(
     import.meta.dirname,

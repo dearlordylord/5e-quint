@@ -12,7 +12,7 @@ const {
   profileKinds,
   protectedExpressionFields,
   rulesKernelProfileKindClassificationIssues,
-  selectedIdentityMbtEvidenceTag,
+  selectedIdentityReplayEvidenceTag,
   selectedIdentityNonApplicableDispositionTag,
   unitEvidenceTags,
   unitProfileOwnerClaimKinds,
@@ -684,15 +684,6 @@ function validateUnitEvidence(
       issues.push(ownerPathIssue);
       continue;
     }
-    if (
-      row.evidence.tag === selectedIdentityMbtEvidenceTag &&
-      !row.evidence.ownerPath.endsWith(".mbt.test.ts")
-    ) {
-      issues.push(
-        `Selected identity MBT evidence for ${row.unitId} ownerPath must be a repo-relative .mbt.test.ts source test path.`,
-      );
-      continue;
-    }
     if (!fs.existsSync(path.join(root, row.evidence.ownerPath))) {
       issues.push(
         `Unit evidence for ${row.unitId} references missing owner ${row.evidence.ownerPath}.`,
@@ -713,8 +704,8 @@ function validateUnitEvidence(
       );
     }
     if (
-      row.evidence.tag === selectedIdentityMbtEvidenceTag &&
-      !hasUnitIdentityMbtReplay(
+      row.evidence.tag === selectedIdentityReplayEvidenceTag &&
+      !hasUnitIdentityReplay(
         scannedUnitEvidence,
         row.evidence.ownerPath,
         row.evidence.taskId,
@@ -722,11 +713,11 @@ function validateUnitEvidence(
       )
     ) {
       issues.push(
-        `Selected identity MBT evidence for ${row.unitId} lacks matching UNIT-IDENTITY-MBT-REPLAY action marker in ${row.evidence.ownerPath}.`,
+        `Selected identity replay evidence for ${row.unitId} lacks matching UNIT-IDENTITY-REPLAY action marker in ${row.evidence.ownerPath}.`,
       );
     }
     if (
-      row.evidence.tag === selectedIdentityMbtEvidenceTag &&
+      row.evidence.tag === selectedIdentityReplayEvidenceTag &&
       !hasSelectedUnitIdentityReplay(
         scannedUnitEvidence,
         row.evidence.ownerPath,
@@ -735,7 +726,7 @@ function validateUnitEvidence(
       )
     ) {
       issues.push(
-        `Selected identity MBT evidence for ${row.unitId} lacks deterministic replay data in ${row.evidence.ownerPath}.`,
+        `Selected identity replay evidence for ${row.unitId} lacks deterministic replay data in ${row.evidence.ownerPath}.`,
       );
     }
   }
@@ -768,8 +759,8 @@ function hasUnitEvidenceClaim(
   );
 }
 
-function hasUnitIdentityMbtReplay(scannedClaims, ownerPath, taskId, unitId) {
-  return scannedClaims.unitIdentityMbtReplays.some(
+function hasUnitIdentityReplay(scannedClaims, ownerPath, taskId, unitId) {
+  return scannedClaims.unitIdentityReplays.some(
     (claim) =>
       claim.ownerPath === ownerPath &&
       claim.taskId === taskId &&
@@ -823,7 +814,7 @@ function validateOwnerClaims(
   );
   const selectedUnitEvidenceRowsByMarker = new Set(
     usableUnitEvidenceRows
-      .filter((row) => row.evidence?.tag === selectedIdentityMbtEvidenceTag)
+      .filter((row) => row.evidence?.tag === selectedIdentityReplayEvidenceTag)
       .map((row) =>
         unitEvidenceRowKey(
           row.evidence?.ownerPath,
@@ -837,7 +828,7 @@ function validateOwnerClaims(
     scannedUnitEvidence.selectedUnitIdentityReplays.map((row) =>
       unitEvidenceRowKey(
         row.ownerPath,
-        selectedIdentityMbtEvidenceTag,
+        selectedIdentityReplayEvidenceTag,
         row.taskId,
         row.unitId,
       ),
@@ -848,10 +839,22 @@ function validateOwnerClaims(
       (row) =>
         `${unitEvidenceRowKey(
           row.ownerPath,
-          selectedIdentityMbtEvidenceTag,
+          selectedIdentityReplayEvidenceTag,
           row.taskId,
           row.unitId,
         )}\u0000${actionSetKey(row.actionNames)}`,
+    ),
+  );
+  const selectedReplayRowsByTaskUnitAndActions = new Set(
+    scannedUnitEvidence.selectedUnitIdentityReplays.map(
+      (row) =>
+        `${row.taskId}\u0000${row.unitId}\u0000${actionSetKey(row.actionNames)}`,
+    ),
+  );
+  const replayMarkerRowsByTaskUnitAndActions = new Set(
+    scannedUnitEvidence.unitIdentityReplays.map(
+      (claim) =>
+        `${claim.taskId}\u0000${claim.unitId}\u0000${actionSetKey(claim.actionNames)}`,
     ),
   );
   const selectedReplayConsumerOwnerPaths = new Set(
@@ -887,7 +890,7 @@ function validateOwnerClaims(
       !selectedUnitEvidenceRowsByMarker.has(
         unitEvidenceRowKey(
           replay.ownerPath,
-          selectedIdentityMbtEvidenceTag,
+          selectedIdentityReplayEvidenceTag,
           replay.taskId,
           replay.unitId,
         ),
@@ -897,7 +900,7 @@ function validateOwnerClaims(
         `${replay.ownerPath} has selected Unit identity replay data for ${replay.unitId} without a matching unit-evidence.jsonl row.`,
       );
     }
-    const marker = scannedUnitEvidence.unitIdentityMbtReplays.find(
+    const marker = scannedUnitEvidence.unitIdentityReplays.find(
       (claim) =>
         claim.ownerPath === replay.ownerPath &&
         claim.taskId === replay.taskId &&
@@ -905,93 +908,123 @@ function validateOwnerClaims(
     );
     if (marker === undefined) {
       issues.push(
-        `${replay.ownerPath} has selected Unit identity replay data for ${replay.unitId} without a matching UNIT-IDENTITY-MBT-REPLAY marker.`,
+        `${replay.ownerPath} has selected Unit identity replay data for ${replay.unitId} without a matching UNIT-IDENTITY-REPLAY marker.`,
       );
       continue;
     }
     if (actionSetKey(marker.actionNames) !== actionSetKey(replay.actionNames)) {
       issues.push(
-        `${replay.ownerPath} selected Unit identity replay data for ${replay.unitId} does not match UNIT-IDENTITY-MBT-REPLAY actions.`,
+        `${replay.ownerPath} selected Unit identity replay data for ${replay.unitId} does not match UNIT-IDENTITY-REPLAY actions.`,
       );
     }
   }
-  for (const claim of scannedUnitEvidence.unitIdentityMbtReplays) {
+  for (const claim of scannedUnitEvidence.unitIdentityReplays) {
     if (claim.taskId.length === 0) {
       issues.push(
-        `${claim.ownerPath}:${claim.line} has empty Unit identity MBT replay task id.`,
+        `${claim.ownerPath}:${claim.line} has empty Unit identity replay task id.`,
       );
     }
     if (claim.unitId.length === 0) {
       issues.push(
-        `${claim.ownerPath}:${claim.line} has empty Unit identity MBT replay Unit id.`,
+        `${claim.ownerPath}:${claim.line} has empty Unit identity replay Unit id.`,
       );
     }
     if (claim.actionNames.length === 0) {
       issues.push(
-        `${claim.ownerPath}:${claim.line} has no Unit identity MBT replay actions.`,
+        `${claim.ownerPath}:${claim.line} has no Unit identity replay actions.`,
       );
     }
     for (const actionName of claim.actionNames) {
       if (!claim.declaredActions.has(actionName)) {
         issues.push(
-          `${claim.ownerPath}:${claim.line} cites Unit identity MBT replay action ${actionName} that is not declared in driverSchema.`,
-        );
-      }
-      if (!claim.stepActionNames.has(actionName)) {
-        issues.push(
-          `${claim.ownerPath}:${claim.line} cites Unit identity MBT replay action ${actionName} that is not reachable from ${claim.stepDescription}.`,
+          `${claim.ownerPath}:${claim.line} cites Unit identity replay action ${actionName} that is not declared in driverSchema.`,
         );
       }
     }
     if (claim.declaredActions.size === 0) {
       issues.push(
-        `${claim.ownerPath}:${claim.line} cites Unit identity MBT replay actions in a file with no driverSchema.`,
-      );
-    }
-    if (claim.stepActionNames.size === 0) {
-      issues.push(
-        `${claim.ownerPath}:${claim.line} cites Unit identity MBT replay actions in a file with no readable Quint MBT step action set.`,
+        `${claim.ownerPath}:${claim.line} cites Unit identity replay actions in a file with no driverSchema.`,
       );
     }
     if (
       !selectedUnitEvidenceRowsByMarker.has(
         unitEvidenceRowKey(
           claim.ownerPath,
-          selectedIdentityMbtEvidenceTag,
+          selectedIdentityReplayEvidenceTag,
           claim.taskId,
           claim.unitId,
         ),
       )
     ) {
       issues.push(
-        `${claim.ownerPath}:${claim.line} claims selected identity MBT replay for ${claim.unitId} without a matching unit-evidence.jsonl row.`,
+        `${claim.ownerPath}:${claim.line} claims selected identity replay for ${claim.unitId} without a matching unit-evidence.jsonl row.`,
       );
     }
     if (
       !selectedReplayRowsByMarker.has(
         unitEvidenceRowKey(
           claim.ownerPath,
-          selectedIdentityMbtEvidenceTag,
+          selectedIdentityReplayEvidenceTag,
           claim.taskId,
           claim.unitId,
         ),
       )
     ) {
       issues.push(
-        `${claim.ownerPath}:${claim.line} claims selected identity MBT replay for ${claim.unitId} without deterministic replay data.`,
+        `${claim.ownerPath}:${claim.line} claims selected identity replay for ${claim.unitId} without deterministic replay data.`,
       );
     } else if (
       !selectedReplayRowsByMarkerAndActions.has(
         `${unitEvidenceRowKey(
           claim.ownerPath,
-          selectedIdentityMbtEvidenceTag,
+          selectedIdentityReplayEvidenceTag,
           claim.taskId,
           claim.unitId,
         )}\u0000${actionSetKey(claim.actionNames)}`,
       )
     ) {
       issues.push(
-        `${claim.ownerPath}:${claim.line} claims selected identity MBT replay actions for ${claim.unitId} that do not match deterministic replay data.`,
+        `${claim.ownerPath}:${claim.line} claims selected identity replay actions for ${claim.unitId} that do not match deterministic replay data.`,
+      );
+    }
+  }
+  for (const claim of scannedUnitEvidence.unitIdentityQntReplays ?? []) {
+    if (claim.taskId.length === 0) {
+      issues.push(
+        `${claim.ownerPath}:${claim.line} has empty Unit identity QNT replay task id.`,
+      );
+    }
+    if (claim.unitId.length === 0) {
+      issues.push(
+        `${claim.ownerPath}:${claim.line} has empty Unit identity QNT replay Unit id.`,
+      );
+    }
+    if (claim.actionNames.length === 0) {
+      issues.push(
+        `${claim.ownerPath}:${claim.line} has no Unit identity QNT replay actions.`,
+      );
+    }
+    for (const actionName of claim.actionNames) {
+      if (!claim.stepActionNames.has(actionName)) {
+        issues.push(
+          `${claim.ownerPath}:${claim.line} cites Unit identity QNT replay action ${actionName} that is not reachable from ${claim.stepDescription}.`,
+        );
+      }
+    }
+    if (claim.stepActionNames.size === 0) {
+      issues.push(
+        `${claim.ownerPath}:${claim.line} cites Unit identity QNT replay actions in a file with no readable Quint step action set.`,
+      );
+    }
+    const taskUnitActionKey = `${claim.taskId}\u0000${claim.unitId}\u0000${actionSetKey(claim.actionNames)}`;
+    if (!replayMarkerRowsByTaskUnitAndActions.has(taskUnitActionKey)) {
+      issues.push(
+        `${claim.ownerPath}:${claim.line} claims Unit identity QNT replay for ${claim.unitId} without a matching UNIT-IDENTITY-REPLAY marker joined by task, Unit, and actions.`,
+      );
+    }
+    if (!selectedReplayRowsByTaskUnitAndActions.has(taskUnitActionKey)) {
+      issues.push(
+        `${claim.ownerPath}:${claim.line} claims Unit identity QNT replay for ${claim.unitId} without matching deterministic replay data joined by task, Unit, and actions.`,
       );
     }
   }
@@ -1172,7 +1205,7 @@ function validateSelectedIdentityHardGate({
 }) {
   const selectedIdentityEvidenceUnitIds = new Set(
     unitEvidence
-      .filter((row) => row.evidence?.tag === selectedIdentityMbtEvidenceTag)
+      .filter((row) => row.evidence?.tag === selectedIdentityReplayEvidenceTag)
       .map((row) => row.unitId),
   );
   const claimsByUnitId = new Map(
@@ -1192,7 +1225,7 @@ function validateSelectedIdentityHardGate({
     if (selectedIdentityEvidenceUnitIds.has(unit.unitId)) continue;
     if (hasSelectedIdentityNonApplicableDisposition(claim)) continue;
     issues.push(
-      `Supported executable Unit ${unit.unitId} has no ${selectedIdentityMbtEvidenceTag} evidence and no selectedIdentityEvidenceDisposition not-applicable classification.`,
+      `Supported executable Unit ${unit.unitId} has no ${selectedIdentityReplayEvidenceTag} evidence and no selectedIdentityEvidenceDisposition not-applicable classification.`,
     );
   }
 

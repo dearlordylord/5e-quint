@@ -106,7 +106,7 @@
       "numerator": 130,
       "percent": "100%"
     },
-    "selectedIdentityMbtCoverage": {
+    "selectedIdentityReplayCoverage": {
       "denominator": 183,
       "numerator": 178,
       "percent": "97.3%"
@@ -224,10 +224,10 @@
     },
     {
       "denominator": "installed Units with supported-profile claims, excluding whole-claim selected-identity not-applicable dispositions",
-      "key": "selectedIdentityMbtCoverage",
+      "key": "selectedIdentityReplayCoverage",
       "kind": "coverage",
       "label": "Selected identity replay coverage",
-      "numerator": "supported Unit ids in the replay denominator with selected-identity-mbt evidence",
+      "numerator": "supported Unit ids in the replay denominator with selected-identity-replay evidence",
       "planningQuestion": "Which supported Unit identities have intentionally selected concrete identity replay evidence?"
     },
     {
@@ -13551,7 +13551,7 @@
         "profile-subset-supported",
         "supported-profile"
       ],
-      "evidenceTag": "selected-identity-mbt"
+      "evidenceTag": "selected-identity-replay"
     },
     "deferredNonApplicableRows": [],
     "rowCount": 11,
@@ -13561,7 +13561,7 @@
         "collectionId": "srd-5.2.1",
         "kind": "feat",
         "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "reason": "The Unit has no selected-identity-replay evidence.",
           "status": "missing-witness"
         },
         "sourceRecordPath": "packages/surface/content/feat_great_weapon_fighting.json",
@@ -13578,7 +13578,7 @@
         "collectionId": "srd-5.2.1",
         "kind": "feat",
         "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "reason": "The Unit has no selected-identity-replay evidence.",
           "status": "missing-witness"
         },
         "sourceRecordPath": "packages/surface/content/feat_two_weapon_fighting.json",
@@ -13595,7 +13595,7 @@
         "collectionId": "srd-5.2.1",
         "kind": "species",
         "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "reason": "The Unit has no selected-identity-replay evidence.",
           "status": "missing-witness"
         },
         "sourceRecordPath": "packages/surface/content/species_gnome.json",
@@ -13612,7 +13612,7 @@
         "collectionId": "srd-5.2.1",
         "kind": "species_trait",
         "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "reason": "The Unit has no selected-identity-replay evidence.",
           "status": "missing-witness"
         },
         "sourceRecordPath": "packages/surface/content/species_gnome_gnomish_lineage.json",
@@ -13630,7 +13630,7 @@
         "collectionId": "srd-5.2.1",
         "kind": "species_trait",
         "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "reason": "The Unit has no selected-identity-replay evidence.",
           "status": "missing-witness"
         },
         "sourceRecordPath": "packages/surface/content/species_halfling_luck.json",
@@ -13647,7 +13647,7 @@
         "collectionId": "srd-5.2.1",
         "kind": "species_trait",
         "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "reason": "The Unit has no selected-identity-replay evidence.",
           "status": "missing-witness"
         },
         "sourceRecordPath": "packages/surface/content/species_halfling_naturally_stealthy.json",
@@ -13664,7 +13664,7 @@
         "collectionId": "srd-5.2.1",
         "kind": "spell",
         "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "reason": "The Unit has no selected-identity-replay evidence.",
           "status": "missing-witness"
         },
         "sourceRecordPath": "packages/surface/content/glyph_of_warding.json",
@@ -13685,7 +13685,7 @@
         "collectionId": "srd-5.2.1",
         "kind": "spell",
         "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "reason": "The Unit has no selected-identity-replay evidence.",
           "status": "missing-witness"
         },
         "sourceRecordPath": "packages/surface/content/haste.json",
@@ -13702,7 +13702,7 @@
         "collectionId": "srd-5.2.1",
         "kind": "spell",
         "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "reason": "The Unit has no selected-identity-replay evidence.",
           "status": "missing-witness"
         },
         "sourceRecordPath": "packages/surface/content/protection_from_energy.json",
@@ -13719,7 +13719,7 @@
         "collectionId": "srd-5.2.1",
         "kind": "spell",
         "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "reason": "The Unit has no selected-identity-replay evidence.",
           "status": "missing-witness"
         },
         "sourceRecordPath": "packages/surface/content/sleet_storm.json",
@@ -13736,7 +13736,7 @@
         "collectionId": "srd-5.2.1",
         "kind": "spell",
         "selectedIdentity": {
-          "reason": "The Unit has no selected-identity-mbt evidence.",
+          "reason": "The Unit has no selected-identity-replay evidence.",
           "status": "missing-witness"
         },
         "sourceRecordPath": "packages/surface/content/slow.json",
@@ -14087,7 +14087,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime admission, reducer, and selected-identity MBT tests cover Bard-level d6, d8, d10, and d12 Bardic Inspiration grant projection from the authored Unit tiers.",
+      "note": "Focused battle-runtime admission, reducer, and selected-identity replay tests cover Bard-level d6, d8, d10, and d12 Bardic Inspiration grant projection from the authored Unit tiers.",
       "profileIds": [
         "unit-feature.bardic-inspiration-grant"
       ],
@@ -14103,7 +14103,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime admission, character-battle-runtime, and selected-identity MBT tests cover Monk-level d6, d8, d10, and d12 Martial Arts attack projection from the authored Unit tiers.",
+      "note": "Focused battle-runtime admission, character-battle-runtime, and selected-identity replay tests cover Monk-level d6, d8, d10, and d12 Martial Arts attack projection from the authored Unit tiers.",
       "profileIds": [
         "unit-feature.martial-arts-attack-projection"
       ],
@@ -15495,7 +15495,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused character-creation selected-identity MBT covers CharacterBuild class-level gain with Fighter Fighting Style replacement as one advancement operation.",
+      "note": "Focused character-creation selected-identity replay covers CharacterBuild class-level gain with Fighter Fighting Style replacement as one advancement operation.",
       "profileIds": [
         "character-creation.fighter-fighting-style-advancement-replacement"
       ],
@@ -16535,7 +16535,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime reducer tests and selected-identity MBT cover Steady Aim discovery through the admitted support profile, prior-movement rejection, Bonus Action spend, next attack-roll Advantage, Speed 0 projection, attack consumption of Advantage, and turn-end cleanup without authored-identity dispatch.",
+      "note": "Focused battle-runtime reducer tests and selected-identity replay cover Steady Aim discovery through the admitted support profile, prior-movement rejection, Bonus Action spend, next attack-roll Advantage, Speed 0 projection, attack consumption of Advantage, and turn-end cleanup without authored-identity dispatch.",
       "profileIds": [
         "unit-feature.rogue-steady-aim"
       ],
@@ -16551,7 +16551,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime reducer tests and selected-identity MBT cover the admitted enemy-zero-Hit-Point Temporary Hit Points profile through the damage boundary, including self and nearby-other enemy reduction to 0 Hit Points, caller-supplied 10-foot range facts, beneficiary-target enemy validation that does not require the damage source to be an enemy of the target, non-enemy and out-of-range rejection, Charisma modifier plus Warlock level amount with minimum 1, and ordinary non-stacking Temporary Hit Point replacement without authored-identity dispatch.",
+      "note": "Focused battle-runtime reducer tests and selected-identity replay cover the admitted enemy-zero-Hit-Point Temporary Hit Points profile through the damage boundary, including self and nearby-other enemy reduction to 0 Hit Points, caller-supplied 10-foot range facts, beneficiary-target enemy validation that does not require the damage source to be an enemy of the target, non-enemy and out-of-range rejection, Charisma modifier plus Warlock level amount with minimum 1, and ordinary non-stacking Temporary Hit Point replacement without authored-identity dispatch.",
       "profileIds": [
         "unit-feature.enemy-zero-hit-point-temporary-hit-points"
       ],
@@ -16567,7 +16567,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime reducer tests and selected-identity MBT cover retained support-profile consumption by direct spell Hit Point restoration, 2 plus Spell Slot level healing, each healed creature receiving the bonus, no-slot healing exclusion through the cantrip admission boundary, and no bonus for unsupported casters without authored-identity dispatch.",
+      "note": "Focused battle-runtime reducer tests and selected-identity replay cover retained support-profile consumption by direct spell Hit Point restoration, 2 plus Spell Slot level healing, each healed creature receiving the bonus, no-slot healing exclusion through the cantrip admission boundary, and no bonus for unsupported casters without authored-identity dispatch.",
       "profileIds": [
         "unit-feature.spell-slot-healing-modifier"
       ],
@@ -16583,7 +16583,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime reducer tests and selected-identity MBT cover Preserve Life discovery through the admitted support profile, Magic Action spend, existing Cleric Channel Divinity resource spend, caller-supplied Bloodied target distribution including self, caller-supplied 30-foot range facts for non-self targets, five-times-Cleric-level pool enforcement, half-Hit-Point-maximum cap enforcement, and rejection cases without authored-identity dispatch or duplicate resource state.",
+      "note": "Focused battle-runtime reducer tests and selected-identity replay cover Preserve Life discovery through the admitted support profile, Magic Action spend, existing Cleric Channel Divinity resource spend, caller-supplied Bloodied target distribution including self, caller-supplied 30-foot range facts for non-self targets, five-times-Cleric-level pool enforcement, half-Hit-Point-maximum cap enforcement, and rejection cases without authored-identity dispatch or duplicate resource state.",
       "profileIds": [
         "unit-feature.magic-action-healing-pool"
       ],
@@ -16599,7 +16599,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime reducer tests and selected-identity MBT cover Potent Cantrip selected Unit identity reaching battle initialization, admitted profile consumption by cantrip spell attack and saving-throw resolution, half damage on supported damaging class-cantrip attack misses and successful target saves against creatures, no non-damage active-effect or light-emitter effect on those branches, object-target miss rejection from the Potent Cantrip half-damage branch, and no authored cantrip identity dispatch.",
+      "note": "Focused battle-runtime reducer tests and selected-identity replay cover Potent Cantrip selected Unit identity reaching battle initialization, admitted profile consumption by cantrip spell attack and saving-throw resolution, half damage on supported damaging class-cantrip attack misses and successful target saves against creatures, no non-damage active-effect or light-emitter effect on those branches, object-target miss rejection from the Potent Cantrip half-damage branch, and no authored cantrip identity dispatch.",
       "profileIds": [
         "unit-feature.potent-cantrip"
       ],
@@ -16615,7 +16615,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime reducer tests and selected-identity MBT cover selected Open Hand Technique support profile retention, Flurry of Blows hit-window gating, Addle Opportunity Attack denial until the target's next turn starts, Strength Saving Throw-gated non-provoking Push disposition validation up to the feature's 15-foot maximum, Dexterity Saving Throw-gated Prone application, successful-save no-op behavior, non-Flurry rejection, stale Flurry hit rejection, and unsupported Push disposition rejection including over-maximum distances and Push facts supplied to non-Push choices without authored-identity dispatch.",
+      "note": "Focused battle-runtime reducer tests and selected-identity replay cover selected Open Hand Technique support profile retention, Flurry of Blows hit-window gating, Addle Opportunity Attack denial until the target's next turn starts, Strength Saving Throw-gated non-provoking Push disposition validation up to the feature's 15-foot maximum, Dexterity Saving Throw-gated Prone application, successful-save no-op behavior, non-Flurry rejection, stale Flurry hit rejection, and unsupported Push disposition rejection including over-maximum distances and Push facts supplied to non-Push choices without authored-identity dispatch.",
       "profileIds": [
         "unit-feature.open-hand-technique"
       ],
@@ -16623,7 +16623,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime reducer tests and selected-identity MBT cover selected Stunning Strike support profile retention, eligible hit-window discovery for Unarmed Strike and Monk weapons, non-Monk weapon and missing-Focus rejection, explicit attempt or decline decision, exact 1 Focus Point spend on attempt, once-per-turn use recording, Constitution Saving Throw resolution against the Monk Focus save DC, failed-save Stunned application until the source Monk's next turn starts, successful-save Speed halving plus next-attack Advantage until that same source-turn boundary, stale fill rejection, and cleanup through existing active-effect lifecycle owners without authored-identity dispatch.",
+      "note": "Focused battle-runtime reducer tests and selected-identity replay cover selected Stunning Strike support profile retention, eligible hit-window discovery for Unarmed Strike and Monk weapons, non-Monk weapon and missing-Focus rejection, explicit attempt or decline decision, exact 1 Focus Point spend on attempt, once-per-turn use recording, Constitution Saving Throw resolution against the Monk Focus save DC, failed-save Stunned application until the source Monk's next turn starts, successful-save Speed halving plus next-attack Advantage until that same source-turn boundary, stale fill rejection, and cleanup through existing active-effect lifecycle owners without authored-identity dispatch.",
       "profileIds": [
         "unit-feature.stunning-strike"
       ],
@@ -16631,7 +16631,7 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Focused Hunter's Prey QNT proof and selected-identity MBT witness model retained choice, optional Colossus Slayer missing-Hit-Point weapon-hit gating and once-per-turn damage, skipped Colossus use, Horde Breaker same-weapon extra attack gating after a primary hit or miss with different nearby target predicates, missing selected-option rejection, same-target rejection, invalid target-predicate rejection, and repeated-use exclusion.",
+      "note": "Focused Hunter's Prey QNT proof and selected-identity QNT replay witness model retained choice, optional Colossus Slayer missing-Hit-Point weapon-hit gating and once-per-turn damage, skipped Colossus use, Horde Breaker same-weapon extra attack gating after a primary hit or miss with different nearby target predicates, missing selected-option rejection, same-target rejection, invalid target-predicate rejection, and repeated-use exclusion.",
       "profileIds": [
         "unit-feature.hunters-prey"
       ],
@@ -16639,7 +16639,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused character-creation, character-battle, battle-runtime reducer tests and selected-identity MBT cover production retained Hunter's Prey selected-option projection into BattleUnitRef, optional Colossus Slayer same-type weapon damage on a wounded hit with skip-then-use and once-per-turn usage recording, missing selected-option rejection, and Horde Breaker same-weapon extra attack after a primary hit or miss against a caller-eligible different creature target, including non-enemy target choice availability, same-target, missing-predicate, repeated-use rejection, and reuse of existing weapon-attack damage rider owners including attack damage riders and marked-target damage without authored-identity dispatch or duplicate target/weapon state.",
+      "note": "Focused character-creation, character-battle, battle-runtime reducer tests and selected-identity replay cover production retained Hunter's Prey selected-option projection into BattleUnitRef, optional Colossus Slayer same-type weapon damage on a wounded hit with skip-then-use and once-per-turn usage recording, missing selected-option rejection, and Horde Breaker same-weapon extra attack after a primary hit or miss against a caller-eligible different creature target, including non-enemy target choice availability, same-target, missing-predicate, repeated-use rejection, and reuse of existing weapon-attack damage rider owners including attack damage riders and marked-target damage without authored-identity dispatch or duplicate target/weapon state.",
       "profileIds": [
         "unit-feature.hunters-prey"
       ],
@@ -16655,7 +16655,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime reducer tests and selected-identity MBT cover Druid Land's Aid discovery through the admitted support profile, Magic Action spend, existing Wild Shape resource spend, caller-supplied 10-foot Sphere membership facts, Constitution saves against the actor's spell save DC, Druid-level 2d6/3d6/4d6 Necrotic damage with half damage on success, one chosen in-area creature healed for the matching 2d6/3d6/4d6 Hit Points, and missing-resource, invalid-area, invalid-save-fill, invalid-healing-target, malformed-roll, and inconsistent scaling-fill rejection without authored-identity dispatch or duplicate geometry state.",
+      "note": "Focused battle-runtime reducer tests and selected-identity replay cover Druid Land's Aid discovery through the admitted support profile, Magic Action spend, existing Wild Shape resource spend, caller-supplied 10-foot Sphere membership facts, Constitution saves against the actor's spell save DC, Druid-level 2d6/3d6/4d6 Necrotic damage with half damage on success, one chosen in-area creature healed for the matching 2d6/3d6/4d6 Hit Points, and missing-resource, invalid-area, invalid-save-fill, invalid-healing-target, malformed-roll, and inconsistent scaling-fill rejection without authored-identity dispatch or duplicate geometry state.",
       "profileIds": [
         "unit-feature.magic-action-area-save-damage-healing"
       ],
@@ -16671,7 +16671,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused reducer tests and selected-identity MBT replay cover Land's Aid level 3, 10, and 14 damage/healing scaling through production battle initialization, Magic Action and Wild Shape spending, caller-supplied Sphere membership, Constitution saves, half damage on success, one healing target, and rejection of fills whose dice counts do not match the class-level-derived threshold.",
+      "note": "Focused reducer tests and selected-identity replay cover Land's Aid level 3, 10, and 14 damage/healing scaling through production battle initialization, Magic Action and Wild Shape spending, caller-supplied Sphere membership, Constitution saves, half damage on success, one healing target, and rejection of fills whose dice counts do not match the class-level-derived threshold.",
       "profileIds": [
         "unit-feature.magic-action-area-save-damage-healing"
       ],
@@ -16687,7 +16687,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests and selected-identity MBT cover retaining the admitted Remarkable Athlete support profile on selected character combatants, projecting Initiative Advantage without changing caller-supplied Initiative scores, projecting Strength (Athletics) Ability Check Advantage through the existing Ability Check roll-mode owner, and rejecting unselected or adjacent check modes.",
+      "note": "Focused battle-runtime tests and selected-identity replay cover retaining the admitted Remarkable Athlete support profile on selected character combatants, projecting Initiative Advantage without changing caller-supplied Initiative scores, projecting Strength (Athletics) Ability Check Advantage through the existing Ability Check roll-mode owner, and rejecting unselected or adjacent check modes.",
       "profileIds": [
         "unit-feature.remarkable-athlete"
       ],
@@ -16703,7 +16703,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests and selected-identity MBT cover weapon/unarmed and supported spell attack Critical Hit detection from the retained Remarkable Athlete support profile, optional use/decline of immediate half-Speed movement, movement cap rejection, Opportunity Attack threat rejection, and no movement offer for non-critical hits or unselected profile state.",
+      "note": "Focused battle-runtime tests and selected-identity replay cover weapon/unarmed and supported spell attack Critical Hit detection from the retained Remarkable Athlete support profile, optional use/decline of immediate half-Speed movement, movement cap rejection, Opportunity Attack threat rejection, and no movement offer for non-critical hits or unselected profile state.",
       "profileIds": [
         "unit-feature.remarkable-athlete"
       ],
@@ -16719,7 +16719,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests and selected-identity MBT cover retaining the admitted Sacred Weapon support profile on selected character combatants, admitting only the Paladin Channel Divinity resource for this battle spend path, discovering activation only with an available Attack action, Channel Divinity use, and held Melee weapon, spending the Attack action and one use, binding the selected weapon item, rejecting stale missing-resource or Ranged-weapon subjects, and replacing the prior binding on recast without duplicating item state. The paired L3CF-04 evidence covers active attack bonus, Radiant damage choice, light projection, dismissal, and no-longer-carried cleanup from that binding.",
+      "note": "Focused battle-runtime tests and selected-identity replay cover retaining the admitted Sacred Weapon support profile on selected character combatants, admitting only the Paladin Channel Divinity resource for this battle spend path, discovering activation only with an available Attack action, Channel Divinity use, and held Melee weapon, spending the Attack action and one use, binding the selected weapon item, rejecting stale missing-resource or Ranged-weapon subjects, and replacing the prior binding on recast without duplicating item state. The paired L3CF-04 evidence covers active attack bonus, Radiant damage choice, light projection, dismissal, and no-longer-carried cleanup from that binding.",
       "profileIds": [
         "unit-feature.paladin-sacred-weapon"
       ],
@@ -16843,7 +16843,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests and selected-identity MBT cover Careful Spell discovery and resolution for Burning Hands save-for-half damage and Command save-gated no-effect representatives, protected-target selection consumption, automatic successful Saving Throw outcomes, no successful-save half damage for protected targets, preservation of base successful-save no-effect behavior, Sorcery Point spending through the shared Font of Magic point pool, and rejection of unsupported or invalid save-affecting Metamagic selections.",
+      "note": "Focused battle-runtime tests and selected-identity replay cover Careful Spell discovery and resolution for Burning Hands save-for-half damage and Command save-gated no-effect representatives, protected-target selection consumption, automatic successful Saving Throw outcomes, no successful-save half damage for protected targets, preservation of base successful-save no-effect behavior, Sorcery Point spending through the shared Font of Magic point pool, and rejection of unsupported or invalid save-affecting Metamagic selections.",
       "profileIds": [
         "unit-feature.metamagic-careful-save-protection"
       ],
@@ -16851,7 +16851,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests and selected-identity MBT cover Heightened Spell discovery and resolution for Burning Hands as a save-for-half representative, selected target consumption, target-specific Saving Throw Disadvantage without changing other affected targets, cancellation against an existing Advantage source, base save outcome preservation, Sorcery Point spending through the shared Font of Magic point pool, and rejection when the selected disadvantaged target is not one affected target of the spell.",
+      "note": "Focused battle-runtime tests and selected-identity replay cover Heightened Spell discovery and resolution for Burning Hands as a save-for-half representative, selected target consumption, target-specific Saving Throw Disadvantage without changing other affected targets, cancellation against an existing Advantage source, base save outcome preservation, Sorcery Point spending through the shared Font of Magic point pool, and rejection when the selected disadvantaged target is not one affected target of the spell.",
       "profileIds": [
         "unit-feature.metamagic-heightened-save-disadvantage"
       ],
@@ -16875,7 +16875,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests and selected-identity MBT cover Transmuted Spell discovery and resolution for Burning Hands save-gated Fire damage and Ray of Frost spell-attack Cold damage representatives, selecting Poison as the replacement damage type, spending 1 Sorcery Point from the shared Font of Magic point pool, projecting the replacement through existing damage resolution facts, preserving authored spell identity and damage dice, and rejecting missing-replacement, non-listed, same-source-target, and unsupported-procedure selections before resource spending.",
+      "note": "Focused battle-runtime tests and selected-identity replay cover Transmuted Spell discovery and resolution for Burning Hands save-gated Fire damage and Ray of Frost spell-attack Cold damage representatives, selecting Poison as the replacement damage type, spending 1 Sorcery Point from the shared Font of Magic point pool, projecting the replacement through existing damage resolution facts, preserving authored spell identity and damage dice, and rejecting missing-replacement, non-listed, same-source-target, and unsupported-procedure selections before resource spending.",
       "profileIds": [
         "unit-feature.metamagic-damage-type-substitution"
       ],
@@ -16891,7 +16891,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests and selected-identity MBT cover Twinned Spell discovery and resolution for Bless as a target-count representative, next-effective-level target maximum projection, actual level-1 Spell Slot spending, 1 Sorcery Point spending through the shared Font of Magic point pool, all selected targets receiving the spell effect, and rejection of unsupported target-count shapes before Sorcery Point spending.",
+      "note": "Focused battle-runtime tests and selected-identity replay cover Twinned Spell discovery and resolution for Bless as a target-count representative, next-effective-level target maximum projection, actual level-1 Spell Slot spending, 1 Sorcery Point spending through the shared Font of Magic point pool, all selected targets receiving the spell effect, and rejection of unsupported target-count shapes before Sorcery Point spending.",
       "profileIds": [
         "unit-feature.metamagic-effective-level-extra-target"
       ],
@@ -16907,7 +16907,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests and selected-identity MBT cover Distant Spell discovery and resolution for the Light object-light owner, deriving the cast-local 30-foot range fact from the selected Distant Spell and the Surface Touch range, consuming a range-bearing object target witness, spending 1 Sorcery Point through the shared Font of Magic pool, preserving Light's 20-foot Bright Light and additional 20-foot Dim Light radii, and rejecting non-range-bearing object-light target facts before resource spending.",
+      "note": "Focused battle-runtime tests and selected-identity replay cover Distant Spell discovery and resolution for the Light object-light owner, deriving the cast-local 30-foot range fact from the selected Distant Spell and the Surface Touch range, consuming a range-bearing object target witness, spending 1 Sorcery Point through the shared Font of Magic pool, preserving Light's 20-foot Bright Light and additional 20-foot Dim Light radii, and rejecting non-range-bearing object-light target facts before resource spending.",
       "profileIds": [
         "unit-feature.metamagic-cast-range-increase"
       ],
@@ -16923,7 +16923,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests and selected-identity MBT cover Extended Spell discovery and resolution for the Enlarge/Reduce creature-size owner, deriving a cast-local doubled duration from the Surface 1-minute Concentration duration, spending 1 Sorcery Point through the shared Font of Magic pool, storing 20 executable duration ticks on the active effect cleanup timer, projecting same-occurrence Concentration maintenance Saving Throw Advantage from the caster's Concentration state, and cleaning up the effect and Concentration when the doubled timer expires.",
+      "note": "Focused battle-runtime tests and selected-identity replay cover Extended Spell discovery and resolution for the Enlarge/Reduce creature-size owner, deriving a cast-local doubled duration from the Surface 1-minute Concentration duration, spending 1 Sorcery Point through the shared Font of Magic pool, storing 20 executable duration ticks on the active effect cleanup timer, projecting same-occurrence Concentration maintenance Saving Throw Advantage from the caster's Concentration state, and cleaning up the effect and Concentration when the doubled timer expires.",
       "profileIds": [
         "unit-feature.metamagic-cast-duration-and-concentration"
       ],
@@ -16955,7 +16955,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests and selected-identity MBT cover Dragonborn Breath Weapon discovery from selected Draconic Ancestry source facts, Proficiency Bonus use spending, Attack-action attack replacement, remaining Extra Attack slot opening through the shared action-resource protocol, table-supplied Cone or Line area membership, Dexterity Saving Throw outcomes, selected ancestry damage application, successful-save half damage, character-level damage dice validation, and rejection of mismatched area/outcome or invalid damage-roll fills without authored-identity dispatch.",
+      "note": "Focused battle-runtime tests and selected-identity replay cover Dragonborn Breath Weapon discovery from selected Draconic Ancestry source facts, Proficiency Bonus use spending, Attack-action attack replacement, remaining Extra Attack slot opening through the shared action-resource protocol, table-supplied Cone or Line area membership, Dexterity Saving Throw outcomes, selected ancestry damage application, successful-save half damage, character-level damage dice validation, and rejection of mismatched area/outcome or invalid damage-roll fills without authored-identity dispatch.",
       "profileIds": [
         "unit-feature.attack-action-area-save-damage-replacement"
       ],
@@ -17003,7 +17003,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests, QNT witnesses, and selected-identity MBT cover Slow Fall admission from authored Surface mechanics, creature-falls Reaction discovery for the selected Monk, Reaction spending, class-level fall-damage reduction, zero-damage capping, and Falling-Prone prevention only when no fall damage remains.",
+      "note": "Focused battle-runtime tests, QNT witnesses, and selected-identity replay cover Slow Fall admission from authored Surface mechanics, creature-falls Reaction discovery for the selected Monk, Reaction spending, class-level fall-damage reduction, zero-damage capping, and Falling-Prone prevention only when no fall damage remains.",
       "profileIds": [
         "unit-feature.reaction-roll-or-damage-reduction"
       ],
@@ -17063,7 +17063,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests and selected-identity MBT cover Seeking Spell discovery and resolution for a missed Ray of Frost spell attack, reopening a typed spell attack reroll fill, declining without spending, rerolling with the forced replacement d20, spending 1 Sorcery Point from the shared Font of Magic pool, using the replacement for hit, miss, natural-1 miss, natural-20 critical, and rejecting unknown, unaffordable, original-hit, and Scorching Ray repeated attack sequence cases before spending.",
+      "note": "Focused battle-runtime tests and selected-identity replay cover Seeking Spell discovery and resolution for a missed Ray of Frost spell attack, reopening a typed spell attack reroll fill, declining without spending, rerolling with the forced replacement d20, spending 1 Sorcery Point from the shared Font of Magic pool, using the replacement for hit, miss, natural-1 miss, natural-20 critical, and rejecting unknown, unaffordable, original-hit, and Scorching Ray repeated attack sequence cases before spending.",
       "profileIds": [
         "unit-feature.metamagic-missed-spell-attack-reroll"
       ],
@@ -17079,7 +17079,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime tests and selected-identity MBT cover Empowered Spell discovery and resolution for Ray of Frost level-5 damage, typed damage dice reroll fills, declining without spending, rerolling selected original dice with forced replacements, spending 1 Sorcery Point from the shared Font of Magic pool, combining with one different Metamagic option, and rejecting unknown, unaffordable, mismatched, over-limit, and Scorching Ray repeated attack sequence cases before spending.",
+      "note": "Focused battle-runtime tests and selected-identity replay cover Empowered Spell discovery and resolution for Ray of Frost level-5 damage, typed damage dice reroll fills, declining without spending, rerolling selected original dice with forced replacements, spending 1 Sorcery Point from the shared Font of Magic pool, combining with one different Metamagic option, and rejecting unknown, unaffordable, mismatched, over-limit, and Scorching Ray repeated attack sequence cases before spending.",
       "profileIds": [
         "unit-feature.metamagic-damage-dice-reroll"
       ],
@@ -17095,7 +17095,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused runtime tests and selected-identity MBT cover Heightened Gust of Wind storing the selected-target rider on the active Line occurrence, preserving it through Bonus Action direction replacement, projecting selected-only Disadvantage for end-turn Line saves, and preserving Line push and movement validation.",
+      "note": "Focused runtime tests and selected-identity replay cover Heightened Gust of Wind storing the selected-target rider on the active Line occurrence, preserving it through Bonus Action direction replacement, projecting selected-only Disadvantage for end-turn Line saves, and preserving Line push and movement validation.",
       "profileIds": [
         "spell.invocation-gust-of-wind-line",
         "unit-feature.metamagic-heightened-save-disadvantage"
@@ -17113,7 +17113,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused runtime tests and selected-identity MBT cover Heightened repeating save-gated condition behavior for multi-target condition spells: only the selected failed target receives the presence-only spellConditionEndTurnSave rider, later end-turn saves project Disadvantage from that rider, unselected failed targets keep Normal repeat-save mode, selected successful saves create no active repeat-save effect, and ordinary success cleanup remains unchanged.",
+      "note": "Focused runtime tests and selected-identity replay cover Heightened repeating save-gated condition behavior for multi-target condition spells: only the selected failed target receives the presence-only spellConditionEndTurnSave rider, later end-turn saves project Disadvantage from that rider, unselected failed targets keep Normal repeat-save mode, selected successful saves create no active repeat-save effect, and ordinary success cleanup remains unchanged.",
       "profileIds": [
         "spell.invocation-condition-save",
         "unit-feature.metamagic-heightened-save-disadvantage"
@@ -17156,7 +17156,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused battle-runtime, character-battle, and selected-identity MBT coverage admit Halfling Brave from its passive modify_roll_advantage Surface shape with Saving Throw roll kind and Frightened condition filter, project the support profile through selected character Unit refs, and grant Advantage for typed Frightened avoiding and ending Saving Throw contexts without authored-identity dispatch or support for unrelated condition scopes.",
+      "note": "Focused battle-runtime, character-battle, and selected-identity replay coverage admit Halfling Brave from its passive modify_roll_advantage Surface shape with Saving Throw roll kind and Frightened condition filter, project the support profile through selected character Unit refs, and grant Advantage for typed Frightened avoiding and ending Saving Throw contexts without authored-identity dispatch or support for unrelated condition scopes.",
       "profileIds": [
         "unit-feature.passive-saving-throw-roll-mode"
       ],
@@ -17220,7 +17220,7 @@
     },
     {
       "claimKind": "completed-runtime-parity",
-      "note": "Focused Character Creation runtime tests cover Grappler Level 4+ and Strength-or-Dexterity prerequisite rejection plus legal Strength/Dexterity ASI choice projection. Focused battle-runtime reducer tests and selected-identity MBT cover Grappler Fast Wrestler drag-cost exemption, Attack Advantage from existing grapple links, and Punch and Grab using an Unarmed Strike hit plus the existing Grapple outcome fill and grapple-link state.",
+      "note": "Focused Character Creation runtime tests cover Grappler Level 4+ and Strength-or-Dexterity prerequisite rejection plus legal Strength/Dexterity ASI choice projection. Focused battle-runtime reducer tests and selected-identity replay cover Grappler Fast Wrestler drag-cost exemption, Attack Advantage from existing grapple links, and Punch and Grab using an Unarmed Strike hit plus the existing Grapple outcome fill and grapple-link state.",
       "profileIds": [
         "character-creation.grappler-general-feat",
         "unit-feature.grappler"
@@ -17630,7 +17630,7 @@
         "profile-subset-supported",
         "supported-profile"
       ],
-      "selectedIdentityEvidenceTag": "selected-identity-mbt"
+      "selectedIdentityEvidenceTag": "selected-identity-replay"
     },
     "denominatorRules": {
       "executableUnitDenominator": "installed Unit records in the group whose authored mechanics are executable",
@@ -18472,7 +18472,7 @@
         },
         {
           "ownerPath": "packages/character-creation-runtime/src/fighter-fighting-style-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1D2-FIGHTER-FIGHTING-STYLE"
         }
       ],
@@ -18545,7 +18545,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "QMBT7"
         }
       ],
@@ -18616,7 +18616,7 @@
         },
         {
           "ownerPath": "packages/character-creation-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1D2-WEAPON-MASTERY-CONTAINERS"
         }
       ],
@@ -18714,7 +18714,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "QMBT9"
         }
       ],
@@ -18775,7 +18775,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "extra-attack-count-scaling"
         }
       ],
@@ -18837,7 +18837,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1H-FIGHTER-TACTICAL-MIND"
         }
       ],
@@ -18920,7 +18920,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "QMBT9"
         }
       ],
@@ -18990,12 +18990,12 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/remarkable-athlete-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L3CF-01-FIGHTER-REMARKABLE-ATHLETE-ROLL-MODES"
         },
         {
           "ownerPath": "packages/battle-runtime/src/remarkable-athlete-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L3CF-02-FIGHTER-REMARKABLE-ATHLETE-CRITICAL-MOVEMENT"
         }
       ],
@@ -19105,7 +19105,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L3-FOLLOWUP-BARBARIAN-FRENZY"
         }
       ],
@@ -19167,7 +19167,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "QMBT9"
         }
       ],
@@ -19226,7 +19226,7 @@
         },
         {
           "ownerPath": "packages/character-sheet-runtime/src/armor-class-base-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "armor-class-base-formula"
         }
       ],
@@ -19280,7 +19280,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "QMBT9"
         }
       ],
@@ -19341,7 +19341,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/danger-sense-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
         }
       ],
@@ -19417,7 +19417,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "extra-attack-count-scaling"
         }
       ],
@@ -19479,7 +19479,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "movement-forced-movement"
         }
       ],
@@ -19632,7 +19632,7 @@
         },
         {
           "ownerPath": "packages/character-creation-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1D2-WEAPON-MASTERY-CONTAINERS"
         }
       ],
@@ -19744,7 +19744,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/bardic-inspiration-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1D2-BARDIC-INSPIRATION-SCALING"
         }
       ],
@@ -19833,7 +19833,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "reaction-interruption"
         }
       ],
@@ -19933,7 +19933,7 @@
         },
         {
           "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
         }
       ],
@@ -19991,7 +19991,7 @@
         },
         {
           "ownerPath": "packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
         }
       ],
@@ -20097,7 +20097,7 @@
         },
         {
           "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
         }
       ],
@@ -20161,7 +20161,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/disciple-of-life-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L3PUTB-03"
         }
       ],
@@ -20231,7 +20231,7 @@
         },
         {
           "ownerPath": "packages/character-creation-runtime/src/cleric-druid-order-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1D2-CLERIC-DRUID-ORDER"
         }
       ],
@@ -20288,7 +20288,7 @@
       "evidence": [
         {
           "ownerPath": "packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
         }
       ],
@@ -20349,7 +20349,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L3PUTB-04"
         }
       ],
@@ -20449,7 +20449,7 @@
         },
         {
           "ownerPath": "packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
         }
       ],
@@ -20533,7 +20533,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/druid-lands-aid-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L3PUTB-08-DRUID-LANDS-AID-RUNTIME"
         }
       ],
@@ -20604,7 +20604,7 @@
         },
         {
           "ownerPath": "packages/character-creation-runtime/src/cleric-druid-order-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1D2-CLERIC-DRUID-ORDER"
         }
       ],
@@ -20703,12 +20703,12 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/druid-wild-shape-form-lifecycle.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L3MWILD-10-WILD-SHAPE-SELECTED-IDENTITY-AUDIT"
         },
         {
           "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
         },
         {
@@ -20912,7 +20912,7 @@
       "evidence": [
         {
           "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
         }
       ],
@@ -20973,7 +20973,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/monk-martial-arts-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1D2-MONK-MARTIAL-ARTS-SCALING"
         }
       ],
@@ -21073,7 +21073,7 @@
         },
         {
           "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B5-CLASS-FEATURE-IDENTITY-BATCH-2"
         },
         {
@@ -21219,7 +21219,7 @@
         },
         {
           "ownerPath": "packages/character-sheet-runtime/src/armor-class-base-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "armor-class-base-formula"
         }
       ],
@@ -21278,7 +21278,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B5-CLASS-FEATURE-IDENTITY-BATCH-2"
         }
       ],
@@ -21349,7 +21349,7 @@
         },
         {
           "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B5-CLASS-FEATURE-IDENTITY-BATCH-2"
         },
         {
@@ -21462,7 +21462,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "reaction-interruption"
         }
       ],
@@ -21522,7 +21522,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "extra-attack-count-scaling"
         }
       ],
@@ -21613,7 +21613,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L14G-03A-MONK-SLOW-FALL-RUNTIME"
         }
       ],
@@ -21709,7 +21709,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/stunning-strike-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME"
         }
       ],
@@ -21783,7 +21783,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L3PUTB-06-MONK-OPEN-HAND-TECHNIQUE-RUNTIME"
         }
       ],
@@ -21880,7 +21880,7 @@
         },
         {
           "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B5-CLASS-FEATURE-IDENTITY-BATCH-2"
         }
       ],
@@ -21952,7 +21952,7 @@
         },
         {
           "ownerPath": "packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B5-CLASS-FEATURE-IDENTITY-BATCH-2"
         }
       ],
@@ -22039,7 +22039,7 @@
         },
         {
           "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B5-CLASS-FEATURE-IDENTITY-BATCH-2"
         }
       ],
@@ -22154,7 +22154,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "QMBT9"
         }
       ],
@@ -22214,7 +22214,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "QMBT9"
         }
       ],
@@ -22276,7 +22276,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "QMBT9"
         }
       ],
@@ -22373,7 +22373,7 @@
         },
         {
           "ownerPath": "packages/character-creation-runtime/src/rogue-expertise-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1D2-ROGUE-EXPERTISE"
         }
       ],
@@ -22590,7 +22590,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L3PUTB-01-ROGUE-STEADY-AIM-RUNTIME"
         }
       ],
@@ -22656,7 +22656,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "QMBT9"
         }
       ],
@@ -22728,7 +22728,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/cunning-strike-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME"
         }
       ],
@@ -22827,7 +22827,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/feature-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1D2-SORCERER-INNATE-SORCERY"
         }
       ],
@@ -22908,7 +22908,7 @@
       "evidence": [
         {
           "ownerPath": "packages/character-creation-runtime/src/class-feature-projections.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B6-CLASS-FEATURE-IDENTITY-BATCH-3"
         },
         {
@@ -23159,7 +23159,7 @@
       "evidence": [
         {
           "ownerPath": "packages/character-creation-runtime/src/class-feature-projections.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B6-CLASS-FEATURE-IDENTITY-BATCH-3"
         },
         {
@@ -23189,67 +23189,67 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L3META-01-SORCERER-METAMAGIC-QUICKENED-SAVE-DAMAGE"
         },
         {
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-spell-attack-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L3META-02-SORCERER-METAMAGIC-QUICKENED-SPELL-ATTACKS"
         },
         {
-          "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-spell-attack-sequence-selected-identity.test.ts",
+          "tag": "selected-identity-replay",
           "taskId": "L3MMETA-07-QUICKENED-NEXT-PROCEDURE-SLICE"
         },
         {
-          "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-transmuted-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-transmuted-selected-identity.test.ts",
+          "tag": "selected-identity-replay",
           "taskId": "L3META-06-TRANSMUTED-SPELL-DAMAGE-TYPE"
         },
         {
-          "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-twinned-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-twinned-selected-identity.test.ts",
+          "tag": "selected-identity-replay",
           "taskId": "L3META-07-TWINNED-SPELL-UPCAST-TARGETING"
         },
         {
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-careful-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L3META-04-SORCERER-METAMAGIC-CAREFUL-SAVE-PROFILES"
         },
         {
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-heightened-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L3META-05-HEIGHTENED-SPELL-SAVE-PROFILES"
         },
         {
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-distant-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L3MMETA-15-DISTANT-OBJECT-LIGHT"
         },
         {
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-extended-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L3MMETA-16-EXTENDED-CAST-DURATION-CONCENTRATION-SLICE"
         },
         {
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-subtle-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT"
         },
         {
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-seeking-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L3MMETA-18-SEEKING-SPELL-ATTACK-REROLL-SLICE"
         },
         {
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-empowered-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L3MMETA-19-EMPOWERED-SPELL-DAMAGE-REROLL-SLICE"
         },
         {
           "ownerPath": "packages/battle-runtime/src/sorcerer-metamagic-heightened-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L3MMETA-22-HEIGHTENED-SAVE-GATED-CONDITION-MULTITARGET-REPEAT-SAVE-SLICE"
         }
       ],
@@ -23882,7 +23882,7 @@
       "evidence": [
         {
           "ownerPath": "packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B6-CLASS-FEATURE-IDENTITY-BATCH-3"
         }
       ],
@@ -23953,7 +23953,7 @@
         },
         {
           "ownerPath": "packages/character-creation-runtime/src/warlock-eldritch-invocations-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1D2-WARLOCK-ELDRITCH-INVOCATIONS"
         }
       ],
@@ -24036,7 +24036,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/dark-ones-blessing-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L3PUTB-02"
         }
       ],
@@ -24107,7 +24107,7 @@
       "evidence": [
         {
           "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B6-CLASS-FEATURE-IDENTITY-BATCH-3"
         },
         {
@@ -24164,7 +24164,7 @@
       "evidence": [
         {
           "ownerPath": "packages/character-sheet-runtime/src/spell-slots-pact-slots.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B6-CLASS-FEATURE-IDENTITY-BATCH-3"
         },
         {
@@ -24249,7 +24249,7 @@
       "evidence": [
         {
           "ownerPath": "packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B6-CLASS-FEATURE-IDENTITY-BATCH-3"
         }
       ],
@@ -24302,7 +24302,7 @@
         },
         {
           "ownerPath": "packages/character-sheet-runtime/src/spellbook-ritual-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "spellbook-ritual-invocation"
         }
       ],
@@ -24357,7 +24357,7 @@
         },
         {
           "ownerPath": "packages/character-sheet-runtime/src/arcane-recovery-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "short-rest-spell-slot-recovery"
         }
       ],
@@ -24412,7 +24412,7 @@
       "evidence": [
         {
           "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B6-CLASS-FEATURE-IDENTITY-BATCH-3"
         },
         {
@@ -24506,7 +24506,7 @@
       "evidence": [
         {
           "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B6-CLASS-FEATURE-IDENTITY-BATCH-3"
         },
         {
@@ -24575,7 +24575,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/potent-cantrip-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L3PUTB-05"
         }
       ],
@@ -24666,7 +24666,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "passive-and-zero-hp-features"
         }
       ],
@@ -24727,7 +24727,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1H-BOON-COMBAT-PROWESS"
         }
       ],
@@ -24787,7 +24787,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "passive-and-zero-hp-features"
         }
       ],
@@ -24927,7 +24927,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/grappler-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L3-FOLLOWUP-GRAPPLER-RUNTIME"
         }
       ],
@@ -25029,7 +25029,7 @@
         },
         {
           "ownerPath": "packages/character-battle-runtime/src/origin-feat-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B7-FEAT-IDENTITY-BATCH"
         }
       ],
@@ -25165,7 +25165,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "QMBT31"
         }
       ],
@@ -25469,7 +25469,7 @@
         },
         {
           "ownerPath": "packages/character-sheet-runtime/src/healing-resource-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "healing-stabilization"
         }
       ],
@@ -25539,7 +25539,7 @@
         },
         {
           "ownerPath": "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B5-CLASS-FEATURE-IDENTITY-BATCH-2"
         }
       ],
@@ -25637,7 +25637,7 @@
         },
         {
           "ownerPath": "packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B5-CLASS-FEATURE-IDENTITY-BATCH-2"
         }
       ],
@@ -25699,7 +25699,7 @@
       "evidence": [
         {
           "ownerPath": "packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B5-CLASS-FEATURE-IDENTITY-BATCH-2"
         }
       ],
@@ -25765,12 +25765,12 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/paladin-sacred-weapon-activation.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION"
         },
         {
           "ownerPath": "packages/battle-runtime/src/paladin-sacred-weapon-activation.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT"
         }
       ],
@@ -25841,7 +25841,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "extra-attack-count-scaling"
         }
       ],
@@ -25934,12 +25934,12 @@
         },
         {
           "ownerPath": "packages/character-creation-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1D2-WEAPON-MASTERY-CONTAINERS"
         },
         {
           "ownerPath": "packages/character-sheet-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1D2-WEAPON-MASTERY-CONTAINERS"
         }
       ],
@@ -26016,7 +26016,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "extra-attack-count-scaling"
         }
       ],
@@ -26086,7 +26086,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/hunters-prey-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME"
         },
         {
@@ -26177,7 +26177,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "movement-forced-movement"
         }
       ],
@@ -26246,12 +26246,12 @@
         },
         {
           "ownerPath": "packages/character-creation-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1D2-WEAPON-MASTERY-CONTAINERS"
         },
         {
           "ownerPath": "packages/character-sheet-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1D2-WEAPON-MASTERY-CONTAINERS"
         }
       ],
@@ -26336,12 +26336,12 @@
         },
         {
           "ownerPath": "packages/character-creation-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1D2-WEAPON-MASTERY-CONTAINERS"
         },
         {
           "ownerPath": "packages/character-sheet-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1D2-WEAPON-MASTERY-CONTAINERS"
         }
       ],
@@ -26418,7 +26418,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "weapon-mastery-properties"
         }
       ],
@@ -26483,7 +26483,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "weapon-mastery-properties"
         }
       ],
@@ -26545,7 +26545,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/weapon-mastery-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "weapon-mastery-properties"
         }
       ],
@@ -26610,7 +26610,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/adrenaline-rush.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1H-ORC-ADRENALINE-RUSH"
         }
       ],
@@ -26699,7 +26699,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "passive-and-zero-hp-features"
         }
       ],
@@ -26790,7 +26790,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/dragonborn-breath-weapon-runtime.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME"
         }
       ],
@@ -26864,7 +26864,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/species-passive-trait-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT"
         }
       ],
@@ -26980,7 +26980,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/species-passive-trait-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT"
         }
       ],
@@ -27241,7 +27241,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/species-passive-trait-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME"
         }
       ],
@@ -27348,7 +27348,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/halfling-nimbleness-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME"
         }
       ],
@@ -27803,7 +27803,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/species-passive-trait-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT"
         }
       ],
@@ -27889,7 +27889,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "spell-procedure-core"
         }
       ],
@@ -28007,7 +28007,7 @@
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
         },
         {
@@ -28081,7 +28081,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level2-protection-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH"
         }
       ],
@@ -28150,8 +28150,8 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
-          "ownerPath": "packages/battle-runtime/src/level2-mobility-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "ownerPath": "packages/battle-runtime/src/level2-mobility-spell-selected-identity.test.ts",
+          "tag": "selected-identity-replay",
           "taskId": "B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH"
         },
         {
@@ -28223,7 +28223,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/creature-type-protection-and-charm-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1H-ANIMAL-FRIENDSHIP"
         }
       ],
@@ -28407,7 +28407,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/antimagic-field-ongoing-suppression.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B19-ANTIMAGIC-FIELD-IDENTITY-WITNESS"
         }
       ],
@@ -28626,7 +28626,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level2-protection-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH"
         }
       ],
@@ -28692,7 +28692,7 @@
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "condition-saving-throw-lifecycle"
         },
         {
@@ -28763,7 +28763,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "roll-modifier-buff"
         }
       ],
@@ -28849,7 +28849,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "roll-modifier-buff"
         }
       ],
@@ -28938,7 +28938,7 @@
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/level2-protection-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH"
         },
         {
@@ -29008,7 +29008,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "level1-damage-spell-selected-identity"
         }
       ],
@@ -29135,7 +29135,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH"
         }
       ],
@@ -29205,7 +29205,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "attack-spell-shape"
         }
       ],
@@ -29315,7 +29315,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "level1-damage-spell-selected-identity"
         }
       ],
@@ -29407,7 +29407,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "condition-saving-throw-lifecycle"
         }
       ],
@@ -29478,7 +29478,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "movement-forced-movement"
         }
       ],
@@ -29657,7 +29657,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level2-protection-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH"
         }
       ],
@@ -29743,7 +29743,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/reaction-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "reaction-interruption"
         }
       ],
@@ -29809,7 +29809,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "healing-stabilization"
         }
       ],
@@ -29871,7 +29871,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "level1-spatial-witness"
         }
       ],
@@ -29947,7 +29947,7 @@
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH"
         },
         {
@@ -30084,7 +30084,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/dispel-magic-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B21-DISPEL-MAGIC-IDENTITY-WITNESS"
         }
       ],
@@ -30162,7 +30162,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "movement-forced-movement"
         }
       ],
@@ -30269,7 +30269,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1E-DIVINE-FAVOR"
         }
       ],
@@ -30332,7 +30332,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1E-DIVINE-SMITE"
         }
       ],
@@ -30405,7 +30405,7 @@
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
         },
         {
@@ -30508,7 +30508,7 @@
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/level2-protection-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH"
         },
         {
@@ -30589,7 +30589,7 @@
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/level2-protection-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH"
         },
         {
@@ -30660,7 +30660,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1E-ENSNARING-STRIKE"
         }
       ],
@@ -30719,7 +30719,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "condition-saving-throw-lifecycle"
         }
       ],
@@ -30798,7 +30798,7 @@
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH"
         },
         {
@@ -30866,7 +30866,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "movement-forced-movement"
         }
       ],
@@ -30936,7 +30936,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "level1-spatial-witness"
         }
       ],
@@ -31010,7 +31010,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "level1-spatial-witness"
         }
       ],
@@ -31073,7 +31073,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1E-FALSE-LIFE"
         }
       ],
@@ -31145,7 +31145,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "attack-spell-shape"
         }
       ],
@@ -31238,8 +31238,8 @@
           "taskId": "SRDINV54"
         },
         {
-          "ownerPath": "packages/battle-runtime/src/fireball-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "ownerPath": "packages/battle-runtime/src/fireball-selected-identity.test.ts",
+          "tag": "selected-identity-replay",
           "taskId": "B23-FIREBALL-IDENTITY-WITNESS"
         }
       ],
@@ -31338,7 +31338,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
         }
       ],
@@ -31434,7 +31434,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/find-familiar-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B22-FIND-FAMILIAR-IDENTITY-WITNESS"
         }
       ],
@@ -31533,7 +31533,7 @@
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
         },
         {
@@ -31616,7 +31616,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "level1-spatial-witness"
         }
       ],
@@ -31678,7 +31678,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "roll-modifier-buff"
         }
       ],
@@ -31753,7 +31753,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "level1-spatial-witness"
         }
       ],
@@ -31821,7 +31821,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "attack-spell-shape"
         }
       ],
@@ -31958,7 +31958,7 @@
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH"
         },
         {
@@ -32124,7 +32124,7 @@
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
         },
         {
@@ -32205,7 +32205,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1E-HEROISM"
         }
       ],
@@ -32273,7 +32273,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1E-HEX"
         }
       ],
@@ -32357,7 +32357,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1E-HUNTERS-MARK"
         }
       ],
@@ -32432,7 +32432,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "level1-damage-spell-selected-identity"
         }
       ],
@@ -32515,7 +32515,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "attack-spell-shape"
         }
       ],
@@ -32628,7 +32628,7 @@
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH"
         },
         {
@@ -32705,7 +32705,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "level1-spatial-witness"
         }
       ],
@@ -32809,7 +32809,7 @@
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH"
         },
         {
@@ -32892,7 +32892,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/condition-removal-protection-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY"
         }
       ],
@@ -32962,8 +32962,8 @@
           "taskId": "L3-SPELL-LIGHTNING-BOLT-RUNTIME-SURVEY"
         },
         {
-          "ownerPath": "packages/battle-runtime/src/lightning-bolt-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "ownerPath": "packages/battle-runtime/src/lightning-bolt-selected-identity.test.ts",
+          "tag": "selected-identity-replay",
           "taskId": "B24-LIGHTNING-BOLT-IDENTITY-WITNESS"
         }
       ],
@@ -33103,7 +33103,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "level1-spatial-witness"
         }
       ],
@@ -33165,7 +33165,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1E-LONGSTRIDER"
         }
       ],
@@ -33233,8 +33233,8 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
-          "ownerPath": "packages/battle-runtime/src/level2-mobility-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "ownerPath": "packages/battle-runtime/src/level2-mobility-spell-selected-identity.test.ts",
+          "tag": "selected-identity-replay",
           "taskId": "B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH"
         },
         {
@@ -33319,7 +33319,7 @@
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/level2-protection-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH"
         },
         {
@@ -33411,7 +33411,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "level1-damage-spell-selected-identity"
         }
       ],
@@ -33528,7 +33528,7 @@
       "evidence": [
         {
           "ownerPath": "packages/character-sheet-runtime/src/spell-rest-benefit-application.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH"
         },
         {
@@ -33669,7 +33669,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/creature-type-protection-and-charm-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1H-PROTECTION-EVIL-GOOD"
         }
       ],
@@ -33743,7 +33743,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/condition-removal-protection-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY"
         }
       ],
@@ -33815,7 +33815,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "level1-spatial-witness"
         }
       ],
@@ -33930,7 +33930,7 @@
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
         },
         {
@@ -34061,7 +34061,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "spell-procedure-core"
         }
       ],
@@ -34171,7 +34171,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "level1-damage-spell-selected-identity"
         }
       ],
@@ -34280,7 +34280,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "roll-modifier-buff"
         }
       ],
@@ -34478,7 +34478,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "level1-damage-spell-selected-identity"
         }
       ],
@@ -34598,7 +34598,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/sanctuary-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1H-SANCTUARY"
         }
       ],
@@ -34658,7 +34658,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
         }
       ],
@@ -34739,7 +34739,7 @@
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH"
         },
         {
@@ -34808,7 +34808,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1E-SEARING-SMITE"
         }
       ],
@@ -34868,7 +34868,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "attack-spell-shape"
         }
       ],
@@ -34985,7 +34985,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "level1-damage-spell-selected-identity"
         }
       ],
@@ -35067,7 +35067,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/healing-stabilization-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "healing-stabilization"
         }
       ],
@@ -35127,7 +35127,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "level1-damage-spell-selected-identity"
         }
       ],
@@ -35230,7 +35230,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/thaumaturgy-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1D2-THAUMATURGY-BOOMING-VOICE"
         }
       ],
@@ -35314,7 +35314,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "level1-damage-spell-selected-identity"
         }
       ],
@@ -35539,7 +35539,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/mage-armor-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1H-MAGE-ARMOR"
         }
       ],
@@ -35672,7 +35672,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "spell-procedure-core"
         }
       ],
@@ -35809,7 +35809,7 @@
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/level2-protection-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH"
         },
         {
@@ -35923,7 +35923,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/mind-spike-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L13UG-A01-MIND-SPIKE-SELECTED-IDENTITY"
         }
       ],
@@ -36015,7 +36015,7 @@
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/level2-protection-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH"
         },
         {
@@ -36105,7 +36105,7 @@
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
         },
         {
@@ -36197,7 +36197,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1H-MASS-CURE-WOUNDS"
         }
       ],
@@ -36259,7 +36259,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1H-MASS-HEALING-WORD"
         }
       ],
@@ -36321,7 +36321,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "healing-stabilization"
         }
       ],
@@ -36384,7 +36384,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/reaction-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "reaction-interruption"
         }
       ],
@@ -36452,7 +36452,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "roll-modifier-buff"
         }
       ],
@@ -36528,7 +36528,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
         }
       ],
@@ -36620,7 +36620,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1E-SHILLELAGH"
         }
       ],
@@ -36716,8 +36716,8 @@
           "taskId": "L12G-SPELL-SHINING-SMITE"
         },
         {
-          "ownerPath": "packages/battle-runtime/src/shining-smite-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "ownerPath": "packages/battle-runtime/src/shining-smite-selected-identity.test.ts",
+          "tag": "selected-identity-replay",
           "taskId": "B25-SHINING-SMITE-IDENTITY-WITNESS"
         }
       ],
@@ -36779,7 +36779,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "condition-saving-throw-lifecycle"
         }
       ],
@@ -37098,8 +37098,8 @@
           "taskId": "L3-FOLLOWUP-FLY-END-FALL-WITNESS"
         },
         {
-          "ownerPath": "packages/battle-runtime/src/level2-mobility-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "ownerPath": "packages/battle-runtime/src/level2-mobility-spell-selected-identity.test.ts",
+          "tag": "selected-identity-replay",
           "taskId": "B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH"
         }
       ],
@@ -37507,8 +37507,8 @@
       "collectionId": "srd-5.2.1",
       "evidence": [
         {
-          "ownerPath": "packages/battle-runtime/src/level2-mobility-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "ownerPath": "packages/battle-runtime/src/level2-mobility-spell-selected-identity.test.ts",
+          "tag": "selected-identity-replay",
           "taskId": "B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH"
         },
         {
@@ -37594,7 +37594,7 @@
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH"
         },
         {
@@ -37681,7 +37681,7 @@
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH"
         },
         {
@@ -37813,7 +37813,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "level1-spatial-witness"
         }
       ],
@@ -37895,7 +37895,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1E-TRUE-STRIKE"
         }
       ],
@@ -37954,7 +37954,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/beam-sequence-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1H-ELDRITCH-BLAST"
         }
       ],
@@ -38068,7 +38068,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH"
         }
       ],
@@ -38135,7 +38135,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/reaction-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "reaction-interruption"
         }
       ],
@@ -38259,7 +38259,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "condition-saving-throw-lifecycle"
         }
       ],
@@ -38334,7 +38334,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "condition-saving-throw-lifecycle"
         }
       ],
@@ -38404,7 +38404,7 @@
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/level2-protection-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH"
         },
         {
@@ -38492,7 +38492,7 @@
       "evidence": [
         {
           "ownerPath": "packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH"
         },
         {
@@ -38577,7 +38577,7 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "condition-saving-throw-lifecycle"
         }
       ],
@@ -38876,12 +38876,12 @@
         },
         {
           "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1H-MYCELIUM-STEP"
         },
         {
           "ownerPath": "packages/battle-runtime/src/mycelium-step-feature-selected-identity.mbt.test.ts",
-          "tag": "selected-identity-mbt",
+          "tag": "selected-identity-replay",
           "taskId": "L1D2-MYCELIUM-STEP"
         }
       ],

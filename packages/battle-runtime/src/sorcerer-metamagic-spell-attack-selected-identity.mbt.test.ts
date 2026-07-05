@@ -1,5 +1,5 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3META-02-SORCERER-METAMAGIC-QUICKENED-SPELL-ATTACKS sorcerer_metamagic
-// UNIT-IDENTITY-MBT-REPLAY: L3META-02-SORCERER-METAMAGIC-QUICKENED-SPELL-ATTACKS sorcerer_metamagic doResolveQuickenedSpellAttack
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3META-02-SORCERER-METAMAGIC-QUICKENED-SPELL-ATTACKS sorcerer_metamagic
+// UNIT-IDENTITY-REPLAY: L3META-02-SORCERER-METAMAGIC-QUICKENED-SPELL-ATTACKS sorcerer_metamagic doResolveQuickenedSpellAttack
 // RAW trace:
 // - .references/srd-5.2.1/Classes/Sorcerer.md#Level 2: Metamagic:
 //   selected Metamagic options spend Sorcery Points from the shared pool.
@@ -25,7 +25,7 @@ import {
   battleReducerStartRouteEvent,
   type BattleReducerRouteEvent,
 } from "./index.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
   observeQuickenedRayOfFrostRoute,
   projectBattleState,
@@ -43,8 +43,8 @@ type QuickenedSpellAttackRouteReplayProjection = {
   readonly route: readonly BattleReducerRouteEvent[];
 };
 
-defineSelectedIdentityWitness({
-  describeLabel: "Sorcerer Metamagic spell-attack selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Sorcerer Metamagic spell-attack selected identity replay",
   taskId: "L3META-02-SORCERER-METAMAGIC-QUICKENED-SPELL-ATTACKS",
   specFile: mbtSpecPath(
     import.meta.dirname,
@@ -147,5 +147,5 @@ function createQuickenedSpellAttackRouteReplayDriver() {
 }
 
 function observeQuickenedRayOfFrostInitialRoute() {
-  return [battleReducerStartRouteEvent(sorcererMetamagicBattle())] as const;
+  return [battleReducerStartRouteEvent()] as const;
 }

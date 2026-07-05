@@ -1,7 +1,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.magic-action-healing-pool
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3PUTB-04 cleric_preserve_life
-// UNIT-IDENTITY-MBT-REPLAY: L3PUTB-04 cleric_preserve_life doDistributeHealing doSelfHealing doRejectNonBloodied doRejectOverPool doRejectOverCap doRejectMissingRange doRejectMissingResource doRejectMissingMagicAction
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3PUTB-04 cleric_preserve_life
+// UNIT-IDENTITY-REPLAY: L3PUTB-04 cleric_preserve_life doDistributeHealing doSelfHealing doRejectNonBloodied doRejectOverPool doRejectOverCap doRejectMissingRange doRejectMissingResource doRejectMissingMagicAction
 import { Hp, movementFeet } from "@dnd/shared/types";
 import * as Either from "effect/Either";
 
@@ -14,7 +14,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
   clericChannelDivinityUnitId,
   clericPreserveLifeUnitId,
@@ -65,8 +65,8 @@ const channelDivinityUnit = unitLibrary.requireUnit(
 const preserveLifeUnitRef = requirePreserveLifeUnitRef();
 const secondTargetId = combatantId("preserve-life-selected-second-target");
 
-defineSelectedIdentityWitness({
-  describeLabel: "Preserve Life selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Preserve Life selected identity replay",
   taskId: "L3PUTB-04",
   specFile: mbtSpecPath(
     import.meta.dirname,

@@ -21,13 +21,13 @@ Append:
 
 - QMBT31 promoted `feat_savage_attacker` as
   `unit-feature.weapon-damage-dice-roll-choice`, including deterministic
-  admission/projection evidence and selected identity MBT evidence.
+  admission/projection evidence and selected identity replay evidence.
 - QMBT32 promoted `cure_wounds` and `mass_healing_word` as
   `spell.hit-point-restoration`, including deterministic admission/projection
   evidence through production spell access and support projection.
 - The current generated matrix reports 53 installed Units, 17 stable
   executable profiles, 21/39 supported executable Unit coverage, 21/21
-  deterministic admission/projection coverage, and 10/21 selected identity MBT
+  deterministic admission/projection coverage, and 10/21 selected identity replay
   coverage.
 
 ## Source Check

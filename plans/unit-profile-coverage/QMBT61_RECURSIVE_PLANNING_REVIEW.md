@@ -28,7 +28,7 @@ Append:
   and original damage type together in one profile.
 - QMBT59 refreshed matrix artifacts to 59 installed Units, 24 stable
   executable profiles, 31/45 supported executable Unit coverage, 31/31
-  deterministic admission/projection coverage, and 10/31 selected identity MBT
+  deterministic admission/projection coverage, and 10/31 selected identity replay
   coverage.
 - QMBT60 selected `fighter_tactical_mind` as the next narrow feature widening
   slice. The selected boundary is the already-rolled failed ability-check

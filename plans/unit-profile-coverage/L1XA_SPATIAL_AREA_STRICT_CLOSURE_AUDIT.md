@@ -38,10 +38,10 @@ group:
 
 | Unit | Precheck strict status | Post-task strict status | Post-task claim | Profile | Required evidence |
 | --- | --- | --- | --- | --- | --- |
-| `faerie_fire` | `open-profile-accounting` | `supported-profile` | `supported-profile` | `spell.invocation-attack-roll-advantage-save` | `SRDINV58C`; `level1-spatial-witness` selected-identity MBT |
-| `fog_cloud` | `open-profile-accounting` | `supported-profile` | `supported-profile` | `spell.invocation-fog-cloud-obscurement` | `SRDINV84E`; `level1-spatial-witness` selected-identity MBT |
-| `grease` | `open-profile-accounting` | `supported-profile` | `supported-profile` | `spell.invocation-grease-ground-hazard` | `SRDINV40`; `level1-spatial-witness` selected-identity MBT |
-| `thunderwave` | `open-profile-accounting` | `supported-profile` | `supported-profile` | `spell.invocation-damage-save-or-attack` | `SRDINV51`; `level1-spatial-witness` selected-identity MBT |
+| `faerie_fire` | `open-profile-accounting` | `supported-profile` | `supported-profile` | `spell.invocation-attack-roll-advantage-save` | `SRDINV58C`; `level1-spatial-witness` selected-identity replay |
+| `fog_cloud` | `open-profile-accounting` | `supported-profile` | `supported-profile` | `spell.invocation-fog-cloud-obscurement` | `SRDINV84E`; `level1-spatial-witness` selected-identity replay |
+| `grease` | `open-profile-accounting` | `supported-profile` | `supported-profile` | `spell.invocation-grease-ground-hazard` | `SRDINV40`; `level1-spatial-witness` selected-identity replay |
+| `thunderwave` | `open-profile-accounting` | `supported-profile` | `supported-profile` | `spell.invocation-damage-save-or-attack` | `SRDINV51`; `level1-spatial-witness` selected-identity replay |
 
 The JSON and Markdown reports agree on the closure:
 
@@ -50,11 +50,11 @@ The JSON and Markdown reports agree on the closure:
   non-A rows listed above.
 - `LEVEL1_FULL_SUPPORT.md` mirrors the same status groups and open frontier.
 - `UNIT_REPORT.md` lists deterministic admission/projection evidence and
-  selected-identity MBT evidence for each of the four units.
+  selected-identity replay evidence for each of the four units.
 - `unit-claims.jsonl` records all four rows with `claim.tag:
   "supported-profile"` in collection `srd-5.2.1`.
 - `unit-evidence.jsonl` records both deterministic admission/projection
-  evidence and `level1-spatial-witness` selected-identity MBT evidence for each
+  evidence and `level1-spatial-witness` selected-identity replay evidence for each
   of the four units.
 
 ## Runtime Boundary Retained

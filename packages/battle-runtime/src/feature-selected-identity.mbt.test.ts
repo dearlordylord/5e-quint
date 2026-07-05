@@ -1,5 +1,5 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1D2-SORCERER-INNATE-SORCERY sorcerer_innate_sorcery
-// UNIT-IDENTITY-MBT-REPLAY: L1D2-SORCERER-INNATE-SORCERY sorcerer_innate_sorcery doActivateInnateSorcery doProjectInnateSorcerySpellBenefits doExcludeInnateSorceryNonSorcererSpellBenefits
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1D2-SORCERER-INNATE-SORCERY sorcerer_innate_sorcery
+// UNIT-IDENTITY-REPLAY: L1D2-SORCERER-INNATE-SORCERY sorcerer_innate_sorcery doActivateInnateSorcery doProjectInnateSorcerySpellBenefits doExcludeInnateSorceryNonSorcererSpellBenefits
 import { Either } from "effect";
 import { expect } from "vitest";
 
@@ -41,7 +41,7 @@ import {
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { ongoingFeatureSourceKeyForUnit } from "./battle-reducer/creature-state.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 
 type InnateSorcerySpellAttackRollMode = "none" | "advantage" | "disadvantage";
 type InnateSorcerySelectedIdentityLastResult =
@@ -98,8 +98,8 @@ if (unitCatalogResult.tag !== "ok") {
 }
 const unitLibrary = unitCatalogResult.catalog;
 
-defineSelectedIdentityWitness({
-  describeLabel: "Innate Sorcery selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Innate Sorcery selected identity replay",
   taskId: "L1D2-SORCERER-INNATE-SORCERY",
   specFile: mbtSpecPath(
     import.meta.dirname,

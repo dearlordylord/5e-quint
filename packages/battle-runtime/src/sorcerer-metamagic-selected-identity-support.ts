@@ -120,7 +120,7 @@ export function observeQuickenedBurningHandsRoute(
   );
 
   return [
-    battleReducerStartRouteEvent(state),
+    battleReducerStartRouteEvent(),
     ...(act.routeEvents ?? []),
     ...(awaitingDamage.routeEvents ?? []),
     ...(resolved.routeEvents ?? []),
@@ -207,7 +207,7 @@ export function observeQuickenedRayOfFrostRoute(
   );
 
   return [
-    battleReducerStartRouteEvent(state),
+    battleReducerStartRouteEvent(),
     ...(act.routeEvents ?? []),
     ...(awaitingAttackRoll.routeEvents ?? []),
     ...(awaitingDamage.routeEvents ?? []),
@@ -224,7 +224,7 @@ export function observeSeekingRayOfFrostRoute(
 ): readonly BattleReducerRouteEvent[] {
   const resolved = resolveSeekingRayOfFrostSubject(state);
   return [
-    battleReducerStartRouteEvent(resolved.initialState),
+    battleReducerStartRouteEvent(),
     ...(resolved.awaitingSeeking.routeEvents ?? []),
     ...(resolved.awaitingDamage.routeEvents ?? []),
     ...(resolved.resolved.routeEvents ?? []),
@@ -621,7 +621,7 @@ export function observeHeightenedHideousLaughterRoute(
 ): readonly BattleReducerRouteEvent[] {
   const resolved = resolveHeightenedHideousLaughterSubject(state);
   return [
-    battleReducerStartRouteEvent(resolved.initialState),
+    battleReducerStartRouteEvent(),
     ...(resolved.awaitingSave.routeEvents ?? []),
     ...(resolved.resolved.routeEvents ?? []),
   ];

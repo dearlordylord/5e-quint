@@ -1,5 +1,5 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt healing-stabilization paladin_lay_on_hands
-// UNIT-IDENTITY-MBT-REPLAY: healing-stabilization paladin_lay_on_hands doLayOnHandsRestoreHpAndRemovePoisoned
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay healing-stabilization paladin_lay_on_hands
+// UNIT-IDENTITY-REPLAY: healing-stabilization paladin_lay_on_hands doLayOnHandsRestoreHpAndRemovePoisoned
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -86,7 +86,7 @@ const selectedUnitIdentityReplays = [
   },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
-describe("Character Sheet healing resource selected identity MBT", () => {
+describe("Character Sheet healing resource selected identity replay", () => {
   it("replays selected Unit identities deterministically", async () => {
     for (const replay of selectedUnitIdentityReplays) {
       const replayedActions =

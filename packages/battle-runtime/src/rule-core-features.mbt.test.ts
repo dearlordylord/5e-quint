@@ -1,34 +1,34 @@
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.DAMAGE.ATTACK_BRANCHES BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt QMBT7 fighter_second_wind
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt QMBT9 fighter_action_surge fighter_improved_critical barbarian_rage barbarian_reckless_attack rogue_cunning_action rogue_evasion rogue_uncanny_dodge rogue_sneak_attack
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3-FOLLOWUP-BARBARIAN-FRENZY barbarian_frenzy
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt QMBT31 feat_savage_attacker
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt passive-and-zero-hp-features defense feat_archery orc_relentless_endurance
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt reaction-interruption bard_cutting_words monk_deflect_attacks
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-FIGHTER-TACTICAL-MIND fighter_tactical_mind
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-BOON-COMBAT-PROWESS feat_boon_of_combat_prowess
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-MYCELIUM-STEP mycelium_step
-// UNIT-IDENTITY-MBT-REPLAY: QMBT7 fighter_second_wind doDiscoverSecondWind doResolveSecondWindLow doResolveSecondWindHigh
-// UNIT-IDENTITY-MBT-REPLAY: QMBT9 fighter_action_surge doActionSurgeActivate doActionSurgeRejectTwice
-// UNIT-IDENTITY-MBT-REPLAY: QMBT9 fighter_improved_critical doImprovedCritical
-// UNIT-IDENTITY-MBT-REPLAY: QMBT9 barbarian_rage doRageActivateAndDamage
-// UNIT-IDENTITY-MBT-REPLAY: QMBT9 barbarian_reckless_attack doRecklessAttack
-// UNIT-IDENTITY-MBT-REPLAY: QMBT9 rogue_cunning_action doCunningDash doCunningDisengage doCunningHide
-// UNIT-IDENTITY-MBT-REPLAY: QMBT9 rogue_evasion doEvasionSuccess doEvasionFailure
-// UNIT-IDENTITY-MBT-REPLAY: QMBT9 rogue_uncanny_dodge doUncannyDodge
-// UNIT-IDENTITY-MBT-REPLAY: QMBT9 rogue_sneak_attack doSneakAttack
-// UNIT-IDENTITY-MBT-REPLAY: L3-FOLLOWUP-BARBARIAN-FRENZY barbarian_frenzy doFrenzy
-// UNIT-IDENTITY-MBT-REPLAY: QMBT31 feat_savage_attacker doSavageAttackerDamage
-// UNIT-IDENTITY-MBT-REPLAY: passive-and-zero-hp-features defense doDefenseArmorClass
-// UNIT-IDENTITY-MBT-REPLAY: passive-and-zero-hp-features feat_archery doArcheryAttackRollBonus
-// UNIT-IDENTITY-MBT-REPLAY: passive-and-zero-hp-features orc_relentless_endurance doZeroHitPointReplacement
-// UNIT-IDENTITY-MBT-REPLAY: reaction-interruption bard_cutting_words doCuttingWordsDamage
-// UNIT-IDENTITY-MBT-REPLAY: reaction-interruption monk_deflect_attacks doDeflectAttacksDamageReduction
-// UNIT-IDENTITY-MBT-REPLAY: L1H-FIGHTER-TACTICAL-MIND fighter_tactical_mind doTacticalMindConvertedSuccess doTacticalMindStillFailed
-// UNIT-IDENTITY-MBT-REPLAY: L1H-BOON-COMBAT-PROWESS feat_boon_of_combat_prowess doCombatProwessMissToHit
-// UNIT-IDENTITY-MBT-REPLAY: L1H-MYCELIUM-STEP mycelium_step doMyceliumStepDash
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay QMBT7 fighter_second_wind
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay QMBT9 fighter_action_surge fighter_improved_critical barbarian_rage barbarian_reckless_attack rogue_cunning_action rogue_evasion rogue_uncanny_dodge rogue_sneak_attack
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-BARBARIAN-FRENZY barbarian_frenzy
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay QMBT31 feat_savage_attacker
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay passive-and-zero-hp-features defense feat_archery orc_relentless_endurance
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay reaction-interruption bard_cutting_words monk_deflect_attacks
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-FIGHTER-TACTICAL-MIND fighter_tactical_mind
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-BOON-COMBAT-PROWESS feat_boon_of_combat_prowess
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-MYCELIUM-STEP mycelium_step
+// UNIT-IDENTITY-REPLAY: QMBT7 fighter_second_wind doDiscoverSecondWind doResolveSecondWindLow doResolveSecondWindHigh
+// UNIT-IDENTITY-REPLAY: QMBT9 fighter_action_surge doActionSurgeActivate doActionSurgeRejectTwice
+// UNIT-IDENTITY-REPLAY: QMBT9 fighter_improved_critical doImprovedCritical
+// UNIT-IDENTITY-REPLAY: QMBT9 barbarian_rage doRageActivateAndDamage
+// UNIT-IDENTITY-REPLAY: QMBT9 barbarian_reckless_attack doRecklessAttack
+// UNIT-IDENTITY-REPLAY: QMBT9 rogue_cunning_action doCunningDash doCunningDisengage doCunningHide
+// UNIT-IDENTITY-REPLAY: QMBT9 rogue_evasion doEvasionSuccess doEvasionFailure
+// UNIT-IDENTITY-REPLAY: QMBT9 rogue_uncanny_dodge doUncannyDodge
+// UNIT-IDENTITY-REPLAY: QMBT9 rogue_sneak_attack doSneakAttack
+// UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-BARBARIAN-FRENZY barbarian_frenzy doFrenzy
+// UNIT-IDENTITY-REPLAY: QMBT31 feat_savage_attacker doSavageAttackerDamage
+// UNIT-IDENTITY-REPLAY: passive-and-zero-hp-features defense doDefenseArmorClass
+// UNIT-IDENTITY-REPLAY: passive-and-zero-hp-features feat_archery doArcheryAttackRollBonus
+// UNIT-IDENTITY-REPLAY: passive-and-zero-hp-features orc_relentless_endurance doZeroHitPointReplacement
+// UNIT-IDENTITY-REPLAY: reaction-interruption bard_cutting_words doCuttingWordsDamage
+// UNIT-IDENTITY-REPLAY: reaction-interruption monk_deflect_attacks doDeflectAttacksDamageReduction
+// UNIT-IDENTITY-REPLAY: L1H-FIGHTER-TACTICAL-MIND fighter_tactical_mind doTacticalMindConvertedSuccess doTacticalMindStillFailed
+// UNIT-IDENTITY-REPLAY: L1H-BOON-COMBAT-PROWESS feat_boon_of_combat_prowess doCombatProwessMissToHit
+// UNIT-IDENTITY-REPLAY: L1H-MYCELIUM-STEP mycelium_step doMyceliumStepDash
 import { isDeepStrictEqual } from "node:util";
 
 import {

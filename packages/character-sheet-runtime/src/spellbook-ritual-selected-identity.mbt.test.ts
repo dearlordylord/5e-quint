@@ -1,5 +1,5 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt spellbook-ritual-invocation wizard_ritual_adept
-// UNIT-IDENTITY-MBT-REPLAY: spellbook-ritual-invocation wizard_ritual_adept doInvokeSpellbookRitual doRejectPreparedOnlyRitual
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay spellbook-ritual-invocation wizard_ritual_adept
+// UNIT-IDENTITY-REPLAY: spellbook-ritual-invocation wizard_ritual_adept doInvokeSpellbookRitual doRejectPreparedOnlyRitual
 // KERNEL-COVERAGE: parity-witness SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION
 import * as path from "node:path";
 
@@ -187,7 +187,7 @@ const semanticCoreReplayActions = [
   "doRejectNonLeveledRitualSpellbookSpell",
 ] as const satisfies ReadonlyArray<SpellbookRitualSelectedIdentityDriverAction>;
 
-describe("Character Sheet spellbook ritual selected identity MBT", () => {
+describe("Character Sheet spellbook ritual selected identity replay", () => {
   it("replays selected Unit identities deterministically", async () => {
     for (const replay of selectedUnitIdentityReplays) {
       const replayedActions =

@@ -1,9 +1,9 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1D2-THAUMATURGY-BOOMING-VOICE thaumaturgy
-// UNIT-IDENTITY-MBT-REPLAY: L1D2-THAUMATURGY-BOOMING-VOICE thaumaturgy doResolveThaumaturgyBoomingVoice
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1D2-THAUMATURGY-BOOMING-VOICE thaumaturgy
+// UNIT-IDENTITY-REPLAY: L1D2-THAUMATURGY-BOOMING-VOICE thaumaturgy doResolveThaumaturgyBoomingVoice
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
   battleId,
   cantripSpellInvocationRef,
@@ -47,8 +47,8 @@ const thaumaturgySubject = {
   mode: { tag: "cast" as const },
 };
 
-defineSelectedIdentityWitness({
-  describeLabel: "Thaumaturgy selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Thaumaturgy selected identity replay",
   taskId: "L1D2-THAUMATURGY-BOOMING-VOICE",
   specFile: mbtSpecPath(
     import.meta.dirname,

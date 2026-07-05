@@ -1,6 +1,6 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.metamagic-cast-duration-and-concentration
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3MMETA-16-EXTENDED-CAST-DURATION-CONCENTRATION-SLICE sorcerer_metamagic
-// UNIT-IDENTITY-MBT-REPLAY: L3MMETA-16-EXTENDED-CAST-DURATION-CONCENTRATION-SLICE sorcerer_metamagic doResolveExtendedCreatureSizeIncrease
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3MMETA-16-EXTENDED-CAST-DURATION-CONCENTRATION-SLICE sorcerer_metamagic
+// UNIT-IDENTITY-REPLAY: L3MMETA-16-EXTENDED-CAST-DURATION-CONCENTRATION-SLICE sorcerer_metamagic doResolveExtendedCreatureSizeIncrease
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION
 // RAW trace:
 // - .references/srd-5.2.1/Classes/Sorcerer.md#Extended Spell: a spell with
@@ -26,7 +26,7 @@ import {
   reducerRoutedMetamagicStateCheck,
   run,
 } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
   enlargeReduceUnitId,
   spellCasterId,
@@ -62,8 +62,8 @@ type ExtendedMetamagicRouteReplayProjection = {
   readonly route: readonly BattleReducerRouteEvent[];
 };
 
-defineSelectedIdentityWitness({
-  describeLabel: "Sorcerer Extended Spell creature-size selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Sorcerer Extended Spell creature-size selected identity replay",
   taskId: "L3MMETA-16-EXTENDED-CAST-DURATION-CONCENTRATION-SLICE",
   specFile: mbtSpecPath(
     import.meta.dirname,

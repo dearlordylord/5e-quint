@@ -1,7 +1,7 @@
 # L1H Special And Tail Precheck
 
 Task 1 reconciles Loop H against the generated strict level-1 report and the
-selected identity MBT denominator. No runtime behavior or rule model changed in
+selected identity replay denominator. No runtime behavior or rule model changed in
 this precheck.
 
 ## Source Artifacts
@@ -23,16 +23,16 @@ The generated coverage artifacts report:
 | Strict executable denominator | 93 |
 | Strict runtime/profile support | 67/93 (72%) |
 | Strict target closure | 82/93 (88.2%) |
-| Selected identity MBT coverage | 47/93 (50.5%) |
+| Selected identity replay coverage | 47/93 (50.5%) |
 
 There are 46 supported-profile Unit ids still missing
-`selected-identity-mbt` evidence. Of those, 38 are strict supported-profile
+`selected-identity-replay` evidence. Of those, 38 are strict supported-profile
 Units in the level-1 report and 8 are outside the strict level-1 denominator.
 
 ## Loop H Reconciliation
 
 The five strict Loop H spell Units are still strict supported-profile Units and
-still lack selected identity MBT evidence:
+still lack selected identity replay evidence:
 
 | Task | Unit | Profile |
 | --- | --- | --- |
@@ -45,7 +45,7 @@ still lack selected identity MBT evidence:
 Keep those five strict tasks ahead of the non-strict tail tasks.
 
 The seven planned SRD tail tasks are all supported-profile Unit ids in the
-selected identity denominator and still lack selected identity MBT evidence:
+selected identity denominator and still lack selected identity replay evidence:
 
 | Task | Unit | Strict level-1 status | Profile |
 | --- | --- | --- | --- |
@@ -84,7 +84,7 @@ loop family:
 
 `mycelium_step` is the only additional supported-profile Unit in the selected
 identity denominator that is outside the strict level-1 report, lacks selected
-identity MBT evidence, and was not named by the original Loop H task list. It
+identity replay evidence, and was not named by the original Loop H task list. It
 belongs to the `classic-2024-non-srd-mechanics` collection, not the SRD
 collection:
 

@@ -1,8 +1,8 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.grappler
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3-FOLLOWUP-GRAPPLER-RUNTIME feat_grappler
-// UNIT-IDENTITY-MBT-REPLAY: L3-FOLLOWUP-GRAPPLER-RUNTIME feat_grappler doFastWrestlerExemptsSameSizeDragCost doAttackAdvantageAgainstGrappledTarget doPunchAndGrabFailedSaveGrapple
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-GRAPPLER-RUNTIME feat_grappler
+// UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-GRAPPLER-RUNTIME feat_grappler doFastWrestlerExemptsSameSizeDragCost doAttackAdvantageAgainstGrappledTarget doPunchAndGrabFailedSaveGrapple
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
   attackInitialTargetHole,
   attackRollFill,
@@ -45,8 +45,8 @@ const GRAPPLER_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
   PunchAndGrab: "punchAndGrab",
 } as const satisfies Readonly<Record<string, GrapplerLastResult>>;
 
-defineSelectedIdentityWitness({
-  describeLabel: "Grappler selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Grappler selected identity replay",
   taskId: "L3-FOLLOWUP-GRAPPLER-RUNTIME",
   specFile: mbtSpecPath(
     import.meta.dirname,

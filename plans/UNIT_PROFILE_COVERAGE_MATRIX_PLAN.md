@@ -40,11 +40,12 @@ Durable decisions that apply across all phases:
   authored Units. Unit coverage proves that every authored Unit maps to one or
   more supported profiles or to an explicit unsupported disposition.
 - **Procedure parity vs Unit identity**: QMBT2-QMBT6 are Procedure Parity MBT:
-  focused behavior-shape parity against production reducers. Specific Unit
-  Parity MBT is a later, selective identity-aware lane driven by this matrix.
-- **Selective MBT identity coverage**: deterministic projection/admission
-  coverage should span every executable Unit. MBT by concrete Unit id is for
-  representative or high-risk identities, not every Unit in the catalog.
+  focused behavior-shape parity against production reducers. Selected identity
+  replay is a later, selective identity-aware lane driven by this matrix.
+- **Selective identity coverage**: deterministic projection/admission coverage
+  should span every executable Unit. Deterministic QNT replay or focused MBT by
+  concrete Unit id is for representative or high-risk identities, not every Unit
+  in the catalog.
 - **No duplicate SRD overlap**: if a mechanic is covered by an SRD Unit, the
   Classic non-SRD collection does not author a duplicate renamed record for it.
 - **Provenance discipline**: SRD provenance, Classic non-SRD mechanics source
@@ -190,8 +191,8 @@ The report must separate:
 - **Deterministic admission/projection coverage**: supported Unit ids with
   deterministic admission/projection evidence / installed Units with
   supported-profile claims.
-- **Selected identity MBT coverage**: supported Unit ids with selected identity
-  MBT evidence / installed Units with supported-profile claims.
+- **Selected identity replay coverage**: supported Unit ids with selected
+  identity replay evidence / installed Units with supported-profile claims.
 - **Classic non-SRD expression gate**: Classic non-SRD records passing the
   no-protected-expression checker / Classic non-SRD records.
 
@@ -354,8 +355,8 @@ Unit ids into production runtime fixtures, not enumerate all Units in QNT.
 - [ ] The checker rejects completed runtime parity claims without owner
       artifacts.
 - [ ] No broad battle MBT is required for matrix-only profile edits.
-- [ ] Specific Unit Parity MBT candidates are chosen from matrix risk/profile
-      pressure, not from a goal of one MBT per Unit id.
+- [ ] Specific Unit parity candidates are chosen from matrix risk/profile
+      pressure, not from a goal of one QNT replay or focused MBT per Unit id.
 
 ---
 

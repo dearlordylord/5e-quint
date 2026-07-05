@@ -1,5 +1,5 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-MAGE-ARMOR mage_armor
-// UNIT-IDENTITY-MBT-REPLAY: L1H-MAGE-ARMOR mage_armor doDiscoverMageArmorUnarmoredSelfTarget doRejectMageArmorArmoredTarget doResolveMageArmorBaseArmorClassProjection doExpireMageArmorDuration
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-MAGE-ARMOR mage_armor
+// UNIT-IDENTITY-REPLAY: L1H-MAGE-ARMOR mage_armor doDiscoverMageArmorUnarmoredSelfTarget doRejectMageArmorArmoredTarget doResolveMageArmorBaseArmorClassProjection doExpireMageArmorDuration
 import { Either } from "effect";
 
 import {
@@ -27,7 +27,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import { activeEffectArmorClass } from "./battle-reducer/creature-state.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
   battleCombatantSide,
   battleId,
@@ -115,8 +115,8 @@ const MAGE_ARMOR_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
   DurationExpired: "durationExpired",
 } as const satisfies Readonly<Record<string, MageArmorSelectedIdentityLastResult>>;
 
-defineSelectedIdentityWitness({
-  describeLabel: "Mage Armor selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Mage Armor selected identity replay",
   taskId: "L1H-MAGE-ARMOR",
   specFile: mbtSpecPath(
     import.meta.dirname,

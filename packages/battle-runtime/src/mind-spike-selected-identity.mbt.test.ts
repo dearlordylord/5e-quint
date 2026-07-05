@@ -1,5 +1,5 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L13UG-A01-MIND-SPIKE-SELECTED-IDENTITY mind_spike
-// UNIT-IDENTITY-MBT-REPLAY: L13UG-A01-MIND-SPIKE-SELECTED-IDENTITY mind_spike doResolveMindSpikeFailedSaveConcentrationDuration doResolveMindSpikeSuccessfulSaveHalfDamage
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L13UG-A01-MIND-SPIKE-SELECTED-IDENTITY mind_spike
+// UNIT-IDENTITY-REPLAY: L13UG-A01-MIND-SPIKE-SELECTED-IDENTITY mind_spike doResolveMindSpikeFailedSaveConcentrationDuration doResolveMindSpikeSuccessfulSaveHalfDamage
 import { type SimpleActionMap, type SimpleDriver } from "@firfi/quint-connect";
 import { describe, expect, it } from "vitest";
 
@@ -140,7 +140,7 @@ const mindSpikeDiscoveries = {
   () => MindSpikeSelectedIdentityProjection
 >;
 
-describe("Mind Spike selected identity MBT", () => {
+describe("Mind Spike selected identity replay", () => {
   it("replays selected Unit identities deterministically", () => {
     for (const replay of selectedUnitIdentityReplays) {
       for (const sequence of replay.sequences) {
@@ -158,7 +158,7 @@ describe("Mind Spike selected identity MBT", () => {
   });
 
   it(
-    "replays MBT parity",
+    "replays deterministic QNT parity",
     async () => {
       await run({
         spec: mbtSpecPath(

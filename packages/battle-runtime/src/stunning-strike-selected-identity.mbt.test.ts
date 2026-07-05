@@ -1,9 +1,9 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.stunning-strike
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME monk_stunning_strike
-// UNIT-IDENTITY-MBT-REPLAY: L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME monk_stunning_strike doFailedSave doSuccessfulSave doDecline doSecondUseGate
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME monk_stunning_strike
+// UNIT-IDENTITY-REPLAY: L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME monk_stunning_strike doFailedSave doSuccessfulSave doDecline doSecondUseGate
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import type { BattleResolutionResult } from "./index.ts";
 import {
   attackRollFill,
@@ -43,8 +43,8 @@ type StunningStrikeProjection = {
 const stunningStrikeUnit = unitLibrary.requireUnit("monk_stunning_strike");
 const stunningStrikeUnitRef = supportedBattleUnitRef(stunningStrikeUnit);
 
-defineSelectedIdentityWitness({
-  describeLabel: "Stunning Strike selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Stunning Strike selected identity replay",
   taskId: "L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME",
   specFile: mbtSpecPath(
     import.meta.dirname,

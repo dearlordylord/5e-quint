@@ -1,9 +1,9 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt attack-spell-shape fire_bolt chill_touch guiding_bolt inflict_wounds shocking_grasp
-// UNIT-IDENTITY-MBT-REPLAY: attack-spell-shape fire_bolt doFireBoltHit
-// UNIT-IDENTITY-MBT-REPLAY: attack-spell-shape chill_touch doChillTouchHitPointRegainPrevention
-// UNIT-IDENTITY-MBT-REPLAY: attack-spell-shape guiding_bolt doGuidingBoltNextAttackAdvantage
-// UNIT-IDENTITY-MBT-REPLAY: attack-spell-shape inflict_wounds doInflictWoundsFailedSave doInflictWoundsSuccessfulSave
-// UNIT-IDENTITY-MBT-REPLAY: attack-spell-shape shocking_grasp doShockingGraspOpportunityAttackDenied
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay attack-spell-shape fire_bolt chill_touch guiding_bolt inflict_wounds shocking_grasp
+// UNIT-IDENTITY-REPLAY: attack-spell-shape fire_bolt doFireBoltHit
+// UNIT-IDENTITY-REPLAY: attack-spell-shape chill_touch doChillTouchHitPointRegainPrevention
+// UNIT-IDENTITY-REPLAY: attack-spell-shape guiding_bolt doGuidingBoltNextAttackAdvantage
+// UNIT-IDENTITY-REPLAY: attack-spell-shape inflict_wounds doInflictWoundsFailedSave doInflictWoundsSuccessfulSave
+// UNIT-IDENTITY-REPLAY: attack-spell-shape shocking_grasp doShockingGraspOpportunityAttackDenied
 import { Either } from "effect";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
@@ -43,7 +43,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 
 const attackSpellShapeSpellIds = [
@@ -105,8 +105,8 @@ if (unitCatalogResult.tag !== "ok") {
 }
 const unitLibrary = unitCatalogResult.catalog;
 
-defineSelectedIdentityWitness({
-  describeLabel: "Attack spell shape selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Attack spell shape selected identity replay",
   taskId: "attack-spell-shape",
   specFile: mbtSpecPath(
     import.meta.dirname,

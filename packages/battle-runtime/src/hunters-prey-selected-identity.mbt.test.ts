@@ -1,11 +1,11 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.hunters-prey
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME ranger_hunters_prey
-// UNIT-IDENTITY-MBT-REPLAY: L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME ranger_hunters_prey doColossusSlayer doSkipThenUseColossusSlayer doHordeBreaker doHordeBreakerAfterPrimaryMiss doRejectMissingSelection doRejectSameTarget doRejectInvalidTargetPredicate doSecondHordeBreakerUnavailable
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME ranger_hunters_prey
+// UNIT-IDENTITY-REPLAY: L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME ranger_hunters_prey doColossusSlayer doSkipThenUseColossusSlayer doHordeBreaker doHordeBreakerAfterPrimaryMiss doRejectMissingSelection doRejectSameTarget doRejectInvalidTargetPredicate doSecondHordeBreakerUnavailable
 import { movementFeet } from "@dnd/shared/types";
 
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import type { BattleUnitRef } from "./index.ts";
 import {
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
@@ -61,8 +61,8 @@ const HUNTERS_PREY_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
   SecondHordeBreakerUnavailable: "secondHordeBreakerUnavailable",
 } as const satisfies Readonly<Record<string, HuntersPreyProjection["lastResult"]>>;
 
-defineSelectedIdentityWitness({
-  describeLabel: "Hunter's Prey selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Hunter's Prey selected identity replay",
   taskId: "L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME",
   specFile: mbtSpecPath(
     import.meta.dirname,

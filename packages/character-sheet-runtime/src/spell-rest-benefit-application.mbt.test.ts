@@ -1,6 +1,6 @@
 // KERNEL-COVERAGE: parity-witness SHEET.SPELL_REST_BENEFIT.APPLICATION
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH prayer_of_healing
-// UNIT-IDENTITY-MBT-REPLAY: B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH prayer_of_healing doApplyPrayerOfHealingRestBenefit doRejectRecipientLongRestLockout
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH prayer_of_healing
+// UNIT-IDENTITY-REPLAY: B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH prayer_of_healing doApplyPrayerOfHealingRestBenefit doRejectRecipientLongRestLockout
 import * as path from "node:path";
 
 import {

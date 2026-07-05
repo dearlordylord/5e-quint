@@ -62,31 +62,35 @@ and `verification-owner:runtime-test`.
 does not restate profile ids; the checker derives those from `unit-claims.jsonl`
 so profile classification stays single-source. Rows use exactly `unitId` plus
 `evidence.tag`, `evidence.taskId`, and `evidence.ownerPath`; there are no
-optional evidence fields. Evidence owner paths are repo-relative source paths;
-`selected-identity-mbt` owners must be `.mbt.test.ts` source tests. Evidence
-owners must also carry a matching marker:
+optional evidence fields. Evidence owner paths are repo-relative source paths.
+Evidence owners must also carry a matching marker:
 
 ```text
 UNIT-IDENTITY-EVIDENCE marker fields:
 <evidence-tag> <task-id> <unit-id> [<unit-id> ...]
 ```
 
-`selected-identity-mbt` is the historical evidence tag for selected Unit
-identity replay through an MBT/QNT owner. The deterministic replay rows required
-by this tag are identity/wiring witnesses, not MBT coverage by themselves.
+`selected-identity-replay` is the evidence tag for selected Unit identity replay.
+The deterministic replay rows required by this tag are identity/wiring
+witnesses, not MBT coverage by themselves. When the same owner also executes
+QNT through `run(...)`, that second claim is deterministic QNT replay or focused
+MBT according to the owner shape; it is not implied by the tag alone.
 
 Rows with this tag also require owner-local replay markers:
 
 ```text
-UNIT-IDENTITY-MBT-REPLAY marker fields:
+UNIT-IDENTITY-REPLAY marker fields:
 <task-id> <unit-id> <driver-action> [<driver-action> ...]
 ```
 
 The checker treats these replay markers as the wiring witness for
-`selected-identity-mbt`: every selected evidence row must name at least one
+`selected-identity-replay`: every selected evidence row must name at least one
 driver action for that Unit id, every replay action must be declared in an
-owner-local driver schema, and every replay action must be reachable from a
-Quint `step` action passed to an owner-local `run()` call.
+owner-local driver schema or selected identity replay helper, and every replay
+action must match deterministic replay data for the same task and Unit id.
+When a separate QNT replay owner exists, its `UNIT-IDENTITY-QNT-REPLAY` marker
+is joined by task id, Unit id, and action set, and those actions must be
+reachable from the QNT `step` action passed to that owner.
 
 Rows with this tag must also have owner-local deterministic replay data and an
 owner-local deterministic replay test consumer. That replay test is the
@@ -94,9 +98,9 @@ executable witness that the named actions actually run, compare the same
 projection shape, and bind the claimed Unit id at a Unit-bearing production
 boundary per claimed action. The replay marker, deterministic replay data, test
 consumer, and `unit-evidence.jsonl` are bidirectional. If a driver action name
-changes, falls out of the executable Quint action set, stops matching
-deterministic replay data, or stops binding the claimed Unit id during the
-deterministic replay, the coverage check or replay test fails.
+changes, stops matching deterministic replay data, stops binding the claimed
+Unit id during the deterministic replay, or falls out of a joined QNT replay
+owner's executable action set, the coverage check or replay test fails.
 
 The deterministic replay consumer is an identity/wiring witness, not MBT
 coverage for reusable reducer semantics. Use rules-kernel focused MBT when the
@@ -109,10 +113,11 @@ Current evidence tags are:
   authored Unit through the production Unit catalog, or loads a public
   mechanics-only Classic fixture through its policy fixture boundary, and proves
   the production support/projection boundary admits it.
-- `selected-identity-mbt`: an MBT/QNT owner binds a concrete authored Unit id
-  into production runtime entrypoints, names the identity-bearing driver replay
-  actions with `UNIT-IDENTITY-MBT-REPLAY`, executes deterministic replay rows
-  for those actions, and compares QCORE-observable projections.
+- `selected-identity-replay`: an owner binds a concrete authored Unit id into
+  production runtime entrypoints, names the identity-bearing driver replay
+  actions with `UNIT-IDENTITY-REPLAY`, executes deterministic replay rows for
+  those actions, and compares QCORE-observable projections. QNT parity is a
+  separate owner claim when the file executes `run(...)`.
 
 Ultra-golden witness kinds are checked vocabulary, not prose labels:
 
@@ -270,7 +275,7 @@ This matrix has two verification layers:
 Deterministic admission/projection coverage counts supported Unit ids with
 `unit-evidence.jsonl` evidence tagged `deterministic-admission-projection`.
 Selected identity replay coverage counts supported Unit ids with evidence
-tagged `selected-identity-mbt`. Both denominators are the supported Unit claims
+tagged `selected-identity-replay`. Both denominators are the supported Unit claims
 in this matrix; unsupported and widening rows remain closure dispositions, not
 test omissions.
 
@@ -428,7 +433,7 @@ these artifacts with:
 node scripts/unit-profile-coverage-check.cjs --write
 ```
 
-QMBT16 decided not to add selected spell identity MBT rows for the currently
+QMBT16 decided not to add selected spell identity replay rows for the currently
 supported spell Units. The rationale is recorded in
 [QMBT16_SELECTED_SPELL_IDENTITY_MBT_DECISION.md](QMBT16_SELECTED_SPELL_IDENTITY_MBT_DECISION.md):
 QMBT5 already replays the supported spell procedures with concrete spell ids,

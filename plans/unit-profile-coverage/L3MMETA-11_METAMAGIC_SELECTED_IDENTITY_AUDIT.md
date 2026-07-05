@@ -24,13 +24,15 @@ their typed owners are promoted.
 ## Existing Gate
 
 `pnpm unit-profile-coverage:check` validates selected-identity replay through
-the shared Unit profile coverage gate. For selected-identity MBT rows, the gate
+the shared Unit profile coverage gate. For selected-identity replay rows, the gate
 joins:
 
-- the `unit-evidence.jsonl` `selected-identity-mbt` row;
-- the `UNIT-IDENTITY-EVIDENCE` and `UNIT-IDENTITY-MBT-REPLAY` markers;
-- deterministic replay data declared through `defineSelectedIdentityWitness`;
-- the focused QNT driver action set; and
+- the `unit-evidence.jsonl` `selected-identity-replay` row;
+- the `UNIT-IDENTITY-EVIDENCE` and `UNIT-IDENTITY-REPLAY` markers;
+- deterministic replay data declared through `defineSelectedIdentityReplayWitness`
+  or split replay data consumed by that helper;
+- the focused QNT driver action set when a joined
+  `UNIT-IDENTITY-QNT-REPLAY` owner exists; and
 - production runtime entrypoint reachability from the selected-identity owner.
 
 The generated matrix reports `sorcerer_metamagic` as
@@ -90,7 +92,7 @@ look executable.
 
 Promoted Metamagic support has no selected-identity replay gap:
 
-- `sorcerer_metamagic` has checker-visible selected-identity MBT evidence.
+- `sorcerer_metamagic` has checker-visible selected-identity replay evidence.
 - Every promoted option-execution profile has at least one replay action tied
   to a selected `sorcerer_metamagic` Unit identity.
 - Projection and resource-bridge profiles are documented as deterministic or

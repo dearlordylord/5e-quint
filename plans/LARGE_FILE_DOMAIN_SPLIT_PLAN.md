@@ -260,7 +260,7 @@ Implementation order:
 
 1. Refresh the May 11 vertical inventory against current line ranges.
 2. Pick `Find Familiar` or `object/light/obscurement` as the tracer bullet.
-3. Add direct focused imports in the matching selected-identity MBT where
+3. Add direct focused imports in the matching selected-identity QNT replay where
    practical.
 4. Move one vertical, leaving wrappers only for names that external QNT imports
    still use.

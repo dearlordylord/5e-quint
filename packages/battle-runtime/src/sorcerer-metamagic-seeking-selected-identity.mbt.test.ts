@@ -1,5 +1,5 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3MMETA-18-SEEKING-SPELL-ATTACK-REROLL-SLICE sorcerer_metamagic
-// UNIT-IDENTITY-MBT-REPLAY: L3MMETA-18-SEEKING-SPELL-ATTACK-REROLL-SLICE sorcerer_metamagic doResolveSeekingSpellAttackReroll
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3MMETA-18-SEEKING-SPELL-ATTACK-REROLL-SLICE sorcerer_metamagic
+// UNIT-IDENTITY-REPLAY: L3MMETA-18-SEEKING-SPELL-ATTACK-REROLL-SLICE sorcerer_metamagic doResolveSeekingSpellAttackReroll
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.metamagic-missed-spell-attack-reroll
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL
 // RAW trace:
@@ -26,7 +26,7 @@ import {
   battleReducerStartRouteEvent,
   type BattleReducerRouteEvent,
 } from "./index.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
   observeSeekingRayOfFrostRoute,
   projectBattleState,
@@ -44,8 +44,8 @@ type SeekingMetamagicRouteReplayProjection = {
   readonly route: readonly BattleReducerRouteEvent[];
 };
 
-defineSelectedIdentityWitness({
-  describeLabel: "Sorcerer Metamagic Seeking Spell selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Sorcerer Metamagic Seeking Spell selected identity replay",
   taskId: "L3MMETA-18-SEEKING-SPELL-ATTACK-REROLL-SLICE",
   specFile: mbtSpecPath(
     import.meta.dirname,
@@ -147,6 +147,6 @@ function createSeekingMetamagicRouteReplayDriver() {
 
 function observeSeekingRayOfFrostInitialRoute() {
   return [
-    battleReducerStartRouteEvent(seekingSorcererMetamagicBattle()),
+    battleReducerStartRouteEvent(),
   ] as const;
 }

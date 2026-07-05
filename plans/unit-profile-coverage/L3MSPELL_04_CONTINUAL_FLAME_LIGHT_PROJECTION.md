@@ -73,7 +73,7 @@ MBT and replay evidence:
   is the deterministic admission/projection owner for
   `L12G-SPELL-CONTINUAL-FLAME`.
 - `packages/battle-runtime/src/level2-protection-spell-selected-identity.mbt.test.ts`
-  includes `UNIT-IDENTITY-MBT-REPLAY:
+  includes `UNIT-IDENTITY-REPLAY:
   B12-LEVEL2-PROTECTION-SPELL-IDENTITY-BATCH continual_flame
   doDiscoverContinualFlameObjectLight`.
 - `packages/battle-runtime/battle-runtime-level2-protection-spell-selected-identity.mbt.qnt`
@@ -92,7 +92,7 @@ Coverage ledgers:
   `BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE` to both Light and Continual
   Flame RAW evidence and to the same object-light QNT/runtime/MBT owners.
 - `plans/unit-profile-coverage/unit-evidence.jsonl` records both deterministic
-  admission projection and selected-identity MBT evidence for `continual_flame`.
+  admission projection and selected-identity replay evidence for `continual_flame`.
 - `plans/unit-profile-coverage/unit-matrix.json` joins `continual_flame` to
   `spell.invocation-object-light`, the object-light owners, and both evidence
   rows.
@@ -114,7 +114,7 @@ runtime-detached object presentation or table owner.
 
 - L3MSPELL-04 can close as evidence consolidated.
 - L3MSPELL-11 can remain in its current queue position; this task found that
-  Continual Flame already has selected-identity MBT replay through the
+  Continual Flame already has selected-identity replay through the
   production object-light subject.
 - L3MSPELL-12 should include this note when consolidating spell-boundary
   evidence.

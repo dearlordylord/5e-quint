@@ -1,5 +1,5 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B7-FEAT-IDENTITY-BATCH alert
-// UNIT-IDENTITY-MBT-REPLAY: B7-FEAT-IDENTITY-BATCH alert doFinalizeCriminalAlertOriginFeat doProjectAlertInitiativeHandoff
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay B7-FEAT-IDENTITY-BATCH alert
+// UNIT-IDENTITY-REPLAY: B7-FEAT-IDENTITY-BATCH alert doFinalizeCriminalAlertOriginFeat doProjectAlertInitiativeHandoff
 import * as path from "node:path";
 
 import {
@@ -111,7 +111,7 @@ const originFeatSelectedIdentityStateCheck = stateCheck(
   compareOriginFeatSelectedIdentityState,
 );
 
-describe("Character Battle origin feat selected identity MBT", () => {
+describe("Character Battle origin feat selected identity replay", () => {
   it("replays selected Unit identities deterministically", async () => {
     for (const replay of selectedUnitIdentityReplays) {
       const replayedActions = new Set<OriginFeatSelectedIdentityDriverAction>();

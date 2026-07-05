@@ -3,7 +3,7 @@ const path = require("node:path");
 const { fail } = require("./unit-profile-coverage-io.cjs");
 const {
   battleReadinessClosureKind,
-  selectedIdentityMbtEvidenceTag,
+  selectedIdentityReplayEvidenceTag,
 } = require("./unit-profile-coverage-config.cjs");
 const {
   percent,
@@ -904,7 +904,7 @@ function rowForStrictUnit(unit, sourceRows, rulesKernelProfileJoin, scope) {
     kind: unit.kind,
     selectedIdentity: selectedIdentityEvidenceStatus(
       unit,
-      selectedIdentityMbtEvidenceTag,
+      selectedIdentityReplayEvidenceTag,
     ),
     sourceRecordPath: unit.sourceRecordPath,
     closureKinds: closureKindsForClaim(unit.claim),
@@ -1453,7 +1453,7 @@ function renderStrictFullSupport(report, scope) {
     "",
     "### Selected Identity Replay Accounting",
     "",
-    "This is the selected-identity gate layer for the strict denominator. `witness-present` means a concrete selected Unit identity reaches an MBT/QNT replay owner; `not-applicable` is an explicit whole-claim non-applicable disposition; `not-required` is outside this gate denominator rather than a green row. `missing-witness-deferred-not-applicable` means the claim still lacks a replay witness for its supported runtime portion while the deferred closed portion is explicitly outside selected-identity replay.",
+    "This is the selected-identity gate layer for the strict denominator. `witness-present` means a concrete selected Unit identity reaches a selected identity replay owner; `not-applicable` is an explicit whole-claim non-applicable disposition; `not-required` is outside this gate denominator rather than a green row. `missing-witness-deferred-not-applicable` means the claim still lacks a replay witness for its supported runtime portion while the deferred closed portion is explicitly outside selected-identity replay.",
     "",
     "| Selected identity status | Rows |",
     "| --- | ---: |",

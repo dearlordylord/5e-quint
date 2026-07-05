@@ -7,7 +7,8 @@ function scanClaimFiles(root) {
   const claims = [];
   const selectedUnitIdentityReplayConsumers = [];
   const unitEvidence = [];
-  const unitIdentityMbtReplays = [];
+  const unitIdentityReplays = [];
+  const unitIdentityQntReplays = [];
   const selectedUnitIdentityReplays = [];
   function visit(dirPath) {
     for (const entry of fs.readdirSync(dirPath, { withFileTypes: true })) {
@@ -58,21 +59,39 @@ function scanClaimFiles(root) {
             unitIds: unitEvidenceMatch[3].trim().split(/\s+/),
           });
         }
-        const unitIdentityMbtReplayMatch = line.match(
-          /UNIT-IDENTITY-MBT-REPLAY:\s+(\S+)\s+(\S+)\s+(.+)$/,
+        const unitIdentityReplayMatch = line.match(
+          /UNIT-IDENTITY-REPLAY:\s+(\S+)\s+(\S+)\s+(.+)$/,
         );
-        if (unitIdentityMbtReplayMatch) {
-          const mbtActionSet = extractMbtFixtureActionSet(root, text, filePath);
-          unitIdentityMbtReplays.push({
+        if (unitIdentityReplayMatch) {
+          unitIdentityReplays.push({
             ownerPath: repoPath,
             line: index + 1,
-            taskId: unitIdentityMbtReplayMatch[1],
-            unitId: unitIdentityMbtReplayMatch[2],
-            actionNames: unitIdentityMbtReplayMatch[3].trim().split(/\s+/),
-            declaredActions: extractDriverSchemaActionNames(text),
-            stepActionNames: mbtActionSet.actionNames,
-            stepDescription: mbtActionSet.description,
+            taskId: unitIdentityReplayMatch[1],
+            unitId: unitIdentityReplayMatch[2],
+            actionNames: unitIdentityReplayMatch[3].trim().split(/\s+/),
+            declaredActions: extractDriverSchemaActionNames(text, filePath),
           });
+        }
+        const unitIdentityQntReplayMatch =
+          line.match(/UNIT-IDENTITY-QNT-REPLAY:\s+(\S+)\s+(\S+)\s+(.+)$/) ??
+          unitIdentityReplayMatch;
+        if (unitIdentityQntReplayMatch) {
+          const replayQntActionSet = extractReplayQntActionSet(
+            root,
+            text,
+            filePath,
+          );
+          if (replayQntActionSet.actionNames.size > 0) {
+            unitIdentityQntReplays.push({
+              ownerPath: repoPath,
+              line: index + 1,
+              taskId: unitIdentityQntReplayMatch[1],
+              unitId: unitIdentityQntReplayMatch[2],
+              actionNames: unitIdentityQntReplayMatch[3].trim().split(/\s+/),
+              stepActionNames: replayQntActionSet.actionNames,
+              stepDescription: replayQntActionSet.description,
+            });
+          }
         }
       }
     }
@@ -83,11 +102,16 @@ function scanClaimFiles(root) {
     selectedUnitIdentityReplayConsumers,
     selectedUnitIdentityReplays,
     unitEvidence,
-    unitIdentityMbtReplays,
+    unitIdentityQntReplays,
+    unitIdentityReplays,
   };
 }
 
-function extractSelectedUnitIdentityReplays(rootOrText, maybeText, maybeFilePath) {
+function extractSelectedUnitIdentityReplays(
+  rootOrText,
+  maybeText,
+  maybeFilePath,
+) {
   const legacyTextOnlyCall = maybeText === undefined;
   const root = legacyTextOnlyCall ? process.cwd() : rootOrText;
   const text = legacyTextOnlyCall ? rootOrText : maybeText;
@@ -95,7 +119,10 @@ function extractSelectedUnitIdentityReplays(rootOrText, maybeText, maybeFilePath
     ? path.join(root, "inline-selected-identity-replay.test.ts")
     : maybeFilePath;
   const tableRows = extractTableSelectedUnitIdentityReplays(text);
-  const witnessActions = extractSelectedIdentityWitnessActionNames(text);
+  const witnessActions = extractSelectedIdentityWitnessActionNames(
+    text,
+    legacyTextOnlyCall ? undefined : filePath,
+  );
   if (tableRows.length === 0 && witnessActions.size === 0) {
     return [];
   }
@@ -112,13 +139,21 @@ function extractSelectedUnitIdentityReplays(rootOrText, maybeText, maybeFilePath
   }));
   if (witnessActions.size > 0) {
     for (const match of text.matchAll(
-      /UNIT-IDENTITY-MBT-REPLAY:\s+(\S+)\s+(\S+)\s+(.+)$/gm,
+      /UNIT-IDENTITY-REPLAY:\s+(\S+)\s+(\S+)\s+(.+)$/gm,
     )) {
+      const taskId = match[1];
+      const unitId = match[2];
       const actionNames = match[3].trim().split(/\s+/);
-      if (actionNames.every((actionName) => witnessActions.has(actionName))) {
+      if (
+        actionNames.every((actionName) => witnessActions.has(actionName)) &&
+        hasSelectedIdentityReplayMarkerEvidence(text, filePath, {
+          unitId,
+          actionNames,
+        })
+      ) {
         rows.push({
-          taskId: match[1],
-          unitId: match[2],
+          taskId,
+          unitId,
           actionNames,
           reducerReachability,
         });
@@ -148,18 +183,24 @@ function extractTableSelectedUnitIdentityReplays(text) {
 
 function hasSelectedUnitIdentityReplayConsumer(text) {
   return (
-    /defineSelectedIdentityWitness\s*\(/.test(text) ||
-    /it\s*\(\s*"replays selected Unit identities deterministically"/.test(
+    hasSelectedIdentityReplayHelper(text) ||
+    (/it\s*\(\s*"replays selected Unit identities deterministically"/.test(
       text,
     ) &&
-    /for\s*\(\s*const\s+replay\s+of\s+selectedUnitIdentityReplays\s*\)/.test(
-      text,
-    ) &&
-    /for\s*\(\s*const\s+sequence\s+of\s+replay\.sequences\s*\)/.test(text)
+      /for\s*\(\s*const\s+replay\s+of\s+selectedUnitIdentityReplays\s*\)/.test(
+        text,
+      ) &&
+      /for\s*\(\s*const\s+sequence\s+of\s+replay\.sequences\s*\)/.test(text))
   );
 }
 
-function extractDriverSchemaActionNames(text) {
+function hasSelectedIdentityReplayHelper(text) {
+  return /defineSelectedIdentity(?:ReplayWitness|ReplayAndQntReplay)\s*\(/.test(
+    text,
+  );
+}
+
+function extractDriverSchemaActionNames(text, filePath) {
   return new Set([
     ...[
       ...text.matchAll(
@@ -170,33 +211,51 @@ function extractDriverSchemaActionNames(text) {
         (match) => match[1],
       ),
     ),
-    ...extractSelectedIdentityWitnessActionNames(text),
+    ...extractSelectedIdentityWitnessActionNames(text, filePath),
   ]);
 }
 
-function extractMbtFixtureActionSet(root, text, filePath) {
-  const runMatches = [
-    ...text.matchAll(
-      /run\s*\(\s*\{[\s\S]*?spec:\s*path\.resolve\(\s*import\.meta\.dirname\s*,\s*"([^"]+\.qnt)"[\s\S]*?\)[\s\S]*?step:\s*"([A-Za-z_]\w*)"[\s\S]*?\}\s*\)/g,
-    ),
-    ...[
-      ...text.matchAll(
-        /run\s*\(\s*\{[\s\S]*?spec:\s*mbtSpecPath\(\s*import\.meta\.dirname\s*,\s*"([^"]+\.qnt)"\s*,?\s*\)[\s\S]*?step:\s*"([A-Za-z_]\w*)"[\s\S]*?\}\s*\)/g,
+function extractReplayQntActionSet(root, text, filePath) {
+  const allMatches = [];
+  for (const source of replayQntTextSources(text, filePath)) {
+    const runMatches = [
+      ...source.text.matchAll(
+        /run\s*\(\s*\{[\s\S]*?spec:\s*path\.resolve\(\s*import\.meta\.dirname\s*,\s*"([^"]+\.qnt)"[\s\S]*?\)[\s\S]*?step:\s*"([A-Za-z_]\w*)"[\s\S]*?\}\s*\)/g,
       ),
-    ].map((match) => [undefined, `../${match[1]}`, match[2]]),
-  ];
-  const selectedIdentityWitnessMatches = [
-    ...text.matchAll(
-      /defineSelectedIdentityWitness\s*\(\s*\{[\s\S]*?specFile:\s*mbtSpecPath\(\s*import\.meta\.dirname\s*,\s*"([^"]+\.qnt)"\s*,?\s*\)[\s\S]*?\}\s*\)/g,
-    ),
-  ].map((match) => [undefined, `../${match[1]}`, "step"]);
-  const legacySelectedIdentityWitnessMatches = [
-    ...text.matchAll(
-      /defineSelectedIdentityWitness\s*\(\s*\{[\s\S]*?specFile:\s*path\.resolve\(\s*import\.meta\.dirname\s*,\s*"([^"]+\.qnt)"[\s\S]*?\)[\s\S]*?\}\s*\)/g,
-    ),
-  ].map((match) => [undefined, match[1], "step"]);
-  const allMatches = [...runMatches, ...selectedIdentityWitnessMatches];
-  allMatches.push(...legacySelectedIdentityWitnessMatches);
+      ...[
+        ...source.text.matchAll(
+          /run\s*\(\s*\{[\s\S]*?spec:\s*mbtSpecPath\(\s*import\.meta\.dirname\s*,\s*"([^"]+\.qnt)"\s*,?\s*\)[\s\S]*?step:\s*"([A-Za-z_]\w*)"[\s\S]*?\}\s*\)/g,
+        ),
+      ].map((match) => [undefined, `../${match[1]}`, match[2]]),
+    ].map((match) => ({ sourceFile: source.filePath, match }));
+    const selectedIdentityWitnessMatches = [
+      ...source.text.matchAll(
+        /defineSelectedIdentity(?:QntReplay|ReplayAndQntReplay)\s*\(\s*\{[\s\S]*?specFile:\s*mbtSpecPath\(\s*import\.meta\.dirname\s*,\s*"([^"]+\.qnt)"\s*,?\s*\)[\s\S]*?\}\s*\)/g,
+      ),
+      ...source.text.matchAll(
+        /specFile:\s*mbtSpecPath\(\s*import\.meta\.dirname\s*,\s*"([^"]+\.qnt)"\s*,?\s*\)/g,
+      ),
+    ].map((match) => ({
+      sourceFile: source.filePath,
+      match: [undefined, `../${match[1]}`, "step"],
+    }));
+    const legacySelectedIdentityWitnessMatches = [
+      ...source.text.matchAll(
+        /defineSelectedIdentity(?:QntReplay|ReplayAndQntReplay)\s*\(\s*\{[\s\S]*?specFile:\s*path\.resolve\(\s*import\.meta\.dirname\s*,\s*"([^"]+\.qnt)"[\s\S]*?\)[\s\S]*?\}\s*\)/g,
+      ),
+      ...source.text.matchAll(
+        /specFile:\s*path\.resolve\(\s*import\.meta\.dirname\s*,\s*"([^"]+\.qnt)"[\s\S]*?\)/g,
+      ),
+    ].map((match) => ({
+      sourceFile: source.filePath,
+      match: [undefined, match[1], "step"],
+    }));
+    allMatches.push(
+      ...runMatches,
+      ...selectedIdentityWitnessMatches,
+      ...legacySelectedIdentityWitnessMatches,
+    );
+  }
   if (allMatches.length === 0) {
     return {
       actionNames: new Set(),
@@ -207,8 +266,11 @@ function extractMbtFixtureActionSet(root, text, filePath) {
   const actionNames = new Set();
   const descriptions = [];
   for (const runMatch of allMatches) {
-    const specPath = path.resolve(path.dirname(filePath), runMatch[1]);
-    const stepName = runMatch[2];
+    const specPath = path.resolve(
+      path.dirname(runMatch.sourceFile),
+      runMatch.match[1],
+    );
+    const stepName = runMatch.match[2];
     descriptions.push(`${toRepoPath(root, specPath)} ${stepName}`);
     if (!fs.existsSync(specPath)) {
       continue;
@@ -225,6 +287,27 @@ function extractMbtFixtureActionSet(root, text, filePath) {
     actionNames,
     description: descriptions.join(", "),
   };
+}
+
+function replayQntTextSources(text, filePath) {
+  const sources = [{ text, filePath }];
+  const visited = new Set([filePath]);
+  function visit(sourceText, sourceFile, remainingDepth) {
+    if (remainingDepth <= 0) return;
+    for (const importPath of extractRelativeTsImports(sourceText)) {
+      const importedFile = resolveRelativeTsImport(sourceFile, importPath);
+      if (importedFile === undefined || visited.has(importedFile)) continue;
+      visited.add(importedFile);
+      const importedText = fs.readFileSync(importedFile, "utf8");
+      sources.push({
+        text: importedText,
+        filePath: importedFile,
+      });
+      visit(importedText, importedFile, remainingDepth - 1);
+    }
+  }
+  visit(text, filePath, 2);
+  return sources;
 }
 
 function extractQuintAnyActionNames(text, actionName) {
@@ -260,11 +343,81 @@ function uniqueSelectedUnitIdentityReplayRows(rows) {
   return result;
 }
 
-function extractSelectedIdentityWitnessActionNames(text) {
-  if (!/defineSelectedIdentityWitness\s*\(/.test(text)) return new Set();
+function extractSelectedIdentityWitnessActionNames(text, filePath) {
+  if (!hasSelectedIdentityReplayHelper(text)) return new Set();
+  const sources =
+    filePath === undefined
+      ? [{ text, filePath }]
+      : replayQntTextSources(text, filePath);
   return new Set(
-    [...text.matchAll(/"((?:do)[A-Za-z_]\w*)"/g)].map((match) => match[1]),
+    sources.flatMap((source) => {
+      const nonMarkerText = source.text.replace(
+        /^.*UNIT-IDENTITY-REPLAY:.*$/gm,
+        "",
+      );
+      return [...nonMarkerText.matchAll(/"((?:do)[A-Za-z_]\w*)"/g)].map(
+        (match) => match[1],
+      );
+    }),
   );
+}
+
+function hasSelectedIdentityReplayMarkerEvidence(
+  text,
+  filePath,
+  { actionNames, unitId },
+) {
+  if (!hasSelectedIdentityReplayHelper(text)) return false;
+  const sources =
+    filePath === undefined
+      ? [{ text, filePath }]
+      : replayQntTextSources(text, filePath);
+  const nonMarkerText = sources
+    .map((source) => source.text.replace(/^.*UNIT-IDENTITY-REPLAY:.*$/gm, ""))
+    .join("\n");
+  return (
+    actionNames.every((actionName) =>
+      nonMarkerText.includes(`"${actionName}"`),
+    ) && selectedIdentityUnitIdMentioned(unitId, nonMarkerText, sources)
+  );
+}
+
+function selectedIdentityUnitIdMentioned(unitId, nonMarkerText, sources) {
+  if (nonMarkerText.includes(`"${unitId}"`)) return true;
+  if (nonMarkerText.includes(`unitId: "${unitId}"`)) return true;
+  const constBindings = extractStringConstBindings(sources);
+  for (const match of nonMarkerText.matchAll(/\bunitId:\s*([A-Za-z_]\w*)/g)) {
+    const identifier = match[1];
+    if (constBindings.get(identifier) === unitId) return true;
+    if (identifierToUnitIdCandidate(identifier) === unitId) return true;
+  }
+  if (
+    /\bunitId\s*,/.test(nonMarkerText) &&
+    constBindings.get("unitId") === unitId
+  ) {
+    return true;
+  }
+  return false;
+}
+
+function extractStringConstBindings(sources) {
+  const bindings = new Map();
+  for (const source of sources) {
+    for (const match of source.text.matchAll(
+      /\b(?:export\s+)?const\s+([A-Za-z_]\w*)\s*=\s*"([^"]+)"/g,
+    )) {
+      bindings.set(match[1], match[2]);
+    }
+  }
+  return bindings;
+}
+
+function identifierToUnitIdCandidate(identifier) {
+  if (!identifier.endsWith("UnitId")) return undefined;
+  return identifier
+    .slice(0, -"UnitId".length)
+    .replace(/([a-z0-9])([A-Z])/g, "$1_$2")
+    .toLowerCase();
 }
 
 function selectedIdentityReducerReachability(root, filePath) {
@@ -350,7 +503,10 @@ function extractPublicBattleRuntimeEntrypoints(text) {
     /import\s*\{([\s\S]*?)\}\s*from\s*"(.\/index\.ts)"\s*;/g,
   )) {
     for (const name of match[1].split(",")) {
-      const imported = name.trim().split(/\s+as\s+/)[0]?.trim();
+      const imported = name
+        .trim()
+        .split(/\s+as\s+/)[0]
+        ?.trim();
       if (
         [
           "startBattle",
@@ -374,7 +530,10 @@ function extractPublicCharacterSheetRuntimeEntrypoints(text) {
     /import\s*\{([\s\S]*?)\}\s*from\s*"(.\/index\.ts)"\s*;/g,
   )) {
     for (const name of match[1].split(",")) {
-      const imported = name.trim().split(/\s+as\s+/)[0]?.trim();
+      const imported = name
+        .trim()
+        .split(/\s+as\s+/)[0]
+        ?.trim();
       if (["characterSheetArmorClassState"].includes(imported)) {
         result.add(imported);
       }
@@ -389,7 +548,10 @@ function extractPackageLocalRuntimeEntrypoints(text) {
     /import\s*\{([\s\S]*?)\}\s*from\s*"(.\/index\.ts)"\s*;/g,
   )) {
     for (const name of match[1].split(",")) {
-      const imported = name.trim().split(/\s+as\s+/)[0]?.trim();
+      const imported = name
+        .trim()
+        .split(/\s+as\s+/)[0]
+        ?.trim();
       if (
         imported.length > 0 &&
         !imported.startsWith("type ") &&
@@ -422,7 +584,7 @@ function escapeRegExp(value) {
 
 module.exports = {
   extractDriverSchemaActionNames,
-  extractMbtFixtureActionSet,
+  extractReplayQntActionSet,
   extractSelectedUnitIdentityReplays,
   hasSelectedUnitIdentityReplayConsumer,
   scanClaimFiles,
