@@ -433,7 +433,7 @@
     {
       "number": 72,
       "id": "CRPI-READY-030",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: rule-core-movement"
     },
     {
@@ -4747,7 +4747,7 @@ Plan Impact:
 
 ### Task 72 - CRPI-READY-030
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
