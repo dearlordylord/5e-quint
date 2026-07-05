@@ -14,7 +14,25 @@ import type {
 } from "@dnd/surface/surface/types";
 import { Option } from "effect";
 
-import type { CharacterSheetClassFeaturePreparedSpellAccess } from "./sheet-types.ts";
+import type {
+  CharacterSheet,
+  CharacterSheetClassFeaturePreparedSpellAccess,
+  CharacterSheetClassFeatureSelectedReferenceProjection,
+  CharacterSheetClassFeatureSelectedReferenceProjectionRoute,
+} from "./sheet-types.ts";
+
+const CHARACTER_SHEET_CLASS_FEATURE_SELECTED_REFERENCE_ROUTE = [
+  {
+    kind: "retainCharacterSheetSelectedReferences",
+    subject: "selectedReferenceProjection",
+    owner: "selectedReference",
+  },
+  {
+    kind: "projectCharacterSheetFacts",
+    subject: "selectedReferenceProjection",
+    owner: "buildProjection",
+  },
+] as const satisfies CharacterSheetClassFeatureSelectedReferenceProjectionRoute;
 
 export function characterSheetClassFeaturePreparedSpellAccessesForBuild(input: {
   readonly build: CharacterBuild;
@@ -46,6 +64,23 @@ export function characterSheetClassFeaturePreparedSpellAccessesForBuild(input: {
     }
   }
   return accesses;
+}
+
+export function characterSheetClassFeatureSelectedReferenceProjection(input: {
+  readonly sheet: CharacterSheet;
+  readonly unitLibrary: UnitCatalog;
+}): CharacterSheetClassFeatureSelectedReferenceProjection {
+  return {
+    classFeatureUnitIds: characterBuildFeatureUnitIds(
+      input.sheet.build,
+      input.unitLibrary,
+    ),
+    selectedClassChoiceUnitIds: input.sheet.build.features.flatMap(
+      (selection) =>
+        selection.kind === "selectedClassChoice" ? [selection.unitId] : [],
+    ),
+    qRoute: CHARACTER_SHEET_CLASS_FEATURE_SELECTED_REFERENCE_ROUTE,
+  };
 }
 
 function classLevelForClassFeatureUnit(input: {

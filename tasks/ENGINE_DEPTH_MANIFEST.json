@@ -1,67 +1,48 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-050",
+  "taskId": "CRPI-BLOCK-051",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.route.mbt.qnt",
+      "path": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.route.mbt.qnt",
       "quarantinedWitnessNames": [
         "qRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-050.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-051.json"
       ]
     },
     {
       "path": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "armorClassRouteActions",
-        "projectPublicArmorClassRoute",
+        "classFeatureSelectedReferenceRouteActions",
+        "projectPublicClassFeatureSelectedReferenceRoute",
         "normalizeCharacterSheetRouteQuintState",
         "routeStateCheck"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-050.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-051.json"
       ]
     },
     {
-      "path": "packages/character-sheet-runtime/src/armor-class-base-selected-identity.mbt.test.ts",
+      "path": "packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "createArmorClassBaseSelectedIdentityDriver",
-        "armorClassBaseSelectedIdentityStateCheck"
+        "createClassFeatureSelectedIdentityDriver",
+        "classFeatureSelectedIdentityStateCheck"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-050.json"
-      ]
-    },
-    {
-      "path": "packages/character-sheet-runtime/src/armor-class.test.ts",
-      "quarantinedWitnessNames": [
-        "projects Armor Class selected-reference qRoute through the public projection entrypoint"
-      ],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-050.json"
-      ]
-    },
-    {
-      "path": "packages/character-sheet-runtime/src/test-support.ts",
-      "quarantinedWitnessNames": [
-        "characterSheetArmorClassProjection"
-      ],
-      "targetReplayEvidence": [
-        "packages/character-sheet-runtime/src/armor-class.test.ts",
-        "tasks/target-replay-evidence/CRPI-BLOCK-050.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-051.json"
       ]
     }
   ],
   "productionModulesExtended": [
     {
-      "path": "packages/character-sheet-runtime/src/armor-class.ts",
+      "path": "packages/character-sheet-runtime/src/class-feature-spells.ts",
       "owners": [
         "CharacterSheetSelectedReferenceOwner",
         "CharacterSheetBuildProjectionOwner"
       ],
-      "notes": "Task 96 adds the public characterSheetArmorClassProjection entrypoint. It derives Armor Class through characterSheetArmorClassState, returns the current Armor Class, and exposes copied selected-reference retention plus Armor Class build-projection qRoute events. No durable CharacterSheet state field is added."
+      "notes": "Task 97 adds the public characterSheetClassFeatureSelectedReferenceProjection entrypoint. It derives retained class-feature Unit ids and selected subclass/class-choice Unit ids from existing CharacterSheet.build facts and exposes the copied selected-reference retention plus selected-reference build-projection qRoute events. No durable CharacterSheet state field is added."
     },
     {
       "path": "packages/character-sheet-runtime/src/sheet-types.ts",
@@ -69,7 +50,7 @@
         "CharacterSheetSelectedReferenceOwner",
         "CharacterSheetBuildProjectionOwner"
       ],
-      "notes": "Task 96 adds the typed CharacterSheetArmorClassProjection and its two-event qRoute projection shape. The type records route projection evidence, not duplicated sheet state."
+      "notes": "Task 97 adds the typed CharacterSheetClassFeatureSelectedReferenceProjection and its two-event qRoute shape. The type records route projection evidence and derived references, not duplicated sheet state."
     },
     {
       "path": "packages/character-sheet-runtime/src/index.ts",
@@ -77,17 +58,24 @@
         "CharacterSheetSelectedReferenceOwner",
         "CharacterSheetBuildProjectionOwner"
       ],
-      "notes": "Exports the public Armor Class projection-with-route entrypoint and projection types."
+      "notes": "Exports the public class-feature selected-reference projection-with-route entrypoint and projection types."
+    },
+    {
+      "path": "scripts/audit-character-sheet-runtime-split.mjs",
+      "owners": [
+        "CharacterSheetBuildProjectionOwner"
+      ],
+      "notes": "Records split-audit ownership for the new public projection export surface so quality checks keep the owner boundary explicit."
     }
   ],
   "expectedNextReuse": [
     {
-      "path": "packages/character-sheet-runtime/src/armor-class.ts",
-      "notes": "Future Character Sheet Armor Class routes should reuse characterSheetArmorClassProjection instead of adapter-local route event assembly."
+      "path": "packages/character-sheet-runtime/src/class-feature-spells.ts",
+      "notes": "Future Character Sheet class-feature selected-reference routes should reuse characterSheetClassFeatureSelectedReferenceProjection instead of adapter-local route event assembly."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 96 observes copied qRoute for Armor Class base selected identity through public Character Sheet projection-with-route entrypoints. Selected identity remains retained reference evidence; Armor Class remains derived from CharacterBuild, loadout, Surface Unit mechanics, ability scores, armor training, and Shield facts."
+    "notes": "Task 97 observes copied qRoute for class-feature selected identity through public Character Sheet projection-with-route entrypoints. Selected identity remains retained reference evidence; ability-check and spell-access behavior remains derived from existing build, sheet, and Surface facts."
   }
 }

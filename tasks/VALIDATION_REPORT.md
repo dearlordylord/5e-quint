@@ -1,5 +1,111 @@
 # Validation Report
 
+## CRPI-BLOCK-051
+
+Status: `pass`
+
+- Task: 97
+- Driver path: `packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt`
+- Route connector path: `packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.route.mbt.qnt`
+- Route class: `reducer-routed`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-051.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt`
+- `packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.route.mbt.qnt`
+- `packages/character-sheet-runtime/src/class-feature-selected-identity.mbt.test.ts`
+- `packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts`
+- `packages/character-sheet-runtime/src/class-feature-spells.ts`
+- `packages/character-sheet-runtime/src/sheet-types.ts`
+- `packages/character-sheet-runtime/src/index.ts`
+- `scripts/audit-character-sheet-runtime-split.mjs`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-convergence-backlog.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Character-Creation.md`
+- `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`
+- `.references/srd-5.2.1/Classes/Bard.md`
+- `.references/srd-5.2.1/Classes/Cleric.md`
+- `.references/srd-5.2.1/Classes/Druid.md`
+- `.references/srd-5.2.1/Classes/Paladin.md`
+- `.references/srd-5.2.1/Classes/Ranger.md`
+- `.references/srd-5.2.1/Classes/Sorcerer.md`
+- `.references/srd-5.2.1/Classes/Warlock.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+Class-feature selected-identity route replay is accepted through the public Character Sheet
+projection-with-route entrypoint. `characterSheetClassFeatureSelectedReferenceProjection`
+derives retained class-feature Unit ids and selected subclass/class-choice Unit ids from
+existing `CharacterSheet.build` facts, then returns the selected-reference retention plus
+selected-reference build-projection `qRoute` copied by the route connector. The Druid Circle
+of the Land branch creates a sheet with the existing `CharacterSheet.druidCircleLand` fact
+and reads that sheet-owned fact before projection. Selected identity remains retained
+reference evidence; Ability Check and spell-access semantics remain derived by the existing
+public projection functions.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectBardJackOfAllTrades` | `tasks/target-replay-evidence/CRPI-BLOCK-051.json#driver:packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectBardJackOfAllTrades#trace:public-route=characterSheetClassFeatureSelectedReferenceProjection action=doProjectBardJackOfAllTrades qRoute=class-feature-selected-identity-public-route` | `_none_` | `covered` |
+| `packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectClericLifeDomainSpells` | `tasks/target-replay-evidence/CRPI-BLOCK-051.json#driver:packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectClericLifeDomainSpells#trace:public-route=characterSheetClassFeatureSelectedReferenceProjection action=doProjectClericLifeDomainSpells qRoute=class-feature-selected-identity-public-route` | `_none_` | `covered` |
+| `packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectDruidCircleLandSpells` | `tasks/target-replay-evidence/CRPI-BLOCK-051.json#driver:packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectDruidCircleLandSpells#trace:public-route=characterSheetClassFeatureSelectedReferenceProjection action=doProjectDruidCircleLandSpells qRoute=class-feature-selected-identity-public-route` | `_none_` | `covered` |
+| `packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectPaladinOathDevotionSpells` | `tasks/target-replay-evidence/CRPI-BLOCK-051.json#driver:packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectPaladinOathDevotionSpells#trace:public-route=characterSheetClassFeatureSelectedReferenceProjection action=doProjectPaladinOathDevotionSpells qRoute=class-feature-selected-identity-public-route` | `_none_` | `covered` |
+| `packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectPaladinsSmite` | `tasks/target-replay-evidence/CRPI-BLOCK-051.json#driver:packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectPaladinsSmite#trace:public-route=characterSheetClassFeatureSelectedReferenceProjection action=doProjectPaladinsSmite qRoute=class-feature-selected-identity-public-route` | `_none_` | `covered` |
+| `packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectRangerFavoredEnemy` | `tasks/target-replay-evidence/CRPI-BLOCK-051.json#driver:packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectRangerFavoredEnemy#trace:public-route=characterSheetClassFeatureSelectedReferenceProjection action=doProjectRangerFavoredEnemy qRoute=class-feature-selected-identity-public-route` | `_none_` | `covered` |
+| `packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectSorcererDraconicSpells` | `tasks/target-replay-evidence/CRPI-BLOCK-051.json#driver:packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectSorcererDraconicSpells#trace:public-route=characterSheetClassFeatureSelectedReferenceProjection action=doProjectSorcererDraconicSpells qRoute=class-feature-selected-identity-public-route` | `_none_` | `covered` |
+| `packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectWarlockFiendSpells` | `tasks/target-replay-evidence/CRPI-BLOCK-051.json#driver:packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt#step:doProjectWarlockFiendSpells#trace:public-route=characterSheetClassFeatureSelectedReferenceProjection action=doProjectWarlockFiendSpells qRoute=class-feature-selected-identity-public-route` | `_none_` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-051.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id pattern: `public-route=characterSheetClassFeatureSelectedReferenceProjection action=<branchAction> qRoute=class-feature-selected-identity-public-route`
+- The copied connector projection source is `packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.route.mbt.qnt#qRoute`; the observed projection source is the public Character Sheet projection-with-route entrypoint `packages/character-sheet-runtime/src/class-feature-spells.ts#characterSheetClassFeatureSelectedReferenceProjection`.
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-051/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 97.
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Character-Creation.md#Record Class Features` defines recording class features and making feature choices on the Character Sheet.
+- SRD 5.2.1 `Spells/Gaining-and-Casting.md#Always-Prepared Spells` defines feature-granted always-prepared Spell Access.
+- SRD 5.2.1 class passages for Bard, Cleric, Druid, Paladin, Ranger, Sorcerer, and Warlock define the in-scope class-feature and subclass Spell Access / class-feature facts.
+- SRD 5.2.1 `Classes/Druid.md#Level 3: Circle of the Land Spells` defines choosing land after a Long Rest and having listed spells prepared for Druid level and lower.
+- `UBIQUITOUS_LANGUAGE.md` defines Character Sheet, Class, Spell Access, and class-feature vocabulary used by this owner.
+
+Verification results:
+
+- Base check passed: declared base ref `ralph/cleanroom-character-sheet-route-lane-20260705T2045Z/integration` initially resolved to `d86cb814a Mark Ralph task 96 done`; `HEAD` resolved to `d86cb814a Mark Ralph task 96 done`; Base SHA `d86cb814ad82069a5d945265c6c0dcd9a72d1e71` is an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against SRD 5.2.1 Character Creation, spell access, in-scope class passages, Druid Circle of the Land, and `UBIQUITOUS_LANGUAGE.md`.
+- Focused typecheck passed: `pnpm --filter @dnd/character-sheet-runtime typecheck`.
+- Focused replay passed: `START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/character-sheet-runtime exec vitest run src/class-feature-selected-identity.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "class-feature selected identity|routes in-scope class-feature" ) 2>&1 & pid=$!; wait "$pid"; status=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"` passed with 4 tests and 9 skipped in `TOTAL: 9s`.
+- JSON validation passed for `tasks/target-replay-evidence/CRPI-BLOCK-051.json`, `tasks/RUN_LEDGER.json`, `tasks/ENGINE_DEPTH_MANIFEST.json`, and `tasks/STATE_OWNER_MANIFEST.json`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `pnpm check:character-sheet-runtime-split` passed after recording ownership for the class-feature selected-reference projection exports.
+- Requested broad verification passed: `pnpm quality`. App lint emitted 61 warnings and exited 0; all quality gates and typecheck passed.
+- `git diff --check` passed.
+- Reviewer-loop convergence passed: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks found no remaining reasonable Task 97 findings after moving observed class-feature selected-reference `qRoute` events into the public projection-with-route entrypoint and recording split-audit export ownership.
+
 ## CRPI-BLOCK-050
 
 Status: `pass`

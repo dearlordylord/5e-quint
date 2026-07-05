@@ -927,6 +927,26 @@ export type CharacterSheetArmorClassProjection = {
   readonly qRoute: CharacterSheetArmorClassProjectionRoute;
 };
 
+export type CharacterSheetClassFeatureSelectedReferenceProjectionRoute =
+  readonly [
+    {
+      readonly kind: "retainCharacterSheetSelectedReferences";
+      readonly subject: "selectedReferenceProjection";
+      readonly owner: "selectedReference";
+    },
+    {
+      readonly kind: "projectCharacterSheetFacts";
+      readonly subject: "selectedReferenceProjection";
+      readonly owner: "buildProjection";
+    },
+  ];
+
+export type CharacterSheetClassFeatureSelectedReferenceProjection = {
+  readonly classFeatureUnitIds: readonly UnitRecord["id"][];
+  readonly selectedClassChoiceUnitIds: readonly UnitRecord["id"][];
+  readonly qRoute: CharacterSheetClassFeatureSelectedReferenceProjectionRoute;
+};
+
 export type CharacterSheetAbilityCheckOtherProficiencyBonusState =
   | { readonly tag: "noOtherProficiencyBonus" }
   | { readonly tag: "otherProficiencyBonusApplies" };

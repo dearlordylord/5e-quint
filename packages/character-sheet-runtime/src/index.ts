@@ -31,7 +31,10 @@ export {
   characterSheetArmorClassProjection,
   characterSheetArmorClassState,
 } from "./armor-class.ts";
-export { characterSheetClassFeaturePreparedSpellAccessesForBuild } from "./class-feature-spells.ts";
+export {
+  characterSheetClassFeaturePreparedSpellAccessesForBuild,
+  characterSheetClassFeatureSelectedReferenceProjection,
+} from "./class-feature-spells.ts";
 export {
   characterSheetDruidCircleLandPreparedSpellAccess,
   characterSheetDruidWildShapeKnownForms,
@@ -108,6 +111,8 @@ export type {
   CharacterSheetBookOfShadowsPresence,
   CharacterSheetBookOfShadowsRitualInvocation,
   CharacterSheetClassFeaturePreparedSpellAccess,
+  CharacterSheetClassFeatureSelectedReferenceProjection,
+  CharacterSheetClassFeatureSelectedReferenceProjectionRoute,
   CharacterSheetCompanion,
   CharacterSheetCompanionCreatureTypeOverride,
   CharacterSheetCompanionFormSelection,

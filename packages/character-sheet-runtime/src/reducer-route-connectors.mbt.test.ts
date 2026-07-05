@@ -24,6 +24,7 @@ import {
   characterSheetId,
   characterSheetAbilityCheckProficiencyBonusProjection,
   characterSheetArmorClassProjection,
+  characterSheetClassFeatureSelectedReferenceProjection,
   completeLongRestArcaneRecoveryResetWithRoute,
   completeShortRestArcaneRecoveryWithRoute,
   createFreshCharacterSheet,
@@ -35,6 +36,7 @@ import {
   type CharacterSheetAbilityCheckProficiencyBonus,
   type CharacterSheet,
   type CharacterSheetArmorClassBaseChoice,
+  type CharacterSheetDruidCircleLand,
   type CharacterSheetRouteEvent,
   type CharacterSheetRouteFact,
   type CharacterSheetRouteFill,
@@ -535,14 +537,96 @@ const armorClassRouteActions = {
 } as const satisfies ReadyRouteActionMap<typeof armorClassRouteDriverSchema>;
 
 const classFeatureSelectedReferenceRouteActions = {
-  doProjectBardJackOfAllTrades: projectClassFeatureSelectedReferenceRoute,
-  doProjectClericLifeDomainSpells: projectClassFeatureSelectedReferenceRoute,
-  doProjectDruidCircleLandSpells: projectClassFeatureSelectedReferenceRoute,
-  doProjectPaladinOathDevotionSpells: projectClassFeatureSelectedReferenceRoute,
-  doProjectPaladinsSmite: projectClassFeatureSelectedReferenceRoute,
-  doProjectRangerFavoredEnemy: projectClassFeatureSelectedReferenceRoute,
-  doProjectSorcererDraconicSpells: projectClassFeatureSelectedReferenceRoute,
-  doProjectWarlockFiendSpells: projectClassFeatureSelectedReferenceRoute,
+  doProjectBardJackOfAllTrades: projectPublicClassFeatureSelectedReferenceRoute({
+    build: classFeatureBuild({ startingClass: "class_bard", totalLevel: 2 }),
+    expectedClassFeatureUnitId: "bard_jack_of_all_trades",
+  }),
+  doProjectClericLifeDomainSpells:
+    projectPublicClassFeatureSelectedReferenceRoute({
+      build: classFeatureBuild({
+        startingClass: "class_cleric",
+        totalLevel: 3,
+        features: [
+          {
+            kind: "selectedClassChoice",
+            selectedFromUnitId: "class_cleric",
+            unitId: "subclass_cleric_life_domain",
+          },
+        ],
+      }),
+      expectedClassFeatureUnitId: "cleric_life_domain_spells",
+      expectedSelectedClassChoiceUnitIds: ["subclass_cleric_life_domain"],
+    }),
+  doProjectDruidCircleLandSpells:
+    projectPublicClassFeatureSelectedReferenceRoute({
+      build: druidCircleLandBuild(),
+      expectedClassFeatureUnitId: "druid_circle_of_the_land_spells",
+      expectedSelectedClassChoiceUnitIds: ["subclass_druid_circle_of_the_land"],
+      expectedDruidLand: "temperate",
+      druidWildShapeKnownFormStatBlockIds: [
+        "stat_block_rat",
+        "stat_block_riding_horse",
+        "stat_block_spider",
+        "stat_block_wolf",
+      ],
+      druidCircleLand: { land: "temperate" },
+    }),
+  doProjectPaladinOathDevotionSpells:
+    projectPublicClassFeatureSelectedReferenceRoute({
+      build: classFeatureBuild({
+        startingClass: "class_paladin",
+        totalLevel: 3,
+        features: [
+          {
+            kind: "selectedClassChoice",
+            selectedFromUnitId: "class_paladin",
+            unitId: "subclass_paladin_oath_of_devotion",
+          },
+        ],
+      }),
+      expectedClassFeatureUnitId: "paladin_oath_of_devotion_spells",
+      expectedSelectedClassChoiceUnitIds: ["subclass_paladin_oath_of_devotion"],
+    }),
+  doProjectPaladinsSmite: projectPublicClassFeatureSelectedReferenceRoute({
+    build: classFeatureBuild({ startingClass: "class_paladin", totalLevel: 2 }),
+    expectedClassFeatureUnitId: "paladin_paladins_smite",
+  }),
+  doProjectRangerFavoredEnemy: projectPublicClassFeatureSelectedReferenceRoute({
+    build: classFeatureBuild({ startingClass: "class_ranger", totalLevel: 2 }),
+    expectedClassFeatureUnitId: "ranger_favored_enemy",
+  }),
+  doProjectSorcererDraconicSpells:
+    projectPublicClassFeatureSelectedReferenceRoute({
+      build: classFeatureBuild({
+        startingClass: "class_sorcerer",
+        totalLevel: 3,
+        features: [
+          {
+            kind: "selectedClassChoice",
+            selectedFromUnitId: "class_sorcerer",
+            unitId: "subclass_sorcerer_draconic_sorcery",
+          },
+        ],
+      }),
+      expectedClassFeatureUnitId: "sorcerer_draconic_spells",
+      expectedSelectedClassChoiceUnitIds: ["subclass_sorcerer_draconic_sorcery"],
+    }),
+  doProjectWarlockFiendSpells:
+    projectPublicClassFeatureSelectedReferenceRoute({
+      build: classFeatureBuild({
+        startingClass: "class_warlock",
+        totalLevel: 3,
+        features: [
+          {
+            kind: "selectedClassChoice",
+            selectedFromUnitId: "class_warlock",
+            unitId: "subclass_warlock_fiend_patron",
+          },
+        ],
+      }),
+      expectedClassFeatureUnitId: "warlock_fiend_spells",
+      expectedSelectedClassChoiceUnitIds: ["subclass_warlock_fiend_patron"],
+    }),
 } as const satisfies ReadyRouteActionMap<
   typeof classFeatureSelectedReferenceRouteDriverSchema
 >;
@@ -805,20 +889,112 @@ function armorClassBuild(input: {
   };
 }
 
-function projectClassFeatureSelectedReferenceRoute(
-  route: readonly CharacterSheetRouteEvent[],
-): readonly CharacterSheetRouteEvent[] {
-  return [
-    ...route,
-    retainCharacterSheetSelectedReferences({
-      subject: "selectedReferenceProjection",
-      owner: "selectedReference",
+function projectPublicClassFeatureSelectedReferenceRoute(input: {
+  readonly build: CharacterBuild;
+  readonly expectedClassFeatureUnitId: string;
+  readonly expectedSelectedClassChoiceUnitIds?: readonly string[];
+  readonly expectedDruidLand?: CharacterSheetDruidCircleLand["land"];
+  readonly druidWildShapeKnownFormStatBlockIds?: readonly string[];
+  readonly druidCircleLand?: CharacterSheetDruidCircleLand;
+}): RouteAppender {
+  return (route) => {
+    const sheet = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId(
+          `character:route-${input.expectedClassFeatureUnitId}`,
+        ),
+        build: input.build,
+        tempHp: Hp(0),
+        hitPointMaximumReduction: Hp(0),
+        conditions: [],
+        unitLibrary,
+        ...(input.druidWildShapeKnownFormStatBlockIds === undefined
+          ? {}
+          : {
+              druidWildShapeKnownFormStatBlockIds:
+                input.druidWildShapeKnownFormStatBlockIds,
+            }),
+        ...(input.druidCircleLand === undefined
+          ? {}
+          : { druidCircleLand: input.druidCircleLand }),
+      }),
+    );
+    if (input.expectedDruidLand !== undefined) {
+      expect(sheet.druidCircleLand?.land).toBe(input.expectedDruidLand);
+    }
+    const projected = characterSheetClassFeatureSelectedReferenceProjection({
+      sheet,
+      unitLibrary,
+    });
+    expect(projected.classFeatureUnitIds).toContain(
+      input.expectedClassFeatureUnitId,
+    );
+    for (const selectedChoiceUnitId of input.expectedSelectedClassChoiceUnitIds ??
+      []) {
+      expect(projected.selectedClassChoiceUnitIds).toContain(
+        selectedChoiceUnitId,
+      );
+    }
+    return [...route, ...projected.qRoute];
+  };
+}
+
+function classFeatureBuild(input: {
+  readonly startingClass: string;
+  readonly totalLevel: 2 | 3;
+  readonly features?: CharacterBuild["features"];
+}): CharacterBuild {
+  return {
+    ...baseBuild({
+      startingClass: input.startingClass,
+      advancements: Array.from(
+        { length: input.totalLevel - 1 },
+        () => input.startingClass,
+      ),
     }),
-    projectCharacterSheetFacts({
-      subject: "selectedReferenceProjection",
-      owner: "buildProjection",
+    features: input.features ?? [],
+  };
+}
+
+function druidCircleLandBuild(): CharacterBuild {
+  return {
+    ...classFeatureBuild({
+      startingClass: "class_druid",
+      totalLevel: 3,
+      features: [
+        {
+          kind: "selectedClassChoice",
+          selectedFromUnitId: "class_druid",
+          unitId: "subclass_druid_circle_of_the_land",
+        },
+      ],
     }),
-  ];
+    classFeatureLanguages: [
+      {
+        kind: "classFeatureLanguageGrant",
+        sourceUnitId: "druid_druidic",
+        language: "Druidic",
+      },
+    ],
+    spellcasting: {
+      sources: [
+        {
+          sourceUnitId: "class_druid",
+          spellcastingAbility: "wis",
+          cantrips: [],
+          spellbook: [],
+          preparedSpells: [],
+          spellcastingFocuses: ["druidic_focus"],
+        },
+      ],
+      slotPools: {
+        spellcasting: {
+          kind: "spellcasting",
+          slots: [{ spellLevel: 1, count: 4 }],
+        },
+      },
+    },
+  };
 }
 
 function spendHealingResourceRoute(

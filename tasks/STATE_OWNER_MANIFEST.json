@@ -1,34 +1,34 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-050",
+  "taskId": "CRPI-BLOCK-051",
   "durableFields": [
     {
       "owner": "CharacterSheetSelectedReferenceOwner",
       "fields": [
-        "CharacterSheetArmorClassStateInput.baseChoice",
-        "CharacterBuild.features selected class/subclass references"
+        "CharacterBuild.features selectedClassChoice Unit references",
+        "characterBuildFeatureUnitIds projection",
+        "CharacterSheetClassFeatureSelectedReferenceProjection.classFeatureUnitIds",
+        "CharacterSheetClassFeatureSelectedReferenceProjection.selectedClassChoiceUnitIds"
       ],
-      "notes": "Owns retained selected Armor Class base references at the Character Sheet projection boundary. Task 96 does not add a route-local selected-reference store; selected class-feature identity is consumed as input evidence for the public projection and returned as qRoute retention evidence."
+      "notes": "Owns retained class-feature and subclass selected-reference evidence at the Character Sheet projection boundary. Task 97 does not add a route-local selected-reference store; references are derived from existing CharacterSheet.build facts and returned as qRoute retention evidence."
     },
     {
       "owner": "CharacterSheetBuildProjectionOwner",
       "fields": [
         "CharacterBuild.progression",
-        "CharacterBuild.equipment.loadout",
-        "CharacterBuild.abilityScores",
-        "characterBuildArmorTraining projection",
-        "UnitRecord armorClassProjection",
-        "UnitRecord.mechanics.grants.kind=modify_ac_set_base",
-        "ArmorClassState projection",
-        "currentArmorClass projection"
+        "CharacterBuild.features",
+        "CharacterSheet.druidCircleLand",
+        "characterSheetAbilityCheckProficiencyBonus projection",
+        "characterSheetClassFeaturePreparedSpellAccessesForBuild projection",
+        "characterSheetDruidCircleLandPreparedSpellAccess projection"
       ],
-      "notes": "Owns Armor Class projection from build, loadout, armor training, Surface armor formulas, Unarmored Defense mechanics, ability scores, and Shield facts. Task 96 threads these existing facts through characterSheetArmorClassProjection without adding a duplicated Armor Class cache."
+      "notes": "Owns derived Ability Check and spell-access projections from build, selected class choices, Surface class-feature mechanics, and the existing Druid land sheet fact. Task 97 threads these existing facts through public qRoute evidence without adding a duplicated build-projection cache."
     }
   ],
   "notes": [
-    "Task 96 introduced no new durable CharacterSheet state fields.",
-    "qRoute target replay evidence is derived from public characterSheetArmorClassProjection and the copied route connector.",
-    "Selected Unarmored Defense authored identity is retained only at selection/catalog boundaries. Production Armor Class behavior derives from typed Surface mechanics and build/loadout facts rather than dispatching on branch action names, connector filenames, or witness labels.",
-    "Armor Class source facts remain projected from existing CharacterBuild and Surface inputs; no route-local Armor Class store was introduced."
+    "Task 97 introduced no new durable CharacterSheet state fields.",
+    "qRoute target replay evidence is derived from public characterSheetClassFeatureSelectedReferenceProjection and the copied route connector.",
+    "Selected class-feature and subclass authored identity remains retained reference evidence at the sheet/catalog/test boundary. Production projection derives from CharacterSheet.build shape and does not dispatch behavior on branch action names, connector filenames, or witness labels.",
+    "Druid Circle of the Land selected land remains owned by existing CharacterSheet.druidCircleLand state; the route test reads that sheet fact for the Druid branch rather than duplicating it."
   ]
 }
