@@ -535,7 +535,7 @@
     {
       "number": 89,
       "id": "CRP04-CCF-01",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Character creation accepted fill batches, hole rediscovery, and finalization"
     },
     {
@@ -5715,7 +5715,7 @@ Plan Impact:
 
 ### Task 89 - CRP04-CCF-01
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

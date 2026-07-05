@@ -1,37 +1,67 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRP06-SRO-02",
+  "taskId": "CRP04-CCF-01",
   "durableFields": [
     {
-      "owner": "CharacterSheetHitPointOwner",
-      "fields": [
-        "CharacterSheet.hitPoints.current",
-        "CharacterSheet.hitPoints.tempHp",
-        "CharacterSheet.hitPointMaximumReduction"
-      ],
-      "notes": "Owns current Hit Points, Temporary Hit Points, Hit Point Maximum reduction, and Long Rest HP restoration. Normal Hit Point Maximum remains derived from CharacterBuild and Unit facts."
+      "fieldPath": "CharacterDraft.revision",
+      "owner": "build-evidence",
+      "introducedIn": "packages/character-creation-runtime/src/types.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      }
     },
     {
-      "owner": "CharacterSheetHitDiceOwner",
-      "fields": [
-        "CharacterSheet.spentHitDice"
-      ],
-      "notes": "Owns spent Hit Dice and Short Rest Hit Die spending. Hit Die capacity and die size remain derived from CharacterBuild through characterBuildHitPoints."
+      "fieldPath": "CharacterDraft.selections",
+      "owner": "build-evidence",
+      "introducedIn": "packages/character-creation-runtime/src/types.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      }
     },
     {
-      "owner": "CharacterSheetStateOwner",
-      "fields": [
-        "CharacterSheetLongRestStart.requiredRestTicks",
-        "CharacterSheetLongRestStart.nextLongRestStartWaitTicks",
-        "CharacterSheetLongRestCalendarGate.remainingTicks"
-      ],
-      "notes": "Owns rest duration and Long Rest calendar gates as workflow state, not alternate HP or Hit Dice ledgers."
+      "fieldPath": "CreationBatchFillResult.holes",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/character-creation-runtime/src/discovery.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "CharacterDraft.selections plus UnitCatalog support-profile readers",
+        "boundary": "fillCreationHoles result and discoverCreationHoles projection"
+      }
+    },
+    {
+      "fieldPath": "CreationBatchFillResult.finalization",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/character-creation-runtime/src/finalization.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "CharacterDraft.selections plus UnitCatalog support-profile readers",
+        "boundary": "fillCreationHoles result and finalizeCharacterDraft projection"
+      }
+    },
+    {
+      "fieldPath": "CreationBatchFillResult.issues",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/character-creation-runtime/src/fill-reducer.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "submitted CreationFill batch and current CharacterDraft.revision",
+        "boundary": "fillCreationHoles rejected result"
+      }
+    },
+    {
+      "fieldPath": "CharacterBuild",
+      "owner": "build-evidence",
+      "introducedIn": "packages/character-creation-runtime/src/finalization.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      }
     }
   ],
   "notes": [
-    "Task 100 introduced no duplicate stored normal Hit Point Maximum, Hit Die capacity, or Hit Die size.",
-    "Short Rest benefit choices remain explicit route fills through SheetRestBenefitChoiceHoleFamily.",
-    "qState is target replay semantic evidence derived from public Character Sheet rest entrypoints and projection helpers.",
-    "qRoute is target replay route evidence derived from the character-sheet reducer route vocabulary, not authored identity."
+    "Character Draft owns accepted source facts and draft revision.",
+    "Creation Hole Frontier is derived by discoverCreationHoles from the draft and support-profile readers; no durable open-hole ledger is stored.",
+    "Finalization is derived by finalizeCharacterDraft from the draft and support-profile admission; no durable finalization status ledger is stored beside the draft.",
+    "Character Build is produced only by the finalization gate once holes are empty and the support profile admits the completed draft.",
+    "Empty issue collections in qState are replay projections of an accepted or issue-free result, not a second durable issue store."
   ]
 }
