@@ -1,23 +1,32 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-032",
+  "taskId": "CRPI-READY-033",
   "durableFields": [
     {
-      "owner": "RuleCoreShoveOutcomeOwner",
+      "owner": "RuleCoreSpellProcedureProfileOwner",
       "fields": [
         "BattleTurnState.actionResources",
-        "BattleCreatureState.conditions",
-        "BattleResolutionResult",
-        "BattleShovePushOutcome"
+        "BattleTurnState.bonusActionAvailable",
+        "BattleCreatureState.reactionAvailable",
+        "BattleCreatureState.hp",
+        "BattleCreatureState.zeroHpLifecycle.deathSaves",
+        "BattleCreatureState.origin.spellcasting.spellSlots",
+        "BattleCreatureState.activeEffects",
+        "BattleState.readiedSpells",
+        "BattleCreatureState.concentration",
+        "BattleHole.kind",
+        "BattleResolutionResult"
       ],
-      "notes": "Owns reusable Shove save-success, failed-save Prone, legal push, blocked push, no-legal-destination push, and invalid push-distance outcome facts through existing battle state fields and public reducer result protocols. The replay adds no alternate Shove outcome flag, Prone copy, push-disposition ledger, or action-resource cache."
+      "notes": "Owns reusable spell procedure profile runtime facts through existing battle state fields, public hole kinds, and public reducer result protocols. The replay adds no alternate spell-slot cache, HP ledger, active-effect copy, readied-spell copy, Concentration flag, or support marker."
     }
   ],
   "notes": [
-    "Task 74 introduced no new durable state fields.",
-    "Attack resource spend remains BattleTurnState.actionResources through the existing attack resolution path.",
-    "Failed-save Prone remains BattleCreatureState.conditions; Shove push results remain BattleShovePushOutcome result facts.",
-    "Invalid Shove push distance is represented as a typed invalid BattleResolutionResult rather than a separate support marker.",
+    "Task 75 introduced no new durable state fields.",
+    "Action and Bonus Action spend remain BattleTurnState facts through the existing spell resolution path.",
+    "Hit Point damage/restoration and zero-Hit-Point recovery remain BattleCreatureState facts.",
+    "Spell Slot expenditure remains BattleCreatureState.origin.spellcasting.spellSlots plus current-turn spell-slot-use facts.",
+    "Mage Armor and Ray of Frost ongoing projections remain BattleCreatureState.activeEffects.",
+    "Readied Spell hold/release remains BattleState.readiedSpells and BattleCreatureState.concentration/reactionAvailable.",
     "qComponentRoute is target replay route evidence derived from typed rule-core component route vocabulary, not authored identity, branch names, witness labels, or connector filenames."
   ]
 }

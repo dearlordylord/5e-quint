@@ -1,56 +1,98 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-032",
+  "taskId": "CRPI-READY-033",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
+      "path": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
       "quarantinedWitnessNames": [
-        "qLastScenario",
-        "qOutcome",
-        "qReplayIndex",
+        "qProtocol",
         "qComponentRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-032.json"
+        "tasks/target-replay-evidence/CRPI-READY-033.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/rule-core-shove-outcome.mbt.test.ts",
+      "path": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
       "quarantinedWitnessNames": [
-        "ShoveOutcomeProjection",
-        "createShoveOutcomeDriver",
-        "normalizeShoveOutcomeQuintState",
-        "shoveOutcomeStateCheck"
+        "qProtocol",
+        "qComponentRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-032.json"
+        "tasks/target-replay-evidence/CRPI-READY-033.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+      "quarantinedWitnessNames": [
+        "qProtocol",
+        "qComponentRoute"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-READY-033.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
+      "quarantinedWitnessNames": [
+        "qProtocol",
+        "qComponentRoute"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-READY-033.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+      "quarantinedWitnessNames": [
+        "RuleCoreSpellProjection",
+        "createRuleCoreSpellDriver",
+        "normalizeRuleCoreSpellQuintState",
+        "spellStateCheck"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-READY-033.json"
       ]
     }
   ],
   "productionModulesExtended": [
     {
-      "path": "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
+      "path": "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/profile.ts",
       "owners": [
-        "RuleCoreShoveOutcomeOwner"
+        "RuleCoreSpellProcedureProfileOwner"
       ],
-      "notes": "Existing public Shove subject resolution path reused as the target component call surface for copied qComponentRoute replay of save success, failed-save Prone, legal push, blocked push, no-legal-destination push, and invalid push distance outcomes."
+      "notes": "Existing typed SpellProcedureProfile boundary is reused as the target component admission/call contract for rule-core spell procedure profile replay."
+    },
+    {
+      "path": "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/registry.ts",
+      "owners": [
+        "RuleCoreSpellProcedureProfileOwner"
+      ],
+      "notes": "Existing registry threads admitted spell procedure profiles to public spell reducer calls without adding a parallel owner ledger."
+    },
+    {
+      "path": "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+      "owners": [
+        "RuleCoreSpellProcedureProfileOwner"
+      ],
+      "notes": "Existing public Spell subject resolver is reused as the component call surface for action spells, Bonus Action spells, and readied spell release."
     }
   ],
   "expectedNextReuse": [
     {
-      "driver": "packages/battle-runtime/battle-runtime-weapon-attack-selected-identity.mbt.qnt",
-      "module": "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
-      "api": "Future action/attack routes can consume accepted Shove outcome component facts through the existing public battle subject reducer without adding a parallel Shove outcome ledger."
+      "driver": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
+      "module": "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+      "api": "Future battle spell/effect routes can consume accepted Spell procedure profile facts through existing public spell subject resolution rather than adding route-local spell procedure state."
     },
     {
-      "driver": "packages/battle-runtime/battle-runtime-feature-selected-identity.mbt.qnt",
-      "module": "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
-      "api": "Future feature routes that modify Unarmed Strike or failed-save outcomes should thread existing Prone, push disposition, and action-resource facts rather than duplicate Shove outcome state."
+      "driver": "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt",
+      "module": "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/profile.ts",
+      "api": "Future exact-damage projection work should thread existing SpellProcedureProfile and Hit Point damage owners instead of duplicating damage or spell-slot facts."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 74 observes copied qComponentRoute for rule-core Shove outcome through the public battle-runtime Shove subject entrypoint. No duplicate durable state was introduced."
+    "notes": "Task 75 observes copied qComponentRoute for rule-core Spell procedure profiles through public battle-runtime Spell reducer entrypoints across the split source connector corpus. No duplicate durable state was introduced."
   }
 }

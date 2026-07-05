@@ -3535,3 +3535,106 @@ Verification results:
   turn-start save hole-id projection with the hole producer to remove duplicated
   string-value connascence. No duplicate durable state or authored-identity
   dispatch was added.
+
+## CRPI-READY-033
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Driver: `packages/battle-runtime/rule-core-spells.mbt.qnt` (stale aggregate name; current source inventory uses the split connector drivers listed below)
+- Route connectors: `packages/battle-runtime/rule-core-spell-damage.mbt.qnt`, `packages/battle-runtime/rule-core-spell-restoration.mbt.qnt`, `packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt`, `packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/rule-core-spell-damage.mbt.qnt`
+- `packages/battle-runtime/rule-core-spell-restoration.mbt.qnt`
+- `packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt`
+- `packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt`
+- `packages/battle-runtime/src/rule-core-spells.mbt.test.ts`
+- `packages/battle-runtime/rule-core-component-route.qnt`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-convergence-backlog.json`
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md`
+- `.references/srd-5.2.1/Spells/Descriptions-E-L.md`
+- `.references/srd-5.2.1/Spells/Descriptions-M-P.md`
+- `.references/srd-5.2.1/Spells/Descriptions-Q-R.md`
+- `.references/srd-5.2.1/Playing-the-Game.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+Task 75 accepts the existing rule-core Spell procedure profile component owner.
+The copied split spell connectors expose `qComponentRoute` through
+`RuleCoreSpellProcedureProfileOwner`, including route-in-denominator Mass Healing Word restoration branches, and the target replay observes the same route event list
+through public battle-runtime Spell procedure entrypoints before downstream
+battle spell/effect routes consume this owner. No new runtime rule behavior was
+introduced.
+
+The replay uses existing public calls in `packages/battle-runtime/src/rule-core-spells.mbt.test.ts`: `discoverBattleActs`,
+`resolveBattleSubject`, and `resolveBattleInterrupt`. The durable facts stay
+in existing BattleState/BattleCreatureState fields and typed public holes/results.
+No authored identity, QNT branch name, witness field name, connector filename, or
+fixture label dispatch was added.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doAcidSplashAllSuccess` | `tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doAcidSplashAllSuccess#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doAcidSplashAllSuccess qComponentRoute=spell-procedure-profile-component-route` | `_none_` | `covered` |
+| `packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doAcidSplashNeedsDamageRoll` | `tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doAcidSplashNeedsDamageRoll#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doAcidSplashNeedsDamageRoll qComponentRoute=spell-procedure-profile-component-route` | `_none_` | `covered` |
+| `packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doAcidSplashNeedsSavingThrow` | `tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doAcidSplashNeedsSavingThrow#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doAcidSplashNeedsSavingThrow qComponentRoute=spell-procedure-profile-component-route` | `_none_` | `covered` |
+| `packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doAcidSplashOneFail` | `tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doAcidSplashOneFail#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doAcidSplashOneFail qComponentRoute=spell-procedure-profile-component-route` | `_none_` | `covered` |
+| `packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doMagicMissileLow` | `tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doMagicMissileLow#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doMagicMissileLow qComponentRoute=spell-procedure-profile-component-route` | `_none_` | `covered` |
+| `packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doMagicMissileNeedsAllocation` | `tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doMagicMissileNeedsAllocation#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doMagicMissileNeedsAllocation qComponentRoute=spell-procedure-profile-component-route` | `_none_` | `covered` |
+| `packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doRayOfFrostCritical` | `tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doRayOfFrostCritical#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doRayOfFrostCritical qComponentRoute=spell-procedure-profile-component-route` | `_none_` | `covered` |
+| `packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doRayOfFrostHit` | `tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doRayOfFrostHit#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doRayOfFrostHit qComponentRoute=spell-procedure-profile-component-route` | `_none_` | `covered` |
+| `packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doRayOfFrostMiss` | `tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doRayOfFrostMiss#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doRayOfFrostMiss qComponentRoute=spell-procedure-profile-component-route` | `_none_` | `covered` |
+| `packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doRayOfFrostNeedsAttackRoll` | `tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doRayOfFrostNeedsAttackRoll#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doRayOfFrostNeedsAttackRoll qComponentRoute=spell-procedure-profile-component-route` | `_none_` | `covered` |
+| `packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doRayOfFrostNeedsDamageRoll` | `tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doRayOfFrostNeedsDamageRoll#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doRayOfFrostNeedsDamageRoll qComponentRoute=spell-procedure-profile-component-route` | `_none_` | `covered` |
+| `packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doRayOfFrostNeedsTarget` | `tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-damage.mbt.qnt#step:doRayOfFrostNeedsTarget#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doRayOfFrostNeedsTarget qComponentRoute=spell-procedure-profile-component-route` | `_none_` | `covered` |
+| `packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt#step:doMageArmor` | `tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt#step:doMageArmor#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-defensive-effect action=doMageArmor qComponentRoute=spell-procedure-profile-component-route` | `_none_` | `covered` |
+| `packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt#step:doMageArmorNeedsTarget` | `tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt#step:doMageArmorNeedsTarget#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-defensive-effect action=doMageArmorNeedsTarget qComponentRoute=spell-procedure-profile-component-route` | `_none_` | `covered` |
+| `packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt#step:doReadySpellHold` | `tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt#step:doReadySpellHold#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-readied-response action=doReadySpellHold qComponentRoute=spell-procedure-profile-component-route` | `_none_` | `covered` |
+| `packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt#step:doRejectSecondSlotSpell` | `tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt#step:doRejectSecondSlotSpell#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-readied-response action=doRejectSecondSlotSpell qComponentRoute=spell-procedure-profile-component-route` | `_none_` | `covered` |
+| `packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt#step:doReleaseReadiedSpell` | `tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt#step:doReleaseReadiedSpell#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-readied-response action=doReleaseReadiedSpell qComponentRoute=spell-procedure-profile-component-route` | `_none_` | `covered` |
+| `packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doCureWoundsNeedsHealingRoll` | `tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doCureWoundsNeedsHealingRoll#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-restoration action=doCureWoundsNeedsHealingRoll qComponentRoute=spell-procedure-profile-component-route` | `_none_` | `covered` |
+| `packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doCureWoundsNeedsTarget` | `tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doCureWoundsNeedsTarget#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-restoration action=doCureWoundsNeedsTarget qComponentRoute=spell-procedure-profile-component-route` | `_none_` | `covered` |
+| `packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doCureWoundsWounded` | `tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doCureWoundsWounded#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-restoration action=doCureWoundsWounded qComponentRoute=spell-procedure-profile-component-route` | `_none_` | `covered` |
+| `packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doHealingWordNeedsHealingRoll` | `tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doHealingWordNeedsHealingRoll#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-restoration action=doHealingWordNeedsHealingRoll qComponentRoute=spell-procedure-profile-component-route` | `_none_` | `covered` |
+| `packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doHealingWordNeedsTarget` | `tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doHealingWordNeedsTarget#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-restoration action=doHealingWordNeedsTarget qComponentRoute=spell-procedure-profile-component-route` | `_none_` | `covered` |
+| `packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doHealingWordWounded` | `tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doHealingWordWounded#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-restoration action=doHealingWordWounded qComponentRoute=spell-procedure-profile-component-route` | `_none_` | `covered` |
+| `packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doHealingWordZeroHp` | `tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doHealingWordZeroHp#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-restoration action=doHealingWordZeroHp qComponentRoute=spell-procedure-profile-component-route` | `_none_` | `covered` |
+| `packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doMassHealingWordNeedsHealingRoll` | `tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doMassHealingWordNeedsHealingRoll#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-restoration action=doMassHealingWordNeedsHealingRoll qComponentRoute=spell-procedure-profile-component-route` | `_none_` | `covered` |
+| `packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doMassHealingWordNeedsTargetList` | `tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doMassHealingWordNeedsTargetList#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-restoration action=doMassHealingWordNeedsTargetList qComponentRoute=spell-procedure-profile-component-route` | `_none_` | `covered` |
+| `packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doMassHealingWordWounded` | `tasks/target-replay-evidence/CRPI-READY-033.json#driver:packages/battle-runtime/rule-core-spell-restoration.mbt.qnt#step:doMassHealingWordWounded#trace:component-route=RuleCoreSpellProcedureProfileOwner connector=spell-restoration action=doMassHealingWordWounded qComponentRoute=spell-procedure-profile-component-route` | `_none_` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-033.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace family: `component-route=RuleCoreSpellProcedureProfileOwner qComponentRoute=spell-procedure-profile-component-route`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-READY-033/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- The Ralph plan/task text still names stale aggregate driver `packages/battle-runtime/rule-core-spells.mbt.qnt`; current inventory has split it into four connector drivers.
+
+Verification results:
+
+- Base check passed: current revision prompt base ref `ralph/cleanroom-reducer-full-lane-20260705-restart3/integration` resolved to `064d06e0d Mark Ralph task 74 done`; reviewer-feedback audit ref `codex/cleanroom-reducer-full-lane-20260705-restart2` resolved to `5a3fb5554 Merge Ralph task 100 status`; `HEAD` resolved to `064d06e0d Mark Ralph task 74 done`; Base SHA `064d06e0daeaf82d26c3db3c7b70c4d3bc845286` is an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against SRD 5.2.1 spell descriptions for Acid Splash, Cure Wounds, Healing Word, Mage Armor, Magic Missile, Mass Cure Wounds, Mass Healing Word, and Ray of Frost; Playing-the-Game Hit Points, Damage Rolls, Saving Throws and Damage, Reactions, and attack spell attack structure; Rules Glossary Magic action, Ready action, Reaction, Hit Points, Healing, and Unconscious; and `UBIQUITOUS_LANGUAGE.md` terms Spell Slot, Spell Invocation, Spell Effect, Hit Points, Attack Roll, Saving Throw, Reaction, Ready Action, and Readied Spell Response.
+- `START=$(date +%s); ( cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=6 pnpm exec vitest run src/rule-core-spells.mbt.test.ts ) 2>&1 & pid=$!; while kill -0 "$pid" 2>/dev/null; do sleep 1; done; wait "$pid"; status=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"` passed with 5 tests, including the four split spell procedure MBT replay cases; final timed run `TOTAL: 21s`.
+- Scoped route-required `validateTargetReplayEvidence` passed for `CRPI-READY-033` with 27 split spell obligations covered, including the three in-denominator Mass Healing Word restoration branches from the route inventory.
+- `pnpm cleanroom-branch-coverage:check` exited 143 once in round 2 without diagnostics or leftover processes; direct `node scripts/cleanroom-branch-coverage-check.cjs` then passed with 738 obligations and 24 sampled inputs, and the same `cleanroom-branch-coverage:check` gate passed inside `pnpm quality`.
+- `git diff --check` passed.
+- `flock /tmp/dnd-mbt-qnt.lock pnpm quality` passed end to end. App lint reported 61 warnings only and exited 0; circular checks passed; turbo typecheck passed 9 packages from cache.
+- Reviewer-loop convergence passed: rounds 1-2 verified RAW traceability, ubiquitous-language/domain terms, component-first architecture, adapter quarantine, no duplicate durable Spell procedure state, no authored-identity dispatch, command/report consistency, and no remaining reasonable Task 75 findings.

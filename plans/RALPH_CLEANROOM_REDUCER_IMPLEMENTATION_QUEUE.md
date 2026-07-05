@@ -451,8 +451,8 @@
     {
       "number": 75,
       "id": "CRPI-READY-033",
-      "status": "ready-for-research",
-      "title": "Implement route replay: rule-core-spells"
+      "status": "done",
+      "title": "Implement route replay: split rule-core spell connectors"
     },
     {
       "number": 76,
@@ -727,7 +727,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRPI-READY-030` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-READY-031` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-READY-032` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-READY-033` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-READY-033` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-037` | `blocked` | blocked by task body | blocker resolution before implementation |
 | `CRPI-READY-034` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRP05-SBE-01` | `ready-for-research` | none | target replay evidence and owner implementation |
@@ -4912,15 +4912,18 @@ Plan Impact:
 
 ### Task 75 - CRPI-READY-033
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
-Implement target replay for `packages/battle-runtime/rule-core-spells.mbt.qnt` as a `component-first` reducer-convergence task.
+Implement target replay for the split rule-core spell connector corpus as a `component-first` reducer-convergence task.
 
 Starting Points:
 
-- `packages/battle-runtime/rule-core-spells.mbt.qnt`
+- `packages/battle-runtime/rule-core-spell-damage.mbt.qnt`
+- `packages/battle-runtime/rule-core-spell-restoration.mbt.qnt`
+- `packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt`
+- `packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt`
 - `plans/cleanroom-branch-coverage/reducer-convergence-backlog.json`
 - `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
 - `plans/cleanroom-branch-coverage/source-branch-inventory.json`
@@ -4938,9 +4941,17 @@ Output:
 
 Acceptance:
 
-- Driver Path: `packages/battle-runtime/rule-core-spells.mbt.qnt`
+- Driver Path(s):
+  - `packages/battle-runtime/rule-core-spell-damage.mbt.qnt`
+  - `packages/battle-runtime/rule-core-spell-restoration.mbt.qnt`
+  - `packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt`
+  - `packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt`
 - Route Class: `component-first`
-- Connector Path(s): `packages/battle-runtime/rule-core-spells.mbt.qnt`
+- Connector Path(s):
+  - `packages/battle-runtime/rule-core-spell-damage.mbt.qnt`
+  - `packages/battle-runtime/rule-core-spell-restoration.mbt.qnt`
+  - `packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt`
+  - `packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt`
 - Durable Owner: RuleCoreSpellProcedureProfileOwner
 - Accepted Projection: `qComponentRoute`
 - Target replay evidence requirement: Target replay must observe `qComponentRoute` from the copied component connector through the target's component admission/call/projection surface before downstream battle routes consume it.
@@ -4955,7 +4966,7 @@ Forbidden Shortcuts:
 
 Verification:
 
-- Run target replay for `packages/battle-runtime/rule-core-spells.mbt.qnt` and require `qComponentRoute` comparator evidence from the copied component connector before any battle route consumes this component owner.
+- Run target replay for the four split rule-core spell connector drivers and require `qComponentRoute` comparator evidence from the copied component connector before any battle route consumes this component owner.
 - Run RAW and ubiquitous-language review against the local `.references/srd-5.2.1/` passages selected by the driver plus `UBIQUITOUS_LANGUAGE.md` before modeling rule behavior.
 - Run `pnpm cleanroom-branch-coverage:check` in the source repo package before handoff.
 - Run `git diff --check`.
