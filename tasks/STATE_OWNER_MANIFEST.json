@@ -1,23 +1,26 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-029",
+  "taskId": "CRPI-READY-030",
   "durableFields": [
     {
-      "owner": "RuleCoreHitPointDamageOwner",
+      "owner": "RuleCoreMovementGrappleOwner",
       "fields": [
-        "BattleCreatureState.hp",
-        "BattleCreatureState.maxHp",
-        "BattleCreatureState.tempHp",
+        "BattleCombatantMovement.spentFeet",
+        "BattleCombatantMovement.remainingFeet",
+        "BattleTurnState.dashMovementBonusFeet",
+        "BattleTurnState.disengaged",
+        "BattleTurnState.actionResources",
         "BattleCreatureState.conditions",
-        "BattleCreatureState.zeroHpLifecycle",
-        "BattleCreatureState.positiveHpUnconscious"
+        "BattleState.grapples",
+        "BattleState.pendingInterrupt"
       ],
-      "notes": "Owns applying resolved damage to current Hit Points, Temporary Hit Points, and zero-HP consequences. Hit Point Maximum is consumed from existing creature state; the replay adds no alternate HP ledger."
+      "notes": "Owns reusable Movement, Dash, Disengage, Prone-standing, Grapple, escape/release, and Opportunity Attack trigger facts through existing battle state fields. The replay adds no alternate movement budget, grapple ledger, action-resource copy, or pending-reaction flag."
     }
   ],
   "notes": [
-    "Task 71 introduced no new durable state fields.",
-    "Temporary Hit Points remain BattleCreatureState.tempHp and are projected through hpDamageProjection rather than duplicated in adapter state.",
-    "qComponentRoute is target replay route evidence derived from typed rule-core component route vocabulary, not authored identity."
+    "Task 72 introduced no new durable state fields.",
+    "Speed remains the creature movement capacity; spent and remaining Movement remain existing battle movement projections.",
+    "Grapple state remains BattleState.grapples; Prone remains BattleCreatureState.conditions; Opportunity Attack prompting remains BattleState.pendingInterrupt.",
+    "qComponentRoute is target replay route evidence derived from typed rule-core component route vocabulary, not authored identity, branch names, witness labels, or connector filenames."
   ]
 }

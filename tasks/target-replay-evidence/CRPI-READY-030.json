@@ -1,0 +1,1448 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts Movement/Grapple copied qComponentRoute versus component-first target replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "acceptance": {
+    "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+    "connectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+    "routeClass": "component-first",
+    "durableOwner": "RuleCoreMovementGrappleOwner",
+    "acceptedProjection": "qComponentRoute"
+  },
+  "status": "pass",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "qntFileSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "componentConnectorSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "branchFamily": "step",
+      "branchAction": "doDash",
+      "observedActionTaken": "doDash",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts",
+      "traceId": "component-route=RuleCoreMovementGrappleOwner action=doDash qComponentRoute=movement-grapple-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doDash",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#createRuleCoreMovementDriver",
+        "componentOwner": "RuleCoreMovementGrappleOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "observedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreMovementGrappleOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#normalizeRuleCoreMovementQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Movement, Dash, Disengage, Grapple, escape, release, and Opportunity Attack interrupt calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreMovementGrappleOwner",
+          "BattleCombatantMovement.spentFeet",
+          "BattleCombatantMovement.remainingFeet",
+          "BattleTurnState.dashMovementBonusFeet",
+          "BattleTurnState.disengaged",
+          "BattleTurnState.actionResources",
+          "BattleCreatureState.conditions includes/excludes prone",
+          "BattleState.grapples",
+          "BattleState.pendingInterrupt.trigger=opportunityAttack",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "qntFileSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "componentConnectorSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "branchFamily": "step",
+      "branchAction": "doDeclineOpportunityAttack",
+      "observedActionTaken": "doDeclineOpportunityAttack",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts",
+      "traceId": "component-route=RuleCoreMovementGrappleOwner action=doDeclineOpportunityAttack qComponentRoute=movement-grapple-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doDeclineOpportunityAttack",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#createRuleCoreMovementDriver",
+        "componentOwner": "RuleCoreMovementGrappleOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "observedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreMovementGrappleOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#normalizeRuleCoreMovementQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Movement, Dash, Disengage, Grapple, escape, release, and Opportunity Attack interrupt calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreMovementGrappleOwner",
+          "BattleCombatantMovement.spentFeet",
+          "BattleCombatantMovement.remainingFeet",
+          "BattleTurnState.dashMovementBonusFeet",
+          "BattleTurnState.disengaged",
+          "BattleTurnState.actionResources",
+          "BattleCreatureState.conditions includes/excludes prone",
+          "BattleState.grapples",
+          "BattleState.pendingInterrupt.trigger=opportunityAttack",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "qntFileSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "componentConnectorSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "branchFamily": "step",
+      "branchAction": "doDiscoverEscapeGrapple",
+      "observedActionTaken": "doDiscoverEscapeGrapple",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts",
+      "traceId": "component-route=RuleCoreMovementGrappleOwner action=doDiscoverEscapeGrapple qComponentRoute=movement-grapple-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doDiscoverEscapeGrapple",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#createRuleCoreMovementDriver",
+        "componentOwner": "RuleCoreMovementGrappleOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "observedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreMovementGrappleOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#normalizeRuleCoreMovementQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Movement, Dash, Disengage, Grapple, escape, release, and Opportunity Attack interrupt calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreMovementGrappleOwner",
+          "BattleCombatantMovement.spentFeet",
+          "BattleCombatantMovement.remainingFeet",
+          "BattleTurnState.dashMovementBonusFeet",
+          "BattleTurnState.disengaged",
+          "BattleTurnState.actionResources",
+          "BattleCreatureState.conditions includes/excludes prone",
+          "BattleState.grapples",
+          "BattleState.pendingInterrupt.trigger=opportunityAttack",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "qntFileSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "componentConnectorSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "branchFamily": "step",
+      "branchAction": "doDiscoverGrapple",
+      "observedActionTaken": "doDiscoverGrapple",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts",
+      "traceId": "component-route=RuleCoreMovementGrappleOwner action=doDiscoverGrapple qComponentRoute=movement-grapple-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doDiscoverGrapple",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#createRuleCoreMovementDriver",
+        "componentOwner": "RuleCoreMovementGrappleOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "observedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreMovementGrappleOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#normalizeRuleCoreMovementQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Movement, Dash, Disengage, Grapple, escape, release, and Opportunity Attack interrupt calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreMovementGrappleOwner",
+          "BattleCombatantMovement.spentFeet",
+          "BattleCombatantMovement.remainingFeet",
+          "BattleTurnState.dashMovementBonusFeet",
+          "BattleTurnState.disengaged",
+          "BattleTurnState.actionResources",
+          "BattleCreatureState.conditions includes/excludes prone",
+          "BattleState.grapples",
+          "BattleState.pendingInterrupt.trigger=opportunityAttack",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "qntFileSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "componentConnectorSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "branchFamily": "step",
+      "branchAction": "doDiscoverMovement",
+      "observedActionTaken": "doDiscoverMovement",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts",
+      "traceId": "component-route=RuleCoreMovementGrappleOwner action=doDiscoverMovement qComponentRoute=movement-grapple-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doDiscoverMovement",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#createRuleCoreMovementDriver",
+        "componentOwner": "RuleCoreMovementGrappleOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "observedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreMovementGrappleOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#normalizeRuleCoreMovementQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Movement, Dash, Disengage, Grapple, escape, release, and Opportunity Attack interrupt calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreMovementGrappleOwner",
+          "BattleCombatantMovement.spentFeet",
+          "BattleCombatantMovement.remainingFeet",
+          "BattleTurnState.dashMovementBonusFeet",
+          "BattleTurnState.disengaged",
+          "BattleTurnState.actionResources",
+          "BattleCreatureState.conditions includes/excludes prone",
+          "BattleState.grapples",
+          "BattleState.pendingInterrupt.trigger=opportunityAttack",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "qntFileSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "componentConnectorSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "branchFamily": "step",
+      "branchAction": "doDisengage",
+      "observedActionTaken": "doDisengage",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts",
+      "traceId": "component-route=RuleCoreMovementGrappleOwner action=doDisengage qComponentRoute=movement-grapple-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doDisengage",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#createRuleCoreMovementDriver",
+        "componentOwner": "RuleCoreMovementGrappleOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "observedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreMovementGrappleOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#normalizeRuleCoreMovementQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Movement, Dash, Disengage, Grapple, escape, release, and Opportunity Attack interrupt calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreMovementGrappleOwner",
+          "BattleCombatantMovement.spentFeet",
+          "BattleCombatantMovement.remainingFeet",
+          "BattleTurnState.dashMovementBonusFeet",
+          "BattleTurnState.disengaged",
+          "BattleTurnState.actionResources",
+          "BattleCreatureState.conditions includes/excludes prone",
+          "BattleState.grapples",
+          "BattleState.pendingInterrupt.trigger=opportunityAttack",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "qntFileSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "componentConnectorSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "branchFamily": "step",
+      "branchAction": "doMoveProvokesOpportunityAttack",
+      "observedActionTaken": "doMoveProvokesOpportunityAttack",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts",
+      "traceId": "component-route=RuleCoreMovementGrappleOwner action=doMoveProvokesOpportunityAttack qComponentRoute=movement-grapple-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doMoveProvokesOpportunityAttack",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#createRuleCoreMovementDriver",
+        "componentOwner": "RuleCoreMovementGrappleOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "observedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreMovementGrappleOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#normalizeRuleCoreMovementQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Movement, Dash, Disengage, Grapple, escape, release, and Opportunity Attack interrupt calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreMovementGrappleOwner",
+          "BattleCombatantMovement.spentFeet",
+          "BattleCombatantMovement.remainingFeet",
+          "BattleTurnState.dashMovementBonusFeet",
+          "BattleTurnState.disengaged",
+          "BattleTurnState.actionResources",
+          "BattleCreatureState.conditions includes/excludes prone",
+          "BattleState.grapples",
+          "BattleState.pendingInterrupt.trigger=opportunityAttack",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "qntFileSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "componentConnectorSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "branchFamily": "step",
+      "branchAction": "doMoveThreatSuppressedByDisengage",
+      "observedActionTaken": "doMoveThreatSuppressedByDisengage",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts",
+      "traceId": "component-route=RuleCoreMovementGrappleOwner action=doMoveThreatSuppressedByDisengage qComponentRoute=movement-grapple-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doMoveThreatSuppressedByDisengage",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#createRuleCoreMovementDriver",
+        "componentOwner": "RuleCoreMovementGrappleOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "observedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreMovementGrappleOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#normalizeRuleCoreMovementQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Movement, Dash, Disengage, Grapple, escape, release, and Opportunity Attack interrupt calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreMovementGrappleOwner",
+          "BattleCombatantMovement.spentFeet",
+          "BattleCombatantMovement.remainingFeet",
+          "BattleTurnState.dashMovementBonusFeet",
+          "BattleTurnState.disengaged",
+          "BattleTurnState.actionResources",
+          "BattleCreatureState.conditions includes/excludes prone",
+          "BattleState.grapples",
+          "BattleState.pendingInterrupt.trigger=opportunityAttack",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "qntFileSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "componentConnectorSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "branchFamily": "step",
+      "branchAction": "doRejectDashAfterActionSpent",
+      "observedActionTaken": "doRejectDashAfterActionSpent",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts",
+      "traceId": "component-route=RuleCoreMovementGrappleOwner action=doRejectDashAfterActionSpent qComponentRoute=movement-grapple-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRejectDashAfterActionSpent",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#createRuleCoreMovementDriver",
+        "componentOwner": "RuleCoreMovementGrappleOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "observedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreMovementGrappleOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#normalizeRuleCoreMovementQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Movement, Dash, Disengage, Grapple, escape, release, and Opportunity Attack interrupt calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreMovementGrappleOwner",
+          "BattleCombatantMovement.spentFeet",
+          "BattleCombatantMovement.remainingFeet",
+          "BattleTurnState.dashMovementBonusFeet",
+          "BattleTurnState.disengaged",
+          "BattleTurnState.actionResources",
+          "BattleCreatureState.conditions includes/excludes prone",
+          "BattleState.grapples",
+          "BattleState.pendingInterrupt.trigger=opportunityAttack",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "qntFileSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "componentConnectorSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "branchFamily": "step",
+      "branchAction": "doRejectMovementOverspend",
+      "observedActionTaken": "doRejectMovementOverspend",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts",
+      "traceId": "component-route=RuleCoreMovementGrappleOwner action=doRejectMovementOverspend qComponentRoute=movement-grapple-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRejectMovementOverspend",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#createRuleCoreMovementDriver",
+        "componentOwner": "RuleCoreMovementGrappleOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "observedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreMovementGrappleOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#normalizeRuleCoreMovementQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Movement, Dash, Disengage, Grapple, escape, release, and Opportunity Attack interrupt calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreMovementGrappleOwner",
+          "BattleCombatantMovement.spentFeet",
+          "BattleCombatantMovement.remainingFeet",
+          "BattleTurnState.dashMovementBonusFeet",
+          "BattleTurnState.disengaged",
+          "BattleTurnState.actionResources",
+          "BattleCreatureState.conditions includes/excludes prone",
+          "BattleState.grapples",
+          "BattleState.pendingInterrupt.trigger=opportunityAttack",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "qntFileSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "componentConnectorSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "branchFamily": "step",
+      "branchAction": "doReleaseGrapple",
+      "observedActionTaken": "doReleaseGrapple",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts",
+      "traceId": "component-route=RuleCoreMovementGrappleOwner action=doReleaseGrapple qComponentRoute=movement-grapple-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doReleaseGrapple",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#createRuleCoreMovementDriver",
+        "componentOwner": "RuleCoreMovementGrappleOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "observedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreMovementGrappleOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#normalizeRuleCoreMovementQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Movement, Dash, Disengage, Grapple, escape, release, and Opportunity Attack interrupt calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreMovementGrappleOwner",
+          "BattleCombatantMovement.spentFeet",
+          "BattleCombatantMovement.remainingFeet",
+          "BattleTurnState.dashMovementBonusFeet",
+          "BattleTurnState.disengaged",
+          "BattleTurnState.actionResources",
+          "BattleCreatureState.conditions includes/excludes prone",
+          "BattleState.grapples",
+          "BattleState.pendingInterrupt.trigger=opportunityAttack",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "qntFileSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "componentConnectorSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "branchFamily": "step",
+      "branchAction": "doResolveEscapeFailure",
+      "observedActionTaken": "doResolveEscapeFailure",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts",
+      "traceId": "component-route=RuleCoreMovementGrappleOwner action=doResolveEscapeFailure qComponentRoute=movement-grapple-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doResolveEscapeFailure",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#createRuleCoreMovementDriver",
+        "componentOwner": "RuleCoreMovementGrappleOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "observedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreMovementGrappleOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#normalizeRuleCoreMovementQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Movement, Dash, Disengage, Grapple, escape, release, and Opportunity Attack interrupt calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreMovementGrappleOwner",
+          "BattleCombatantMovement.spentFeet",
+          "BattleCombatantMovement.remainingFeet",
+          "BattleTurnState.dashMovementBonusFeet",
+          "BattleTurnState.disengaged",
+          "BattleTurnState.actionResources",
+          "BattleCreatureState.conditions includes/excludes prone",
+          "BattleState.grapples",
+          "BattleState.pendingInterrupt.trigger=opportunityAttack",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "qntFileSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "componentConnectorSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "branchFamily": "step",
+      "branchAction": "doResolveEscapeSuccess",
+      "observedActionTaken": "doResolveEscapeSuccess",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts",
+      "traceId": "component-route=RuleCoreMovementGrappleOwner action=doResolveEscapeSuccess qComponentRoute=movement-grapple-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doResolveEscapeSuccess",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#createRuleCoreMovementDriver",
+        "componentOwner": "RuleCoreMovementGrappleOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "observedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreMovementGrappleOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#normalizeRuleCoreMovementQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Movement, Dash, Disengage, Grapple, escape, release, and Opportunity Attack interrupt calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreMovementGrappleOwner",
+          "BattleCombatantMovement.spentFeet",
+          "BattleCombatantMovement.remainingFeet",
+          "BattleTurnState.dashMovementBonusFeet",
+          "BattleTurnState.disengaged",
+          "BattleTurnState.actionResources",
+          "BattleCreatureState.conditions includes/excludes prone",
+          "BattleState.grapples",
+          "BattleState.pendingInterrupt.trigger=opportunityAttack",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "qntFileSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "componentConnectorSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "branchFamily": "step",
+      "branchAction": "doResolveGrappleFailure",
+      "observedActionTaken": "doResolveGrappleFailure",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts",
+      "traceId": "component-route=RuleCoreMovementGrappleOwner action=doResolveGrappleFailure qComponentRoute=movement-grapple-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doResolveGrappleFailure",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#createRuleCoreMovementDriver",
+        "componentOwner": "RuleCoreMovementGrappleOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "observedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreMovementGrappleOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#normalizeRuleCoreMovementQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Movement, Dash, Disengage, Grapple, escape, release, and Opportunity Attack interrupt calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreMovementGrappleOwner",
+          "BattleCombatantMovement.spentFeet",
+          "BattleCombatantMovement.remainingFeet",
+          "BattleTurnState.dashMovementBonusFeet",
+          "BattleTurnState.disengaged",
+          "BattleTurnState.actionResources",
+          "BattleCreatureState.conditions includes/excludes prone",
+          "BattleState.grapples",
+          "BattleState.pendingInterrupt.trigger=opportunityAttack",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "qntFileSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "componentConnectorSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "branchFamily": "step",
+      "branchAction": "doResolveGrappleSuccess",
+      "observedActionTaken": "doResolveGrappleSuccess",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts",
+      "traceId": "component-route=RuleCoreMovementGrappleOwner action=doResolveGrappleSuccess qComponentRoute=movement-grapple-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doResolveGrappleSuccess",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#createRuleCoreMovementDriver",
+        "componentOwner": "RuleCoreMovementGrappleOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "observedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreMovementGrappleOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#normalizeRuleCoreMovementQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Movement, Dash, Disengage, Grapple, escape, release, and Opportunity Attack interrupt calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreMovementGrappleOwner",
+          "BattleCombatantMovement.spentFeet",
+          "BattleCombatantMovement.remainingFeet",
+          "BattleTurnState.dashMovementBonusFeet",
+          "BattleTurnState.disengaged",
+          "BattleTurnState.actionResources",
+          "BattleCreatureState.conditions includes/excludes prone",
+          "BattleState.grapples",
+          "BattleState.pendingInterrupt.trigger=opportunityAttack",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "qntFileSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "componentConnectorSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "branchFamily": "step",
+      "branchAction": "doSelectGrappleTarget",
+      "observedActionTaken": "doSelectGrappleTarget",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts",
+      "traceId": "component-route=RuleCoreMovementGrappleOwner action=doSelectGrappleTarget qComponentRoute=movement-grapple-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doSelectGrappleTarget",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#createRuleCoreMovementDriver",
+        "componentOwner": "RuleCoreMovementGrappleOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "observedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreMovementGrappleOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#normalizeRuleCoreMovementQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Movement, Dash, Disengage, Grapple, escape, release, and Opportunity Attack interrupt calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreMovementGrappleOwner",
+          "BattleCombatantMovement.spentFeet",
+          "BattleCombatantMovement.remainingFeet",
+          "BattleTurnState.dashMovementBonusFeet",
+          "BattleTurnState.disengaged",
+          "BattleTurnState.actionResources",
+          "BattleCreatureState.conditions includes/excludes prone",
+          "BattleState.grapples",
+          "BattleState.pendingInterrupt.trigger=opportunityAttack",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "qntFileSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "componentConnectorSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "branchFamily": "step",
+      "branchAction": "doSpendFullMovement",
+      "observedActionTaken": "doSpendFullMovement",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts",
+      "traceId": "component-route=RuleCoreMovementGrappleOwner action=doSpendFullMovement qComponentRoute=movement-grapple-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doSpendFullMovement",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#createRuleCoreMovementDriver",
+        "componentOwner": "RuleCoreMovementGrappleOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "observedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreMovementGrappleOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#normalizeRuleCoreMovementQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Movement, Dash, Disengage, Grapple, escape, release, and Opportunity Attack interrupt calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreMovementGrappleOwner",
+          "BattleCombatantMovement.spentFeet",
+          "BattleCombatantMovement.remainingFeet",
+          "BattleTurnState.dashMovementBonusFeet",
+          "BattleTurnState.disengaged",
+          "BattleTurnState.actionResources",
+          "BattleCreatureState.conditions includes/excludes prone",
+          "BattleState.grapples",
+          "BattleState.pendingInterrupt.trigger=opportunityAttack",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "qntFileSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "componentConnectorSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "branchFamily": "step",
+      "branchAction": "doSpendMovement",
+      "observedActionTaken": "doSpendMovement",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts",
+      "traceId": "component-route=RuleCoreMovementGrappleOwner action=doSpendMovement qComponentRoute=movement-grapple-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doSpendMovement",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#createRuleCoreMovementDriver",
+        "componentOwner": "RuleCoreMovementGrappleOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "observedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreMovementGrappleOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#normalizeRuleCoreMovementQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Movement, Dash, Disengage, Grapple, escape, release, and Opportunity Attack interrupt calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreMovementGrappleOwner",
+          "BattleCombatantMovement.spentFeet",
+          "BattleCombatantMovement.remainingFeet",
+          "BattleTurnState.dashMovementBonusFeet",
+          "BattleTurnState.disengaged",
+          "BattleTurnState.actionResources",
+          "BattleCreatureState.conditions includes/excludes prone",
+          "BattleState.grapples",
+          "BattleState.pendingInterrupt.trigger=opportunityAttack",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "qntFileSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "componentConnectorSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "branchFamily": "step",
+      "branchAction": "doSpendShortMovement",
+      "observedActionTaken": "doSpendShortMovement",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts",
+      "traceId": "component-route=RuleCoreMovementGrappleOwner action=doSpendShortMovement qComponentRoute=movement-grapple-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doSpendShortMovement",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#createRuleCoreMovementDriver",
+        "componentOwner": "RuleCoreMovementGrappleOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "observedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreMovementGrappleOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#normalizeRuleCoreMovementQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Movement, Dash, Disengage, Grapple, escape, release, and Opportunity Attack interrupt calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreMovementGrappleOwner",
+          "BattleCombatantMovement.spentFeet",
+          "BattleCombatantMovement.remainingFeet",
+          "BattleTurnState.dashMovementBonusFeet",
+          "BattleTurnState.disengaged",
+          "BattleTurnState.actionResources",
+          "BattleCreatureState.conditions includes/excludes prone",
+          "BattleState.grapples",
+          "BattleState.pendingInterrupt.trigger=opportunityAttack",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "qntFileSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "componentConnectorSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "branchFamily": "step",
+      "branchAction": "doStandFromProne",
+      "observedActionTaken": "doStandFromProne",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts",
+      "traceId": "component-route=RuleCoreMovementGrappleOwner action=doStandFromProne qComponentRoute=movement-grapple-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doStandFromProne",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#createRuleCoreMovementDriver",
+        "componentOwner": "RuleCoreMovementGrappleOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "observedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreMovementGrappleOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#normalizeRuleCoreMovementQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Movement, Dash, Disengage, Grapple, escape, release, and Opportunity Attack interrupt calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreMovementGrappleOwner",
+          "BattleCombatantMovement.spentFeet",
+          "BattleCombatantMovement.remainingFeet",
+          "BattleTurnState.dashMovementBonusFeet",
+          "BattleTurnState.disengaged",
+          "BattleTurnState.actionResources",
+          "BattleCreatureState.conditions includes/excludes prone",
+          "BattleState.grapples",
+          "BattleState.pendingInterrupt.trigger=opportunityAttack",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "qntFileSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "componentConnectorSha256": "af34f1112f145233ac40b7dffe4a80bb94cae8ee5879c912eb116fc18d5a66cb",
+      "branchFamily": "step",
+      "branchAction": "doStartGrappledTargetTurn",
+      "observedActionTaken": "doStartGrappledTargetTurn",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts",
+      "traceId": "component-route=RuleCoreMovementGrappleOwner action=doStartGrappledTargetTurn qComponentRoute=movement-grapple-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doStartGrappledTargetTurn",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#createRuleCoreMovementDriver",
+        "componentOwner": "RuleCoreMovementGrappleOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "observedProjectionSha256": "61f31844719ded060a636f4824e52f14dc95978958bb3db4a0e88a139eb31391",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreMovementGrappleOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#normalizeRuleCoreMovementQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Movement, Dash, Disengage, Grapple, escape, release, and Opportunity Attack interrupt calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-movement.mbt.test.ts#resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreMovementGrappleOwner",
+          "BattleCombatantMovement.spentFeet",
+          "BattleCombatantMovement.remainingFeet",
+          "BattleTurnState.dashMovementBonusFeet",
+          "BattleTurnState.disengaged",
+          "BattleTurnState.actionResources",
+          "BattleCreatureState.conditions includes/excludes prone",
+          "BattleState.grapples",
+          "BattleState.pendingInterrupt.trigger=opportunityAttack",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}

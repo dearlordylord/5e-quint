@@ -1,5 +1,116 @@
 # Validation Report
 
+## CRPI-READY-030
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Driver path: `packages/battle-runtime/rule-core-movement.mbt.qnt`
+- Component connector path: `packages/battle-runtime/rule-core-movement.mbt.qnt`
+- Route class: `component-first`
+- Durable owner: `RuleCoreMovementGrappleOwner`
+- Accepted projection: `qComponentRoute`
+- Status: `accepted`
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-030.json`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/rule-core-movement.mbt.qnt`
+- `packages/battle-runtime/rule-core-component-route.qnt`
+- `packages/battle-runtime/src/rule-core-movement.mbt.test.ts`
+- `packages/battle-runtime/src/rule-core-component-route.ts`
+- `packages/battle-runtime/src/battle-reducer/turn-end-movement.ts`
+- `packages/battle-runtime/src/battle-reducer/movement-speed.ts`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-convergence-backlog.json`
+- `.references/srd-5.2.1/Playing-the-Game.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+The component-first replay for rule-core Movement/Grapple now has accepted target
+evidence for the copied `qComponentRoute` projection. The target harness records
+the reusable component route sequence parse input, admit input, call
+`RuleCoreMovementGrappleOwner`, and project result before downstream battle action,
+stat-block, spell-effect, and feature routes consume this owner.
+
+Runtime projections are produced through public battle-runtime Movement, Dash,
+Disengage, Grapple, escape, release, and Opportunity Attack interrupt entrypoints
+via `resolveBattleSubject` and `resolveBattleInterrupt`, then compared to the
+copied component connector route. No production reducer state was added: movement
+spent/remaining, Dash bonus, Disengage, action resources, Prone, Grapple links,
+and pending Opportunity Attack decisions remain on existing battle state fields.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Harness | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/rule-core-movement.mbt.qnt#step:doDash` | `tasks/target-replay-evidence/CRPI-READY-030.json#driver:packages/battle-runtime/rule-core-movement.mbt.qnt#step:doDash#trace:component-route=RuleCoreMovementGrappleOwner action=doDash qComponentRoute=movement-grapple-component-route` | `packages/battle-runtime/src/rule-core-movement.mbt.test.ts#replays QCORE7 Movement, Grapple, and OA-decline against battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-movement.mbt.qnt#step:doDeclineOpportunityAttack` | `tasks/target-replay-evidence/CRPI-READY-030.json#driver:packages/battle-runtime/rule-core-movement.mbt.qnt#step:doDeclineOpportunityAttack#trace:component-route=RuleCoreMovementGrappleOwner action=doDeclineOpportunityAttack qComponentRoute=movement-grapple-component-route` | `packages/battle-runtime/src/rule-core-movement.mbt.test.ts#replays QCORE7 Movement, Grapple, and OA-decline against battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-movement.mbt.qnt#step:doDiscoverEscapeGrapple` | `tasks/target-replay-evidence/CRPI-READY-030.json#driver:packages/battle-runtime/rule-core-movement.mbt.qnt#step:doDiscoverEscapeGrapple#trace:component-route=RuleCoreMovementGrappleOwner action=doDiscoverEscapeGrapple qComponentRoute=movement-grapple-component-route` | `packages/battle-runtime/src/rule-core-movement.mbt.test.ts#replays QCORE7 Movement, Grapple, and OA-decline against battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-movement.mbt.qnt#step:doDiscoverGrapple` | `tasks/target-replay-evidence/CRPI-READY-030.json#driver:packages/battle-runtime/rule-core-movement.mbt.qnt#step:doDiscoverGrapple#trace:component-route=RuleCoreMovementGrappleOwner action=doDiscoverGrapple qComponentRoute=movement-grapple-component-route` | `packages/battle-runtime/src/rule-core-movement.mbt.test.ts#replays QCORE7 Movement, Grapple, and OA-decline against battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-movement.mbt.qnt#step:doDiscoverMovement` | `tasks/target-replay-evidence/CRPI-READY-030.json#driver:packages/battle-runtime/rule-core-movement.mbt.qnt#step:doDiscoverMovement#trace:component-route=RuleCoreMovementGrappleOwner action=doDiscoverMovement qComponentRoute=movement-grapple-component-route` | `packages/battle-runtime/src/rule-core-movement.mbt.test.ts#replays QCORE7 Movement, Grapple, and OA-decline against battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-movement.mbt.qnt#step:doDisengage` | `tasks/target-replay-evidence/CRPI-READY-030.json#driver:packages/battle-runtime/rule-core-movement.mbt.qnt#step:doDisengage#trace:component-route=RuleCoreMovementGrappleOwner action=doDisengage qComponentRoute=movement-grapple-component-route` | `packages/battle-runtime/src/rule-core-movement.mbt.test.ts#replays QCORE7 Movement, Grapple, and OA-decline against battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-movement.mbt.qnt#step:doMoveProvokesOpportunityAttack` | `tasks/target-replay-evidence/CRPI-READY-030.json#driver:packages/battle-runtime/rule-core-movement.mbt.qnt#step:doMoveProvokesOpportunityAttack#trace:component-route=RuleCoreMovementGrappleOwner action=doMoveProvokesOpportunityAttack qComponentRoute=movement-grapple-component-route` | `packages/battle-runtime/src/rule-core-movement.mbt.test.ts#replays QCORE7 Movement, Grapple, and OA-decline against battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-movement.mbt.qnt#step:doMoveThreatSuppressedByDisengage` | `tasks/target-replay-evidence/CRPI-READY-030.json#driver:packages/battle-runtime/rule-core-movement.mbt.qnt#step:doMoveThreatSuppressedByDisengage#trace:component-route=RuleCoreMovementGrappleOwner action=doMoveThreatSuppressedByDisengage qComponentRoute=movement-grapple-component-route` | `packages/battle-runtime/src/rule-core-movement.mbt.test.ts#replays QCORE7 Movement, Grapple, and OA-decline against battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-movement.mbt.qnt#step:doRejectDashAfterActionSpent` | `tasks/target-replay-evidence/CRPI-READY-030.json#driver:packages/battle-runtime/rule-core-movement.mbt.qnt#step:doRejectDashAfterActionSpent#trace:component-route=RuleCoreMovementGrappleOwner action=doRejectDashAfterActionSpent qComponentRoute=movement-grapple-component-route` | `packages/battle-runtime/src/rule-core-movement.mbt.test.ts#replays QCORE7 Movement, Grapple, and OA-decline against battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-movement.mbt.qnt#step:doRejectMovementOverspend` | `tasks/target-replay-evidence/CRPI-READY-030.json#driver:packages/battle-runtime/rule-core-movement.mbt.qnt#step:doRejectMovementOverspend#trace:component-route=RuleCoreMovementGrappleOwner action=doRejectMovementOverspend qComponentRoute=movement-grapple-component-route` | `packages/battle-runtime/src/rule-core-movement.mbt.test.ts#replays QCORE7 Movement, Grapple, and OA-decline against battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-movement.mbt.qnt#step:doReleaseGrapple` | `tasks/target-replay-evidence/CRPI-READY-030.json#driver:packages/battle-runtime/rule-core-movement.mbt.qnt#step:doReleaseGrapple#trace:component-route=RuleCoreMovementGrappleOwner action=doReleaseGrapple qComponentRoute=movement-grapple-component-route` | `packages/battle-runtime/src/rule-core-movement.mbt.test.ts#replays QCORE7 Movement, Grapple, and OA-decline against battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-movement.mbt.qnt#step:doResolveEscapeFailure` | `tasks/target-replay-evidence/CRPI-READY-030.json#driver:packages/battle-runtime/rule-core-movement.mbt.qnt#step:doResolveEscapeFailure#trace:component-route=RuleCoreMovementGrappleOwner action=doResolveEscapeFailure qComponentRoute=movement-grapple-component-route` | `packages/battle-runtime/src/rule-core-movement.mbt.test.ts#replays QCORE7 Movement, Grapple, and OA-decline against battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-movement.mbt.qnt#step:doResolveEscapeSuccess` | `tasks/target-replay-evidence/CRPI-READY-030.json#driver:packages/battle-runtime/rule-core-movement.mbt.qnt#step:doResolveEscapeSuccess#trace:component-route=RuleCoreMovementGrappleOwner action=doResolveEscapeSuccess qComponentRoute=movement-grapple-component-route` | `packages/battle-runtime/src/rule-core-movement.mbt.test.ts#replays QCORE7 Movement, Grapple, and OA-decline against battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-movement.mbt.qnt#step:doResolveGrappleFailure` | `tasks/target-replay-evidence/CRPI-READY-030.json#driver:packages/battle-runtime/rule-core-movement.mbt.qnt#step:doResolveGrappleFailure#trace:component-route=RuleCoreMovementGrappleOwner action=doResolveGrappleFailure qComponentRoute=movement-grapple-component-route` | `packages/battle-runtime/src/rule-core-movement.mbt.test.ts#replays QCORE7 Movement, Grapple, and OA-decline against battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-movement.mbt.qnt#step:doResolveGrappleSuccess` | `tasks/target-replay-evidence/CRPI-READY-030.json#driver:packages/battle-runtime/rule-core-movement.mbt.qnt#step:doResolveGrappleSuccess#trace:component-route=RuleCoreMovementGrappleOwner action=doResolveGrappleSuccess qComponentRoute=movement-grapple-component-route` | `packages/battle-runtime/src/rule-core-movement.mbt.test.ts#replays QCORE7 Movement, Grapple, and OA-decline against battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-movement.mbt.qnt#step:doSelectGrappleTarget` | `tasks/target-replay-evidence/CRPI-READY-030.json#driver:packages/battle-runtime/rule-core-movement.mbt.qnt#step:doSelectGrappleTarget#trace:component-route=RuleCoreMovementGrappleOwner action=doSelectGrappleTarget qComponentRoute=movement-grapple-component-route` | `packages/battle-runtime/src/rule-core-movement.mbt.test.ts#replays QCORE7 Movement, Grapple, and OA-decline against battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-movement.mbt.qnt#step:doSpendFullMovement` | `tasks/target-replay-evidence/CRPI-READY-030.json#driver:packages/battle-runtime/rule-core-movement.mbt.qnt#step:doSpendFullMovement#trace:component-route=RuleCoreMovementGrappleOwner action=doSpendFullMovement qComponentRoute=movement-grapple-component-route` | `packages/battle-runtime/src/rule-core-movement.mbt.test.ts#replays QCORE7 Movement, Grapple, and OA-decline against battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-movement.mbt.qnt#step:doSpendMovement` | `tasks/target-replay-evidence/CRPI-READY-030.json#driver:packages/battle-runtime/rule-core-movement.mbt.qnt#step:doSpendMovement#trace:component-route=RuleCoreMovementGrappleOwner action=doSpendMovement qComponentRoute=movement-grapple-component-route` | `packages/battle-runtime/src/rule-core-movement.mbt.test.ts#replays QCORE7 Movement, Grapple, and OA-decline against battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-movement.mbt.qnt#step:doSpendShortMovement` | `tasks/target-replay-evidence/CRPI-READY-030.json#driver:packages/battle-runtime/rule-core-movement.mbt.qnt#step:doSpendShortMovement#trace:component-route=RuleCoreMovementGrappleOwner action=doSpendShortMovement qComponentRoute=movement-grapple-component-route` | `packages/battle-runtime/src/rule-core-movement.mbt.test.ts#replays QCORE7 Movement, Grapple, and OA-decline against battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-movement.mbt.qnt#step:doStandFromProne` | `tasks/target-replay-evidence/CRPI-READY-030.json#driver:packages/battle-runtime/rule-core-movement.mbt.qnt#step:doStandFromProne#trace:component-route=RuleCoreMovementGrappleOwner action=doStandFromProne qComponentRoute=movement-grapple-component-route` | `packages/battle-runtime/src/rule-core-movement.mbt.test.ts#replays QCORE7 Movement, Grapple, and OA-decline against battle-runtime reducers` | `covered` |
+| `packages/battle-runtime/rule-core-movement.mbt.qnt#step:doStartGrappledTargetTurn` | `tasks/target-replay-evidence/CRPI-READY-030.json#driver:packages/battle-runtime/rule-core-movement.mbt.qnt#step:doStartGrappledTargetTurn#trace:component-route=RuleCoreMovementGrappleOwner action=doStartGrappledTargetTurn qComponentRoute=movement-grapple-component-route` | `packages/battle-runtime/src/rule-core-movement.mbt.test.ts#replays QCORE7 Movement, Grapple, and OA-decline against battle-runtime reducers` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-030.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id pattern: `component-route=RuleCoreMovementGrappleOwner action=<branchAction> qComponentRoute=movement-grapple-component-route`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-READY-030/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 72.
+
+RAW / ubiquitous-language trace:
+
+- SRD 5.2.1 Playing the Game: on a turn, a creature can move a distance up to its Speed and can break up movement around actions.
+- SRD 5.2.1 Rules Glossary: Speed is the distance a creature can cover when it moves on its turn, and special speeds share the movement accounting rule.
+- SRD 5.2.1 Rules Glossary and Playing the Game: Dash grants extra movement for the current turn equal to Speed, and Disengage prevents Opportunity Attacks for the rest of the turn.
+- SRD 5.2.1 Rules Glossary: Prone restricts movement to crawling or spending half Speed to stand.
+- SRD 5.2.1 Playing the Game and Rules Glossary: Opportunity Attacks trigger when a visible creature leaves reach using its movement, action, Bonus Action, Reaction, or Speed, and Teleport/forced movement do not provoke.
+- SRD 5.2.1 Rules Glossary: Grappled sets Speed to 0, permits grappler drag/carry with extra movement cost, and can end by escape, separation, incapacitation, or release with no action.
+- SRD 5.2.1 Rules Glossary: Unarmed Strike Grapple gives the target a Strength or Dexterity save against DC 8 plus Strength modifier and Proficiency Bonus, then applies Grappled on failure.
+- `UBIQUITOUS_LANGUAGE.md`: Speed is capacity, Movement is expenditure, Grapple/Prone/Opportunity Attack names match the modeled domain terms.
+
+Verification results:
+
+- Base check passed: declared base ref `codex/cleanroom-reducer-full-lane-20260705-restart2` resolved to `5a3fb5554 Merge Ralph task 100 status`; `HEAD` resolved to `82543595d Mark Ralph task 71 done`; `git merge-base --is-ancestor 82543595d93db102fd8a33d0a191bb8e85fe863e HEAD` passed, so the Task Base SHA remains an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against SRD 5.2.1 Playing the Game Movement and Position, Actions, Reactions, Opportunity Attacks; Rules Glossary Speed, Dash, Disengage, Prone, Grappled, Grappling, Opportunity Attacks, Unarmed Strike; and `UBIQUITOUS_LANGUAGE.md`.
+- JSON validation passed: `jq empty tasks/target-replay-evidence/CRPI-READY-030.json tasks/ENGINE_DEPTH_MANIFEST.json tasks/STATE_OWNER_MANIFEST.json tasks/RUN_LEDGER.json`.
+- Pre-MBT process checks passed: no existing `vitest` or `quint_evaluator` processes were running; no evaluator cleanup was needed.
+- Focused MBT replay passed: `START=$(date +%s); cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=6 pnpm exec vitest run src/rule-core-movement.mbt.test.ts 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 1 test in `TOTAL: 22s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- Scoped target evidence validation passed: `node scoped validateTargetReplayEvidence for CRPI-READY-030 movement driver` covered 21 Task 72 obligations.
+- `git diff --check` passed.
+- Requested broad verification passed: `flock /tmp/dnd-mbt-qnt.lock pnpm quality`. App lint reported warnings only and exited 0; turbo typecheck passed all 9 packages from cache.
+- Reviewer-loop convergence passed: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks found no remaining reasonable Task 72 findings.
+
 ## CRP06-SRO-02
 
 - Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
