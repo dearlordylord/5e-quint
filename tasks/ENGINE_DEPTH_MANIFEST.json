@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRP04-CCF-02",
+  "taskId": "CRP04-CCF-03",
   "productionModulesExtended": [
     {
       "path": "packages/character-creation-runtime/src/fill-reducer.ts",
@@ -22,7 +22,7 @@
         "fillIssues"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRP04-CCF-02.json"
+        "tasks/target-replay-evidence/CRP04-CCF-03.json"
       ]
     },
     {
@@ -31,11 +31,11 @@
         "qRoute",
         "RouteApplyCreationFillBatch",
         "RouteDiscoverCreationHoles",
-        "RouteRecordCreationFacts",
-        "CreationStaleFillRejectionFact"
+        "CreationSupportProfileAdmissionOwner",
+        "CharacterDraftOwner"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRP04-CCF-02.json"
+        "tasks/target-replay-evidence/CRP04-CCF-03.json"
       ]
     },
     {
@@ -44,10 +44,15 @@
         "normalizeQuintState",
         "RuntimeMbtState",
         "character-creation-runtime-state",
-        "rejectedFillBatchSteps"
+        "rejectedFillBatchSteps",
+        "doRejectUnsupportedLanguage",
+        "doRejectDuplicateLanguage",
+        "doRejectTooFewLanguages",
+        "doRejectTooManyLanguages",
+        "doRejectUnsupportedClassEquipment"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRP04-CCF-02.json"
+        "tasks/target-replay-evidence/CRP04-CCF-03.json"
       ]
     },
     {
@@ -55,10 +60,11 @@
       "quarantinedWitnessNames": [
         "normalizeCharacterCreationRouteQuintState",
         "RouteProjection",
-        "route-event-list"
+        "route-event-list",
+        "routes language and equipment fill rejections to draft or support-profile owners"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRP04-CCF-02.json"
+        "tasks/target-replay-evidence/CRP04-CCF-03.json"
       ]
     }
   ],
@@ -67,16 +73,16 @@
     {
       "driver": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
       "module": "packages/character-creation-runtime/src/fill-reducer.ts",
-      "api": "fillCreationHoles remains the public atomic batch entrypoint for rejected creation fills; validation completes before draft mutation and rejected results derive holes and finalization from the unchanged draft."
+      "api": "fillCreationHoles remains the public atomic batch entrypoint for rejected creation fills; validation completes before draft mutation, choice cardinality is read from the discovered hole shape, support-profile admission remains a separate rejection owner, and rejected results derive holes and finalization from the unchanged draft."
     },
     {
       "driver": "packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt",
       "module": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
-      "api": "Character creation route replay records rejection owners from public reducer entrypoints instead of adapter-local expected routes."
+      "api": "Character creation route replay records cardinality and duplicate-choice rejection under CharacterDraftOwner while valid unsupported choices route to CreationSupportProfileAdmissionOwner."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 90 records rejected qState and qRoute replay evidence for stale revision, duplicate fill, wrong-kind fill, and non-open hole rejection. No duplicate durable open-hole, finalization, or issue store was introduced."
+    "notes": "Task 91 records rejected qState and qRoute replay evidence for language choice cardinality, duplicate options, valid unsupported language choices, and valid unsupported class equipment choices. No duplicate durable required-count, open-hole, finalization, or issue store was introduced."
   }
 }

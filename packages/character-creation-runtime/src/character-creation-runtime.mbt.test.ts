@@ -801,10 +801,15 @@ type RejectedFillBatchStep = {
   readonly name: keyof Pick<
     typeof driverSchema,
     | "doRejectStaleInitialManifest"
+    | "doRejectUnsupportedLanguage"
+    | "doRejectDuplicateLanguage"
     | "doRejectDuplicateFill"
+    | "doRejectTooFewLanguages"
+    | "doRejectTooManyLanguages"
     | "doRejectWrongKindPrimaryClass"
     | "doRejectClosedInitialProgressionHole"
     | "doRejectUnknownLoadoutArmor"
+    | "doRejectUnsupportedClassEquipment"
   >;
   readonly expectedRevision?: (
     draft: CharacterDraft,
@@ -864,6 +869,23 @@ function initialChoicesAcceptedState(): {
   return { draft: result.draft, holes: result.holes };
 }
 
+function initialManifestAcceptedState(): {
+  readonly draft: CharacterDraft;
+  readonly holes: readonly CreationHole[];
+} {
+  const state = initialDraftState();
+  const result = fillCreationHoles({
+    draft: state.draft,
+    fills: initialManifestFills(state.holes),
+    expectedRevision: state.draft.revision,
+    unitLibrary,
+  });
+  if (result.tag !== "accepted") {
+    throw new Error("Initial manifest fixture must be accepted.");
+  }
+  return { draft: result.draft, holes: result.holes };
+}
+
 const rejectedFillBatchSteps: ReadonlyArray<RejectedFillBatchStep> = [
   {
     name: "doRejectStaleInitialManifest",
@@ -873,11 +895,50 @@ const rejectedFillBatchSteps: ReadonlyArray<RejectedFillBatchStep> = [
     expectedFillIssues: [],
   },
   {
+    name: "doRejectUnsupportedLanguage",
+    fills: (holes) => [
+      choiceFill(holes, "HLanguages", ["Dwarvish", "Elvish"]),
+    ],
+    expectedBatchIssueCodes: [],
+    expectedFillIssues: [
+      { fillIndex: 0, hole: "HLanguages", code: "unsupportedChoice" },
+    ],
+  },
+  {
+    name: "doRejectDuplicateLanguage",
+    fills: (holes) => [
+      choiceFill(holes, "HLanguages", ["Dwarvish", "Dwarvish"]),
+    ],
+    expectedBatchIssueCodes: [],
+    expectedFillIssues: [
+      { fillIndex: 0, hole: "HLanguages", code: "invalidChoice" },
+    ],
+  },
+  {
     name: "doRejectDuplicateFill",
     fills: duplicateLanguageHoleFills,
     expectedBatchIssueCodes: [],
     expectedFillIssues: [
       { fillIndex: 1, hole: "HLanguages", code: "duplicateFill" },
+    ],
+  },
+  {
+    name: "doRejectTooFewLanguages",
+    fills: (holes) => [choiceFill(holes, "HLanguages", ["Dwarvish"])],
+    expectedBatchIssueCodes: [],
+    expectedFillIssues: [
+      { fillIndex: 0, hole: "HLanguages", code: "tooFewChoices" },
+    ],
+  },
+  {
+    name: "doRejectTooManyLanguages",
+    fills: (holes) => [
+      choiceFill(holes, "HLanguages", ["Dwarvish", "Goblin", "Elvish"]),
+    ],
+    expectedBatchIssueCodes: [],
+    expectedFillIssues: [
+      { fillIndex: 0, hole: "HLanguages", code: "tooManyChoices" },
+      { fillIndex: 0, hole: "HLanguages", code: "unsupportedChoice" },
     ],
   },
   {
@@ -904,6 +965,15 @@ const rejectedFillBatchSteps: ReadonlyArray<RejectedFillBatchStep> = [
     expectedFillIssues: [
       { fillIndex: 0, hole: "HLoadoutArmor", code: "unknownHole" },
     ],
+  },
+  {
+    name: "doRejectUnsupportedClassEquipment",
+    fills: (holes) => [choiceFill(holes, "HClassEquipment", ["option_a"])],
+    expectedBatchIssueCodes: [],
+    expectedFillIssues: [
+      { fillIndex: 0, hole: "HClassEquipment", code: "unsupportedChoice" },
+    ],
+    prepare: initialManifestAcceptedState,
   },
 ];
 

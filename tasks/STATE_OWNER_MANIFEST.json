@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRP04-CCF-02",
+  "taskId": "CRP04-CCF-03",
   "durableFields": [
     {
       "fieldPath": "CharacterDraft.revision",
@@ -24,7 +24,7 @@
       "introducedIn": "packages/character-creation-runtime/src/discovery.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "CharacterDraft.selections plus UnitCatalog support-profile readers",
+      "sourceField": "CharacterDraft.selections plus UnitCatalog support-profile readers",
         "boundary": "fillCreationHoles rejected result and discoverCreationHoles projection"
       }
     },
@@ -44,7 +44,7 @@
       "introducedIn": "packages/character-creation-runtime/src/fill-reducer.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "submitted CreationFill batch, current CharacterDraft.revision, and currently derived Creation Hole Frontier",
+      "sourceField": "submitted CreationFill batch, current CharacterDraft.revision, discovered Creation Hole cardinality, support-profile admission, and currently derived Creation Hole Frontier",
         "boundary": "fillCreationHoles rejected result"
       }
     },
@@ -62,6 +62,8 @@
     "Creation Hole Frontier is derived by discoverCreationHoles from the draft and support-profile readers; no durable open-hole ledger is stored.",
     "Finalization is derived by finalizeCharacterDraft from the draft and support-profile admission; no durable finalization status ledger is stored beside the draft.",
     "Rejected batch issues and fill issues are result projections at the fillCreationHoles boundary, not durable state beside the draft.",
+    "Choice cardinality is derived from each discovered Creation Hole shape; no per-draft mutable required-count copy is stored.",
+    "Support Profile admission is a package-private runtime boundary for valid-but-unsupported choices, not authored provenance or Surface content status.",
     "Closed and not-yet-open holes are rejected by comparing a fill against the derived Creation Hole Frontier; no closed-hole status field is stored.",
     "Character Build is produced only by the finalization gate once holes are empty and the support profile admits the completed draft."
   ]
