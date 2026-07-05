@@ -367,7 +367,7 @@
     {
       "number": 61,
       "id": "CRPI-READY-023",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-turn-boundary-effect-lifecycle"
     },
     {
@@ -4136,7 +4136,7 @@ Plan Impact:
 
 ### Task 61 - CRPI-READY-023
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
