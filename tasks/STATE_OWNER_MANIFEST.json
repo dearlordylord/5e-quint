@@ -1,37 +1,23 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRP06-SRO-02",
+  "taskId": "CRPI-READY-029",
   "durableFields": [
     {
-      "owner": "CharacterSheetHitPointOwner",
+      "owner": "RuleCoreHitPointDamageOwner",
       "fields": [
-        "CharacterSheet.hitPoints.current",
-        "CharacterSheet.hitPoints.tempHp",
-        "CharacterSheet.hitPointMaximumReduction"
+        "BattleCreatureState.hp",
+        "BattleCreatureState.maxHp",
+        "BattleCreatureState.tempHp",
+        "BattleCreatureState.conditions",
+        "BattleCreatureState.zeroHpLifecycle",
+        "BattleCreatureState.positiveHpUnconscious"
       ],
-      "notes": "Owns current Hit Points, Temporary Hit Points, Hit Point Maximum reduction, and Long Rest HP restoration. Normal Hit Point Maximum remains derived from CharacterBuild and Unit facts."
-    },
-    {
-      "owner": "CharacterSheetHitDiceOwner",
-      "fields": [
-        "CharacterSheet.spentHitDice"
-      ],
-      "notes": "Owns spent Hit Dice and Short Rest Hit Die spending. Hit Die capacity and die size remain derived from CharacterBuild through characterBuildHitPoints."
-    },
-    {
-      "owner": "CharacterSheetStateOwner",
-      "fields": [
-        "CharacterSheetLongRestStart.requiredRestTicks",
-        "CharacterSheetLongRestStart.nextLongRestStartWaitTicks",
-        "CharacterSheetLongRestCalendarGate.remainingTicks"
-      ],
-      "notes": "Owns rest duration and Long Rest calendar gates as workflow state, not alternate HP or Hit Dice ledgers."
+      "notes": "Owns applying resolved damage to current Hit Points, Temporary Hit Points, and zero-HP consequences. Hit Point Maximum is consumed from existing creature state; the replay adds no alternate HP ledger."
     }
   ],
   "notes": [
-    "Task 100 introduced no duplicate stored normal Hit Point Maximum, Hit Die capacity, or Hit Die size.",
-    "Short Rest benefit choices remain explicit route fills through SheetRestBenefitChoiceHoleFamily.",
-    "qState is target replay semantic evidence derived from public Character Sheet rest entrypoints and projection helpers.",
-    "qRoute is target replay route evidence derived from the character-sheet reducer route vocabulary, not authored identity."
+    "Task 71 introduced no new durable state fields.",
+    "Temporary Hit Points remain BattleCreatureState.tempHp and are projected through hpDamageProjection rather than duplicated in adapter state.",
+    "qComponentRoute is target replay route evidence derived from typed rule-core component route vocabulary, not authored identity."
   ]
 }
