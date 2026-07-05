@@ -41,6 +41,7 @@ import {
   recoverShortRestUseCountResources,
 } from "./resources.ts";
 import {
+  characterSheetPactSlots,
   isCharacterSheetWithSpellSlots,
   ordinarySpellSlotStates,
   replaceOrdinarySpellSlotExpenditure,
@@ -61,6 +62,8 @@ import {
   type CharacterSheetIssue,
   type CharacterSheetLayOnHandsInput,
   type CharacterSheetLayOnHandsResult,
+  type CharacterSheetPactSlotState,
+  type CharacterSheetRouteOwner,
   type CharacterSheetShortRestBenefitHpGate,
   type CharacterSheetSpellRestBenefitInput,
   type CharacterSheetSpellRestBenefitRecipient,
@@ -70,6 +73,40 @@ import {
   type CharacterSheetWithSpellSlots,
   type CharacterSpellSlotExpenditure,
 } from "./sheet-types.ts";
+
+type CharacterSheetShortRestBenefitsInput = {
+  readonly sheet: CharacterSheet;
+  readonly unitLibrary: UnitCatalog;
+  readonly hpGate: CharacterSheetShortRestBenefitHpGate;
+  readonly spendHitDice?: readonly CharacterSheetHitDieSpend[] | undefined;
+  readonly arcaneRecovery?:
+    | {
+        readonly refundSpellSlots: readonly CharacterSheetArcaneRecoverySlotRefund[];
+      }
+    | undefined;
+  readonly sorcerousRestoration?:
+    | {
+        readonly recoverSorceryPoints: ResourceCount;
+      }
+    | undefined;
+};
+
+type CharacterSheetArcaneRecoveryRouteOwner = Extract<
+  CharacterSheetRouteOwner,
+  "featureResource" | "pactSlot" | "spellSlot"
+>;
+
+export type CharacterSheetShortRestArcaneRecoveryBenefitsResult =
+  | {
+      readonly tag: "accepted";
+      readonly sheet: CharacterSheet;
+      readonly owner: "spellSlot";
+    }
+  | {
+      readonly tag: "rejected";
+      readonly issue: CharacterSheetIssue;
+      readonly owner: CharacterSheetArcaneRecoveryRouteOwner | undefined;
+    };
 
 export type CharacterSheetSpellRestBenefitProfile = {
   readonly spellId: UnitRecord["id"];
@@ -306,22 +343,49 @@ export function spellRestBenefitHealingAmount(input: {
   );
 }
 
-export function completeShortRestBenefits(input: {
-  readonly sheet: CharacterSheet;
-  readonly unitLibrary: UnitCatalog;
-  readonly hpGate: CharacterSheetShortRestBenefitHpGate;
-  readonly spendHitDice?: readonly CharacterSheetHitDieSpend[] | undefined;
-  readonly arcaneRecovery?:
-    | {
-        readonly refundSpellSlots: readonly CharacterSheetArcaneRecoverySlotRefund[];
-      }
-    | undefined;
-  readonly sorcerousRestoration?:
-    | {
-        readonly recoverSorceryPoints: ResourceCount;
-      }
-    | undefined;
-}): Either.Either<CharacterSheet, CharacterSheetIssue> {
+export function completeShortRestBenefits(
+  input: CharacterSheetShortRestBenefitsInput,
+): Either.Either<CharacterSheet, CharacterSheetIssue> {
+  const prepared = completeShortRestBenefitsBeforeArcaneRecovery(input);
+  if (Either.isLeft(prepared)) return Either.left(prepared.left);
+  if (input.arcaneRecovery === undefined) return Either.right(prepared.right);
+  const arcaneRecovery = applyArcaneRecovery({
+    sheet: prepared.right,
+    pactSlotsAtRestStart: characterSheetPactSlots(input.sheet),
+    unitLibrary: input.unitLibrary,
+    refundSpellSlots: input.arcaneRecovery.refundSpellSlots,
+  });
+  return arcaneRecovery.tag === "accepted"
+    ? Either.right(arcaneRecovery.sheet)
+    : Either.left(arcaneRecovery.issue);
+}
+
+export function completeShortRestArcaneRecoveryBenefitsWithOwner(
+  input: CharacterSheetShortRestBenefitsInput & {
+    readonly arcaneRecovery: NonNullable<
+      CharacterSheetShortRestBenefitsInput["arcaneRecovery"]
+    >;
+  },
+): CharacterSheetShortRestArcaneRecoveryBenefitsResult {
+  const prepared = completeShortRestBenefitsBeforeArcaneRecovery(input);
+  if (Either.isLeft(prepared)) {
+    return {
+      tag: "rejected",
+      issue: prepared.left,
+      owner: undefined,
+    };
+  }
+  return applyArcaneRecovery({
+    sheet: prepared.right,
+    pactSlotsAtRestStart: characterSheetPactSlots(input.sheet),
+    unitLibrary: input.unitLibrary,
+    refundSpellSlots: input.arcaneRecovery.refundSpellSlots,
+  });
+}
+
+function completeShortRestBenefitsBeforeArcaneRecovery(
+  input: CharacterSheetShortRestBenefitsInput,
+): Either.Either<CharacterSheet, CharacterSheetIssue> {
   if (
     input.hpGate === "requiresShortRestStartHp" &&
     characterSheetCurrentHp(input.sheet) < Hp(1)
@@ -355,13 +419,7 @@ export function completeShortRestBenefits(input: {
   if (Either.isLeft(sorceryPointsRecovered)) {
     return Either.left(sorceryPointsRecovered.left);
   }
-  if (input.arcaneRecovery === undefined)
-    return Either.right(sorceryPointsRecovered.right);
-  return applyArcaneRecovery({
-    sheet: sorceryPointsRecovered.right,
-    unitLibrary: input.unitLibrary,
-    refundSpellSlots: input.arcaneRecovery.refundSpellSlots,
-  });
+  return Either.right(sorceryPointsRecovered.right);
 }
 
 export function characterSheetHitDice(
@@ -697,27 +755,42 @@ function spendHitDice(input: {
 
 function applyArcaneRecovery(input: {
   readonly sheet: CharacterSheet;
+  readonly pactSlotsAtRestStart: CharacterSheetPactSlotState | undefined;
   readonly unitLibrary: UnitCatalog;
   readonly refundSpellSlots: readonly CharacterSheetArcaneRecoverySlotRefund[];
-}): Either.Either<CharacterSheet, CharacterSheetIssue> {
+}): CharacterSheetShortRestArcaneRecoveryBenefitsResult {
   if (!isCharacterSheetWithSpellSlots(input.sheet)) {
-    return characterSheetIssue(
-      "Arcane Recovery requires ordinary Spell Slot state.",
-    );
+    return {
+      tag: "rejected",
+      issue: arcaneRecoveryIssue(
+        "Arcane Recovery requires ordinary Spell Slot state.",
+      ),
+      owner: "spellSlot",
+    };
   }
   const profile = restSpellSlotRecoveryProfileForBuild(
     input.sheet.build,
     input.unitLibrary,
   );
-  if (Either.isLeft(profile)) return Either.left(profile.left);
+  if (Either.isLeft(profile)) {
+    return {
+      tag: "rejected",
+      issue: profile.left,
+      owner: "featureResource",
+    };
+  }
   if (
     input.sheet.restFeatureUses.some(
       (use) => use.tag === ARCANE_RECOVERY_REST_FEATURE_TAG,
     )
   ) {
-    return characterSheetIssue(
-      "Arcane Recovery cannot be used again until a Long Rest.",
-    );
+    return {
+      tag: "rejected",
+      issue: arcaneRecoveryIssue(
+        "Arcane Recovery cannot be used again until a Long Rest.",
+      ),
+      owner: "featureResource",
+    };
   }
   const sheet = input.sheet;
   const refund = arcaneRecoverySpellSlotRefund({
@@ -725,18 +798,38 @@ function applyArcaneRecovery(input: {
     profile: profile.right,
     refundSpellSlots: input.refundSpellSlots,
   });
-  if (Either.isLeft(refund)) return Either.left(refund.left);
-  return Either.right({
-    ...sheet,
-    spellSlotExpenditures: refund.right,
-    restFeatureUses: [
-      ...sheet.restFeatureUses,
-      {
-        tag: ARCANE_RECOVERY_REST_FEATURE_TAG,
-        usedSinceLongRest: true,
-      },
-    ],
-  });
+  if (Either.isLeft(refund)) {
+    return {
+      tag: "rejected",
+      issue: refund.left,
+      owner: arcaneRecoveryPactSlotRejectionBoundary({
+        sheet,
+        pactSlotsAtRestStart: input.pactSlotsAtRestStart,
+        refundSpellSlots: input.refundSpellSlots,
+      })
+        ? "pactSlot"
+        : "spellSlot",
+    };
+  }
+  return {
+    tag: "accepted",
+    owner: "spellSlot",
+    sheet: {
+      ...sheet,
+      spellSlotExpenditures: refund.right,
+      restFeatureUses: [
+        ...sheet.restFeatureUses,
+        {
+          tag: ARCANE_RECOVERY_REST_FEATURE_TAG,
+          usedSinceLongRest: true,
+        },
+      ],
+    },
+  };
+}
+
+function arcaneRecoveryIssue(message: string): CharacterSheetIssue {
+  return { tag: "characterSheetIssue", message };
 }
 
 function arcaneRecoverySpellSlotRefund(input: {
@@ -789,25 +882,52 @@ function arcaneRecoverySpellSlotRefund(input: {
       expended: resourceCount(expenditure.expended - refundCount),
     };
   });
-  const knownLevels = new Set(
-    input.sheet.spellSlotExpenditures.map((slot) => slot.spellLevel),
+  const ordinarySlotsByLevel = new Map(
+    ordinarySpellSlotStates(input.sheet).map((slot) => [
+      slot.spellLevel,
+      slot,
+    ]),
   );
   for (const [spellLevel, refundCount] of refundByLevel.entries()) {
-    if (!knownLevels.has(spellLevel)) {
+    const ordinarySlot = ordinarySlotsByLevel.get(spellLevel);
+    if (ordinarySlot === undefined) {
       return characterSheetIssue(
         "Arcane Recovery refund must match existing Spell Slot levels.",
       );
     }
-    const original = input.sheet.spellSlotExpenditures.find(
-      (slot) => slot.spellLevel === spellLevel,
-    );
-    if (original === undefined || refundCount > original.expended) {
+    if (refundCount > ordinarySlot.expended) {
       return characterSheetIssue(
         "Arcane Recovery cannot refund more Spell Slots than are expended.",
       );
     }
   }
   return Either.right(updated);
+}
+
+function arcaneRecoveryPactSlotRejectionBoundary(input: {
+  readonly sheet: CharacterSheetWithSpellSlots;
+  readonly pactSlotsAtRestStart: CharacterSheetPactSlotState | undefined;
+  readonly refundSpellSlots: readonly CharacterSheetArcaneRecoverySlotRefund[];
+}): boolean {
+  const pactSlots = input.pactSlotsAtRestStart;
+  if (pactSlots === undefined || pactSlots.expended < resourceCount(1)) {
+    return false;
+  }
+  const ordinaryExpendedByLevel = new Map(
+    ordinarySpellSlotStates(input.sheet).map((slot) => [
+      slot.spellLevel,
+      slot.expended,
+    ]),
+  );
+  return input.refundSpellSlots.some((refund) => {
+    const ordinaryExpended =
+      ordinaryExpendedByLevel.get(refund.spellLevel) ?? resourceCount(0);
+    return (
+      refund.spellLevel === pactSlots.slotLevel &&
+      ordinaryExpended === resourceCount(0) &&
+      refund.count <= pactSlots.expended
+    );
+  });
 }
 
 function restSpellSlotRecoveryProfileForFeature(input: {

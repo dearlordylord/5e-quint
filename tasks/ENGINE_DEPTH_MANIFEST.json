@@ -1,49 +1,99 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-048",
+  "taskId": "CRPI-BLOCK-049",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.route.mbt.qnt",
+      "path": "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.route.mbt.qnt",
       "quarantinedWitnessNames": [
         "qRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-048.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-049.json"
       ]
     },
     {
       "path": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "abilityCheckRouteActions",
-        "projectPublicAbilityCheckRoute",
+        "arcaneRecoveryRouteActions",
+        "recoverSecondLevelSpellSlotRoute",
+        "resetArcaneRecoveryOnLongRestRoute",
+        "rejectPactSlotArcaneRecoveryRoute",
         "normalizeCharacterSheetRouteQuintState",
         "routeStateCheck"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-048.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-049.json"
+      ]
+    },
+    {
+      "path": "packages/character-sheet-runtime/src/test-support.ts",
+      "quarantinedWitnessNames": [
+        "completeShortRestArcaneRecoveryWithRoute",
+        "completeLongRestArcaneRecoveryResetWithRoute"
+      ],
+      "targetReplayEvidence": [
+        "packages/character-sheet-runtime/src/rests.test.ts",
+        "tasks/target-replay-evidence/CRPI-BLOCK-049.json"
+      ]
+    },
+    {
+      "path": "packages/character-sheet-runtime/src/rests.test.ts",
+      "quarantinedWitnessNames": [
+        "Arcane Recovery route wrapper reports Feature Resource owner for use lockout rejection",
+        "Long Rest Arcane Recovery route wrapper omits qRoute when no Arcane Recovery reset occurred"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-049.json"
       ]
     }
   ],
   "productionModulesExtended": [
     {
-      "path": "packages/character-sheet-runtime/src/ability-checks.ts",
+      "path": "packages/character-sheet-runtime/src/rests.ts",
       "owners": [
-        "CharacterSheetBuildProjectionOwner"
+        "CharacterSheetSpellSlotOwner",
+        "CharacterSheetPactSlotOwner",
+        "CharacterSheetFeatureResourceOwner"
       ],
-      "notes": "Public Ability Check Proficiency Bonus projection derives from CharacterBuild proficiencies, Expertise, Jack of All Trades feature grants, total level, and typed other-bonus gates. Task 94 adds characterSheetAbilityCheckProficiencyBonusProjection so the public projection path returns the semantic projection with its Ability Check qRoute event; it does not add production state."
+      "notes": "Task 95 adds public Arcane Recovery rest-with-route projection entrypoints around the existing Short Rest and Long Rest reducers. They return copied qRoute events only when typed Arcane Recovery owner-boundary state proves a route was observed; broad Long Rest success without an Arcane Recovery reset returns no qRoute."
+    },
+    {
+      "path": "packages/character-sheet-runtime/src/healing-rest-benefit.ts",
+      "owners": [
+        "CharacterSheetSpellSlotOwner",
+        "CharacterSheetPactSlotOwner",
+        "CharacterSheetFeatureResourceOwner"
+      ],
+      "notes": "Arcane Recovery returns a typed Short Rest owner classification for route replay. Feature-use lockout failures belong to CharacterSheetFeatureResourceOwner, ordinary refund failures belong to CharacterSheetSpellSlotOwner, and only pact-slot-shaped shortages belong to CharacterSheetPactSlotOwner. The over-refund rejection distinguishes build-derived ordinary Spell Slot levels from nonzero expenditure source state."
     },
     {
       "path": "packages/character-sheet-runtime/src/sheet-types.ts",
       "owners": [
-        "CharacterSheetBuildProjectionOwner"
+        "CharacterSheetSpellSlotOwner",
+        "CharacterSheetPactSlotOwner",
+        "CharacterSheetFeatureResourceOwner"
       ],
-      "notes": "Typed CharacterSheetAbilityCheckProficiencyBonus and CharacterSheetAbilityCheckOtherProficiencyBonusState boundaries are reused for route replay evidence. Task 94 adds a typed Ability Check Proficiency Bonus projection route event/result so the public projection path, not the adapter, owns the observed qRoute event."
+      "notes": "Task 95 introduces typed Character Sheet route-event vocabulary and CharacterSheetArcaneRecoveryRestRouteResult as runtime projections. The result distinguishes observed Arcane Recovery routes from no-route outcomes. No durable sheet state fields are added."
+    },
+    {
+      "path": "packages/character-sheet-runtime/src/index.ts",
+      "owners": [
+        "CharacterSheetSpellSlotOwner",
+        "CharacterSheetPactSlotOwner",
+        "CharacterSheetFeatureResourceOwner"
+      ],
+      "notes": "Exports the public Arcane Recovery rest-with-route projection entrypoints and typed route projection result."
     }
   ],
-  "expectedNextReuse": [],
+  "expectedNextReuse": [
+    {
+      "path": "packages/character-sheet-runtime/src/sheet-types.ts",
+      "notes": "Shared CharacterSheetRouteEvent vocabulary can replace remaining adapter-local route event type duplication in future Character Sheet route replay tasks."
+    }
+  ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 94 observes copied qRoute for Ability Check Proficiency Bonus through the public Character Sheet projection-with-route entrypoint. No duplicate proficiency, Expertise, Jack of All Trades, or Proficiency Bonus ledger was introduced."
+    "notes": "Task 95 observes copied qRoute for Arcane Recovery selected identity through public Character Sheet rest-with-route entrypoints. Route metadata is constrained by typed Arcane Recovery owner-boundary state. Slot capacities remain build-derived; no duplicate Spell Slot, Pact Slot, or feature-use ledger was introduced."
   }
 }

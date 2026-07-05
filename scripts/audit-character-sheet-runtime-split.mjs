@@ -29,6 +29,7 @@ const EXPECTED_EXPORTS = [
   "CharacterSheetAbilityCheckOtherProficiencyBonusState",
   "CharacterSheetAbilityCheckProficiencyBonus",
   "CharacterSheetAbilityCheckProficiencyBonusInput",
+  "CharacterSheetArcaneRecoveryRestRouteResult",
   "CharacterSheetArcaneRecoverySlotRefund",
   "CharacterSheetArmorClassBaseChoice",
   "CharacterSheetArmorClassStateInput",
@@ -94,6 +95,12 @@ const EXPECTED_EXPORTS = [
   "CharacterSheetRetainedCompanionState",
   "CharacterSheetResourceExpenditure",
   "CharacterSheetResourceState",
+  "CharacterSheetRouteEvent",
+  "CharacterSheetRouteFact",
+  "CharacterSheetRouteFill",
+  "CharacterSheetRouteHole",
+  "CharacterSheetRouteOwner",
+  "CharacterSheetRouteSubject",
   "CharacterSheetRestActivityInterruption",
   "CharacterSheetRestFeatureUse",
   "CharacterSheetShortRestCompletion",
@@ -160,8 +167,10 @@ const EXPECTED_EXPORTS = [
   "characterSheetSpellbookRitualAccessesForBuild",
   "characterSheetTempHp",
   "completeLongRest",
+  "completeLongRestArcaneRecoveryResetWithRoute",
   "completeMagicalCunningRite",
   "completeShortRest",
+  "completeShortRestArcaneRecoveryWithRoute",
   "convertFontOfMagicSorceryPointsToSpellSlot",
   "convertFontOfMagicSpellSlotToSorceryPoints",
   "createFreshCharacterSheet",
@@ -207,6 +216,51 @@ const EXPECTED_EXPORT_RECONCILIATION_REASONS = [
     name: "characterSheetAbilityCheckProficiencyBonusProjection",
     reason:
       "Character Sheet owns Ability Check Proficiency Bonus projection from build facts; exposing the projection-with-route entrypoint lets route replay observe the qRoute event without maintaining an adapter-local route projection.",
+  },
+  {
+    name: "completeShortRestArcaneRecoveryWithRoute",
+    reason:
+      "Character Sheet owns Arcane Recovery Short Rest ordinary Spell Slot refund and Pact Slot rejection routing; exposing the rest-with-route entrypoint lets route replay observe qRoute without duplicating rest reducer state.",
+  },
+  {
+    name: "completeLongRestArcaneRecoveryResetWithRoute",
+    reason:
+      "Character Sheet owns Long Rest reset for ordinary Spell Slots, Pact Slots, and Arcane Recovery use lockout; exposing the reset-with-route entrypoint lets route replay observe qRoute from the public rest reducer path.",
+  },
+  {
+    name: "CharacterSheetArcaneRecoveryRestRouteResult",
+    reason:
+      "Character Sheet owns the typed result returned by Arcane Recovery rest-with-route entrypoints so accepted and rejected route projections remain explicit rather than adapter-local.",
+  },
+  {
+    name: "CharacterSheetRouteEvent",
+    reason:
+      "Character Sheet owns its reducer route-event vocabulary; exporting it avoids parallel route event structures in public route projection entrypoints.",
+  },
+  {
+    name: "CharacterSheetRouteSubject",
+    reason:
+      "Character Sheet owns its route subject vocabulary; exporting it keeps route projections typed at the owner boundary instead of stringly adapter-local.",
+  },
+  {
+    name: "CharacterSheetRouteHole",
+    reason:
+      "Character Sheet owns its route hole vocabulary; exporting it keeps recovery-choice holes typed in route projection results.",
+  },
+  {
+    name: "CharacterSheetRouteFill",
+    reason:
+      "Character Sheet owns its route fill vocabulary; exporting it keeps recovery-selection fills typed in route projection results.",
+  },
+  {
+    name: "CharacterSheetRouteOwner",
+    reason:
+      "Character Sheet owns its route owner vocabulary; exporting it makes Spell Slot, Pact Slot, and Feature Resource ownership explicit in route projection results.",
+  },
+  {
+    name: "CharacterSheetRouteFact",
+    reason:
+      "Character Sheet owns its route fact vocabulary; exporting it keeps future fact-recording route projections on the same typed surface.",
   },
 ];
 

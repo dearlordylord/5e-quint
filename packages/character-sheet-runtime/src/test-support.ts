@@ -64,8 +64,10 @@ import {
   characterSheetSpellInvocation,
   characterSheetSpellSlotSourceState,
   characterSheetSpellSlots,
+  completeLongRestArcaneRecoveryResetWithRoute as completeLongRestArcaneRecoveryResetWithRouteCore,
   completeLongRest as completeLongRestCore,
   completeMagicalCunningRite,
+  completeShortRestArcaneRecoveryWithRoute as completeShortRestArcaneRecoveryWithRouteCore,
   completeShortRest as completeShortRestCore,
   convertFontOfMagicSpellSlotToSorceryPoints,
   convertFontOfMagicSorceryPointsToSpellSlot,
@@ -333,6 +335,55 @@ export function completeLongRest(
     }),
   );
   return completeLongRestCore({
+    ...benefits,
+    completion,
+  });
+}
+
+export function completeShortRestArcaneRecoveryWithRoute(
+  input: Omit<CharacterSheetShortRestInput, "completion" | "arcaneRecovery"> & {
+    readonly sheet: CharacterSheet;
+    readonly restedTicks?: ElapsedTimeTicks;
+    readonly arcaneRecovery: NonNullable<
+      CharacterSheetShortRestInput["arcaneRecovery"]
+    >;
+  },
+) {
+  const { sheet, restedTicks, ...benefits } = input;
+  const rest = requireRight(startShortRest({ sheet }));
+  const completion = requireRight(
+    finishShortRest({
+      rest,
+      restedTicks: restedTicks ?? CHARACTER_SHEET_SHORT_REST_TICKS,
+    }),
+  );
+  return completeShortRestArcaneRecoveryWithRouteCore({
+    ...benefits,
+    completion,
+  });
+}
+
+export function completeLongRestArcaneRecoveryResetWithRoute(
+  input: Omit<CharacterSheetLongRestInput, "completion"> & {
+    readonly sheet: CharacterSheet;
+    readonly restedTicks?: ElapsedTimeTicks;
+    readonly timing?: CharacterSheetLongRestStartTiming;
+  },
+) {
+  const { sheet, restedTicks, timing, ...benefits } = input;
+  const rest = requireRight(
+    startLongRest({
+      sheet,
+      timing: timing ?? { tag: "noPriorLongRest" },
+    }),
+  );
+  const completion = requireRight(
+    finishLongRest({
+      rest,
+      restedTicks: restedTicks ?? rest.requiredRestTicks,
+    }),
+  );
+  return completeLongRestArcaneRecoveryResetWithRouteCore({
     ...benefits,
     completion,
   });

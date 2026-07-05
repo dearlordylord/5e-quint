@@ -26,8 +26,10 @@ import {
   characterSheetPactSlots,
   characterSheetSpellSlots,
   completeLongRest,
+  completeLongRestArcaneRecoveryResetWithRoute,
   completeMagicalCunningRite,
   completeShortRest,
+  completeShortRestArcaneRecoveryWithRoute,
   createFreshCharacterSheet,
   elapsedTimeTicks,
   expectRight,
@@ -821,6 +823,72 @@ describe("Character Sheet runtime / rests", () => {
       left: {
         message: "Arcane Recovery cannot be used again until a Long Rest.",
       },
+    });
+  });
+
+  test("Arcane Recovery route wrapper reports Feature Resource owner for use lockout rejection", () => {
+    const sheet = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:arcane-recovery-route-lockout"),
+        build: wizardBuild({ wizardAdvancements: 3 }),
+        tempHp: Hp(0),
+        unitLibrary,
+        spellSlotExpenditures: [
+          { spellLevel: spellSlotLevel(1), expended: resourceCount(1) },
+        ],
+        restFeatureUses: [
+          { tag: "arcaneRecovery", usedSinceLongRest: true },
+        ],
+      }),
+    );
+
+    const routed = completeShortRestArcaneRecoveryWithRoute({
+      sheet,
+      unitLibrary,
+      arcaneRecovery: {
+        refundSpellSlots: [
+          { spellLevel: spellSlotLevel(1), count: resourceCount(1) },
+        ],
+      },
+    });
+
+    expect(routed).toMatchObject({
+      tag: "rejected",
+      route: "arcaneRecovery",
+      issue: {
+        message: "Arcane Recovery cannot be used again until a Long Rest.",
+      },
+      qRoute: [
+        {
+          kind: "resolveCharacterSheetSubject",
+          subject: "featureResource",
+          fill: "recoverySelection",
+          holes: ["recoveryChoice"],
+          owner: "featureResource",
+        },
+      ],
+    });
+  });
+
+  test("Long Rest Arcane Recovery route wrapper omits qRoute when no Arcane Recovery reset occurred", () => {
+    const sheet = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:arcane-recovery-route-none"),
+        build: armorClassBuild({ startingClass: "class_fighter" }),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+
+    const routed = completeLongRestArcaneRecoveryResetWithRoute({
+      sheet,
+      unitLibrary,
+    });
+
+    expect(routed).toMatchObject({
+      tag: "accepted",
+      route: "none",
+      qRoute: [],
     });
   });
 
