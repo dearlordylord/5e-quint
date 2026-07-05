@@ -343,7 +343,7 @@
     {
       "number": 37,
       "id": "L6UG-FINAL-01-ULTRA-GOLDEN-REFRESH",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Refresh and verify the level-1-6 ultra-golden gate"
     }
   ]
@@ -487,7 +487,7 @@ Every Ralph task must run the task-base check before research or edits:
 |  34 | L6UG-MCP-03-LEVEL6-BATTLE-HANDOFF - Extend the level-6 MCP scenario through battle handoff | done | L6UG-MCP-02-LEVEL6-SHEET-SCENARIO, L6UG-GATE-01-NON-MCP-LAYER-RECONCILIATION | Adds selected Rogue 6 Steady Aim battle handoff coverage. |
 |  35 | L6UG-MCP-04-LEVEL6-SCENARIO-REGISTRY - Register the level-6 MCP scenario in acceptance coverage | done | L6UG-MCP-03-LEVEL6-BATTLE-HANDOFF | Wires executable Rogue 6 Steady Aim scenario into acceptance metadata and protocol coverage. |
 |  36 | L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE - Admit level-1-6 MCP scenario evidence | done | L6UG-MCP-04-LEVEL6-SCENARIO-REGISTRY | Ready to admit checker-owned MCP evidence for the registered level-6 scenario. |
-|  37 | L6UG-FINAL-01-ULTRA-GOLDEN-REFRESH - Refresh and verify the level-1-6 ultra-golden gate | blocked | L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE | Final generated refresh after scope, parity, and MCP evidence land. |
+|  37 | L6UG-FINAL-01-ULTRA-GOLDEN-REFRESH - Refresh and verify the level-1-6 ultra-golden gate | ready-for-research | L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE | Final generated refresh after scope, parity, and MCP evidence land. |
 
 ## Shared Verification
 
@@ -3478,7 +3478,7 @@ Verification:
 
 ### Task 37 - L6UG-FINAL-01-ULTRA-GOLDEN-REFRESH
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE`
 
