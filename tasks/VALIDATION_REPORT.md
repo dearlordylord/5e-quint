@@ -1,5 +1,75 @@
 # Validation Report
 
+## CRP04-CCF-02 - Character Creation Rejection Replay
+
+- Manifest source commit SHA: `84e17424ba5882f076783f4bd0780b34d2a0a58e`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+- Selected driver: `packages/character-creation-runtime/character-creation-runtime.mbt.qnt`
+
+Task 90 target replay covers stale revision, duplicate fill, wrong fill kind,
+closed progression hole, and future loadout hole rejection through the public
+character-creation reducer entrypoints. Semantic `qState` evidence uses the
+`character-creation-runtime-state` comparator; route `qRoute` evidence uses
+`route-event-list` from `packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt`.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectStaleInitialManifest` | `tasks/target-replay-evidence/CRP04-CCF-02.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectStaleInitialManifest#trace:deterministic-rejection-contract action=doRejectStaleInitialManifest projection=qState` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectDuplicateFill` | `tasks/target-replay-evidence/CRP04-CCF-02.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectDuplicateFill#trace:deterministic-rejection-contract action=doRejectDuplicateFill projection=qState` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectWrongKindPrimaryClass` | `tasks/target-replay-evidence/CRP04-CCF-02.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectWrongKindPrimaryClass#trace:deterministic-rejection-contract action=doRejectWrongKindPrimaryClass projection=qState` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectClosedInitialProgressionHole` | `tasks/target-replay-evidence/CRP04-CCF-02.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectClosedInitialProgressionHole#trace:deterministic-rejection-contract action=doRejectClosedInitialProgressionHole projection=qState` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectUnknownLoadoutArmor` | `tasks/target-replay-evidence/CRP04-CCF-02.json#driver:packages/character-creation-runtime/character-creation-runtime.mbt.qnt#step:doRejectUnknownLoadoutArmor#trace:deterministic-rejection-contract action=doRejectUnknownLoadoutArmor projection=qState` | `_none_` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRP04-CCF-02.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id pattern: `deterministic-rejection-contract action=<branchAction> projection=qState`
+- Route trace id pattern: `deterministic-rejection-contract action=<branchAction> projection=qRoute`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRP04-CCF-02/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 90.
+
+Verification results:
+
+- Base check passed: declared base ref
+  `ralph/cleanroom-character-creation-lane-20260705/integration` and `HEAD`
+  both resolved to `883f1021e Mark Ralph task 89 done`; Base SHA
+  `883f1021e0752e7706888399562ef037c1339fca` is an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against Character Creation steps,
+  Character Origins background/species choices, Fighter level-1 creation facts,
+  Equipment starting-equipment/loadout facts, `UBIQUITOUS_LANGUAGE.md`, and
+  `packages/character-creation-runtime/VOCABULARY.md`.
+- `pnpm --filter @dnd/character-creation-runtime exec vitest run src/character-creation-runtime.mbt.test.ts -t "rejects invalid creation fill batches"` passed with 1 focused deterministic test and 2 skipped MBT tests.
+- `pnpm --filter @dnd/character-creation-runtime typecheck` passed.
+- `START=$(date +%s); MBT_TRACES=1 MBT_STEPS=16 pnpm --filter @dnd/character-creation-runtime exec vitest run src/character-creation-runtime.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "character creation" 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 2 files, 9 tests, 2 skipped deterministic tests, and `TOTAL: 43s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- `flock /tmp/dnd-mbt-qnt.lock pnpm quality` passed end to end; app lint reported warnings only and exited 0.
+- Reviewer-loop convergence passed: round 1 verified RAW traceability, domain
+  language, atomic rejection-before-mutation locality, derived hole/finalization
+  projections, route event ownership, and no authored-identity dispatch. Round 2
+  rechecked the artifact and code diff after fixes; no reasonable findings
+  remained.
+
+Plan Impact:
+
+- Status: `none`
+- Affected tasks: Task 90 / `CRP04-CCF-02` accepted; Task 91 left unchanged.
+- Required plan edits: none.
+
 ## CRP06-SRO-03
 
 - Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`

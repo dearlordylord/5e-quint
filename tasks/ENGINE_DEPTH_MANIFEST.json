@@ -1,56 +1,82 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-029",
+  "taskId": "CRP04-CCF-02",
   "productionModulesExtended": [
     {
-      "path": "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
-      "owners": [
-        "RuleCoreHitPointDamageOwner"
-      ],
-      "notes": "Existing public Hit Point damage reducer API reused as the target component call surface for copied qComponentRoute replay."
+      "path": "packages/character-creation-runtime/src/fill-reducer.ts",
+      "role": "domain-engine",
+      "domainApis": [
+        "fillCreationHoles",
+        "creationFillIssues"
+      ]
     }
   ],
   "adapterModules": [
     {
-      "path": "packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt",
+      "path": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
       "quarantinedWitnessNames": [
-        "qLastScenario",
-        "qHitPoints",
-        "qHitPointMaximum",
-        "qTemporaryHitPoints",
-        "qDead",
-        "qUnconscious",
-        "qDamageToHitPoints",
-        "qRemainingDamageAtZero",
-        "qReplayIndex",
-        "qComponentRoute"
+        "qState",
+        "CreationRuntimeWitnessState",
+        "CreationRejected",
+        "batchIssueCodes",
+        "fillIssues"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-029.json"
+        "tasks/target-replay-evidence/CRP04-CCF-02.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/rule-core-hit-point-damage.mbt.test.ts",
+      "path": "packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt",
       "quarantinedWitnessNames": [
-        "HitPointDamageProjection",
-        "createHitPointDamageDriver",
-        "normalizeHitPointDamageQuintState"
+        "qRoute",
+        "RouteApplyCreationFillBatch",
+        "RouteDiscoverCreationHoles",
+        "RouteRecordCreationFacts",
+        "CreationStaleFillRejectionFact"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-029.json"
+        "tasks/target-replay-evidence/CRP04-CCF-02.json"
+      ]
+    },
+    {
+      "path": "packages/character-creation-runtime/src/character-creation-runtime.mbt.test.ts",
+      "quarantinedWitnessNames": [
+        "normalizeQuintState",
+        "RuntimeMbtState",
+        "character-creation-runtime-state",
+        "rejectedFillBatchSteps"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRP04-CCF-02.json"
+      ]
+    },
+    {
+      "path": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "quarantinedWitnessNames": [
+        "normalizeCharacterCreationRouteQuintState",
+        "RouteProjection",
+        "route-event-list"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRP04-CCF-02.json"
       ]
     }
   ],
   "accumulatorGrowth": [],
   "expectedNextReuse": [
     {
-      "driver": "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt",
-      "module": "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
-      "api": "Later exact-damage projection tasks can reuse RuleCoreHitPointDamageOwner evidence through the same public applyBattleHitPointDamage and hpDamageProjection surface."
+      "driver": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+      "module": "packages/character-creation-runtime/src/fill-reducer.ts",
+      "api": "fillCreationHoles remains the public atomic batch entrypoint for rejected creation fills; validation completes before draft mutation and rejected results derive holes and finalization from the unchanged draft."
+    },
+    {
+      "driver": "packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt",
+      "module": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "api": "Character creation route replay records rejection owners from public reducer entrypoints instead of adapter-local expected routes."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 71 observes copied qComponentRoute for rule-core Hit Point damage through public battle-runtime Hit Point damage entrypoints. No duplicate durable state was introduced."
+    "notes": "Task 90 records rejected qState and qRoute replay evidence for stale revision, duplicate fill, wrong-kind fill, and non-open hole rejection. No duplicate durable open-hole, finalization, or issue store was introduced."
   }
 }

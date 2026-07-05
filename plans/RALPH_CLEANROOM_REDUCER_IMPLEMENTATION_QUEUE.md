@@ -541,7 +541,7 @@
     {
       "number": 90,
       "id": "CRP04-CCF-02",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Character creation stale revision, duplicate fill, wrong-kind, and closed-hole rejection"
     },
     {
@@ -742,7 +742,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRPI-BLOCK-044` | `blocked` | blocked by task body | blocker resolution before implementation |
 | `CRPI-BLOCK-045` | `blocked` | blocked by task body | blocker resolution before implementation |
 | `CRP04-CCF-01` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRP04-CCF-02` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRP04-CCF-02` | `done` | none | target replay evidence and owner implementation |
 | `CRP04-CCF-03` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-046` | `blocked` | blocked by task body | blocker resolution before implementation |
 | `CRPI-BLOCK-047` | `blocked` | blocked by task body | blocker resolution before implementation |
@@ -5781,7 +5781,7 @@ Plan Impact:
 
 ### Task 90 - CRP04-CCF-02
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
