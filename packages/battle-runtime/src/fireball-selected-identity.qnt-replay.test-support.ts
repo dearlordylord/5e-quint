@@ -9,16 +9,23 @@ const FIREBALL_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
 
 export const fireballSelectedIdentityQntReplay = {
   ...fireballSelectedIdentityReplay,
+  units: fireballSelectedIdentityReplay.units.map((unit) => ({
+    unitId: unit.unitId,
+    procedures: unit.procedures.map((procedure) => ({
+      actionName: procedure.actionName,
+      discover: procedure.discover,
+    })),
+  })),
   specFile: mbtSpecPath(
-      import.meta.dirname,
-      "battle-runtime-fireball-selected-identity.mbt.qnt",
-    ),
+    import.meta.dirname,
+    "battle-runtime-fireball-selected-identity.mbt.qnt",
+  ),
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   quintFieldNames: { lastResult: "qScenarioOutcome" },
   witnessProtocolField: "protocol",
   quintVariantFieldTags: {
-      lastResult: FIREBALL_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG,
-    },
+    lastResult: FIREBALL_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG,
+  },
   projectionSchema: { lastResult: "variant" },
 } as const;

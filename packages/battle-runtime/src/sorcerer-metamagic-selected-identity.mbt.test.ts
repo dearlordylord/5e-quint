@@ -80,14 +80,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doResolveQuickenedSaveGatedDamage",
-          projectionAfter: {
-            magicActionAvailable: true,
-            bonusActionAvailable: false,
-            sorceryPointsRemaining: 2,
-            targetHp: 1,
-            targetActiveEffectCount: 0,
-            lastResult: "quickenedSaveGatedDamage",
-          },
           discover: () =>
             projectBattleState(
               resolveQuickenedBurningHands(sorcererMetamagicBattle()),
@@ -146,7 +138,5 @@ function createQuickenedSaveGatedDamageRouteReplayDriver() {
 }
 
 function observeQuickenedBurningHandsInitialRoute() {
-  return [
-    battleReducerStartRouteEvent(),
-  ] as const;
+  return [battleReducerStartRouteEvent()] as const;
 }

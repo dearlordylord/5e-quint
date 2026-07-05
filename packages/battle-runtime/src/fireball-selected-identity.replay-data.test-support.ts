@@ -19,63 +19,64 @@ export const fireballSelectedIdentityReplay = {
   taskId: "B23-FIREBALL-IDENTITY-WITNESS",
   initialProjection: { lastResult: "init" },
   units: [
-      {
-        unitId: fireballUnitId,
-        procedures: [
-          {
-            actionName: "doDiscoverFireballSaveGatedDamage",
-            projectionAfter: { lastResult: "fireballSaveGatedDamage" },
-            discover: () => {
-              const spell = spellRecord(fireballUnitId);
-              const state = spellBattle({
-                preparedSpells: [spell],
-                spellSlots: [{ spellLevel: 3, count: 1 }],
-              });
-              const act = spellAct({
-                state,
-                spellId: fireballUnitId,
-                slotLevel: 3,
-              });
-              expect(act.subject).toEqual({
-                tag: "actionSpell",
-                actorId: spellCasterId,
-                invocation: spellSlotInvocationRef(
-                  fireballUnitId,
-                  3,
-                  "saveGatedDamage",
-                ),
-                mode: { tag: "cast" },
-              });
-              const savingThrow = requireHole(
-                act.initialHoles,
-                "savingThrowOutcome",
-              );
-              expect(savingThrow).toEqual(
-                expect.objectContaining({
-                  label: "Fireball point-origin Sphere Saving Throw outcomes",
-                  ability: "dex",
-                  dc: { kind: "caster_spell_save_dc" },
-                }),
-              );
-              expect(spellHoleInvocation([savingThrow])).toEqual(
-                expect.objectContaining({
-                  procedure: "saveGatedDamage",
-                  spell,
-                  resource: { tag: "spellSlot", slotLevel: 3 },
-                  ability: "dex",
-                  targeting: { kind: "pointOriginSphere", radiusFeet: 20 },
-                  damage: {
-                    expr: { dice: 8, dieSize: 6 },
-                    damageType: "fire",
-                  },
-                  successDamage: "half",
-                  rangeFeet: 150,
-                  postSaveAreaEffect: { kind: "fireballObjectIgnition" },
-                }),
-              );
-            },
+    {
+      unitId: fireballUnitId,
+      procedures: [
+        {
+          actionName: "doDiscoverFireballSaveGatedDamage",
+          projectionAfter: { lastResult: "fireballSaveGatedDamage" },
+          discover: () => {
+            const spell = spellRecord(fireballUnitId);
+            const state = spellBattle({
+              preparedSpells: [spell],
+              spellSlots: [{ spellLevel: 3, count: 1 }],
+            });
+            const act = spellAct({
+              state,
+              spellId: fireballUnitId,
+              slotLevel: 3,
+            });
+            expect(act.subject).toEqual({
+              tag: "actionSpell",
+              actorId: spellCasterId,
+              invocation: spellSlotInvocationRef(
+                fireballUnitId,
+                3,
+                "saveGatedDamage",
+              ),
+              mode: { tag: "cast" },
+            });
+            const savingThrow = requireHole(
+              act.initialHoles,
+              "savingThrowOutcome",
+            );
+            expect(savingThrow).toEqual(
+              expect.objectContaining({
+                label: "Fireball point-origin Sphere Saving Throw outcomes",
+                ability: "dex",
+                dc: { kind: "caster_spell_save_dc" },
+              }),
+            );
+            expect(spellHoleInvocation([savingThrow])).toEqual(
+              expect.objectContaining({
+                procedure: "saveGatedDamage",
+                spell,
+                resource: { tag: "spellSlot", slotLevel: 3 },
+                ability: "dex",
+                targeting: { kind: "pointOriginSphere", radiusFeet: 20 },
+                damage: {
+                  expr: { dice: 8, dieSize: 6 },
+                  damageType: "fire",
+                },
+                successDamage: "half",
+                rangeFeet: 150,
+                postSaveAreaEffect: { kind: "fireballObjectIgnition" },
+              }),
+            );
+            return { lastResult: "fireballSaveGatedDamage" };
           },
-        ],
-      },
-    ],
+        },
+      ],
+    },
+  ],
 } satisfies SelectedIdentityReplayWitness<Readonly<Record<string, unknown>>>;

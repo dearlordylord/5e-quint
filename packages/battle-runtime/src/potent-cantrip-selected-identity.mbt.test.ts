@@ -94,11 +94,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doAttackMissHalfDamage",
-          projectionAfter: expectedProjection({
-            targetHp: 11,
-            actionResourcesRemaining: 0,
-            lastResult: "attackMissHalfDamage",
-          }),
           discover: () =>
             projectResolvedResult(
               resolveAttackMissCantrip("ray_of_frost"),
@@ -107,12 +102,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doAttackMissNoLightEmitter",
-          projectionAfter: expectedProjection({
-            targetHp: 11,
-            actionResourcesRemaining: 0,
-            lightEmitterCount: 0,
-            lastResult: "attackMissNoLightEmitter",
-          }),
           discover: () =>
             projectResolvedResult(
               resolveAttackMissCantrip("starry_wisp"),
@@ -121,12 +110,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doAttackMissNoAdditionalEffect",
-          projectionAfter: expectedProjection({
-            targetHp: 11,
-            actionResourcesRemaining: 0,
-            targetActiveEffectCount: 0,
-            lastResult: "attackMissNoAdditionalEffect",
-          }),
           discover: () =>
             projectResolvedResult(
               resolveAttackMissCantrip("shocking_grasp"),
@@ -135,11 +118,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doSaveSuccessHalfDamage",
-          projectionAfter: expectedProjection({
-            targetHp: 11,
-            actionResourcesRemaining: 0,
-            lastResult: "saveSuccessHalfDamage",
-          }),
           discover: () =>
             projectResolvedResult(
               resolveSuccessfulSaveCantrip("acid_splash"),
@@ -148,12 +126,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doSaveSuccessNoAdditionalEffect",
-          projectionAfter: expectedProjection({
-            targetHp: 11,
-            actionResourcesRemaining: 0,
-            targetActiveEffectCount: 0,
-            lastResult: "saveSuccessNoAdditionalEffect",
-          }),
           discover: () =>
             projectResolvedResult(
               resolveSuccessfulSaveCantrip("vicious_mockery"),
@@ -162,11 +134,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doRejectObjectMissHalfDamage",
-          projectionAfter: expectedProjection({
-            actionResourcesRemaining: 0,
-            objectDamageCount: 0,
-            lastResult: "rejectObjectMissHalfDamage",
-          }),
           discover: () =>
             projectResolvedResult(
               resolveObjectMissCantrip("fire_bolt"),

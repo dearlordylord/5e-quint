@@ -82,11 +82,12 @@ const FIND_FAMILIAR_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
   Recast: "recast",
   DismissedAndReappeared: "dismissedAndReappeared",
   TouchDelivered: "touchDelivered",
-} as const satisfies Readonly<Record<string, | "init"
-    | "cast"
-    | "recast"
-    | "dismissedAndReappeared"
-    | "touchDelivered">>;
+} as const satisfies Readonly<
+  Record<
+    string,
+    "init" | "cast" | "recast" | "dismissedAndReappeared" | "touchDelivered"
+  >
+>;
 
 defineSelectedIdentityReplayAndQntReplay({
   describeLabel: "Find Familiar selected identity replay",
@@ -120,50 +121,18 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doCastFindFamiliar",
-          projectionAfter: expectedFindFamiliarProjection({
-            familiarStatus: "present",
-            formId: "cat",
-            familiarCombatantPresent: true,
-            familiarReactionAvailable: true,
-            lastResult: "cast",
-          }),
           discover: castFindFamiliarProjection,
         },
         {
           actionName: "doRecastFindFamiliarReplacement",
-          projectionAfter: expectedFindFamiliarProjection({
-            familiarStatus: "present",
-            formId: "rat",
-            familiarCombatantPresent: true,
-            familiarReactionAvailable: true,
-            lastResult: "recast",
-          }),
           discover: recastFindFamiliarReplacementProjection,
         },
         {
           actionName: "doDismissAndReappearFindFamiliar",
-          projectionAfter: expectedFindFamiliarProjection({
-            familiarStatus: "present",
-            formId: "cat",
-            familiarCombatantPresent: true,
-            familiarReactionAvailable: true,
-            ownerActionAvailable: false,
-            lastResult: "dismissedAndReappeared",
-          }),
           discover: dismissAndReappearFindFamiliarProjection,
         },
         {
           actionName: "doDeliverTouchSpellThroughFindFamiliar",
-          projectionAfter: expectedFindFamiliarProjection({
-            familiarStatus: "present",
-            formId: "cat",
-            familiarCombatantPresent: true,
-            familiarReactionAvailable: false,
-            ownerActionAvailable: false,
-            ownerSpellSlotCommitted: true,
-            targetHp: 12,
-            lastResult: "touchDelivered",
-          }),
           discover: deliverTouchSpellThroughFindFamiliarProjection,
         },
       ],

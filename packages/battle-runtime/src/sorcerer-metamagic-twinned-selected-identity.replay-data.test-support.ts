@@ -20,34 +20,34 @@ export const sorcererMetamagicTwinnedSelectedIdentityReplay = {
   describeLabel: "Sorcerer Metamagic Twinned Spell selected identity replay",
   taskId: "L3META-07-TWINNED-SPELL-UPCAST-TARGETING",
   initialProjection: {
-      magicActionAvailable: true,
-      bonusActionAvailable: true,
-      sorceryPointsRemaining: 4,
-      targetHp: 10,
-      targetActiveEffectCount: 0,
-      lastResult: "init",
-    },
+    magicActionAvailable: true,
+    bonusActionAvailable: true,
+    sorceryPointsRemaining: 4,
+    targetHp: 10,
+    targetActiveEffectCount: 0,
+    lastResult: "init",
+  },
   units: [
-      {
-        unitId: "sorcerer_metamagic",
-        procedures: [
-          {
-            actionName: "doResolveTwinnedTargetCount",
-            projectionAfter: {
-              magicActionAvailable: false,
-              bonusActionAvailable: true,
-              sorceryPointsRemaining: 3,
-              targetHp: 10,
-              targetActiveEffectCount: 1,
-              lastResult: "twinnedTargetCount",
-            },
-            discover: () =>
-              projectBattleState(
-                resolveTwinnedBless(twinnedSorcererMetamagicBattle()),
-                "twinnedTargetCount",
-              ),
+    {
+      unitId: "sorcerer_metamagic",
+      procedures: [
+        {
+          actionName: "doResolveTwinnedTargetCount",
+          projectionAfter: {
+            magicActionAvailable: false,
+            bonusActionAvailable: true,
+            sorceryPointsRemaining: 3,
+            targetHp: 10,
+            targetActiveEffectCount: 1,
+            lastResult: "twinnedTargetCount",
           },
-        ],
-      },
-    ],
+          discover: () =>
+            projectBattleState(
+              resolveTwinnedBless(twinnedSorcererMetamagicBattle()),
+              "twinnedTargetCount",
+            ),
+        },
+      ],
+    },
+  ],
 } satisfies SelectedIdentityReplayWitness<Readonly<Record<string, unknown>>>;

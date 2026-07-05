@@ -89,11 +89,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doDiscoverMyceliumStepDash",
-          projectionAfter: {
-            bonusActionAvailable: true,
-            dashBonusFeet: 0,
-            lastResult: "discovered",
-          },
           discover: () => {
             const state = myceliumStepBattle();
             const act = myceliumStepDashAct(state);
@@ -103,11 +98,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doDashAsBonusAction",
-          projectionAfter: {
-            bonusActionAvailable: false,
-            dashBonusFeet: 30,
-            lastResult: "dashed",
-          },
           discover: () => {
             const state = myceliumStepBattle();
             const act = myceliumStepDashAct(state);

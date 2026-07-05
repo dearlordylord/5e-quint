@@ -70,16 +70,17 @@ type CreatureTypeProtectionAndCharmSelectedIdentityLastResult =
   | "protectionCharmPrevented"
   | "protectionRelevantSaveResolved";
 
-const CREATURE_TYPE_PROTECTION_AND_CHARM_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
-  Init: "init",
-  Discovered: "discovered",
-  Resolved: "resolved",
-  DamageBreakResolved: "damageBreakResolved",
-  ProtectionResolved: "protectionResolved",
-  ProtectionAttackProjected: "protectionAttackProjected",
-  ProtectionCharmPrevented: "protectionCharmPrevented",
-  ProtectionRelevantSaveResolved: "protectionRelevantSaveResolved",
-} as const;
+const CREATURE_TYPE_PROTECTION_AND_CHARM_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG =
+  {
+    Init: "init",
+    Discovered: "discovered",
+    Resolved: "resolved",
+    DamageBreakResolved: "damageBreakResolved",
+    ProtectionResolved: "protectionResolved",
+    ProtectionAttackProjected: "protectionAttackProjected",
+    ProtectionCharmPrevented: "protectionCharmPrevented",
+    ProtectionRelevantSaveResolved: "protectionRelevantSaveResolved",
+  } as const;
 
 type AnimalFriendshipTargetAdmission = {
   readonly beastTargetAdmitted: boolean;
@@ -387,7 +388,10 @@ defineSelectedIdentityReplayAndQntReplay({
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
   quintFieldNames: { lastResult: "qScenarioOutcome" },
-  quintVariantFieldTags: { lastResult: CREATURE_TYPE_PROTECTION_AND_CHARM_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG },
+  quintVariantFieldTags: {
+    lastResult:
+      CREATURE_TYPE_PROTECTION_AND_CHARM_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG,
+  },
   projectionSchema: {
     beastTargetAdmitted: "bool",
     humanoidTargetAdmitted: "bool",
@@ -419,7 +423,6 @@ defineSelectedIdentityReplayAndQntReplay({
       );
       return {
         actionName,
-        projectionAfter: sequence.expected,
         discover: creatureTypeProtectionAndCharmDiscoveries[actionName],
       };
     }),

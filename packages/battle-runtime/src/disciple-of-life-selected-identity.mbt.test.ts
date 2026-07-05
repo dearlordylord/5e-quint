@@ -78,7 +78,9 @@ defineSelectedIdentityReplayAndQntReplay({
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
   quintFieldNames: { lastResult: "qScenarioOutcome" },
-  quintVariantFieldTags: { lastResult: DISCIPLE_OF_LIFE_SCENARIO_OUTCOME_BY_TAG },
+  quintVariantFieldTags: {
+    lastResult: DISCIPLE_OF_LIFE_SCENARIO_OUTCOME_BY_TAG,
+  },
   projectionSchema: {
     targetHp: "int",
     secondTargetHp: "int",
@@ -92,11 +94,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doSlotHealingModifier",
-          projectionAfter: expectedProjection({
-            targetHp: 9,
-            spellSlotsRemaining: 0,
-            lastResult: "slotHealingModifier",
-          }),
           discover: () =>
             projectBattleState(
               resolveCureWounds(discipleOfLifeBattle(), {
@@ -108,11 +105,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doNonModifierSlotHealing",
-          projectionAfter: expectedProjection({
-            targetHp: 6,
-            spellSlotsRemaining: 0,
-            lastResult: "nonModifierSlotHealing",
-          }),
           discover: () =>
             projectBattleState(
               resolveCureWounds(healingBattleWithoutModifier(), {
@@ -124,11 +116,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doNonSlotHealingExcluded",
-          projectionAfter: expectedProjection({
-            targetHp: 1,
-            spellSlotsRemaining: 1,
-            lastResult: "nonSlotHealingExcluded",
-          }),
           discover: () =>
             projectBattleState(
               noSlotHealingCantripExcludedBattle(),
@@ -137,12 +124,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doEachCreatureHealed",
-          projectionAfter: expectedProjection({
-            targetHp: 11,
-            secondTargetHp: 11,
-            spellSlotsRemaining: 0,
-            lastResult: "eachCreatureHealed",
-          }),
           discover: () =>
             projectBattleState(
               resolveMassHealingWord({

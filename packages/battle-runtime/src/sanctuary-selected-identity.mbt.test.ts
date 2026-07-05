@@ -307,7 +307,6 @@ defineSelectedIdentityReplayAndQntReplay({
       );
       return {
         actionName,
-        projectionAfter: sequence.expected,
         discover: sanctuaryDiscoveries[actionName],
       };
     }),

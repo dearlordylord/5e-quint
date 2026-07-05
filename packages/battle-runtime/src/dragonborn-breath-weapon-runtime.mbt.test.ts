@@ -84,7 +84,9 @@ defineSelectedIdentityReplayAndQntReplay({
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
   quintFieldNames: { lastResult: "qScenarioOutcome" },
-  quintVariantFieldTags: { lastResult: DRAGONBORN_BREATH_WEAPON_SCENARIO_OUTCOME_BY_TAG },
+  quintVariantFieldTags: {
+    lastResult: DRAGONBORN_BREATH_WEAPON_SCENARIO_OUTCOME_BY_TAG,
+  },
   witnessInvalidScenarioReasons: {
     rejectMissingResource: "invalidFill",
     rejectMismatchedArea: "invalidFill",
@@ -104,13 +106,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doResolveBreathWeapon",
-          projectionAfter: expectedProjection({
-            targetHp: 10,
-            secondTargetHp: 15,
-            breathWeaponUsesRemaining: 2,
-            actionResourcesRemaining: 0,
-            lastResult: "resolved",
-          }),
           discover: () =>
             projectBattleState(
               recordResolvedState(
@@ -128,12 +123,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doOpenExtraAttackSlot",
-          projectionAfter: expectedProjection({
-            targetHp: 10,
-            breathWeaponUsesRemaining: 2,
-            actionResourcesRemaining: 1,
-            lastResult: "openedExtraAttack",
-          }),
           discover: () =>
             projectBattleState(
               recordResolvedState(
@@ -148,10 +137,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doRejectMissingResource",
-          projectionAfter: expectedProjection({
-            breathWeaponUsesRemaining: 0,
-            lastResult: "rejectMissingResource",
-          }),
           discover: () => {
             const state = breathWeaponBattle({ usesRemaining: 0 });
             recordInvalidResult(
@@ -166,9 +151,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doRejectMismatchedArea",
-          projectionAfter: expectedProjection({
-            lastResult: "rejectMismatchedArea",
-          }),
           discover: () => {
             const state = breathWeaponBattle();
             recordInvalidResult(
@@ -182,9 +164,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doRejectInvalidDamageRoll",
-          projectionAfter: expectedProjection({
-            lastResult: "rejectInvalidDamageRoll",
-          }),
           discover: () => {
             const state = breathWeaponBattle();
             recordInvalidResult(

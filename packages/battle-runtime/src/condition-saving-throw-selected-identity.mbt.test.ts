@@ -142,12 +142,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doResolveBlindnessDeafnessBlindedSavingThrow",
-          projectionAfter: expectedProjection({
-            targetBlinded: true,
-            actionAvailable: false,
-            secondLevelSlotsExpended: 1,
-            lastResult: "resolved",
-          }),
           discover: () =>
             resolvedProjection(
               resolveBlindnessDeafnessFailedSavingThrow("blinded"),
@@ -155,12 +149,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doResolveBlindnessDeafnessDeafenedSavingThrow",
-          projectionAfter: expectedProjection({
-            targetDeafened: true,
-            actionAvailable: false,
-            secondLevelSlotsExpended: 1,
-            lastResult: "resolved",
-          }),
           discover: () =>
             resolvedProjection(
               resolveBlindnessDeafnessFailedSavingThrow("deafened"),
@@ -173,12 +161,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doResolveColorSprayFailedSavingThrow",
-          projectionAfter: expectedProjection({
-            targetBlinded: true,
-            actionAvailable: false,
-            firstLevelSlotsExpended: 1,
-            lastResult: "resolved",
-          }),
           discover: () =>
             resolvedProjection(
               resolveAreaSavingThrowSpell(
@@ -194,14 +176,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doResolveEntangleFailedSavingThrow",
-          projectionAfter: expectedProjection({
-            targetRestrained: true,
-            casterConcentrating: true,
-            actionAvailable: false,
-            targetWalkSpeedFeet: 0,
-            firstLevelSlotsExpended: 1,
-            lastResult: "resolved",
-          }),
           discover: () =>
             resolvedProjection(
               resolveAreaSavingThrowSpell(
@@ -217,11 +191,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doResolveHideousLaughterRepeatSavingThrowSuccess",
-          projectionAfter: expectedProjection({
-            actionAvailable: true,
-            firstLevelSlotsExpended: 1,
-            lastResult: "resolved",
-          }),
           discover: () =>
             resolvedProjection(
               resolveHideousLaughterRepeatSavingThrowSuccess(),
@@ -234,25 +203,11 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doResolveHoldPersonFailedSavingThrow",
-          projectionAfter: expectedProjection({
-            targetParalyzed: true,
-            targetIncapacitated: true,
-            casterConcentrating: true,
-            actionAvailable: false,
-            targetWalkSpeedFeet: 0,
-            secondLevelSlotsExpended: 1,
-            lastResult: "resolved",
-          }),
           discover: () =>
             resolvedProjection(resolveHoldPersonFailedSavingThrow()),
         },
         {
           actionName: "doResolveHoldPersonRepeatSavingThrowSuccess",
-          projectionAfter: expectedProjection({
-            actionAvailable: true,
-            secondLevelSlotsExpended: 1,
-            lastResult: "resolved",
-          }),
           discover: () =>
             resolvedProjection(resolveHoldPersonRepeatSavingThrowSuccess()),
         },
@@ -263,15 +218,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doResolveHypnoticPatternFailedSavingThrow",
-          projectionAfter: expectedProjection({
-            targetCharmed: true,
-            targetIncapacitated: true,
-            casterConcentrating: true,
-            actionAvailable: false,
-            targetWalkSpeedFeet: 0,
-            thirdLevelSlotsExpended: 1,
-            lastResult: "resolved",
-          }),
           discover: () =>
             resolvedProjection(resolveHypnoticPatternFailedSavingThrow()),
         },
@@ -282,16 +228,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doResolveSleepRepeatSavingThrowFailure",
-          projectionAfter: expectedProjection({
-            targetIncapacitated: true,
-            targetUnconscious: true,
-            targetProne: true,
-            casterConcentrating: true,
-            actionAvailable: true,
-            targetWalkSpeedFeet: 0,
-            firstLevelSlotsExpended: 1,
-            lastResult: "resolved",
-          }),
           discover: () =>
             resolvedProjection(resolveSleepRepeatSavingThrowFailure()),
         },

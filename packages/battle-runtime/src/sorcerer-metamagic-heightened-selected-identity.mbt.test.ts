@@ -80,7 +80,8 @@ defineSelectedIdentityReplayAndQntReplay({
       HeightenedHideousLaughter: "heightenedHideousLaughter",
       HeightenedGreaseEntrySave: "heightenedGreaseEntrySave",
       HeightenedGustOfWindEndTurnSave: "heightenedGustOfWindEndTurnSave",
-      HeightenedSaveGatedConditionEndTurnSave: "heightenedSaveGatedConditionEndTurnSave",
+      HeightenedSaveGatedConditionEndTurnSave:
+        "heightenedSaveGatedConditionEndTurnSave",
     },
   },
   projectionSchema: {
@@ -105,14 +106,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doResolveHeightenedSaveGatedDamage",
-          projectionAfter: {
-            magicActionAvailable: false,
-            bonusActionAvailable: true,
-            sorceryPointsRemaining: 2,
-            targetHp: 1,
-            targetActiveEffectCount: 0,
-            lastResult: "heightenedSaveGatedDamage",
-          },
           discover: () =>
             projectBattleState(
               resolveHeightenedBurningHands(
@@ -123,14 +116,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doResolveHeightenedHideousLaughter",
-          projectionAfter: {
-            magicActionAvailable: false,
-            bonusActionAvailable: true,
-            sorceryPointsRemaining: 2,
-            targetHp: 10,
-            targetActiveEffectCount: 1,
-            lastResult: "heightenedHideousLaughter",
-          },
           discover: () =>
             projectBattleState(
               resolveHeightenedHideousLaughter(
@@ -141,14 +126,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doResolveHeightenedGreaseEntrySave",
-          projectionAfter: {
-            magicActionAvailable: true,
-            bonusActionAvailable: true,
-            sorceryPointsRemaining: 2,
-            targetHp: 10,
-            targetActiveEffectCount: 0,
-            lastResult: "heightenedGreaseEntrySave",
-          },
           discover: () =>
             projectBattleState(
               resolveHeightenedGreaseEntrySave(
@@ -159,14 +136,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doResolveHeightenedGustOfWindEndTurnSave",
-          projectionAfter: {
-            magicActionAvailable: true,
-            bonusActionAvailable: true,
-            sorceryPointsRemaining: 2,
-            targetHp: 10,
-            targetActiveEffectCount: 0,
-            lastResult: "heightenedGustOfWindEndTurnSave",
-          },
           discover: () =>
             projectBattleState(
               resolveHeightenedGustOfWindEndTurnSave(
@@ -177,14 +146,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doResolveHeightenedSaveGatedConditionEndTurnSave",
-          projectionAfter: {
-            magicActionAvailable: true,
-            bonusActionAvailable: true,
-            sorceryPointsRemaining: 2,
-            targetHp: 10,
-            targetActiveEffectCount: 0,
-            lastResult: "heightenedSaveGatedConditionEndTurnSave",
-          },
           discover: () =>
             projectBattleState(
               resolveHeightenedSaveGatedConditionEndTurnSave(

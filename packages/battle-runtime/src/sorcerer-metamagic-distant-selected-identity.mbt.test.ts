@@ -102,13 +102,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doResolveDistantObjectLight",
-          projectionAfter: {
-            sorceryPointsRemaining: 1,
-            lightEmitterCount: 1,
-            brightRadiusFeet: 20,
-            dimAdditionalFeet: 20,
-            lastResult: "distantObjectLight",
-          },
           discover: () =>
             distantObjectLightProjection(resolveDistantObjectLight()),
         },

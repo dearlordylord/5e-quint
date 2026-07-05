@@ -79,14 +79,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doResolveThaumaturgyBoomingVoice",
-          projectionAfter: {
-            casterEffectCount: 1,
-            actionAvailable: false,
-            intimidationRollMode: "advantage",
-            wisdomIntimidationRollMode: "normal",
-            perceptionRollMode: "normal",
-            lastResult: "resolved",
-          },
           discover: () => {
             const initial = battleWithThaumaturgy();
             const resolved = requireResolved(

@@ -201,14 +201,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doDissonantWhispersForcedReactionMovement",
-          projectionAfter: expectedProjection({
-            spellSlotSpentThisTurn: true,
-            level1SlotsRemaining: 1,
-            targetHp: 18,
-            targetReactionAvailable: false,
-            dissonantMovementFillRequired: true,
-            lastResult: "dissonantWhispers",
-          }),
           discover: dissonantWhispersForcedReactionMovement,
         },
       ],
@@ -218,13 +210,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doCommandFleeTargetTurn",
-          projectionAfter: expectedProjection({
-            level1SlotsRemaining: 1,
-            targetMovementSpentFeet: 30,
-            commandMovementFillRequired: true,
-            commandPendingEffectObserved: true,
-            lastResult: "commandFlee",
-          }),
           discover: commandFleeTargetTurn,
         },
       ],
@@ -234,16 +219,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doExpeditiousRetreatImmediateDash",
-          projectionAfter: expectedProjection({
-            casterRemainingFeet: 60,
-            casterDashBonusFeet: 30,
-            casterBonusActionAvailable: false,
-            casterConcentrating: true,
-            spellSlotSpentThisTurn: true,
-            level1SlotsRemaining: 1,
-            spellDashBonusActionEffectCount: 1,
-            lastResult: "expeditiousRetreat",
-          }),
           discover: expeditiousRetreatImmediateDash,
         },
       ],
@@ -253,14 +228,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doRangerRovingClimbSwimMovement",
-          projectionAfter: expectedProjection({
-            casterSpeedFeet: 40,
-            casterRemainingFeet: 0,
-            level1SlotsRemaining: 0,
-            climbSpeedFeet: 40,
-            swimSpeedFeet: 40,
-            lastResult: "rangerRoving",
-          }),
           discover: rangerRovingClimbSwimMovement,
         },
       ],
@@ -270,13 +237,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doBarbarianFastMovementDash",
-          projectionAfter: expectedProjection({
-            casterSpeedFeet: 40,
-            casterRemainingFeet: 80,
-            casterDashBonusFeet: 40,
-            level1SlotsRemaining: 0,
-            lastResult: "barbarianFastMovement",
-          }),
           discover: barbarianFastMovementDash,
         },
       ],
@@ -286,13 +246,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doMonkUnarmoredMovementDash",
-          projectionAfter: expectedProjection({
-            casterSpeedFeet: 40,
-            casterRemainingFeet: 80,
-            casterDashBonusFeet: 40,
-            level1SlotsRemaining: 0,
-            lastResult: "monkUnarmoredMovement",
-          }),
           discover: monkUnarmoredMovementDash,
         },
       ],

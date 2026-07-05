@@ -18,37 +18,37 @@ import type { SelectedIdentityReplayWitness } from "./selected-identity-witness.
 
 export const sorcererMetamagicSpellAttackSequenceSelectedIdentityReplay = {
   describeLabel:
-      "Sorcerer Metamagic spell attack sequence selected identity replay",
+    "Sorcerer Metamagic spell attack sequence selected identity replay",
   taskId: "L3MMETA-07-QUICKENED-NEXT-PROCEDURE-SLICE",
   initialProjection: {
-      magicActionAvailable: true,
-      bonusActionAvailable: true,
-      sorceryPointsRemaining: 4,
-      targetHp: 10,
-      targetActiveEffectCount: 0,
-      lastResult: "init",
-    },
+    magicActionAvailable: true,
+    bonusActionAvailable: true,
+    sorceryPointsRemaining: 4,
+    targetHp: 10,
+    targetActiveEffectCount: 0,
+    lastResult: "init",
+  },
   units: [
-      {
-        unitId: "sorcerer_metamagic",
-        procedures: [
-          {
-            actionName: "doResolveQuickenedSpellAttackSequence",
-            projectionAfter: {
-              magicActionAvailable: true,
-              bonusActionAvailable: false,
-              sorceryPointsRemaining: 2,
-              targetHp: 6,
-              targetActiveEffectCount: 0,
-              lastResult: "quickenedSpellAttackSequence",
-            },
-            discover: () =>
-              projectBattleState(
-                resolveQuickenedEldritchBlast(sorcererMetamagicBattle()),
-                "quickenedSpellAttackSequence",
-              ),
+    {
+      unitId: "sorcerer_metamagic",
+      procedures: [
+        {
+          actionName: "doResolveQuickenedSpellAttackSequence",
+          projectionAfter: {
+            magicActionAvailable: true,
+            bonusActionAvailable: false,
+            sorceryPointsRemaining: 2,
+            targetHp: 6,
+            targetActiveEffectCount: 0,
+            lastResult: "quickenedSpellAttackSequence",
           },
-        ],
-      },
-    ],
+          discover: () =>
+            projectBattleState(
+              resolveQuickenedEldritchBlast(sorcererMetamagicBattle()),
+              "quickenedSpellAttackSequence",
+            ),
+        },
+      ],
+    },
+  ],
 } satisfies SelectedIdentityReplayWitness<Readonly<Record<string, unknown>>>;

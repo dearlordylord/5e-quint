@@ -72,12 +72,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doSlowFallReduceDamage",
-          projectionAfter: {
-            reactionAvailable: false,
-            effectiveFallDamage: 3,
-            fallingProne: true,
-            lastResult: "reducedDamage",
-          },
           discover: () =>
             resolveSlowFallScenario({
               level: 5,
@@ -87,12 +81,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doSlowFallPreventDamage",
-          projectionAfter: {
-            reactionAvailable: false,
-            effectiveFallDamage: 0,
-            fallingProne: false,
-            lastResult: "preventedDamage",
-          },
           discover: () =>
             resolveSlowFallScenario({
               level: 4,

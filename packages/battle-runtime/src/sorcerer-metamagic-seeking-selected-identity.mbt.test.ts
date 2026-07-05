@@ -82,14 +82,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doResolveSeekingSpellAttackReroll",
-          projectionAfter: {
-            magicActionAvailable: false,
-            bonusActionAvailable: true,
-            sorceryPointsRemaining: 3,
-            targetHp: 3,
-            targetActiveEffectCount: 1,
-            lastResult: "seekingSpellAttackReroll",
-          },
           discover: () =>
             projectBattleState(
               resolveSeekingRayOfFrost(seekingSorcererMetamagicBattle()),
@@ -146,7 +138,5 @@ function createSeekingMetamagicRouteReplayDriver() {
 }
 
 function observeSeekingRayOfFrostInitialRoute() {
-  return [
-    battleReducerStartRouteEvent(),
-  ] as const;
+  return [battleReducerStartRouteEvent()] as const;
 }

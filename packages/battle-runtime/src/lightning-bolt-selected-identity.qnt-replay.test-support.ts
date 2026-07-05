@@ -9,16 +9,23 @@ const LIGHTNING_BOLT_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
 
 export const lightningBoltSelectedIdentityQntReplay = {
   ...lightningBoltSelectedIdentityReplay,
+  units: lightningBoltSelectedIdentityReplay.units.map((unit) => ({
+    unitId: unit.unitId,
+    procedures: unit.procedures.map((procedure) => ({
+      actionName: procedure.actionName,
+      discover: procedure.discover,
+    })),
+  })),
   specFile: mbtSpecPath(
-      import.meta.dirname,
-      "battle-runtime-lightning-bolt-selected-identity.mbt.qnt",
-    ),
+    import.meta.dirname,
+    "battle-runtime-lightning-bolt-selected-identity.mbt.qnt",
+  ),
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   quintFieldNames: { lastResult: "qScenarioOutcome" },
   witnessProtocolField: "protocol",
   quintVariantFieldTags: {
-      lastResult: LIGHTNING_BOLT_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG,
-    },
+    lastResult: LIGHTNING_BOLT_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG,
+  },
   projectionSchema: { lastResult: "variant" },
 } as const;

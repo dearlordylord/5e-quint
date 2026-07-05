@@ -24,54 +24,54 @@ export const sorcererMetamagicTransmutedSelectedIdentityReplay = {
   describeLabel: "Sorcerer Metamagic Transmuted Spell selected identity replay",
   taskId: "L3META-06-TRANSMUTED-SPELL-DAMAGE-TYPE",
   initialProjection: {
-      magicActionAvailable: true,
-      bonusActionAvailable: true,
-      sorceryPointsRemaining: 4,
-      targetHp: 10,
-      targetActiveEffectCount: 0,
-      lastResult: "init",
-    },
+    magicActionAvailable: true,
+    bonusActionAvailable: true,
+    sorceryPointsRemaining: 4,
+    targetHp: 10,
+    targetActiveEffectCount: 0,
+    lastResult: "init",
+  },
   units: [
-      {
-        unitId: "sorcerer_metamagic",
-        procedures: [
-          {
-            actionName: "doResolveTransmutedSaveGatedDamage",
-            projectionAfter: {
-              magicActionAvailable: false,
-              bonusActionAvailable: true,
-              sorceryPointsRemaining: 3,
-              targetHp: 1,
-              targetActiveEffectCount: 0,
-              lastResult: "transmutedSaveGatedDamage",
-            },
-            discover: () =>
-              projectBattleState(
-                resolveTransmutedBurningHandsToPoison(
-                  transmutedSorcererMetamagicBattle(),
-                ),
-                "transmutedSaveGatedDamage",
-              ),
+    {
+      unitId: "sorcerer_metamagic",
+      procedures: [
+        {
+          actionName: "doResolveTransmutedSaveGatedDamage",
+          projectionAfter: {
+            magicActionAvailable: false,
+            bonusActionAvailable: true,
+            sorceryPointsRemaining: 3,
+            targetHp: 1,
+            targetActiveEffectCount: 0,
+            lastResult: "transmutedSaveGatedDamage",
           },
-          {
-            actionName: "doResolveTransmutedSpellAttack",
-            projectionAfter: {
-              magicActionAvailable: false,
-              bonusActionAvailable: true,
-              sorceryPointsRemaining: 3,
-              targetHp: 3,
-              targetActiveEffectCount: 1,
-              lastResult: "transmutedSpellAttack",
-            },
-            discover: () =>
-              projectBattleState(
-                resolveTransmutedRayOfFrostToPoison(
-                  transmutedSorcererMetamagicBattle(),
-                ),
-                "transmutedSpellAttack",
+          discover: () =>
+            projectBattleState(
+              resolveTransmutedBurningHandsToPoison(
+                transmutedSorcererMetamagicBattle(),
               ),
+              "transmutedSaveGatedDamage",
+            ),
+        },
+        {
+          actionName: "doResolveTransmutedSpellAttack",
+          projectionAfter: {
+            magicActionAvailable: false,
+            bonusActionAvailable: true,
+            sorceryPointsRemaining: 3,
+            targetHp: 3,
+            targetActiveEffectCount: 1,
+            lastResult: "transmutedSpellAttack",
           },
-        ],
-      },
-    ],
+          discover: () =>
+            projectBattleState(
+              resolveTransmutedRayOfFrostToPoison(
+                transmutedSorcererMetamagicBattle(),
+              ),
+              "transmutedSpellAttack",
+            ),
+        },
+      ],
+    },
+  ],
 } satisfies SelectedIdentityReplayWitness<Readonly<Record<string, unknown>>>;

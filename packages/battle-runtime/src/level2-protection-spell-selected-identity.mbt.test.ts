@@ -101,7 +101,9 @@ const LEVEL2_PROTECTION_SPELL_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
   MirrorImageHitInterception: "mirrorImageHitInterception",
   PassWithoutTraceStealthModifier: "passWithoutTraceStealthModifier",
   WardingBondLinkedEffect: "wardingBondLinkedEffect",
-} as const satisfies Readonly<Record<string, Level2ProtectionSpellSelectedIdentityResult>>;
+} as const satisfies Readonly<
+  Record<string, Level2ProtectionSpellSelectedIdentityResult>
+>;
 
 defineSelectedIdentityReplayAndQntReplay({
   describeLabel: "Level 2 protection spell selected identity replay",
@@ -115,7 +117,8 @@ defineSelectedIdentityReplayAndQntReplay({
   witnessProtocolField: "protocol",
   quintFieldNames: { lastResult: "qScenarioOutcome" },
   quintVariantFieldTags: {
-    lastResult: LEVEL2_PROTECTION_SPELL_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG,
+    lastResult:
+      LEVEL2_PROTECTION_SPELL_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG,
   },
   projectionSchema: { lastResult: "variant" },
   initialProjection: expectedProjection("init"),
@@ -175,9 +178,6 @@ defineSelectedIdentityReplayAndQntReplay({
         }),
         {
           actionName: "doResolveEnhanceAbilityHigherSlotPerTarget",
-          projectionAfter: expectedProjection(
-            "enhanceAbilityHigherSlotPerTarget",
-          ),
           discover: resolveEnhanceAbilityHigherSlotPerTarget,
         },
       ],
@@ -246,7 +246,6 @@ function selectedSpellProcedure(
 ) {
   return {
     actionName,
-    projectionAfter: expectedProjection(input.result),
     discover: () => recordDiscoveredInvocation(input),
   };
 }

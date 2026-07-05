@@ -163,15 +163,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doResolveSapMasteryPropertyHit",
-          projectionAfter: {
-            primaryTargetHp: 9,
-            secondTargetHp: 13,
-            actionAvailable: false,
-            primaryTargetHasSapEffect: true,
-            primaryTargetProne: false,
-            cleaveUsed: false,
-            lastResult: "resolved",
-          },
           discover: () => resolveSapMasteryPropertyHit(),
         },
       ],
@@ -181,15 +172,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doResolveToppleMasteryPropertyFailedSavingThrow",
-          projectionAfter: {
-            primaryTargetHp: 13,
-            secondTargetHp: 13,
-            actionAvailable: true,
-            primaryTargetHasSapEffect: false,
-            primaryTargetProne: true,
-            cleaveUsed: false,
-            lastResult: "needsHoles",
-          },
           discover: () => resolveToppleMasteryPropertyFailedSavingThrow(),
         },
       ],
@@ -199,15 +181,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doResolveCleaveMasteryPropertySecondTargetHit",
-          projectionAfter: {
-            primaryTargetHp: 9,
-            secondTargetHp: 9,
-            actionAvailable: false,
-            primaryTargetHasSapEffect: false,
-            primaryTargetProne: false,
-            cleaveUsed: true,
-            lastResult: "resolved",
-          },
           discover: () => resolveCleaveMasteryPropertySecondTargetHit(),
         },
       ],

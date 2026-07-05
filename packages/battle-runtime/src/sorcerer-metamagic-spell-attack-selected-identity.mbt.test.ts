@@ -81,14 +81,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doResolveQuickenedSpellAttack",
-          projectionAfter: {
-            magicActionAvailable: true,
-            bonusActionAvailable: false,
-            sorceryPointsRemaining: 2,
-            targetHp: 3,
-            targetActiveEffectCount: 1,
-            lastResult: "quickenedSpellAttack",
-          },
           discover: () =>
             projectBattleState(
               resolveQuickenedRayOfFrost(sorcererMetamagicBattle()),

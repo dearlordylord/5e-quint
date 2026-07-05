@@ -45,7 +45,9 @@ type HalflingNimblenessProjection = {
 };
 
 const speciesHalflingNimblenessUnitId = "species_halfling_nimbleness";
-const nimbleMoverId = combatantId("halfling-nimbleness-selected-identity-mover");
+const nimbleMoverId = combatantId(
+  "halfling-nimbleness-selected-identity-mover",
+);
 const blockerId = combatantId("halfling-nimbleness-selected-identity-blocker");
 const occupiedPositionId = battleTablePositionId(
   "halfling-nimbleness-occupied-space",
@@ -85,11 +87,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doMoveThroughLargerCreatureSpace",
-          projectionAfter: expectedProjection({
-            traversalAccepted: true,
-            acceptedMovementSpentFeet: 10,
-            lastResult: "moveThroughLargerCreatureSpace",
-          }),
           discover: () =>
             projectAcceptedTraversal(
               halflingNimblenessBattle({ selected: true }),
@@ -97,10 +94,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doRejectOccupiedStop",
-          projectionAfter: expectedProjection({
-            occupiedStopRejected: true,
-            lastResult: "rejectOccupiedStop",
-          }),
           discover: () =>
             projectRejectedTraversal({
               state: halflingNimblenessBattle({ selected: true }),
@@ -117,10 +110,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doRejectMissingProfile",
-          projectionAfter: expectedProjection({
-            missingProfileRejected: true,
-            lastResult: "rejectMissingProfile",
-          }),
           discover: () =>
             projectRejectedTraversal({
               state: halflingNimblenessBattle({ selected: false }),
@@ -138,10 +127,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doRejectSameSizeTraversal",
-          projectionAfter: expectedProjection({
-            sameSizeRejected: true,
-            lastResult: "rejectSameSizeTraversal",
-          }),
           discover: () =>
             projectRejectedTraversal({
               state: halflingNimblenessBattle({
@@ -230,7 +215,9 @@ function projectAcceptedTraversal(
     },
   });
   if (result.tag !== "resolved") {
-    throw new Error(`Expected accepted Nimbleness Movement, got ${result.tag}.`);
+    throw new Error(
+      `Expected accepted Nimbleness Movement, got ${result.tag}.`,
+    );
   }
   return expectedProjection({
     traversalAccepted: true,
@@ -259,7 +246,9 @@ function projectRejectedTraversal(input: {
     destination: input.destination,
   });
   if (result.tag !== "invalid") {
-    throw new Error(`Expected rejected Nimbleness Movement, got ${result.tag}.`);
+    throw new Error(
+      `Expected rejected Nimbleness Movement, got ${result.tag}.`,
+    );
   }
   if (result.message !== input.expectedMessage) {
     throw new Error(result.message);

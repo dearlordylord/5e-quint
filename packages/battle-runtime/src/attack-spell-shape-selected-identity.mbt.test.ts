@@ -134,10 +134,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doFireBoltHit",
-          projectionAfter: expectedProjection({
-            targetHp: 8,
-            lastResult: "fireBolt",
-          }),
           discover: () =>
             resolveAttackSpellShapeProjection({
               state: attackSpellShapeBattle({
@@ -156,12 +152,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doChillTouchHitPointRegainPrevention",
-          projectionAfter: expectedProjection({
-            targetHp: 8,
-            activeEffectKind: "hitPointRegainPrevented",
-            activeEffectCount: 1,
-            lastResult: "chillTouch",
-          }),
           discover: () =>
             resolveAttackSpellShapeProjection({
               state: attackSpellShapeBattle({
@@ -180,14 +170,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doGuidingBoltNextAttackAdvantage",
-          projectionAfter: expectedProjection({
-            targetHp: 8,
-            spellSlotSpentThisTurn: true,
-            level1SlotsRemaining: 1,
-            activeEffectKind: "nextAttackRollAgainstSelf",
-            activeEffectCount: 1,
-            lastResult: "guidingBolt",
-          }),
           discover: () =>
             resolveAttackSpellShapeProjection({
               state: attackSpellShapeBattle({
@@ -206,12 +188,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doInflictWoundsFailedSave",
-          projectionAfter: expectedProjection({
-            targetHp: 6,
-            spellSlotSpentThisTurn: true,
-            level1SlotsRemaining: 1,
-            lastResult: "inflictWoundsFailure",
-          }),
           discover: () =>
             resolveSaveDamageProjection({
               state: attackSpellShapeBattle({
@@ -226,12 +202,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doInflictWoundsSuccessfulSave",
-          projectionAfter: expectedProjection({
-            targetHp: 9,
-            spellSlotSpentThisTurn: true,
-            level1SlotsRemaining: 1,
-            lastResult: "inflictWoundsSuccess",
-          }),
           discover: () =>
             resolveSaveDamageProjection({
               state: attackSpellShapeBattle({
@@ -251,12 +221,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doShockingGraspOpportunityAttackDenied",
-          projectionAfter: expectedProjection({
-            targetHp: 8,
-            activeEffectKind: "opportunityAttackDenied",
-            activeEffectCount: 1,
-            lastResult: "shockingGrasp",
-          }),
           discover: () =>
             resolveAttackSpellShapeProjection({
               state: attackSpellShapeBattle({

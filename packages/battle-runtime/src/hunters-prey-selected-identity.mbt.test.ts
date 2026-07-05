@@ -59,7 +59,9 @@ const HUNTERS_PREY_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
   RejectSameTarget: "rejectSameTarget",
   RejectInvalidTargetPredicate: "rejectInvalidTargetPredicate",
   SecondHordeBreakerUnavailable: "secondHordeBreakerUnavailable",
-} as const satisfies Readonly<Record<string, HuntersPreyProjection["lastResult"]>>;
+} as const satisfies Readonly<
+  Record<string, HuntersPreyProjection["lastResult"]>
+>;
 
 defineSelectedIdentityReplayAndQntReplay({
   describeLabel: "Hunter's Prey selected identity replay",
@@ -97,70 +99,34 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doColossusSlayer",
-          projectionAfter: expectedProjection({
-            colossusTargetHp: 1,
-            colossusUsed: true,
-            lastResult: "colossusSlayer",
-          }),
           discover: projectColossusSlayer,
         },
         {
           actionName: "doSkipThenUseColossusSlayer",
-          projectionAfter: expectedProjection({
-            colossusTargetHp: 2,
-            colossusUsed: true,
-            lastResult: "skipThenUseColossusSlayer",
-          }),
           discover: projectSkipThenUseColossusSlayer,
         },
         {
           actionName: "doHordeBreaker",
-          projectionAfter: expectedProjection({
-            hordeTargetHp: 6,
-            hordeBreakerUsed: true,
-            lastResult: "hordeBreaker",
-          }),
           discover: projectHordeBreaker,
         },
         {
           actionName: "doHordeBreakerAfterPrimaryMiss",
-          projectionAfter: expectedProjection({
-            hordeTargetHp: 6,
-            hordeBreakerUsed: true,
-            lastResult: "hordeBreakerAfterPrimaryMiss",
-          }),
           discover: projectHordeBreakerAfterPrimaryMiss,
         },
         {
           actionName: "doRejectMissingSelection",
-          projectionAfter: expectedProjection({
-            lastResult: "rejectMissingSelection",
-            lastInvalidReason: "invalidFill",
-          }),
           discover: projectRejectMissingSelection,
         },
         {
           actionName: "doRejectSameTarget",
-          projectionAfter: expectedProjection({
-            lastResult: "rejectSameTarget",
-            lastInvalidReason: "invalidFill",
-          }),
           discover: projectRejectSameTarget,
         },
         {
           actionName: "doRejectInvalidTargetPredicate",
-          projectionAfter: expectedProjection({
-            lastResult: "rejectInvalidTargetPredicate",
-            lastInvalidReason: "invalidFill",
-          }),
           discover: projectRejectInvalidTargetPredicate,
         },
         {
           actionName: "doSecondHordeBreakerUnavailable",
-          projectionAfter: expectedProjection({
-            hordeBreakerUsed: true,
-            lastResult: "secondHordeBreakerUnavailable",
-          }),
           discover: projectSecondHordeBreakerUnavailable,
         },
       ],
@@ -212,9 +178,7 @@ function projectColossusSlayer(): HuntersPreyProjection {
       fills: [
         targetFill(target, goblinId),
         attackRollFill(roll, { total: 15, naturalD20: 10 }),
-        damageRollFillWithGroups(damage, [[1], [1]], [
-          "ranger_hunters_prey",
-        ]),
+        damageRollFillWithGroups(damage, [[1], [1]], ["ranger_hunters_prey"]),
       ],
     }),
   );
@@ -308,9 +272,11 @@ function projectSkipThenUseColossusSlayer(): HuntersPreyProjection {
       fills: [
         targetFill(secondTarget, skeletonId),
         attackRollFill(secondRoll, { total: 15, naturalD20: 10 }),
-        damageRollFillWithGroups(secondDamage, [[1], [1]], [
-          "ranger_hunters_prey",
-        ]),
+        damageRollFillWithGroups(
+          secondDamage,
+          [[1], [1]],
+          ["ranger_hunters_prey"],
+        ),
       ],
     }),
   );
@@ -486,9 +452,10 @@ function hordeBreakerWindow(input: { readonly primaryHit?: boolean } = {}) {
   const state = hordeBreakerBattle();
   const subject = fighterAttackSubject("Longsword");
   const primaryTarget = attackInitialTargetHole(state, subject);
-  const primaryAttackRoll = input.primaryHit === false
-    ? { total: 5, naturalD20: 2 }
-    : { total: 15, naturalD20: 10 };
+  const primaryAttackRoll =
+    input.primaryHit === false
+      ? { total: 5, naturalD20: 2 }
+      : { total: 15, naturalD20: 10 };
   const primaryRoll = attackRollHoleAfterTarget(
     state,
     primaryTarget,

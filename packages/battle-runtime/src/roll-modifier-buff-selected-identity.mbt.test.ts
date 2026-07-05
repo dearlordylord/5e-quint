@@ -179,15 +179,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doBlessAttackAndSaveModifier",
-          projectionAfter: expectedProjection({
-            casterConcentrating: true,
-            primaryTargetEffectCount: 1,
-            secondaryTargetEffectCount: 1,
-            d20ModifierSign: "+",
-            d20ModifierAttackRoll: true,
-            d20ModifierSavingThrow: true,
-            lastResult: "bless",
-          }),
           discover: blessAttackAndSaveModifier,
         },
       ],
@@ -197,14 +188,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doBaneFailedSavePenalty",
-          projectionAfter: expectedProjection({
-            casterConcentrating: true,
-            primaryTargetEffectCount: 1,
-            d20ModifierSign: "-",
-            d20ModifierAttackRoll: true,
-            d20ModifierSavingThrow: true,
-            lastResult: "bane",
-          }),
           discover: baneFailedSavePenalty,
         },
       ],
@@ -214,15 +197,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doGuidanceSkillAbilityCheckModifier",
-          projectionAfter: expectedProjection({
-            casterConcentrating: true,
-            casterEffectCount: 1,
-            d20ModifierSign: "+",
-            d20ModifierAbilityCheck: true,
-            d20ModifierSkill: "stealth",
-            invalidTargetRejected: true,
-            lastResult: "guidance",
-          }),
           discover: guidanceSkillAbilityCheckModifier,
         },
       ],
@@ -232,13 +206,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doResistanceReducesMatchingDamage",
-          projectionAfter: expectedProjection({
-            casterConcentrating: true,
-            casterEffectCount: 1,
-            damageReductionType: "bludgeoning",
-            damageReductionUsed: true,
-            lastResult: "resistance",
-          }),
           discover: resistanceReducesMatchingDamage,
         },
       ],
@@ -248,12 +215,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doShieldOfFaithArmorClassBonus",
-          projectionAfter: expectedProjection({
-            casterConcentrating: true,
-            primaryTargetEffectCount: 1,
-            primaryTargetArmorClass: 12,
-            lastResult: "shieldOfFaith",
-          }),
           discover: shieldOfFaithArmorClassBonus,
         },
       ],

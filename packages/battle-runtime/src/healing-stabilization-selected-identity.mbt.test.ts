@@ -115,15 +115,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doResolveSpareTheDyingStable",
-          projectionAfter: {
-            targetHp: 0,
-            targetStable: true,
-            targetUnconscious: true,
-            targetDeathSuccesses: 0,
-            targetDeathFailures: 0,
-            actionAvailable: false,
-            lastResult: "resolved",
-          },
           discover: () => {
             const state = spareTheDyingBattle();
             const act = spareTheDyingAct(state);

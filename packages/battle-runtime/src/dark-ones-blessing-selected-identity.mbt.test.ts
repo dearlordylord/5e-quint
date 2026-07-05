@@ -73,7 +73,9 @@ defineSelectedIdentityReplayAndQntReplay({
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
   quintFieldNames: { lastResult: "qScenarioOutcome" },
-  quintVariantFieldTags: { lastResult: DARK_ONES_BLESSING_SCENARIO_OUTCOME_BY_TAG },
+  quintVariantFieldTags: {
+    lastResult: DARK_ONES_BLESSING_SCENARIO_OUTCOME_BY_TAG,
+  },
   projectionSchema: {
     warlockTempHp: "int",
     targetHp: "int",
@@ -86,11 +88,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doSelfKill",
-          projectionAfter: expectedProjection({
-            warlockTempHp: 6,
-            targetHp: 0,
-            lastResult: "selfKill",
-          }),
           discover: () =>
             projectBattleState(
               damageEnemyToZero({
@@ -105,11 +102,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doNearbyOtherKill",
-          projectionAfter: expectedProjection({
-            warlockTempHp: 6,
-            targetHp: 0,
-            lastResult: "nearbyOtherKill",
-          }),
           discover: () =>
             projectBattleState(
               damageEnemyToZero({
@@ -125,11 +117,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doSameSideOtherKill",
-          projectionAfter: expectedProjection({
-            warlockTempHp: 6,
-            targetHp: 0,
-            lastResult: "sameSideOtherKill",
-          }),
           discover: () =>
             projectBattleState(
               damageEnemyToZero({
@@ -147,11 +134,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doRejectOutOfRangeOtherKill",
-          projectionAfter: expectedProjection({
-            warlockTempHp: 0,
-            targetHp: 0,
-            lastResult: "outOfRangeRejected",
-          }),
           discover: () =>
             projectBattleState(
               damageEnemyToZero({
@@ -166,11 +148,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doRejectNonEnemyKill",
-          projectionAfter: expectedProjection({
-            warlockTempHp: 0,
-            targetHp: 0,
-            lastResult: "nonEnemyRejected",
-          }),
           discover: () =>
             projectBattleState(
               damageEnemyToZero({
@@ -187,11 +164,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doMinimumTemporaryHitPoints",
-          projectionAfter: expectedProjection({
-            warlockTempHp: 1,
-            targetHp: 0,
-            lastResult: "minimumTemporaryHitPoints",
-          }),
           discover: () =>
             projectBattleState(
               damageEnemyToZero({
@@ -206,11 +178,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doTemporaryHitPointReplacement",
-          projectionAfter: expectedProjection({
-            warlockTempHp: 8,
-            targetHp: 0,
-            lastResult: "temporaryHitPointReplacement",
-          }),
           discover: () =>
             projectBattleState(
               damageEnemyToZero({

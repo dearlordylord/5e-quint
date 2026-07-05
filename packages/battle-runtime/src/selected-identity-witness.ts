@@ -32,28 +32,43 @@ export type ProjectionOf<S extends ProjectionSchema> = Readonly<{
 
 type ProjectionRecord = Readonly<Record<string, unknown>>;
 
-export type SelectedIdentityProcedure<P extends ProjectionRecord> = {
+type SelectedIdentityProcedureBase<P extends ProjectionRecord> = {
   readonly actionName: `do${string}`;
-  readonly projectionAfter: P;
   readonly discover: () => P | void | Promise<P | void>;
   readonly project?: (projection: P) => P;
   readonly preservesProjection?: true;
 };
 
-export type SelectedIdentityUnit<P extends ProjectionRecord> = {
+export type SelectedIdentityProcedure<P extends ProjectionRecord> =
+  SelectedIdentityProcedureBase<P> & {
+    readonly projectionAfter: P;
+  };
+
+type SelectedIdentityQntProcedure<P extends ProjectionRecord> =
+  SelectedIdentityProcedureBase<P>;
+
+export type SelectedIdentityUnit<
+  P extends ProjectionRecord,
+  Procedure extends SelectedIdentityProcedureBase<P> =
+    SelectedIdentityProcedure<P>,
+> = {
   readonly unitId: string;
-  readonly procedures: ReadonlyArray<SelectedIdentityProcedure<P>>;
+  readonly procedures: ReadonlyArray<Procedure>;
 };
 
-type SelectedIdentityReplayWitnessBase<P extends ProjectionRecord> = {
+type SelectedIdentityReplayWitnessBase<
+  P extends ProjectionRecord,
+  Procedure extends SelectedIdentityProcedureBase<P> =
+    SelectedIdentityProcedure<P>,
+> = {
   readonly describeLabel: string;
   readonly taskId: string;
   readonly initialProjection: P;
-  readonly units: ReadonlyArray<SelectedIdentityUnit<P>>;
+  readonly units: ReadonlyArray<SelectedIdentityUnit<P, Procedure>>;
 };
 
 type SelectedIdentityQntReplayBase<P extends ProjectionRecord> =
-  SelectedIdentityReplayWitnessBase<P> & {
+  SelectedIdentityReplayWitnessBase<P, SelectedIdentityQntProcedure<P>> & {
     readonly specFile: string;
     readonly mbtParityTimeoutMs?: number;
     readonly quintStateField?: string;
@@ -106,7 +121,7 @@ function defineSelectedIdentityReplayWitnessCore<P extends ProjectionRecord>(
       for (const unit of witness.units) {
         const replayed = new Set<string>();
         for (const procedure of unit.procedures) {
-          const driver = createSelectedIdentityDriver(witness);
+          const driver = createSelectedIdentityReplayDriver(witness);
           const driverAction = driver.actions[procedure.actionName];
           if (driverAction === undefined) {
             throw new Error(
@@ -167,7 +182,7 @@ function defineSelectedIdentityQntReplayCore<
           spec: witness.specFile,
           init: "init",
           step: "step",
-          driver: () => createSelectedIdentityDriver(witness),
+          driver: () => createSelectedIdentityQntDriver(witness),
           backend: "typescript",
           seed: process.env["QUINT_SEED"],
           nTraces: mbtTraceCount(),
@@ -196,12 +211,30 @@ export function defineSelectedIdentityReplayAndQntReplay<
     readonly normalizeQuintState?: ((raw: unknown) => P) | undefined;
   },
 ): void {
-  defineSelectedIdentityReplayWitnessCore(witness);
   defineSelectedIdentityQntReplayCore(witness);
 }
 
+function createSelectedIdentityReplayDriver<P extends ProjectionRecord>(
+  witness: SelectedIdentityReplayWitness<P>,
+): SimpleDriver<P, SimpleActionMap> {
+  return createSelectedIdentityDriver(witness, "allowProjectionAfter");
+}
+
+function createSelectedIdentityQntDriver<P extends ProjectionRecord>(
+  witness: SelectedIdentityReplayWitnessBase<
+    P,
+    SelectedIdentityQntProcedure<P>
+  >,
+): SimpleDriver<P, SimpleActionMap> {
+  return createSelectedIdentityDriver(witness, "computedProjectionOnly");
+}
+
 function createSelectedIdentityDriver<P extends ProjectionRecord>(
-  witness: SelectedIdentityReplayWitnessBase<P>,
+  witness: SelectedIdentityReplayWitnessBase<
+    P,
+    SelectedIdentityProcedureBase<P>
+  >,
+  mode: "allowProjectionAfter" | "computedProjectionOnly",
 ): SimpleDriver<P, SimpleActionMap> {
   let projection = witness.initialProjection;
   const actions: Record<
@@ -233,9 +266,19 @@ function createSelectedIdentityDriver<P extends ProjectionRecord>(
             projection = computed;
             return;
           }
-          if (procedure.preservesProjection !== true) {
-            projection = procedure.projectionAfter;
+          if (procedure.preservesProjection === true) {
+            return;
           }
+          if (
+            mode === "allowProjectionAfter" &&
+            hasProjectionAfter(procedure)
+          ) {
+            projection = procedure.projectionAfter;
+            return;
+          }
+          throw new Error(
+            `Selected identity replay action ${procedure.actionName} must return a runtime projection.`,
+          );
         },
       };
     }
@@ -244,6 +287,12 @@ function createSelectedIdentityDriver<P extends ProjectionRecord>(
     actions,
     getState: () => projection,
   };
+}
+
+function hasProjectionAfter<P extends ProjectionRecord>(
+  procedure: SelectedIdentityProcedureBase<P>,
+): procedure is SelectedIdentityProcedure<P> {
+  return "projectionAfter" in procedure;
 }
 
 function selectedIdentityStateCheck<
@@ -283,7 +332,6 @@ function selectedIdentityStateCheck<
 
 type RuntimeProjectionField = {
   readonly kind: ProjectionFieldKind;
-  readonly allowedStrings: ReadonlySet<string>;
   readonly variantTagValues: Readonly<Record<string, string>>;
 };
 type RuntimeProjectionSchema = Readonly<Record<string, RuntimeProjectionField>>;
@@ -294,38 +342,9 @@ function projectionRuntimeSchema<
 >(
   witness: Pick<
     SelectedIdentityQntReplayBase<P> & { readonly projectionSchema: S },
-    "projectionSchema" | "initialProjection" | "units" | "quintVariantFieldTags"
+    "projectionSchema" | "quintVariantFieldTags"
   >,
 ): RuntimeProjectionSchema {
-  const stringValues = new Map<string, Set<string>>();
-  const recordStringValues = (projection: unknown): void => {
-    if (projection === null || typeof projection !== "object") {
-      return;
-    }
-    for (const [field, value] of Object.entries(projection)) {
-      if (
-        witness.projectionSchema[field] === "str" ||
-        witness.projectionSchema[field] === "variant"
-      ) {
-        if (typeof value !== "string") {
-          throw new Error(
-            `Expected selected identity projection field ${field} to declare a string value.`,
-          );
-        }
-        const values = stringValues.get(field) ?? new Set<string>();
-        values.add(value);
-        stringValues.set(field, values);
-      }
-    }
-  };
-
-  recordStringValues(witness.initialProjection);
-  for (const unit of witness.units) {
-    for (const procedure of unit.procedures) {
-      recordStringValues(procedure.projectionAfter);
-    }
-  }
-
   return Object.fromEntries(
     Object.entries(witness.projectionSchema).map(([field, kind]) => [
       field,
@@ -334,7 +353,6 @@ function projectionRuntimeSchema<
         // value comes directly from witness.projectionSchema and was typed as
         // ProjectionFieldKind before enumeration.
         kind: kind as ProjectionFieldKind,
-        allowedStrings: stringValues.get(field) ?? new Set<string>(),
         variantTagValues: witness.quintVariantFieldTags?.[field] ?? {},
       },
     ]),
@@ -388,7 +406,6 @@ function normalizeQuintState(
     ) {
       result[field] = parseStr(
         protocol.lastResult,
-        spec.allowedStrings,
         `${witness.quintStateField ?? "root"}.${witness.witnessProtocolField}.result`,
       );
       continue;
@@ -400,7 +417,6 @@ function normalizeQuintState(
     ) {
       result[field] = parseStr(
         protocol.lastInvalidReason,
-        spec.allowedStrings,
         `${witness.quintStateField ?? "root"}.${witness.witnessProtocolField}.result`,
       );
       continue;
@@ -460,7 +476,7 @@ function parseQuintField(
   return byKind.pipe(
     Match.when("bool", () => parseBool(value, qKey)),
     Match.when("int", () => parseInt(value, qKey)),
-    Match.when("str", () => parseStr(value, spec.allowedStrings, qKey)),
+    Match.when("str", () => parseStr(value, qKey)),
     Match.when("variant", () => parseVariant(value, spec, qKey)),
     Match.exhaustive,
   )(spec.kind);
@@ -474,19 +490,10 @@ function parseInt(value: unknown, qKey: string): number {
   return numberFromQuintInt(value, qKey);
 }
 
-function parseStr(
-  value: unknown,
-  allowedValues: ReadonlySet<string>,
-  qKey: string,
-): string {
+function parseStr(value: unknown, qKey: string): string {
   if (typeof value !== "string") {
     throw new Error(
       `Expected string Quint field ${qKey}, got ${String(value)}.`,
-    );
-  }
-  if (!allowedValues.has(value)) {
-    throw new Error(
-      `Unexpected Quint field ${qKey} value ${value}; expected one of ${[...allowedValues].join(", ")}.`,
     );
   }
   return value;
@@ -504,5 +511,5 @@ function parseVariant(
       `Unexpected Quint variant field ${qKey} tag ${tag}; expected one of ${Object.keys(spec.variantTagValues).join(", ")}.`,
     );
   }
-  return parseStr(projectedValue, spec.allowedStrings, qKey);
+  return projectedValue;
 }

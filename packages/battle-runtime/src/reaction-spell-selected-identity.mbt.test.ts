@@ -120,17 +120,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doResolveShieldReactionSpellHit",
-          projectionAfter: {
-            reactorHp: 12,
-            triggerCreatureHp: 12,
-            reactorArmorClass: 15,
-            reactorReactionAvailable: false,
-            triggerCreatureFirstLevelSlotsExpended: 0,
-            firstLevelSlotsExpended: 1,
-            secondLevelSlotsExpended: 0,
-            thirdLevelSlotsExpended: 0,
-            lastResult: "resolved",
-          },
           discover: () => resolveShieldReactionSpellHit(),
         },
       ],
@@ -140,17 +129,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doResolveHellishRebukeFailedSavingThrow",
-          projectionAfter: {
-            reactorHp: 11,
-            triggerCreatureHp: 9,
-            reactorArmorClass: 10,
-            reactorReactionAvailable: false,
-            triggerCreatureFirstLevelSlotsExpended: 0,
-            firstLevelSlotsExpended: 0,
-            secondLevelSlotsExpended: 1,
-            thirdLevelSlotsExpended: 0,
-            lastResult: "resolved",
-          },
           discover: () => resolveHellishRebukeFailedSavingThrow(),
         },
       ],
@@ -160,17 +138,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doResolveCounterspellMagicMissileCast",
-          projectionAfter: {
-            reactorHp: 12,
-            triggerCreatureHp: 12,
-            reactorArmorClass: 10,
-            reactorReactionAvailable: false,
-            triggerCreatureFirstLevelSlotsExpended: 0,
-            firstLevelSlotsExpended: 0,
-            secondLevelSlotsExpended: 0,
-            thirdLevelSlotsExpended: 1,
-            lastResult: "resolved",
-          },
           discover: () => resolveCounterspellMagicMissileCast(),
         },
       ],

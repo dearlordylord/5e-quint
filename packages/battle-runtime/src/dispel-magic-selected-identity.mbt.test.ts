@@ -89,7 +89,9 @@ defineSelectedIdentityReplayAndQntReplay({
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
   quintFieldNames: { lastResult: "qScenarioOutcome" },
-  quintVariantFieldTags: { lastResult: DISPEL_MAGIC_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG },
+  quintVariantFieldTags: {
+    lastResult: DISPEL_MAGIC_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG,
+  },
   witnessInvalidScenarioReasons: {
     outOfRangeObjectRejected: "invalidFill",
   },
@@ -108,39 +110,15 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doEndObjectAttachedSpellLight",
-          projectionAfter: {
-            magicActionAvailable: false,
-            thirdLevelSlotCommitted: true,
-            spellLightEmitterCount: 0,
-            selectedActiveEffectPresent: false,
-            retainedActiveEffectPresent: false,
-            lastResult: "objectSpellLightEnded",
-          },
           discover: () => dispelMagicProjection(endObjectAttachedSpellLight()),
         },
         {
           actionName: "doEndSelectedMagicalEffectActiveEffect",
-          projectionAfter: {
-            magicActionAvailable: false,
-            thirdLevelSlotCommitted: true,
-            spellLightEmitterCount: 0,
-            selectedActiveEffectPresent: false,
-            retainedActiveEffectPresent: true,
-            lastResult: "selectedMagicalEffectEnded",
-          },
           discover: () =>
             dispelMagicProjection(endSelectedMagicalEffectActiveEffect()),
         },
         {
           actionName: "doRejectOutOfRangeObjectTarget",
-          projectionAfter: {
-            magicActionAvailable: true,
-            thirdLevelSlotCommitted: false,
-            spellLightEmitterCount: 1,
-            selectedActiveEffectPresent: false,
-            retainedActiveEffectPresent: false,
-            lastResult: "outOfRangeObjectRejected",
-          },
           discover: () => dispelMagicProjection(rejectOutOfRangeObjectTarget()),
         },
       ],

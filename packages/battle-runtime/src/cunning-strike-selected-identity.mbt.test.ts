@@ -92,37 +92,14 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doResolveCunningStrikeTripFailedSave",
-          projectionAfter: expectedProjection({
-            targetTempHp: 22,
-            targetProne: true,
-            sneakAttackDiceRolled: 2,
-            cunningStrikeUnitBound: true,
-            sourceDamageRiderUnitBound: true,
-            lastResult: "tripFailedSave",
-          }),
           discover: () => resolveTripFailedSave(),
         },
         {
           actionName: "doResolveCunningStrikePoisonFailedSave",
-          projectionAfter: expectedProjection({
-            targetTempHp: 22,
-            targetPoisoned: true,
-            sneakAttackDiceRolled: 2,
-            cunningStrikeUnitBound: true,
-            sourceDamageRiderUnitBound: true,
-            lastResult: "poisonFailedSave",
-          }),
           discover: () => resolvePoisonFailedSave(),
         },
         {
           actionName: "doResolveCunningStrikeWithdrawMove",
-          projectionAfter: expectedProjection({
-            targetTempHp: 22,
-            sneakAttackDiceRolled: 2,
-            cunningStrikeUnitBound: true,
-            sourceDamageRiderUnitBound: true,
-            lastResult: "withdrawMoved",
-          }),
           discover: () => resolveWithdrawMove(),
         },
       ],

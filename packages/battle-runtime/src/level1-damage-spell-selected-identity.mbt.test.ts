@@ -527,15 +527,22 @@ const LEVEL1_DAMAGE_SPELL_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
   Init: "init",
   BurningHandsMixedConeSavingThrows: "burningHandsMixedConeSavingThrows",
   ChromaticOrbDuplicateDamageLeap: "chromaticOrbDuplicateDamageLeap",
-  IceKnifeHitAttackDamageAndBurstSavingThrows: "iceKnifeHitAttackDamageAndBurstSavingThrows",
+  IceKnifeHitAttackDamageAndBurstSavingThrows:
+    "iceKnifeHitAttackDamageAndBurstSavingThrows",
   IceKnifeMissBurstSavingThrows: "iceKnifeMissBurstSavingThrows",
   PoisonSpraySpellAttackDamage: "poisonSpraySpellAttackDamage",
-  RayOfSicknessSpellAttackDamageAndPoisoned: "rayOfSicknessSpellAttackDamageAndPoisoned",
-  SacredFlameDexteritySavingThrowRadiantDamage: "sacredFlameDexteritySavingThrowRadiantDamage",
+  RayOfSicknessSpellAttackDamageAndPoisoned:
+    "rayOfSicknessSpellAttackDamageAndPoisoned",
+  SacredFlameDexteritySavingThrowRadiantDamage:
+    "sacredFlameDexteritySavingThrowRadiantDamage",
   SorcerousBurstSpellAttackDamage: "sorcerousBurstSpellAttackDamage",
-  StarryWispObjectSpellAttackDamageAndDimLight: "starryWispObjectSpellAttackDamageAndDimLight",
-  ViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage: "viciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage",
-} as const satisfies Readonly<Record<string, Level1DamageSpellSelectedIdentityResult>>;
+  StarryWispObjectSpellAttackDamageAndDimLight:
+    "starryWispObjectSpellAttackDamageAndDimLight",
+  ViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage:
+    "viciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage",
+} as const satisfies Readonly<
+  Record<string, Level1DamageSpellSelectedIdentityResult>
+>;
 
 defineSelectedIdentityReplayAndQntReplay({
   describeLabel: "Level 1 damage spell selected identity replay",
@@ -572,7 +579,6 @@ defineSelectedIdentityReplayAndQntReplay({
       );
       return {
         actionName,
-        projectionAfter: sequence.expected,
         discover: level1DamageSpellDiscoveries[actionName],
       };
     }),
@@ -2066,7 +2072,9 @@ function projectLevel1DamageSpellSelectedIdentityState(
       (resource) => resource.source === "turn",
     ),
     spellSlotSpentThisTurn:
-      state.currentTurnResources.spellSlotUsesThisTurn.some((use) => use.kind === "committed"),
+      state.currentTurnResources.spellSlotUsesThisTurn.some(
+        (use) => use.kind === "committed",
+      ),
     level1SlotsRemaining: level1SlotsRemaining(state, casterId),
     primaryTargetHp: primaryTarget.hp,
     primaryTargetPoisoned: primaryTarget.conditions.includes("poisoned"),

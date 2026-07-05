@@ -529,8 +529,7 @@ function quintSelectedIdentityResult(
   key: string,
 ): MindSpikeSelectedIdentityResult {
   const tag = quintVariantTag(state[key], key);
-  const value =
-    MIND_SPIKE_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG[tag];
+  const value = MIND_SPIKE_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG[tag];
   if (value !== undefined) {
     return value;
   }

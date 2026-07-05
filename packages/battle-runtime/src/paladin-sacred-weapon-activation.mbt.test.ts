@@ -281,16 +281,7 @@ defineSelectedIdentityReplayAndQntReplay({
       unitId: paladinSacredWeaponUnitId,
       procedures: [
         {
-          actionName: "doActivateSacredWeapon",
-          projectionAfter: {
-            activationOffered: false,
-            channelDivinityUsesRemaining: 1,
-            boundWeaponItemId: "main:weapon_longsword",
-            activeEffectCount: 1,
-            rejected: false,
-            lastResult: "activated",
-          },
-          discover: () => {
+          actionName: "doActivateSacredWeapon",          discover: () => {
             const state = sacredWeaponBattle({});
             return sacredWeaponProjection(
               resolveSacredWeapon(state, requireSacredWeaponAct(state)),
@@ -299,48 +290,21 @@ defineSelectedIdentityReplayAndQntReplay({
           },
         },
         {
-          actionName: "doRejectSacredWeaponNoResource",
-          projectionAfter: {
-            activationOffered: false,
-            channelDivinityUsesRemaining: 0,
-            boundWeaponItemId: "none",
-            activeEffectCount: 0,
-            rejected: true,
-            lastResult: "noResource",
-          },
-          discover: () =>
+          actionName: "doRejectSacredWeaponNoResource",          discover: () =>
             sacredWeaponProjection(
               sacredWeaponBattle({ channelDivinityUsesRemaining: 0 }),
               "noResource",
             ),
         },
         {
-          actionName: "doRejectSacredWeaponRangedWeapon",
-          projectionAfter: {
-            activationOffered: false,
-            channelDivinityUsesRemaining: 2,
-            boundWeaponItemId: "none",
-            activeEffectCount: 0,
-            rejected: true,
-            lastResult: "rangedWeapon",
-          },
-          discover: () =>
+          actionName: "doRejectSacredWeaponRangedWeapon",          discover: () =>
             sacredWeaponProjection(
               sacredWeaponBattle({ weaponUnitId: "weapon_shortbow" }),
               "rangedWeapon",
             ),
         },
         {
-          actionName: "doRecastSacredWeapon",
-          projectionAfter: {
-            activationOffered: false,
-            channelDivinityUsesRemaining: 0,
-            boundWeaponItemId: "second:weapon_longsword",
-            activeEffectCount: 1,
-            rejected: false,
-            lastResult: "recast",
-          },
-          discover: () => {
+          actionName: "doRecastSacredWeapon",          discover: () => {
             const state = sacredWeaponBattle({});
             const first = resolveSacredWeapon(
               state,
@@ -360,16 +324,7 @@ defineSelectedIdentityReplayAndQntReplay({
           },
         },
         {
-          actionName: "doProjectSacredWeaponAttackDamageAndLight",
-          projectionAfter: {
-            activationOffered: false,
-            channelDivinityUsesRemaining: 1,
-            boundWeaponItemId: "main:weapon_longsword",
-            activeEffectCount: 1,
-            rejected: false,
-            lastResult: "attackEffects",
-          },
-          discover: () => {
+          actionName: "doProjectSacredWeaponAttackDamageAndLight",          discover: () => {
             const state = sacredWeaponBattle({});
             return sacredWeaponProjection(
               resolveSacredWeapon(state, requireSacredWeaponAct(state)),
@@ -378,16 +333,7 @@ defineSelectedIdentityReplayAndQntReplay({
           },
         },
         {
-          actionName: "doDismissSacredWeapon",
-          projectionAfter: {
-            activationOffered: false,
-            channelDivinityUsesRemaining: 1,
-            boundWeaponItemId: "none",
-            activeEffectCount: 0,
-            rejected: false,
-            lastResult: "dismissed",
-          },
-          discover: () => {
+          actionName: "doDismissSacredWeapon",          discover: () => {
             const state = sacredWeaponBattle({});
             const activated = resolveSacredWeapon(
               state,
@@ -409,16 +355,7 @@ defineSelectedIdentityReplayAndQntReplay({
           },
         },
         {
-          actionName: "doEndSacredWeaponWhenNotCarryingWeapon",
-          projectionAfter: {
-            activationOffered: false,
-            channelDivinityUsesRemaining: 1,
-            boundWeaponItemId: "none",
-            activeEffectCount: 0,
-            rejected: false,
-            lastResult: "notCarryingWeapon",
-          },
-          discover: () => {
+          actionName: "doEndSacredWeaponWhenNotCarryingWeapon",          discover: () => {
             const state = sacredWeaponBattle({});
             const activated = resolveSacredWeapon(
               state,

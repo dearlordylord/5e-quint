@@ -88,12 +88,10 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doProjectDangerSenseDexterityAdvantage",
-          projectionAfter: dangerSenseDexterityAdvantageProjection(),
           discover: () => dangerSenseDexterityAdvantageProjection(),
         },
         {
           actionName: "doSuppressDangerSenseWhileIncapacitated",
-          projectionAfter: dangerSenseSuppressedProjection(),
           discover: () => dangerSenseSuppressedProjection(),
         },
       ],

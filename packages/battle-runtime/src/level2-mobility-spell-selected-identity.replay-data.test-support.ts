@@ -59,73 +59,77 @@ export const level2MobilitySpellSelectedIdentityReplay = {
   taskId: "B11-LEVEL2-MOBILITY-SPELL-IDENTITY-BATCH",
   initialProjection: { lastResult: "init" },
   units: [
-      {
-        unitId: alterSelfUnitId,
-        procedures: [
-          {
-            actionName: "doDiscoverAlterSelfTransformationMode",
-            projectionAfter: { lastResult: "alterSelfTransformationMode" },
-            discover: () => {
-              discoverInvocation({
-                spellId: alterSelfUnitId,
-                actionTag: "actionSpell",
-                slotLevel: 2,
-                procedure: "selfTransformationMode",
-              });
-            },
+    {
+      unitId: alterSelfUnitId,
+      procedures: [
+        {
+          actionName: "doDiscoverAlterSelfTransformationMode",
+          projectionAfter: { lastResult: "alterSelfTransformationMode" },
+          discover: () => {
+            discoverInvocation({
+              spellId: alterSelfUnitId,
+              actionTag: "actionSpell",
+              slotLevel: 2,
+              procedure: "selfTransformationMode",
+            });
+            return { lastResult: "alterSelfTransformationMode" };
           },
-        ],
-      },
-      {
-        unitId: flyUnitId,
-        procedures: [
-          {
-            actionName: "doDiscoverFlySpeedGrant",
-            projectionAfter: { lastResult: "flySpeedGrant" },
-            discover: () => {
-              discoverInvocation({
-                spellId: flyUnitId,
-                actionTag: "actionSpell",
-                slotLevel: 3,
-                procedure: "scalarBuff",
-              });
-            },
+        },
+      ],
+    },
+    {
+      unitId: flyUnitId,
+      procedures: [
+        {
+          actionName: "doDiscoverFlySpeedGrant",
+          projectionAfter: { lastResult: "flySpeedGrant" },
+          discover: () => {
+            discoverInvocation({
+              spellId: flyUnitId,
+              actionTag: "actionSpell",
+              slotLevel: 3,
+              procedure: "scalarBuff",
+            });
+            return { lastResult: "flySpeedGrant" };
           },
-        ],
-      },
-      {
-        unitId: mistyStepUnitId,
-        procedures: [
-          {
-            actionName: "doDiscoverMistyStepSelfTeleport",
-            projectionAfter: { lastResult: "mistyStepSelfTeleport" },
-            discover: () => {
-              discoverInvocation({
-                spellId: mistyStepUnitId,
-                actionTag: "bonusActionSpell",
-                slotLevel: 2,
-                procedure: "selfTeleport",
-              });
-            },
+        },
+      ],
+    },
+    {
+      unitId: mistyStepUnitId,
+      procedures: [
+        {
+          actionName: "doDiscoverMistyStepSelfTeleport",
+          projectionAfter: { lastResult: "mistyStepSelfTeleport" },
+          discover: () => {
+            discoverInvocation({
+              spellId: mistyStepUnitId,
+              actionTag: "bonusActionSpell",
+              slotLevel: 2,
+              procedure: "selfTeleport",
+            });
+            return { lastResult: "mistyStepSelfTeleport" };
           },
-        ],
-      },
-      {
-        unitId: spiderClimbUnitId,
-        procedures: [
-          {
-            actionName: "doDiscoverSpiderClimbSpeedGrant",
-            projectionAfter: { lastResult: "spiderClimbSpeedGrant" },
-            discover: () => {
-              discoverInvocation({
-                spellId: spiderClimbUnitId,
-                actionTag: "actionSpell",
-                slotLevel: 2,
-                procedure: "scalarBuff",
-              });
-            },
+        },
+      ],
+    },
+    {
+      unitId: spiderClimbUnitId,
+      procedures: [
+        {
+          actionName: "doDiscoverSpiderClimbSpeedGrant",
+          projectionAfter: { lastResult: "spiderClimbSpeedGrant" },
+          discover: () => {
+            discoverInvocation({
+              spellId: spiderClimbUnitId,
+              actionTag: "actionSpell",
+              slotLevel: 2,
+              procedure: "scalarBuff",
+            });
+            return { lastResult: "spiderClimbSpeedGrant" };
           },
-        ],
-      },
-    ],
+        },
+      ],
+    },
+  ],
 } satisfies SelectedIdentityReplayWitness<Readonly<Record<string, unknown>>>;

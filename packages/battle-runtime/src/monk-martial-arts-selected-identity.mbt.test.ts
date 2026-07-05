@@ -59,12 +59,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doProjectMartialArtsD12",
-          projectionAfter: {
-            classLevel: 17,
-            damageDieSize: 12,
-            unitBound: true,
-            lastResult: "projected",
-          },
           discover: () => projectMartialArtsD12(),
         },
       ],

@@ -78,37 +78,18 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doFailedSave",
-          projectionAfter: expectedProjection({
-            targetStunned: true,
-            focusUsesRemaining: 1,
-            usedThisTurn: true,
-            lastResult: "failedSave",
-          }),
           discover: () => projectSave(false, "failedSave"),
         },
         {
           actionName: "doSuccessfulSave",
-          projectionAfter: expectedProjection({
-            targetSpeedHalved: true,
-            targetAttackAdvantage: true,
-            focusUsesRemaining: 1,
-            usedThisTurn: true,
-            lastResult: "successfulSave",
-          }),
           discover: () => projectSave(true, "successfulSave"),
         },
         {
           actionName: "doDecline",
-          projectionAfter: expectedProjection({ lastResult: "decline" }),
           discover: projectDecline,
         },
         {
           actionName: "doSecondUseGate",
-          projectionAfter: expectedProjection({
-            focusUsesRemaining: 1,
-            usedThisTurn: true,
-            lastResult: "secondUseGate",
-          }),
           discover: projectSecondUseGate,
         },
       ],

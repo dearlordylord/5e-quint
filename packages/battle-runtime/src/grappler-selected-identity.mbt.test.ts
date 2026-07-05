@@ -71,29 +71,14 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doFastWrestlerExemptsSameSizeDragCost",
-          projectionAfter: expectedProjection({
-            fastWrestlerDragExempt: true,
-            grappleActive: true,
-            lastResult: "fastWrestler",
-          }),
           discover: projectFastWrestlerExemptsSameSizeDragCost,
         },
         {
           actionName: "doAttackAdvantageAgainstGrappledTarget",
-          projectionAfter: expectedProjection({
-            attackRollMode: "advantage",
-            grappleActive: true,
-            lastResult: "attackAdvantage",
-          }),
           discover: projectAttackAdvantageAgainstGrappledTarget,
         },
         {
           actionName: "doPunchAndGrabFailedSaveGrapple",
-          projectionAfter: expectedProjection({
-            punchAndGrabUsed: true,
-            grappleActive: true,
-            lastResult: "punchAndGrab",
-          }),
           discover: projectPunchAndGrabFailedSaveGrapple,
         },
       ],
@@ -139,10 +124,7 @@ function projectFastWrestlerExemptsSameSizeDragCost(): GrapplerProjection {
     resolveBattleSubject({
       state,
       subject,
-      fills: [
-        targetFill(target, goblinId),
-        grappleOutcomeFill(outcome, false),
-      ],
+      fills: [targetFill(target, goblinId), grappleOutcomeFill(outcome, false)],
     }),
   );
   const link = resolved.state.grapples.find(

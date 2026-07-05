@@ -132,7 +132,9 @@ defineSelectedIdentityReplayAndQntReplay({
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
   quintFieldNames: { lastResult: "qScenarioOutcome" },
-  quintVariantFieldTags: { lastResult: BEAM_SEQUENCE_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG },
+  quintVariantFieldTags: {
+    lastResult: BEAM_SEQUENCE_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG,
+  },
   projectionSchema: {
     initialCreatureTargetHoles: "int",
     initialObjectTargetHoles: "int",
@@ -149,21 +151,10 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doDiscoverLevelFiveBeamTargetHoles",
-          projectionAfter: projectInitialBattle("discovered"),
           discover: () => projectInitialBattle("discovered"),
         },
         {
           actionName: "doResolveTwoCreatureBeamsSameTarget",
-          projectionAfter: projectResolvedBattle(
-            resolveEldritchBlastTwoBeamSequence({
-              targetFills: (holes) => [
-                spellTargetFill(beamCreatureTargetHole(holes, 0), skeletonId),
-                spellTargetFill(beamCreatureTargetHole(holes, 1), skeletonId),
-              ],
-              outcomes: [hitForFour(), miss()],
-            }),
-            "sameTargetResolved",
-          ),
           discover: () =>
             projectResolvedBattle(
               resolveEldritchBlastTwoBeamSequence({
@@ -178,16 +169,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doResolveTwoCreatureBeamsSplitTargets",
-          projectionAfter: projectResolvedBattle(
-            resolveEldritchBlastTwoBeamSequence({
-              targetFills: (holes) => [
-                spellTargetFill(beamCreatureTargetHole(holes, 0), skeletonId),
-                spellTargetFill(beamCreatureTargetHole(holes, 1), zombieId),
-              ],
-              outcomes: [hitForFour(), hitForFour()],
-            }),
-            "splitTargetResolved",
-          ),
           discover: () =>
             projectResolvedBattle(
               resolveEldritchBlastTwoBeamSequence({
@@ -202,16 +183,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doResolveCreatureAndObjectBeamTargets",
-          projectionAfter: projectResolvedBattle(
-            resolveEldritchBlastTwoBeamSequence({
-              targetFills: (holes) => [
-                spellTargetFill(beamCreatureTargetHole(holes, 0), skeletonId),
-                spellObjectTargetFill(beamObjectTargetHole(holes, 1)),
-              ],
-              outcomes: [hitForFour(), hitForFour()],
-            }),
-            "creatureObjectResolved",
-          ),
           discover: () =>
             projectResolvedBattle(
               resolveEldritchBlastTwoBeamSequence({

@@ -83,12 +83,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doGrantBardicInspirationD12",
-          projectionAfter: {
-            bonusActionAvailable: false,
-            featureUsesRemaining: 0,
-            targetBardicInspirationDieSize: 12,
-            lastResult: "resolved",
-          },
           discover: () => grantBardicInspirationD12(),
         },
       ],

@@ -97,19 +97,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doProjectRemarkableAthleteRollModes",
-          projectionAfter: {
-            initiativeRollMode: "advantage",
-            strengthAthleticsRollMode: "advantage",
-            strengthAcrobaticsRollMode: "normal",
-            plainStrengthRollMode: "normal",
-            dexterityAthleticsRollMode: "normal",
-            unselectedStrengthAthleticsRollMode: "normal",
-            criticalMovementOffered: false,
-            criticalMovementBudgetFeet: 0,
-            criticalMovementProvokesOpportunityAttacks: false,
-            criticalMovementAccepted: false,
-            lastResult: "projected",
-          },
           discover: () =>
             projectRemarkableAthleteRollModes(
               remarkableAthleteBattle(),
@@ -118,19 +105,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doProjectRemarkableAthleteCriticalMovement",
-          projectionAfter: {
-            initiativeRollMode: "normal",
-            strengthAthleticsRollMode: "normal",
-            strengthAcrobaticsRollMode: "normal",
-            plainStrengthRollMode: "normal",
-            dexterityAthleticsRollMode: "normal",
-            unselectedStrengthAthleticsRollMode: "normal",
-            criticalMovementOffered: true,
-            criticalMovementBudgetFeet: 15,
-            criticalMovementProvokesOpportunityAttacks: false,
-            criticalMovementAccepted: true,
-            lastResult: "criticalMovement",
-          },
           discover: () =>
             projectRemarkableAthleteCriticalMovement(remarkableAthleteBattle()),
         },

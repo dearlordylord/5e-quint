@@ -91,28 +91,15 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doDecline",
-          projectionAfter: expectedProjection({
-            lastResult: "decline",
-          }),
           discover: () => projectChoice("decline", "decline"),
         },
         {
           actionName: "doDenyOpportunityAttacks",
-          projectionAfter: expectedProjection({
-            targetOpportunityAttackDenied: true,
-            lastResult: "denyOpportunityAttacks",
-          }),
           discover: () =>
-            projectChoice(
-              "denyOpportunityAttacks",
-              "denyOpportunityAttacks",
-            ),
+            projectChoice("denyOpportunityAttacks", "denyOpportunityAttacks"),
         },
         {
           actionName: "doPushAwaySaveSucceeded",
-          projectionAfter: expectedProjection({
-            lastResult: "pushAwaySaveSucceeded",
-          }),
           discover: () =>
             projectSaveChoice(
               "pushAwayOnFailedSave",
@@ -122,10 +109,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doPushAwaySaveFailed",
-          projectionAfter: expectedProjection({
-            pushDistanceFeet: 10,
-            lastResult: "pushAwaySaveFailed",
-          }),
           discover: () =>
             projectSaveChoice(
               "pushAwayOnFailedSave",
@@ -136,9 +119,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doApplyProneSaveSucceeded",
-          projectionAfter: expectedProjection({
-            lastResult: "applyProneSaveSucceeded",
-          }),
           discover: () =>
             projectSaveChoice(
               "applyConditionOnFailedSave",
@@ -148,10 +128,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doApplyProneSaveFailed",
-          projectionAfter: expectedProjection({
-            targetProne: true,
-            lastResult: "applyProneSaveFailed",
-          }),
           discover: () =>
             projectSaveChoice(
               "applyConditionOnFailedSave",
@@ -161,26 +137,14 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doRejectNonFlurry",
-          projectionAfter: expectedProjection({
-            lastResult: "rejectNonFlurry",
-            lastInvalidReason: "invalidFill",
-          }),
           discover: projectRejectNonFlurry,
         },
         {
           actionName: "doRejectPushTooFar",
-          projectionAfter: expectedProjection({
-            lastResult: "rejectPushTooFar",
-            lastInvalidReason: "invalidFill",
-          }),
           discover: projectRejectPushTooFar,
         },
         {
           actionName: "doRejectApplyPronePushDisposition",
-          projectionAfter: expectedProjection({
-            lastResult: "rejectApplyPronePushDisposition",
-            lastInvalidReason: "invalidFill",
-          }),
           discover: projectRejectApplyPronePushDisposition,
         },
       ],

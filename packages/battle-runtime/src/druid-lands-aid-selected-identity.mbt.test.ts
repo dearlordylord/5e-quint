@@ -91,7 +91,9 @@ defineSelectedIdentityReplayAndQntReplay({
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
   quintFieldNames: { lastResult: "qScenarioOutcome" },
-  quintVariantFieldTags: { lastResult: DRUID_LANDS_AID_SCENARIO_OUTCOME_BY_TAG },
+  quintVariantFieldTags: {
+    lastResult: DRUID_LANDS_AID_SCENARIO_OUTCOME_BY_TAG,
+  },
   projectionSchema: {
     targetHp: "int",
     secondTargetHp: "int",
@@ -107,14 +109,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doResolveAreaSaveDamageHealing",
-          projectionAfter: expectedProjection({
-            targetHp: 12,
-            secondTargetHp: 16,
-            healingTargetHp: 12,
-            wildShapeUsesRemaining: 1,
-            actionResourcesRemaining: 0,
-            lastResult: "resolved",
-          }),
           discover: () =>
             projectBattleState(
               recordResolvedState(
@@ -138,14 +132,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doResolveAreaSaveDamageHealingLevel10",
-          projectionAfter: expectedProjection({
-            targetHp: 8,
-            secondTargetHp: 14,
-            healingTargetHp: 17,
-            wildShapeUsesRemaining: 1,
-            actionResourcesRemaining: 0,
-            lastResult: "resolved",
-          }),
           discover: () =>
             projectBattleState(
               recordResolvedState(
@@ -169,14 +155,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doResolveAreaSaveDamageHealingLevel14",
-          projectionAfter: expectedProjection({
-            targetHp: 4,
-            secondTargetHp: 12,
-            healingTargetHp: 20,
-            wildShapeUsesRemaining: 1,
-            actionResourcesRemaining: 0,
-            lastResult: "resolved",
-          }),
           discover: () =>
             projectBattleState(
               recordResolvedState(
@@ -200,10 +178,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doRejectMissingResource",
-          projectionAfter: expectedProjection({
-            wildShapeUsesRemaining: 0,
-            lastResult: "rejectMissingResource",
-          }),
           discover: () => {
             const state = landsAidBattle({ wildShapeUsesRemaining: 0 });
             recordInvalidResult(
@@ -218,9 +192,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doRejectMissingAreaMembership",
-          projectionAfter: expectedProjection({
-            lastResult: "rejectMissingAreaMembership",
-          }),
           discover: () => {
             const state = landsAidBattle();
             recordInvalidResult(
@@ -237,9 +208,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doRejectDuplicateSaveFill",
-          projectionAfter: expectedProjection({
-            lastResult: "rejectDuplicateSaveFill",
-          }),
           discover: () => {
             const state = landsAidBattle();
             recordInvalidResult(
@@ -259,9 +227,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doRejectInvalidHealingTarget",
-          projectionAfter: expectedProjection({
-            lastResult: "rejectInvalidHealingTarget",
-          }),
           discover: () => {
             const state = landsAidBattle();
             recordInvalidResult(
@@ -278,9 +243,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doRejectInvalidDamageRoll",
-          projectionAfter: expectedProjection({
-            lastResult: "rejectInvalidDamageRoll",
-          }),
           discover: () => {
             const state = landsAidBattle();
             recordInvalidResult(
@@ -297,9 +259,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doRejectInvalidHealingRoll",
-          projectionAfter: expectedProjection({
-            lastResult: "rejectInvalidHealingRoll",
-          }),
           discover: () => {
             const state = landsAidBattle();
             recordInvalidResult(

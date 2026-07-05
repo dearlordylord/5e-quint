@@ -63,7 +63,8 @@ type ExtendedMetamagicRouteReplayProjection = {
 };
 
 defineSelectedIdentityReplayAndQntReplay({
-  describeLabel: "Sorcerer Extended Spell creature-size selected identity replay",
+  describeLabel:
+    "Sorcerer Extended Spell creature-size selected identity replay",
   taskId: "L3MMETA-16-EXTENDED-CAST-DURATION-CONCENTRATION-SLICE",
   specFile: mbtSpecPath(
     import.meta.dirname,
@@ -96,12 +97,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doResolveExtendedCreatureSizeIncrease",
-          projectionAfter: {
-            sorceryPointsRemaining: 1,
-            durationTicks: 20,
-            concentrationSavingThrowMode: "advantage",
-            lastResult: "extendedCreatureSizeIncrease",
-          },
           discover: () =>
             extendedCreatureSizeProjection(
               resolveExtendedCreatureSizeIncrease(),

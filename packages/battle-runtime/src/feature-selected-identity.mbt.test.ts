@@ -57,9 +57,7 @@ const FEATURE_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
   NonSorcererExcluded: "nonSorcererExcluded",
 } as const;
 
-type InnateSorceryOccurrenceProjection =
-  | "inactive"
-  | "activeUntilEndOfRound11";
+type InnateSorceryOccurrenceProjection = "inactive" | "activeUntilEndOfRound11";
 type InnateSorcerySelectedIdentityProjection = {
   readonly bonusActionAvailable: boolean;
   readonly featureUsesRemaining: number;
@@ -79,7 +77,6 @@ type ResolvedBattleResult = Extract<
 const innateSorceryUnitId = "sorcerer_innate_sorcery";
 const rayOfFrostUnitId = "ray_of_frost";
 const baseSorcererSpellSaveDc = 13;
-const innateSorcerySpellSaveDc = 14;
 const innateSorceryExpiresRound = 11;
 const activeInnateSorceryOccurrence = "activeUntilEndOfRound11";
 const sorcererId = combatantId("innate-sorcery-selected-identity-sorcerer");
@@ -109,7 +106,9 @@ defineSelectedIdentityReplayAndQntReplay({
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
   quintFieldNames: { lastResult: "qScenarioOutcome" },
-  quintVariantFieldTags: { lastResult: FEATURE_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG },
+  quintVariantFieldTags: {
+    lastResult: FEATURE_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG,
+  },
   projectionSchema: {
     bonusActionAvailable: "bool",
     featureUsesRemaining: "int",
@@ -125,13 +124,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doActivateInnateSorcery",
-          projectionAfter: expectedProjection({
-            bonusActionAvailable: false,
-            featureUsesRemaining: 1,
-            innateSorceryOccurrence: activeInnateSorceryOccurrence,
-            spellSaveDc: innateSorcerySpellSaveDc,
-            lastResult: "activated",
-          }),
           discover: () =>
             withSelectedUnitBoundaryCheck("doActivateInnateSorcery", () =>
               projectBattleState(
@@ -143,14 +135,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doProjectInnateSorcerySpellBenefits",
-          projectionAfter: expectedProjection({
-            bonusActionAvailable: false,
-            featureUsesRemaining: 1,
-            innateSorceryOccurrence: activeInnateSorceryOccurrence,
-            spellSaveDc: innateSorcerySpellSaveDc,
-            spellAttackRollMode: "advantage",
-            lastResult: "spellBenefitsProjected",
-          }),
           discover: () =>
             withSelectedUnitBoundaryCheck(
               "doProjectInnateSorcerySpellBenefits",
@@ -168,12 +152,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doExcludeInnateSorceryNonSorcererSpellBenefits",
-          projectionAfter: expectedProjection({
-            bonusActionAvailable: false,
-            featureUsesRemaining: 1,
-            innateSorceryOccurrence: activeInnateSorceryOccurrence,
-            lastResult: "nonSorcererExcluded",
-          }),
           discover: () =>
             withSelectedUnitBoundaryCheck(
               "doExcludeInnateSorceryNonSorcererSpellBenefits",

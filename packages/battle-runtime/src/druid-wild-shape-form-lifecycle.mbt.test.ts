@@ -515,43 +515,13 @@ defineSelectedIdentityReplayAndQntReplay({
       unitId: "druid_wild_shape",
       procedures: [
         {
-          actionName: "doAssumeRidingHorse",
-          projectionAfter: expectedDruidWildShapeFormProjection({
-            activeForm: "ridingHorse",
-            bonusActionAvailable: false,
-            usesRemaining: 1,
-            tempHp: 2,
-            armorClass: 11,
-            creatureSize: "large",
-            speedFeet: 60,
-            shoveDc: 13,
-            spellAvailable: false,
-            activeFormEffectCount: 1,
-            mergedEquipmentCount: 2,
-            lastResult: "assumedRidingHorse",
-          }),
-          discover: () =>
+          actionName: "doAssumeRidingHorse",          discover: () =>
             druidWildShapeFormProjection(
               assumeRidingHorse(initialRuntimeState()),
             ),
         },
         {
-          actionName: "doReuseAsCat",
-          projectionAfter: expectedDruidWildShapeFormProjection({
-            activeForm: "cat",
-            bonusActionAvailable: false,
-            usesRemaining: 0,
-            tempHp: 2,
-            armorClass: 12,
-            creatureSize: "tiny",
-            speedFeet: 40,
-            shoveDc: 6,
-            spellAvailable: false,
-            activeFormEffectCount: 1,
-            mergedEquipmentCount: 2,
-            lastResult: "reusedCat",
-          }),
-          discover: () =>
+          actionName: "doReuseAsCat",          discover: () =>
             druidWildShapeFormProjection(
               reuseAsCat(
                 beginNextTurn(assumeRidingHorse(initialRuntimeState())),
@@ -559,9 +529,7 @@ defineSelectedIdentityReplayAndQntReplay({
             ),
         },
         {
-          actionName: "doBeginNextTurn",
-          projectionAfter: expectedDruidWildShapeFormProjection(),
-          project: (projection) =>
+          actionName: "doBeginNextTurn",          project: (projection) =>
             projection.bonusActionAvailable
               ? projection
               : {
@@ -572,14 +540,7 @@ defineSelectedIdentityReplayAndQntReplay({
           discover: () => undefined,
         },
         {
-          actionName: "doDismissForm",
-          projectionAfter: expectedDruidWildShapeFormProjection({
-            bonusActionAvailable: false,
-            usesRemaining: 1,
-            tempHp: 2,
-            lastResult: "dismissed",
-          }),
-          discover: () =>
+          actionName: "doDismissForm",          discover: () =>
             druidWildShapeFormProjection(
               dismissForm(
                 beginNextTurn(assumeRidingHorse(initialRuntimeState())),
@@ -587,15 +548,7 @@ defineSelectedIdentityReplayAndQntReplay({
             ),
         },
         {
-          actionName: "doIncapacitatedReversion",
-          projectionAfter: expectedDruidWildShapeFormProjection({
-            bonusActionAvailable: false,
-            usesRemaining: 1,
-            tempHp: 2,
-            spellAvailable: false,
-            lastResult: "incapacitated",
-          }),
-          discover: () =>
+          actionName: "doIncapacitatedReversion",          discover: () =>
             druidWildShapeFormProjection(
               applyIncapacitatedReversion(
                 assumeRidingHorse(initialRuntimeState()),
@@ -603,24 +556,13 @@ defineSelectedIdentityReplayAndQntReplay({
             ),
         },
         {
-          actionName: "doDeathReversion",
-          projectionAfter: expectedDruidWildShapeFormProjection({
-            bonusActionAvailable: false,
-            usesRemaining: 1,
-            tempHp: 2,
-            spellAvailable: false,
-            druidAlive: false,
-            lastResult: "dead",
-          }),
-          discover: () =>
+          actionName: "doDeathReversion",          discover: () =>
             druidWildShapeFormProjection(
               applyDeathReversion(assumeRidingHorse(initialRuntimeState())),
             ),
         },
         {
-          actionName: "doStutter",
-          projectionAfter: expectedDruidWildShapeFormProjection(),
-          preservesProjection: true,
+          actionName: "doStutter",          preservesProjection: true,
           discover: () => undefined,
         },
       ],

@@ -104,13 +104,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doDistributeHealing",
-          projectionAfter: expectedProjection({
-            targetHp: 10,
-            secondTargetHp: 10,
-            channelDivinityUsesRemaining: 1,
-            actionResourcesRemaining: 0,
-            lastResult: "distributed",
-          }),
           discover: () =>
             projectBattleState(
               recordResolvedState(
@@ -124,13 +117,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doSelfHealing",
-          projectionAfter: expectedProjection({
-            casterHp: 10,
-            targetHp: 12,
-            channelDivinityUsesRemaining: 1,
-            actionResourcesRemaining: 0,
-            lastResult: "self",
-          }),
           discover: () =>
             projectBattleState(
               recordResolvedState(
@@ -144,10 +130,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doRejectNonBloodied",
-          projectionAfter: expectedProjection({
-            targetHp: 11,
-            lastResult: "rejectNonBloodied",
-          }),
           discover: () => {
             const state = preserveLifeBattle({ targetHp: 11 });
             recordInvalidResult(
@@ -160,11 +142,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doRejectOverPool",
-          projectionAfter: expectedProjection({
-            targetHp: 0,
-            secondTargetHp: 0,
-            lastResult: "rejectOverPool",
-          }),
           discover: () => {
             const state = preserveLifeBattle({
               targetHp: 0,
@@ -181,9 +158,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doRejectOverCap",
-          projectionAfter: expectedProjection({
-            lastResult: "rejectOverCap",
-          }),
           discover: () => {
             const state = preserveLifeBattle();
             recordInvalidResult(
@@ -196,9 +170,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doRejectMissingRange",
-          projectionAfter: expectedProjection({
-            lastResult: "rejectMissingRange",
-          }),
           discover: () => {
             const state = preserveLifeBattle();
             const act = preserveLifeAct(state);
@@ -225,10 +196,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doRejectMissingResource",
-          projectionAfter: expectedProjection({
-            channelDivinityUsesRemaining: 0,
-            lastResult: "rejectMissingResource",
-          }),
           discover: () => {
             const state = preserveLifeBattle({
               channelDivinityUsesRemaining: 0,
@@ -245,10 +212,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doRejectMissingMagicAction",
-          projectionAfter: expectedProjection({
-            actionResourcesRemaining: 0,
-            lastResult: "rejectMissingMagicAction",
-          }),
           discover: () => {
             const base = preserveLifeBattle();
             const act = preserveLifeAct(base);

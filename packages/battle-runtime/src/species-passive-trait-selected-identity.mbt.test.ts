@@ -136,10 +136,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doDragonbornDamageResistance",
-          projectionAfter: expectedProjection({
-            dragonbornFireDamageAfter: 4,
-            lastResult: "dragonbornDamageResistance",
-          }),
           discover: () =>
             projectDragonbornDamageResistance(
               dragonbornDamageResistanceBattle(),
@@ -152,11 +148,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doDwarvenResilience",
-          projectionAfter: expectedProjection({
-            dwarfPoisonDamageAfter: 4,
-            dwarfPoisonedSaveAdvantage: true,
-            lastResult: "dwarvenResilience",
-          }),
           discover: () => projectDwarvenResilience(dwarvenResilienceBattle()),
         },
       ],
@@ -166,11 +157,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doHalflingBrave",
-          projectionAfter: expectedProjection({
-            halflingFrightenedAvoidSaveAdvantage: true,
-            halflingFrightenedEndSaveAdvantage: true,
-            lastResult: "halflingBrave",
-          }),
           discover: () => projectHalflingBrave(halflingBraveBattle()),
         },
       ],
@@ -180,10 +166,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doGoliathPowerfulBuild",
-          projectionAfter: expectedProjection({
-            goliathEscapeRollMode: "advantage",
-            lastResult: "goliathPowerfulBuild",
-          }),
           discover: () => ({
             ...expectedProjection({
               goliathEscapeRollMode: escapeGrappleRollMode({
@@ -378,7 +360,9 @@ function halflingBraveBattle(): BattleState {
   return result.right;
 }
 
-function projectHalflingBrave(state: BattleState): SpeciesPassiveTraitProjection {
+function projectHalflingBrave(
+  state: BattleState,
+): SpeciesPassiveTraitProjection {
   const targetId = combatantId("species-passive-halfling-target");
   const target = state.combatants.get(targetId);
   if (target === undefined) {
@@ -522,21 +506,25 @@ const speciesPassiveTraitSubstrateRouteDriverSchema = {
 } as const;
 
 describe("Species passive trait substrate route MBT", () => {
-  it("routes passive trait substrates through generic battle owners", async () => {
-    await run({
-      spec: mbtSpecPath(
-        import.meta.dirname,
-        "battle-runtime-species-passive-trait-substrates.route.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createSpeciesPassiveTraitSubstrateRouteDriver(),
-      backend: "typescript",
-      nTraces: mbtTraceCount(),
-      maxSteps: focusedMbtMaxSteps(8),
-      stateCheck: speciesPassiveTraitSubstrateRouteStateCheck,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "routes passive trait substrates through generic battle owners",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-species-passive-trait-substrates.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createSpeciesPassiveTraitSubstrateRouteDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(8),
+        stateCheck: speciesPassiveTraitSubstrateRouteStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function createSpeciesPassiveTraitSubstrateRouteDriver() {

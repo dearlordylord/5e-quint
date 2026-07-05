@@ -69,38 +69,30 @@ defineSelectedIdentityReplayAndQntReplay({
     targetActiveEffectCount: "int",
     lastResult: "variant",
   },
-  initialProjection: {
-    magicActionAvailable: true,
-    bonusActionAvailable: true,
-    sorceryPointsRemaining: 4,
-    targetHp: 10,
-    targetActiveEffectCount: 0,
-    lastResult: "init",
-  },
+  initialProjection: projectEmpoweredRayOfFrostInitialState(),
   units: [
     {
       unitId: "sorcerer_metamagic",
       procedures: [
         {
           actionName: "doResolveEmpoweredSpellDamageReroll",
-          projectionAfter: {
-            magicActionAvailable: false,
-            bonusActionAvailable: true,
-            sorceryPointsRemaining: 3,
-            targetHp: 1,
-            targetActiveEffectCount: 1,
-            lastResult: "empoweredSpellDamageReroll",
-          },
-          discover: () =>
-            projectBattleState(
-              resolveEmpoweredRayOfFrost(empoweredSorcererMetamagicBattle()),
-              "empoweredSpellDamageReroll",
-            ),
+          discover: projectEmpoweredRayOfFrostResolvedState,
         },
       ],
     },
   ],
 });
+
+function projectEmpoweredRayOfFrostInitialState() {
+  return projectBattleState(empoweredSorcererMetamagicBattle(), "init");
+}
+
+function projectEmpoweredRayOfFrostResolvedState() {
+  return projectBattleState(
+    resolveEmpoweredRayOfFrost(empoweredSorcererMetamagicBattle()),
+    "empoweredSpellDamageReroll",
+  );
+}
 
 it(
   "compares Empowered Spell damage-reroll public reducer route to copied qRoute",
@@ -148,7 +140,5 @@ function createEmpoweredMetamagicRouteReplayDriver() {
 }
 
 function observeEmpoweredRayOfFrostInitialRoute() {
-  return [
-    battleReducerStartRouteEvent(),
-  ] as const;
+  return [battleReducerStartRouteEvent()] as const;
 }

@@ -88,7 +88,9 @@ const LEVEL2_DAMAGE_SPELL_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
   ScorchingRayAttackSequence: "scorchingRayAttackSequence",
   ShatterSaveGatedDamage: "shatterSaveGatedDamage",
   SpiritualWeaponAttackProxy: "spiritualWeaponAttackProxy",
-} as const satisfies Readonly<Record<string, Level2DamageSpellSelectedIdentityResult>>;
+} as const satisfies Readonly<
+  Record<string, Level2DamageSpellSelectedIdentityResult>
+>;
 
 defineSelectedIdentityReplayAndQntReplay({
   describeLabel: "Level 2 damage spell selected identity replay",
@@ -236,7 +238,6 @@ function selectedSpellProcedure(
 ) {
   return {
     actionName,
-    projectionAfter: expectedProjection(input.result),
     discover: () => recordDiscoveredInvocation(input),
   };
 }

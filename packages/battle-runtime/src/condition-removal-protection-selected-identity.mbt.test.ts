@@ -79,7 +79,10 @@ defineSelectedIdentityReplayAndQntReplay({
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
   quintFieldNames: { lastResult: "qScenarioOutcome" },
-  quintVariantFieldTags: { lastResult: CONDITION_REMOVAL_PROTECTION_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG },
+  quintVariantFieldTags: {
+    lastResult:
+      CONDITION_REMOVAL_PROTECTION_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG,
+  },
   projectionSchema: {
     targetParalyzed: "bool",
     targetPoisoned: "bool",
@@ -99,13 +102,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doResolveLesserRestorationChoice",
-          projectionAfter: expectedProjection({
-            targetPoisoned: true,
-            targetEffectCount: 1,
-            secondLevelSlotsExpended: 1,
-            bonusActionAvailable: false,
-            lastResult: "lesserRestorationChoice",
-          }),
           discover: () =>
             projectConditionRemovalProtectionSelectedIdentityState(
               resolveLesserRestorationChoiceBattle(),
@@ -114,11 +110,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doResolveLesserRestorationConcentrationCleanup",
-          projectionAfter: expectedProjection({
-            secondLevelSlotsExpended: 1,
-            bonusActionAvailable: false,
-            lastResult: "lesserRestorationConcentration",
-          }),
           discover: () =>
             projectConditionRemovalProtectionSelectedIdentityState(
               resolveLesserRestorationConcentrationCleanupBattle(),
@@ -132,14 +123,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doResolveProtectionFromPoison",
-          projectionAfter: expectedProjection({
-            targetEffectCount: 2,
-            targetHasPoisonResistance: true,
-            targetHasPoisonSaveAdvantage: true,
-            secondLevelSlotsExpended: 1,
-            actionAvailable: false,
-            lastResult: "protectionFromPoison",
-          }),
           discover: () =>
             projectConditionRemovalProtectionSelectedIdentityState(
               resolveProtectionFromPoisonBattle(),

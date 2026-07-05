@@ -80,7 +80,9 @@ const LEVEL2_CONTROL_SPELL_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
   SeeInvisibilityObserverSight: "seeInvisibilityObserverSight",
   SpikeGrowthMovementHazard: "spikeGrowthMovementHazard",
   WebRestraintHazard: "webRestraintHazard",
-} as const satisfies Readonly<Record<string, Level2ControlSpellSelectedIdentityResult>>;
+} as const satisfies Readonly<
+  Record<string, Level2ControlSpellSelectedIdentityResult>
+>;
 
 defineSelectedIdentityReplayAndQntReplay({
   describeLabel: "Level 2 control spell selected identity replay",
@@ -102,15 +104,12 @@ defineSelectedIdentityReplayAndQntReplay({
     {
       unitId: calmEmotionsUnitId,
       procedures: [
-        selectedSpellProcedure(
-          "doDiscoverCalmEmotionsConditionImmunity",
-          {
-            spellId: calmEmotionsUnitId,
-            slotLevel: 2,
-            procedure: "saveGatedConditionImmunity",
-            result: "calmEmotionsConditionImmunity",
-          },
-        ),
+        selectedSpellProcedure("doDiscoverCalmEmotionsConditionImmunity", {
+          spellId: calmEmotionsUnitId,
+          slotLevel: 2,
+          procedure: "saveGatedConditionImmunity",
+          result: "calmEmotionsConditionImmunity",
+        }),
       ],
     },
     {
@@ -221,7 +220,6 @@ function selectedSpellProcedure(
 ) {
   return {
     actionName,
-    projectionAfter: expectedProjection(input.result),
     discover: () => recordDiscoveredInvocation(input),
   };
 }

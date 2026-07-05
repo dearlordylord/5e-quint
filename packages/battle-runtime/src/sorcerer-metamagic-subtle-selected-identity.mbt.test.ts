@@ -129,28 +129,10 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doResolveSubtleFalseLife",
-          projectionAfter: {
-            verbalSuppressed: true,
-            somaticSuppressed: true,
-            materialSuppressed: true,
-            materialPreserved: false,
-            sorceryPointsRemaining: 1,
-            tempHp: 11,
-            lastResult: "subtleFalseLife",
-          },
           discover: () => subtleFalseLifeProjection(resolveSubtleFalseLife()),
         },
         {
           actionName: "doRejectSubtleFalseLifeWithoutSorceryPoints",
-          projectionAfter: {
-            verbalSuppressed: false,
-            somaticSuppressed: false,
-            materialSuppressed: false,
-            materialPreserved: false,
-            sorceryPointsRemaining: 0,
-            tempHp: 0,
-            lastResult: "unaffordableSubtleFalseLife",
-          },
           discover: () => rejectSubtleFalseLifeWithoutSorceryPoints(),
         },
       ],

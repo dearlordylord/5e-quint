@@ -7,10 +7,7 @@ import {
   currentArmorClass,
   defaultArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
-import {
-  elapsedTimeTicks,
-  elapsedTimeTicksFromHours,
-} from "@dnd/shared-algebras/elapsed-time-algebra";
+import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   Hp,
   abilityModifier,
@@ -91,8 +88,6 @@ const defaultUnarmoredBaseArmorClass = 10;
 const mageArmorBaseArmorClass = 13;
 const mageArmorDexModifier = 2;
 const initialArmorClass = defaultUnarmoredBaseArmorClass + mageArmorDexModifier;
-const mageArmorArmorClass = mageArmorBaseArmorClass + mageArmorDexModifier;
-const mageArmorDurationTicks = Number(requireElapsedHours(8));
 const casterId = combatantId("mage-armor-selected-identity-caster");
 const armoredTargetId = combatantId(
   "mage-armor-selected-identity-armored-target",
@@ -113,7 +108,9 @@ const MAGE_ARMOR_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
   ArmoredRejected: "armoredRejected",
   Resolved: "resolved",
   DurationExpired: "durationExpired",
-} as const satisfies Readonly<Record<string, MageArmorSelectedIdentityLastResult>>;
+} as const satisfies Readonly<
+  Record<string, MageArmorSelectedIdentityLastResult>
+>;
 
 defineSelectedIdentityReplayAndQntReplay({
   describeLabel: "Mage Armor selected identity replay",
@@ -148,38 +145,19 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doDiscoverMageArmorUnarmoredSelfTarget",
-          projectionAfter: expectedProjection({ lastResult: "discovered" }),
           discover: () => projectInitialBattle("discovered"),
         },
         {
           actionName: "doRejectMageArmorArmoredTarget",
-          projectionAfter: expectedProjection({
-            armoredTargetRejected: true,
-            lastResult: "armoredRejected",
-          }),
           discover: projectArmoredTargetRejection,
         },
         {
           actionName: "doResolveMageArmorBaseArmorClassProjection",
-          projectionAfter: expectedProjection({
-            mageArmorEffectPresent: true,
-            projectedBaseIsMageArmor: true,
-            armorClass: mageArmorArmorClass,
-            mageArmorDurationTicks,
-            level1SlotsExpended: 1,
-            actionAvailable: false,
-            lastResult: "resolved",
-          }),
           discover: () =>
             projectResolvedBattle(resolveMageArmorSelf(), "resolved"),
         },
         {
           actionName: "doExpireMageArmorDuration",
-          projectionAfter: expectedProjection({
-            level1SlotsExpended: 1,
-            actionAvailable: false,
-            lastResult: "durationExpired",
-          }),
           discover: projectExpiredDurationBattle,
         },
       ],
@@ -306,11 +284,14 @@ function resolveMageArmorSelf(): ResolvedBattleResult {
   );
 }
 
-function mageArmorNearlyExpiredState(result: ResolvedBattleResult): BattleState {
+function mageArmorNearlyExpiredState(
+  result: ResolvedBattleResult,
+): BattleState {
   const caster = requireCombatant(result.state, casterId);
   const activeEffects: BattleActiveEffect[] = caster.activeEffects.map(
     (effect) =>
-      isMageArmorDurationEffect(effect) && effect.sourceSpellId === mageArmorUnitId
+      isMageArmorDurationEffect(effect) &&
+      effect.sourceSpellId === mageArmorUnitId
         ? {
             ...effect,
             expiresAt: {
@@ -333,13 +314,16 @@ function isMageArmorDurationEffect(
   effect: BattleActiveEffect,
 ): effect is MageArmorDurationEffect {
   return (
-    effect.kind === "spellBaseArmorClass" && effect.expiresAt.kind === "duration"
+    effect.kind === "spellBaseArmorClass" &&
+    effect.expiresAt.kind === "duration"
   );
 }
 
-function mageArmorBattle(input: {
-  readonly includeArmoredTarget?: boolean;
-} = {}): BattleState {
+function mageArmorBattle(
+  input: {
+    readonly includeArmoredTarget?: boolean;
+  } = {},
+): BattleState {
   const combatants = [
     battleCreature({
       combatantId: casterId,
@@ -378,7 +362,9 @@ function mageArmorBattle(input: {
   });
 }
 
-function startBattleRight(input: Parameters<typeof startBattle>[0]): BattleState {
+function startBattleRight(
+  input: Parameters<typeof startBattle>[0],
+): BattleState {
   const result = startBattle(input);
   if (Either.isLeft(result)) {
     throw new Error(result.left.message);
@@ -461,7 +447,9 @@ function targetChoiceHole(
   holes: readonly BattleHole[],
 ): Extract<BattleHole, { readonly kind: "targetChoice" }> {
   const hole = holes.find(
-    (candidate): candidate is Extract<BattleHole, { readonly kind: "targetChoice" }> =>
+    (
+      candidate,
+    ): candidate is Extract<BattleHole, { readonly kind: "targetChoice" }> =>
       candidate.kind === "targetChoice",
   );
   if (hole === undefined) {
@@ -542,10 +530,7 @@ function projectedBaseIsMageArmor(armorClass: ArmorClassState): boolean {
   );
 }
 
-function level1SlotsExpended(
-  state: BattleState,
-  actorId: CombatantId,
-): number {
+function level1SlotsExpended(state: BattleState, actorId: CombatantId): number {
   const actor = state.combatants.get(actorId);
   if (actor?.origin.kind !== "character") {
     throw new Error("Expected character spellcaster.");
@@ -573,12 +558,4 @@ function requireResolved(result: BattleResolutionResult): ResolvedBattleResult {
     throw new Error(`Expected resolved result, got ${result.tag}.`);
   }
   return result;
-}
-
-function requireElapsedHours(hours: number) {
-  const parsed = elapsedTimeTicksFromHours(hours);
-  if (Either.isLeft(parsed)) {
-    throw new Error(`invalid test elapsed hours: ${hours}`);
-  }
-  return parsed.right;
 }

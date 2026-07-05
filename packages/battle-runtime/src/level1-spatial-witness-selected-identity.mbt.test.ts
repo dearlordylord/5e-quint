@@ -796,16 +796,24 @@ const selectedUnitIdentityReplays = [
 const LEVEL1_SPATIAL_WITNESS_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
   Init: "init",
   DancingLightsMovableDimLight: "dancingLightsMovableDimLight",
-  FaerieFireOutlineAdvantageInvisibleDimLight: "faerieFireOutlineAdvantageInvisibleDimLight",
+  FaerieFireOutlineAdvantageInvisibleDimLight:
+    "faerieFireOutlineAdvantageInvisibleDimLight",
   FeatherFallReactionMitigationLanding: "featherFallReactionMitigationLanding",
-  FogCloudAreaIdentityObscurementStrongWindCleanup: "fogCloudAreaIdentityObscurementStrongWindCleanup",
+  FogCloudAreaIdentityObscurementStrongWindCleanup:
+    "fogCloudAreaIdentityObscurementStrongWindCleanup",
   GreaseCastGroundHazardSavingThrows: "greaseCastGroundHazardSavingThrows",
   GreaseMovementAndTurnTriggers: "greaseMovementAndTurnTriggers",
-  JumpMovementReplacementLandingWitness: "jumpMovementReplacementLandingWitness",
-  LightObjectEmitterProjectionReplacementCleanup: "lightObjectEmitterProjectionReplacementCleanup",
-  ProduceFlameHeldLightProjectionHurlCleanup: "produceFlameHeldLightProjectionHurlCleanup",
+  JumpMovementReplacementLandingWitness:
+    "jumpMovementReplacementLandingWitness",
+  LightObjectEmitterProjectionReplacementCleanup:
+    "lightObjectEmitterProjectionReplacementCleanup",
+  ProduceFlameHeldLightProjectionHurlCleanup:
+    "produceFlameHeldLightProjectionHurlCleanup",
   ThunderwaveSavePushObjectsBoom: "thunderwaveSavePushObjectsBoom",
-} as const satisfies Readonly<Record<string, | "init"
+} as const satisfies Readonly<
+  Record<
+    string,
+    | "init"
     | "dancingLightsMovableDimLight"
     | "faerieFireOutlineAdvantageInvisibleDimLight"
     | "featherFallReactionMitigationLanding"
@@ -815,7 +823,9 @@ const LEVEL1_SPATIAL_WITNESS_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
     | "jumpMovementReplacementLandingWitness"
     | "lightObjectEmitterProjectionReplacementCleanup"
     | "produceFlameHeldLightProjectionHurlCleanup"
-    | "thunderwaveSavePushObjectsBoom">>;
+    | "thunderwaveSavePushObjectsBoom"
+  >
+>;
 
 defineSelectedIdentityReplayAndQntReplay({
   describeLabel: "Level 1 spatial witness selected identity replay",
@@ -829,7 +839,8 @@ defineSelectedIdentityReplayAndQntReplay({
   witnessProtocolField: "protocol",
   quintFieldNames: { lastResult: "qScenarioOutcome" },
   quintVariantFieldTags: {
-    lastResult: LEVEL1_SPATIAL_WITNESS_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG,
+    lastResult:
+      LEVEL1_SPATIAL_WITNESS_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG,
   },
   projectionSchema: {
     lightEmitterCount: "int",
@@ -934,7 +945,6 @@ defineSelectedIdentityReplayAndQntReplay({
       );
       return {
         actionName,
-        projectionAfter: sequence.expected,
         discover: () => replayLevel1SpatialWitnessAction(actionName),
       };
     }),
@@ -963,849 +973,813 @@ function replayLevel1SpatialWitnessAction(
 }
 
 function createLevel1SpatialWitnessSelectedIdentityRuntime() {
-    let state = dancingLightsBattle();
-    let retainedLightIdentityCount = 0;
-    let faerieFireCreatureAttackRollMode: ProjectedAttackRollMode = "normal";
-    let faerieFireInvisibleCreatureAttackRollMode: ProjectedAttackRollMode =
-      "normal";
-    let faerieFireObjectAttackRollMode: ProjectedAttackRollMode = "normal";
-    let featherFallProjection = emptyFeatherFallProjection();
-    let fogCloudProjection = emptyFogCloudProjection();
-    let greaseProjection = emptyGreaseProjection();
-    let jumpProjection = emptyJumpProjection();
-    let lightProjection = emptyLightProjection();
-    let produceFlameProjection = emptyProduceFlameProjection();
-    let thunderwaveProjection = emptyThunderwaveProjection();
-    let lastResult: Level1SpatialWitnessSelectedIdentityProjection["lastResult"] =
-      "init";
+  let state = dancingLightsBattle();
+  let retainedLightIdentityCount = 0;
+  let faerieFireCreatureAttackRollMode: ProjectedAttackRollMode = "normal";
+  let faerieFireInvisibleCreatureAttackRollMode: ProjectedAttackRollMode =
+    "normal";
+  let faerieFireObjectAttackRollMode: ProjectedAttackRollMode = "normal";
+  let featherFallProjection = emptyFeatherFallProjection();
+  let fogCloudProjection = emptyFogCloudProjection();
+  let greaseProjection = emptyGreaseProjection();
+  let jumpProjection = emptyJumpProjection();
+  let lightProjection = emptyLightProjection();
+  let produceFlameProjection = emptyProduceFlameProjection();
+  let thunderwaveProjection = emptyThunderwaveProjection();
+  let lastResult: Level1SpatialWitnessSelectedIdentityProjection["lastResult"] =
+    "init";
 
-    function reset(): void {
+  function reset(): void {
+    state = dancingLightsBattle();
+    retainedLightIdentityCount = 0;
+    faerieFireCreatureAttackRollMode = "normal";
+    faerieFireInvisibleCreatureAttackRollMode = "normal";
+    faerieFireObjectAttackRollMode = "normal";
+    featherFallProjection = emptyFeatherFallProjection();
+    fogCloudProjection = emptyFogCloudProjection();
+    greaseProjection = emptyGreaseProjection();
+    jumpProjection = emptyJumpProjection();
+    lightProjection = emptyLightProjection();
+    produceFlameProjection = emptyProduceFlameProjection();
+    thunderwaveProjection = emptyThunderwaveProjection();
+    lastResult = "init";
+  }
+
+  return {
+    init: reset,
+    doDancingLightsMovableDimLight: () => {
       state = dancingLightsBattle();
+      const castAct = dancingLightsSeparateCastAct(state);
+      const cast = resolveBattleSubject({
+        state,
+        subject: castAct.subject,
+        fills: [
+          separateCastPlacement(
+            requireHole(castAct.initialHoles, "dancingLightsPlacement"),
+          ),
+        ],
+      });
+      if (cast.tag !== "resolved") {
+        throw new Error(
+          `Expected Dancing Lights cast to resolve, got ${cast.tag}.`,
+        );
+      }
+
+      const beforeMoveEmitters = dancingLightEmitters(cast.state);
+      const moveAct = dancingLightsRepositionAct(cast.state);
+      const moved = resolveBattleSubject({
+        state: cast.state,
+        subject: moveAct.subject,
+        fills: [
+          separateRepositionPlacement(
+            requireHole(moveAct.initialHoles, "dancingLightsPlacement"),
+            beforeMoveEmitters,
+          ),
+        ],
+      });
+      if (moved.tag !== "resolved") {
+        throw new Error(
+          `Expected Dancing Lights reposition to resolve, got ${moved.tag}.`,
+        );
+      }
+
+      const afterMoveEmitters = dancingLightEmitters(moved.state);
+      retainedLightIdentityCount = retainedIdentityCount(
+        beforeMoveEmitters,
+        afterMoveEmitters,
+      );
+      state = moved.state;
+      lastResult = "dancingLightsMovableDimLight";
+    },
+    doFaerieFireOutlineAdvantageInvisibleDimLight: () => {
+      state = faerieFireBattle();
       retainedLightIdentityCount = 0;
-      faerieFireCreatureAttackRollMode = "normal";
-      faerieFireInvisibleCreatureAttackRollMode = "normal";
-      faerieFireObjectAttackRollMode = "normal";
-      featherFallProjection = emptyFeatherFallProjection();
-      fogCloudProjection = emptyFogCloudProjection();
-      greaseProjection = emptyGreaseProjection();
-      jumpProjection = emptyJumpProjection();
-      lightProjection = emptyLightProjection();
-      produceFlameProjection = emptyProduceFlameProjection();
-      thunderwaveProjection = emptyThunderwaveProjection();
-      lastResult = "init";
-    }
-
-    return {
-      init: reset,
-      doDancingLightsMovableDimLight: () => {
-        state = dancingLightsBattle();
-        const castAct = dancingLightsSeparateCastAct(state);
-        const cast = resolveBattleSubject({
-          state,
-          subject: castAct.subject,
-          fills: [
-            separateCastPlacement(
-              requireHole(castAct.initialHoles, "dancingLightsPlacement"),
-            ),
-          ],
-        });
-        if (cast.tag !== "resolved") {
-          throw new Error(
-            `Expected Dancing Lights cast to resolve, got ${cast.tag}.`,
-          );
-        }
-
-        const beforeMoveEmitters = dancingLightEmitters(cast.state);
-        const moveAct = dancingLightsRepositionAct(cast.state);
-        const moved = resolveBattleSubject({
-          state: cast.state,
-          subject: moveAct.subject,
-          fills: [
-            separateRepositionPlacement(
-              requireHole(moveAct.initialHoles, "dancingLightsPlacement"),
-              beforeMoveEmitters,
-            ),
-          ],
-        });
-        if (moved.tag !== "resolved") {
-          throw new Error(
-            `Expected Dancing Lights reposition to resolve, got ${moved.tag}.`,
-          );
-        }
-
-        const afterMoveEmitters = dancingLightEmitters(moved.state);
-        retainedLightIdentityCount = retainedIdentityCount(
-          beforeMoveEmitters,
-          afterMoveEmitters,
+      const act = faerieFireAct(state);
+      const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+      const outlined = resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          faerieFireSavingThrowOutcomeFill(
+            savingThrow,
+            [
+              { targetId: casterId, succeeded: true },
+              { targetId: observerId, succeeded: false },
+            ],
+            [faerieFireObjectId],
+          ),
+        ],
+      });
+      if (outlined.tag !== "resolved") {
+        throw new Error(
+          `Expected Faerie Fire outline to resolve, got ${outlined.tag}.`,
         );
-        state = moved.state;
-        lastResult = "dancingLightsMovableDimLight";
-      },
-      doFaerieFireOutlineAdvantageInvisibleDimLight: () => {
-        state = faerieFireBattle();
-        retainedLightIdentityCount = 0;
-        const act = faerieFireAct(state);
-        const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
-        const outlined = resolveBattleSubject({
-          state,
-          subject: act.subject,
-          fills: [
-            faerieFireSavingThrowOutcomeFill(
-              savingThrow,
-              [
-                { targetId: casterId, succeeded: true },
-                { targetId: observerId, succeeded: false },
+      }
+
+      const afterVisibleTargetTurns = advanceBackToCasterTurn(outlined.state);
+      faerieFireCreatureAttackRollMode = attackRollModeForMeleeTarget(
+        afterVisibleTargetTurns,
+      );
+
+      const invisibleOutlined = advanceBackToCasterTurn(
+        withInvisibleObserver(outlined.state),
+      );
+      faerieFireInvisibleCreatureAttackRollMode =
+        attackRollModeForMeleeTarget(invisibleOutlined);
+      faerieFireObjectAttackRollMode =
+        attackRollModeForFaerieFireObject(invisibleOutlined);
+      state = invisibleOutlined;
+      lastResult = "faerieFireOutlineAdvantageInvisibleDimLight";
+    },
+    doFeatherFallReactionMitigationLanding: () => {
+      state = featherFallBattle();
+      retainedLightIdentityCount = 0;
+      const unwitnessedTrigger = openFeatherFallWindow(state, []);
+      const unwitnessedTriggerRejected =
+        unwitnessedTrigger.tag === "resolved" &&
+        unwitnessedTrigger.snapshot.pendingInterrupt === null;
+      const awaitingReaction = openFeatherFallWindow(state, [
+        featherFallTriggerFact(),
+      ]);
+      const triggerOffered =
+        awaitingReaction.tag === "needsHoles" &&
+        awaitingReaction.snapshot.pendingInterrupt?.trigger === "creatureFalls";
+      if (awaitingReaction.tag !== "needsHoles") {
+        throw new Error(
+          "Expected Feather Fall falling-trigger Reaction window.",
+        );
+      }
+
+      const choice = featherFallReactionChoice(awaitingReaction);
+      const resolved = resolveBattleInterrupt({
+        state: awaitingReaction.state,
+        fill: interruptDecisionFill(
+          requireHole(awaitingReaction.holes, "interruptDecision"),
+          {
+            kind: "resolve",
+            responderId: casterId,
+            choice: {
+              kind: "castTriggeredReactionSpell",
+              invocation: choice.invocation,
+              fills: [
+                featherFallTargetListFill(
+                  requireHole(choice.initialHoles, "spellTargetList"),
+                  [featherFallFallingAllyId, featherFallOtherFallingAllyId],
+                ),
               ],
-              [faerieFireObjectId],
-            ),
-          ],
-        });
-        if (outlined.tag !== "resolved") {
-          throw new Error(
-            `Expected Faerie Fire outline to resolve, got ${outlined.tag}.`,
-          );
-        }
-
-        const afterVisibleTargetTurns = advanceBackToCasterTurn(outlined.state);
-        faerieFireCreatureAttackRollMode = attackRollModeForMeleeTarget(
-          afterVisibleTargetTurns,
+            },
+          },
+        ),
+      });
+      if (resolved.tag !== "resolved") {
+        throw new Error(
+          `Expected Feather Fall Reaction to resolve, got ${resolved.tag}.`,
         );
+      }
 
-        const invisibleOutlined = advanceBackToCasterTurn(
-          withInvisibleObserver(outlined.state),
+      const landing = resolveFeatherFallLanding({
+        state: resolved.state,
+        targetId: featherFallFallingAllyId,
+      });
+      if (landing.tag !== "mitigated") {
+        throw new Error("Expected Feather Fall landing mitigation.");
+      }
+      featherFallProjection = {
+        triggerOffered,
+        unwitnessedTriggerRejected,
+        reactionSpent: !featherFallCaster(resolved.state).reactionAvailable,
+        slotExpended: featherFallCasterSlotExpended(resolved.state),
+        mitigatedTargetCountBeforeLanding: featherFallMitigationTargetCount(
+          resolved.state,
+        ),
+        landedTargetDescentRateCapFeetPerRound:
+          activeFeatherFallDescentRateCapFeetPerRound(
+            featherFallCombatant(resolved.state, featherFallFallingAllyId),
+          ) ?? 0,
+        landingFallDamagePrevented: landing.fallDamagePrevented,
+        landingFallingPronePrevented: landing.fallingPronePrevented,
+        landedTargetMitigationCleared:
+          activeFeatherFallDescentRateCapFeetPerRound(
+            featherFallCombatant(landing.state, featherFallFallingAllyId),
+          ) === null,
+        otherTargetStillMitigated:
+          activeFeatherFallDescentRateCapFeetPerRound(
+            featherFallCombatant(landing.state, featherFallOtherFallingAllyId),
+          ) === FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
+      };
+      state = landing.state;
+      lastResult = "featherFallReactionMitigationLanding";
+    },
+    doFogCloudAreaIdentityObscurementStrongWindCleanup: () => {
+      state = fogCloudBattle();
+      retainedLightIdentityCount = 0;
+      const act = fogCloudAct(state);
+      const area = requireHole(act.initialHoles, "spellAreaChoice");
+      const cast = resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [fogCloudAreaFill(area)],
+      });
+      if (cast.tag !== "resolved") {
+        throw new Error(`Expected Fog Cloud cast to resolve, got ${cast.tag}.`);
+      }
+
+      const command = fogCloudStrongWindDispersalAct(cast.state);
+      const dispersed = resolveBattleSubject({
+        state: cast.state,
+        subject: command.subject,
+        fills: [],
+      });
+      if (dispersed.tag !== "resolved") {
+        throw new Error(
+          `Expected Fog Cloud strong-wind cleanup to resolve, got ${dispersed.tag}.`,
         );
-        faerieFireInvisibleCreatureAttackRollMode =
-          attackRollModeForMeleeTarget(invisibleOutlined);
-        faerieFireObjectAttackRollMode =
-          attackRollModeForFaerieFireObject(invisibleOutlined);
-        state = invisibleOutlined;
-        lastResult = "faerieFireOutlineAdvantageInvisibleDimLight";
-      },
-      doFeatherFallReactionMitigationLanding: () => {
-        state = featherFallBattle();
-        retainedLightIdentityCount = 0;
-        const unwitnessedTrigger = openFeatherFallWindow(state, []);
-        const unwitnessedTriggerRejected =
-          unwitnessedTrigger.tag === "resolved" &&
-          unwitnessedTrigger.snapshot.pendingInterrupt === null;
-        const awaitingReaction = openFeatherFallWindow(state, [
-          featherFallTriggerFact(),
-        ]);
-        const triggerOffered =
-          awaitingReaction.tag === "needsHoles" &&
-          awaitingReaction.snapshot.pendingInterrupt?.trigger ===
-            "creatureFalls";
-        if (awaitingReaction.tag !== "needsHoles") {
-          throw new Error(
-            "Expected Feather Fall falling-trigger Reaction window.",
-          );
-        }
+      }
 
-        const choice = featherFallReactionChoice(awaitingReaction);
-        const resolved = resolveBattleInterrupt({
-          state: awaitingReaction.state,
-          fill: interruptDecisionFill(
-            requireHole(awaitingReaction.holes, "interruptDecision"),
+      fogCloudProjection = projectFogCloudReplay(cast.state, dispersed.state, {
+        strongWindCommandOffered: true,
+      });
+      state = dispersed.state;
+      lastResult = "fogCloudAreaIdentityObscurementStrongWindCleanup";
+    },
+    doGreaseCastGroundHazardSavingThrows: () => {
+      state = greaseBattle();
+      retainedLightIdentityCount = 0;
+      const act = greaseAct(state);
+      const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+      const savingThrowOutcomes = greaseCastSavingThrowOutcomes();
+      const mismatched = resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          greaseSavingThrowOutcomeFill(savingThrow, greaseAffectedTargetIds, [
+            { targetId: greaseFailedTargetId, succeeded: false },
+            { targetId: casterId, succeeded: true },
+          ]),
+        ],
+      });
+      const mismatchedAffectedTargetRejected =
+        mismatched.tag === "invalid" &&
+        mismatched.message ===
+          "Grease Saving Throw outcomes must match the table-supplied ground-area affected targets.";
+
+      const cast = resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          greaseSavingThrowOutcomeFill(
+            savingThrow,
+            greaseAffectedTargetIds,
+            savingThrowOutcomes,
+          ),
+        ],
+      });
+      if (cast.tag !== "resolved") {
+        throw new Error(`Expected Grease cast to resolve, got ${cast.tag}.`);
+      }
+
+      greaseProjection = projectGreaseReplay(cast.state, {
+        mismatchedAffectedTargetRejected,
+        affectedTargetOutcomeCount: savingThrowOutcomes.length,
+      });
+      state = cast.state;
+      lastResult = "greaseCastGroundHazardSavingThrows";
+    },
+    doGreaseMovementAndTurnTriggers: () => {
+      state = greaseBattle();
+      retainedLightIdentityCount = 0;
+      const act = greaseAct(state);
+      const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+      const savingThrowOutcomes = greaseCastSavingThrowOutcomes();
+      const mismatched = resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          greaseSavingThrowOutcomeFill(savingThrow, greaseAffectedTargetIds, [
+            { targetId: greaseFailedTargetId, succeeded: false },
+            { targetId: casterId, succeeded: true },
+          ]),
+        ],
+      });
+      const mismatchedAffectedTargetRejected =
+        mismatched.tag === "invalid" &&
+        mismatched.message ===
+          "Grease Saving Throw outcomes must match the table-supplied ground-area affected targets.";
+
+      const cast = resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          greaseSavingThrowOutcomeFill(
+            savingThrow,
+            greaseAffectedTargetIds,
+            savingThrowOutcomes,
+          ),
+        ],
+      });
+      if (cast.tag !== "resolved") {
+        throw new Error(`Expected Grease cast to resolve, got ${cast.tag}.`);
+      }
+
+      const movementAct = greaseMovementAct(cast.state);
+      const movement = requireHole(movementAct.initialHoles, "movement");
+      const staleMovement = resolveBattleSubject({
+        state: cast.state,
+        subject: movementAct.subject,
+        fills: [
+          greaseMovementFill(movement, {
+            areaId: staleGreaseAreaId,
+            movementCostFeet: greaseDifficultTerrainMovementCostFeet,
+          }),
+        ],
+      });
+      const mismatchedMovementAreaRejected = staleMovement.tag === "invalid";
+      const moved = resolveBattleSubject({
+        state: cast.state,
+        subject: movementAct.subject,
+        fills: [
+          greaseMovementFill(movement, {
+            areaId: greaseAreaId,
+            movementCostFeet: greaseDifficultTerrainMovementCostFeet,
+          }),
+        ],
+      });
+      if (moved.tag !== "resolved") {
+        throw new Error(
+          `Expected Grease Difficult Terrain movement to resolve, got ${moved.tag}.`,
+        );
+      }
+
+      const entryAct = greaseGroundHazardSaveAct(
+        moved.state,
+        casterId,
+        "entersArea",
+      );
+      const entrySave = requireHole(
+        entryAct.initialHoles,
+        "savingThrowOutcome",
+      );
+      const mismatchedEntry = resolveBattleSubject({
+        state: moved.state,
+        subject: entryAct.subject,
+        fills: [
+          greaseGroundHazardSavingThrowOutcomeFill(entrySave, {
+            targetId: greaseSuccessfulTargetId,
+            succeeded: true,
+          }),
+        ],
+      });
+      const entryMismatchedTargetRejected =
+        mismatchedEntry.tag === "invalid" &&
+        mismatchedEntry.message ===
+          "Grease ground-hazard Saving Throw outcome must match the triggering target.";
+      const entryFailed = resolveBattleSubject({
+        state: moved.state,
+        subject: entryAct.subject,
+        fills: [
+          greaseGroundHazardSavingThrowOutcomeFill(entrySave, {
+            targetId: casterId,
+            succeeded: false,
+          }),
+        ],
+      });
+      if (entryFailed.tag !== "resolved") {
+        throw new Error(
+          `Expected Grease entry Saving Throw to resolve, got ${entryFailed.tag}.`,
+        );
+      }
+
+      const failedTargetTurn = resolveEndTurn(
+        entryFailed.state,
+        casterId,
+        "Grease caster after entry",
+      );
+      const successfulTargetTurn = resolveEndTurn(
+        failedTargetTurn,
+        greaseFailedTargetId,
+        "Grease failed target",
+      );
+      const endTurnAct = greaseGroundHazardSaveAct(
+        successfulTargetTurn,
+        greaseSuccessfulTargetId,
+        "endsTurnInArea",
+      );
+      const endTurnSave = requireHole(
+        endTurnAct.initialHoles,
+        "savingThrowOutcome",
+      );
+      const mismatchedEndTurn = resolveBattleSubject({
+        state: successfulTargetTurn,
+        subject: endTurnAct.subject,
+        fills: [
+          greaseGroundHazardSavingThrowOutcomeFill(endTurnSave, {
+            targetId: casterId,
+            succeeded: true,
+          }),
+        ],
+      });
+      const endTurnMismatchedTargetRejected =
+        mismatchedEndTurn.tag === "invalid" &&
+        mismatchedEndTurn.message ===
+          "Grease ground-hazard Saving Throw outcome must match the triggering target.";
+      const endTurnFailed = resolveBattleSubject({
+        state: successfulTargetTurn,
+        subject: endTurnAct.subject,
+        fills: [
+          greaseGroundHazardSavingThrowOutcomeFill(endTurnSave, {
+            targetId: greaseSuccessfulTargetId,
+            succeeded: false,
+          }),
+        ],
+      });
+      if (endTurnFailed.tag !== "resolved") {
+        throw new Error(
+          `Expected Grease end-turn Saving Throw to resolve, got ${endTurnFailed.tag}.`,
+        );
+      }
+
+      greaseProjection = projectGreaseMovementAndTurnTriggerReplay({
+        castState: cast.state,
+        movedState: moved.state,
+        entryState: entryFailed.state,
+        endTurnState: endTurnFailed.state,
+        affectedTargetOutcomeCount: savingThrowOutcomes.length,
+        mismatchedAffectedTargetRejected,
+        mismatchedMovementAreaRejected,
+        entrySaveOffered: true,
+        entryMismatchedTargetRejected,
+        endTurnSaveOffered: true,
+        endTurnMismatchedTargetRejected,
+      });
+      state = endTurnFailed.state;
+      lastResult = "greaseMovementAndTurnTriggers";
+    },
+    doJumpMovementReplacementLandingWitness: () => {
+      state = jumpBattle();
+      retainedLightIdentityCount = 0;
+      const castAct = jumpCastAct(state);
+      const targetList = requireHole(castAct.initialHoles, "spellTargetList");
+      const cast = resolveBattleSubject({
+        state,
+        subject: castAct.subject,
+        fills: [jumpTargetListFill(targetList, [jumpTargetId])],
+      });
+      if (cast.tag !== "resolved") {
+        throw new Error(`Expected Jump cast to resolve, got ${cast.tag}.`);
+      }
+
+      const targetEffectInstalled = jumpTargetEffectInstalled(cast.state);
+      const targetTurn = resolveEndTurn(cast.state, casterId, "Jump caster");
+      const jumpAct = jumpMovementReplacementAct(targetTurn, jumpTargetId);
+      const movement = requireHole(jumpAct.initialHoles, "movement");
+      const missingLandingFact = resolveBattleSubject({
+        state: targetTurn,
+        subject: jumpAct.subject,
+        fills: [ordinaryMovementFill(movement, jumpMovementCostFeet)],
+      });
+      const missingLandingFactRejected =
+        missingLandingFact.tag === "invalid" &&
+        missingLandingFact.message ===
+          "Jump movement replacement requires caller-supplied jump distance and landing facts.";
+      const jumped = resolveBattleSubject({
+        state: targetTurn,
+        subject: jumpAct.subject,
+        fills: [
+          jumpMovementReplacementFill(movement, {
+            difficultTerrainAcrobatics: "notRequired",
+          }),
+        ],
+      });
+      if (jumped.tag !== "resolved") {
+        throw new Error(
+          `Expected Jump movement replacement to resolve, got ${jumped.tag}.`,
+        );
+      }
+
+      const nextCasterTurn = resolveEndTurn(
+        jumped.state,
+        jumpTargetId,
+        "Jump target",
+      );
+      const nextTargetTurn = resolveEndTurn(
+        nextCasterTurn,
+        casterId,
+        "Jump caster after target",
+      );
+      const nextTargetTurnAvailable =
+        maybeJumpMovementReplacementAct(nextTargetTurn, jumpTargetId) !==
+        undefined;
+      const nextJumpAct = jumpMovementReplacementAct(
+        nextTargetTurn,
+        jumpTargetId,
+      );
+      const nextMovement = requireHole(nextJumpAct.initialHoles, "movement");
+      const failedLanding = resolveBattleSubject({
+        state: nextTargetTurn,
+        subject: nextJumpAct.subject,
+        fills: [
+          jumpMovementReplacementFill(nextMovement, {
+            difficultTerrainAcrobatics: "failed",
+          }),
+        ],
+      });
+      if (failedLanding.tag !== "resolved") {
+        throw new Error(
+          `Expected Jump failed landing witness to resolve, got ${failedLanding.tag}.`,
+        );
+      }
+
+      jumpProjection = {
+        targetEffectInstalled,
+        movementSpentFeet: Number(
+          jumpCombatant(jumped.state, jumpTargetId).movementSpentFeet,
+        ),
+        usedMarkerSet:
+          jumpMovementReplacementEffect(jumped.state, jumpTargetId)
+            ?.usedThisTurn === true,
+        sameTurnUnavailable:
+          maybeJumpMovementReplacementAct(jumped.state, jumpTargetId) ===
+          undefined,
+        nextTargetTurnAvailable,
+        missingLandingFactRejected,
+        failedLandingProne: hasCondition(
+          jumpCombatant(failedLanding.state, jumpTargetId).conditions,
+          "prone",
+        ),
+        slotExpended: jumpCasterSlotExpended(cast.state),
+      };
+      state = failedLanding.state;
+      lastResult = "jumpMovementReplacementLandingWitness";
+    },
+    doLightObjectEmitterProjectionReplacementCleanup: () => {
+      state = lightBattle();
+      retainedLightIdentityCount = 0;
+      const act = lightAct(state);
+      const targetHole = requireHole(act.initialHoles, "objectTargetChoice");
+      const tooLarge = resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          lightObjectTargetFill(targetHole, {
+            objectId: lightObjectId,
+            size: "huge",
+          }),
+        ],
+      });
+      const wornBySomeoneElse = resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          lightObjectTargetFill(targetHole, {
+            objectId: lightObjectId,
+            wornOrCarried: { kind: "someoneElse", relation: "worn" },
+          }),
+        ],
+      });
+      const carriedBySomeoneElse = resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          lightObjectTargetFill(targetHole, {
+            objectId: lightObjectId,
+            wornOrCarried: { kind: "someoneElse", relation: "carried" },
+          }),
+        ],
+      });
+      const admitted = resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          lightObjectTargetFill(targetHole, {
+            objectId: lightObjectId,
+            size: "large",
+            wornOrCarried: { kind: "caster" },
+          }),
+        ],
+      });
+      if (admitted.tag !== "resolved") {
+        throw new Error(`Expected Light cast to resolve, got ${admitted.tag}.`);
+      }
+
+      const initialEmitter = lightObjectEmitter(admitted.state, lightObjectId);
+      const nextObserverTurn = resolveEndTurn(
+        admitted.state,
+        casterId,
+        "Light caster",
+      );
+      const nextCasterTurn = resolveEndTurn(
+        nextObserverTurn,
+        observerId,
+        "Light observer",
+      );
+      const recastAct = lightAct(nextCasterTurn);
+      const recast = resolveBattleSubject({
+        state: nextCasterTurn,
+        subject: recastAct.subject,
+        fills: [
+          lightObjectTargetFill(
+            requireHole(recastAct.initialHoles, "objectTargetChoice"),
             {
-              kind: "resolve",
-              responderId: casterId,
-              choice: {
-                kind: "castTriggeredReactionSpell",
-                invocation: choice.invocation,
-                fills: [
-                  featherFallTargetListFill(
-                    requireHole(choice.initialHoles, "spellTargetList"),
-                    [featherFallFallingAllyId, featherFallOtherFallingAllyId],
-                  ),
-                ],
-              },
+              objectId: lightRecastObjectId,
+              size: "large",
             },
           ),
-        });
-        if (resolved.tag !== "resolved") {
-          throw new Error(
-            `Expected Feather Fall Reaction to resolve, got ${resolved.tag}.`,
-          );
-        }
+        ],
+      });
+      if (recast.tag !== "resolved") {
+        throw new Error(`Expected Light recast to resolve, got ${recast.tag}.`);
+      }
 
-        const landing = resolveFeatherFallLanding({
-          state: resolved.state,
-          targetId: featherFallFallingAllyId,
-        });
-        if (landing.tag !== "mitigated") {
-          throw new Error("Expected Feather Fall landing mitigation.");
-        }
-        featherFallProjection = {
-          triggerOffered,
-          unwitnessedTriggerRejected,
-          reactionSpent: !featherFallCaster(resolved.state).reactionAvailable,
-          slotExpended: featherFallCasterSlotExpended(resolved.state),
-          mitigatedTargetCountBeforeLanding: featherFallMitigationTargetCount(
-            resolved.state,
-          ),
-          landedTargetDescentRateCapFeetPerRound:
-            activeFeatherFallDescentRateCapFeetPerRound(
-              featherFallCombatant(resolved.state, featherFallFallingAllyId),
-            ) ?? 0,
-          landingFallDamagePrevented: landing.fallDamagePrevented,
-          landingFallingPronePrevented: landing.fallingPronePrevented,
-          landedTargetMitigationCleared:
-            activeFeatherFallDescentRateCapFeetPerRound(
-              featherFallCombatant(landing.state, featherFallFallingAllyId),
-            ) === null,
-          otherTargetStillMitigated:
-            activeFeatherFallDescentRateCapFeetPerRound(
-              featherFallCombatant(
-                landing.state,
-                featherFallOtherFallingAllyId,
-              ),
-            ) === FEATHER_FALL_DESCENT_RATE_CAP_FEET_PER_ROUND,
-        };
-        state = landing.state;
-        lastResult = "featherFallReactionMitigationLanding";
-      },
-      doFogCloudAreaIdentityObscurementStrongWindCleanup: () => {
-        state = fogCloudBattle();
-        retainedLightIdentityCount = 0;
-        const act = fogCloudAct(state);
-        const area = requireHole(act.initialHoles, "spellAreaChoice");
-        const cast = resolveBattleSubject({
-          state,
-          subject: act.subject,
-          fills: [fogCloudAreaFill(area)],
-        });
-        if (cast.tag !== "resolved") {
-          throw new Error(
-            `Expected Fog Cloud cast to resolve, got ${cast.tag}.`,
-          );
-        }
-
-        const command = fogCloudStrongWindDispersalAct(cast.state);
-        const dispersed = resolveBattleSubject({
-          state: cast.state,
-          subject: command.subject,
-          fills: [],
-        });
-        if (dispersed.tag !== "resolved") {
-          throw new Error(
-            `Expected Fog Cloud strong-wind cleanup to resolve, got ${dispersed.tag}.`,
-          );
-        }
-
-        fogCloudProjection = projectFogCloudReplay(
-          cast.state,
-          dispersed.state,
-          {
-            strongWindCommandOffered: true,
-          },
-        );
-        state = dispersed.state;
-        lastResult = "fogCloudAreaIdentityObscurementStrongWindCleanup";
-      },
-      doGreaseCastGroundHazardSavingThrows: () => {
-        state = greaseBattle();
-        retainedLightIdentityCount = 0;
-        const act = greaseAct(state);
-        const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
-        const savingThrowOutcomes = greaseCastSavingThrowOutcomes();
-        const mismatched = resolveBattleSubject({
-          state,
-          subject: act.subject,
-          fills: [
-            greaseSavingThrowOutcomeFill(savingThrow, greaseAffectedTargetIds, [
-              { targetId: greaseFailedTargetId, succeeded: false },
-              { targetId: casterId, succeeded: true },
-            ]),
-          ],
-        });
-        const mismatchedAffectedTargetRejected =
-          mismatched.tag === "invalid" &&
-          mismatched.message ===
-            "Grease Saving Throw outcomes must match the table-supplied ground-area affected targets.";
-
-        const cast = resolveBattleSubject({
-          state,
-          subject: act.subject,
-          fills: [
-            greaseSavingThrowOutcomeFill(
-              savingThrow,
-              greaseAffectedTargetIds,
-              savingThrowOutcomes,
+      const cleanupFirstTurn = resolveEndTurn(
+        lightOneRoundRemainingBattle(),
+        casterId,
+        "Light expiring caster",
+      );
+      const cleanupSecondTurn = resolveEndTurn(
+        cleanupFirstTurn,
+        observerId,
+        "Light expiring observer",
+      );
+      lightProjection = {
+        objectAdmitted: lightObjectAdmissionMatches(initialEmitter),
+        invalidObjectRejectionCount: [
+          tooLarge,
+          wornBySomeoneElse,
+          carriedBySomeoneElse,
+        ].filter(lightObjectTargetRejected).length,
+        durationTicks: lightObjectDurationTicks(initialEmitter),
+        brightProjectionIllumination: battleIlluminationFromLightEmitters(
+          recast.snapshot.lightEmitters,
+          [
+            lightObjectProjectionFact(
+              lightRecastObjectId,
+              lightBrightRadiusFeet,
+              false,
             ),
           ],
-        });
-        if (cast.tag !== "resolved") {
-          throw new Error(`Expected Grease cast to resolve, got ${cast.tag}.`);
-        }
-
-        greaseProjection = projectGreaseReplay(cast.state, {
-          mismatchedAffectedTargetRejected,
-          affectedTargetOutcomeCount: savingThrowOutcomes.length,
-        });
-        state = cast.state;
-        lastResult = "greaseCastGroundHazardSavingThrows";
-      },
-      doGreaseMovementAndTurnTriggers: () => {
-        state = greaseBattle();
-        retainedLightIdentityCount = 0;
-        const act = greaseAct(state);
-        const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
-        const savingThrowOutcomes = greaseCastSavingThrowOutcomes();
-        const mismatched = resolveBattleSubject({
-          state,
-          subject: act.subject,
-          fills: [
-            greaseSavingThrowOutcomeFill(savingThrow, greaseAffectedTargetIds, [
-              { targetId: greaseFailedTargetId, succeeded: false },
-              { targetId: casterId, succeeded: true },
-            ]),
-          ],
-        });
-        const mismatchedAffectedTargetRejected =
-          mismatched.tag === "invalid" &&
-          mismatched.message ===
-            "Grease Saving Throw outcomes must match the table-supplied ground-area affected targets.";
-
-        const cast = resolveBattleSubject({
-          state,
-          subject: act.subject,
-          fills: [
-            greaseSavingThrowOutcomeFill(
-              savingThrow,
-              greaseAffectedTargetIds,
-              savingThrowOutcomes,
+        ),
+        opaqueCoverIllumination: battleIlluminationFromLightEmitters(
+          recast.snapshot.lightEmitters,
+          [
+            lightObjectProjectionFact(
+              lightRecastObjectId,
+              lightBrightRadiusFeet,
+              true,
             ),
           ],
-        });
-        if (cast.tag !== "resolved") {
-          throw new Error(`Expected Grease cast to resolve, got ${cast.tag}.`);
-        }
+        ),
+        recastReplacedPriorEmitter:
+          lightObjectEmitters(recast.state).length === 1 &&
+          lightObjectEmitter(recast.state, lightRecastObjectId) !== undefined &&
+          lightObjectEmitter(recast.state, lightObjectId) === undefined,
+        durationCleanupClearedEmitter:
+          lightObjectEmitter(cleanupSecondTurn, lightExpiringObjectId) ===
+          undefined,
+      };
+      state = recast.state;
+      lastResult = "lightObjectEmitterProjectionReplacementCleanup";
+    },
+    doProduceFlameHeldLightProjectionHurlCleanup: () => {
+      state = produceFlameBattle();
+      retainedLightIdentityCount = 0;
+      const act = produceFlameHeldLightAct(state);
+      const lit = resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [],
+      });
+      if (lit.tag !== "resolved") {
+        throw new Error(
+          `Expected Produce Flame held light to resolve, got ${lit.tag}.`,
+        );
+      }
 
-        const movementAct = greaseMovementAct(cast.state);
-        const movement = requireHole(movementAct.initialHoles, "movement");
-        const staleMovement = resolveBattleSubject({
-          state: cast.state,
-          subject: movementAct.subject,
-          fills: [
-            greaseMovementFill(movement, {
-              areaId: staleGreaseAreaId,
-              movementCostFeet: greaseDifficultTerrainMovementCostFeet,
-            }),
-          ],
-        });
-        const mismatchedMovementAreaRejected = staleMovement.tag === "invalid";
-        const moved = resolveBattleSubject({
-          state: cast.state,
-          subject: movementAct.subject,
-          fills: [
-            greaseMovementFill(movement, {
-              areaId: greaseAreaId,
-              movementCostFeet: greaseDifficultTerrainMovementCostFeet,
-            }),
-          ],
-        });
-        if (moved.tag !== "resolved") {
-          throw new Error(
-            `Expected Grease Difficult Terrain movement to resolve, got ${moved.tag}.`,
-          );
-        }
-
-        const entryAct = greaseGroundHazardSaveAct(
-          moved.state,
-          casterId,
-          "entersArea",
-        );
-        const entrySave = requireHole(
-          entryAct.initialHoles,
-          "savingThrowOutcome",
-        );
-        const mismatchedEntry = resolveBattleSubject({
-          state: moved.state,
-          subject: entryAct.subject,
-          fills: [
-            greaseGroundHazardSavingThrowOutcomeFill(entrySave, {
-              targetId: greaseSuccessfulTargetId,
-              succeeded: true,
-            }),
-          ],
-        });
-        const entryMismatchedTargetRejected =
-          mismatchedEntry.tag === "invalid" &&
-          mismatchedEntry.message ===
-            "Grease ground-hazard Saving Throw outcome must match the triggering target.";
-        const entryFailed = resolveBattleSubject({
-          state: moved.state,
-          subject: entryAct.subject,
-          fills: [
-            greaseGroundHazardSavingThrowOutcomeFill(entrySave, {
-              targetId: casterId,
-              succeeded: false,
-            }),
-          ],
-        });
-        if (entryFailed.tag !== "resolved") {
-          throw new Error(
-            `Expected Grease entry Saving Throw to resolve, got ${entryFailed.tag}.`,
-          );
-        }
-
-        const failedTargetTurn = resolveEndTurn(
-          entryFailed.state,
-          casterId,
-          "Grease caster after entry",
-        );
-        const successfulTargetTurn = resolveEndTurn(
-          failedTargetTurn,
-          greaseFailedTargetId,
-          "Grease failed target",
-        );
-        const endTurnAct = greaseGroundHazardSaveAct(
-          successfulTargetTurn,
-          greaseSuccessfulTargetId,
-          "endsTurnInArea",
-        );
-        const endTurnSave = requireHole(
-          endTurnAct.initialHoles,
-          "savingThrowOutcome",
-        );
-        const mismatchedEndTurn = resolveBattleSubject({
-          state: successfulTargetTurn,
-          subject: endTurnAct.subject,
-          fills: [
-            greaseGroundHazardSavingThrowOutcomeFill(endTurnSave, {
-              targetId: casterId,
-              succeeded: true,
-            }),
-          ],
-        });
-        const endTurnMismatchedTargetRejected =
-          mismatchedEndTurn.tag === "invalid" &&
-          mismatchedEndTurn.message ===
-            "Grease ground-hazard Saving Throw outcome must match the triggering target.";
-        const endTurnFailed = resolveBattleSubject({
-          state: successfulTargetTurn,
-          subject: endTurnAct.subject,
-          fills: [
-            greaseGroundHazardSavingThrowOutcomeFill(endTurnSave, {
-              targetId: greaseSuccessfulTargetId,
-              succeeded: false,
-            }),
-          ],
-        });
-        if (endTurnFailed.tag !== "resolved") {
-          throw new Error(
-            `Expected Grease end-turn Saving Throw to resolve, got ${endTurnFailed.tag}.`,
-          );
-        }
-
-        greaseProjection = projectGreaseMovementAndTurnTriggerReplay({
-          castState: cast.state,
-          movedState: moved.state,
-          entryState: entryFailed.state,
-          endTurnState: endTurnFailed.state,
-          affectedTargetOutcomeCount: savingThrowOutcomes.length,
-          mismatchedAffectedTargetRejected,
-          mismatchedMovementAreaRejected,
-          entrySaveOffered: true,
-          entryMismatchedTargetRejected,
-          endTurnSaveOffered: true,
-          endTurnMismatchedTargetRejected,
-        });
-        state = endTurnFailed.state;
-        lastResult = "greaseMovementAndTurnTriggers";
-      },
-      doJumpMovementReplacementLandingWitness: () => {
-        state = jumpBattle();
-        retainedLightIdentityCount = 0;
-        const castAct = jumpCastAct(state);
-        const targetList = requireHole(castAct.initialHoles, "spellTargetList");
-        const cast = resolveBattleSubject({
-          state,
-          subject: castAct.subject,
-          fills: [jumpTargetListFill(targetList, [jumpTargetId])],
-        });
-        if (cast.tag !== "resolved") {
-          throw new Error(`Expected Jump cast to resolve, got ${cast.tag}.`);
-        }
-
-        const targetEffectInstalled = jumpTargetEffectInstalled(cast.state);
-        const targetTurn = resolveEndTurn(cast.state, casterId, "Jump caster");
-        const jumpAct = jumpMovementReplacementAct(targetTurn, jumpTargetId);
-        const movement = requireHole(jumpAct.initialHoles, "movement");
-        const missingLandingFact = resolveBattleSubject({
-          state: targetTurn,
-          subject: jumpAct.subject,
-          fills: [ordinaryMovementFill(movement, jumpMovementCostFeet)],
-        });
-        const missingLandingFactRejected =
-          missingLandingFact.tag === "invalid" &&
-          missingLandingFact.message ===
-            "Jump movement replacement requires caller-supplied jump distance and landing facts.";
-        const jumped = resolveBattleSubject({
-          state: targetTurn,
-          subject: jumpAct.subject,
-          fills: [
-            jumpMovementReplacementFill(movement, {
-              difficultTerrainAcrobatics: "notRequired",
-            }),
-          ],
-        });
-        if (jumped.tag !== "resolved") {
-          throw new Error(
-            `Expected Jump movement replacement to resolve, got ${jumped.tag}.`,
-          );
-        }
-
-        const nextCasterTurn = resolveEndTurn(
-          jumped.state,
-          jumpTargetId,
-          "Jump target",
-        );
-        const nextTargetTurn = resolveEndTurn(
-          nextCasterTurn,
-          casterId,
-          "Jump caster after target",
-        );
-        const nextTargetTurnAvailable =
-          maybeJumpMovementReplacementAct(nextTargetTurn, jumpTargetId) !==
-          undefined;
-        const nextJumpAct = jumpMovementReplacementAct(
-          nextTargetTurn,
-          jumpTargetId,
-        );
-        const nextMovement = requireHole(nextJumpAct.initialHoles, "movement");
-        const failedLanding = resolveBattleSubject({
-          state: nextTargetTurn,
-          subject: nextJumpAct.subject,
-          fills: [
-            jumpMovementReplacementFill(nextMovement, {
-              difficultTerrainAcrobatics: "failed",
-            }),
-          ],
-        });
-        if (failedLanding.tag !== "resolved") {
-          throw new Error(
-            `Expected Jump failed landing witness to resolve, got ${failedLanding.tag}.`,
-          );
-        }
-
-        jumpProjection = {
-          targetEffectInstalled,
-          movementSpentFeet: Number(
-            jumpCombatant(jumped.state, jumpTargetId).movementSpentFeet,
-          ),
-          usedMarkerSet:
-            jumpMovementReplacementEffect(jumped.state, jumpTargetId)
-              ?.usedThisTurn === true,
-          sameTurnUnavailable:
-            maybeJumpMovementReplacementAct(jumped.state, jumpTargetId) ===
-            undefined,
-          nextTargetTurnAvailable,
-          missingLandingFactRejected,
-          failedLandingProne: hasCondition(
-            jumpCombatant(failedLanding.state, jumpTargetId).conditions,
-            "prone",
-          ),
-          slotExpended: jumpCasterSlotExpended(cast.state),
-        };
-        state = failedLanding.state;
-        lastResult = "jumpMovementReplacementLandingWitness";
-      },
-      doLightObjectEmitterProjectionReplacementCleanup: () => {
-        state = lightBattle();
-        retainedLightIdentityCount = 0;
-        const act = lightAct(state);
-        const targetHole = requireHole(act.initialHoles, "objectTargetChoice");
-        const tooLarge = resolveBattleSubject({
-          state,
-          subject: act.subject,
-          fills: [
-            lightObjectTargetFill(targetHole, {
-              objectId: lightObjectId,
-              size: "huge",
-            }),
-          ],
-        });
-        const wornBySomeoneElse = resolveBattleSubject({
-          state,
-          subject: act.subject,
-          fills: [
-            lightObjectTargetFill(targetHole, {
-              objectId: lightObjectId,
-              wornOrCarried: { kind: "someoneElse", relation: "worn" },
-            }),
-          ],
-        });
-        const carriedBySomeoneElse = resolveBattleSubject({
-          state,
-          subject: act.subject,
-          fills: [
-            lightObjectTargetFill(targetHole, {
-              objectId: lightObjectId,
-              wornOrCarried: { kind: "someoneElse", relation: "carried" },
-            }),
-          ],
-        });
-        const admitted = resolveBattleSubject({
-          state,
-          subject: act.subject,
-          fills: [
-            lightObjectTargetFill(targetHole, {
-              objectId: lightObjectId,
-              size: "large",
-              wornOrCarried: { kind: "caster" },
-            }),
-          ],
-        });
-        if (admitted.tag !== "resolved") {
-          throw new Error(
-            `Expected Light cast to resolve, got ${admitted.tag}.`,
-          );
-        }
-
-        const initialEmitter = lightObjectEmitter(
-          admitted.state,
-          lightObjectId,
-        );
-        const nextObserverTurn = resolveEndTurn(
-          admitted.state,
-          casterId,
-          "Light caster",
-        );
-        const nextCasterTurn = resolveEndTurn(
-          nextObserverTurn,
-          observerId,
-          "Light observer",
-        );
-        const recastAct = lightAct(nextCasterTurn);
-        const recast = resolveBattleSubject({
-          state: nextCasterTurn,
-          subject: recastAct.subject,
-          fills: [
-            lightObjectTargetFill(
-              requireHole(recastAct.initialHoles, "objectTargetChoice"),
-              {
-                objectId: lightRecastObjectId,
-                size: "large",
-              },
-            ),
-          ],
-        });
-        if (recast.tag !== "resolved") {
-          throw new Error(
-            `Expected Light recast to resolve, got ${recast.tag}.`,
-          );
-        }
-
-        const cleanupFirstTurn = resolveEndTurn(
-          lightOneRoundRemainingBattle(),
-          casterId,
-          "Light expiring caster",
-        );
-        const cleanupSecondTurn = resolveEndTurn(
-          cleanupFirstTurn,
-          observerId,
-          "Light expiring observer",
-        );
-        lightProjection = {
-          objectAdmitted: lightObjectAdmissionMatches(initialEmitter),
-          invalidObjectRejectionCount: [
-            tooLarge,
-            wornBySomeoneElse,
-            carriedBySomeoneElse,
-          ].filter(lightObjectTargetRejected).length,
-          durationTicks: lightObjectDurationTicks(initialEmitter),
-          brightProjectionIllumination: battleIlluminationFromLightEmitters(
-            recast.snapshot.lightEmitters,
-            [
-              lightObjectProjectionFact(
-                lightRecastObjectId,
-                lightBrightRadiusFeet,
-                false,
-              ),
-            ],
-          ),
-          opaqueCoverIllumination: battleIlluminationFromLightEmitters(
-            recast.snapshot.lightEmitters,
-            [
-              lightObjectProjectionFact(
-                lightRecastObjectId,
-                lightBrightRadiusFeet,
-                true,
-              ),
-            ],
-          ),
-          recastReplacedPriorEmitter:
-            lightObjectEmitters(recast.state).length === 1 &&
-            lightObjectEmitter(recast.state, lightRecastObjectId) !==
-              undefined &&
-            lightObjectEmitter(recast.state, lightObjectId) === undefined,
-          durationCleanupClearedEmitter:
-            lightObjectEmitter(cleanupSecondTurn, lightExpiringObjectId) ===
-            undefined,
-        };
-        state = recast.state;
-        lastResult = "lightObjectEmitterProjectionReplacementCleanup";
-      },
-      doProduceFlameHeldLightProjectionHurlCleanup: () => {
-        state = produceFlameBattle();
-        retainedLightIdentityCount = 0;
-        const act = produceFlameHeldLightAct(state);
-        const lit = resolveBattleSubject({
-          state,
-          subject: act.subject,
-          fills: [],
-        });
-        if (lit.tag !== "resolved") {
-          throw new Error(
-            `Expected Produce Flame held light to resolve, got ${lit.tag}.`,
-          );
-        }
-
-        const hurlAct = produceFlameHurlAct(lit.state);
-        const hurlOffered = hurlAct.initialHoles.some(
-          (hole) => hole.kind === "targetChoice",
-        );
-        const target = requireHole(hurlAct.initialHoles, "targetChoice");
-        const targetFill = spellTargetFill(
-          target,
-          produceFlameUnitId,
-          casterId,
-          observerId,
-        );
-        const attack = requireResultHole(
-          resolveBattleSubject({
-            state: lit.state,
-            subject: hurlAct.subject,
-            fills: [targetFill],
-          }),
-          "attackRoll",
-        );
-        const damage = requireResultHole(
-          resolveBattleSubject({
-            state: lit.state,
-            subject: hurlAct.subject,
-            fills: [
-              targetFill,
-              attackRollFill(attack, { total: 18, naturalD20: 12 }),
-            ],
-          }),
-          "rolledDice",
-        );
-        const hurled = resolveBattleSubject({
+      const hurlAct = produceFlameHurlAct(lit.state);
+      const hurlOffered = hurlAct.initialHoles.some(
+        (hole) => hole.kind === "targetChoice",
+      );
+      const target = requireHole(hurlAct.initialHoles, "targetChoice");
+      const targetFill = spellTargetFill(
+        target,
+        produceFlameUnitId,
+        casterId,
+        observerId,
+      );
+      const attack = requireResultHole(
+        resolveBattleSubject({
+          state: lit.state,
+          subject: hurlAct.subject,
+          fills: [targetFill],
+        }),
+        "attackRoll",
+      );
+      const damage = requireResultHole(
+        resolveBattleSubject({
           state: lit.state,
           subject: hurlAct.subject,
           fills: [
             targetFill,
             attackRollFill(attack, { total: 18, naturalD20: 12 }),
-            damageRollFillWithGroups(damage, [[5]]),
           ],
-        });
-        if (hurled.tag !== "resolved") {
-          throw new Error(
-            `Expected Produce Flame hurl to resolve, got ${hurled.tag}.`,
-          );
-        }
-
-        const cleanupFirstTurn = resolveEndTurn(
-          produceFlameOneRoundRemainingBattle(),
-          casterId,
-          "Produce Flame expiring caster",
+        }),
+        "rolledDice",
+      );
+      const hurled = resolveBattleSubject({
+        state: lit.state,
+        subject: hurlAct.subject,
+        fills: [
+          targetFill,
+          attackRollFill(attack, { total: 18, naturalD20: 12 }),
+          damageRollFillWithGroups(damage, [[5]]),
+        ],
+      });
+      if (hurled.tag !== "resolved") {
+        throw new Error(
+          `Expected Produce Flame hurl to resolve, got ${hurled.tag}.`,
         );
-        const cleanupSecondTurn = resolveEndTurn(
-          cleanupFirstTurn,
-          observerId,
-          "Produce Flame expiring observer",
-        );
-        produceFlameProjection = {
-          heldLightInstalled: produceFlameHeldLightMatches(
-            produceFlameHeldLightEffect(lit.state),
-          ),
-          durationTicks: produceFlameHeldLightDurationTicks(
-            produceFlameHeldLightEffect(lit.state),
-          ),
-          brightProjectionIllumination: battleIlluminationFromLightEmitters(
-            lit.snapshot.lightEmitters,
-            [
-              produceFlameProjectionFact(
-                casterId,
-                produceFlameBrightRadiusFeet,
-              ),
-            ],
-          ),
-          hurlOffered,
-          hurlTargetDamaged:
-            produceFlameCombatant(hurled.state, observerId).hp === Hp(7),
-          hurlCleanupClearedEmitter:
-            produceFlameHeldLightEffect(hurled.state) === undefined &&
-            produceFlameHeldLightEmitters(hurled.state).length === 0,
-          durationCleanupClearedEmitter:
-            produceFlameHeldLightEffect(cleanupSecondTurn) === undefined &&
-            produceFlameHeldLightEmitters(cleanupSecondTurn).length === 0,
-        };
-        state = lit.state;
-        lastResult = "produceFlameHeldLightProjectionHurlCleanup";
-      },
-      doThunderwaveSavePushObjectsBoom: () => {
-        state = thunderwaveBattle();
-        retainedLightIdentityCount = 0;
-        const act = thunderwaveAct(state);
-        const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
-        const outcomes = thunderwaveSavingThrowOutcomes();
-        const acceptedArea = thunderwaveAreaChoice();
+      }
 
-        const missingAreaFacts = resolveBattleSubject({
-          state,
-          subject: act.subject,
-          fills: [
-            {
-              kind: "savingThrowOutcome",
-              holeId: savingThrow.holeId,
-              value: { outcomes },
-            },
-          ],
-        });
-        const missingAreaFactsRejected =
-          missingAreaFacts.tag === "invalid" &&
-          missingAreaFacts.message ===
-            "Spell saving throw outcomes require area facts.";
+      const cleanupFirstTurn = resolveEndTurn(
+        produceFlameOneRoundRemainingBattle(),
+        casterId,
+        "Produce Flame expiring caster",
+      );
+      const cleanupSecondTurn = resolveEndTurn(
+        cleanupFirstTurn,
+        observerId,
+        "Produce Flame expiring observer",
+      );
+      produceFlameProjection = {
+        heldLightInstalled: produceFlameHeldLightMatches(
+          produceFlameHeldLightEffect(lit.state),
+        ),
+        durationTicks: produceFlameHeldLightDurationTicks(
+          produceFlameHeldLightEffect(lit.state),
+        ),
+        brightProjectionIllumination: battleIlluminationFromLightEmitters(
+          lit.snapshot.lightEmitters,
+          [produceFlameProjectionFact(casterId, produceFlameBrightRadiusFeet)],
+        ),
+        hurlOffered,
+        hurlTargetDamaged:
+          produceFlameCombatant(hurled.state, observerId).hp === Hp(7),
+        hurlCleanupClearedEmitter:
+          produceFlameHeldLightEffect(hurled.state) === undefined &&
+          produceFlameHeldLightEmitters(hurled.state).length === 0,
+        durationCleanupClearedEmitter:
+          produceFlameHeldLightEffect(cleanupSecondTurn) === undefined &&
+          produceFlameHeldLightEmitters(cleanupSecondTurn).length === 0,
+      };
+      state = lit.state;
+      lastResult = "produceFlameHeldLightProjectionHurlCleanup";
+    },
+    doThunderwaveSavePushObjectsBoom: () => {
+      state = thunderwaveBattle();
+      retainedLightIdentityCount = 0;
+      const act = thunderwaveAct(state);
+      const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+      const outcomes = thunderwaveSavingThrowOutcomes();
+      const acceptedArea = thunderwaveAreaChoice();
 
-        const mismatchedBoom = resolveBattleSubject({
-          state,
-          subject: act.subject,
-          fills: [
-            thunderwaveSavingThrowOutcomeFill(
-              savingThrow,
-              outcomes,
-              thunderwaveAreaChoice({
-                audibleBoom: {
-                  sound: "thunderous boom",
-                  audibleRadiusFeet: movementFeet(100),
-                },
-              }),
-            ),
-          ],
-        });
-        const mismatchedBoomRejected =
-          mismatchedBoom.tag === "invalid" &&
-          mismatchedBoom.message ===
-            "Thunderwave audible-boom fact must match the spell's thunderous boom within 300 feet.";
+      const missingAreaFacts = resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          {
+            kind: "savingThrowOutcome",
+            holeId: savingThrow.holeId,
+            value: { outcomes },
+          },
+        ],
+      });
+      const missingAreaFactsRejected =
+        missingAreaFacts.tag === "invalid" &&
+        missingAreaFacts.message ===
+          "Spell saving throw outcomes require area facts.";
 
-        const damage = requireResultHole(
-          resolveBattleSubject({
-            state,
-            subject: act.subject,
-            fills: [
-              thunderwaveSavingThrowOutcomeFill(
-                savingThrow,
-                outcomes,
-                acceptedArea,
-              ),
-            ],
-          }),
-          "rolledDice",
-        );
-        const resolved = resolveBattleSubject({
+      const mismatchedBoom = resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          thunderwaveSavingThrowOutcomeFill(
+            savingThrow,
+            outcomes,
+            thunderwaveAreaChoice({
+              audibleBoom: {
+                sound: "thunderous boom",
+                audibleRadiusFeet: movementFeet(100),
+              },
+            }),
+          ),
+        ],
+      });
+      const mismatchedBoomRejected =
+        mismatchedBoom.tag === "invalid" &&
+        mismatchedBoom.message ===
+          "Thunderwave audible-boom fact must match the spell's thunderous boom within 300 feet.";
+
+      const damage = requireResultHole(
+        resolveBattleSubject({
           state,
           subject: act.subject,
           fills: [
@@ -1814,42 +1788,55 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
               outcomes,
               acceptedArea,
             ),
-            damageRollFillWithGroups(damage, [[4, 4]]),
           ],
-        });
-        if (resolved.tag !== "resolved") {
-          throw new Error(
-            `Expected Thunderwave to resolve, got ${resolved.tag}.`,
-          );
-        }
+        }),
+        "rolledDice",
+      );
+      const resolved = resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          thunderwaveSavingThrowOutcomeFill(
+            savingThrow,
+            outcomes,
+            acceptedArea,
+          ),
+          damageRollFillWithGroups(damage, [[4, 4]]),
+        ],
+      });
+      if (resolved.tag !== "resolved") {
+        throw new Error(
+          `Expected Thunderwave to resolve, got ${resolved.tag}.`,
+        );
+      }
 
-        thunderwaveProjection = projectThunderwaveReplay(resolved.state, {
-          area: acceptedArea,
-          affectedTargetOutcomeCount: outcomes.length,
-          missingAreaFactsRejected,
-          mismatchedBoomRejected,
-        });
-        state = resolved.state;
-        lastResult = "thunderwaveSavePushObjectsBoom";
-      },
-      step: () => {},
-      getState: () =>
-        projectLevel1SpatialWitnessSelectedIdentityState(
-          state,
-          retainedLightIdentityCount,
-          faerieFireCreatureAttackRollMode,
-          faerieFireInvisibleCreatureAttackRollMode,
-          faerieFireObjectAttackRollMode,
-          featherFallProjection,
-          fogCloudProjection,
-          greaseProjection,
-          jumpProjection,
-          lightProjection,
-          produceFlameProjection,
-          thunderwaveProjection,
-          lastResult,
-        ),
-    };
+      thunderwaveProjection = projectThunderwaveReplay(resolved.state, {
+        area: acceptedArea,
+        affectedTargetOutcomeCount: outcomes.length,
+        missingAreaFactsRejected,
+        mismatchedBoomRejected,
+      });
+      state = resolved.state;
+      lastResult = "thunderwaveSavePushObjectsBoom";
+    },
+    step: () => {},
+    getState: () =>
+      projectLevel1SpatialWitnessSelectedIdentityState(
+        state,
+        retainedLightIdentityCount,
+        faerieFireCreatureAttackRollMode,
+        faerieFireInvisibleCreatureAttackRollMode,
+        faerieFireObjectAttackRollMode,
+        featherFallProjection,
+        fogCloudProjection,
+        greaseProjection,
+        jumpProjection,
+        lightProjection,
+        produceFlameProjection,
+        thunderwaveProjection,
+        lastResult,
+      ),
+  };
 }
 
 function requireElapsedHours(hours: number) {

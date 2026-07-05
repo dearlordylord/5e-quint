@@ -69,14 +69,6 @@ defineSelectedIdentityReplayAndQntReplay({
       procedures: [
         {
           actionName: "doResolveCarefulSaveGatedDamage",
-          projectionAfter: {
-            magicActionAvailable: false,
-            bonusActionAvailable: true,
-            sorceryPointsRemaining: 3,
-            targetHp: 10,
-            targetActiveEffectCount: 0,
-            lastResult: "carefulSaveGatedDamage",
-          },
           discover: () =>
             projectBattleState(
               resolveCarefulBurningHands(carefulSorcererMetamagicBattle()),
@@ -85,14 +77,6 @@ defineSelectedIdentityReplayAndQntReplay({
         },
         {
           actionName: "doResolveCarefulSaveGatedNoEffect",
-          projectionAfter: {
-            magicActionAvailable: false,
-            bonusActionAvailable: true,
-            sorceryPointsRemaining: 3,
-            targetHp: 10,
-            targetActiveEffectCount: 0,
-            lastResult: "carefulSaveGatedNoEffect",
-          },
           discover: () =>
             projectBattleState(
               resolveCarefulCommand(carefulSorcererMetamagicBattle()),
