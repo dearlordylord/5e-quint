@@ -1149,6 +1149,36 @@ export function resolveTwinnedBless(state: BattleState): BattleState {
   ).state;
 }
 
+export function observeTwinnedBlessRoute(
+  state: BattleState,
+): readonly BattleReducerRouteEvent[] {
+  const act = twinnedBlessAct(state);
+  const targetHole = findHole(act.initialHoles, "spellTargetList");
+  if (targetHole.kind !== "spellTargetList") {
+    throw new Error("Expected Twinned Bless to request a target-list hole.");
+  }
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetListFill(act.initialHoles, "Bless targets", "bless", [
+          wizardId,
+          fighterId,
+          skeletonId,
+          secondSkeletonId,
+        ]),
+      ],
+    }),
+  );
+
+  return [
+    battleReducerStartRouteEvent(state),
+    ...(act.routeEvents ?? []),
+    ...(resolved.routeEvents ?? []),
+  ];
+}
+
 export function projectBattleState(
   state: BattleState,
   lastResult: SorcererMetamagicProjection["lastResult"],

@@ -672,6 +672,10 @@ module battleRuntimeSorcererMetamagicRouteMbt {
     ),
   }
 
+  action stepRouteEffectiveSpellLevel = any {
+    doRouteEffectiveSpellLevel,
+  }
+
   action doRouteSpellRangeProjection = all {
     qStage == Init,
     recordStage(

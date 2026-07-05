@@ -11,13 +11,37 @@
 //   for each slot level above level 1.
 // - UBIQUITOUS_LANGUAGE.md: Spell Level, Cast Level, Spell Slot, Spell
 //   Invocation, Sorcery Points as a Pool, and Spend.
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
+import { it } from "vitest";
+
+import {
+  battleReducerStartRouteEvent,
+  type BattleReducerRouteEvent,
+} from "./index.ts";
+import {
+  defineDriver,
+  focusedMbtMaxSteps,
+  MBT_TEST_TIMEOUT_MS,
+  mbtSpecPath,
+  reducerRoutedMetamagicStateCheck,
+  run,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import {
+  observeTwinnedBlessRoute,
   projectBattleState,
   resolveTwinnedBless,
   twinnedSorcererMetamagicBattle,
 } from "./sorcerer-metamagic-selected-identity-support.ts";
+
+const twinnedMetamagicRouteReplayDriverSchema = {
+  init: {},
+  doRouteEffectiveSpellLevel: {},
+  stepRouteEffectiveSpellLevel: {},
+} as const;
+
+type TwinnedMetamagicRouteReplayProjection = {
+  readonly route: readonly BattleReducerRouteEvent[];
+};
 
 defineSelectedIdentityWitness({
   describeLabel: "Sorcerer Metamagic Twinned Spell selected identity MBT",
@@ -75,3 +99,53 @@ defineSelectedIdentityWitness({
     },
   ],
 });
+
+it(
+  "compares Twinned Spell effective-level public reducer route to copied qRoute",
+  async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "stepRouteEffectiveSpellLevel",
+      driver: createTwinnedMetamagicRouteReplayDriver(),
+      backend: "typescript",
+      nTraces: 1,
+      maxSteps: focusedMbtMaxSteps(1),
+      stateCheck: reducerRoutedMetamagicStateCheck,
+    });
+  },
+  MBT_TEST_TIMEOUT_MS,
+);
+
+function createTwinnedMetamagicRouteReplayDriver() {
+  return defineDriver(twinnedMetamagicRouteReplayDriverSchema, () => {
+    let route: readonly BattleReducerRouteEvent[] =
+      observeTwinnedBlessInitialRoute();
+
+    function reset(): void {
+      route = observeTwinnedBlessInitialRoute();
+    }
+
+    function recordResolvedRoute(): void {
+      route = observeTwinnedBlessRoute(twinnedSorcererMetamagicBattle());
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doRouteEffectiveSpellLevel: recordResolvedRoute,
+      stepRouteEffectiveSpellLevel: recordResolvedRoute,
+      getState: (): TwinnedMetamagicRouteReplayProjection => ({ route }),
+    };
+  });
+}
+
+function observeTwinnedBlessInitialRoute() {
+  return [
+    battleReducerStartRouteEvent(twinnedSorcererMetamagicBattle()),
+  ] as const;
+}

@@ -1934,6 +1934,89 @@
           "detail": "Round 1 added public metamagicDamageTypeSubstitution route ownership and deterministic copied-route replay; round 2 verified route admission is typed by damage_type_substitution Metamagic facts, promoted save-gated damage procedure shape, savingThrowOutcome fills, rolledDice fills, and existing resource and HP owners. No duplicate durable state or authored-identity dispatch was added."
         }
       ]
+    },
+    {
+      "taskId": "CRPI-READY-022",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic-twinned-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "b2943aa232d110df8a01df87ef780d85187f5020900a802628b3809dbbcdb895"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "5d3fbada4e0af32b973b306c7ba703fd5a9409911533993aebfeccb30adbd773"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "23661dcc6762ad6728d8f2c26b7c59041fe8b5abb71d68fdb2d4eeebcad3b27c"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-READY-022.json",
+          "sha256": "8434a6aedb647276c022fcbd0f91a67baf775f065fc635dbdb06a73f14c2ca97",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-READY-022.json#driver:packages/battle-runtime/battle-runtime-sorcerer-metamagic-twinned-selected-identity.mbt.qnt#step:doResolveTwinnedTargetCount#trace:public-route=metamagicEffectiveSpellLevel action=doResolveTwinnedTargetCount qRoute=metamagic-effective-spell-level-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-reducer-full-lane-20260704T211636Z/integration && git log --oneline -1 codex/cleanroom-reducer-full-lane-20260704T211636Z && git log --oneline -1 HEAD && git merge-base --is-ancestor a23d68b8ce4a09594ab492f980e26a555d8d54c4 HEAD",
+          "status": "pass",
+          "detail": "Revision prompt Ralph base ref was a23d68b8c Mark Ralph task 52 done; reviewer-feedback codex base ref was 10baec507 Mark Ralph task 45 done; HEAD was a23d68b8c Mark Ralph task 52 done; Base SHA a23d68b8ce4a09594ab492f980e26a555d8d54c4 is an ancestor of HEAD."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime typecheck",
+          "status": "pass",
+          "detail": "Passed again in revision round 2 after narrowing metamagicEffectiveSpellLevel route admission."
+        },
+        {
+          "command": "START=$(date +%s); pnpm --filter @dnd/battle-runtime exec vitest run src/sorcerer-metamagic-twinned-selected-identity.mbt.test.ts -t \"Twinned Spell effective-level\" 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "fail",
+          "detail": "Initial focused replay failed because the copied route connector had doRouteEffectiveSpellLevel in step but no deterministic stepRouteEffectiveSpellLevel wrapper for the target replay harness."
+        },
+        {
+          "command": "START=$(date +%s); pnpm --filter @dnd/battle-runtime exec vitest run src/sorcerer-metamagic-twinned-selected-identity.mbt.test.ts -t \"Twinned Spell effective-level\" 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "1 test passed after adding the deterministic connector wrapper; stepRouteEffectiveSpellLevel executed copied doRouteEffectiveSpellLevel qRoute and compared it to the public reducer route; final timed run TOTAL: 6s."
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/battle-runtime exec vitest run src/sorcerer-metamagic-twinned-selected-identity.mbt.test.ts 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "3 tests passed after revision-round route admission narrowing, covering the selected Unit witness and copied qRoute replay together; final timed run TOTAL: 8s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "Quality passed end to end; app lint reported warnings only and exited 0."
+        },
+        {
+          "command": "RAW/ubiquitous-language review against .references/srd-5.2.1/Classes/Sorcerer.md, .references/srd-5.2.1/Spells/Descriptions-A-D.md, and UBIQUITOUS_LANGUAGE.md",
+          "status": "pass"
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 added public metamagicEffectiveSpellLevel route ownership and deterministic copied-route replay; round 2 narrowed route admission to Twinned rollModifier cast subjects with spellTargetList holes/fills, corrected the base-check artifact, and verified no duplicate durable state or authored-identity dispatch was added."
+        }
+      ]
     }
   ]
 }

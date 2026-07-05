@@ -23,6 +23,7 @@ import {
   SEEKING_METAMAGIC_EFFECT_KIND,
   SUBTLE_METAMAGIC_EFFECT_KIND,
   TRANSMUTED_METAMAGIC_EFFECT_KIND,
+  TWINNED_METAMAGIC_EFFECT_KIND,
 } from "./metamagic-support.ts";
 import { isHeightenedSpellTargetChoiceHoleId } from "./spells-damage-fills.ts";
 
@@ -35,6 +36,7 @@ export type BattleReducerRouteSubjectFamily =
   | "metamagicBonusActionCastingTime"
   | "metamagicDamageDiceReroll"
   | "metamagicDamageTypeSubstitution"
+  | "metamagicEffectiveSpellLevel"
   | "metamagicMissedSpellAttackReroll"
   | "metamagicSavingThrowProtection"
   | "metamagicSavingThrowRollMode"
@@ -186,6 +188,16 @@ export function battleReducerStartRouteEvent(
 export function battleReducerRouteEventsForDiscoveredAct(
   act: AvailableBattleAct,
 ): BattleReducerRouteEvents | undefined {
+  if (isTwinnedEffectiveSpellLevelDiscoveryAct(act)) {
+    return [
+      {
+        kind: "discoverBattleActs",
+        subject: "metamagicEffectiveSpellLevel",
+        holes: battleReducerRouteHoles(act.initialHoles),
+        owner: "battleFeatureResource",
+      },
+    ];
+  }
   const rollModifierRoute = rollModifierRouteForDiscoveredAct(act);
   if (rollModifierRoute !== undefined) {
     return [rollModifierRoute];
@@ -340,6 +352,11 @@ export function battleReducerRouteForResolution(
   input: BattleResolutionInput,
   result: BattleResolutionResult,
 ): BattleReducerRouteEvents | undefined {
+  const metamagicEffectiveSpellLevelRoute =
+    metamagicEffectiveSpellLevelRouteForResolution(input, result);
+  if (metamagicEffectiveSpellLevelRoute !== undefined) {
+    return metamagicEffectiveSpellLevelRoute;
+  }
   const rollModifierRoute = rollModifierRouteForResolution(input, result);
   if (rollModifierRoute !== undefined) {
     return rollModifierRoute;
@@ -898,6 +915,39 @@ function metamagicSavingThrowRollModeRouteForResolution(
   return undefined;
 }
 
+function metamagicEffectiveSpellLevelRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  if (
+    !isTwinnedEffectiveSpellLevelSubject(input.subject) ||
+    result.tag === "invalid"
+  ) {
+    return undefined;
+  }
+  const fill = input.fills.at(-1);
+  if (fill === undefined || battleReducerRouteFill(fill) !== "spellTargetList") {
+    return undefined;
+  }
+  const holes =
+    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
+  return [
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "metamagicEffectiveSpellLevel",
+      holes: ["spellTargetList"],
+      owner: "battleSpellSlotAndActionEconomy",
+    },
+    {
+      kind: "resolveBattleSubject",
+      subject: "metamagicEffectiveSpellLevel",
+      fill: "spellTargetList",
+      holes,
+      owner: "battleTargetSelection",
+    },
+  ];
+}
+
 function metamagicSpellRangeProjectionRouteForResolution(
   input: BattleResolutionInput,
   result: BattleResolutionResult,
@@ -1229,6 +1279,15 @@ function metamagicGovernorInvalidRoute(
   };
 }
 
+function isTwinnedEffectiveSpellLevelDiscoveryAct(
+  act: AvailableBattleAct,
+): boolean {
+  return (
+    isTwinnedEffectiveSpellLevelSubject(act.subject) &&
+    act.initialHoles.some((hole) => hole.kind === "spellTargetList")
+  );
+}
+
 function isCarefulSavingThrowProtectionSubject(
   subject: BattleResolutionInput["subject"],
 ): boolean {
@@ -1273,6 +1332,19 @@ function isTransmutedDamageTypeSubstitutionSubject(
       subject.invocation.procedure === "spellAttackDamage") &&
     subject.metamagic?.some(
       (selection) => selection.effectKind === TRANSMUTED_METAMAGIC_EFFECT_KIND,
+    ) === true
+  );
+}
+
+function isTwinnedEffectiveSpellLevelSubject(
+  subject: BattleResolutionInput["subject"],
+): boolean {
+  return (
+    subject.tag === "actionSpell" &&
+    subject.mode.tag === "cast" &&
+    subject.invocation.procedure === "rollModifier" &&
+    subject.metamagic?.some(
+      (selection) => selection.effectKind === TWINNED_METAMAGIC_EFFECT_KIND,
     ) === true
   );
 }

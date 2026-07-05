@@ -2353,3 +2353,95 @@ Verification results:
   procedure shape, savingThrowOutcome fills, rolledDice fills, and existing
   resource and HP owners. No duplicate durable state or authored-identity
   dispatch was added.
+
+## CRPI-READY-022
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec`
+- Driver: `packages/battle-runtime/battle-runtime-sorcerer-metamagic-twinned-selected-identity.mbt.qnt`
+- Route connector: `packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/battle-runtime-sorcerer-metamagic-twinned-selected-identity.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Classes/Sorcerer.md`
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+The route replay for Twinned Spell effective-level projection now observes the
+copied `qRoute` projection through public battle reducer entrypoints. The
+replay starts from `battleReducerStartRouteEvent`, uses `discoverBattleActs` to
+obtain the Twinned Bless roll-modifier act, then resolves that subject with the
+existing `spellTargetList` fill. `AvailableBattleAct.routeEvents` exposes
+`metamagicEffectiveSpellLevel` discovery through the feature-resource owner.
+`BattleResolutionResult.routeEvents` exposes spell-slot/action-economy
+ownership and target-list ownership for the resolved cast.
+
+BattleState remains the durable owner. Sorcery Point spend remains
+`CharacterBattlePointPoolResourceState.pointsRemaining`, spell-slot and action
+economy remain in the spell invocation resolver, the effective target-count
+projection remains a typed selected Metamagic application fact on the
+`BattleSubject` plus the existing invocation targeting projection, target-list
+choice remains a table-supplied fill, and active Spell Effects remain in
+`BattleCreatureState.activeEffects`. No selected-option identity dispatch or
+duplicate effective-level state was added.
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-022.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id: `public-route=metamagicEffectiveSpellLevel action=doResolveTwinnedTargetCount qRoute=metamagic-effective-spell-level-public-route`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-READY-022/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 53.
+
+Verification results:
+
+- Revision-round base check passed: prompt Ralph base ref
+  `ralph/cleanroom-reducer-full-lane-20260704T211636Z/integration` was
+  `a23d68b8c Mark Ralph task 52 done`, reviewer-feedback codex base ref
+  `codex/cleanroom-reducer-full-lane-20260704T211636Z` was
+  `10baec507 Mark Ralph task 45 done`, `HEAD` was
+  `a23d68b8c Mark Ralph task 52 done`, and the task Base SHA
+  `a23d68b8ce4a09594ab492f980e26a555d8d54c4` was an ancestor of `HEAD`.
+- `pnpm --filter @dnd/battle-runtime typecheck` passed.
+- First focused replay attempt failed because the copied connector exposed
+  `doRouteEffectiveSpellLevel` through nondeterministic `step` but did not yet
+  define the deterministic `stepRouteEffectiveSpellLevel` wrapper required by
+  the target replay harness.
+- `START=$(date +%s); pnpm --filter @dnd/battle-runtime exec vitest run src/sorcerer-metamagic-twinned-selected-identity.mbt.test.ts -t "Twinned Spell effective-level" 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with the deterministic route replay; `stepRouteEffectiveSpellLevel` executed copied `doRouteEffectiveSpellLevel` `qRoute` and compared it to the public reducer route; final timed run `TOTAL: 6s`.
+- `START=$(date +%s); MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/battle-runtime exec vitest run src/sorcerer-metamagic-twinned-selected-identity.mbt.test.ts 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 3 tests, covering the selected Unit witness and copied `qRoute` replay together; final timed run `TOTAL: 8s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- `pnpm quality` passed end to end; app lint reported warnings only and exited 0.
+- RAW/ubiquitous-language review passed against Sorcerer Metamagic and Twinned
+  Spell, Bless, and `UBIQUITOUS_LANGUAGE.md` terms Spell Level, Cast Level,
+  Spell Slot, Spell Invocation, Pool, and Spend.
+- Reviewer-loop convergence passed: round 1 added public
+  `metamagicEffectiveSpellLevel` route ownership and deterministic copied-route
+  replay; round 2 verified route admission is typed by
+  `effective_spell_level_increase_for_extra_target` Metamagic facts, promoted
+  rollModifier spell procedure shape, spellTargetList fills, and existing
+  resource, target-list, and active-effect owners. No duplicate durable state or
+  authored-identity dispatch was added.
+- Revision round 2 narrowed `metamagicEffectiveSpellLevel` discovery to Twinned
+  roll-modifier cast acts with a `spellTargetList` hole and resolution to
+  Twinned roll-modifier cast subjects with a `spellTargetList` fill. The run
+  ledger base-check artifact was corrected to distinguish the revision prompt's
+  Ralph base ref from the reviewer-feedback codex base ref.
