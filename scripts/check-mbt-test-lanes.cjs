@@ -31,7 +31,6 @@ const SELECTED_IDENTITY_VOCABULARY_SCOPES = [
   },
 ];
 const SELECTED_IDENTITY_VOCABULARY_EXCLUDED_PATHS = new Set([
-  "plans/SELECTED_IDENTITY_EVIDENCE_RECLASSIFICATION_PLAN.md",
   "plans/unit-profile-coverage/SRDINV91D_SELECTED_IDENTITY_MBT_FRONTIER_BATCH.md",
 ]);
 const SELECTED_IDENTITY_VOCABULARY_EXCLUDED_PREFIXES = [
@@ -124,7 +123,8 @@ const ACCEPTED_MBT_GROUPS = {
   "@dnd/character-battle-runtime": [
     {
       label: "selected-identity QNT replay owners",
-      reason: "character-to-battle selected-identity QNT replay owners are grouped",
+      reason:
+        "character-to-battle selected-identity QNT replay owners are grouped",
       pattern: /^src\/.*selected-identity\.mbt\.test\.ts$/,
       requiresSelectedIdentityQntReplay: true,
     },
@@ -144,7 +144,8 @@ const ACCEPTED_MBT_GROUPS = {
   "@dnd/character-creation-runtime": [
     {
       label: "selected-identity QNT replay owners",
-      reason: "character creation selected-identity QNT replay owners are grouped",
+      reason:
+        "character creation selected-identity QNT replay owners are grouped",
       pattern: /^src\/.*selected-identity\.mbt\.test\.ts$/,
       requiresSelectedIdentityQntReplay: true,
     },
@@ -230,7 +231,10 @@ function selectedIdentityVocabularyFailures() {
     for (const filePath of listFiles(scope.root, (file) =>
       scope.include.test(file),
     )) {
-      const repoPath = path.relative(REPO_ROOT, filePath).split(path.sep).join("/");
+      const repoPath = path
+        .relative(REPO_ROOT, filePath)
+        .split(path.sep)
+        .join("/");
       if (repoPath === "scripts/check-mbt-test-lanes.cjs") continue;
       if (SELECTED_IDENTITY_VOCABULARY_EXCLUDED_PATHS.has(repoPath)) continue;
       if (
@@ -247,7 +251,8 @@ function selectedIdentityVocabularyFailures() {
         }
       }
       if (
-        repoPath !== "packages/battle-runtime/src/selected-identity-witness.ts" &&
+        repoPath !==
+          "packages/battle-runtime/src/selected-identity-witness.ts" &&
         /defineSelectedIdentityWitness\s*\(/.test(text)
       ) {
         failures.push(
@@ -300,6 +305,54 @@ function qntReplaySupportFailures(packages) {
       (filePath) =>
         `${path.relative(REPO_ROOT, filePath).split(path.sep).join("/")}: QNT replay support files must be imported by a runnable .mbt.test.ts owner.`,
     );
+}
+
+function selectedIdentityQntProjectionFailures(packages) {
+  const failures = [];
+
+  for (const pkg of packages) {
+    for (const file of listMbtTests(pkg)) {
+      const filePath = path.join(pkg.root, ...file.split("/"));
+      const text = fs.readFileSync(filePath, "utf8");
+      if (
+        !/defineSelectedIdentity(?:ReplayAndQntReplay|QntReplay)\s*\(/.test(
+          text,
+        )
+      ) {
+        continue;
+      }
+      if (/\bprojectionAfter\s*:/.test(text)) {
+        failures.push(
+          `${path.relative(REPO_ROOT, filePath).split(path.sep).join("/")}: QNT-backed selected identity replay must get expected post-action state from QNT, not projectionAfter.`,
+        );
+      }
+    }
+  }
+
+  for (const filePath of listQntReplaySupportFiles()) {
+    const text = fs.readFileSync(filePath, "utf8");
+    const repoPath = path
+      .relative(REPO_ROOT, filePath)
+      .split(path.sep)
+      .join("/");
+    if (/\bprojectionAfter\s*:/.test(text)) {
+      failures.push(
+        `${repoPath}: QNT replay support must not define projectionAfter.`,
+      );
+    }
+    const replaySpread = /\.\.\.\w+SelectedIdentityReplay\s*,/g;
+    let match;
+    while ((match = replaySpread.exec(text)) !== null) {
+      const afterSpread = text.slice(match.index + match[0].length);
+      if (!/\bunits\s*:/.test(afterSpread)) {
+        failures.push(
+          `${repoPath}: QNT replay support that spreads standalone replay data must override units so projectionAfter is not inherited.`,
+        );
+      }
+    }
+  }
+
+  return failures;
 }
 
 function listVitestConfigs(pkg) {
@@ -582,6 +635,7 @@ function runTestLaneHygiene() {
   const failures = [
     ...selectedIdentityVocabularyFailures(),
     ...qntReplaySupportFailures(packages),
+    ...selectedIdentityQntProjectionFailures(packages),
   ];
 
   console.log("Default test lane hygiene:");
