@@ -35,6 +35,7 @@ import {
   battleCombatantSide,
   battleId,
   combatantId,
+  discoverBattleActs,
   initiativeScore,
   resolveBattleSubject,
   startBattle,
@@ -134,9 +135,10 @@ function createStatBlockMultiDamageDriverWithProjection<State>(
       damageMode = mode;
       targetChoice = null;
       attackRoll = null;
+      const subject = requireDiscoveredStatBlockAttackSubject(state, mode);
       const result = resolveBattleSubject({
         state,
-        subject: attackSubject(mode),
+        subject,
         fills: [],
       });
       if (result.tag !== "needsHoles") {
@@ -383,6 +385,35 @@ function attackSubject(
     attackName: multiDamageAttackName,
     ...(damageMode === "static" ? { statBlockDamageNotation: "static" } : {}),
   };
+}
+
+function requireDiscoveredStatBlockAttackSubject(
+  state: BattleState,
+  damageMode: StatBlockMultiDamageMode,
+): Extract<
+  BattleSubject,
+  { readonly tag: "action"; readonly action: "attack" }
+> {
+  const expected = attackSubject(damageMode);
+  const act = discoverBattleActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "action" &&
+      candidate.subject.action === "attack" &&
+      candidate.subject.actorId === expected.actorId &&
+      candidate.subject.attackName === expected.attackName &&
+      (candidate.subject.statBlockDamageNotation ?? "rolled") ===
+        (expected.statBlockDamageNotation ?? "rolled"),
+  );
+  if (
+    act === undefined ||
+    act.subject.tag !== "action" ||
+    act.subject.action !== "attack"
+  ) {
+    throw new Error(
+      `Expected discovered ${damageMode} Stat Block multi-damage attack subject.`,
+    );
+  }
+  return act.subject;
 }
 
 function statBlockMultiDamageBattle(): BattleState {

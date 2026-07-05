@@ -349,7 +349,7 @@
     {
       "number": 58,
       "id": "CRPI-BLOCK-030",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-stat-block-multi-damage"
     },
     {
@@ -3976,7 +3976,7 @@ Plan Impact:
 
 ### Task 58 - CRPI-BLOCK-030
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
