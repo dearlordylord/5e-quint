@@ -1,28 +1,29 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-034",
+  "taskId": "CRPI-BLOCK-029",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt",
       "quarantinedWitnessNames": [
         "qProtocol",
-        "qComponentRoute"
+        "qRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-034.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-029.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/rule-core-stat-block-controls.mbt.test.ts",
+      "path": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "RuleCoreStatBlockControlProjection",
-        "createRuleCoreStatBlockControlDriver",
-        "normalizeRuleCoreStatBlockControlQuintState",
-        "statBlockControlStateCheck"
+        "StatBlockActionOrderingProjection",
+        "StatBlockActionOrderingRouteProjection",
+        "createStatBlockActionOrderingRouteDriver",
+        "normalizeStatBlockActionOrderingRouteQuintState",
+        "statBlockActionOrderingRouteStateCheck"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-034.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-029.json"
       ]
     }
   ],
@@ -30,39 +31,49 @@
     {
       "path": "packages/battle-runtime/src/battle-reducer/actions.ts",
       "owners": [
+        "BattleStatBlockActionOwner",
         "RuleCoreStatBlockControlOwner"
       ],
-      "notes": "Existing public BattleSubject action resolution is reused as the target component call surface for Stat Block Multiattack and Stat Block attack dispatch."
+      "notes": "Existing public BattleSubject action resolution is reused for Stat Block action and Multiattack dispatch route replay."
     },
     {
-      "path": "packages/battle-runtime/src/battle-reducer/movement.ts",
+      "path": "packages/battle-runtime/src/battle-reducer/attack-main.ts",
       "owners": [
-        "RuleCoreStatBlockControlOwner"
+        "BattleTargetSelectionOwner",
+        "BattleAttackRollOwner",
+        "BattleHoleFrontierOwner"
       ],
-      "notes": "Existing public movement command resolution is reused for movement during an open Multiattack dispatch sequence without adding a parallel movement ledger."
+      "notes": "Existing target-choice, attack-roll, and out-of-order fill rejection behavior is reused for Stat Block attack route replay."
     },
     {
-      "path": "packages/battle-runtime/src/battle-reducer/turn-end.ts",
+      "path": "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
       "owners": [
-        "RuleCoreStatBlockControlOwner"
+        "BattleHitPointOwner"
       ],
-      "notes": "Existing End Turn resolution closes outstanding Stat Block Multiattack dispatch action resources through the public runtime command surface."
+      "notes": "Existing Hit Point damage application is reused for rolled and static Stat Block damage notation route replay."
+    },
+    {
+      "path": "packages/battle-runtime/src/battle-reducer/statblock.ts",
+      "owners": [
+        "BattleStatBlockActionOwner"
+      ],
+      "notes": "Existing Stat Block action admission and Recharge availability facts are reused without adding authored-identity dispatch."
     }
   ],
   "expectedNextReuse": [
     {
-      "driver": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt",
-      "module": "packages/battle-runtime/src/battle-reducer/actions.ts",
-      "api": "Future Stat Block action route replay can consume accepted Stat Block control facts through existing public action resolution rather than adding route-local Multiattack state."
+      "driver": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt",
+      "module": "packages/battle-runtime/src/stat-block-action-ordering.mbt.test.ts",
+      "api": "Future Stat Block multi-damage replay can reuse the same public StatBlockActionRouteSubject target-selection, attack-roll, and Hit Point owner route shape."
     },
     {
-      "driver": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt",
-      "module": "packages/battle-runtime/src/battle-reducer/actions.ts",
-      "api": "Future shared attack-route work should thread existing turn action resources and Stat Block attack dispatch resources instead of duplicating action availability facts."
+      "driver": "packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt",
+      "module": "packages/battle-runtime/src/battle-reducer/statblock.ts",
+      "api": "Future condition-rider replay should thread existing Stat Block action subjects and creature facts instead of adding route-local target or condition state."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 77 observes copied qComponentRoute for rule-core Stat Block controls through public battle-runtime action, movement, attack dispatch, and End Turn reducer entrypoints. No duplicate durable state was introduced."
+    "notes": "Task 57 observes copied qRoute for Stat Block action ordering through public battle-runtime reducer entrypoints. No duplicate durable state was introduced."
   }
 }
