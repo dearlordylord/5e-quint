@@ -12,6 +12,7 @@ import {
 } from "@dnd/surface/surface/find-familiar-forms";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
+import { expect, it } from "vitest";
 
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
@@ -41,6 +42,14 @@ import {
   temporarilyDismissFindFamiliar,
   type BattleState,
   type BattleCompanionState,
+  battleReducerStartRouteEvent,
+  resolveBattleSubject,
+  type AvailableBattleAct,
+  type BattleFill,
+  type BattleHole,
+  type BattleReducerRouteEvent,
+  type BattleResolutionResult,
+  type BattleSubject,
 } from "./index.ts";
 
 type FindFamiliarSelectedIdentityProjection = {
@@ -88,6 +97,21 @@ const FIND_FAMILIAR_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
     "init" | "cast" | "recast" | "dismissedAndReappeared" | "touchDelivered"
   >
 >;
+
+it("observes selected Find Familiar qRoute through public reducer events", () => {
+  expect(observeCastFindFamiliarRoute()).toEqual(
+    findFamiliarCompanionLifecycleRoute(),
+  );
+  expect(observeRecastFindFamiliarReplacementRoute()).toEqual(
+    findFamiliarCompanionLifecycleRoute(),
+  );
+  expect(observeDismissAndReappearFindFamiliarRoute()).toEqual(
+    findFamiliarCompanionLifecycleRoute(),
+  );
+  expect(observeDeliverTouchSpellThroughFindFamiliarRoute()).toEqual(
+    findFamiliarTouchDeliveryRoute(),
+  );
+});
 
 defineSelectedIdentityReplayAndQntReplay({
   describeLabel: "Find Familiar selected identity replay",
@@ -139,6 +163,132 @@ defineSelectedIdentityReplayAndQntReplay({
     },
   ],
 });
+
+function observeCastFindFamiliarRoute(): readonly BattleReducerRouteEvent[] {
+  const result = castCatFamiliar(startSpellcasterFixtureBattle());
+  return [
+    battleReducerStartRouteEvent(),
+    ...routeEventsOf(result, "Find Familiar selected cast"),
+  ];
+}
+
+function observeRecastFindFamiliarReplacementRoute(): readonly BattleReducerRouteEvent[] {
+  const first = castCatFamiliar(startSpellcasterFixtureBattle());
+  const second = castRatFamiliar(requireResolved(first));
+  return [
+    battleReducerStartRouteEvent(),
+    ...routeEventsOf(second, "Find Familiar selected recast"),
+  ];
+}
+
+function observeDismissAndReappearFindFamiliarRoute(): readonly BattleReducerRouteEvent[] {
+  const cast = castCatFamiliar(startSpellcasterFixtureBattle());
+  const dismissed = temporarilyDismissFindFamiliar({
+    state: requireResolved(cast),
+    casterId,
+    heldObjectIds: [],
+  });
+  const reappeared = reappearTemporarilyDismissedFindFamiliar({
+    state: withFreshMagicAction(requireResolved(dismissed)),
+    casterId,
+    catalog: statBlockCatalog,
+    initiative: initiativeScore(14),
+    placement: { kind: "unoccupiedSpaceWithin30Feet" },
+  });
+  return [
+    battleReducerStartRouteEvent(),
+    ...routeEventsOf(reappeared, "Find Familiar selected reappearance"),
+  ];
+}
+
+function observeDeliverTouchSpellThroughFindFamiliarRoute(): readonly BattleReducerRouteEvent[] {
+  const state = requireResolved(castCatFamiliar(startSpellcasterFixtureBattle()));
+  const act = touchDeliveryAct(state);
+  const targetFill = selectedTouchSpellTargetFill(
+    requireHole(act.initialHoles, "targetChoice"),
+  );
+  const connectionFill = findFamiliarConnectionFill(
+    requireHole(act.initialHoles, "findFamiliarConnection"),
+  );
+  const awaitingHealingRoll = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [connectionFill, targetFill],
+  });
+  if (awaitingHealingRoll.tag !== "needsHoles") {
+    throw new Error(
+      `Expected Find Familiar touch delivery healing roll, got ${awaitingHealingRoll.tag}.`,
+    );
+  }
+  const delivered = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [
+      connectionFill,
+      targetFill,
+      healingRollFill(requireHole(awaitingHealingRoll.holes, "rolledDice")),
+    ],
+  });
+  return [
+    battleReducerStartRouteEvent(),
+    ...routeEventsOf(act, "Find Familiar selected touch delivery discovery"),
+    ...routeEventsOf(
+      awaitingHealingRoll,
+      "Find Familiar selected touch delivery target",
+    ),
+    ...routeEventsOf(delivered, "Find Familiar selected touch delivery roll"),
+  ];
+}
+
+function findFamiliarCompanionLifecycleRoute(): readonly BattleReducerRouteEvent[] {
+  return [
+    battleReducerStartRouteEvent(),
+    {
+      kind: "discoverBattleActs",
+      subject: "companionLifecycle",
+      holes: [],
+      owner: "battleCompanion",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "companionLifecycle",
+      holes: [],
+      owner: "battleCompanion",
+    },
+  ];
+}
+
+function findFamiliarTouchDeliveryRoute(): readonly BattleReducerRouteEvent[] {
+  return [
+    battleReducerStartRouteEvent(),
+    {
+      kind: "discoverBattleActs",
+      subject: "companionTouchDelivery",
+      holes: ["targetChoice"],
+      owner: "battleSpellSlotAndActionEconomy",
+    },
+    {
+      kind: "resolveBattleSubject",
+      subject: "companionTouchDelivery",
+      fill: "targetChoice",
+      holes: ["rolledDice"],
+      owner: "battleCompanion",
+    },
+    {
+      kind: "resolveBattleSubject",
+      subject: "companionTouchDelivery",
+      fill: "rolledDice",
+      holes: [],
+      owner: "battleSpellSlotAndActionEconomy",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "companionTouchDelivery",
+      holes: [],
+      owner: "battleActionEconomy",
+    },
+  ];
+}
 
 function castFindFamiliarProjection(): FindFamiliarSelectedIdentityProjection {
   const result = castCatFamiliar(startSpellcasterFixtureBattle());
@@ -330,6 +480,86 @@ function castRatFamiliar(state: BattleState) {
     initiative: initiativeScore(15),
     placement: { kind: "unoccupiedSpaceWithinSpellRange" },
   });
+}
+
+function touchDeliveryAct(state: BattleState): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "findFamiliarTouchSpell" }
+  >;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        BattleSubject,
+        { readonly tag: "findFamiliarTouchSpell" }
+      >;
+    } =>
+      candidate.subject.tag === "findFamiliarTouchSpell" &&
+      candidate.subject.invocation.spellId === cureWoundsUnitId,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Find Familiar touch delivery act.");
+  }
+  return act;
+}
+
+function selectedTouchSpellTargetFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  return {
+    kind: "targetChoice",
+    holeId: hole.holeId,
+    value: targetId,
+    spatialFacts: [
+      {
+        kind: "findFamiliarTouchSpellTarget",
+        ownerId: casterId,
+        familiarId,
+        targetId,
+        spellId: cureWoundsUnitId,
+      },
+    ],
+  };
+}
+
+function findFamiliarConnectionFill(
+  hole: Extract<BattleHole, { readonly kind: "findFamiliarConnection" }>,
+): Extract<BattleFill, { readonly kind: "findFamiliarConnection" }> {
+  return {
+    kind: "findFamiliarConnection",
+    holeId: hole.holeId,
+    value: { withinRange: true },
+  };
+}
+
+function healingRollFill(
+  hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
+): Extract<BattleFill, { readonly kind: "rolledDice" }> {
+  return {
+    kind: "rolledDice",
+    holeId: hole.holeId,
+    value: [{ results: [DieRollResult(4), DieRollResult(4)] }],
+  };
+}
+
+function routeEventsOf(
+  source: { readonly routeEvents?: readonly BattleReducerRouteEvent[] },
+  label: string,
+): readonly BattleReducerRouteEvent[] {
+  if (source.routeEvents === undefined || source.routeEvents.length === 0) {
+    throw new Error(`Expected public reducer route events for ${label}.`);
+  }
+  return source.routeEvents;
+}
+
+function requireResolved(result: BattleResolutionResult): BattleState {
+  if (result.tag !== "resolved") {
+    throw new Error(`Expected Find Familiar result to resolve, got ${result.tag}.`);
+  }
+  return result.state;
 }
 
 function withFreshMagicAction(state: BattleState): BattleState {

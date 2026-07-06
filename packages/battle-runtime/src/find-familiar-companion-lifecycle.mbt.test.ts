@@ -54,9 +54,11 @@ import {
   findFamiliarCompanionEntryForOwner,
   findFamiliarTelepathicConnection,
   initiativeScore,
+  reappearTemporarilyDismissedFindFamiliar,
   resolveBattleSubject,
   shareFindFamiliarSenses,
   startBattle,
+  temporarilyDismissFindFamiliar,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
@@ -151,6 +153,7 @@ const findFamiliarCompanionRouteDriverSchema = {
   init: {},
   doRouteFamiliarCreation: {},
   doRouteFamiliarReplacement: {},
+  doRouteFamiliarDismissalReappearance: {},
   doRouteSharedSenses: {},
   doRouteTouchDelivery: {},
   doRoutePactFamiliarAttack: {},
@@ -201,6 +204,9 @@ function createFindFamiliarCompanionRouteDriver() {
       },
       doRouteFamiliarReplacement: () => {
         route = observeFamiliarReplacementRoute();
+      },
+      doRouteFamiliarDismissalReappearance: () => {
+        route = observeFamiliarDismissalReappearanceRoute();
       },
       doRouteSharedSenses: () => {
         route = observeSharedSensesRoute();
@@ -347,6 +353,26 @@ function observeFamiliarReplacementRoute(): readonly ReducerRouteEvent[] {
   return [
     battleReducerStartRouteEvent(),
     ...routeEventsOf(replaced, "Find Familiar replacement"),
+  ];
+}
+
+function observeFamiliarDismissalReappearanceRoute(): readonly ReducerRouteEvent[] {
+  const created = createCatFamiliar(initialRuntimeState());
+  const dismissed = temporarilyDismissFindFamiliar({
+    state: created.battle,
+    casterId,
+    heldObjectIds: [],
+  });
+  const reappeared = reappearTemporarilyDismissedFindFamiliar({
+    state: requireResolved(dismissed),
+    casterId,
+    catalog: statBlockCatalog,
+    initiative: initiativeScore(18),
+    placement: { kind: "unoccupiedSpaceWithin30Feet" },
+  });
+  return [
+    battleReducerStartRouteEvent(),
+    ...routeEventsOf(reappeared, "Find Familiar reappearance"),
   ];
 }
 

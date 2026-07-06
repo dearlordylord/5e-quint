@@ -1,0 +1,202 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/find-familiar-selected-identity.mbt.test.ts and find-familiar-companion-lifecycle.mbt.test.ts Find Familiar selected identity copied qRoute versus public reducer replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "e8ededa80ac8cdfd875f4725149078879450eefb855b922cd7e1bba86f4edc43",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "acceptance": {
+    "driverPath": "packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt",
+    "connectorPath": "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt",
+    "routeClass": "catalog-after-substrate",
+    "durableOwner": "BattleState owns selected Find Familiar behavior through companion lifecycle, replacement, dismissal/reappearance, shared senses, touch delivery, action-economy, spell-slot/action-economy, active-effect, target-selection, Reaction, attack-roll, and Hit Point reducer surfaces. Selected spell and familiar form identity remain catalog, selection, admission, and SRD fixture boundaries.",
+    "acceptedProjection": "qRoute"
+  },
+  "status": "pass",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt",
+      "qntFileSha256": "af485f7cc301a98595e65b186c5703afb3c77699033e0e6ab0129e74759f5818",
+      "routeConnectorSha256": "2d44d9dbdfd320b79ccd187fef85331702708154abf7b81072f68c42f0eaa220",
+      "branchFamily": "step",
+      "branchAction": "doCastFindFamiliar",
+      "observedActionTaken": "doCastFindFamiliar",
+      "harnessTestPath": "packages/battle-runtime/src/find-familiar-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=5 action=doCastFindFamiliar qRoute=find-familiar-selected-companion-lifecycle-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "1cc748c675bcf6a1adc9be9cbe6003be60760bd6093356a1c9dbb35d4230a881",
+        "observedProjectionSha256": "1cc748c675bcf6a1adc9be9cbe6003be60760bd6093356a1c9dbb35d4230a881",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "packages/battle-runtime/src/index.ts#castFindFamiliar"
+          ],
+          "routeEventSource": "Public reducer route events emitted by castFindFamiliar for selected Find Familiar companion creation through BattleState-owned companion lifecycle.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#castFindFamiliar"
+        },
+        "checkedTargetStateFields": [
+          "BattleResolutionResult.routeEvents",
+          "BattleState.companions",
+          "BattleCompanionState.status=present",
+          "BattleCompanionState.formSelection.formId=cat",
+          "BattleCreatureState.reactionAvailable"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt",
+      "qntFileSha256": "af485f7cc301a98595e65b186c5703afb3c77699033e0e6ab0129e74759f5818",
+      "routeConnectorSha256": "2d44d9dbdfd320b79ccd187fef85331702708154abf7b81072f68c42f0eaa220",
+      "branchFamily": "step",
+      "branchAction": "doRecastFindFamiliarReplacement",
+      "observedActionTaken": "doRecastFindFamiliarReplacement",
+      "harnessTestPath": "packages/battle-runtime/src/find-familiar-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=5 action=doRecastFindFamiliarReplacement qRoute=find-familiar-selected-companion-lifecycle-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "1cc748c675bcf6a1adc9be9cbe6003be60760bd6093356a1c9dbb35d4230a881",
+        "observedProjectionSha256": "1cc748c675bcf6a1adc9be9cbe6003be60760bd6093356a1c9dbb35d4230a881",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "packages/battle-runtime/src/index.ts#castFindFamiliar"
+          ],
+          "routeEventSource": "Public reducer route events emitted by castFindFamiliar for selected Find Familiar one-familiar replacement through BattleState-owned companion lifecycle.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#castFindFamiliar"
+        },
+        "checkedTargetStateFields": [
+          "BattleResolutionResult.routeEvents",
+          "BattleState.companions",
+          "BattleCompanionState.status=present",
+          "BattleCompanionState.formSelection.formId=rat",
+          "BattleState.combatants excludes replaced familiar"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt",
+      "qntFileSha256": "af485f7cc301a98595e65b186c5703afb3c77699033e0e6ab0129e74759f5818",
+      "routeConnectorSha256": "2d44d9dbdfd320b79ccd187fef85331702708154abf7b81072f68c42f0eaa220",
+      "branchFamily": "step",
+      "branchAction": "doDismissAndReappearFindFamiliar",
+      "observedActionTaken": "doDismissAndReappearFindFamiliar",
+      "harnessTestPath": "packages/battle-runtime/src/find-familiar-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=5 action=doDismissAndReappearFindFamiliar qRoute=find-familiar-selected-companion-lifecycle-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "1cc748c675bcf6a1adc9be9cbe6003be60760bd6093356a1c9dbb35d4230a881",
+        "observedProjectionSha256": "1cc748c675bcf6a1adc9be9cbe6003be60760bd6093356a1c9dbb35d4230a881",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "packages/battle-runtime/src/index.ts#castFindFamiliar",
+            "packages/battle-runtime/src/index.ts#temporarilyDismissFindFamiliar",
+            "packages/battle-runtime/src/index.ts#reappearTemporarilyDismissedFindFamiliar"
+          ],
+          "routeEventSource": "Public reducer route events emitted by reappearTemporarilyDismissedFindFamiliar after temporary dismissal retained the selected familiar as BattleState-owned companion lifecycle state.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#reappearTemporarilyDismissedFindFamiliar"
+        },
+        "checkedTargetStateFields": [
+          "BattleResolutionResult.routeEvents",
+          "BattleCompanionState.status=temporarilyDismissed",
+          "BattleCompanionState.status=present",
+          "BattleCompanionState.formSelection.formId=cat",
+          "BattleState.currentTurnResources.actionResources"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt",
+      "qntFileSha256": "af485f7cc301a98595e65b186c5703afb3c77699033e0e6ab0129e74759f5818",
+      "routeConnectorSha256": "2d44d9dbdfd320b79ccd187fef85331702708154abf7b81072f68c42f0eaa220",
+      "branchFamily": "step",
+      "branchAction": "doDeliverTouchSpellThroughFindFamiliar",
+      "observedActionTaken": "doDeliverTouchSpellThroughFindFamiliar",
+      "harnessTestPath": "packages/battle-runtime/src/find-familiar-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=5 action=doDeliverTouchSpellThroughFindFamiliar qRoute=find-familiar-selected-touch-delivery-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "13ca259601eccfa9e8aebfbc079f50ef7915438e6eafe23ee66a96f77fb2323d",
+        "observedProjectionSha256": "13ca259601eccfa9e8aebfbc079f50ef7915438e6eafe23ee66a96f77fb2323d",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "packages/battle-runtime/src/index.ts#castFindFamiliar",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "Public reducer route events from selected Find Familiar touch delivery discovery and target/dice fills through familiar Reaction, spell-slot/action-economy, and final action-economy ownership.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleSubject.tag=findFamiliarTouchSpell",
+          "BattleHole.kind=targetChoice",
+          "BattleHole.kind=rolledDice",
+          "BattleCreatureState.reactionAvailable=false",
+          "BattleState.currentTurnResources.spellSlotUsesThisTurn"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}

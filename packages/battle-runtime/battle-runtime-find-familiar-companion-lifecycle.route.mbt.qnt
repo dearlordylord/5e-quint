@@ -22,6 +22,7 @@ module battleRuntimeFindFamiliarCompanionLifecycleRouteMbt {
     | FreshCompanionRouteSurface
     | FamiliarCreationRouteSurface
     | FamiliarReplacementRouteSurface
+    | FamiliarDismissalReappearanceRouteSurface
     | FamiliarSharedSensesRouteSurface
     | FamiliarTouchDeliveryRouteSurface
     | PactFamiliarAttackRouteSurface
@@ -65,6 +66,14 @@ module battleRuntimeFindFamiliarCompanionLifecycleRouteMbt {
   action doRouteFamiliarReplacement = all {
     qSurface == FreshCompanionRouteSurface,
     recordSurface(FamiliarReplacementRouteSurface, routeCompanionLifecycle),
+  }
+
+  action doRouteFamiliarDismissalReappearance = all {
+    qSurface == FreshCompanionRouteSurface,
+    recordSurface(
+      FamiliarDismissalReappearanceRouteSurface,
+      routeCompanionLifecycle,
+    ),
   }
 
   action doRouteSharedSenses = all {
@@ -170,6 +179,7 @@ module battleRuntimeFindFamiliarCompanionLifecycleRouteMbt {
   action step = any {
     doRouteFamiliarCreation,
     doRouteFamiliarReplacement,
+    doRouteFamiliarDismissalReappearance,
     doRouteSharedSenses,
     doRouteTouchDelivery,
     doRoutePactFamiliarAttack,

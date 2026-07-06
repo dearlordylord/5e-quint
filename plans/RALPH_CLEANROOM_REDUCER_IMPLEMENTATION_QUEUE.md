@@ -109,7 +109,7 @@
     {
       "number": 18,
       "id": "CRPI-BLOCK-012",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Blocked route replay: battle-runtime-find-familiar-selected-identity"
     },
     {
@@ -1787,7 +1787,7 @@ Plan Impact:
 
 ### Task 18 - CRPI-BLOCK-012
 
-Status: `ready-for-research`
+Status: `done`
 
 Blocker Type: none
 
