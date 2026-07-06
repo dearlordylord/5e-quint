@@ -85,7 +85,7 @@
     {
       "number": 14,
       "id": "CRPI-BLOCK-009",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Blocked route replay: battle-runtime-druid-wild-shape-form-lifecycle"
     },
     {
@@ -1558,7 +1558,7 @@ Plan Impact:
 
 ### Task 14 - CRPI-BLOCK-009
 
-Status: `ready-for-research`
+Status: `done`
 
 Blocker Type: none
 
