@@ -19,7 +19,7 @@
     {
       "number": 3,
       "id": "CRPI-BLOCK-002",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-after-hit-damage-riders"
     },
     {
@@ -881,7 +881,7 @@ Plan Impact:
 
 ### Task 3 - CRPI-BLOCK-002
 
-Status: `ready-for-research`
+Status: `done`
 
 Blocker Type: none
 
