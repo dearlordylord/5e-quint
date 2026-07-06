@@ -1,82 +1,54 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-002",
+  "taskId": "CRPI-BLOCK-003",
   "durableFields": [
     {
-      "fieldPath": "BattleState.currentTurnResources.currentHasBonusAction",
+      "fieldPath": "BattleState.currentTurnResources.spellSlotUsesThisTurn",
       "owner": "battle-state",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": { "tag": "canonical-source" },
-      "notes": "Existing turn-resource field owns Bonus Action availability for after-hit smite-style spell choices."
-    },
-    {
-      "fieldPath": "BattleState.currentTurnResources.levelOnePlusSpellCastsThisTurn",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": { "tag": "canonical-source" },
-      "notes": "Existing turn-resource field owns the level-1-plus spell-cast commitment used by slot and slotless after-hit spell spends."
+      "notes": "Existing turn-resource field owns the current-turn spell-slot action economy commitment for slotted action spells."
     },
     {
       "fieldPath": "CharacterBattleSpellSlotState.expended",
       "owner": "character-battle-resource-state",
       "introducedIn": "packages/battle-runtime/src/character-battle-resources.ts",
       "derivability": { "tag": "canonical-source" },
-      "notes": "Existing character battle spell-slot state owns slotted after-hit spell expenditure."
-    },
-    {
-      "fieldPath": "CharacterBattleResourceState.usesRemaining",
-      "owner": "character-battle-resource-state",
-      "introducedIn": "packages/battle-runtime/src/character-battle-resources.ts",
-      "derivability": { "tag": "canonical-source" },
-      "notes": "Existing feature resource state owns slotless class-feature free-cast spends."
+      "notes": "Existing character battle spell-slot state owns slotted attack/save spell expenditure."
     },
     {
       "fieldPath": "BattleCreatureState.hp",
       "owner": "battle-state",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": { "tag": "canonical-source" },
-      "notes": "Existing combatant Hit Point field owns after-hit weapon/rider damage and timed Spell Effect damage."
-    },
-    {
-      "fieldPath": "BattleCreatureState.conditions.restrained",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": { "tag": "canonical-source" },
-      "notes": "Existing condition lifecycle state owns save-gated Restrained admission and escape cleanup."
-    },
-    {
-      "fieldPath": "BattleCreatureState.concentration",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": { "tag": "canonical-source" },
-      "notes": "Existing concentration state owns after-hit spell Concentration start, break, and cleanup."
+      "notes": "Existing combatant Hit Point field owns spell Attack and save-gated damage."
     },
     {
       "fieldPath": "BattleCreatureState.activeEffects",
       "owner": "battle-state",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": { "tag": "canonical-source" },
-      "notes": "Existing active Spell Effect state owns timed damage/save effects and Shining Smite illumination admission/cleanup."
+      "notes": "Existing active Spell Effect state owns Hit Point regain prevention, next Attack Roll Advantage, and Opportunity Attack denial admissions."
     },
     {
-      "fieldPath": "BattleActiveEffect.spellTurnStartDamageAndSave.source",
-      "owner": "battle-state-active-effect",
-      "introducedIn": "packages/battle-runtime/src/active-effect/types.ts",
-      "derivability": { "tag": "canonical-source" },
-      "notes": "Typed source fact distinguishes after-hit timed damage/save effects from generic turn-boundary damage/save effects for route ownership without dispatching on spell identity."
+      "fieldPath": "AvailableBattleAct.routeEvents",
+      "owner": "battle-reducer-route-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": { "tag": "runtime-projection" },
+      "notes": "Public discovery route events project existing subject, hole, target-shape, and action/spell-slot owner facts for qRoute replay."
     },
     {
-      "fieldPath": "AttackSpellDamageAddition.sourceProcedure",
-      "owner": "battle-interrupt-continuation",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": { "tag": "canonical-source" },
-      "notes": "Typed procedure fact distinguishes after-hit attack damage additions from other spell-hosted weapon damage additions when emitting hit-point route evidence."
+      "fieldPath": "BattleResolutionResult.routeEvents",
+      "owner": "battle-reducer-route-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": { "tag": "runtime-projection" },
+      "notes": "Public resolution route events project existing fill, hole, Hit Point, Attack Roll, saving throw, and active-effect owner facts for qRoute replay."
     }
   ],
   "notes": [
-    "Task 3 introduced no whole-battle after-hit accumulator and no new top-level BattleState, BattleCreatureState, or character battle resource fields.",
+    "Task 4 introduced no top-level BattleState, BattleCreatureState, or character battle resource fields.",
     "qRoute target replay evidence is derived from public battle reducer routeEvents emitted by packages/battle-runtime/src/battle-reducer/reducer-route.ts and observed in the focused MBT harness.",
-    "The afterHitDamageRider route vocabulary is execution evidence for existing owner fields; the added source/procedure facts are retained on the existing effect/addition projections that require route disambiguation.",
-    "Production runtime does not dispatch on QNT branch names, fixture labels, selected spell identity, or route connector names."
+    "The selected spell identities remain fixture/catalog inputs. Production routing uses action spell procedure, fill kind, target-shape facts, spell-slot invocation facts, and typed active-effect deltas.",
+    "Production runtime does not dispatch on QNT branch names, selected spell ids, selected spell names, or route connector names."
   ]
 }
