@@ -41,6 +41,7 @@ import { supportedSpellInvocationMatchesRef } from "./spells-invocation-ref.ts";
 import { supportedSpellActs } from "./spells-profiles.ts";
 import {
   conditionSpellEndTurnRepeatSaveHoleIds,
+  isCreatureSpaceTraversalMovementFactValidationMessage,
   sleepRepeatSaveSavingThrowHoleIds,
   spellTurnStartSavingThrowOutcomeHoleId,
 } from "./turn-end-movement.ts";
@@ -86,6 +87,7 @@ export type BattleReducerRouteSubjectFamily =
   | "metamagicSpellDurationProjection"
   | "metamagicSpellComponentProjection"
   | "passiveSavingThrowRollMode"
+  | "creatureSpaceMovementPermission"
   | "reactionSpell"
   | "rollModifierEffect"
   | "saveGatedSpell"
@@ -133,6 +135,7 @@ export type BattleReducerRouteOwnerGroup =
   | "battleActiveEffect"
   | "battleConditionLifecycle"
   | "battleCreatureState"
+  | "battleCreatureSpaceMovement"
   | "battleDamageAdjustment"
   | "battleFeatureResource"
   | "battleStatBlockAction"
@@ -705,6 +708,14 @@ export function battleReducerRouteForResolution(
       activeFormLifecycleTerminalRoute,
     );
   }
+  const creatureSpaceMovementRoute =
+    creatureSpaceMovementPermissionRouteForResolution(input, result);
+  if (creatureSpaceMovementRoute !== undefined) {
+    return composeWithActiveFormLifecycleTerminalRoute(
+      creatureSpaceMovementRoute,
+      activeFormLifecycleTerminalRoute,
+    );
+  }
   const commandRoute = commandRouteForResolution(input, result);
   if (commandRoute !== undefined) {
     return composeWithActiveFormLifecycleTerminalRoute(
@@ -809,6 +820,56 @@ export function battleReducerRouteForResolution(
     spellAttackRoute,
     activeFormLifecycleTerminalRoute,
   );
+}
+
+function creatureSpaceMovementPermissionRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  if (
+    input.subject.tag !== "runtimeCommand" ||
+    input.subject.command !== "move"
+  ) {
+    return undefined;
+  }
+  const fill = input.fills.at(-1);
+  if (
+    fill === undefined ||
+    fill.kind !== "movement" ||
+    fill.value.creatureSpaceTraversal === undefined
+  ) {
+    return undefined;
+  }
+  if (
+    result.tag === "invalid" &&
+    (result.reason !== "invalidFill" ||
+      !isCreatureSpaceTraversalMovementFactValidationMessage(result.message))
+  ) {
+    return undefined;
+  }
+  if (result.tag === "needsHoles") {
+    return undefined;
+  }
+  const holes: readonly BattleReducerRouteHole[] =
+    result.tag === "invalid" ? ["movement"] : [];
+  const route: BattleReducerRouteEvent[] = [
+    {
+      kind: "resolveBattleSubject",
+      subject: "creatureSpaceMovementPermission",
+      fill: "movement",
+      holes,
+      owner: "battleCreatureSpaceMovement",
+    },
+  ];
+  if (result.tag === "resolved") {
+    route.push({
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "creatureSpaceMovementPermission",
+      holes: [],
+      owner: "battleMovementResource",
+    });
+  }
+  return nonEmptyRouteEvents(route);
 }
 
 function spellAttackProcedureRouteForResolution(
@@ -5360,6 +5421,7 @@ function battleReducerRouteFill(
     return "hitPointHealingDistribution";
   }
   if (kind === "interruptDecision") return "interruptDecision";
+  if (kind === "movement") return "movement";
   if (kind === "objectTargetChoice") return "targetChoice";
   if (kind === "rolledDice") return "rolledDice";
   if (kind === "savingThrowOutcome") return "savingThrowOutcome";

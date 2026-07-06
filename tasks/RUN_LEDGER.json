@@ -4,6 +4,194 @@
   "sourceBranchInventorySha256": "e8ededa80ac8cdfd875f4725149078879450eefb855b922cd7e1bba86f4edc43",
   "entries": [
     {
+      "taskId": "CRPI-BLOCK-013",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "e8ededa80ac8cdfd875f4725149078879450eefb855b922cd7e1bba86f4edc43",
+      "artifacts": {
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "452c1d20a0eee8c917bcaa0fb34a2f21b546252ea5c01dce4c45c937215f94d9"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-BLOCK-013/README.md",
+          "sha256": "0f12ac17aa288de7947486bc0c9916cb1a42e551080684abf639efc2675db25b"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-013.json",
+          "sha256": "3c38ab6ed1a520e37fd954989b5d517a7055d29f136dae4a75da457e410b728f",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-013.json#driver:packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt#step:doMoveThroughLargerCreatureSpace#trace:MBT_TRACES=1 MBT_STEPS=8 action=doMoveThroughLargerCreatureSpace qRoute=halfling-nimbleness-creature-space-movement-accepted-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-013.json#driver:packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt#step:doRejectOccupiedStop#trace:MBT_TRACES=1 MBT_STEPS=8 action=doRejectOccupiedStop qRoute=halfling-nimbleness-creature-space-movement-rejected-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-013.json#driver:packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt#step:doRejectMissingProfile#trace:MBT_TRACES=1 MBT_STEPS=8 action=doRejectMissingProfile qRoute=halfling-nimbleness-creature-space-movement-rejected-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-013.json#driver:packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt#step:doRejectSameSizeTraversal#trace:MBT_TRACES=1 MBT_STEPS=8 action=doRejectSameSizeTraversal qRoute=halfling-nimbleness-creature-space-movement-rejected-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 master; git log --oneline -1 HEAD; git merge-base --is-ancestor 1bee0094edb2f792e557d9fe279b98eee836014f HEAD",
+          "status": "pass",
+          "detail": "Revision round 2 review-time base ref master resolved to fe3b327cd Merge Ralph task 18; HEAD resolved to 1bee0094e Task 18 find familiar selected route replay; Base SHA is an ancestor of HEAD. The prompt-declared integration ref was also rechecked in round 2 and resolved to 1bee0094e Task 18 find familiar selected route replay."
+        },
+        {
+          "command": "RAW/ubiquitous-language check for Halfling Nimbleness, movement through larger creature space, Size, Speed, Movement, Creature, and Character Sheet projection boundaries",
+          "status": "pass",
+          "detail": "Checked .references/srd-5.2.1/Character-Origins.md, .references/srd-5.2.1/Rules-Glossary.md, and UBIQUITOUS_LANGUAGE.md before route/runtime changes."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec vitest run src/halfling-nimbleness-selected-identity.mbt.test.ts -t \"observes selected Halfling Nimbleness qRoute\"",
+          "status": "pass",
+          "detail": "Focused deterministic public route assertion passed; 1 test passed and 1 filtered test skipped."
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Pre-MBT process check found no active vitest or quint_evaluator process; both grep commands exited 1 with no output."
+        },
+        {
+          "command": "START=$(date +%s); ( while true; do sleep 60; echo \"PROGRESS: $(( $(date +%s) - START ))s\"; done ) & reporter=$!; ( MBT_TRACES=1 MBT_STEPS=8 pnpm --filter @dnd/battle-runtime exec vitest run src/halfling-nimbleness-selected-identity.mbt.test.ts src/species-passive-trait-selected-identity.mbt.test.ts ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; kill \"$reporter\" 2>/dev/null || true; wait \"$reporter\" 2>/dev/null || true; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "status": "pass",
+          "detail": "Focused Halfling Nimbleness selected-identity semantic replay and species passive trait substrate route connector replay passed; 4 tests passed; TOTAL: 9s."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec tsc --noEmit --pretty false",
+          "status": "pass",
+          "detail": "Battle runtime TypeScript check passed after adding public Movement qRoute observability."
+        },
+        {
+          "command": "node task-scoped validateTargetReplayEvidence for packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt",
+          "status": "pass",
+          "detail": "Validated tasks/target-replay-evidence/CRPI-BLOCK-013.json with scripts/cleanroom-branch-coverage-check.cjs#validateTargetReplayEvidence and requireAllObligations=false; 4 obligations covered."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "Cleanroom branch coverage passed with 738 obligations and 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass",
+          "detail": "Whitespace check passed."
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "All quality gates passed; app lint emitted 61 warnings and exited 0."
+        },
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-battle-unblocked-batch-20260706T130150Z/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor 1bee0094edb2f792e557d9fe279b98eee836014f HEAD",
+          "status": "pass",
+          "detail": "Revision round 3 prompt-declared integration ref and HEAD both resolved to 1bee0094e Task 18 find familiar selected route replay; Base SHA is an ancestor of HEAD."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec vitest run src/halfling-nimbleness-selected-identity.mbt.test.ts -t \"observes selected Halfling Nimbleness qRoute\"",
+          "status": "pass",
+          "detail": "Revision round 3 focused deterministic public route assertion passed with the ordinary-movement negative assertion; 1 test passed and 1 filtered test skipped."
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Revision round 3 pre-MBT process check matched only the Ralph status-monitor shell command containing the words vitest/quint_evaluator; no active vitest runner or quint_evaluator process was alive."
+        },
+        {
+          "command": "START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=8 pnpm --filter @dnd/battle-runtime exec vitest run src/halfling-nimbleness-selected-identity.mbt.test.ts src/species-passive-trait-selected-identity.mbt.test.ts ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "status": "pass",
+          "detail": "Revision round 3 focused Halfling Nimbleness selected-identity semantic replay and species passive trait substrate route connector replay passed after narrowing creature-space route evidence to Movement fills with creatureSpaceTraversal; 4 tests passed; TOTAL: 9s."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec tsc --noEmit --pretty false",
+          "status": "pass",
+          "detail": "Revision round 3 battle runtime TypeScript check passed after narrowing public Movement qRoute observability."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "Revision round 3 cleanroom branch coverage passed with 738 obligations and 24 sampled inputs after the route connector and target replay evidence were narrowed to Movement fills with creatureSpaceTraversal."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass",
+          "detail": "Revision round 3 whitespace check passed."
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "Revision round 3 quality gate passed end to end; app lint emitted the existing 61 warnings and exited 0."
+        },
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-battle-unblocked-batch-20260706T130150Z/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor 1bee0094edb2f792e557d9fe279b98eee836014f HEAD",
+          "status": "pass",
+          "detail": "Revision round 4 prompt-declared integration ref and HEAD both resolved to 1bee0094e Task 18 find familiar selected route replay; Base SHA is an ancestor of HEAD."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec vitest run src/halfling-nimbleness-selected-identity.mbt.test.ts -t \"observes selected Halfling Nimbleness qRoute\"",
+          "status": "pass",
+          "detail": "Revision round 4 focused deterministic public route assertion passed with negative assertions for ordinary Movement, Opportunity Attack interrupt windows, movement-budget failures, and Opportunity Attack threat validation failures; 1 test passed and 1 filtered test skipped."
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Revision round 4 pre-MBT process check found no active vitest runner or quint_evaluator process; both grep commands exited 1 with no output."
+        },
+        {
+          "command": "START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=8 pnpm --filter @dnd/battle-runtime exec vitest run src/halfling-nimbleness-selected-identity.mbt.test.ts src/species-passive-trait-selected-identity.mbt.test.ts ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "status": "pass",
+          "detail": "Revision round 4 focused Halfling Nimbleness selected-identity semantic replay and species passive trait substrate route connector replay passed after narrowing creature-space route evidence to actual permission outcomes; 4 tests passed; TOTAL: 9s."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec tsc --noEmit --pretty false",
+          "status": "pass",
+          "detail": "Revision round 4 battle runtime TypeScript check passed after limiting creature-space route evidence to permission outcomes."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "Revision round 4 cleanroom branch coverage passed with 738 obligations and 24 sampled inputs after target replay evidence was regenerated for permission-outcome-only route evidence."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass",
+          "detail": "Revision round 4 whitespace check passed."
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "Revision round 4 quality gate passed end to end; app lint emitted the existing 61 warnings and exited 0."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 verified Halfling Nimbleness route ownership against SRD Halfling Size, Speed, and Nimbleness plus Rules Glossary Speed, Size, and Creature. Round 2 confirmed evidence artifacts were tracked and base-check wording was honest. Round 3 narrowed qRoute observation so generic public move discovery and ordinary Movement fills do not emit creatureSpaceMovementPermission. Round 4 narrowed route emission further so Opportunity Attack interrupt windows and non-permission movement failures with creatureSpaceTraversal do not emit creatureSpaceMovementPermission; invalid permission routes are limited to messages from the creature-space traversal validator."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-013",
+            "impact": "unblocked"
+          },
+          {
+            "taskId": "CRPI-BLOCK-014",
+            "impact": "left unchanged"
+          }
+        ],
+        "observations": [
+          "Halfling Nimbleness selected-identity qRoute is accepted through public movement-fill resolution route events for accepted larger-creature traversal and the occupied-stop, missing-profile, and same-size rejection branches.",
+          "The runtime route vocabulary exposes creatureSpaceMovementPermission and battleCreatureSpaceMovement only for actual creature-space permission outcomes: resolved movement with creatureSpaceTraversal or invalidFill messages from the creature-space traversal validator. Generic move discovery, ordinary Movement fills, Opportunity Attack interrupt windows, and non-permission movement failures do not claim creature-space permission ownership.",
+          "Selected species identity remains a catalog, selection, admission, and SRD fixture boundary; production route events use movement subject shape, support profiles, Size comparison, and typed Movement fills rather than authored species identity dispatch."
+        ],
+        "requiredPlanEdits": "none"
+      }
+    },
+    {
       "taskId": "CRPI-BLOCK-012",
       "assignmentId": "reducer-spine-diagnostic-battle",
       "laneId": "battle",

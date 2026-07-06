@@ -151,13 +151,6 @@ module battleRuntimeSpeciesPassiveTraitSubstratesRouteMbt {
   ): List[ReducerRouteEvent] =
     route
       .append(
-        discoverSubstrate(
-          CreatureSpaceMovementPermissionRouteSubject,
-          Set(MovementHoleKind),
-          BattleCreatureSpaceMovementOwner,
-        )
-      )
-      .append(
         resolveSubstrateWithFill(
           CreatureSpaceMovementPermissionRouteSubject,
           MovementFillKind,
@@ -177,13 +170,6 @@ module battleRuntimeSpeciesPassiveTraitSubstratesRouteMbt {
     route: List[ReducerRouteEvent],
   ): List[ReducerRouteEvent] =
     route
-      .append(
-        discoverSubstrate(
-          CreatureSpaceMovementPermissionRouteSubject,
-          Set(MovementHoleKind),
-          BattleCreatureSpaceMovementOwner,
-        )
-      )
       .append(
         resolveSubstrateWithFill(
           CreatureSpaceMovementPermissionRouteSubject,
