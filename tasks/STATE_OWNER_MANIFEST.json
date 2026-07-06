@@ -1,34 +1,36 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-051",
+  "taskId": "CRPI-BLOCK-052",
   "durableFields": [
     {
-      "owner": "CharacterSheetSelectedReferenceOwner",
+      "owner": "CharacterSheetFeatureResourceOwner",
       "fields": [
-        "CharacterBuild.features selectedClassChoice Unit references",
-        "characterBuildFeatureUnitIds projection",
-        "CharacterSheetClassFeatureSelectedReferenceProjection.classFeatureUnitIds",
-        "CharacterSheetClassFeatureSelectedReferenceProjection.selectedClassChoiceUnitIds"
+        "CharacterSheet.resourceExpenditures tag=layOnHandsHealingPool",
+        "CharacterSheetResourceState tag=layOnHandsHealingPool",
+        "CharacterSheetLayOnHandsRouteResult.qRoute"
       ],
-      "notes": "Owns retained class-feature and subclass selected-reference evidence at the Character Sheet projection boundary. Task 97 does not add a route-local selected-reference store; references are derived from existing CharacterSheet.build facts and returned as qRoute retention evidence."
+      "notes": "Owns Lay On Hands healing-pool spend at the Character Sheet feature-resource boundary. Task 98 does not add a route-local healing-resource ledger; qRoute is returned by the public reducer route result after the existing resourceExpenditures update."
     },
     {
-      "owner": "CharacterSheetBuildProjectionOwner",
+      "owner": "CharacterSheetHitPointOwner",
       "fields": [
-        "CharacterBuild.progression",
-        "CharacterBuild.features",
-        "CharacterSheet.druidCircleLand",
-        "characterSheetAbilityCheckProficiencyBonus projection",
-        "characterSheetClassFeaturePreparedSpellAccessesForBuild projection",
-        "characterSheetDruidCircleLandPreparedSpellAccess projection"
+        "CharacterSheet.hitPoints",
+        "target CharacterSheet.hitPoints.currentHp"
       ],
-      "notes": "Owns derived Ability Check and spell-access projections from build, selected class choices, Surface class-feature mechanics, and the existing Druid land sheet fact. Task 97 threads these existing facts through public qRoute evidence without adding a duplicated build-projection cache."
+      "notes": "Owns Hit Point restoration from Lay On Hands. Task 98 reads the canonical target hitPoints state after applyLayOnHandsWithRoute instead of storing a separate HP projection."
+    },
+    {
+      "owner": "CharacterSheetConditionListOwner",
+      "fields": [
+        "CharacterSheet.conditions"
+      ],
+      "notes": "Owns Poisoned removal because the route vocabulary has no separate sheet condition owner. Task 98 checks the existing condition list after the public Lay On Hands reducer path removes Poisoned."
     }
   ],
   "notes": [
-    "Task 97 introduced no new durable CharacterSheet state fields.",
-    "qRoute target replay evidence is derived from public characterSheetClassFeatureSelectedReferenceProjection and the copied route connector.",
-    "Selected class-feature and subclass authored identity remains retained reference evidence at the sheet/catalog/test boundary. Production projection derives from CharacterSheet.build shape and does not dispatch behavior on branch action names, connector filenames, or witness labels.",
-    "Druid Circle of the Land selected land remains owned by existing CharacterSheet.druidCircleLand state; the route test reads that sheet fact for the Druid branch rather than duplicating it."
+    "Task 98 introduced no new durable CharacterSheet state fields.",
+    "qRoute target replay evidence is derived from public applyLayOnHandsWithRoute and the copied route connector.",
+    "Lay On Hands behavior derives from typed Surface mechanics and existing CharacterSheet build/resource state; production runtime does not dispatch on QNT branch names, witness labels, connector filenames, or authored catalog identity.",
+    "Poisoned removal remains existing CharacterSheet.conditions state, not a parallel condition-removal ledger."
   ]
 }

@@ -66,6 +66,8 @@ const EXPECTED_EXPORTS = [
   "CharacterSheetJumpDistanceAbilityInput",
   "CharacterSheetJumpDistanceAbilitySubstitution",
   "CharacterSheetLayOnHandsInput",
+  "CharacterSheetLayOnHandsRoute",
+  "CharacterSheetLayOnHandsRouteResult",
   "CharacterSheetLayOnHandsResult",
   "CharacterSheetLinkedSpeedGrant",
   "CharacterSheetLongRestCalendarGate",
@@ -137,6 +139,7 @@ const EXPECTED_EXPORTS = [
   "CharacterSpellSlotExpenditure",
   "applyCharacterSheetSpellRestBenefit",
   "applyLayOnHands",
+  "applyLayOnHandsWithRoute",
   "characterBuildHasSpellbookSpell",
   "characterSheetAbilityCheckAbility",
   "characterSheetAbilityCheckProficiencyBonus",
@@ -267,6 +270,21 @@ const EXPECTED_EXPORT_RECONCILIATION_REASONS = [
     name: "CharacterSheetArcaneRecoveryRestRouteResult",
     reason:
       "Character Sheet owns the typed result returned by Arcane Recovery rest-with-route entrypoints so accepted and rejected route projections remain explicit rather than adapter-local.",
+  },
+  {
+    name: "applyLayOnHandsWithRoute",
+    reason:
+      "Character Sheet owns Lay On Hands pool spend, Hit Point restoration, and Poisoned removal routing; exposing the reducer route result lets replay observe qRoute from the public feature-resource owner path instead of adapter-local route assembly.",
+  },
+  {
+    name: "CharacterSheetLayOnHandsRoute",
+    reason:
+      "Character Sheet owns the Lay On Hands resource-spend, Hit Point projection, and feature-resource fact-recording route tuple; exporting it keeps the route event sequence typed at the owner boundary.",
+  },
+  {
+    name: "CharacterSheetLayOnHandsRouteResult",
+    reason:
+      "Character Sheet owns the typed Lay On Hands result returned with qRoute evidence so source, target, and route projection remain one public reducer outcome.",
   },
   {
     name: "CharacterSheetRouteEvent",

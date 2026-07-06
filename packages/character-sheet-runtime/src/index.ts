@@ -47,6 +47,7 @@ export {
 export {
   applyCharacterSheetSpellRestBenefit,
   applyLayOnHands,
+  applyLayOnHandsWithRoute,
   characterSheetHitDice,
 } from "./healing-rest-benefit.ts";
 export {
@@ -139,6 +140,8 @@ export type {
   CharacterSheetJumpDistanceAbilityInput,
   CharacterSheetJumpDistanceAbilitySubstitution,
   CharacterSheetLayOnHandsInput,
+  CharacterSheetLayOnHandsRoute,
+  CharacterSheetLayOnHandsRouteResult,
   CharacterSheetLayOnHandsResult,
   CharacterSheetLinkedSpeedGrant,
   CharacterSheetLongRestCalendarGate,
