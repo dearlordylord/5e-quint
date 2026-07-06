@@ -1,5 +1,83 @@
 # Validation Report
 
+## CRPI-BLOCK-041
+
+Status: `pass`
+
+- Task: 84
+- Driver path: `packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt`
+- Route connector path: `packages/character-creation-runtime/character-creation-class-feature-projections.route.mbt.qnt`
+- Route class: `reducer-routed`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-041.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Behavior implemented:
+
+Task 84 accepts Character Creation class-feature build-projection route replay
+through the public
+`characterBuildClassFeatureFactsProjectionWithRoute` entrypoint. That
+entrypoint derives class-feature facts from `CharacterBuild` plus the Unit
+catalog and emits the `CharacterBuildOwner` build-projection route events
+compared against copied connector `qRoute`.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt#step:doProjectMonkFocusAndUncannyMetabolism` | `tasks/target-replay-evidence/CRPI-BLOCK-041.json#driver:packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt#step:doProjectMonkFocusAndUncannyMetabolism#trace:public-route=createCompletedReducerRouteDriver action=doProjectMonkFocusAndUncannyMetabolism qRoute=class-feature-build-projection-public-route` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt#step:doProjectSorcererFontAndMetamagic` | `tasks/target-replay-evidence/CRPI-BLOCK-041.json#driver:packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt#step:doProjectSorcererFontAndMetamagic#trace:public-route=createCompletedReducerRouteDriver action=doProjectSorcererFontAndMetamagic qRoute=class-feature-build-projection-public-route` | `_none_` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-041.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace family: `public-route=createCompletedReducerRouteDriver qRoute=class-feature-build-projection-public-route`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-041/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 84.
+
+Verification results:
+
+- Base check passed: declared base ref
+  `ralph/cleanroom-owner-character-creation-20260706T213644Z/integration`
+  resolved to `fb3fcddac Unblock owner-decision Ralph tasks`, `HEAD`
+  resolved to `fb3fcddac Unblock owner-decision Ralph tasks`, and Base SHA
+  `fb3fcddac57b6b34e16c41d09fe4794066faa104` was an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against SRD 5.2.1
+  `Character-Creation.md` Record Class Features, `Classes/Monk.md` Monk's
+  Focus and Uncanny Metabolism, `Classes/Sorcerer.md` Font of Magic and
+  Metamagic, `packages/character-creation-runtime/VOCABULARY.md`, and
+  `UBIQUITOUS_LANGUAGE.md` Character Building terms.
+- Character Creation runtime typecheck passed:
+  `pnpm --filter @dnd/character-creation-runtime exec tsc --noEmit`.
+- Focused semantic plus route MBT replay passed:
+  `START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=2 pnpm --filter @dnd/character-creation-runtime exec vitest run src/class-feature-projections.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "replays class-feature resource and source fact projections|routes class-feature build projections" ) 2>&1 & pid=$!; wait "$pid"; status=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"` passed with 2 tests and 9 skipped; `TOTAL: 4s`.
+- `pnpm cleanroom-branch-coverage:check --target-replay-evidence tasks/target-replay-evidence/CRPI-BLOCK-041.json` failed on unrelated broad missing-evidence baseline across the full corpus. Task-scoped `validateTargetReplayEvidence` passed for `packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt` and covered both Task 84 obligations.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- `pnpm quality` passed end to end; app lint reported 61 warnings and exited 0.
+- Reviewer-loop convergence passed: RAW traceability, ubiquitous-language/domain
+  language, architecture/connascence, and code-review checks found no remaining
+  reasonable Task 84 findings after the round 3 evidence fix. The route replay
+  now receives `qRoute` from the public CharacterBuild class-feature
+  projection-with-route entrypoint, preserves `CharacterBuildOwner` as the
+  projection owner, adds no duplicate resource/source state, and keeps copied
+  QNT witness names quarantined in evidence/harness boundaries.
+
 ## CRPI-BLOCK-014
 
 Status: `pass`

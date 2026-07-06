@@ -1,0 +1,193 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts public CharacterBuild class-feature projection route replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "acceptance": {
+    "driverPath": "packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt",
+    "connectorPath": "packages/character-creation-runtime/character-creation-class-feature-projections.route.mbt.qnt",
+    "routeClass": "reducer-routed",
+    "durableOwner": "CharacterBuildOwner owns build fact projection; source facts remain retained build facts plus Unit catalog, not duplicate resource/source state.",
+    "acceptedProjection": "qRoute"
+  },
+  "status": "pass",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt",
+      "routeConnectorPath": "packages/character-creation-runtime/character-creation-class-feature-projections.route.mbt.qnt",
+      "qntFileSha256": "8fc02f0d03d9299f85edf3b31bbceefb70fe1c0ca29d1043787298558bbf3ec5",
+      "routeConnectorSha256": "c5f78c11563ff3e277aded1ea5ada2d65880c71bc636998045cab3468e2d0535",
+      "branchFamily": "step",
+      "branchAction": "doProjectMonkFocusAndUncannyMetabolism",
+      "observedActionTaken": "doProjectMonkFocusAndUncannyMetabolism",
+      "harnessTestPath": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=createCompletedReducerRouteDriver action=doProjectMonkFocusAndUncannyMetabolism qRoute=class-feature-build-projection-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doProjectMonkFocusAndUncannyMetabolism",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#createCompletedReducerRouteDriver",
+        "routeSubject": "CreationBuildProjectionRouteSubject",
+        "owners": [
+          "CharacterBuildOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "7d6c8e9653ad358cfc0492d335a4cfb2eba9d461e8a6d3451917e049f57e356d",
+        "observedProjectionSha256": "7d6c8e9653ad358cfc0492d335a4cfb2eba9d461e8a6d3451917e049f57e356d",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-creation-runtime/character-creation-class-feature-projections.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "CreationBuildProjectionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_draft",
+            "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#createRouteReducerSession",
+            "discover_creation_holes",
+            "packages/character-creation-runtime/src/discovery.ts#discoverCreationHoles",
+            "apply_creation_fill_batches",
+            "packages/character-creation-runtime/src/fill-reducer.ts#fillCreationHoles",
+            "finalize_character_draft",
+            "packages/character-creation-runtime/src/finalization.ts#finalizeCharacterDraft",
+            "construct_character_build_projection_input",
+            "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#classFeatureProjectionBuild",
+            "project_character_build_class_feature_facts_with_route",
+            "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts#characterBuildClassFeatureFactsProjectionWithRoute",
+            "packages/character-creation-runtime/src/monk-focus.ts#characterBuildMonksFocusFacts",
+            "packages/character-creation-runtime/src/monk-uncanny-metabolism.ts#characterBuildMonkUncannyMetabolismFacts",
+            "packages/character-creation-runtime/src/finalization.ts#characterBuildResources",
+            "read_public_qRoute",
+            "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterCreationRouteQuintState"
+          ],
+          "routeEventSource": "The public CharacterBuild class-feature projection route entrypoint observes Monk 2 projection facts from retained CharacterBuild progression plus the Unit catalog, then emits the CharacterBuildOwner build-projection qRoute events copied by the route connector.",
+          "reducerPublicApiPath": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts#characterBuildClassFeatureFactsProjectionWithRoute"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.progression.startingClass=class_monk",
+          "CharacterBuild.progression.advancements[].classUnitId=class_monk",
+          "characterBuildResources(...).unitId=monk_monks_focus",
+          "characterBuildResources(...).resource.kind=use_count",
+          "CharacterBuildMonksFocusFacts.focusPointUseCount.maximum=2",
+          "CharacterBuildMonksFocusFacts.focusPointUseCount.shortRestRefillsAll=true",
+          "CharacterBuildMonksFocusFacts.focusPointUseCount.longRestRefillsAll=true",
+          "CharacterBuildMonkUncannyMetabolismFacts.focusRecovery.resourceUnitId=monk_monks_focus",
+          "CharacterBuildMonkUncannyMetabolismFacts.healing.martialArtsDieSourceUnitId=monk_martial_arts",
+          "CharacterBuildMonkUncannyMetabolismFacts.healing.martialArtsDie=1d6",
+          "CharacterBuildMonkUncannyMetabolismFacts.healing.monkLevelBonus=2",
+          "CharacterCreationRouteEvent.kind=projectCharacterBuildFacts",
+          "CharacterCreationRouteEvent.kind=recordCreationFacts",
+          "CharacterCreationRouteEvent.subject=buildProjection",
+          "CharacterCreationRouteEvent.facts=buildProjectionInput",
+          "CharacterCreationRouteEvent.owner=characterBuild"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Monk Focus and Uncanny Metabolism build facts are observed from CharacterBuild plus Unit catalog before CharacterBuildOwner projection events are emitted, without storing duplicate resource/source state."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt",
+      "routeConnectorPath": "packages/character-creation-runtime/character-creation-class-feature-projections.route.mbt.qnt",
+      "qntFileSha256": "8fc02f0d03d9299f85edf3b31bbceefb70fe1c0ca29d1043787298558bbf3ec5",
+      "routeConnectorSha256": "c5f78c11563ff3e277aded1ea5ada2d65880c71bc636998045cab3468e2d0535",
+      "branchFamily": "step",
+      "branchAction": "doProjectSorcererFontAndMetamagic",
+      "observedActionTaken": "doProjectSorcererFontAndMetamagic",
+      "harnessTestPath": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=createCompletedReducerRouteDriver action=doProjectSorcererFontAndMetamagic qRoute=class-feature-build-projection-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doProjectSorcererFontAndMetamagic",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#createCompletedReducerRouteDriver",
+        "routeSubject": "CreationBuildProjectionRouteSubject",
+        "owners": [
+          "CharacterBuildOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "a02a5435febe7d73ed82404b7f7ccaaf7b62df4b2fd825b562e4e56720c6e3a9",
+        "observedProjectionSha256": "a02a5435febe7d73ed82404b7f7ccaaf7b62df4b2fd825b562e4e56720c6e3a9",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-creation-runtime/character-creation-class-feature-projections.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "CreationBuildProjectionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_draft",
+            "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#createRouteReducerSession",
+            "discover_creation_holes",
+            "packages/character-creation-runtime/src/discovery.ts#discoverCreationHoles",
+            "apply_creation_fill_batches",
+            "packages/character-creation-runtime/src/fill-reducer.ts#fillCreationHoles",
+            "finalize_character_draft",
+            "packages/character-creation-runtime/src/finalization.ts#finalizeCharacterDraft",
+            "construct_character_build_projection_input",
+            "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#classFeatureProjectionBuild",
+            "project_character_build_class_feature_facts_with_route",
+            "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts#characterBuildClassFeatureFactsProjectionWithRoute",
+            "packages/character-creation-runtime/src/sorcerer-font-of-magic.ts#characterBuildSorcererFontOfMagicFacts",
+            "packages/character-creation-runtime/src/sorcerer-metamagic.ts#characterBuildSorcererMetamagicFacts",
+            "packages/character-creation-runtime/src/finalization.ts#characterBuildResources",
+            "read_public_qRoute",
+            "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterCreationRouteQuintState"
+          ],
+          "routeEventSource": "The public CharacterBuild class-feature projection route entrypoint observes Sorcerer 2 projection facts from retained CharacterBuild progression, selected Metamagic build facts, and the Unit catalog, then emits the CharacterBuildOwner build-projection qRoute events copied by the route connector.",
+          "reducerPublicApiPath": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts#characterBuildClassFeatureFactsProjectionWithRoute"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.progression.startingClass=class_sorcerer",
+          "CharacterBuild.progression.advancements[].classUnitId=class_sorcerer",
+          "CharacterBuild.features[kind=selectedSorcererMetamagicOption]",
+          "characterBuildResources(...).unitId=sorcerer_font_of_magic",
+          "characterBuildResources(...).resource.kind=point_pool",
+          "CharacterBuildSorcererFontOfMagicFacts.sorceryPointPool.maximum=2",
+          "CharacterBuildSorcererFontOfMagicFacts.sorceryPointPool.longRestRefillsAll=true",
+          "CharacterBuildSorcererMetamagicFacts.sorceryPointResource.resourceUnitId=sorcerer_font_of_magic",
+          "CharacterBuildSorcererMetamagicFacts.sorceryPointResource.poolId=sorcery_points",
+          "CharacterBuildSorcererMetamagicFacts.choiceCount=2",
+          "CharacterBuildSorcererMetamagicFacts.ownerClassLevel=2",
+          "CharacterBuildSorcererMetamagicFacts.selectionRepeatability=unique",
+          "CharacterBuildSorcererMetamagicFacts.spellUseLimit=one_per_spell_unless_option_allows_stacking",
+          "CharacterBuildSorcererMetamagicFacts.knownOptions=sorcerer_empowered_spell,sorcerer_heightened_spell",
+          "CharacterCreationRouteEvent.kind=projectCharacterBuildFacts",
+          "CharacterCreationRouteEvent.kind=recordCreationFacts",
+          "CharacterCreationRouteEvent.subject=buildProjection",
+          "CharacterCreationRouteEvent.facts=buildProjectionInput",
+          "CharacterCreationRouteEvent.owner=characterBuild"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Sorcerer Font of Magic and Metamagic build facts are observed from CharacterBuild plus Unit catalog before CharacterBuildOwner projection events are emitted, without authored identity dispatch."
+      }
+    }
+  ]
+}

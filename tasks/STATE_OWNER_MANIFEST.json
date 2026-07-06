@@ -1,56 +1,47 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-005",
+  "taskId": "CRPI-BLOCK-041",
   "durableFields": [
     {
-      "fieldPath": "BattleCreatureState.conditions",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "fieldPath": "CharacterBuild.progression",
+      "owner": "character-build",
+      "introducedIn": "packages/character-creation-runtime/src/types.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing condition lifecycle state owns Blinded, Restrained, Incapacitated, Prone, and Unconscious outcomes for save-gated and repeat-save condition spells."
+      "notes": "Existing finalized build progression is the retained class-level source fact used to derive class-feature resources."
     },
     {
-      "fieldPath": "BattleCreatureState.activeEffects",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "fieldPath": "CharacterBuild.features",
+      "owner": "character-build",
+      "introducedIn": "packages/character-creation-runtime/src/types.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing active effects own spell condition duration, Sleep pending repeat-save and Unconscious effects, and repeat-save cleanup state."
+      "notes": "Existing selected class-feature and Metamagic option refs remain retained build facts; Task 84 adds no duplicate resource or source cache."
     },
     {
-      "fieldPath": "BattleCreatureState.concentration",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing Concentration state owns concentrating caster cleanup when a repeat-save condition spell ends."
-    },
-    {
-      "fieldPath": "BattleReducerRouteEvent.subject=repeatSaveConditionEffect",
-      "owner": "battle-reducer-route-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "fieldPath": "CharacterCreationRouteEvent.subject=buildProjection",
+      "owner": "character-creation-reducer-route-projection",
+      "introducedIn": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts",
       "derivability": {
         "tag": "runtime-projection"
       },
-      "notes": "Route events are derived from owner-local End Turn repeat-save hole ids and condition/active-effect/Concentration state deltas; no route event or pending-hole cache is stored in BattleState."
+      "notes": "Build projection route events are emitted by the public CharacterBuild class-feature projection-with-route entrypoint after it derives facts from retained build facts plus Unit catalog projections."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=saveGatedSpell",
-      "owner": "battle-reducer-route-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "fieldPath": "CharacterCreationRouteEvent.facts=buildProjectionInput",
+      "owner": "character-creation-reducer-route-projection",
+      "introducedIn": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts",
       "derivability": {
         "tag": "runtime-projection"
       },
-      "notes": "Existing save-gated spell route projection owns action-economy discovery and Saving Throw outcome fill order for Color Spray and Entangle selected-identity branches."
+      "notes": "CreationBuildProjectionInputFact records the projection input boundary without storing authored identity or duplicate source facts."
     }
   ],
   "notes": [
-    "Task 9 introduced no new durable BattleState or BattleCreatureState fields.",
-    "The new repeatSaveConditionEffect route projection is derived from existing owner hole-id projections and state deltas, not selected spell id, authored name, QNT action name, connector filename, or a duplicate route-local state cache.",
-    "Condition-choice catalog identity remains a support-profile admission/input boundary and is not stored as production reducer dispatch state."
+    "Task 84 introduced no new durable CharacterBuild fields.",
+    "Class-feature resource and source facts remain derived from CharacterBuild retained facts plus the Unit catalog.",
+    "Route evidence observes qRoute returned by the public CharacterBuild class-feature projection-with-route entrypoint; it is not adapter-local expected routes or production dispatch on class-feature authored identity."
   ]
 }

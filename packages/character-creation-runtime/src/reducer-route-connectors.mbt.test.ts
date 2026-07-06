@@ -38,6 +38,7 @@ import {
   PHASE1_WEAPON_MASTERY_UNIT_IDS,
   WEAPON_MASTERY_OPTIONS_CHOICE_KEY,
   abilityScoreAssignment,
+  characterBuildClassFeatureFactsProjectionWithRoute,
   characterDraftId,
   classUnitId,
   createCharacterDraft as createRuntimeCharacterDraft,
@@ -50,6 +51,11 @@ import {
   loadoutEquipmentUnitId,
   loadoutSourceHoleIdText,
   progressionOptionId,
+  sorcererMetamagicOptionId,
+  type CharacterBuild,
+  type CharacterBuildClassFeatureFactsProjectionRoute,
+  type CharacterBuildResource,
+  type CharacterBuildSorcererMetamagicFacts,
   type CharacterDraft,
   type CreationBatchFillResult,
   type CreationFill,
@@ -451,8 +457,9 @@ describe("character creation reducer route connector MBT", () => {
         "cc:route-class-feature-projection",
         {
           doProjectMonkFocusAndUncannyMetabolism:
-            projectCharacterBuildFactsRoute,
-          doProjectSorcererFontAndMetamagic: projectCharacterBuildFactsRoute,
+            projectMonkFocusAndUncannyMetabolismBuildFactsRoute,
+          doProjectSorcererFontAndMetamagic:
+            projectSorcererFontAndMetamagicBuildFactsRoute,
         },
       ),
       maxSteps: focusedMbtMaxSteps(2),
@@ -1324,21 +1331,233 @@ function choiceFillForKnownProtocolLoadoutArmor(
   };
 }
 
-function projectCharacterBuildFactsRoute(
+function projectMonkFocusAndUncannyMetabolismBuildFactsRoute(
   route: readonly CharacterCreationRouteEvent[],
 ): readonly CharacterCreationRouteEvent[] {
-  return [
-    ...route,
-    projectCharacterBuildFacts({
-      subject: "buildProjection",
-      owner: "characterBuild",
+  const projection = requireRight(
+    characterBuildClassFeatureFactsProjectionWithRoute({
+      build: classFeatureProjectionBuild({
+        startingClass: "class_monk",
+        totalLevel: 2,
+      }),
+      unitLibrary,
+      route,
     }),
-    recordCreationFacts({
-      subject: "buildProjection",
-      facts: ["buildProjectionInput"],
-      owner: "characterBuild",
+  );
+  observeMonkFocusAndUncannyMetabolismBuildFacts(projection);
+  return projection.route;
+}
+
+function projectSorcererFontAndMetamagicBuildFactsRoute(
+  route: readonly CharacterCreationRouteEvent[],
+): readonly CharacterCreationRouteEvent[] {
+  const projection = requireRight(
+    characterBuildClassFeatureFactsProjectionWithRoute({
+      build: classFeatureProjectionBuild({
+        startingClass: "class_sorcerer",
+        totalLevel: 2,
+        features: [
+          {
+            kind: "selectedSorcererMetamagicOption",
+            selectedFromUnitId: "sorcerer_metamagic",
+            optionId: requireRight(
+              sorcererMetamagicOptionId("sorcerer_empowered_spell"),
+            ),
+          },
+          {
+            kind: "selectedSorcererMetamagicOption",
+            selectedFromUnitId: "sorcerer_metamagic",
+            optionId: requireRight(
+              sorcererMetamagicOptionId("sorcerer_heightened_spell"),
+            ),
+          },
+        ],
+      }),
+      unitLibrary,
+      route,
     }),
-  ];
+  );
+  observeSorcererFontAndMetamagicBuildFacts(projection);
+  return projection.route;
+}
+
+function observeMonkFocusAndUncannyMetabolismBuildFacts(
+  projection: CharacterBuildClassFeatureFactsProjectionRoute<CharacterCreationRouteEvent>,
+): void {
+  const build = projection.build;
+  const resource = requiredBuildResource(
+    projection.facts.resources,
+    "monk_monks_focus",
+  );
+  const focusFacts = requireDefined(
+    projection.facts.monksFocus,
+    "Expected Monk 2 build to project Monk's Focus facts.",
+  );
+  const uncannyFacts = requireDefined(
+    projection.facts.monkUncannyMetabolism,
+    "Expected Monk 2 build to project Uncanny Metabolism facts.",
+  );
+
+  expect(build.progression.startingClass).toBe(classUnitId("class_monk"));
+  expect(build.progression.advancements).toEqual([
+    {
+      classUnitId: classUnitId("class_monk"),
+      hitPointRule: { tag: "fixedHigherLevelGain" },
+    },
+  ]);
+  expect(resource.resource.kind).toBe("use_count");
+  expect(focusFacts.focusPointUseCount).toMatchObject({
+    maximum: 2,
+    shortRestRefillsAll: true,
+    longRestRefillsAll: true,
+  });
+  expect(uncannyFacts.focusRecovery.resourceUnitId).toBe(resource.unitId);
+  expect(uncannyFacts.healing).toMatchObject({
+    martialArtsDieSourceUnitId: "monk_martial_arts",
+    martialArtsDie: { dice: 1, dieSize: 6 },
+    monkLevelBonus: 2,
+  });
+}
+
+function observeSorcererFontAndMetamagicBuildFacts(
+  projection: CharacterBuildClassFeatureFactsProjectionRoute<CharacterCreationRouteEvent>,
+): void {
+  const build = projection.build;
+  const resource = requiredBuildResource(
+    projection.facts.resources,
+    "sorcerer_font_of_magic",
+  );
+  const fontFacts = requireDefined(
+    projection.facts.sorcererFontOfMagic,
+    "Expected Sorcerer 2 build to project Font of Magic facts.",
+  );
+  const metamagicFacts = requireDefined(
+    projection.facts.sorcererMetamagic,
+    "Expected Sorcerer 2 build to project Metamagic facts.",
+  );
+  const empoweredSpell = requiredKnownMetamagicOption(
+    metamagicFacts,
+    "sorcerer_empowered_spell",
+  );
+  const heightenedSpell = requiredKnownMetamagicOption(
+    metamagicFacts,
+    "sorcerer_heightened_spell",
+  );
+
+  expect(build.progression.startingClass).toBe(classUnitId("class_sorcerer"));
+  expect(build.progression.advancements).toEqual([
+    {
+      classUnitId: classUnitId("class_sorcerer"),
+      hitPointRule: { tag: "fixedHigherLevelGain" },
+    },
+  ]);
+  expect(build.features).toHaveLength(2);
+  expect(resource.resource.kind).toBe("point_pool");
+  expect(fontFacts.sorceryPointPool).toMatchObject({
+    maximum: 2,
+    longRestRefillsAll: true,
+  });
+  expect(metamagicFacts.sorceryPointResource).toMatchObject({
+    resourceUnitId: resource.unitId,
+    poolId: "sorcery_points",
+  });
+  expect(metamagicFacts.choiceCount).toBe(2);
+  expect(metamagicFacts.ownerClassLevel).toBe(2);
+  expect(metamagicFacts.selectionRepeatability).toBe("unique");
+  expect(metamagicFacts.spellUseLimit).toBe(
+    "one_per_spell_unless_option_allows_stacking",
+  );
+  expect(metamagicFacts.knownOptions).toHaveLength(2);
+  expect(empoweredSpell).toMatchObject({
+    optionId: "sorcerer_empowered_spell",
+    sorceryPointCost: 1,
+    stackingMode: "can_combine_with_different_metamagic",
+    effectKind: "damage_dice_reroll",
+  });
+  expect(heightenedSpell).toMatchObject({
+    optionId: "sorcerer_heightened_spell",
+    sorceryPointCost: 2,
+    stackingMode: "one_per_spell",
+    effectKind: "saving_throw_disadvantage",
+  });
+}
+
+function classFeatureProjectionBuild(input: {
+  readonly startingClass: string;
+  readonly totalLevel: 1 | 2;
+  readonly features?: CharacterBuild["features"];
+}): CharacterBuild {
+  return {
+    progression: {
+      startingClass: classUnitId(input.startingClass),
+      advancements: Array.from({ length: input.totalLevel - 1 }, () => ({
+        classUnitId: classUnitId(input.startingClass),
+        hitPointRule: { tag: "fixedHigherLevelGain" as const },
+      })),
+    },
+    background: "background_soldier",
+    species: "species_orc",
+    originLanguages: ["Common", "Dwarvish", "Goblin"],
+    classFeatureLanguages: [],
+    alignment: { order: "lawful", morality: "good" },
+    abilityScores: requireRight(
+      abilityScoreAssignment({
+        str: 13,
+        dex: 14,
+        con: 13,
+        int: 8,
+        wis: 16,
+        cha: 10,
+      }),
+    ),
+    proficiencyChoices: [],
+    features: input.features ?? [],
+    equipment: {
+      owned: [],
+      loadout: {},
+    },
+  };
+}
+
+function requiredBuildResource(
+  resources: readonly CharacterBuildResource[],
+  unitId: string,
+): CharacterBuildResource {
+  const resource = resources.find(
+    (candidate) => candidate.unitId === unitId,
+  );
+  if (resource !== undefined) return resource;
+  throw new Error(`Expected CharacterBuild resource ${unitId}.`);
+}
+
+function requireRight<T, E>(result: Either.Either<T, E>): T {
+  if (Either.isRight(result)) return result.right;
+  const left = result.left;
+  if (
+    left !== null &&
+    typeof left === "object" &&
+    "message" in left &&
+    typeof left.message === "string"
+  ) {
+    throw new Error(left.message);
+  }
+  throw new Error(JSON.stringify(left));
+}
+
+function requireDefined<T>(value: T | undefined, message: string): T {
+  if (value !== undefined) return value;
+  throw new Error(message);
+}
+
+function requiredKnownMetamagicOption(
+  facts: CharacterBuildSorcererMetamagicFacts,
+  optionId: string,
+): CharacterBuildSorcererMetamagicFacts["knownOptions"][number] {
+  const option = facts.knownOptions.find(
+    (candidate) => candidate.optionId === optionId,
+  );
+  if (option !== undefined) return option;
+  throw new Error(`Expected Metamagic option fact ${optionId}.`);
 }
 
 function retainSelectedReferenceRoute(
