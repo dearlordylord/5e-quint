@@ -1,78 +1,38 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-003",
+  "taskId": "CRPI-BLOCK-004",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt",
-      "quarantinedWitnessNames": ["qState", "qRoute"],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-003.json"
-      ]
-    },
-    {
-      "path": "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt",
-      "quarantinedWitnessNames": ["qRoute"],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-003.json"
-      ]
-    },
-    {
-      "path": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
-      "quarantinedWitnessNames": ["qRoute"],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-003.json"
-      ]
-    },
-    {
-      "path": "packages/battle-runtime/battle-runtime-hit-point-regain-prevention.route.mbt.qnt",
-      "quarantinedWitnessNames": ["qRoute"],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-003.json"
-      ]
-    },
-    {
-      "path": "packages/battle-runtime/battle-runtime-next-attack-roll-mode.route.mbt.qnt",
-      "quarantinedWitnessNames": ["qRoute"],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-003.json"
-      ]
-    },
-    {
-      "path": "packages/battle-runtime/battle-runtime-opportunity-attack-denial.route.mbt.qnt",
-      "quarantinedWitnessNames": ["qRoute"],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-003.json"
-      ]
-    },
-    {
-      "path": "packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts",
+      "path": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
       "quarantinedWitnessNames": [
-        "resolveSpellAttackHitRoute",
-        "resolveSaveDamageRoute",
-        "spellAttackHitRoute",
-        "saveGatedDamageRoute"
+        "qProtocol",
+        "qRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-003.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-004.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/src/command-option-next-turn.mbt.test.ts",
+      "quarantinedWitnessNames": [
+        "CommandOptionNextTurnProjection.route",
+        "applyScenarioSegment"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-004.json"
       ]
     }
   ],
-  "productionModulesExtended": [
-    {
-      "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "ownerSurface": "selected spell-shape generic route substrates",
-      "notes": "Extends public reducer routeEvents for single spellAttackDamage procedures, save-gated action spells, and typed active-effect admissions for Hit Point regain prevention, next Attack Roll mode, and Opportunity Attack denial. The route mapper derives events from procedure, fill, target-shape, owner, and active-effect state deltas, not selected spell ids or names."
-    }
-  ],
+  "productionModulesExtended": [],
   "expectedNextReuse": [
     {
       "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "notes": "Future selected spell-shape tasks should reuse spellAttackProcedure, saveGatedSpell, battleObjectTargetBoundary, and active-effect admission route subjects instead of introducing selected-spell route dispatch."
+      "notes": "Future Command route tasks should keep using public routeEvents from discoverBattleActs, resolveBattleSubject, and resolveBattleInterrupt instead of adding a Command-specific route ledger."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 4 observes the copied qRoute projections for six selected attack spell shape branches through exact public battle reducer routeEvents. Existing state owns spell-slot spend, target holes, saving throws, Attack Rolls, Hit Point damage, and active Spell Effects. No new durable accumulator or duplicate selected-spell state was added."
+    "notes": "Task 6 observes Command option next-turn qRoute through public battle reducer route events. No durable BattleState fields or production modules were added; selected Command option remains the existing commandPending active effect plus typed runtime command subjects and fills."
   }
 }

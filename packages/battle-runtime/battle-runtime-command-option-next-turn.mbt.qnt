@@ -3,6 +3,9 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.COMMAND.OPTION_AND_NEXT_TURN
 
 module battleRuntimeCommandOptionNextTurnMbt {
+  import battleRuntimeFillKinds.* from "./battle-runtime-fill-kinds"
+  import battleRuntimeHoleKinds.* from "./battle-runtime-hole-kinds"
+  import battleRuntimeReducerRoute.* from "./battle-runtime-reducer-route"
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
 
   // Self-contained literal projection witness for the SRD Command options.
@@ -38,9 +41,33 @@ module battleRuntimeCommandOptionNextTurnMbt {
   var qDroppedObjectCount: int
   var qReactionWindowOpen: bool
   var qHaltSuppressed: bool
+  var qRoute: List[ReducerRouteEvent]
 
   pure val witnessHoleType: str = "CommandOptionNextTurn"
   pure val interruptDecisionHole: str = "InterruptDecision"
+  pure val noRouteHoles: Set[BattleHoleFamilyKind] = Set()
+
+  pure def commandDiscoverRoute(
+    holes: Set[BattleHoleFamilyKind],
+    owner: ReducerRouteOwnerGroup,
+  ): ReducerRouteEvent =
+    routeDiscoverBattleActs(CommandEffectRouteSubject, holes, owner)
+
+  pure def commandResolveRoute(
+    fill: BattleFillKind,
+    holes: Set[BattleHoleFamilyKind],
+    owner: ReducerRouteOwnerGroup,
+  ): ReducerRouteEvent =
+    routeResolveBattleSubject(CommandEffectRouteSubject, fill, holes, owner)
+
+  pure def commandResolveWithoutFillRoute(
+    owner: ReducerRouteOwnerGroup,
+  ): ReducerRouteEvent =
+    routeResolveBattleSubjectWithoutFill(
+      CommandEffectRouteSubject,
+      noRouteHoles,
+      owner,
+    )
 
   action recordProjection(
     scenario: CommandOptionNextTurnScenario,
@@ -55,6 +82,7 @@ module battleRuntimeCommandOptionNextTurnMbt {
     droppedObjectCount: int,
     reactionWindowOpen: bool,
     haltSuppressed: bool,
+    route: List[ReducerRouteEvent],
   ): bool = all {
     qScenario' = scenario,
     qProtocol' = protocol,
@@ -68,6 +96,7 @@ module battleRuntimeCommandOptionNextTurnMbt {
     qDroppedObjectCount' = droppedObjectCount,
     qReactionWindowOpen' = reactionWindowOpen,
     qHaltSuppressed' = haltSuppressed,
+    qRoute' = route,
   }
 
   action init = recordProjection(
@@ -83,6 +112,7 @@ module battleRuntimeCommandOptionNextTurnMbt {
     0,
     false,
     false,
+    List(routeStartBattle(BattleActionEconomyOwner)),
   )
 
   action doFailedSaveRecordsPending = all {
@@ -100,6 +130,22 @@ module battleRuntimeCommandOptionNextTurnMbt {
       0,
       false,
       false,
+      qRoute.concat(List(
+        commandDiscoverRoute(
+          Set(SpellTargetListHoleKind, CommandOptionChoiceHoleKind),
+          BattleSpellSlotAndActionEconomyOwner,
+        ),
+        commandResolveRoute(
+          CommandOptionChoiceFillKind,
+          Set(SavingThrowOutcomeHoleKind),
+          BattleHoleFrontierOwner,
+        ),
+        commandResolveRoute(
+          SavingThrowOutcomeFillKind,
+          noRouteHoles,
+          BattleActiveEffectOwner,
+        ),
+      )),
     ),
   }
 
@@ -118,6 +164,7 @@ module battleRuntimeCommandOptionNextTurnMbt {
       0,
       false,
       false,
+      qRoute.append(commandResolveWithoutFillRoute(BattleConditionLifecycleOwner)),
     ),
   }
 
@@ -136,6 +183,7 @@ module battleRuntimeCommandOptionNextTurnMbt {
       1,
       false,
       false,
+      qRoute.append(commandResolveWithoutFillRoute(BattleActiveEffectOwner)),
     ),
   }
 
@@ -154,6 +202,7 @@ module battleRuntimeCommandOptionNextTurnMbt {
       0,
       false,
       true,
+      qRoute.append(commandResolveWithoutFillRoute(BattleActiveEffectOwner)),
     ),
   }
 
@@ -172,6 +221,7 @@ module battleRuntimeCommandOptionNextTurnMbt {
       0,
       false,
       false,
+      qRoute.append(commandResolveWithoutFillRoute(BattleActiveEffectOwner)),
     ),
   }
 
@@ -190,6 +240,17 @@ module battleRuntimeCommandOptionNextTurnMbt {
       0,
       false,
       false,
+      qRoute.concat(List(
+        commandDiscoverRoute(
+          Set(MovementHoleKind),
+          BattleActiveEffectOwner,
+        ),
+        commandResolveRoute(
+          MovementFillKind,
+          noRouteHoles,
+          BattleMovementResourceOwner,
+        ),
+      )),
     ),
   }
 
@@ -208,6 +269,17 @@ module battleRuntimeCommandOptionNextTurnMbt {
       0,
       false,
       false,
+      qRoute.concat(List(
+        commandDiscoverRoute(
+          Set(MovementHoleKind),
+          BattleActiveEffectOwner,
+        ),
+        commandResolveRoute(
+          MovementFillKind,
+          noRouteHoles,
+          BattleMovementResourceOwner,
+        ),
+      )),
     ),
   }
 
@@ -226,6 +298,7 @@ module battleRuntimeCommandOptionNextTurnMbt {
       0,
       false,
       false,
+      qRoute.append(commandResolveWithoutFillRoute(BattleMovementResourceOwner)),
     ),
   }
 
@@ -244,6 +317,17 @@ module battleRuntimeCommandOptionNextTurnMbt {
       0,
       false,
       false,
+      qRoute.concat(List(
+        commandDiscoverRoute(
+          Set(MovementHoleKind),
+          BattleActiveEffectOwner,
+        ),
+        commandResolveRoute(
+          MovementFillKind,
+          noRouteHoles,
+          BattleMovementResourceOwner,
+        ),
+      )),
     ),
   }
 
@@ -262,6 +346,17 @@ module battleRuntimeCommandOptionNextTurnMbt {
       0,
       false,
       false,
+      qRoute.concat(List(
+        commandDiscoverRoute(
+          Set(MovementHoleKind),
+          BattleActiveEffectOwner,
+        ),
+        commandResolveRoute(
+          MovementFillKind,
+          noRouteHoles,
+          BattleMovementResourceOwner,
+        ),
+      )),
     ),
   }
 
@@ -280,6 +375,17 @@ module battleRuntimeCommandOptionNextTurnMbt {
       0,
       false,
       false,
+      qRoute.concat(List(
+        commandDiscoverRoute(
+          Set(MovementHoleKind),
+          BattleActiveEffectOwner,
+        ),
+        commandResolveRoute(
+          MovementFillKind,
+          Set(MovementHoleKind),
+          BattleHoleFrontierOwner,
+        ),
+      )),
     ),
   }
 
@@ -298,6 +404,7 @@ module battleRuntimeCommandOptionNextTurnMbt {
       0,
       false,
       false,
+      qRoute.append(commandResolveWithoutFillRoute(BattleMovementResourceOwner)),
     ),
   }
 
@@ -316,6 +423,17 @@ module battleRuntimeCommandOptionNextTurnMbt {
       0,
       true,
       false,
+      qRoute.concat(List(
+        commandDiscoverRoute(
+          Set(MovementHoleKind),
+          BattleActiveEffectOwner,
+        ),
+        commandResolveRoute(
+          MovementFillKind,
+          Set(InterruptDecisionHoleKind),
+          BattleInterruptStackOwner,
+        ),
+      )),
     ),
   }
 
@@ -334,6 +452,14 @@ module battleRuntimeCommandOptionNextTurnMbt {
       0,
       false,
       false,
+      qRoute.append(
+        routeResolveBattleInterrupt(
+          InterruptStackResumeRouteSubject,
+          InterruptDecisionFillKind,
+          noRouteHoles,
+          BattleInterruptStackOwner,
+        )
+      ),
     ),
   }
 
@@ -352,6 +478,7 @@ module battleRuntimeCommandOptionNextTurnMbt {
       qDroppedObjectCount,
       qReactionWindowOpen,
       qHaltSuppressed,
+      qRoute,
     ),
   }
 

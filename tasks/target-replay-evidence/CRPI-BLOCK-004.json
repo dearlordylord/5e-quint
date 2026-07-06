@@ -1,0 +1,822 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/command-option-next-turn.mbt.test.ts Command option next-turn public reducer qRoute replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "f07a33f783419b9f8f88eed9d679faadace779ec658d2a990ae56bc963d55387",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
+      "qntFileSha256": "2d26a14afd5d84248983228624e908ee29522cba54718e030c2f9a614849e657",
+      "branchFamily": "step",
+      "branchAction": "doFailedSaveRecordsPending",
+      "observedActionTaken": "doFailedSaveRecordsPending",
+      "harnessTestPath": "packages/battle-runtime/src/command-option-next-turn.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=15 action=doFailedSaveRecordsPending qRoute=command-option-next-turn-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "86fa667cae40f092d22f98e0a549e6cd145473cda6be6d21762884629d450ec0",
+        "observedProjectionSha256": "86fa667cae40f092d22f98e0a549e6cd145473cda6be6d21762884629d450ec0",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-command-ordering.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "resolve_battle_interrupt",
+            "packages/battle-runtime/src/index.ts#resolveBattleInterrupt"
+          ],
+          "routeEventSource": "Public battle reducer route events from battleReducerStartRouteEvent, AvailableBattleAct.routeEvents, BattleResolutionResult.routeEvents, and resolveBattleInterrupt routeEvents while replaying Command failed-save next-turn consequences.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleSubject.runtimeCommand.command",
+          "BattleHole.kind",
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleResolutionResult.routeEvents(resolveBattleInterrupt)",
+          "BattleActiveEffect.kind=commandPending",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.movementSpentFeet",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
+      "qntFileSha256": "2d26a14afd5d84248983228624e908ee29522cba54718e030c2f9a614849e657",
+      "branchFamily": "step",
+      "branchAction": "doFollowGrovel",
+      "observedActionTaken": "doFollowGrovel",
+      "harnessTestPath": "packages/battle-runtime/src/command-option-next-turn.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=15 action=doFollowGrovel qRoute=command-option-next-turn-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "3eeef09d22cea2e1e4425f23f94625bc3925c33ebd4ba5365d89b89b7d1192c9",
+        "observedProjectionSha256": "3eeef09d22cea2e1e4425f23f94625bc3925c33ebd4ba5365d89b89b7d1192c9",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-command-ordering.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "resolve_battle_interrupt",
+            "packages/battle-runtime/src/index.ts#resolveBattleInterrupt"
+          ],
+          "routeEventSource": "Public battle reducer route events from battleReducerStartRouteEvent, AvailableBattleAct.routeEvents, BattleResolutionResult.routeEvents, and resolveBattleInterrupt routeEvents while replaying Command failed-save next-turn consequences.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleSubject.runtimeCommand.command",
+          "BattleHole.kind",
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleResolutionResult.routeEvents(resolveBattleInterrupt)",
+          "BattleActiveEffect.kind=commandPending",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.movementSpentFeet",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
+      "qntFileSha256": "2d26a14afd5d84248983228624e908ee29522cba54718e030c2f9a614849e657",
+      "branchFamily": "step",
+      "branchAction": "doFollowDrop",
+      "observedActionTaken": "doFollowDrop",
+      "harnessTestPath": "packages/battle-runtime/src/command-option-next-turn.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=15 action=doFollowDrop qRoute=command-option-next-turn-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "66cbcc7603d3f911d03fd2d0ab7cc7011f5337049a284f1b786fed00bf1ec523",
+        "observedProjectionSha256": "66cbcc7603d3f911d03fd2d0ab7cc7011f5337049a284f1b786fed00bf1ec523",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-command-ordering.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "resolve_battle_interrupt",
+            "packages/battle-runtime/src/index.ts#resolveBattleInterrupt"
+          ],
+          "routeEventSource": "Public battle reducer route events from battleReducerStartRouteEvent, AvailableBattleAct.routeEvents, BattleResolutionResult.routeEvents, and resolveBattleInterrupt routeEvents while replaying Command failed-save next-turn consequences.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleSubject.runtimeCommand.command",
+          "BattleHole.kind",
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleResolutionResult.routeEvents(resolveBattleInterrupt)",
+          "BattleActiveEffect.kind=commandPending",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.movementSpentFeet",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
+      "qntFileSha256": "2d26a14afd5d84248983228624e908ee29522cba54718e030c2f9a614849e657",
+      "branchFamily": "step",
+      "branchAction": "doHaltSuppresses",
+      "observedActionTaken": "doHaltSuppresses",
+      "harnessTestPath": "packages/battle-runtime/src/command-option-next-turn.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=15 action=doHaltSuppresses qRoute=command-option-next-turn-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "d1b62063a7e1b6c6afc92737721d7588d128344337fcad87465c79af8c758b0e",
+        "observedProjectionSha256": "d1b62063a7e1b6c6afc92737721d7588d128344337fcad87465c79af8c758b0e",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-command-ordering.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "resolve_battle_interrupt",
+            "packages/battle-runtime/src/index.ts#resolveBattleInterrupt"
+          ],
+          "routeEventSource": "Public battle reducer route events from battleReducerStartRouteEvent, AvailableBattleAct.routeEvents, BattleResolutionResult.routeEvents, and resolveBattleInterrupt routeEvents while replaying Command failed-save next-turn consequences.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleSubject.runtimeCommand.command",
+          "BattleHole.kind",
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleResolutionResult.routeEvents(resolveBattleInterrupt)",
+          "BattleActiveEffect.kind=commandPending",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.movementSpentFeet",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
+      "qntFileSha256": "2d26a14afd5d84248983228624e908ee29522cba54718e030c2f9a614849e657",
+      "branchFamily": "step",
+      "branchAction": "doHaltEndTurnCleanup",
+      "observedActionTaken": "doHaltEndTurnCleanup",
+      "harnessTestPath": "packages/battle-runtime/src/command-option-next-turn.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=15 action=doHaltEndTurnCleanup qRoute=command-option-next-turn-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "cec73002f29236a33037ce3f5ccd0f1297071acbc66d242645558d84cbdc6a0a",
+        "observedProjectionSha256": "cec73002f29236a33037ce3f5ccd0f1297071acbc66d242645558d84cbdc6a0a",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-command-ordering.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "resolve_battle_interrupt",
+            "packages/battle-runtime/src/index.ts#resolveBattleInterrupt"
+          ],
+          "routeEventSource": "Public battle reducer route events from battleReducerStartRouteEvent, AvailableBattleAct.routeEvents, BattleResolutionResult.routeEvents, and resolveBattleInterrupt routeEvents while replaying Command failed-save next-turn consequences.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleSubject.runtimeCommand.command",
+          "BattleHole.kind",
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleResolutionResult.routeEvents(resolveBattleInterrupt)",
+          "BattleActiveEffect.kind=commandPending",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.movementSpentFeet",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
+      "qntFileSha256": "2d26a14afd5d84248983228624e908ee29522cba54718e030c2f9a614849e657",
+      "branchFamily": "step",
+      "branchAction": "doApproachContinues",
+      "observedActionTaken": "doApproachContinues",
+      "harnessTestPath": "packages/battle-runtime/src/command-option-next-turn.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=15 action=doApproachContinues qRoute=command-option-next-turn-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "120d2f01fa838dbc555667ce2e6129eb25790cf19aab976c817df4684482222c",
+        "observedProjectionSha256": "120d2f01fa838dbc555667ce2e6129eb25790cf19aab976c817df4684482222c",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-command-ordering.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "resolve_battle_interrupt",
+            "packages/battle-runtime/src/index.ts#resolveBattleInterrupt"
+          ],
+          "routeEventSource": "Public battle reducer route events from battleReducerStartRouteEvent, AvailableBattleAct.routeEvents, BattleResolutionResult.routeEvents, and resolveBattleInterrupt routeEvents while replaying Command failed-save next-turn consequences.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleSubject.runtimeCommand.command",
+          "BattleHole.kind",
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleResolutionResult.routeEvents(resolveBattleInterrupt)",
+          "BattleActiveEffect.kind=commandPending",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.movementSpentFeet",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
+      "qntFileSha256": "2d26a14afd5d84248983228624e908ee29522cba54718e030c2f9a614849e657",
+      "branchFamily": "step",
+      "branchAction": "doApproachWithinFiveEndsTurn",
+      "observedActionTaken": "doApproachWithinFiveEndsTurn",
+      "harnessTestPath": "packages/battle-runtime/src/command-option-next-turn.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=15 action=doApproachWithinFiveEndsTurn qRoute=command-option-next-turn-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "ea6c6296a2645587e803c107e5df63e03a6ce0c07345d260a5875ff30a006c79",
+        "observedProjectionSha256": "ea6c6296a2645587e803c107e5df63e03a6ce0c07345d260a5875ff30a006c79",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-command-ordering.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "resolve_battle_interrupt",
+            "packages/battle-runtime/src/index.ts#resolveBattleInterrupt"
+          ],
+          "routeEventSource": "Public battle reducer route events from battleReducerStartRouteEvent, AvailableBattleAct.routeEvents, BattleResolutionResult.routeEvents, and resolveBattleInterrupt routeEvents while replaying Command failed-save next-turn consequences.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleSubject.runtimeCommand.command",
+          "BattleHole.kind",
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleResolutionResult.routeEvents(resolveBattleInterrupt)",
+          "BattleActiveEffect.kind=commandPending",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.movementSpentFeet",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
+      "qntFileSha256": "2d26a14afd5d84248983228624e908ee29522cba54718e030c2f9a614849e657",
+      "branchFamily": "step",
+      "branchAction": "doApproachMovementRejected",
+      "observedActionTaken": "doApproachMovementRejected",
+      "harnessTestPath": "packages/battle-runtime/src/command-option-next-turn.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=15 action=doApproachMovementRejected qRoute=command-option-next-turn-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "afc629e87a042c1ea044d4b2655bcd8bc80b7a8f3af6415e9a23d5d6f4e3bd8d",
+        "observedProjectionSha256": "afc629e87a042c1ea044d4b2655bcd8bc80b7a8f3af6415e9a23d5d6f4e3bd8d",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-command-ordering.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "resolve_battle_interrupt",
+            "packages/battle-runtime/src/index.ts#resolveBattleInterrupt"
+          ],
+          "routeEventSource": "Public battle reducer route events from battleReducerStartRouteEvent, AvailableBattleAct.routeEvents, BattleResolutionResult.routeEvents, and resolveBattleInterrupt routeEvents while replaying Command failed-save next-turn consequences.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleSubject.runtimeCommand.command",
+          "BattleHole.kind",
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleResolutionResult.routeEvents(resolveBattleInterrupt)",
+          "BattleActiveEffect.kind=commandPending",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.movementSpentFeet",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
+      "qntFileSha256": "2d26a14afd5d84248983228624e908ee29522cba54718e030c2f9a614849e657",
+      "branchFamily": "step",
+      "branchAction": "doApproachNoMovementCleanup",
+      "observedActionTaken": "doApproachNoMovementCleanup",
+      "harnessTestPath": "packages/battle-runtime/src/command-option-next-turn.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=15 action=doApproachNoMovementCleanup qRoute=command-option-next-turn-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "9d512d68e211491ab5ed2ca7cd0415d9413c4eafc535044b3b3aec3401b5c9a0",
+        "observedProjectionSha256": "9d512d68e211491ab5ed2ca7cd0415d9413c4eafc535044b3b3aec3401b5c9a0",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-command-ordering.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "resolve_battle_interrupt",
+            "packages/battle-runtime/src/index.ts#resolveBattleInterrupt"
+          ],
+          "routeEventSource": "Public battle reducer route events from battleReducerStartRouteEvent, AvailableBattleAct.routeEvents, BattleResolutionResult.routeEvents, and resolveBattleInterrupt routeEvents while replaying Command failed-save next-turn consequences.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleSubject.runtimeCommand.command",
+          "BattleHole.kind",
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleResolutionResult.routeEvents(resolveBattleInterrupt)",
+          "BattleActiveEffect.kind=commandPending",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.movementSpentFeet",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
+      "qntFileSha256": "2d26a14afd5d84248983228624e908ee29522cba54718e030c2f9a614849e657",
+      "branchFamily": "step",
+      "branchAction": "doFleeFullMovementEndsTurn",
+      "observedActionTaken": "doFleeFullMovementEndsTurn",
+      "harnessTestPath": "packages/battle-runtime/src/command-option-next-turn.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=15 action=doFleeFullMovementEndsTurn qRoute=command-option-next-turn-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "85b62656f81cfc1efbb001e2f4413572781b81a6ea8411d6029c1dda5570ace4",
+        "observedProjectionSha256": "85b62656f81cfc1efbb001e2f4413572781b81a6ea8411d6029c1dda5570ace4",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-command-ordering.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "resolve_battle_interrupt",
+            "packages/battle-runtime/src/index.ts#resolveBattleInterrupt"
+          ],
+          "routeEventSource": "Public battle reducer route events from battleReducerStartRouteEvent, AvailableBattleAct.routeEvents, BattleResolutionResult.routeEvents, and resolveBattleInterrupt routeEvents while replaying Command failed-save next-turn consequences.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleSubject.runtimeCommand.command",
+          "BattleHole.kind",
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleResolutionResult.routeEvents(resolveBattleInterrupt)",
+          "BattleActiveEffect.kind=commandPending",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.movementSpentFeet",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
+      "qntFileSha256": "2d26a14afd5d84248983228624e908ee29522cba54718e030c2f9a614849e657",
+      "branchFamily": "step",
+      "branchAction": "doFleePartialMovementRejected",
+      "observedActionTaken": "doFleePartialMovementRejected",
+      "harnessTestPath": "packages/battle-runtime/src/command-option-next-turn.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=15 action=doFleePartialMovementRejected qRoute=command-option-next-turn-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "4b4e5642d1241ad3856ad34359dd1462c3432b28f6156d9d04d6c25a312dfaf4",
+        "observedProjectionSha256": "4b4e5642d1241ad3856ad34359dd1462c3432b28f6156d9d04d6c25a312dfaf4",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-command-ordering.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "resolve_battle_interrupt",
+            "packages/battle-runtime/src/index.ts#resolveBattleInterrupt"
+          ],
+          "routeEventSource": "Public battle reducer route events from battleReducerStartRouteEvent, AvailableBattleAct.routeEvents, BattleResolutionResult.routeEvents, and resolveBattleInterrupt routeEvents while replaying Command failed-save next-turn consequences.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleSubject.runtimeCommand.command",
+          "BattleHole.kind",
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleResolutionResult.routeEvents(resolveBattleInterrupt)",
+          "BattleActiveEffect.kind=commandPending",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.movementSpentFeet",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
+      "qntFileSha256": "2d26a14afd5d84248983228624e908ee29522cba54718e030c2f9a614849e657",
+      "branchFamily": "step",
+      "branchAction": "doFleeNoMovementCleanup",
+      "observedActionTaken": "doFleeNoMovementCleanup",
+      "harnessTestPath": "packages/battle-runtime/src/command-option-next-turn.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=15 action=doFleeNoMovementCleanup qRoute=command-option-next-turn-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "20992045b42a2d5f305e257c450917efb9a4366236a2311452a0f7f939bdf616",
+        "observedProjectionSha256": "20992045b42a2d5f305e257c450917efb9a4366236a2311452a0f7f939bdf616",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-command-ordering.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "resolve_battle_interrupt",
+            "packages/battle-runtime/src/index.ts#resolveBattleInterrupt"
+          ],
+          "routeEventSource": "Public battle reducer route events from battleReducerStartRouteEvent, AvailableBattleAct.routeEvents, BattleResolutionResult.routeEvents, and resolveBattleInterrupt routeEvents while replaying Command failed-save next-turn consequences.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleSubject.runtimeCommand.command",
+          "BattleHole.kind",
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleResolutionResult.routeEvents(resolveBattleInterrupt)",
+          "BattleActiveEffect.kind=commandPending",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.movementSpentFeet",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
+      "qntFileSha256": "2d26a14afd5d84248983228624e908ee29522cba54718e030c2f9a614849e657",
+      "branchFamily": "step",
+      "branchAction": "doFleeOpportunityAttackWindow",
+      "observedActionTaken": "doFleeOpportunityAttackWindow",
+      "harnessTestPath": "packages/battle-runtime/src/command-option-next-turn.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=15 action=doFleeOpportunityAttackWindow qRoute=command-option-next-turn-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "10a6560216cccdf817acfe88b31421371bb5ede61010027fff5d22fe1b02e489",
+        "observedProjectionSha256": "10a6560216cccdf817acfe88b31421371bb5ede61010027fff5d22fe1b02e489",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-command-ordering.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "resolve_battle_interrupt",
+            "packages/battle-runtime/src/index.ts#resolveBattleInterrupt"
+          ],
+          "routeEventSource": "Public battle reducer route events from battleReducerStartRouteEvent, AvailableBattleAct.routeEvents, BattleResolutionResult.routeEvents, and resolveBattleInterrupt routeEvents while replaying Command failed-save next-turn consequences.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleSubject.runtimeCommand.command",
+          "BattleHole.kind",
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleResolutionResult.routeEvents(resolveBattleInterrupt)",
+          "BattleActiveEffect.kind=commandPending",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.movementSpentFeet",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
+      "qntFileSha256": "2d26a14afd5d84248983228624e908ee29522cba54718e030c2f9a614849e657",
+      "branchFamily": "step",
+      "branchAction": "doFleeOpportunityAttackDeclinedContinuation",
+      "observedActionTaken": "doFleeOpportunityAttackDeclinedContinuation",
+      "harnessTestPath": "packages/battle-runtime/src/command-option-next-turn.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=15 action=doFleeOpportunityAttackDeclinedContinuation qRoute=command-option-next-turn-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "794ccfce48e7a48f16991a8405c36dfb07d91e6576f1340db6bc66a6e2440e0e",
+        "observedProjectionSha256": "794ccfce48e7a48f16991a8405c36dfb07d91e6576f1340db6bc66a6e2440e0e",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-command-ordering.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "resolve_battle_interrupt",
+            "packages/battle-runtime/src/index.ts#resolveBattleInterrupt"
+          ],
+          "routeEventSource": "Public battle reducer route events from battleReducerStartRouteEvent, AvailableBattleAct.routeEvents, BattleResolutionResult.routeEvents, and resolveBattleInterrupt routeEvents while replaying Command failed-save next-turn consequences.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleSubject.runtimeCommand.command",
+          "BattleHole.kind",
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleResolutionResult.routeEvents(resolveBattleInterrupt)",
+          "BattleActiveEffect.kind=commandPending",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.movementSpentFeet",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
+      "qntFileSha256": "2d26a14afd5d84248983228624e908ee29522cba54718e030c2f9a614849e657",
+      "branchFamily": "step",
+      "branchAction": "doComplete",
+      "observedActionTaken": "doComplete",
+      "harnessTestPath": "packages/battle-runtime/src/command-option-next-turn.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=15 action=doComplete qRoute=command-option-next-turn-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "2dac7bcbe488bd92d14af1e46c9d7d039c372193531cdffa6326ed710c467bf0",
+        "observedProjectionSha256": "2dac7bcbe488bd92d14af1e46c9d7d039c372193531cdffa6326ed710c467bf0",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-command-ordering.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "resolve_battle_interrupt",
+            "packages/battle-runtime/src/index.ts#resolveBattleInterrupt"
+          ],
+          "routeEventSource": "Public battle reducer route events from battleReducerStartRouteEvent, AvailableBattleAct.routeEvents, BattleResolutionResult.routeEvents, and resolveBattleInterrupt routeEvents while replaying Command failed-save next-turn consequences.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleSubject.runtimeCommand.command",
+          "BattleHole.kind",
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleResolutionResult.routeEvents(resolveBattleInterrupt)",
+          "BattleActiveEffect.kind=commandPending",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.movementSpentFeet",
+          "BattleState.currentTurnResources.commandHalt",
+          "BattleState.interruptStack"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}
