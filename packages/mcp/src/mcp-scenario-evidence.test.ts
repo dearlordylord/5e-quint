@@ -57,9 +57,7 @@ const require = createRequire(import.meta.url);
 // boundary so this test exercises the same manifest validator used by the
 // ultra-golden evidence gate. The validator checks repo-relative owner/test
 // paths, keeping admitted evidence local to this worktree.
-const ultraGoldenGateModule: UltraGoldenGateModule = require(
-  "../../../scripts/ultra-golden-gate.cjs",
-);
+const ultraGoldenGateModule: UltraGoldenGateModule = require("../../../scripts/ultra-golden-gate.cjs");
 const { validateMcpScenarioEvidence } = ultraGoldenGateModule;
 
 function readJson<T>(path: string): T {
