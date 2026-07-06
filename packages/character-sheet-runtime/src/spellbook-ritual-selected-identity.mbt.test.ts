@@ -412,7 +412,7 @@ function spellbookRitualSheet(input: {
         spellbook: input.spellbook,
         preparedSpells: input.preparedSpells,
       }),
-      currentHp: Hp(8),
+      currentHp: Hp(7),
       tempHp: Hp(0),
       hitPointMaximumReduction: Hp(0),
       conditions: [],

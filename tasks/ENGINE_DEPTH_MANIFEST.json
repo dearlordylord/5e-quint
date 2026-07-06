@@ -1,83 +1,82 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-053",
+  "taskId": "CRPI-BLOCK-054",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.route.mbt.qnt",
+      "path": "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.route.mbt.qnt",
       "quarantinedWitnessNames": [
         "qRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-053.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-054.json"
       ]
     },
     {
       "path": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "hitPointMaximumRouteActions",
-        "projectHitPointMaximumRoute",
+        "spellbookRitualRouteActions",
+        "spellbookRitualRoute",
         "normalizeCharacterSheetRouteQuintState",
         "routeStateCheck"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-053.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-054.json"
       ]
     },
     {
-      "path": "packages/character-sheet-runtime/src/hit-point-maximum.mbt.test.ts",
+      "path": "packages/character-sheet-runtime/src/spellbook-ritual-selected-identity.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "createHitPointMaximumDriver",
-        "projectHitPointMaximum",
-        "hitPointMaximumStateCheck"
+        "createSpellbookRitualSelectedIdentityDriver",
+        "spellbookRitualSelectedIdentityStateCheck"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-053.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-054.json"
       ]
     }
   ],
   "productionModulesExtended": [
     {
-      "path": "packages/character-sheet-runtime/src/hit-points.ts",
+      "path": "packages/character-sheet-runtime/src/spell-invocation.ts",
       "owners": [
-        "CharacterSheetHitPointOwner",
+        "CharacterSheetSelectedReferenceOwner",
         "CharacterSheetBuildProjectionOwner"
       ],
-      "notes": "Task 99 adds the public characterSheetHitPointMaximumProjection entrypoint. It derives normal Hit Point Maximum from CharacterBuild facts, applies existing CharacterSheet.hitPointMaximumReduction for effective maximum, and returns the copied hit-point projection plus build arithmetic-input qRoute. No durable CharacterSheet state field is added."
+      "notes": "Task 102 adds the public characterSheetSpellbookRitualInvocationProjection entrypoint. It derives accepted and rejected spellbook Ritual invocation projections from existing CharacterBuild spellbook Spell Access, Surface Spell Definition ritual facts, and the spellbook Ritual Access feature, then returns copied qRoute evidence. No ritual-casting ledger or duplicate spellbook state is added."
     },
     {
       "path": "packages/character-sheet-runtime/src/sheet-types.ts",
       "owners": [
-        "CharacterSheetHitPointOwner",
+        "CharacterSheetSelectedReferenceOwner",
         "CharacterSheetBuildProjectionOwner"
       ],
-      "notes": "Task 99 adds CharacterSheetHitPointMaximumProjection and CharacterSheetHitPointMaximumProjectionRoute types. The projection records public route evidence and derived maximum values, not duplicated sheet state."
+      "notes": "Task 102 adds CharacterSheetSpellbookRitualInvocationProjection and CharacterSheetSpellbookRitualInvocationRoute types. The projection records accepted no-slot invocation or rejected projection-choice route evidence without adding durable CharacterSheet fields."
     },
     {
       "path": "packages/character-sheet-runtime/src/index.ts",
       "owners": [
-        "CharacterSheetHitPointOwner",
+        "CharacterSheetSelectedReferenceOwner",
         "CharacterSheetBuildProjectionOwner"
       ],
-      "notes": "Exports the public Hit Point Maximum projection entrypoint and projection route types."
+      "notes": "Exports the public spellbook Ritual invocation projection entrypoint and route projection types."
     },
     {
       "path": "scripts/audit-character-sheet-runtime-split.mjs",
       "owners": [
-        "CharacterSheetHitPointOwner",
+        "CharacterSheetSelectedReferenceOwner",
         "CharacterSheetBuildProjectionOwner"
       ],
-      "notes": "Records split-audit ownership for the new public Hit Point Maximum projection export surface so quality checks keep the owner boundary explicit."
+      "notes": "Records split-audit ownership for the new public spellbook Ritual projection export surface so quality checks keep the owner boundary explicit."
     }
   ],
   "expectedNextReuse": [
     {
-      "path": "packages/character-sheet-runtime/src/hit-points.ts",
-      "notes": "Future Character Sheet Hit Point Maximum route tasks should reuse characterSheetHitPointMaximumProjection instead of adapter-local route event assembly."
+      "path": "packages/character-sheet-runtime/src/spell-invocation.ts",
+      "notes": "Future Character Sheet spellbook Ritual route tasks should reuse characterSheetSpellbookRitualInvocationProjection instead of adapter-local qRoute assembly."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 99 observes copied qRoute for Hit Point Maximum projection through a public Character Sheet projection entrypoint. Normal maximum remains build-derived; maximum reduction remains canonical sheet Hit Point state."
+    "notes": "Task 102 observes copied qRoute for spellbook Ritual selected identity through a public Character Sheet spellbook Ritual invocation projection entrypoint. Spellbook access remains build-derived and ritual invocation remains a no-slot projection, not stored sheet state."
   }
 }
