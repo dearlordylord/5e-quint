@@ -1,52 +1,78 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-002",
+  "taskId": "CRPI-BLOCK-003",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt",
-      "quarantinedWitnessNames": ["qRoute"],
+      "path": "packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt",
+      "quarantinedWitnessNames": ["qState", "qRoute"],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-002.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-003.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+      "path": "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt",
+      "quarantinedWitnessNames": ["qRoute"],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-003.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
+      "quarantinedWitnessNames": ["qRoute"],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-003.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/battle-runtime-hit-point-regain-prevention.route.mbt.qnt",
+      "quarantinedWitnessNames": ["qRoute"],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-003.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/battle-runtime-next-attack-roll-mode.route.mbt.qnt",
+      "quarantinedWitnessNames": ["qRoute"],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-003.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/battle-runtime-opportunity-attack-denial.route.mbt.qnt",
+      "quarantinedWitnessNames": ["qRoute"],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-003.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "createAfterHitDamageRidersRouteDriver",
-        "observeAfterHitPublicRouteSurface",
-        "afterHitRouteStateCheck"
+        "resolveSpellAttackHitRoute",
+        "resolveSaveDamageRoute",
+        "spellAttackHitRoute",
+        "saveGatedDamageRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-002.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-003.json"
       ]
     }
   ],
   "productionModulesExtended": [
     {
       "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "ownerSurface": "afterHitDamageRider",
-      "notes": "Extends reducer-route vocabulary and route-event emission for after-hit interrupt selection, pending attack damage additions, timed active-effect turn boundaries, escape ability-check cleanup, and illumination concentration cleanup. The events are derived from typed runtime procedure/fill/active-effect shape and state deltas, not authored spell identity."
-    },
-    {
-      "path": "packages/battle-runtime/src/active-effect/types.ts",
-      "ownerSurface": "afterHitDamageRider",
-      "notes": "Extends spellTurnStartDamageAndSave with an explicit source fact so generic turn-boundary damage/save effects cannot be routed as after-hit timed damage riders."
-    },
-    {
-      "path": "packages/battle-runtime/src/battle-reducer.ts",
-      "ownerSurface": "afterHitDamageRider",
-      "notes": "Extends AttackSpellDamageAddition with sourceProcedure so weapon-attack damage routes can distinguish after-hit rider additions from other spell-hosted weapon damage additions."
+      "ownerSurface": "selected spell-shape generic route substrates",
+      "notes": "Extends public reducer routeEvents for single spellAttackDamage procedures, save-gated action spells, and typed active-effect admissions for Hit Point regain prevention, next Attack Roll mode, and Opportunity Attack denial. The route mapper derives events from procedure, fill, target-shape, owner, and active-effect state deltas, not selected spell ids or names."
     }
   ],
   "expectedNextReuse": [
     {
-      "path": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
-      "notes": "Future selected after-hit spell identity tasks should reuse the generic public after-hit reducer observations instead of introducing selected-spell route dispatch or a whole-battle rider accumulator."
+      "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "notes": "Future selected spell-shape tasks should reuse spellAttackProcedure, saveGatedSpell, battleObjectTargetBoundary, and active-effect admission route subjects instead of introducing selected-spell route dispatch."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 3 observes copied qRoute for after-hit damage rider owner surfaces through exact public battle reducer routeEvents. BattleState owners cover interrupt decisions, spell-slot/action-economy and feature free-cast spends, Hit Point damage, save-gated condition lifecycle, Concentration, timed active Spell Effect cleanup, escape Ability Check cleanup, and illumination active-effect cleanup. Typed source facts on existing effect/addition projections prevent generic escape and generic turn-boundary routes from being mislabeled as after-hit. No production accumulator or duplicate durable state was added."
+    "notes": "Task 4 observes the copied qRoute projections for six selected attack spell shape branches through exact public battle reducer routeEvents. Existing state owns spell-slot spend, target holes, saving throws, Attack Rolls, Hit Point damage, and active Spell Effects. No new durable accumulator or duplicate selected-spell state was added."
   }
 }

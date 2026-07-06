@@ -5702,3 +5702,107 @@ Verification results:
   `characterSheetSpellbookRitualInvocationProjection`, rejected branches route
   through `projectionChoice`, accepted branches preserve no-slot invocation
   facts, and no remaining reasonable Task 102 findings were found.
+
+## CRPI-BLOCK-003
+
+Status: `pass`
+
+- Task: 4
+- Driver path: `packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt`
+- Route connector paths:
+  `packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt`,
+  `packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt`,
+  `packages/battle-runtime/battle-runtime-hit-point-regain-prevention.route.mbt.qnt`,
+  `packages/battle-runtime/battle-runtime-next-attack-roll-mode.route.mbt.qnt`,
+  `packages/battle-runtime/battle-runtime-opportunity-attack-denial.route.mbt.qnt`
+- Route class: `catalog-after-substrate`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-003.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Behavior implemented:
+
+Task 4 accepts the attack spell shape selected-identity route through public
+battle reducer route events. The focused harness resolves the selected spell
+fixtures through `discoverBattleActs` and `resolveBattleSubject`, then compares
+the copied connector `qRoute` to exact public route events from
+`AvailableBattleAct.routeEvents` and `BattleResolutionResult.routeEvents`.
+Production route mapping now exposes the generic single-attack spell procedure,
+save-gated spell fills, object target boundary, and typed active-effect
+admissions for Hit Point regain prevention, next Attack Roll mode, and
+Opportunity Attack denial. No selected spell id/name dispatch or duplicate
+durable state was added.
+
+Generated branch coverage:
+
+| Obligation                                                                                                                     | Evidence                                                                                                                                                                                                                                                                                                           | Sampled inputs | Status    |
+| ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------- | --------- |
+| `packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt#step:doFireBoltHit`                       | `tasks/target-replay-evidence/CRPI-BLOCK-003.json#driver:packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt#step:doFireBoltHit#trace:public-route=attackSpellShape action=doFireBoltHit qRoute=spell-attack-object-target-public-route`                                       | `_none_`       | `covered` |
+| `packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt#step:doChillTouchHitPointRegainPrevention` | `tasks/target-replay-evidence/CRPI-BLOCK-003.json#driver:packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt#step:doChillTouchHitPointRegainPrevention#trace:public-route=attackSpellShape action=doChillTouchHitPointRegainPrevention qRoute=hit-point-regain-prevention-public-route` | `_none_`       | `covered` |
+| `packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt#step:doGuidingBoltNextAttackAdvantage`     | `tasks/target-replay-evidence/CRPI-BLOCK-003.json#driver:packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt#step:doGuidingBoltNextAttackAdvantage#trace:public-route=attackSpellShape action=doGuidingBoltNextAttackAdvantage qRoute=next-attack-roll-mode-public-route`       | `_none_`       | `covered` |
+| `packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt#step:doInflictWoundsFailedSave`           | `tasks/target-replay-evidence/CRPI-BLOCK-003.json#driver:packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt#step:doInflictWoundsFailedSave#trace:public-route=attackSpellShape action=doInflictWoundsFailedSave qRoute=save-gated-damage-public-route`                       | `_none_`       | `covered` |
+| `packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt#step:doInflictWoundsSuccessfulSave`       | `tasks/target-replay-evidence/CRPI-BLOCK-003.json#driver:packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt#step:doInflictWoundsSuccessfulSave#trace:public-route=attackSpellShape action=doInflictWoundsSuccessfulSave qRoute=save-gated-damage-public-route`               | `_none_`       | `covered` |
+| `packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt#step:doShockingGraspOpportunityAttackDenied` | `tasks/target-replay-evidence/CRPI-BLOCK-003.json#driver:packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt#step:doShockingGraspOpportunityAttackDenied#trace:public-route=attackSpellShape action=doShockingGraspOpportunityAttackDenied qRoute=opportunity-attack-denial-public-route` | `_none_`       | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-003.json`
+- Reproduction trace family: `public-route=attackSpellShape action=<branch> qRoute=<selected spell-shape public route>`
+- The copied connector projection source is each selected route connector's
+  `qRoute`; the observed projection source is public battle reducer route
+  events collected in
+  `packages/battle-runtime/src/attack-spell-shape-selected-identity.mbt.test.ts`.
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-003/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 4.
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Spells/Gaining-and-Casting.md#Attack Rolls` and
+  `#Saving Throws` define spell Attack Roll and spell save route facts.
+- SRD 5.2.1 `Playing-the-Game.md#Making an Attack`, `#Damage Rolls`,
+  `#Hit Points`, and `#Healing` define target choice, Attack Roll, damage roll,
+  Hit Point damage, and Hit Point regain owner facts.
+- SRD 5.2.1 `Rules-Glossary.md#Opportunity Attacks`, `#Reaction`,
+  `#Attack Roll`, `#Healing`, and `#Hit Points` define Opportunity Attack,
+  Reaction, Attack Roll, healing, and Hit Point terms.
+- SRD 5.2.1 spell passages for Fire Bolt, Chill Touch, Guiding Bolt, Inflict
+  Wounds, and Shocking Grasp define the selected fixture shapes used by the
+  target replay.
+- `UBIQUITOUS_LANGUAGE.md` defines Saving Throw, Attack Roll, Advantage,
+  Hit Points, Reaction, Opportunity Attack, Spell Effect, and Spell Attack.
+
+Verification results:
+
+- Base check passed: declared base ref
+  `ralph/cleanroom-attack-spell-shape-route-20260706T062148Z/integration`
+  resolved to `8d96c2469 Merge CRPI-BLOCK-003 unblock`, `HEAD` resolved to
+  `8d96c2469 Merge CRPI-BLOCK-003 unblock`, and Base SHA
+  `8d96c2469bb756b85d2abcd28535ec15a0b3f5e7` was an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against the local SRD passages listed
+  above and `UBIQUITOUS_LANGUAGE.md`.
+- Focused selected replay passed:
+  `START=$(date +%s); pnpm --filter @dnd/battle-runtime exec vitest run src/attack-spell-shape-selected-identity.mbt.test.ts 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"`
+  passed with 2 tests and `TOTAL: 5s`.
+- Focused route connector subset passed:
+  `START=$(date +%s); pnpm --filter @dnd/battle-runtime exec vitest run src/reducer-route-connectors.mbt.test.ts -t "save-gated spell ordering|spell Attack ordering|Hit Point regain prevention|next Attack Roll mode|Opportunity Attack denial" 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"`
+  passed with 5 tests and 29 skipped; `TOTAL: 20s`.
+- Final JSON validation, branch coverage, diff check, and broad quality results
+  are recorded in `tasks/RUN_LEDGER.json`.
+- Reviewer-loop convergence passed: round 1 verified RAW traceability,
+  ubiquitous-language/domain language, no duplicate durable state, no authored
+  identity dispatch, and public route-event comparison. Round 2 verified
+  connascence locality for route subject/owner/fill mappings and found no
+  remaining reasonable Task 4 findings.
