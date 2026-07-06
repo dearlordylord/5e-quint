@@ -19154,7 +19154,7 @@
         {
           "ownerPath": "packages/battle-runtime/src/danger-sense-selected-identity.mbt.test.ts",
           "tag": "selected-identity-replay",
-          "taskId": "B4-CLASS-FEATURE-IDENTITY-BATCH-1"
+          "taskId": "CRPI-BLOCK-007"
         }
       ],
       "executableMechanics": true,

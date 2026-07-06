@@ -273,6 +273,7 @@ export {
 } from "./battle-reducer/wild-shape-equipment.ts";
 export {
   battleReducerStartRouteEvent,
+  passiveSavingThrowRollModeRouteEvents,
   type BattleReducerRouteEvent,
   type BattleReducerRouteEvents,
   type BattleReducerRouteFill,

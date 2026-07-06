@@ -1,0 +1,104 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/danger-sense-selected-identity.mbt.test.ts Danger Sense copied qRoute versus public passive Saving Throw roll-mode replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "f07a33f783419b9f8f88eed9d679faadace779ec658d2a990ae56bc963d55387",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-danger-sense-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-danger-sense-substrates.route.mbt.qnt",
+      "qntFileSha256": "1a3710eb18c667601d2b5120783a5084bc5f89192466a3c54f494c3be854d22d",
+      "routeConnectorSha256": "2eaab0e247887395741858a7d6f84816deec4bb8193e0d9ea2f42481afcf51af",
+      "branchFamily": "step",
+      "branchAction": "doProjectDangerSenseDexterityAdvantage",
+      "observedActionTaken": "doProjectDangerSenseDexterityAdvantage",
+      "harnessTestPath": "packages/battle-runtime/src/danger-sense-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=2 action=doProjectDangerSenseDexterityAdvantage qRoute=danger-sense-public-passive-saving-throw-roll-mode-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "e343c3e0b7c2d9322ee0094e82ba10fa98fb19c84cfa12bd908106e9473d29e9",
+        "observedProjectionSha256": "e343c3e0b7c2d9322ee0094e82ba10fa98fb19c84cfa12bd908106e9473d29e9",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-danger-sense-substrates.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "project_passive_saving_throw_roll_mode_route",
+            "packages/battle-runtime/src/index.ts#passiveSavingThrowRollModeRouteEvents"
+          ],
+          "routeEventSource": "Public battle runtime route projection from BattleState character support-profile facts and condition state after startBattle admits Barbarian Danger Sense.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#passiveSavingThrowRollModeRouteEvents"
+        },
+        "checkedTargetStateFields": [
+          "BattleCreatureState.origin.passiveSavingThrowRollModeProfiles",
+          "BattleCreatureState.conditions",
+          "BattleReducerRouteEvent.subject=passiveSavingThrowRollMode",
+          "BattleReducerRouteEvent.owner=battleSavingThrowRollMode",
+          "BattleReducerRouteEvent.fill=savingThrowOutcome"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-danger-sense-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-danger-sense-substrates.route.mbt.qnt",
+      "qntFileSha256": "1a3710eb18c667601d2b5120783a5084bc5f89192466a3c54f494c3be854d22d",
+      "routeConnectorSha256": "2eaab0e247887395741858a7d6f84816deec4bb8193e0d9ea2f42481afcf51af",
+      "branchFamily": "step",
+      "branchAction": "doSuppressDangerSenseWhileIncapacitated",
+      "observedActionTaken": "doSuppressDangerSenseWhileIncapacitated",
+      "harnessTestPath": "packages/battle-runtime/src/danger-sense-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=2 action=doSuppressDangerSenseWhileIncapacitated qRoute=danger-sense-public-passive-saving-throw-roll-mode-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "9d62beb87b2f2fadf99540332bfb55fa936dfba6501e139dc1e1182a9a995d06",
+        "observedProjectionSha256": "9d62beb87b2f2fadf99540332bfb55fa936dfba6501e139dc1e1182a9a995d06",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-danger-sense-substrates.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "project_passive_saving_throw_roll_mode_route",
+            "packages/battle-runtime/src/index.ts#passiveSavingThrowRollModeRouteEvents"
+          ],
+          "routeEventSource": "Public battle runtime route projection from BattleState character support-profile facts and Incapacitated condition state after startBattle admits Barbarian Danger Sense.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#passiveSavingThrowRollModeRouteEvents"
+        },
+        "checkedTargetStateFields": [
+          "BattleCreatureState.origin.passiveSavingThrowRollModeProfiles",
+          "BattleCreatureState.conditions",
+          "BattleReducerRouteEvent.subject=passiveSavingThrowRollMode",
+          "BattleReducerRouteEvent.owner=battleSavingThrowRollMode",
+          "BattleReducerRouteEvent.owner=battleConditionLifecycle"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}

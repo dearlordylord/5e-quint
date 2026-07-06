@@ -67,7 +67,7 @@
     {
       "number": 11,
       "id": "CRPI-BLOCK-007",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Blocked route replay: battle-runtime-danger-sense-selected-identity"
     },
     {
@@ -1371,7 +1371,7 @@ Plan Impact:
 
 ### Task 11 - CRPI-BLOCK-007
 
-Status: `ready-for-research`
+Status: `done`
 
 Blocker Type: none
 

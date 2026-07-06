@@ -4,6 +4,96 @@
   "sourceBranchInventorySha256": "f07a33f783419b9f8f88eed9d679faadace779ec658d2a990ae56bc963d55387",
   "entries": [
     {
+      "taskId": "CRPI-BLOCK-007",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-danger-sense-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "f07a33f783419b9f8f88eed9d679faadace779ec658d2a990ae56bc963d55387",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "fde679f8966d8918a1e6ce5c0f5febabe5b0c4ffaad42a2644477c30c5dcb3f8"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "e2c724899792055ba65e6ab834c1f8407f4fc06dded0f631bde16c65f92a964f"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "2357972532ff5a487b0eb88a89d7fe53ab48352c4766f09b08a196d07c8084cf"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-007.json",
+          "sha256": "42ecdc6b352cf49656a50f32d031413a8036b6c367e1a5f8122fafa2441c2205",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-007.json#driver:packages/battle-runtime/battle-runtime-danger-sense-selected-identity.mbt.qnt#step:doProjectDangerSenseDexterityAdvantage#trace:MBT_TRACES=1 MBT_STEPS=2 action=doProjectDangerSenseDexterityAdvantage qRoute=danger-sense-public-passive-saving-throw-roll-mode-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-007.json#driver:packages/battle-runtime/battle-runtime-danger-sense-selected-identity.mbt.qnt#step:doSuppressDangerSenseWhileIncapacitated#trace:MBT_TRACES=1 MBT_STEPS=2 action=doSuppressDangerSenseWhileIncapacitated qRoute=danger-sense-public-passive-saving-throw-roll-mode-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec vitest run src/unit-profile-admission-danger-sense.test.ts",
+          "status": "pass",
+          "detail": "Focused deterministic Danger Sense admission and Grease save-hole projection tests passed; 6 tests passed."
+        },
+        {
+          "command": "START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=2 pnpm --filter @dnd/battle-runtime exec vitest run src/danger-sense-selected-identity.mbt.test.ts ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "status": "pass",
+          "detail": "Focused Danger Sense selected-identity and substrate route replay passed after final route predicate tightening; 2 tests passed; TOTAL: 6s."
+        },
+        {
+          "command": "node task-scoped validateTargetReplayEvidence for packages/battle-runtime/battle-runtime-danger-sense-selected-identity.mbt.qnt",
+          "status": "pass",
+          "detail": "Validated tasks/target-replay-evidence/CRPI-BLOCK-007.json with scripts/cleanroom-branch-coverage-check.cjs#validateTargetReplayEvidence and requireAllObligations=false; 2 obligations covered."
+        },
+        {
+          "command": "node scripts/unit-profile-coverage-check.cjs --write && pnpm unit-profile-coverage:check",
+          "status": "pass",
+          "detail": "Updated the existing barbarian_danger_sense selected-identity evidence row from B4-CLASS-FEATURE-IDENTITY-BATCH-1 to CRPI-BLOCK-007, regenerated plans/unit-profile-coverage/unit-matrix.json and UNIT_REPORT.md, then verified Unit profile coverage OK: 332 Units, 192 profiles."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check --target-replay-evidence tasks/target-replay-evidence/CRPI-BLOCK-007.json",
+          "status": "fail",
+          "detail": "Diagnostic broad check failed on unrelated baseline missing-evidence rows across the full corpus; after schema cleanup it reported no Task 11 evidence issues."
+        },
+        {
+          "command": "pnpm quality",
+          "status": "fail",
+          "detail": "Passed task-relevant cleanroom branch coverage and unit-profile coverage gates, then failed in unrelated baseline formatting for untouched packages/mcp/src/mcp-scenario-evidence.test.ts; broad cleanup stopped per task instructions."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 verified Danger Sense against SRD Barbarian, D20 Tests, Advantage/Disadvantage, Incapacitated, and ubiquitous-language terms. Round 2 confirmed qRoute is derived from public BattleState support-profile and condition facts with no duplicate durable state and no authored-identity production dispatch."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-007",
+            "impact": "unblocked"
+          },
+          {
+            "taskId": "CRPI-BLOCK-013",
+            "impact": "left unchanged"
+          }
+        ],
+        "observations": [
+          "Danger Sense route replay is supported by the existing passive Saving Throw roll-mode substrate and BattleState-owned condition lifecycle.",
+          "The public passiveSavingThrowRollModeRouteEvents projection can be reused for future passive save-roll-mode selected-identity evidence, but runtime roll-mode semantics remain owned by savingThrowRollModeProjections.",
+          "No future task should add a selected-feature route cache or dispatch production behavior on barbarian_danger_sense."
+        ],
+        "requiredPlanEdits": "none"
+      }
+    },
+    {
       "taskId": "CRPI-BLOCK-001",
       "assignmentId": "reducer-spine-diagnostic-battle",
       "laneId": "battle",

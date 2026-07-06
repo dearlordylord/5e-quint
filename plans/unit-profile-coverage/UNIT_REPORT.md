@@ -1110,7 +1110,7 @@ This raw inventory lists authored Surface records that are absent from the insta
 | `barbarian_rage` | `unit-feature.bonus-action-ongoing-rage` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
 | `barbarian_unarmored_defense` | `character-sheet.armor-class-base-formula` | armor-class-base-formula | `packages/character-sheet-runtime/src/armor-class-base-selected-identity.mbt.test.ts` |
 | `barbarian_reckless_attack` | `unit-feature.first-attack-roll-reckless-advantage` | QMBT9 | `packages/battle-runtime/src/rule-core-features.mbt.test.ts` |
-| `barbarian_danger_sense` | `unit-feature.passive-saving-throw-roll-mode` | B4-CLASS-FEATURE-IDENTITY-BATCH-1 | `packages/battle-runtime/src/danger-sense-selected-identity.mbt.test.ts` |
+| `barbarian_danger_sense` | `unit-feature.passive-saving-throw-roll-mode` | CRPI-BLOCK-007 | `packages/battle-runtime/src/danger-sense-selected-identity.mbt.test.ts` |
 | `barbarian_extra_attack` | `unit-feature.attack-action-attack-count-scaling` | extra-attack-count-scaling | `packages/battle-runtime/src/extra-attack-count.mbt.test.ts` |
 | `barbarian_fast_movement` | `unit-feature.passive-speed-bonus` | movement-forced-movement | `packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts` |
 | `barbarian_weapon_mastery` | `character-creation.weapon-mastery-choice`, `character-creation.weapon-mastery-level-gain`, `character-sheet.weapon-mastery-class-level-reselection` | L1D2-WEAPON-MASTERY-CONTAINERS | `packages/character-creation-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts` |

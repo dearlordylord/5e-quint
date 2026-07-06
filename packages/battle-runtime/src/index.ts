@@ -256,6 +256,7 @@ export {
   battleMagicalDarknessSightObscurement,
   battleCreatureCanBreatheUnderwater,
   battleReducerStartRouteEvent,
+  passiveSavingThrowRollModeRouteEvents,
   battleLightEmitterProjection,
   battleLightEmitters,
   battleObscurementZones,
