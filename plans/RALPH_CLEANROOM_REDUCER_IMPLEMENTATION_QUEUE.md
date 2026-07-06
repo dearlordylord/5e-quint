@@ -475,7 +475,7 @@
     {
       "number": 79,
       "id": "CRPI-BLOCK-038",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: character-battle-origin-feat-selected-identity"
     },
     {
@@ -731,7 +731,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRPI-BLOCK-037` | `blocked` | blocked by task body | blocker resolution before implementation |
 | `CRPI-READY-034` | `done` | none | target replay evidence and owner implementation |
 | `CRP05-SBE-01` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-038` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-038` | `done` | none | target replay evidence and owner implementation |
 | `CRP05-SBE-02` | `done` | none | target replay evidence and owner implementation |
 | `CRP06-SRO-01` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-039` | `ready-for-research` | none | target replay evidence and owner implementation |
@@ -5249,7 +5249,7 @@ Plan Impact:
 
 ### Task 79 - CRPI-BLOCK-038
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

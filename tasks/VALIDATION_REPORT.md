@@ -1,5 +1,72 @@
 # Validation Report
 
+## CRPI-BLOCK-038
+
+Status: `pass`
+
+- Task: 79
+- Driver path: `packages/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt`
+- Route connector path: `packages/character-battle-runtime/character-battle-origin-feat-selected-identity.route.mbt.qnt`
+- Route class: `reducer-routed`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-038.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Behavior implemented:
+
+Task 79 accepts Character Battle Origin feat selected-reference route replay
+through public target handoff route events. Character creation finalization
+retains the background-granted Origin feat in existing `CharacterBuild` unit
+refs. The public Character Battle handoff route now emits selected-reference
+route events from `characterSheetBattleInitWithRoute` and
+`startBattleFromCharacterSheetAndStatBlock` after reading the finalized build
+background, Surface background Origin feat facts, existing unit refs, and
+Initiative support-profile path; no duplicate durable selected-feat, route, or
+BattleState field was added.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt#step:doFinalizeCriminalAlertOriginFeat` | `tasks/target-replay-evidence/CRPI-BLOCK-038.json#driver:packages/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt#step:doFinalizeCriminalAlertOriginFeat#trace:public-route=selectedReferenceRetention action=doFinalizeCriminalAlertOriginFeat qRoute=origin-feat-selected-reference-retention-route` | `_none_` | `covered` |
+| `packages/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt#step:doProjectAlertInitiativeHandoff` | `tasks/target-replay-evidence/CRPI-BLOCK-038.json#driver:packages/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt#step:doProjectAlertInitiativeHandoff#trace:public-route=selectedReferenceRuntimeEntry action=doProjectAlertInitiativeHandoff qRoute=origin-feat-selected-reference-initiative-handoff-route` | `_none_` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-038.json`
+- Reproduction trace family: `MBT_TRACES=1 MBT_STEPS=2 action=<branchAction> qRoute=origin-feat-selected-reference-*`
+- The copied connector projection source is `packages/character-battle-runtime/character-battle-origin-feat-selected-identity.route.mbt.qnt#qRoute`; the observed projection source is public Character Battle handoff `routeEvents` from `packages/character-battle-runtime/src/index.ts#characterSheetBattleInitWithRoute` and `#startBattleFromCharacterSheetAndStatBlock`, exercised by `packages/character-battle-runtime/src/origin-feat-selected-identity.mbt.test.ts` and `packages/character-battle-runtime/src/reducer-route-connectors.mbt.test.ts`.
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-038/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Character-Origins.md#Parts of a Background` says a background gives a specified Origin feat, and `#Criminal` lists the Alert Origin feat.
+- SRD 5.2.1 `Feats.md#Alert` defines Initiative Proficiency as adding Proficiency Bonus when rolling Initiative.
+- SRD 5.2.1 `Playing-the-Game.md#Initiative` defines Initiative as the Dexterity check that determines combat turn order.
+- `UBIQUITOUS_LANGUAGE.md` keeps Initiative as the start-of-combat Dexterity check and Character Sheet as the character-derived source for creature-level combat statistics.
+
+Verification results:
+
+- Task-base check passed: base ref `ralph/cleanroom-owner-character-battle-20260706T213644Z/integration` and `HEAD` both resolved to `fb3fcddac Unblock owner-decision Ralph tasks`; Base SHA `fb3fcddac57b6b34e16c41d09fe4794066faa104` is an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against the SRD 5.2.1 and `UBIQUITOUS_LANGUAGE.md` passages listed above.
+- TypeScript passed: `pnpm --filter @dnd/character-battle-runtime typecheck`.
+- Pre-MBT process check found no active `vitest` runner or `quint_evaluator`; the only match was the Ralph status-monitor command text.
+- Focused replay passed: `START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=2 pnpm --filter @dnd/character-battle-runtime exec vitest run src/origin-feat-selected-identity.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "Origin feat|origin feat" ) 2>&1 & pid=$!; wait "$pid"; status=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"` passed 5 tests with 6 skipped by filter; `TOTAL: 6s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- `pnpm quality` passed end to end; app lint emitted the existing 61 warnings and exited 0.
+- Reviewer-loop convergence passed: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks found no remaining reasonable Task 79 findings after moving selected-reference route construction out of the MBT adapter and into public Character Battle handoff routeEvents that consume source facts.
+
 ## CRPI-BLOCK-014
 
 Status: `pass`

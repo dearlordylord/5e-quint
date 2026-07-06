@@ -4,6 +4,106 @@
   "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
   "entries": [
     {
+      "taskId": "CRPI-BLOCK-038",
+      "assignmentId": "reducer-spine-diagnostic-character-battle",
+      "laneId": "character-battle",
+      "selectedDrivers": [
+        "packages/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
+      "artifacts": {
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "b62bb0895f47ca801d9694713a5454f72558cb4bf6288f601776542a8d1dd86f"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-BLOCK-038/README.md",
+          "sha256": "4214d915b210c7bd599ba4884e88923c72b11e4cebd5a7258b18725261ab9416"
+        },
+        "engineDepthManifest": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "9cf82820b5b1b0a4bc83b0797e22ec6b72b55034996a64dbabb2643e31454b8a"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "70b06dfaafd8abd1b5221d6e4a9f00edea15e3cb88c0d468c6dc0397ae00bd39"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-038.json",
+          "sha256": "8c4d8bdeda018825186acd9d143b28bee9787eb4d01a2558f12f96791ebfa50c",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-038.json#driver:packages/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt#step:doFinalizeCriminalAlertOriginFeat#trace:public-route=selectedReferenceRetention action=doFinalizeCriminalAlertOriginFeat qRoute=origin-feat-selected-reference-retention-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-038.json#driver:packages/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt#step:doProjectAlertInitiativeHandoff#trace:public-route=selectedReferenceRuntimeEntry action=doProjectAlertInitiativeHandoff qRoute=origin-feat-selected-reference-initiative-handoff-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-owner-character-battle-20260706T213644Z/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor fb3fcddac57b6b34e16c41d09fe4794066faa104 HEAD",
+          "status": "pass",
+          "detail": "Prompt-declared integration ref and HEAD both resolved to fb3fcddac Unblock owner-decision Ralph tasks; Base SHA is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language check for background-granted Origin feat retention, Alert Initiative Proficiency, Initiative, and Character Sheet projection boundaries",
+          "status": "pass",
+          "detail": "Checked .references/srd-5.2.1/Character-Origins.md, .references/srd-5.2.1/Feats.md, .references/srd-5.2.1/Playing-the-Game.md, and UBIQUITOUS_LANGUAGE.md before route projection changes."
+        },
+        {
+          "command": "pnpm --filter @dnd/character-battle-runtime typecheck",
+          "status": "pass",
+          "detail": "Character Battle Runtime TypeScript check passed after moving selected-reference qRoute observation onto public handoff routeEvents."
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Pre-MBT process check found no active vitest runner or quint_evaluator; only the Ralph status-monitor command text matched."
+        },
+        {
+          "command": "START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=2 pnpm --filter @dnd/character-battle-runtime exec vitest run src/origin-feat-selected-identity.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"Origin feat|origin feat\" ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "status": "pass",
+          "detail": "Focused Origin feat selected-identity semantic replay and copied qRoute route connector replay passed through public handoff routeEvents; 5 tests passed, 6 skipped by filter; TOTAL: 6s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "Cleanroom branch coverage passed with 738 obligations and 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass",
+          "detail": "Whitespace check passed."
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "All quality gates passed; app lint emitted the existing 61 warnings and exited 0."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "No remaining reasonable Task 79 findings after moving selected-reference route observation out of the MBT adapter and onto public Character Battle handoff routeEvents, with no duplicate durable state or authored-identity runtime dispatch."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-038",
+            "impact": "unblocked"
+          }
+        ],
+        "observations": [
+          "Origin feat selected-reference qRoute is accepted through public Character Battle selected-reference retention and Initiative handoff routeEvents.",
+          "The selected Origin feat remains an existing CharacterBuild unit ref derived from CharacterBuild.background and Surface background facts; no new durable state field was added.",
+          "Authored Alert/Criminal identity remains at SRD catalog, selection, and test/evidence boundaries; production route projection uses selected-reference handoff shape and owner vocabulary."
+        ],
+        "requiredPlanEdits": "none"
+      }
+    },
+    {
       "taskId": "CRPI-BLOCK-014",
       "assignmentId": "reducer-spine-diagnostic-battle",
       "laneId": "battle",
@@ -3777,7 +3877,9 @@
       "assignmentId": "reducer-spine-diagnostic-battle",
       "laneId": "rules-core",
       "status": "accepted",
-      "selectedDrivers": ["packages/battle-runtime/rule-core-features.mbt.qnt"],
+      "selectedDrivers": [
+        "packages/battle-runtime/rule-core-features.mbt.qnt"
+      ],
       "observedExistingSplitDrivers": [
         "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
         "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
@@ -4613,7 +4715,9 @@
       "taskId": "CRPI-READY-030",
       "assignmentId": "reducer-spine-diagnostic-battle",
       "laneId": "battle",
-      "selectedDrivers": ["packages/battle-runtime/rule-core-movement.mbt.qnt"],
+      "selectedDrivers": [
+        "packages/battle-runtime/rule-core-movement.mbt.qnt"
+      ],
       "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
       "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
       "artifacts": {

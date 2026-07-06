@@ -1,10 +1,50 @@
 import * as path from "node:path";
 
+import {
+  battleCombatantSide,
+  battleId,
+  combatantId,
+  initiativeScore,
+} from "@dnd/battle-runtime";
+import {
+  abilityScoreAssignment,
+  characterDraftId,
+  createCharacterDraft,
+  creationChoiceOptionId,
+  creationHoleId,
+  fillCreationHoles,
+  finalizeCharacterDraft,
+  loadoutEquipmentUnitId,
+  loadoutSourceHoleIdText,
+  unitChoiceSourceHoleIdText,
+  unitChoiceSourceUnitId,
+  type CharacterBuild,
+  type CharacterDraft,
+  type CreationFill,
+  type CreationHoleIdText,
+  type LoadoutSlot,
+  type UnitChoiceKey,
+} from "@dnd/character-creation-runtime";
+import {
+  characterSheetId,
+  createFreshCharacterSheet,
+} from "@dnd/character-sheet-runtime";
+import { Hp } from "@dnd/shared/types";
+import {
+  buildStatBlockCatalog,
+  srdStatBlockCollection,
+} from "@dnd/surface/surface/stat-block-catalog";
+import {
+  buildUnitCatalog,
+  srdUnitCollection,
+} from "@dnd/surface/surface/unit-catalog";
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
+import { Either } from "effect";
 import type { SimpleActionMap, SimpleDriver } from "@firfi/quint-connect";
 import { describe, expect, it } from "vitest";
 
 import {
+  characterBattleInitiativeScore,
   characterBattleEncounterCompositionRouteStep,
   characterBattleInitProjectionRouteStep,
   characterBattleSettlementRouteStep,
@@ -20,6 +60,8 @@ import {
   recordCharacterBattleHandoffFactsRoute as recordCharacterBattleHandoffFacts,
   rejectCharacterBattleHandoffRoute as rejectCharacterBattleHandoff,
   settleBattleToCharacterSheetRoute as settleBattleToCharacterSheet,
+  characterSheetBattleInitWithRoute,
+  startBattleFromCharacterSheetAndStatBlock,
   type CharacterBattleEncounterCompositionRouteAction,
   type CharacterBattleInitProjectionRouteAction,
   type CharacterBattleRouteCompositionFact,
@@ -34,6 +76,7 @@ import {
 } from "./index.ts";
 
 const MBT_TEST_TIMEOUT_MS = 120_000;
+const CRIMINAL_BACKGROUND_UNIT_ID = "background_criminal";
 
 const SUBJECT_BY_TAG = {
   SheetToBattleInitRouteSubject: "sheetToBattleInit",
@@ -100,6 +143,18 @@ const OWNER_BY_TAG = {
   CharacterBattleSubjectProfileOwner: "characterBattleSubjectProfile",
   CharacterBattleInitiativeOwner: "characterBattleInitiative",
 } as const;
+
+const unitCatalogResult = buildUnitCatalog({
+  collections: [srdUnitCollection],
+});
+const statBlockCatalogResult = buildStatBlockCatalog({
+  collections: [srdStatBlockCollection],
+});
+if (unitCatalogResult.tag !== "ok" || statBlockCatalogResult.tag !== "ok") {
+  throw new Error("Character battle route connector catalogs must build.");
+}
+const unitLibrary = unitCatalogResult.catalog;
+const statBlockCatalog = statBlockCatalogResult.catalog;
 
 type RouteProjection = {
   readonly route: readonly CharacterBattleRouteEvent[];
@@ -227,7 +282,7 @@ describe("character battle reducer route connector MBT", () => {
       driver: createIndexedRouteDriver(
         originFeatRouteDriverSchema,
         originFeatRouteActions,
-        initialOriginFeatRoute,
+        () => [],
       ),
       maxSteps: 2,
     });
@@ -327,8 +382,14 @@ const battleInitRouteActions = indexedActionEntries(
 );
 
 const originFeatRouteActions = indexedActionEntries(originFeatRouteDriverSchema, [
-  ["doFinalizeCriminalAlertOriginFeat", retainOriginFeatRoute],
-  ["doProjectAlertInitiativeHandoff", projectInitiativeHandoffRoute],
+  [
+    "doFinalizeCriminalAlertOriginFeat",
+    originFeatSelectedReferenceRetentionRoute,
+  ],
+  [
+    "doProjectAlertInitiativeHandoff",
+    originFeatSelectedReferenceInitiativeHandoffRoute,
+  ],
 ]);
 
 const encounterCompositionRouteActions = indexedActionEntries(
@@ -426,14 +487,100 @@ const featureResourceRouteActions = indexedActionEntries(
   ],
 );
 
+function originFeatSelectedReferenceRetentionRoute(): readonly CharacterBattleRouteEvent[] {
+  const build = criminalAlertRouteBuild();
+  const projection = characterSheetBattleInitWithRoute({
+    sheet: characterSheetForBuild(build),
+    unitLibrary,
+    statBlockCatalog,
+    combatantId: combatantId("combatant:route-origin-feat-retention"),
+    displayName: "Route Origin Feat Retention",
+    initiative: alertInitiativeScoreForBuild(build),
+    side: battleCombatantSide("party"),
+  });
+  if (Either.isLeft(projection)) {
+    throw new Error(projection.left.issue.message);
+  }
+  return selectedReferenceRouteEvents(projection.right.routeEvents).filter(
+    (event) => event.owner === "characterBattleBuildProjection",
+  );
+}
+
+function originFeatSelectedReferenceInitiativeHandoffRoute(): readonly CharacterBattleRouteEvent[] {
+  const build = criminalAlertRouteBuild();
+  const entry = startBattleFromCharacterSheetAndStatBlock({
+    battleId: battleId("battle:route-origin-feat-runtime-entry"),
+    character: {
+      sheet: characterSheetForBuild(build),
+      unitLibrary,
+      statBlockCatalog,
+      combatantId: combatantId("combatant:route-origin-feat-runtime-entry"),
+      displayName: "Route Origin Feat Runtime Entry",
+      initiative: alertInitiativeScoreForBuild(build),
+      side: battleCombatantSide("party"),
+    },
+    statBlockBattleInput: {
+      combatantId: combatantId("combatant:route-origin-feat-skeleton"),
+      statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+      initiative: initiativeScore(10),
+      side: battleCombatantSide("monsters"),
+    },
+  });
+  if (Either.isLeft(entry)) {
+    throw new Error(entry.left.issue.message);
+  }
+  return selectedReferenceRouteEvents(entry.right.initProjectionRouteEvents);
+}
+
+function criminalAlertRouteBuild(): CharacterBuild {
+  return finalizedFighterBuildForBackground({
+    backgroundUnitId: CRIMINAL_BACKGROUND_UNIT_ID,
+    asiOptionId: "two_and_one:dex:con",
+    toolOptionId: "thieves_tools",
+  });
+}
+
+function selectedReferenceRouteEvents(
+  routeEvents: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  return routeEvents.filter(
+    (event) => event.subject === "handoffSelectedReference",
+  );
+}
+
+function characterSheetForBuild(build: CharacterBuild) {
+  const sheet = createFreshCharacterSheet({
+    characterId: characterSheetId("character:route-origin-feat"),
+    build,
+    currentHp: Hp(10),
+    tempHp: Hp(0),
+    hitPointMaximumReduction: Hp(0),
+    conditions: [],
+    unitLibrary,
+  });
+  if (Either.isLeft(sheet)) {
+    throw new Error(sheet.left.message);
+  }
+  return sheet.right;
+}
+
+function alertInitiativeScoreForBuild(build: CharacterBuild) {
+  const score = characterBattleInitiativeScore({
+    build,
+    unitLibrary,
+    rollTotal: 14,
+    proficiencyBonusChoice: "add",
+  });
+  if (Either.isLeft(score)) {
+    throw new Error(score.left.message);
+  }
+  return score.right;
+}
+
 function initProjectionRouteStep(
   action: CharacterBattleInitProjectionRouteAction,
 ): RouteAppender {
   return (route) => characterBattleInitProjectionRouteStep(route, action);
-}
-
-function initialOriginFeatRoute(): readonly CharacterBattleRouteEvent[] {
-  return [];
 }
 
 function encounterCompositionRouteStep(
@@ -463,39 +610,6 @@ function initialFeatureResourceHandoffRoute(): readonly CharacterBattleRouteEven
     projectCharacterSheetToBattle({
       subject: "handoffFeatureResourceProjection",
       owner: "characterBattleSheet",
-    }),
-  ];
-}
-
-function retainOriginFeatRoute(
-  route: readonly CharacterBattleRouteEvent[],
-): readonly CharacterBattleRouteEvent[] {
-  return [
-    ...route,
-    projectCharacterSheetToBattle({
-      subject: "handoffSelectedReference",
-      owner: "characterBattleBuildProjection",
-    }),
-    recordCharacterBattleHandoffFacts({
-      subject: "handoffSelectedReference",
-      facts: ["selectedReferenceRetention"],
-      owner: "characterBattleBuildProjection",
-    }),
-  ];
-}
-
-function projectInitiativeHandoffRoute(
-  route: readonly CharacterBattleRouteEvent[],
-): readonly CharacterBattleRouteEvent[] {
-  return [
-    ...route,
-    projectCharacterSheetToBattle({
-      subject: "handoffSelectedReference",
-      owner: "characterBattleInitProjection",
-    }),
-    enterBattleRuntime({
-      subject: "handoffSelectedReference",
-      owner: "characterBattleRuntime",
     }),
   ];
 }
@@ -665,6 +779,206 @@ function metamagicBattleBridgeRoute(
       owner: "characterBattleRuntime",
     }),
   ];
+}
+
+function finalizedFighterBuildForBackground(input: {
+  readonly backgroundUnitId: string;
+  readonly asiOptionId: string;
+  readonly toolOptionId: string;
+}): CharacterBuild {
+  const finalized = finalizeCharacterDraft({
+    draft: completeFighterDraftForBackground(input),
+    unitLibrary,
+  });
+  if (finalized.tag !== "ready") {
+    throw new Error(
+      `Expected ${input.backgroundUnitId} origin feat route draft to finalize, received ${finalized.tag}.`,
+    );
+  }
+  return finalized.build;
+}
+
+function completeFighterDraftForBackground(input: {
+  readonly backgroundUnitId: string;
+  readonly asiOptionId: string;
+  readonly toolOptionId: string;
+}): CharacterDraft {
+  const draft = createCharacterDraft({
+    unitLibrary,
+    draftId: characterDraftId(`route-origin-feat-${input.backgroundUnitId}`),
+  });
+  const afterInitial = requireAcceptedBatch(
+    fillCreationHoles({
+      draft,
+      unitLibrary,
+      expectedRevision: draft.revision,
+      fills: [
+        choiceFill(
+          "cc:draft:draft.progression.initial",
+          "13:class_fighter:level_1:maximum_hit_die",
+        ),
+        choiceFill("cc:draft:draft.background", input.backgroundUnitId),
+        choiceFill("cc:draft:draft.species", "species_orc"),
+        {
+          kind: "abilityScores",
+          holeId: creationHoleId("cc:draft:draft.abilityScoreGeneration"),
+          method: "standardArray",
+          value: expectRight(
+            abilityScoreAssignment({
+              str: 15,
+              dex: 14,
+              con: 13,
+              int: 8,
+              wis: 10,
+              cha: 12,
+            }),
+          ),
+        },
+        choiceFill("cc:draft:draft.languages", "Dwarvish", "Goblin"),
+        choiceFill("cc:draft:draft.alignment", "lawful_good"),
+      ],
+    }),
+  );
+  const afterChoices = requireAcceptedBatch(
+    fillCreationHoles({
+      draft: afterInitial,
+      unitLibrary,
+      expectedRevision: afterInitial.revision,
+      fills: [
+        choiceFill(
+          unitChoiceHoleId("class_fighter", "class_skill_proficiency_choice"),
+          "perception",
+          "survival",
+        ),
+        choiceFill(
+          unitChoiceHoleId(
+            "fighter_fighting_style",
+            "class_feature_feat_choice",
+          ),
+          "defense",
+        ),
+        choiceFill(
+          unitChoiceHoleId("fighter_weapon_mastery", "weapon_mastery_options"),
+          "weapon_longsword",
+          "weapon_spear",
+          "weapon_flail",
+        ),
+        choiceFill(
+          unitChoiceHoleId(
+            input.backgroundUnitId,
+            "background_ability_score_increase",
+          ),
+          input.asiOptionId,
+        ),
+        choiceFill(
+          unitChoiceHoleId(input.backgroundUnitId, "background_tool_choice"),
+          input.toolOptionId,
+        ),
+        choiceFill(
+          unitChoiceHoleId("class_fighter", "class_equipment_choice"),
+          "option_c",
+        ),
+        choiceFill(
+          unitChoiceHoleId(
+            input.backgroundUnitId,
+            "background_equipment_choice",
+          ),
+          "option_b",
+        ),
+      ],
+    }),
+  );
+  const afterPurchase = requireAcceptedBatch(
+    fillCreationHoles({
+      draft: afterChoices,
+      unitLibrary,
+      expectedRevision: afterChoices.revision,
+      fills: [
+        choiceFill(
+          unitChoiceHoleId("class_fighter", "equipment_purchase"),
+          "armor_chain_mail",
+          "weapon_longsword",
+          "equipment_shield",
+        ),
+      ],
+    }),
+  );
+
+  return requireAcceptedBatch(
+    fillCreationHoles({
+      draft: afterPurchase,
+      unitLibrary,
+      expectedRevision: afterPurchase.revision,
+      fills: [
+        choiceFill(loadoutHoleId("armor_chain_mail", "armor"), "worn"),
+        choiceFill(loadoutHoleId("equipment_shield", "shield"), "wielded"),
+        choiceFill(
+          loadoutHoleId("weapon_longsword", "weapon"),
+          "wielded_one_handed",
+        ),
+      ],
+    }),
+  );
+}
+
+function requireAcceptedBatch(result: ReturnType<typeof fillCreationHoles>) {
+  if (result.tag !== "accepted") {
+    throw new Error(
+      `Expected accepted origin feat route fill batch, received ${JSON.stringify(result.issues)}`,
+    );
+  }
+
+  return result.draft;
+}
+
+function choiceFill(
+  holeId: CreationHoleIdText,
+  ...optionIds: readonly string[]
+): CreationFill {
+  return {
+    kind: "choice",
+    holeId: creationHoleId(holeId),
+    optionIds: optionIds.map(creationChoiceOptionId),
+  };
+}
+
+function unitChoiceHoleId(
+  unitId: string,
+  choiceKey: UnitChoiceKey,
+): CreationHoleIdText {
+  const parsedUnitId = unitChoiceSourceUnitId(unitId);
+  if (Either.isLeft(parsedUnitId)) {
+    throw new Error(`Invalid route Unit choice source Unit id ${unitId}.`);
+  }
+  return unitChoiceSourceHoleIdText({
+    tag: "unitChoice",
+    unitId: parsedUnitId.right,
+    choiceKey,
+  });
+}
+
+function loadoutHoleId(
+  equipmentUnitId: string,
+  slot: LoadoutSlot,
+): CreationHoleIdText {
+  const parsedEquipmentUnitId = loadoutEquipmentUnitId(equipmentUnitId);
+  if (Either.isLeft(parsedEquipmentUnitId)) {
+    throw new Error(
+      `Invalid route loadout equipment Unit id ${equipmentUnitId}.`,
+    );
+  }
+  return loadoutSourceHoleIdText({
+    tag: "loadout",
+    equipmentUnitId: parsedEquipmentUnitId.right,
+    slot,
+  });
+}
+
+function expectRight<T, E>(result: Either.Either<T, E>): T {
+  if (Either.isLeft(result)) {
+    throw new Error(`Expected Right, received ${JSON.stringify(result.left)}`);
+  }
+  return result.right;
 }
 
 function indexedActionEntries<const Schema extends RouteDriverSchema>(

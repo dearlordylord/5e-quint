@@ -23,6 +23,21 @@ import {
   unitChoiceSourceUnitId,
 } from "@dnd/character-creation-runtime";
 import {
+  battleCombatantSide,
+  battleId,
+  combatantId,
+  initiativeScore,
+} from "@dnd/battle-runtime";
+import {
+  characterSheetId,
+  createFreshCharacterSheet,
+} from "@dnd/character-sheet-runtime";
+import { Hp } from "@dnd/shared/types";
+import {
+  buildStatBlockCatalog,
+  srdStatBlockCollection,
+} from "@dnd/surface/surface/stat-block-catalog";
+import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
@@ -30,7 +45,12 @@ import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
 
-import { characterBattleInitiativeScore } from "./index.ts";
+import {
+  characterBattleInitiativeScore,
+  characterSheetBattleInitWithRoute,
+  startBattleFromCharacterSheetAndStatBlock,
+  type CharacterBattleRouteEvent,
+} from "./index.ts";
 
 const TASK_ID = "B7-FEAT-IDENTITY-BATCH";
 const ALERT_UNIT_ID = "alert";
@@ -75,10 +95,14 @@ const originFeatSelectedIdentityDriverSchema = {
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
 });
-if (unitCatalogResult.tag !== "ok") {
-  throw new Error("Origin feat selected identity Unit catalog must build.");
+const statBlockCatalogResult = buildStatBlockCatalog({
+  collections: [srdStatBlockCollection],
+});
+if (unitCatalogResult.tag !== "ok" || statBlockCatalogResult.tag !== "ok") {
+  throw new Error("Origin feat selected identity catalogs must build.");
 }
 const unitLibrary = unitCatalogResult.catalog;
+const statBlockCatalog = statBlockCatalogResult.catalog;
 
 const selectedUnitIdentityReplays = [
   {
@@ -190,6 +214,61 @@ describe("Character Battle origin feat selected identity replay", () => {
     }
   });
 
+  it("observes selected Origin feat qRoute through public handoff entrypoints", () => {
+    const build = finalizedFighterBuildForBackground({
+      backgroundUnitId: CRIMINAL_BACKGROUND_UNIT_ID,
+      originFeatUnitId: ALERT_UNIT_ID,
+      asiOptionId: "two_and_one:dex:con",
+      toolOptionId: "thieves_tools",
+    });
+    const unitRefIds = characterBuildUnitRefs(build, unitLibrary).map(
+      (ref) => ref.unitId,
+    );
+    const retentionRoute =
+      publicCharacterSheetBattleInitSelectedReferenceRetentionRoute(build);
+    const initiativeHandoffRoute =
+      publicStartBattleSelectedReferenceRuntimeRoute(build);
+
+    expect(unitRefIds).toContain(CRIMINAL_BACKGROUND_UNIT_ID);
+    expect(unitRefIds).toContain(ALERT_UNIT_ID);
+    expect(retentionRoute).toEqual([
+      {
+        kind: "projectCharacterSheetToBattle",
+        subject: "handoffSelectedReference",
+        owner: "characterBattleBuildProjection",
+      },
+      {
+        kind: "recordCharacterBattleHandoffFacts",
+        subject: "handoffSelectedReference",
+        facts: ["selectedReferenceRetention"],
+        owner: "characterBattleBuildProjection",
+      },
+    ]);
+    expect(initiativeHandoffRoute).toEqual([
+      {
+        kind: "projectCharacterSheetToBattle",
+        subject: "handoffSelectedReference",
+        owner: "characterBattleBuildProjection",
+      },
+      {
+        kind: "recordCharacterBattleHandoffFacts",
+        subject: "handoffSelectedReference",
+        facts: ["selectedReferenceRetention"],
+        owner: "characterBattleBuildProjection",
+      },
+      {
+        kind: "projectCharacterSheetToBattle",
+        subject: "handoffSelectedReference",
+        owner: "characterBattleInitProjection",
+      },
+      {
+        kind: "enterBattleRuntime",
+        subject: "handoffSelectedReference",
+        owner: "characterBattleRuntime",
+      },
+    ]);
+  });
+
   it("replays Character Battle origin feat selected identity parity", async () => {
     await run({
       spec: path.resolve(
@@ -284,6 +363,92 @@ function alertInitiativeHandoffProjection(): OriginFeatSelectedIdentityProjectio
     outcome: "alert-initiative-handoff",
     initiativeScore: score.right,
   };
+}
+
+function publicCharacterSheetBattleInitSelectedReferenceRetentionRoute(
+  build: CharacterBuild,
+): readonly CharacterBattleRouteEvent[] {
+  const projection = characterSheetBattleInitWithRoute({
+    sheet: characterSheetForBuild(build),
+    unitLibrary,
+    statBlockCatalog,
+    combatantId: combatantId("combatant:origin-feat-retention"),
+    displayName: "Origin Feat Retention",
+    initiative: alertInitiativeScoreForBuild(build),
+    side: battleCombatantSide("party"),
+  });
+  if (Either.isLeft(projection)) {
+    throw new Error(projection.left.issue.message);
+  }
+
+  return selectedReferenceRouteEvents(projection.right.routeEvents).filter(
+    (event) => event.owner === "characterBattleBuildProjection",
+  );
+}
+
+function publicStartBattleSelectedReferenceRuntimeRoute(
+  build: CharacterBuild,
+): readonly CharacterBattleRouteEvent[] {
+  const entry = startBattleFromCharacterSheetAndStatBlock({
+    battleId: battleId("battle:origin-feat-runtime-entry"),
+    character: {
+      sheet: characterSheetForBuild(build),
+      unitLibrary,
+      statBlockCatalog,
+      combatantId: combatantId("combatant:origin-feat-runtime-entry"),
+      displayName: "Origin Feat Runtime Entry",
+      initiative: alertInitiativeScoreForBuild(build),
+      side: battleCombatantSide("party"),
+    },
+    statBlockBattleInput: {
+      combatantId: combatantId("combatant:origin-feat-skeleton"),
+      statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+      initiative: initiativeScore(10),
+      side: battleCombatantSide("monsters"),
+    },
+  });
+  if (Either.isLeft(entry)) {
+    throw new Error(entry.left.issue.message);
+  }
+
+  return selectedReferenceRouteEvents(entry.right.initProjectionRouteEvents);
+}
+
+function selectedReferenceRouteEvents(
+  routeEvents: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  return routeEvents.filter(
+    (event) => event.subject === "handoffSelectedReference",
+  );
+}
+
+function characterSheetForBuild(build: CharacterBuild) {
+  const sheet = createFreshCharacterSheet({
+    characterId: characterSheetId("character:origin-feat"),
+    build,
+    currentHp: Hp(10),
+    tempHp: Hp(0),
+    hitPointMaximumReduction: Hp(0),
+    conditions: [],
+    unitLibrary,
+  });
+  if (Either.isLeft(sheet)) {
+    throw new Error(sheet.left.message);
+  }
+  return sheet.right;
+}
+
+function alertInitiativeScoreForBuild(build: CharacterBuild) {
+  const score = characterBattleInitiativeScore({
+    build,
+    unitLibrary,
+    rollTotal: 14,
+    proficiencyBonusChoice: "add",
+  });
+  if (Either.isLeft(score)) {
+    throw new Error(score.left.message);
+  }
+  return score.right;
 }
 
 function finalizedFighterBuildForBackground(input: {
