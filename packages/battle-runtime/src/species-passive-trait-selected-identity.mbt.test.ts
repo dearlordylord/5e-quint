@@ -9,6 +9,8 @@
 // UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME species_halfling_brave doHalflingBrave
 import { describe, expect, it } from "vitest";
 
+import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
+import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   MBT_TEST_TIMEOUT_MS,
   decodeReducerRoute,
@@ -18,10 +20,6 @@ import {
   mbtTraceCount,
   quintField,
   quintStateRecord,
-  reducerRouteDiscoverBattleActs,
-  reducerRouteResolveBattleSubject,
-  reducerRouteResolveBattleSubjectWithoutFill,
-  reducerRouteStartBattle,
   run,
   stateCheck,
   type ReducerRouteEvent,
@@ -34,11 +32,15 @@ import { damageAmountAfterTargetAdjustments } from "./battle-reducer/damage-help
 import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
 import {
   battleId,
+  battleTablePositionId,
   combatantId,
+  discoverBattleActs,
   endTurn,
   resolveBattleSubject,
   startBattle,
+  type BattleActiveEffect,
   type BattleState,
+  type BattleSubject,
 } from "./index.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
@@ -52,13 +54,35 @@ import {
 import { characterCreature } from "./unit-profile-admission-creature-fixture-support.ts";
 import { battleUnitRefWithSupportProfiles } from "./unit-profile-admission-test-support.ts";
 import {
+  attackRollFill,
+  characterSeed,
+  damageRollFillWithGroups,
+  movementFill,
   grappleOutcomeFill,
   requireHole,
   requireResolved,
+  savingThrowOutcomeFill,
+  spellRecord,
   targetFill,
+  testBattleCreatureStateWithConditions,
+  wizardId,
+  wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
 
 const speciesGoliathPowerfulBuildUnitId = "species_goliath_powerful_build";
+const speciesHalflingNimblenessUnitId = "species_halfling_nimbleness";
+const dragonbornDamageResistanceTargetId = combatantId(
+  "species-passive-dragonborn-target",
+);
+const dwarvenResilienceTargetId = combatantId("species-passive-dwarf-target");
+const poisonedDwarvenResilienceTargetId = combatantId(
+  "species-passive-dwarf-poisoned-target",
+);
+const substrateMoverId = combatantId("species-passive-substrate-mover");
+const substrateBlockerId = combatantId("species-passive-substrate-blocker");
+const substrateOccupiedPositionId = battleTablePositionId(
+  "species-passive-substrate-occupied-space",
+);
 const dragonbornSpeciesRecord = decodeSpeciesRecordSync(speciesDragonbornInput);
 if (dragonbornSpeciesRecord.species !== "dragonborn") {
   throw new Error("Expected Dragonborn species source record.");
@@ -214,12 +238,11 @@ function dragonbornDamageResistanceBattle(): BattleState {
   if (Either.isLeft(unitRef)) {
     throw new Error(unitRef.left.message);
   }
-  const targetId = combatantId("species-passive-dragonborn-target");
   const result = startBattle({
     battleId: battleId("species-passive-dragonborn-resistance"),
     combatants: [
       characterCreature({
-        combatantId: targetId,
+        combatantId: dragonbornDamageResistanceTargetId,
         displayName: "Dragonborn Target",
         initiative: 10,
         side: partySide,
@@ -243,7 +266,7 @@ function projectDragonbornDamageResistance(
   state: BattleState,
 ): SpeciesPassiveTraitProjection {
   const target = state.combatants.get(
-    combatantId("species-passive-dragonborn-target"),
+    dragonbornDamageResistanceTargetId,
   );
   if (target === undefined) {
     throw new Error("Expected Dragonborn target combatant.");
@@ -272,23 +295,27 @@ function dwarvenResilienceBattle(): BattleState {
   if (Either.isLeft(unitRef)) {
     throw new Error(unitRef.left.message);
   }
-  const targetId = combatantId("species-passive-dwarf-target");
   const result = startBattle({
     battleId: battleId("species-passive-dwarven-resilience"),
     combatants: [
       characterCreature({
-        combatantId: targetId,
+        combatantId: dwarvenResilienceTargetId,
         displayName: "Dwarf Target",
         initiative: 10,
         side: partySide,
         unitFeatures: [{ unit }],
         characterUnitRefs: [unitRef.right],
       }),
-      characterCreature({
-        combatantId: combatantId("species-passive-dwarf-attacker"),
+      characterSeed({
+        combatantId: wizardId,
         displayName: "Attacker",
-        initiative: 5,
+        initiative: 20,
         side: oppositionSide,
+        attack: null,
+        spellcasting: wizardSpellcasting({
+          preparedSpells: [spellRecord("ray_of_sickness")],
+          spellSlots: [{ spellLevel: 1, count: 1 }],
+        }),
       }),
     ],
   });
@@ -298,11 +325,77 @@ function dwarvenResilienceBattle(): BattleState {
   return result.right;
 }
 
+function poisonedDwarvenResilienceEndTurnBattle(): BattleState {
+  const unit = unitLibrary.requireUnit(dwarfDwarvenResilienceUnitId);
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+  });
+  if (Either.isLeft(unitRef)) {
+    throw new Error(unitRef.left.message);
+  }
+  const result = startBattle({
+    battleId: battleId("species-passive-dwarven-resilience-poisoned-save"),
+    combatants: [
+      characterCreature({
+        combatantId: poisonedDwarvenResilienceTargetId,
+        displayName: "Poisoned Dwarf Target",
+        initiative: 20,
+        side: partySide,
+        unitFeatures: [{ unit }],
+        characterUnitRefs: [unitRef.right],
+      }),
+      characterSeed({
+        combatantId: wizardId,
+        displayName: "Poison Source",
+        initiative: 10,
+        side: oppositionSide,
+      }),
+    ],
+  });
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  const target = result.right.combatants.get(poisonedDwarvenResilienceTargetId);
+  if (target === undefined) {
+    throw new Error("Expected poisoned Dwarven Resilience target.");
+  }
+  const poisonedEffect = {
+    kind: "spellConditionEndTurnSave",
+    sourceSpellId: "synthetic_poison_condition_save",
+    sourceCombatantId: wizardId,
+    condition: "poisoned",
+    conditionHadNonSpellSource: false,
+    heightenedSpellTargetDisadvantage: null,
+    save: {
+      ability: "con",
+      dc: { kind: "caster_spell_save_dc" },
+    },
+    expiresAt: {
+      kind: "duration",
+      durationTicks: elapsedTimeTicks(10),
+    },
+  } satisfies BattleActiveEffect;
+  const poisonedTarget = {
+    ...testBattleCreatureStateWithConditions(
+      target,
+      applyCondition(target.conditions, "poisoned"),
+    ),
+    activeEffects: [...target.activeEffects, poisonedEffect],
+  };
+  return {
+    ...result.right,
+    combatants: new Map(result.right.combatants).set(
+      poisonedDwarvenResilienceTargetId,
+      poisonedTarget,
+    ),
+  };
+}
+
 function projectDwarvenResilience(
   state: BattleState,
 ): SpeciesPassiveTraitProjection {
-  const targetId = combatantId("species-passive-dwarf-target");
-  const target = state.combatants.get(targetId);
+  const target = state.combatants.get(dwarvenResilienceTargetId);
   if (target === undefined) {
     throw new Error("Expected Dwarven Resilience target combatant.");
   }
@@ -319,8 +412,12 @@ function projectDwarvenResilience(
       "poison",
     ),
     dwarfFireDamageAfter: damageAmountAfterTargetAdjustments(target, 9, "fire"),
-    dwarfPoisonedSaveAdvantage: poisonedSaveTargets.includes(targetId),
-    dwarfCharmedSaveAdvantage: charmedSaveTargets.includes(targetId),
+    dwarfPoisonedSaveAdvantage: poisonedSaveTargets.includes(
+      dwarvenResilienceTargetId,
+    ),
+    dwarfCharmedSaveAdvantage: charmedSaveTargets.includes(
+      dwarvenResilienceTargetId,
+    ),
     lastResult: "dwarvenResilience",
   });
 }
@@ -535,7 +632,9 @@ function createSpeciesPassiveTraitSubstrateRouteDriver() {
     let route: readonly ReducerRouteEvent[] = [];
 
     function reset(): void {
-      route = [reducerRouteStartBattle("battleCreatureState")];
+      route = routeStart(
+        requireCreatureStatProjectionRoute(dragonbornDamageResistanceBattle()),
+      );
     }
 
     reset();
@@ -543,83 +642,81 @@ function createSpeciesPassiveTraitSubstrateRouteDriver() {
     return {
       init: reset,
       doProjectSpeciesBaseSizeSpeed: () => {
-        route = [
-          ...route,
-          reducerRouteDiscoverBattleActs({
-            subject: "creatureStatProjection",
-            holes: [],
-            owner: "battleCreatureState",
-          }),
-          reducerRouteResolveBattleSubjectWithoutFill({
-            subject: "creatureStatProjection",
-            holes: [],
-            owner: "battleCreatureState",
-          }),
-          reducerRouteResolveBattleSubjectWithoutFill({
-            subject: "creatureStatProjection",
-            holes: [],
-            owner: "battleMovementResource",
-          }),
-        ];
+        route = requireCreatureStatProjectionRoute(
+          dragonbornDamageResistanceBattle(),
+        );
       },
       doRoutePassiveDamageAdjustment: () => {
         route = [
           ...route,
-          reducerRouteDiscoverBattleActs({
-            subject: "passiveDamageAdjustment",
-            holes: [],
-            owner: "battleDamageAdjustment",
-          }),
-          reducerRouteResolveBattleSubjectWithoutFill({
-            subject: "passiveDamageAdjustment",
-            holes: [],
-            owner: "battleDamageAdjustment",
-          }),
+          ...requirePassiveDamageAdjustmentRoute(dwarvenResilienceBattle()),
         ];
       },
       doRoutePassiveSavingThrowRollMode: () => {
         route = [
           ...route,
-          reducerRouteDiscoverBattleActs({
-            subject: "passiveSavingThrowRollMode",
-            holes: [{ kind: "savingThrowOutcome" }],
-            owner: "battleSavingThrowRollMode",
-          }),
-          reducerRouteResolveBattleSubject({
-            subject: "passiveSavingThrowRollMode",
-            fill: "savingThrowOutcome",
-            holes: [],
-            owner: "battleSavingThrowRollMode",
-          }),
+          ...requirePassiveSavingThrowRollModeRoute(),
         ];
       },
       doRoutePassiveAbilityCheckRollMode: () => {
         route = [
           ...route,
-          reducerRouteDiscoverBattleActs({
-            subject: "passiveAbilityCheckRollMode",
-            holes: [{ kind: "grappleOutcome" }],
-            owner: "battleAbilityCheckRollMode",
-          }),
-          reducerRouteResolveBattleSubject({
-            subject: "passiveAbilityCheckRollMode",
-            fill: "grappleOutcome",
-            holes: [],
-            owner: "battleAbilityCheckRollMode",
-          }),
+          ...requirePassiveAbilityCheckRollModeRoute(
+            goliathPowerfulBuildBattle(),
+          ),
         ];
       },
       doMoveThroughLargerCreatureSpace: () => {
-        route = appendAcceptedCreatureSpaceMovementRoute(route);
+        route = [
+          ...route,
+          ...observeAcceptedCreatureSpaceMovementRoute(
+            halflingNimblenessSubstrateBattle({ selected: true }),
+          ),
+        ];
       },
       doRejectOccupiedStop: () => {
-        route = appendRejectedCreatureSpaceMovementRoute(route);
+        route = [
+          ...route,
+          ...observeRejectedCreatureSpaceMovementRoute({
+            state: halflingNimblenessSubstrateBattle({ selected: true }),
+            destination: {
+              kind: "occupiedCreatureSpace",
+              occupantId: substrateBlockerId,
+              positionId: substrateOccupiedPositionId,
+            },
+          }),
+        ];
       },
       doRejectMissingMovementPermission: () => {
-        route = appendRejectedCreatureSpaceMovementRoute(route);
+        route = [
+          ...route,
+          ...observeRejectedCreatureSpaceMovementRoute({
+            state: halflingNimblenessSubstrateBattle({ selected: false }),
+            destination: {
+              kind: "unoccupiedSpace",
+              positionId: battleTablePositionId(
+                "species-passive-substrate-missing-profile-destination",
+              ),
+            },
+          }),
+        ];
       },
       doRejectSameSizeTraversal: () => {
-        route = appendRejectedCreatureSpaceMovementRoute(route);
+        route = [
+          ...route,
+          ...observeRejectedCreatureSpaceMovementRoute({
+            state: halflingNimblenessSubstrateBattle({
+              selected: true,
+              blockerSize: "small",
+            }),
+            destination: {
+              kind: "unoccupiedSpace",
+              positionId: battleTablePositionId(
+                "species-passive-substrate-same-size-destination",
+              ),
+            },
+          }),
+        ];
       },
       step: () => {},
       getState: () => ({ route }),
@@ -627,37 +724,411 @@ function createSpeciesPassiveTraitSubstrateRouteDriver() {
   });
 }
 
-function appendAcceptedCreatureSpaceMovementRoute(
-  route: readonly ReducerRouteEvent[],
+function requireCreatureStatProjectionRoute(
+  state: BattleState,
 ): readonly ReducerRouteEvent[] {
-  return [
-    ...route,
-    reducerRouteResolveBattleSubject({
-      subject: "creatureSpaceMovementPermission",
-      fill: "movement",
-      holes: [],
-      owner: "battleCreatureSpaceMovement",
-    }),
-    reducerRouteResolveBattleSubjectWithoutFill({
-      subject: "creatureSpaceMovementPermission",
-      holes: [],
-      owner: "battleMovementResource",
-    }),
-  ];
+  const target = state.combatants.get(dragonbornDamageResistanceTargetId);
+  if (target === undefined) {
+    throw new Error("Expected Dragonborn target for creature stat route.");
+  }
+  const proneState: BattleState = {
+    ...state,
+    combatants: new Map(state.combatants).set(
+      dragonbornDamageResistanceTargetId,
+      testBattleCreatureStateWithConditions(
+        target,
+        applyCondition(target.conditions, "prone"),
+      ),
+    ),
+  };
+  const subject: BattleSubject = {
+    tag: "runtimeCommand",
+    actorId: dragonbornDamageResistanceTargetId,
+    command: "standFromProne",
+  };
+  const standAct = discoverBattleActs(proneState).find(
+    (act) =>
+      act.subject.tag === "runtimeCommand" &&
+      act.subject.actorId === dragonbornDamageResistanceTargetId &&
+      act.subject.command === "standFromProne",
+  );
+  if (standAct === undefined) {
+    throw new Error("Expected public Stand from Prone act for stat route.");
+  }
+  const resolved = requireResolved(
+    resolveBattleSubject({ state: proneState, subject, fills: [] }),
+  );
+  return routeEventsWithSubject(
+    [...(standAct.routeEvents ?? []), ...(resolved.routeEvents ?? [])],
+    "creatureStatProjection",
+    { includeStartOwner: "battleCreatureState" },
+  );
 }
 
-function appendRejectedCreatureSpaceMovementRoute(
-  route: readonly ReducerRouteEvent[],
+function requirePassiveDamageAdjustmentRoute(
+  state: BattleState,
 ): readonly ReducerRouteEvent[] {
-  return [
-    ...route,
-    reducerRouteResolveBattleSubject({
-      subject: "creatureSpaceMovementPermission",
-      fill: "movement",
-      holes: [{ kind: "movement" }],
-      owner: "battleCreatureSpaceMovement",
+  const act = discoverBattleActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.actorId === wizardId &&
+      candidate.subject.invocation.spellId === "ray_of_sickness",
+  );
+  if (act === undefined || act.subject.tag !== "actionSpell") {
+    throw new Error("Expected public Ray of Sickness act for damage route.");
+  }
+  const target = act.initialHoles.find((hole) => hole.kind === "targetChoice");
+  if (target === undefined) {
+    throw new Error("Expected Ray of Sickness target-choice hole.");
+  }
+  const targetChoice = targetFill(target, dwarvenResilienceTargetId);
+  const awaitingAttack = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [targetChoice],
+  });
+  const attack = requireHole(awaitingAttack, "attackRoll");
+  const attackRoll = attackRollFill(attack, {
+    total: 18,
+    naturalD20: 12,
+  });
+  const awaitingDamage = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [targetChoice, attackRoll],
+  });
+  const damage = requireHole(awaitingDamage, "rolledDice");
+  const damageResult = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetChoice, attackRoll, damageRollFillWithGroups(damage, [[3, 5]])],
+    });
+  if (damageResult.tag !== "resolved") {
+    throw new Error(
+      `Expected Ray of Sickness damage to resolve, got ${damageResult.tag}: ${
+        "message" in damageResult ? damageResult.message : "no message"
+      }`,
+    );
+  }
+  return routeEventsWithSubject(
+    [
+      ...(act.routeEvents ?? []),
+      ...(awaitingAttack.routeEvents ?? []),
+      ...(awaitingDamage.routeEvents ?? []),
+      ...(damageResult.routeEvents ?? []),
+    ],
+    "passiveDamageAdjustment",
+  );
+}
+
+function requirePassiveSavingThrowRollModeRoute(): readonly ReducerRouteEvent[] {
+  const routeState = poisonedDwarvenResilienceEndTurnBattle();
+  const subject: BattleSubject = {
+    tag: "runtimeCommand",
+    actorId: poisonedDwarvenResilienceTargetId,
+    command: "endTurn",
+  };
+  const endTurnAct = discoverBattleActs(routeState).find(
+    (act) =>
+      act.subject.tag === "runtimeCommand" &&
+      act.subject.actorId === poisonedDwarvenResilienceTargetId &&
+      act.subject.command === "endTurn",
+  );
+  if (endTurnAct === undefined) {
+    throw new Error("Expected public End Turn act for poisoned save route.");
+  }
+  const awaitingSave = resolveBattleSubject({
+    state: routeState,
+    subject,
+    fills: [],
+  });
+  const save = requireHole(awaitingSave, "savingThrowOutcome");
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: routeState,
+      subject,
+      fills: [
+        savingThrowOutcomeFill(save, [
+          { targetId: poisonedDwarvenResilienceTargetId, succeeded: true },
+        ]),
+      ],
     }),
-  ];
+  );
+  return routeEventsWithSubject(
+    [
+      ...(endTurnAct.routeEvents ?? []),
+      ...(awaitingSave.routeEvents ?? []),
+      ...(resolved.routeEvents ?? []),
+    ],
+    "passiveSavingThrowRollMode",
+  );
+}
+
+function requirePassiveAbilityCheckRollModeRoute(
+  state: BattleState,
+): readonly ReducerRouteEvent[] {
+  const actorId = combatantId("species-passive-substrate-goliath");
+  const grapplerId = combatantId("species-passive-substrate-grappler");
+  const grappleSubject = {
+    tag: "action",
+    actorId: grapplerId,
+    action: "grapple",
+  } as const;
+  const target = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: grappleSubject,
+      fills: [],
+    }),
+    "targetChoice",
+  );
+  const targetChoice = targetFill(target, actorId, [
+    { kind: "grappleTargetWithinReach", grapplerId, targetId: actorId },
+  ]);
+  const outcome = requireHole(
+    resolveBattleSubject({
+      state,
+      subject: grappleSubject,
+      fills: [targetChoice],
+    }),
+    "grappleOutcome",
+  );
+  const grappled = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: grappleSubject,
+      fills: [targetChoice, grappleOutcomeFill(outcome, false)],
+    }),
+  );
+  const actorTurn = requireResolved(
+    endTurn({ state: grappled.state, actorId: grapplerId }),
+  ).state;
+  const escapeSubject: BattleSubject = {
+    tag: "action",
+    actorId,
+    action: "escapeGrapple",
+  };
+  const escapeAct = discoverBattleActs(actorTurn).find(
+    (act) =>
+      act.subject.tag === "action" &&
+      act.subject.actorId === actorId &&
+      act.subject.action === "escapeGrapple",
+  );
+  if (escapeAct === undefined) {
+    throw new Error("Expected public Escape Grapple act for ability route.");
+  }
+  const awaitingEscape = resolveBattleSubject({
+    state: actorTurn,
+    subject: escapeSubject,
+    fills: [],
+  });
+  const escape = requireHole(awaitingEscape, "grappleOutcome");
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: actorTurn,
+      subject: escapeSubject,
+      fills: [grappleOutcomeFill(escape, true)],
+    }),
+  );
+  return routeEventsWithSubject(
+    [
+      ...(escapeAct.routeEvents ?? []),
+      ...(awaitingEscape.routeEvents ?? []),
+      ...(resolved.routeEvents ?? []),
+    ],
+    "passiveAbilityCheckRollMode",
+  );
+}
+
+function routeEventsWithSubject(
+  events: readonly ReducerRouteEvent[],
+  subject: Extract<ReducerRouteEvent, { readonly subject: string }>["subject"],
+  input: {
+    readonly includeStartOwner?: Extract<
+      ReducerRouteEvent,
+      { readonly kind: "startBattle" }
+    >["owner"];
+  } = {},
+): readonly ReducerRouteEvent[] {
+  const routeEvents = events.filter((event) => {
+    if (event.kind === "startBattle") {
+      return event.owner === input.includeStartOwner;
+    }
+    return "subject" in event && event.subject === subject;
+  });
+  if (routeEvents.length === 0) {
+    throw new Error(`Expected public route events for subject ${subject}.`);
+  }
+  return routeEvents;
+}
+
+function routeStart(route: readonly ReducerRouteEvent[]): readonly [
+  ReducerRouteEvent,
+] {
+  const [start] = route;
+  if (start === undefined || start.kind !== "startBattle") {
+    throw new Error("Expected route to start with startBattle.");
+  }
+  return [start];
+}
+
+function goliathPowerfulBuildBattle(): BattleState {
+  const unit = unitLibrary.requireUnit(speciesGoliathPowerfulBuildUnitId);
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+  });
+  if (Either.isLeft(unitRef)) {
+    throw new Error(unitRef.left.message);
+  }
+  const result = startBattle({
+    battleId: battleId("species-passive-substrate-goliath-powerful-build"),
+    combatants: [
+      characterCreature({
+        combatantId: combatantId("species-passive-substrate-grappler"),
+        displayName: "Grappler",
+        initiative: 12,
+        side: oppositionSide,
+      }),
+      characterCreature({
+        combatantId: combatantId("species-passive-substrate-goliath"),
+        displayName: "Goliath Target",
+        initiative: 10,
+        side: partySide,
+        characterUnitRefs: [unitRef.right],
+        unitFeatures: [{ unit }],
+      }),
+    ],
+  });
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
+function halflingNimblenessSubstrateBattle(input: {
+  readonly selected: boolean;
+  readonly blockerSize?: "small" | "medium";
+}): BattleState {
+  const unit = unitLibrary.requireUnit(speciesHalflingNimblenessUnitId);
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+  });
+  if (Either.isLeft(unitRef)) {
+    throw new Error(unitRef.left.message);
+  }
+  const result = startBattle({
+    battleId: battleId(
+      input.blockerSize === "small"
+        ? "species-passive-substrate-halfling-same-size"
+        : input.selected
+          ? "species-passive-substrate-halfling-selected"
+          : "species-passive-substrate-halfling-missing-profile",
+    ),
+    combatants: [
+      characterSeed({
+        combatantId: substrateMoverId,
+        displayName: "Nimble Mover",
+        initiative: 20,
+        side: partySide,
+        size: "small",
+        unitFeatures: [{ unit }],
+        characterUnitRefs: input.selected ? [unitRef.right] : [],
+      }),
+      characterSeed({
+        combatantId: substrateBlockerId,
+        displayName: "Blocker",
+        initiative: 10,
+        side: oppositionSide,
+        size: input.blockerSize ?? "medium",
+      }),
+    ],
+  });
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
+function observeAcceptedCreatureSpaceMovementRoute(
+  state: BattleState,
+): readonly ReducerRouteEvent[] {
+  return observeCreatureSpaceMovementRoute(state, {
+    destination: {
+      kind: "unoccupiedSpace",
+      positionId: battleTablePositionId(
+        "species-passive-substrate-accepted-destination",
+      ),
+    },
+  });
+}
+
+function observeRejectedCreatureSpaceMovementRoute(input: {
+  readonly state: BattleState;
+  readonly destination: NonNullable<
+    Parameters<typeof observeCreatureSpaceMovementRoute>[1]["destination"]
+  >;
+}): readonly ReducerRouteEvent[] {
+  return observeCreatureSpaceMovementRoute(input.state, {
+    destination: input.destination,
+  });
+}
+
+function observeCreatureSpaceMovementRoute(
+  state: BattleState,
+  input: {
+    readonly destination:
+      | {
+          readonly kind: "unoccupiedSpace";
+          readonly positionId: ReturnType<typeof battleTablePositionId>;
+        }
+      | {
+          readonly kind: "occupiedCreatureSpace";
+          readonly occupantId: typeof substrateBlockerId;
+          readonly positionId: typeof substrateOccupiedPositionId;
+        };
+  },
+): readonly ReducerRouteEvent[] {
+  const subject: BattleSubject = {
+    tag: "runtimeCommand",
+    actorId: substrateMoverId,
+    command: "move",
+  };
+  const moveAct = discoverBattleActs(state).find(
+    (act) =>
+      act.subject.tag === "runtimeCommand" &&
+      act.subject.actorId === substrateMoverId &&
+      act.subject.command === "move",
+  );
+  if (moveAct === undefined) {
+    throw new Error("Expected public Movement act for species substrate route.");
+  }
+  const hole = requireHole(
+    resolveBattleSubject({ state, subject, fills: [] }),
+    "movement",
+  );
+  const result = resolveBattleSubject({
+    state,
+    subject,
+    fills: [
+      movementFill(hole, {
+        movementCostFeet: 10,
+        provokedOpportunityAttacks: [],
+        creatureSpaceTraversal: {
+          kind: "occupiedCreatureSpaceTraversal",
+          occupiedSpaces: [
+            {
+              occupantId: substrateBlockerId,
+              positionId: substrateOccupiedPositionId,
+            },
+          ],
+          destination: input.destination,
+        },
+      }),
+    ],
+  });
+  return [...(moveAct.routeEvents ?? []), ...(result.routeEvents ?? [])];
 }
 
 const speciesPassiveTraitSubstrateRouteStateCheck = stateCheck(

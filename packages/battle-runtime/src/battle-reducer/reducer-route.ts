@@ -86,7 +86,10 @@ export type BattleReducerRouteSubjectFamily =
   | "metamagicSpellRangeProjection"
   | "metamagicSpellDurationProjection"
   | "metamagicSpellComponentProjection"
+  | "creatureStatProjection"
+  | "passiveDamageAdjustment"
   | "passiveSavingThrowRollMode"
+  | "passiveAbilityCheckRollMode"
   | "creatureSpaceMovementPermission"
   | "reactionSpell"
   | "rollModifierEffect"
@@ -126,6 +129,7 @@ export type BattleReducerRouteOwnerGroup =
   | "battleAttackRoll"
   | "battleSpellAttackProcedure"
   | "battleAbilityCheck"
+  | "battleAbilityCheckRollMode"
   | "battleSavingThrowOutcome"
   | "battleSavingThrowRollMode"
   | "battleHitPointAndZeroHpLifecycle"
@@ -151,6 +155,7 @@ export type BattleReducerRouteHole =
   | "attackRoll"
   | "commandOptionChoice"
   | "damageTypeChoice"
+  | "grappleOutcome"
   | "interruptDecision"
   | "concentrationSavingThrow"
   | "deathSavingThrow"
@@ -173,6 +178,7 @@ export type BattleReducerRouteFillKind =
   | "commandOptionChoice"
   | "concentrationSavingThrow"
   | "deathSavingThrow"
+  | "grappleOutcome"
   | "hitPointHealingDistribution"
   | "interruptDecision"
   | "damageTypeChoice"
@@ -255,6 +261,108 @@ export type BattleReducerRouteEvents = readonly [
 
 export function battleReducerStartRouteEvent(): BattleReducerRouteEvent {
   return { kind: "startBattle", owner: "battleActionEconomy" };
+}
+
+function creatureStatProjectionRouteEvents(input: {
+  readonly state: BattleState;
+}): BattleReducerRouteEvents | undefined {
+  const hasCharacterCreature = [...input.state.combatants.values()].some(
+    isCharacterBattleCreatureState,
+  );
+  if (!hasCharacterCreature) {
+    return undefined;
+  }
+  return [
+    { kind: "startBattle", owner: "battleCreatureState" },
+    {
+      kind: "discoverBattleActs",
+      subject: "creatureStatProjection",
+      holes: [],
+      owner: "battleCreatureState",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "creatureStatProjection",
+      holes: [],
+      owner: "battleCreatureState",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "creatureStatProjection",
+      holes: [],
+      owner: "battleMovementResource",
+    },
+  ];
+}
+
+function passiveDamageAdjustmentRouteEvents(input: {
+  readonly state: BattleState;
+}): BattleReducerRouteEvents | undefined {
+  const hasPassiveAdjustment = [...input.state.combatants.values()].some(
+    (target) =>
+      target.origin.kind === "character" &&
+      target.origin.characterUnitRefs.some((unitRef) =>
+        unitRef.supportProfiles.some(
+          (profile) =>
+            typeof profile === "object" &&
+            profile.kind === "passiveDamageResistance",
+        ),
+      ),
+  );
+  if (!hasPassiveAdjustment) {
+    return undefined;
+  }
+  return [
+    { kind: "startBattle", owner: "battleDamageAdjustment" },
+    {
+      kind: "discoverBattleActs",
+      subject: "passiveDamageAdjustment",
+      holes: [],
+      owner: "battleDamageAdjustment",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "passiveDamageAdjustment",
+      holes: [],
+      owner: "battleDamageAdjustment",
+    },
+  ];
+}
+
+function passiveAbilityCheckRollModeRouteEvents(input: {
+  readonly state: BattleState;
+  readonly condition?: Condition;
+}): BattleReducerRouteEvents | undefined {
+  const hasPassiveAbilityCheckRollMode = [
+    ...input.state.combatants.values(),
+  ].some((target) =>
+    target.origin.kind === "character" &&
+    [...target.origin.passiveAbilityCheckRollModeProfiles.values()].some(
+      (profile) =>
+        input.condition === undefined ||
+        (profile.abilityCheck.scope.kind === "endingCondition" &&
+          profile.abilityCheck.scope.condition === input.condition),
+    ),
+  );
+  if (!hasPassiveAbilityCheckRollMode) {
+    return undefined;
+  }
+  return [
+    { kind: "startBattle", owner: "battleAbilityCheckRollMode" },
+    {
+      kind: "discoverBattleActs",
+      subject: "passiveAbilityCheckRollMode",
+      holes: ["grappleOutcome"],
+      owner: "battleAbilityCheckRollMode",
+    },
+    {
+      kind: "resolveBattleSubject",
+      subject: "passiveAbilityCheckRollMode",
+      fill: "grappleOutcome",
+      holes: [],
+      owner: "battleAbilityCheckRollMode",
+    },
+  ];
 }
 
 export function activeFeatureSpellSaveDcRouteEvents(input: {
@@ -373,6 +481,21 @@ export function battleReducerRouteEventsForDiscoveredAct(
   state: BattleState,
   act: AvailableBattleAct,
 ): BattleReducerRouteEvents | undefined {
+  const creatureStatProjectionRoute =
+    creatureStatProjectionRouteForDiscoveredAct(state, act);
+  if (creatureStatProjectionRoute !== undefined) {
+    return creatureStatProjectionRoute;
+  }
+  const passiveAbilityCheckRollModeRoute =
+    passiveAbilityCheckRollModeRouteForDiscoveredAct(state, act);
+  if (passiveAbilityCheckRollModeRoute !== undefined) {
+    return passiveAbilityCheckRollModeRoute;
+  }
+  const passiveSavingThrowRollModeRoute =
+    passiveSavingThrowRollModeRouteForDiscoveredAct(state, act);
+  if (passiveSavingThrowRollModeRoute !== undefined) {
+    return passiveSavingThrowRollModeRoute;
+  }
   if (isUnitFeatureBonusActionRouteSubject(state, act.subject)) {
     return [
       {
@@ -558,7 +681,7 @@ export function battleReducerRouteEventsForDiscoveredAct(
     act.subject.tag === "actionSpell" &&
     isSaveGatedSpellProcedure(act.subject.invocation.procedure)
   ) {
-    return [
+    return nonEmptyRouteEvents([
       {
         kind: "discoverBattleActs",
         subject: "saveGatedSpell",
@@ -568,7 +691,8 @@ export function battleReducerRouteEventsForDiscoveredAct(
             ? "battleSpellSlotAndActionEconomy"
             : "battleActionEconomy",
       },
-    ];
+      ...passiveDamageAdjustmentRouteForSpellDiscovery(state),
+    ]);
   }
   if (
     act.subject.tag !== "actionSpell" ||
@@ -596,6 +720,7 @@ export function battleReducerRouteEventsForDiscoveredAct(
   if (act.subject.invocation.procedure === "spellAttackSequence") {
     return nonEmptyRouteEvents([
       actionEconomyEvent,
+      ...passiveDamageAdjustmentRouteForSpellDiscovery(state),
       ...activeFeatureSpellAttackRollModeDiscoveryRouteEvents(
         state,
         act.subject,
@@ -609,6 +734,7 @@ export function battleReducerRouteEventsForDiscoveredAct(
   if (!hasObjectTargetBoundary) {
     return nonEmptyRouteEvents([
       actionEconomyEvent,
+      ...passiveDamageAdjustmentRouteForSpellDiscovery(state),
       ...activeFeatureSpellAttackRollModeDiscoveryRouteEvents(
         state,
         act.subject,
@@ -626,6 +752,7 @@ export function battleReducerRouteEventsForDiscoveredAct(
       ),
       owner: "battleObjectTargetBoundary",
     },
+    ...passiveDamageAdjustmentRouteForSpellDiscovery(state),
     ...activeFeatureSpellAttackRollModeDiscoveryRouteEvents(
       state,
       act.subject,
@@ -638,6 +765,21 @@ export function battleReducerRouteForResolution(
   input: BattleResolutionInput,
   result: BattleResolutionResult,
 ): BattleReducerRouteEvents | undefined {
+  const creatureStatProjectionRoute =
+    creatureStatProjectionRouteForResolution(input, result);
+  if (creatureStatProjectionRoute !== undefined) {
+    return creatureStatProjectionRoute;
+  }
+  const passiveAbilityCheckRollModeRoute =
+    passiveAbilityCheckRollModeRouteForResolution(input, result);
+  if (passiveAbilityCheckRollModeRoute !== undefined) {
+    return passiveAbilityCheckRollModeRoute;
+  }
+  const passiveSavingThrowRollModeRoute =
+    passiveSavingThrowRollModeRouteForResolution(input, result);
+  if (passiveSavingThrowRollModeRoute !== undefined) {
+    return passiveSavingThrowRollModeRoute;
+  }
   const metamagicEffectiveSpellLevelRoute =
     metamagicEffectiveSpellLevelRouteForResolution(input, result);
   if (metamagicEffectiveSpellLevelRoute !== undefined) {
@@ -841,6 +983,183 @@ export function battleReducerRouteForResolution(
   );
 }
 
+function creatureStatProjectionRouteForDiscoveredAct(
+  state: BattleState,
+  act: AvailableBattleAct,
+): BattleReducerRouteEvents | undefined {
+  if (
+    act.subject.tag !== "runtimeCommand" ||
+    act.subject.command !== "standFromProne" ||
+    ![...state.combatants.values()].some(isCharacterBattleCreatureState)
+  ) {
+    return undefined;
+  }
+  return [
+    { kind: "startBattle", owner: "battleCreatureState" },
+    {
+      kind: "discoverBattleActs",
+      subject: "creatureStatProjection",
+      holes: [],
+      owner: "battleCreatureState",
+    },
+  ];
+}
+
+function creatureStatProjectionRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  if (
+    result.tag !== "resolved" ||
+    input.subject.tag !== "runtimeCommand" ||
+    input.subject.command !== "standFromProne"
+  ) {
+    return undefined;
+  }
+  return creatureStatProjectionRouteTail(input.state);
+}
+
+function passiveDamageAdjustmentRouteForSpellDiscovery(
+  state: BattleState,
+): readonly BattleReducerRouteEvent[] {
+  const route = passiveDamageAdjustmentRouteEvents({ state });
+  return route === undefined ? [] : [route[1]];
+}
+
+function passiveAbilityCheckRollModeRouteForDiscoveredAct(
+  state: BattleState,
+  act: AvailableBattleAct,
+): BattleReducerRouteEvents | undefined {
+  if (act.subject.tag !== "action" || act.subject.action !== "escapeGrapple") {
+    return undefined;
+  }
+  const route = passiveAbilityCheckRollModeRouteEvents({
+    state,
+    condition: "grappled",
+  });
+  return route === undefined ? undefined : [route[1]];
+}
+
+function passiveAbilityCheckRollModeRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  const fill = input.fills.at(-1);
+  if (
+    input.subject.tag !== "action" ||
+    input.subject.action !== "escapeGrapple" ||
+    result.tag === "invalid" ||
+    fill === undefined ||
+    battleReducerRouteFill(fill) !== "grappleOutcome"
+  ) {
+    return undefined;
+  }
+  return passiveAbilityCheckRollModeRouteTail(input.state);
+}
+
+function passiveSavingThrowRollModeRouteForDiscoveredAct(
+  state: BattleState,
+  act: AvailableBattleAct,
+): BattleReducerRouteEvents | undefined {
+  if (
+    act.subject.tag !== "runtimeCommand" ||
+    act.subject.command !== "endTurn"
+  ) {
+    return undefined;
+  }
+  const save = passiveSavingThrowEndTurnRouteContext(state);
+  if (save === undefined) {
+    return undefined;
+  }
+  return [
+    {
+      kind: "discoverBattleActs",
+      subject: "passiveSavingThrowRollMode",
+      holes: ["savingThrowOutcome"],
+      owner: "battleSavingThrowRollMode",
+    },
+  ];
+}
+
+function passiveSavingThrowRollModeRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  const fill = input.fills.at(-1);
+  if (
+    input.subject.tag !== "runtimeCommand" ||
+    input.subject.command !== "endTurn" ||
+    result.tag === "invalid" ||
+    fill === undefined ||
+    battleReducerRouteFill(fill) !== "savingThrowOutcome" ||
+    passiveSavingThrowEndTurnRouteContext(input.state) === undefined
+  ) {
+    return undefined;
+  }
+  return [
+    {
+      kind: "resolveBattleSubject",
+      subject: "passiveSavingThrowRollMode",
+      fill: "savingThrowOutcome",
+      holes: [],
+      owner: "battleSavingThrowRollMode",
+    },
+  ];
+}
+
+function passiveSavingThrowEndTurnRouteContext(
+  state: BattleState,
+): { readonly ability: Ability; readonly condition: Condition } | undefined {
+  const actorId = currentActorId(state);
+  const actor = actorId === null ? undefined : state.combatants.get(actorId);
+  if (actor === undefined) {
+    return undefined;
+  }
+  for (const effect of actor.activeEffects) {
+    if (effect.kind !== "spellConditionEndTurnSave") {
+      continue;
+    }
+    if (
+      passiveSavingThrowRollModeDispositionForTarget(
+        actor,
+        effect.save.ability,
+        effect.condition,
+      ) === "projected"
+    ) {
+      return { ability: effect.save.ability, condition: effect.condition };
+    }
+  }
+  return undefined;
+}
+
+function creatureStatProjectionRouteTail(
+  state: BattleState,
+): BattleReducerRouteEvents | undefined {
+  return resolutionRouteEvents(creatureStatProjectionRouteEvents({ state }));
+}
+
+function passiveDamageAdjustmentRouteTail(
+  state: BattleState,
+): BattleReducerRouteEvents | undefined {
+  return resolutionRouteEvents(passiveDamageAdjustmentRouteEvents({ state }));
+}
+
+function passiveAbilityCheckRollModeRouteTail(
+  state: BattleState,
+): BattleReducerRouteEvents | undefined {
+  return resolutionRouteEvents(passiveAbilityCheckRollModeRouteEvents({ state }));
+}
+
+function resolutionRouteEvents(
+  routeEvents: BattleReducerRouteEvents | undefined,
+): BattleReducerRouteEvents | undefined {
+  if (routeEvents === undefined) {
+    return undefined;
+  }
+  const [, , ...tail] = routeEvents;
+  return nonEmptyRouteEvents(tail);
+}
+
 function creatureSpaceMovementPermissionRouteForResolution(
   input: BattleResolutionInput,
   result: BattleResolutionResult,
@@ -974,10 +1293,26 @@ function spellAttackProcedureRouteForResolution(
   return [
     eventForOwner(firstOwner),
     ...remainingOwners.map(eventForOwner),
+    ...passiveDamageAdjustmentRouteForSpellDamageResolution(
+      input,
+      result,
+      routeFill,
+    ),
     ...activeFeatureSpellAttackRollModeResolutionRouteEvents(input, result),
     ...spellAttackHitActiveEffectAdmissionRouteForResolution(input, result),
     ...zeroHitPointSpellEffectTeardownRouteForResolution(input, fill, result),
   ];
+}
+
+function passiveDamageAdjustmentRouteForSpellDamageResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+  routeFill: BattleReducerRouteFill,
+): readonly BattleReducerRouteEvent[] {
+  if (routeFill !== "rolledDice" || result.tag !== "resolved") {
+    return [];
+  }
+  return passiveDamageAdjustmentRouteTail(input.state) ?? [];
 }
 
 export function battleReducerRouteForInterrupt(
@@ -5468,6 +5803,7 @@ function battleReducerRouteFill(
   if (kind === "concentrationSavingThrow") return "concentrationSavingThrow";
   if (kind === "damageTypeChoice") return "damageTypeChoice";
   if (kind === "deathSavingThrow") return "deathSavingThrow";
+  if (kind === "grappleOutcome") return "grappleOutcome";
   if (kind === "hitPointHealingDistribution") {
     return "hitPointHealingDistribution";
   }

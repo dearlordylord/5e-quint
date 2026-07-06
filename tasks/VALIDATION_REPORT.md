@@ -64,6 +64,76 @@ Verification results:
 - `git diff --check` passed after the revision-round evidence-accounting fix.
 - Reviewer-loop convergence passed: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks found no remaining reasonable Task 20 findings after moving qRoute observation onto the selected driver action and recording the evidence artifact in the report/ledger.
 
+## CRPI-BLOCK-026
+
+Status: `pass`
+
+- Task: 54
+- Driver path: `packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt`
+- Route connector path: `packages/battle-runtime/battle-runtime-species-passive-trait-substrates.route.mbt.qnt`
+- Route class: `catalog-after-substrate`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-026.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Behavior implemented:
+
+Task 54 accepts species passive trait selected-identity replay through the
+generic passive trait substrate route connector. The focused harness now
+compares the copied `qRoute` to public `discoverBattleActs` and
+`resolveBattleSubject` route events for creature stat projection, passive
+damage adjustment, passive Saving Throw roll mode, passive Ability Check roll
+mode, and movement-fill route events for creature-space movement permission.
+Selected species identity remains catalog/admission/fixture input; production
+route events use typed support-profile, creature-state, damage-adjustment,
+roll-mode, movement-resource, and movement-fill facts.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt#step:doDragonbornDamageResistance` | `tasks/target-replay-evidence/CRPI-BLOCK-026.json#driver:packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt#step:doDragonbornDamageResistance#trace:MBT_TRACES=1 MBT_STEPS=8 action=doDragonbornDamageResistance qRoute=species-passive-trait-substrate-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt#step:doDwarvenResilience` | `tasks/target-replay-evidence/CRPI-BLOCK-026.json#driver:packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt#step:doDwarvenResilience#trace:MBT_TRACES=1 MBT_STEPS=8 action=doDwarvenResilience qRoute=species-passive-trait-substrate-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt#step:doGoliathPowerfulBuild` | `tasks/target-replay-evidence/CRPI-BLOCK-026.json#driver:packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt#step:doGoliathPowerfulBuild#trace:MBT_TRACES=1 MBT_STEPS=8 action=doGoliathPowerfulBuild qRoute=species-passive-trait-substrate-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt#step:doHalflingBrave` | `tasks/target-replay-evidence/CRPI-BLOCK-026.json#driver:packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt#step:doHalflingBrave#trace:MBT_TRACES=1 MBT_STEPS=8 action=doHalflingBrave qRoute=species-passive-trait-substrate-public-route` | `_none_` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-026.json`
+- Reproduction trace family: `MBT_TRACES=1 MBT_STEPS=8 action=<branchAction> qRoute=species-passive-trait-substrate-public-route`
+- The copied connector projection source is `packages/battle-runtime/battle-runtime-species-passive-trait-substrates.route.mbt.qnt#qRoute`; the observed projection source is public `discoverBattleActs` route events and public `resolveBattleSubject` route events in `packages/battle-runtime/src/species-passive-trait-selected-identity.mbt.test.ts`.
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-026/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Character-Origins.md#Dragonborn`, `#Dwarf`, `#Goliath`, and `#Halfling` define the passive trait substrate facts used by this replay.
+- SRD 5.2.1 `Rules-Glossary.md#Grappling` and `#Resistance` define Grapple escape checks and Resistance damage halving.
+- `UBIQUITOUS_LANGUAGE.md` defines Character Sheet, Creature, Damage, Saving Throw, Ability Check, Grappled, Movement, Size, and Speed terms used by the route owners.
+
+Verification results:
+
+- Task-base check passed: declared base ref `ralph/cleanroom-owner-battle-attack-20260706T213644Z/integration` and `HEAD` both resolved to `fb3fcddac Unblock owner-decision Ralph tasks`; Base SHA `fb3fcddac57b6b34e16c41d09fe4794066faa104` is an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against the SRD 5.2.1 and `UBIQUITOUS_LANGUAGE.md` passages listed above.
+- TypeScript passed: `pnpm --filter @dnd/battle-runtime typecheck`.
+- Pre-MBT process check found no active Vitest runner or Quint evaluator; the only match was a Ralph monitor command whose command text contained the process names.
+- Focused replay passed: `START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=8 pnpm --filter @dnd/battle-runtime exec vitest run src/species-passive-trait-selected-identity.mbt.test.ts ) 2>&1 & pid=$!; wait "$pid"; status=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"` passed 2 tests with `TOTAL: 9s`.
+- Task-scoped target replay evidence validation passed: direct `scripts/cleanroom-branch-coverage-check.cjs#validateTargetReplayEvidence` call with `requireAllObligations: false` covered 4 obligations in `tasks/target-replay-evidence/CRPI-BLOCK-026.json`.
+- Reviewer-loop convergence round 1 passed for RAW traceability, ubiquitous-language/domain language, public route-event comparison, no duplicate durable state, no authored-identity production dispatch, and connascence locality for route subject/owner/fill vocabulary. Round 3 removed the rejected synthetic projection acts and observed qRoute through real public Stand from Prone, Ray of Sickness damage, poisoned end-turn save, Escape Grapple, and Movement reducer paths; no remaining reasonable Task 54 findings.
+
+Remaining gaps:
+
+- None for Task 54.
+
 ## CRPI-BLOCK-013
 
 Status: `pass`
