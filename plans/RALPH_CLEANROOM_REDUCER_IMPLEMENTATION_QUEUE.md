@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "CRPI-BLOCK-005",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Blocked route replay: battle-runtime-condition-saving-throw-selected-identity"
     },
     {
@@ -79,13 +79,13 @@
     {
       "number": 13,
       "id": "CRPI-BLOCK-008",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Blocked route replay: battle-runtime-dragonborn-breath-weapon"
     },
     {
       "number": 14,
       "id": "CRPI-BLOCK-009",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Blocked route replay: battle-runtime-druid-wild-shape-form-lifecycle"
     },
     {
@@ -97,31 +97,31 @@
     {
       "number": 16,
       "id": "CRPI-BLOCK-010",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Blocked route replay: battle-runtime-feature-selected-identity"
     },
     {
       "number": 17,
       "id": "CRPI-BLOCK-011",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Blocked route replay: battle-runtime-find-familiar-companion-lifecycle"
     },
     {
       "number": 18,
       "id": "CRPI-BLOCK-012",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Blocked route replay: battle-runtime-find-familiar-selected-identity"
     },
     {
       "number": 19,
       "id": "CRPI-BLOCK-013",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Blocked route replay: battle-runtime-halfling-nimbleness-selected-identity"
     },
     {
       "number": 20,
       "id": "CRPI-BLOCK-014",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Blocked route replay: battle-runtime-healing-stabilization-selected-identity"
     },
     {
