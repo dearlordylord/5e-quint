@@ -395,6 +395,7 @@ function spellHostedWeaponAttackBonusDamageAdditions(
     : [
         {
           kind: "attackSpellDamageAddition",
+          sourceProcedure: "spellHostedWeaponAttack",
           sourceSpellId: invocation.spell.id,
           sourceCombatantId: actorId,
           damage: invocation.bonusDamage,

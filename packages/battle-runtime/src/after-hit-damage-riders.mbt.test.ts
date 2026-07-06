@@ -4,7 +4,6 @@
 import { describe, expect, it } from "vitest";
 
 import type { BattleActiveEffect } from "./battle-reducer.ts";
-import { breakBattleConcentration } from "./battle-reducer/damage-apply.ts";
 import {
   MBT_TEST_TIMEOUT_MS,
   assertWitnessProtocolConsistentWithScenario,
@@ -30,6 +29,7 @@ import {
   stateCheck,
   type ReducerRouteEvent,
   type ReducerRouteFill,
+  type ReducerRouteHole,
   type ReducerRouteOwnerGroup,
   type ReducerRouteSubjectFamily,
 } from "./battle-runtime-mbt-driver-kit.ts";
@@ -73,6 +73,7 @@ import {
   snapshotBattle,
   type BattleFill,
   type BattleHole,
+  type BattleReducerRouteEvent,
   type BattleResolutionResult,
   type BattleState,
   type BattleSubject,
@@ -218,8 +219,11 @@ type AfterHitRuntimeState = {
   readonly phase: AfterHitPhase;
   readonly holes: readonly BattleHole[];
   readonly pending: PendingInvocation;
+  readonly route: readonly ReducerRouteEvent[];
   readonly lastResult: "init" | "needsHoles" | "resolved";
 };
+
+const AFTER_HIT_TARGET_INITIAL_HP = 30;
 
 const AFTER_HIT_ROUTE_SURFACES = [
   "fresh",
@@ -247,6 +251,10 @@ type AfterHitRouteState = {
   readonly surface: AfterHitRouteSurface;
   readonly route: readonly ReducerRouteEvent[];
 };
+type NonStartReducerRouteEvent = Exclude<
+  ReducerRouteEvent,
+  { readonly kind: "startBattle" }
+>;
 
 const AFTER_HIT_ROUTE_SURFACE_BY_TAG = {
   FreshRouteSurface: "fresh",
@@ -452,10 +460,7 @@ function afterHitRouteForAction(
     ]),
     doRouteSaveGatedCondition: routeState("saveGatedCondition", [
       afterHitStartRoute(),
-      afterHitDiscoverRoute(
-        savingThrowOutcome,
-        "battleConditionLifecycle",
-      ),
+      afterHitDiscoverRoute(savingThrowOutcome, "battleConditionLifecycle"),
       afterHitResolveRoute(
         "savingThrowOutcome",
         rolledDice,
@@ -474,11 +479,7 @@ function afterHitRouteForAction(
     doRouteTurnStartDamage: routeState("turnStartDamage", [
       afterHitStartRoute(),
       afterHitDiscoverRoute(rolledDice, "battleActiveEffect"),
-      afterHitResolveRoute(
-        "rolledDice",
-        abilityCheck,
-        "battleHitPoint",
-      ),
+      afterHitResolveRoute("rolledDice", abilityCheck, "battleHitPoint"),
     ]),
     doRouteTurnStartSaveCleanup: routeState("turnStartSaveCleanup", [
       afterHitStartRoute(),
@@ -486,16 +487,8 @@ function afterHitRouteForAction(
         routeHoles("rolledDice", "savingThrowOutcome"),
         "battleActiveEffect",
       ),
-      afterHitResolveRoute(
-        "rolledDice",
-        savingThrowOutcome,
-        "battleHitPoint",
-      ),
-      afterHitResolveRoute(
-        "savingThrowOutcome",
-        noHoles,
-        "battleActiveEffect",
-      ),
+      afterHitResolveRoute("rolledDice", savingThrowOutcome, "battleHitPoint"),
+      afterHitResolveRoute("savingThrowOutcome", noHoles, "battleActiveEffect"),
     ]),
     doRouteEscapeCheck: routeState("escapeCheck", [
       afterHitStartRoute(),
@@ -505,11 +498,7 @@ function afterHitRouteForAction(
     doRouteEscapeConditionCleanup: routeState("escapeConditionCleanup", [
       afterHitStartRoute(),
       afterHitDiscoverRoute(abilityCheck, "battleConditionLifecycle"),
-      afterHitResolveRoute(
-        "abilityCheck",
-        noHoles,
-        "battleConditionLifecycle",
-      ),
+      afterHitResolveRoute("abilityCheck", noHoles, "battleConditionLifecycle"),
     ]),
     doRouteEscapeConcentrationCleanup: routeState(
       "escapeConcentrationCleanup",
@@ -528,18 +517,15 @@ function afterHitRouteForAction(
         "battleActiveEffect",
       ),
     ]),
-    doRouteIlluminationConcentration: routeState(
-      "illuminationConcentration",
-      [
-        afterHitStartRoute(),
-        afterHitDiscoverRoute(interruptDecision, "battleConcentration"),
-        afterHitResolveRoute(
-          "interruptDecision",
-          rolledDice,
-          "battleConcentration",
-        ),
-      ],
-    ),
+    doRouteIlluminationConcentration: routeState("illuminationConcentration", [
+      afterHitStartRoute(),
+      afterHitDiscoverRoute(interruptDecision, "battleConcentration"),
+      afterHitResolveRoute(
+        "interruptDecision",
+        rolledDice,
+        "battleConcentration",
+      ),
+    ]),
     doRouteIlluminationConcentrationBreak: routeState(
       "illuminationConcentrationBreak",
       [
@@ -548,14 +534,11 @@ function afterHitRouteForAction(
         afterHitResolveRouteWithoutFill(noHoles, "battleConcentration"),
       ],
     ),
-    doRouteIlluminationEffectCleanup: routeState(
-      "illuminationEffectCleanup",
-      [
-        afterHitStartRoute(),
-        afterHitDiscoverRoute(noHoles, "battleActiveEffect"),
-        afterHitResolveRouteWithoutFill(noHoles, "battleActiveEffect"),
-      ],
-    ),
+    doRouteIlluminationEffectCleanup: routeState("illuminationEffectCleanup", [
+      afterHitStartRoute(),
+      afterHitDiscoverRoute(noHoles, "battleActiveEffect"),
+      afterHitResolveRouteWithoutFill(noHoles, "battleActiveEffect"),
+    ]),
   } as const satisfies Readonly<
     Record<AfterHitRouteStepAction, AfterHitRouteState>
   >;
@@ -563,11 +546,323 @@ function afterHitRouteForAction(
   return states[action];
 }
 
+function observeAfterHitPublicRouteSurface(
+  action: AfterHitRouteStepAction,
+): AfterHitRouteState {
+  const observers = {
+    doRouteInterruptDecision: observeAfterHitInterruptDecisionRoute,
+    doRouteSaveGatedInterruptDecision:
+      observeAfterHitSaveGatedInterruptDecisionRoute,
+    doRouteSlotSpend: observeAfterHitSlotSpendRoute,
+    doRouteFreeCastSpend: observeAfterHitFreeCastSpendRoute,
+    doRouteSaveGatedSlotAndActionEconomySpend:
+      observeAfterHitSaveGatedSlotAndActionEconomySpendRoute,
+    doRouteAttackDamage: observeAfterHitAttackDamageRoute,
+    doRouteSaveGatedCondition: observeAfterHitSaveGatedConditionRoute,
+    doRouteSaveGatedConcentration: observeAfterHitSaveGatedConcentrationRoute,
+    doRouteTurnStartDamage: observeAfterHitTurnStartDamageRoute,
+    doRouteTurnStartSaveCleanup: observeAfterHitTurnStartSaveCleanupRoute,
+    doRouteEscapeCheck: observeAfterHitEscapeCheckRoute,
+    doRouteEscapeConditionCleanup: observeAfterHitEscapeConditionCleanupRoute,
+    doRouteEscapeConcentrationCleanup:
+      observeAfterHitEscapeConcentrationCleanupRoute,
+    doRouteIlluminationEffect: observeAfterHitIlluminationEffectRoute,
+    doRouteIlluminationConcentration:
+      observeAfterHitIlluminationConcentrationRoute,
+    doRouteIlluminationConcentrationBreak:
+      observeAfterHitIlluminationConcentrationBreakRoute,
+    doRouteIlluminationEffectCleanup:
+      observeAfterHitIlluminationEffectCleanupRoute,
+  } as const satisfies Readonly<
+    Record<AfterHitRouteStepAction, () => AfterHitRuntimeState>
+  >;
+  return afterHitRouteObservedFromPublicEvents(action, observers[action]());
+}
+
+function afterHitRouteObservedFromPublicEvents(
+  action: AfterHitRouteStepAction,
+  observed: AfterHitRuntimeState,
+): AfterHitRouteState {
+  const expected = afterHitRouteForAction(action);
+  const observedRoute = expected.route.map((event) =>
+    event.kind === "startBattle"
+      ? event
+      : requireObservedAfterHitRouteEvent(observed.route, event, action),
+  );
+  return routeState(expected.surface, observedRoute);
+}
+
+function requireObservedAfterHitRouteEvent(
+  events: readonly ReducerRouteEvent[],
+  expected: NonStartReducerRouteEvent,
+  action: AfterHitRouteStepAction,
+): ReducerRouteEvent {
+  const observed = events.find((event) =>
+    reducerRouteEventMatchesAfterHitProjection(event, expected),
+  );
+  if (observed === undefined) {
+    throw new Error(
+      `Expected public after-hit route event for ${action}: ${JSON.stringify(expected)} in ${JSON.stringify(events)}`,
+    );
+  }
+  if (observed.kind === "startBattle") {
+    throw new Error("Unexpected startBattle event matched after-hit route.");
+  }
+  return observed;
+}
+
+function reducerRouteEventMatchesAfterHitProjection(
+  observed: ReducerRouteEvent,
+  expected: NonStartReducerRouteEvent,
+): boolean {
+  if (observed.kind === "startBattle") return false;
+  if (observed.kind !== expected.kind) return false;
+  if (observed.subject !== expected.subject) return false;
+  if (observed.owner !== expected.owner) return false;
+  if (!routeHolesEqual(observed.holes, expected.holes)) return false;
+  if ("fill" in expected) {
+    return "fill" in observed && routeFillsEqual(observed.fill, expected.fill);
+  }
+  return !("fill" in observed);
+}
+
+function routeHolesEqual(
+  left: readonly ReducerRouteHole[],
+  right: readonly ReducerRouteHole[],
+): boolean {
+  return JSON.stringify([...left].sort()) === JSON.stringify([...right].sort());
+}
+
+function routeFillsEqual(
+  left: ReducerRouteFill,
+  right: ReducerRouteFill,
+): boolean {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function appendObservedRouteEvents(
+  route: readonly ReducerRouteEvent[],
+  events: readonly BattleReducerRouteEvent[] | undefined,
+): readonly ReducerRouteEvent[] {
+  return events === undefined ? route : [...route, ...events];
+}
+
+function afterHitChoiceReady(
+  scenario: Exclude<AfterHitScenario, "done">,
+): AfterHitRuntimeState {
+  return fillHitAttackRoll(
+    fillTargetChoice(discoverWeaponHit(initialRuntimeState(scenario))),
+  );
+}
+
+function afterHitDivineSlotDamageReady(): AfterHitRuntimeState {
+  return chooseAfterHitDamageSpell(
+    afterHitChoiceReady("divineSmiteSlot"),
+    divineSmiteUnitId,
+    2,
+  );
+}
+
+function afterHitDivineFreeCastDamageReady(): AfterHitRuntimeState {
+  return chooseAfterHitDamageSpell(
+    afterHitChoiceReady("divineSmiteFreeCast"),
+    divineSmiteUnitId,
+    2,
+    { invocationTag: "classFeatureFreeCast" },
+  );
+}
+
+function afterHitEnsnaringSaveReady(): AfterHitRuntimeState {
+  return chooseEnsnaringStrike(
+    afterHitChoiceReady("ensnaringStrikeFailedSave"),
+  );
+}
+
+function afterHitEnsnaringDamageReady(): AfterHitRuntimeState {
+  return fillEnsnaringSave(afterHitEnsnaringSaveReady(), false);
+}
+
+function afterHitEnsnaringAfterDamage(): AfterHitRuntimeState {
+  return fillAttackDamage(afterHitEnsnaringDamageReady(), 4);
+}
+
+function afterHitEnsnaringEscapeReady(): AfterHitRuntimeState {
+  return fillEnsnaringStartTurnDamage(
+    discoverTurnStartDamage(afterHitEnsnaringAfterDamage()),
+    1,
+  );
+}
+
+function afterHitSearingAfterDamage(): AfterHitRuntimeState {
+  return fillAttackDamage(
+    chooseAfterHitDamageSpell(
+      afterHitChoiceReady("searingSmiteHit"),
+      searingSmiteUnitId,
+      3,
+    ),
+    4,
+    1,
+  );
+}
+
+function afterHitShiningAfterDamage(): AfterHitRuntimeState {
+  return fillAttackDamage(
+    chooseAfterHitDamageSpell(
+      afterHitChoiceReady("shiningSmiteHit"),
+      shiningSmiteUnitId,
+      3,
+    ),
+    4,
+    1,
+  );
+}
+
+function expectObservedHoleKinds(
+  state: AfterHitRuntimeState,
+  expected: readonly BattleHole["kind"][],
+): void {
+  expect(state.holes.map((hole) => hole.kind).sort()).toEqual(
+    [...expected].sort(),
+  );
+}
+
+function observeAfterHitInterruptDecisionRoute(): AfterHitRuntimeState {
+  const state = afterHitDivineSlotDamageReady();
+  expectObservedHoleKinds(state, ["rolledDice"]);
+  expect(state.pending.tag).toBe("attackDamage");
+  return state;
+}
+
+function observeAfterHitSaveGatedInterruptDecisionRoute(): AfterHitRuntimeState {
+  const ready = afterHitEnsnaringSaveReady();
+  expectObservedHoleKinds(ready, ["savingThrowOutcome"]);
+  expect(ready.pending.tag).toBe("ensnaringSave");
+  return fillEnsnaringSave(ready, false);
+}
+
+function observeAfterHitSlotSpendRoute(): AfterHitRuntimeState {
+  const state = afterHitDivineSlotDamageReady();
+  expect(casterSlotExpended(state.battle)).toBe(true);
+  expect(state.battle.currentTurnResources.currentHasBonusAction).toBe(false);
+  expectObservedHoleKinds(state, ["rolledDice"]);
+  return state;
+}
+
+function observeAfterHitFreeCastSpendRoute(): AfterHitRuntimeState {
+  const state = afterHitDivineFreeCastDamageReady();
+  expect(casterSlotExpended(state.battle)).toBe(false);
+  expect(paladinsSmiteUsesRemaining(state.battle)).toBe(0);
+  expect(state.battle.currentTurnResources.currentHasBonusAction).toBe(false);
+  expectObservedHoleKinds(state, ["rolledDice"]);
+  return state;
+}
+
+function observeAfterHitSaveGatedSlotAndActionEconomySpendRoute(): AfterHitRuntimeState {
+  const state = afterHitEnsnaringDamageReady();
+  expect(casterSlotExpended(state.battle)).toBe(true);
+  expect(state.battle.currentTurnResources.currentHasBonusAction).toBe(false);
+  expectObservedHoleKinds(state, ["rolledDice"]);
+  return state;
+}
+
+function observeAfterHitAttackDamageRoute(): AfterHitRuntimeState {
+  const state = fillAttackDamage(afterHitDivineSlotDamageReady(), 4, 1);
+  expect(afterHitProjection(state).targetHp).toBeLessThan(
+    AFTER_HIT_TARGET_INITIAL_HP,
+  );
+  expectObservedHoleKinds(state, []);
+  return state;
+}
+
+function observeAfterHitSaveGatedConditionRoute(): AfterHitRuntimeState {
+  const state = afterHitEnsnaringDamageReady();
+  expect(afterHitProjection(state).targetRestrained).toBe(true);
+  expectObservedHoleKinds(state, ["rolledDice"]);
+  return state;
+}
+
+function observeAfterHitSaveGatedConcentrationRoute(): AfterHitRuntimeState {
+  const state = afterHitEnsnaringDamageReady();
+  expect(afterHitProjection(state).concentrationActive).toBe(true);
+  expectObservedHoleKinds(state, ["rolledDice"]);
+  return state;
+}
+
+function observeAfterHitTurnStartDamageRoute(): AfterHitRuntimeState {
+  const state = discoverTurnStartDamage(afterHitEnsnaringAfterDamage());
+  expectObservedHoleKinds(state, ["rolledDice"]);
+  const next = fillEnsnaringStartTurnDamage(state, 1);
+  expect(afterHitProjection(next).targetHp).toBeLessThan(
+    AFTER_HIT_TARGET_INITIAL_HP,
+  );
+  expectObservedHoleKinds(next, ["abilityCheck"]);
+  return next;
+}
+
+function observeAfterHitTurnStartSaveCleanupRoute(): AfterHitRuntimeState {
+  const state = discoverTurnStartDamageAndSave(afterHitSearingAfterDamage());
+  expectObservedHoleKinds(state, ["rolledDice", "savingThrowOutcome"]);
+  const cleaned = fillSearingStartTurnDamageAndSave(state, 1);
+  expect(afterHitProjection(cleaned).searingBurning).toBe(false);
+  expect(afterHitProjection(cleaned).concentrationActive).toBe(false);
+  expectObservedHoleKinds(cleaned, []);
+  return cleaned;
+}
+
+function observeAfterHitEscapeCheckRoute(): AfterHitRuntimeState {
+  const state = afterHitEnsnaringEscapeReady();
+  expect(state.pending.tag).toBe("escapeCheck");
+  expectObservedHoleKinds(state, ["abilityCheck"]);
+  return fillEnsnaringEscapeCheck(state);
+}
+
+function observeAfterHitEscapeConditionCleanupRoute(): AfterHitRuntimeState {
+  const state = fillEnsnaringEscapeCheck(afterHitEnsnaringEscapeReady());
+  expect(afterHitProjection(state).targetRestrained).toBe(false);
+  expectObservedHoleKinds(state, []);
+  return state;
+}
+
+function observeAfterHitEscapeConcentrationCleanupRoute(): AfterHitRuntimeState {
+  const state = fillEnsnaringEscapeCheck(afterHitEnsnaringEscapeReady());
+  expect(afterHitProjection(state).concentrationActive).toBe(false);
+  expectObservedHoleKinds(state, []);
+  return state;
+}
+
+function observeAfterHitIlluminationEffectRoute(): AfterHitRuntimeState {
+  const state = afterHitShiningAfterDamage();
+  expect(afterHitProjection(state).shiningIlluminated).toBe(true);
+  expectObservedHoleKinds(state, []);
+  return state;
+}
+
+function observeAfterHitIlluminationConcentrationRoute(): AfterHitRuntimeState {
+  const state = afterHitShiningAfterDamage();
+  expect(afterHitProjection(state).concentrationActive).toBe(true);
+  expectObservedHoleKinds(state, []);
+  return state;
+}
+
+function observeAfterHitIlluminationConcentrationBreakRoute(): AfterHitRuntimeState {
+  const state = breakConcentration(afterHitShiningAfterDamage());
+  expect(afterHitProjection(state).concentrationActive).toBe(false);
+  expectObservedHoleKinds(state, []);
+  return state;
+}
+
+function observeAfterHitIlluminationEffectCleanupRoute(): AfterHitRuntimeState {
+  const state = breakConcentration(afterHitShiningAfterDamage());
+  expect(afterHitProjection(state).shiningIlluminated).toBe(false);
+  expectObservedHoleKinds(state, []);
+  return state;
+}
+
 function createAfterHitDamageRidersRouteDriver() {
   return defineDriver(afterHitRouteDriverSchema, () => {
     let state = routeState("fresh", [afterHitStartRoute()]);
     const transition = (action: AfterHitRouteStepAction): void => {
-      state = afterHitRouteForAction(action);
+      state = observeAfterHitPublicRouteSurface(action);
     };
 
     return {
@@ -582,8 +877,7 @@ function createAfterHitDamageRidersRouteDriver() {
       doRouteSaveGatedSlotAndActionEconomySpend: () =>
         transition("doRouteSaveGatedSlotAndActionEconomySpend"),
       doRouteAttackDamage: () => transition("doRouteAttackDamage"),
-      doRouteSaveGatedCondition: () =>
-        transition("doRouteSaveGatedCondition"),
+      doRouteSaveGatedCondition: () => transition("doRouteSaveGatedCondition"),
       doRouteSaveGatedConcentration: () =>
         transition("doRouteSaveGatedConcentration"),
       doRouteTurnStartDamage: () => transition("doRouteTurnStartDamage"),
@@ -594,8 +888,7 @@ function createAfterHitDamageRidersRouteDriver() {
         transition("doRouteEscapeConditionCleanup"),
       doRouteEscapeConcentrationCleanup: () =>
         transition("doRouteEscapeConcentrationCleanup"),
-      doRouteIlluminationEffect: () =>
-        transition("doRouteIlluminationEffect"),
+      doRouteIlluminationEffect: () => transition("doRouteIlluminationEffect"),
       doRouteIlluminationConcentration: () =>
         transition("doRouteIlluminationConcentration"),
       doRouteIlluminationConcentrationBreak: () =>
@@ -964,6 +1257,7 @@ function initialRuntimeState(
     phase: "fresh",
     holes: [],
     pending: { tag: "none" },
+    route: [afterHitStartRoute()],
     lastResult,
   };
 }
@@ -1010,15 +1304,18 @@ function paladinFreeCastBattle(): BattleState {
 
 function discoverWeaponHit(state: AfterHitRuntimeState): AfterHitRuntimeState {
   const subject = weaponAttackSubject("Longsword");
-  const targetHole = requireResultHole(
-    resolveBattleSubject({ state: state.battle, subject, fills: [] }),
-    "targetChoice",
-  );
+  const result = resolveBattleSubject({
+    state: state.battle,
+    subject,
+    fills: [],
+  });
+  const targetHole = requireResultHole(result, "targetChoice");
   return {
     ...state,
     phase: "targetChoiceNeeded",
     holes: [targetHole],
     pending: { tag: "targetChoice", subject },
+    route: appendObservedRouteEvents(state.route, result.routeEvents),
     lastResult: "needsHoles",
   };
 }
@@ -1033,14 +1330,12 @@ function fillTargetChoice(state: AfterHitRuntimeState): AfterHitRuntimeState {
     spellTargetId,
     "Longsword",
   );
-  const attackRoll = requireResultHole(
-    resolveBattleSubject({
-      state: state.battle,
-      subject: state.pending.subject,
-      fills: [targetFill],
-    }),
-    "attackRoll",
-  );
+  const result = resolveBattleSubject({
+    state: state.battle,
+    subject: state.pending.subject,
+    fills: [targetFill],
+  });
+  const attackRoll = requireResultHole(result, "attackRoll");
   return {
     ...state,
     phase: "attackRollNeeded",
@@ -1050,6 +1345,7 @@ function fillTargetChoice(state: AfterHitRuntimeState): AfterHitRuntimeState {
       subject: state.pending.subject,
       targetFill,
     },
+    route: appendObservedRouteEvents(state.route, result.routeEvents),
     lastResult: "needsHoles",
   };
 }
@@ -1087,6 +1383,10 @@ function fillHitAttackRoll(state: AfterHitRuntimeState): AfterHitRuntimeState {
       interruptHole,
     },
     lastResult: "needsHoles",
+    route: appendObservedRouteEvents(
+      state.route,
+      awaitingInterrupt.routeEvents,
+    ),
   };
 }
 
@@ -1129,6 +1429,7 @@ function chooseAfterHitDamageSpell(
       riderDice,
     },
     lastResult: "needsHoles",
+    route: appendObservedRouteEvents(state.route, afterChoice.routeEvents),
   };
 }
 
@@ -1196,6 +1497,7 @@ function fillEnsnaringSave(
       riderDice: 0,
     },
     lastResult: "needsHoles",
+    route: appendObservedRouteEvents(state.route, afterChoice.routeEvents),
   };
 }
 
@@ -1235,17 +1537,31 @@ function fillAttackDamage(
     phase: "afterDamage",
     holes: [],
     pending: { tag: "none" },
+    route: appendObservedRouteEvents(state.route, resolved.routeEvents),
     lastResult: "resolved",
   };
 }
 
 function breakConcentration(state: AfterHitRuntimeState): AfterHitRuntimeState {
+  const act = endConcentrationAct(state.battle);
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: state.battle,
+      subject: act.subject,
+      fills: [],
+    }),
+    "Expected after-hit public End Concentration to resolve.",
+  );
   return {
     ...state,
-    battle: breakBattleConcentration(state.battle, spellCasterId),
+    battle: resolved.state,
     phase: "cleaned",
     holes: [],
     pending: { tag: "none" },
+    route: appendObservedRouteEvents(
+      appendObservedRouteEvents(state.route, act.routeEvents),
+      resolved.routeEvents,
+    ),
     lastResult: "resolved",
   };
 }
@@ -1271,6 +1587,10 @@ function discoverTurnStartDamage(
       sourceBattle: state.battle,
     },
     lastResult: "needsHoles",
+    route: appendObservedRouteEvents(
+      state.route,
+      awaitingTurnStartDamage.routeEvents,
+    ),
   };
 }
 
@@ -1304,6 +1624,10 @@ function fillEnsnaringStartTurnDamage(
       tag: "escapeCheck",
       subject: escapeAct.subject,
     },
+    route: appendObservedRouteEvents(
+      appendObservedRouteEvents(state.route, targetTurn.routeEvents),
+      escapeAct.routeEvents,
+    ),
     lastResult: "needsHoles",
   };
 }
@@ -1328,6 +1652,7 @@ function fillEnsnaringEscapeCheck(
     phase: "cleaned",
     holes: [],
     pending: { tag: "none" },
+    route: appendObservedRouteEvents(state.route, escaped.routeEvents),
     lastResult: "resolved",
   };
 }
@@ -1354,6 +1679,10 @@ function discoverTurnStartDamageAndSave(
       sourceBattle: state.battle,
     },
     lastResult: "needsHoles",
+    route: appendObservedRouteEvents(
+      state.route,
+      awaitingTurnStart.routeEvents,
+    ),
   };
 }
 
@@ -1385,6 +1714,7 @@ function fillSearingStartTurnDamageAndSave(
     phase: "cleaned",
     holes: [],
     pending: { tag: "none" },
+    route: appendObservedRouteEvents(state.route, targetTurn.routeEvents),
     lastResult: "resolved",
   };
 }
@@ -1630,6 +1960,33 @@ function requireSpellRestraintEscapeAct(state: BattleState): ReturnType<
   );
   if (act === undefined) {
     throw new Error("Expected Ensnaring Strike escape action.");
+  }
+  return act;
+}
+
+function endConcentrationAct(state: BattleState): ReturnType<
+  typeof discoverBattleActs
+>[number] & {
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "runtimeCommand"; readonly command: "endConcentration" }
+  >;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is ReturnType<typeof discoverBattleActs>[number] & {
+      readonly subject: Extract<
+        BattleSubject,
+        { readonly tag: "runtimeCommand"; readonly command: "endConcentration" }
+      >;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "endConcentration" &&
+      candidate.subject.actorId === spellCasterId,
+  );
+  if (act === undefined) {
+    throw new Error("Expected public after-hit End Concentration act.");
   }
   return act;
 }

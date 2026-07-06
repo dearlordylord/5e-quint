@@ -2,10 +2,12 @@
 
 import { battleFillKind } from "../battle-protocol-kinds.ts";
 import type {
+  AttackSpellDamageAddition,
   AvailableBattleAct,
   BattleActiveEffect,
   BattleFill,
   BattleInterruptCheckpoint,
+  BattleInterruptProcedureSelection,
   BattleHole,
   BattleResolutionInput,
   BattleResolutionResult,
@@ -27,6 +29,15 @@ import {
 } from "./metamagic-support.ts";
 import { isHeightenedSpellTargetChoiceHoleId } from "./spells-damage-fills.ts";
 import { spellTurnStartSavingThrowOutcomeHoleId } from "./turn-end-movement.ts";
+
+type AfterHitDamageRiderChoice = Extract<
+  BattleInterruptCheckpoint["choices"][number],
+  { readonly kind: "castAttackHitBonusActionSpell" }
+>;
+type AfterHitDamageRiderSelection = Extract<
+  BattleInterruptProcedureSelection,
+  { readonly kind: "castAttackHitBonusActionSpell" }
+>;
 
 export type BattleReducerRouteSubjectFamily =
   | "concentrationTeardown"
@@ -52,6 +63,7 @@ export type BattleReducerRouteSubjectFamily =
   | "repeatSaveConditionEffect"
   | "turnBoundaryEffectLifecycle"
   | "zeroHitPointSpellEffectTeardown"
+  | "afterHitDamageRider"
   | "slotSpell"
   | "spellAttackProcedure"
   | "weaponAttack"
@@ -65,6 +77,7 @@ export type BattleReducerRouteOwnerGroup =
   | "battleObjectTargetBoundary"
   | "battleAttackRoll"
   | "battleSpellAttackProcedure"
+  | "battleAbilityCheck"
   | "battleSavingThrowOutcome"
   | "battleSavingThrowRollMode"
   | "battleHitPointAndZeroHpLifecycle"
@@ -82,6 +95,7 @@ export type BattleReducerRouteOwnerGroup =
   | "battleTurnBoundary";
 
 export type BattleReducerRouteHole =
+  | "abilityCheck"
   | "abilityChoice"
   | "attackRoll"
   | "commandOptionChoice"
@@ -101,6 +115,7 @@ export type BattleReducerRouteHole =
   | "unitFeatureDecision";
 
 export type BattleReducerRouteFillKind =
+  | "abilityCheck"
   | "abilityChoice"
   | "attackRoll"
   | "commandOptionChoice"
@@ -190,6 +205,7 @@ export function battleReducerStartRouteEvent(): BattleReducerRouteEvent {
 }
 
 export function battleReducerRouteEventsForDiscoveredAct(
+  state: BattleState,
   act: AvailableBattleAct,
 ): BattleReducerRouteEvents | undefined {
   if (isTwinnedEffectiveSpellLevelDiscoveryAct(act)) {
@@ -205,6 +221,11 @@ export function battleReducerRouteEventsForDiscoveredAct(
   const rollModifierRoute = rollModifierRouteForDiscoveredAct(act);
   if (rollModifierRoute !== undefined) {
     return [rollModifierRoute];
+  }
+  const afterHitDamageRiderDiscoveryRoute =
+    afterHitDamageRiderDiscoveryRoutesForDiscoveredAct(state, act);
+  if (afterHitDamageRiderDiscoveryRoute !== undefined) {
+    return afterHitDamageRiderDiscoveryRoute;
   }
   if (isSubtleSpellComponentProjectionSubject(act.subject)) {
     return [
@@ -344,7 +365,9 @@ export function battleReducerRouteEventsForDiscoveredAct(
     subject: "spellAttackProcedure",
     holes:
       act.subject.invocation.procedure === "spellAttackSequence"
-        ? spellAttackSequenceRouteHoles(battleReducerRouteHoles(act.initialHoles))
+        ? spellAttackSequenceRouteHoles(
+            battleReducerRouteHoles(act.initialHoles),
+          )
         : battleReducerRouteHoles(act.initialHoles),
     owner: actionOwner,
   };
@@ -397,12 +420,16 @@ export function battleReducerRouteForResolution(
   if (rollModifierConcentrationRoute !== undefined) {
     return rollModifierConcentrationRoute;
   }
-  const sleepRepeatSaveRoute = sleepRepeatSaveRouteForResolution(
+  const sleepRepeatSaveRoute = sleepRepeatSaveRouteForResolution(input, result);
+  if (sleepRepeatSaveRoute !== undefined) {
+    return sleepRepeatSaveRoute;
+  }
+  const afterHitEscapeRoute = afterHitDamageRiderEscapeRouteForResolution(
     input,
     result,
   );
-  if (sleepRepeatSaveRoute !== undefined) {
-    return sleepRepeatSaveRoute;
+  if (afterHitEscapeRoute !== undefined) {
+    return afterHitEscapeRoute;
   }
   const deathSavingThrowRoute = deathSavingThrowRouteForResolution(
     input,
@@ -413,8 +440,16 @@ export function battleReducerRouteForResolution(
   }
   const turnBoundaryEffectLifecycleRoute =
     turnBoundaryEffectLifecycleRouteForResolution(input, result);
-  if (turnBoundaryEffectLifecycleRoute !== undefined) {
-    return turnBoundaryEffectLifecycleRoute;
+  const afterHitTurnBoundaryRoute =
+    afterHitDamageRiderTurnBoundaryRouteForResolution(input, result);
+  if (
+    turnBoundaryEffectLifecycleRoute !== undefined ||
+    afterHitTurnBoundaryRoute !== undefined
+  ) {
+    return nonEmptyRouteEvents([
+      ...(turnBoundaryEffectLifecycleRoute ?? []),
+      ...(afterHitTurnBoundaryRoute ?? []),
+    ]);
   }
   const metamagicSpellDurationProjectionRoute =
     metamagicSpellDurationProjectionRouteForResolution(input, result);
@@ -450,8 +485,18 @@ export function battleReducerRouteForResolution(
   }
   const interruptResumeDiscoveryRoute =
     interruptStackResumeDiscoveryRouteForResolution(input, result);
-  if (interruptResumeDiscoveryRoute !== undefined) {
-    return [interruptResumeDiscoveryRoute];
+  const afterHitDamageRiderDiscoveryRoutes =
+    afterHitDamageRiderDiscoveryRoutesForResolution(result);
+  if (
+    interruptResumeDiscoveryRoute !== undefined ||
+    afterHitDamageRiderDiscoveryRoutes !== undefined
+  ) {
+    return nonEmptyRouteEvents([
+      ...(interruptResumeDiscoveryRoute === undefined
+        ? []
+        : [interruptResumeDiscoveryRoute]),
+      ...(afterHitDamageRiderDiscoveryRoutes ?? []),
+    ]);
   }
   const weaponAttackRoute = weaponAttackRouteForResolution(input, result);
   if (weaponAttackRoute !== undefined) {
@@ -521,6 +566,15 @@ export function battleReducerRouteForInterrupt(
   if (reactionSpellRoute !== undefined) {
     return reactionSpellRoute;
   }
+  const afterHitDamageRiderRoute = afterHitDamageRiderRouteForInterrupt({
+    before,
+    fill,
+    holes,
+    result,
+  });
+  if (afterHitDamageRiderRoute !== undefined) {
+    return afterHitDamageRiderRoute;
+  }
   const eventForOwner = (
     owner: BattleReducerRouteOwnerGroup,
   ): BattleReducerRouteEvent => ({
@@ -541,6 +595,342 @@ export function battleReducerRouteForInterrupt(
     ];
   }
   return [eventForOwner("battleInterruptStack")];
+}
+
+function afterHitDamageRiderDiscoveryRoutesForResolution(
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  if (result.tag !== "needsHoles") {
+    return undefined;
+  }
+  const holes = battleReducerRouteHoles(result.holes);
+  if (!holes.includes("interruptDecision")) {
+    return undefined;
+  }
+  const frame = currentInterruptCheckpoint(result.state);
+  if (
+    frame?.trigger !== "attackHit" ||
+    !frame.choices.some(isAfterHitDamageRiderChoice)
+  ) {
+    return undefined;
+  }
+
+  const owners = new Set<BattleReducerRouteOwnerGroup>([
+    "battleInterruptStack",
+  ]);
+  for (const choice of frame.choices) {
+    if (!isAfterHitDamageRiderChoice(choice)) {
+      continue;
+    }
+    if (choice.invocation.tag === "spellSlot") {
+      owners.add("battleSpellSlotAndActionEconomy");
+    }
+    if (choice.invocation.tag === "classFeatureFreeCast") {
+      owners.add("battleFeatureResource");
+    }
+    if (choice.invocation.procedure === "afterHitDamageAndIllumination") {
+      owners.add("battleActiveEffect");
+      owners.add("battleConcentration");
+    }
+  }
+
+  return nonEmptyRouteEvents(
+    [...owners].map((owner) =>
+      afterHitDamageRiderDiscoverRoute(["interruptDecision"], owner),
+    ),
+  );
+}
+
+function afterHitDamageRiderDiscoveryRoutesForDiscoveredAct(
+  state: BattleState,
+  act: AvailableBattleAct,
+): BattleReducerRouteEvents | undefined {
+  if (isAfterHitDamageRiderConcentrationTeardownSubject(state, act.subject)) {
+    return [
+      afterHitDamageRiderDiscoverRoute(
+        battleReducerRouteHoles(act.initialHoles),
+        "battleConcentration",
+      ),
+      afterHitDamageRiderDiscoverRoute(
+        battleReducerRouteHoles(act.initialHoles),
+        "battleActiveEffect",
+      ),
+    ];
+  }
+  if (!isAfterHitEscapeAbilityCheckSubject(state, act.subject)) {
+    return undefined;
+  }
+  const holes = battleReducerRouteHoles(act.initialHoles);
+  return nonEmptyRouteEvents([
+    afterHitDamageRiderDiscoverRoute(holes, "battleAbilityCheck"),
+    afterHitDamageRiderDiscoverRoute(holes, "battleConditionLifecycle"),
+    afterHitDamageRiderDiscoverRoute(holes, "battleConcentration"),
+  ]);
+}
+
+function afterHitDamageRiderRouteForInterrupt(input: {
+  readonly before: BattleState;
+  readonly fill: Extract<BattleFill, { readonly kind: "interruptDecision" }>;
+  readonly holes: readonly BattleReducerRouteHole[];
+  readonly result: BattleResolutionResult;
+}): BattleReducerRouteEvents | undefined {
+  if (input.fill.value.kind !== "resolve") {
+    return undefined;
+  }
+  const choice = input.fill.value.choice;
+  if (!isAfterHitDamageRiderSelection(choice)) {
+    return undefined;
+  }
+
+  const choiceFillKinds = choice.fills
+    .map(battleReducerRouteFill)
+    .filter((fill): fill is BattleReducerRouteFill => fill !== undefined);
+  const hasSaveFill = choiceFillKinds.includes("savingThrowOutcome");
+  const choiceHoles: readonly BattleReducerRouteHole[] = hasSaveFill
+    ? ["savingThrowOutcome"]
+    : input.holes;
+  const choiceFill: BattleReducerRouteFill = hasSaveFill
+    ? "savingThrowOutcome"
+    : "interruptDecision";
+  const route: BattleReducerRouteEvent[] = [
+    afterHitDamageRiderResolveRoute(
+      "interruptDecision",
+      choiceHoles,
+      "battleInterruptStack",
+    ),
+  ];
+
+  if (choice.invocation.tag === "spellSlot") {
+    route.push(
+      afterHitDamageRiderDiscoverRoute(
+        hasSaveFill ? ["savingThrowOutcome"] : ["interruptDecision"],
+        "battleSpellSlotAndActionEconomy",
+      ),
+      afterHitDamageRiderResolveRoute(
+        choiceFill,
+        input.holes,
+        "battleSpellSlotAndActionEconomy",
+      ),
+    );
+  }
+  if (choice.invocation.tag === "classFeatureFreeCast") {
+    route.push(
+      afterHitDamageRiderDiscoverRoute(
+        hasSaveFill ? ["savingThrowOutcome"] : ["interruptDecision"],
+        "battleFeatureResource",
+      ),
+      afterHitDamageRiderResolveRoute(
+        choiceFill,
+        input.holes,
+        "battleFeatureResource",
+      ),
+    );
+  }
+  if (choice.invocation.procedure === "afterHitSaveGatedCondition") {
+    if (
+      input.result.tag !== "invalid" &&
+      combatantConditionsChanged(input.before, input.result.state)
+    ) {
+      route.push(
+        afterHitDamageRiderDiscoverRoute(
+          ["savingThrowOutcome"],
+          "battleConditionLifecycle",
+        ),
+        afterHitDamageRiderResolveRoute(
+          "savingThrowOutcome",
+          input.holes,
+          "battleConditionLifecycle",
+        ),
+      );
+    }
+    if (
+      input.result.tag !== "invalid" &&
+      combatantsConcentrationChanged(input.before, input.result.state)
+    ) {
+      route.push(
+        afterHitDamageRiderDiscoverRoute(
+          ["savingThrowOutcome"],
+          "battleConcentration",
+        ),
+        afterHitDamageRiderResolveRoute(
+          "savingThrowOutcome",
+          input.holes,
+          "battleConcentration",
+        ),
+      );
+    }
+  }
+  if (
+    choice.invocation.procedure === "afterHitDamageAndIllumination" &&
+    input.result.tag !== "invalid"
+  ) {
+    if (combatantsActiveEffectsChanged(input.before, input.result.state)) {
+      route.push(
+        afterHitDamageRiderResolveRoute(
+          "interruptDecision",
+          input.holes,
+          "battleActiveEffect",
+        ),
+      );
+    }
+    if (combatantsConcentrationChanged(input.before, input.result.state)) {
+      route.push(
+        afterHitDamageRiderResolveRoute(
+          "interruptDecision",
+          input.holes,
+          "battleConcentration",
+        ),
+      );
+    }
+  }
+  if (input.holes.includes("rolledDice")) {
+    route.push(afterHitDamageRiderDiscoverRoute(input.holes, "battleHitPoint"));
+  }
+
+  return nonEmptyRouteEvents(route);
+}
+
+function afterHitDamageRiderEscapeRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  if (!isAfterHitEscapeAbilityCheckSubject(input.state, input.subject)) {
+    return undefined;
+  }
+  if (result.tag === "invalid") {
+    return undefined;
+  }
+  const fill = input.fills.at(-1);
+  const routeFill =
+    fill === undefined ? undefined : battleReducerRouteFill(fill);
+  if (routeFill !== "abilityCheck") {
+    return undefined;
+  }
+  const holes =
+    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
+  const route: BattleReducerRouteEvent[] = [
+    afterHitDamageRiderResolveRoute(routeFill, holes, "battleAbilityCheck"),
+  ];
+  if (combatantConditionsChanged(input.state, result.state)) {
+    route.push(
+      afterHitDamageRiderResolveRoute(
+        routeFill,
+        holes,
+        "battleConditionLifecycle",
+      ),
+    );
+  }
+  if (combatantsConcentrationChanged(input.state, result.state)) {
+    route.push(
+      afterHitDamageRiderResolveRoute(routeFill, holes, "battleConcentration"),
+    );
+  }
+  return nonEmptyRouteEvents(route);
+}
+
+function isAfterHitEscapeAbilityCheckSubject(
+  state: BattleState,
+  subject: BattleResolutionInput["subject"],
+): boolean {
+  if (subject.tag !== "action" || subject.action !== "escapeSpellRestraint") {
+    return false;
+  }
+  const target = state.combatants.get(subject.targetId);
+  return (
+    target?.activeEffects.some(
+      (effect) =>
+        effect.kind === "spellCondition" &&
+        effect.sourceSpellId === subject.sourceSpellId &&
+        effect.sourceCombatantId === subject.sourceCombatantId &&
+        effect.condition === "restrained" &&
+        effect.turnStartDamage !== null &&
+        effect.escape?.kind === "abilityCheck",
+    ) ?? false
+  );
+}
+
+function isAfterHitDamageRiderConcentrationTeardownSubject(
+  state: BattleState,
+  subject: BattleResolutionInput["subject"],
+): boolean {
+  if (
+    subject.tag !== "runtimeCommand" ||
+    subject.command !== "endConcentration"
+  ) {
+    return false;
+  }
+  const actor = state.combatants.get(subject.actorId);
+  const concentration = actor?.concentration ?? null;
+  if (concentration === null) {
+    return false;
+  }
+  return [...state.combatants.values()].some((combatant) =>
+    combatant.activeEffects.some(
+      (effect) =>
+        effect.kind === "shiningSmiteIllumination" &&
+        effect.sourceSpellId === concentration.sourceSpellId &&
+        effect.sourceCombatantId === subject.actorId,
+    ),
+  );
+}
+
+function isAfterHitDamageRiderChoice(
+  choice: BattleInterruptCheckpoint["choices"][number],
+): choice is AfterHitDamageRiderChoice {
+  return choice.kind === "castAttackHitBonusActionSpell";
+}
+
+function isAfterHitDamageRiderSelection(
+  choice: BattleInterruptProcedureSelection,
+): choice is AfterHitDamageRiderSelection {
+  return choice.kind === "castAttackHitBonusActionSpell";
+}
+
+function afterHitDamageRiderDiscoverRoute(
+  holes: readonly BattleReducerRouteHole[],
+  owner: BattleReducerRouteOwnerGroup,
+): BattleReducerRouteEvent {
+  return {
+    kind: "discoverBattleActs",
+    subject: "afterHitDamageRider",
+    holes,
+    owner,
+  };
+}
+
+function afterHitDamageRiderResolveRoute(
+  fill: BattleReducerRouteFill,
+  holes: readonly BattleReducerRouteHole[],
+  owner: BattleReducerRouteOwnerGroup,
+): BattleReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubject",
+    subject: "afterHitDamageRider",
+    fill,
+    holes,
+    owner,
+  };
+}
+
+function afterHitDamageRiderResolveWithoutFillRoute(
+  holes: readonly BattleReducerRouteHole[],
+  owner: BattleReducerRouteOwnerGroup,
+): BattleReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubjectWithoutFill",
+    subject: "afterHitDamageRider",
+    holes,
+    owner,
+  };
+}
+
+function combatantsConcentrationChanged(
+  before: BattleState,
+  after: BattleState,
+): boolean {
+  return [...after.combatants.values()].some((combatant) =>
+    combatantConcentrationChanged(before, after, combatant.combatantId),
+  );
 }
 
 function reactionSpellRouteForInterrupt(input: {
@@ -604,16 +994,8 @@ function metamagicRouteForResolution(
       metamagicSpellRangeProjectionRouteForResolution(input, result, fill) ??
       metamagicSavingThrowProtectionRouteForResolution(input, result, fill) ??
       metamagicSavingThrowRollModeRouteForResolution(input, result, fill) ??
-      metamagicDamageTypeSubstitutionRouteForResolution(
-        input,
-        result,
-        fill,
-      ) ??
-      metamagicMissedSpellAttackRerollRouteForResolution(
-        input,
-        result,
-        fill,
-      ) ??
+      metamagicDamageTypeSubstitutionRouteForResolution(input, result, fill) ??
+      metamagicMissedSpellAttackRerollRouteForResolution(input, result, fill) ??
       metamagicDamageDiceRerollRouteForResolution(input, result, fill)
     );
   }
@@ -956,7 +1338,10 @@ function metamagicEffectiveSpellLevelRouteForResolution(
     return undefined;
   }
   const fill = input.fills.at(-1);
-  if (fill === undefined || battleReducerRouteFill(fill) !== "spellTargetList") {
+  if (
+    fill === undefined ||
+    battleReducerRouteFill(fill) !== "spellTargetList"
+  ) {
     return undefined;
   }
   const holes =
@@ -1485,6 +1870,27 @@ function concentrationRouteForResolution(
     return undefined;
   }
 
+  const routeFills = input.fills
+    .map(battleReducerRouteFill)
+    .filter((fill): fill is BattleReducerRouteFill => fill !== undefined);
+  if (
+    routeFills.includes("rolledDice") &&
+    routeFills.includes("savingThrowOutcome")
+  ) {
+    return [
+      afterHitDamageRiderResolveRoute(
+        "rolledDice",
+        ["savingThrowOutcome"],
+        "battleHitPoint",
+      ),
+      afterHitDamageRiderResolveRoute(
+        "savingThrowOutcome",
+        [],
+        "battleActiveEffect",
+      ),
+    ];
+  }
+
   const fill = input.fills.at(-1);
   const holes =
     result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
@@ -1530,6 +1936,21 @@ function concentrationRouteForResolution(
       input.subject.tag === "runtimeCommand" &&
       input.subject.command === "endConcentration"
     ) {
+      const afterHitRoutes = isAfterHitDamageRiderConcentrationTeardownSubject(
+        input.state,
+        input.subject,
+      )
+        ? [
+            afterHitDamageRiderResolveWithoutFillRoute(
+              holes,
+              "battleConcentration",
+            ),
+            afterHitDamageRiderResolveWithoutFillRoute(
+              holes,
+              "battleActiveEffect",
+            ),
+          ]
+        : [];
       return [
         {
           kind: "resolveBattleSubjectWithoutFill",
@@ -1543,6 +1964,7 @@ function concentrationRouteForResolution(
           holes,
           owner: "battleActiveEffect",
         },
+        ...afterHitRoutes,
       ];
     }
     return undefined;
@@ -2028,18 +2450,22 @@ function scalarBuffRouteForResolution(
   }
 
   return nonEmptyRouteEvents(
-    scalarBuffResolveOwners(input.state, result.state, input.subject.actorId).map(
-      (owner) => scalarBuffResolveWithoutFill([], owner),
-    ),
+    scalarBuffResolveOwners(
+      input.state,
+      result.state,
+      input.subject.actorId,
+    ).map((owner) => scalarBuffResolveWithoutFill([], owner)),
   );
 }
 
 function scalarBuffRouteFill(
   fill: BattleFill,
-): Extract<
-  BattleReducerRouteFill,
-  "targetChoice" | "spellTargetList" | "rolledDice"
-> | undefined {
+):
+  | Extract<
+      BattleReducerRouteFill,
+      "targetChoice" | "spellTargetList" | "rolledDice"
+    >
+  | undefined {
   const routeFill = battleReducerRouteFill(fill);
   if (
     routeFill === "targetChoice" ||
@@ -2069,9 +2495,7 @@ function scalarBuffResolveOwners(
       ? ["battleMovementResource"]
       : [];
   const hitPointOwners: readonly BattleReducerRouteOwnerGroup[] =
-    addedEffectKinds.has("hitPointMaximumIncrease")
-      ? ["battleHitPoint"]
-      : [];
+    addedEffectKinds.has("hitPointMaximumIncrease") ? ["battleHitPoint"] : [];
   const concentrationOwners: readonly BattleReducerRouteOwnerGroup[] =
     combatantConcentrationChanged(before, after, actorId)
       ? ["battleConcentration"]
@@ -2254,9 +2678,7 @@ function sleepRepeatSaveTurnBoundaryRoute(
       result.tag === "resolved" &&
       hasPendingSleepRepeatSaveEffect(input.state)
     ) {
-      return [
-        sleepRepeatSaveResolveWithoutFill([], "battleTurnBoundary"),
-      ];
+      return [sleepRepeatSaveResolveWithoutFill([], "battleTurnBoundary")];
     }
     return undefined;
   }
@@ -2297,9 +2719,7 @@ function sleepRepeatSaveResolvedRoutes(input: {
     input.includeActiveEffectTransition ||
     sleepRepeatSaveEffectCount(input.after) !==
       sleepRepeatSaveEffectCount(input.before)
-      ? [
-          sleepRepeatSaveResolveWithoutFill([], "battleActiveEffect"),
-        ]
+      ? [sleepRepeatSaveResolveWithoutFill([], "battleActiveEffect")]
       : [];
   const concentrationRoutes =
     input.sourceCombatantId !== undefined &&
@@ -2308,9 +2728,7 @@ function sleepRepeatSaveResolvedRoutes(input: {
       input.after,
       input.sourceCombatantId,
     )
-      ? [
-          sleepRepeatSaveResolveWithoutFill([], "battleConcentration"),
-        ]
+      ? [sleepRepeatSaveResolveWithoutFill([], "battleConcentration")]
       : [];
   return nonEmptyRouteEvents([
     ...conditionRoutes,
@@ -2383,12 +2801,8 @@ function turnBoundaryEffectLifecycleRouteForResolution(
     return result.tag === "resolved" && holes.length === 0
       ? [
           hitPointRoute,
-          turnBoundaryEffectLifecycleResolveWithoutFill(
-            "battleActiveEffect",
-          ),
-          turnBoundaryEffectLifecycleResolveWithoutFill(
-            "battleTurnBoundary",
-          ),
+          turnBoundaryEffectLifecycleResolveWithoutFill("battleActiveEffect"),
+          turnBoundaryEffectLifecycleResolveWithoutFill("battleTurnBoundary"),
         ]
       : nonEmptyRouteEvents([
           hitPointRoute,
@@ -2410,6 +2824,53 @@ function turnBoundaryEffectLifecycleRouteForResolution(
         holes,
         owner: "battleActiveEffect",
       },
+    ];
+  }
+  return undefined;
+}
+
+function afterHitDamageRiderTurnBoundaryRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  if (!isEndTurnSubject(input.subject)) {
+    return undefined;
+  }
+  if (!battleHasAfterHitTurnBoundaryEffects(input.state)) {
+    return undefined;
+  }
+  if (result.tag === "invalid") {
+    return undefined;
+  }
+
+  const fill = input.fills.at(-1);
+  const holes =
+    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
+  if (fill === undefined) {
+    return holes.length === 0
+      ? undefined
+      : [afterHitDamageRiderDiscoverRoute(holes, "battleActiveEffect")];
+  }
+
+  const routeFill = battleReducerRouteFill(fill);
+  if (routeFill === "rolledDice") {
+    const nextHoles =
+      result.tag === "resolved" &&
+      battleHasAfterHitEscapeAbilityCheck(result.state)
+        ? (["abilityCheck"] as const)
+        : holes;
+    return [
+      afterHitDamageRiderResolveRoute(routeFill, nextHoles, "battleHitPoint"),
+    ];
+  }
+  if (routeFill === "savingThrowOutcome") {
+    return [
+      afterHitDamageRiderResolveRoute(
+        "rolledDice",
+        ["savingThrowOutcome"],
+        "battleHitPoint",
+      ),
+      afterHitDamageRiderResolveRoute(routeFill, holes, "battleActiveEffect"),
     ];
   }
   return undefined;
@@ -2477,10 +2938,35 @@ function battleHasTurnBoundaryLifecycleEffects(state: BattleState): boolean {
   );
 }
 
+function battleHasAfterHitTurnBoundaryEffects(state: BattleState): boolean {
+  return [...state.combatants.values()].some((combatant) =>
+    combatant.activeEffects.some(isAfterHitTurnBoundaryEffect),
+  );
+}
+
+function battleHasAfterHitEscapeAbilityCheck(state: BattleState): boolean {
+  return [...state.combatants.values()].some((combatant) =>
+    combatant.activeEffects.some(
+      (effect) =>
+        effect.kind === "spellCondition" &&
+        effect.escape?.kind === "abilityCheck",
+    ),
+  );
+}
+
 function isTurnBoundaryLifecycleEffect(effect: BattleActiveEffect): boolean {
   return (
     effect.kind === "spellTurnStartDamageAndSave" ||
-    effect.kind === "spellTurnEndDamage"
+    effect.kind === "spellTurnEndDamage" ||
+    (effect.kind === "spellCondition" && effect.turnStartDamage !== null)
+  );
+}
+
+function isAfterHitTurnBoundaryEffect(effect: BattleActiveEffect): boolean {
+  return (
+    (effect.kind === "spellTurnStartDamageAndSave" &&
+      effect.source === "afterHitTimedDamageAndSave") ||
+    (effect.kind === "spellCondition" && effect.turnStartDamage !== null)
   );
 }
 
@@ -2493,10 +2979,7 @@ function isTurnBoundaryEffectLifecycleSavingThrowFill(
       (effect) =>
         effect.kind === "spellTurnStartDamageAndSave" &&
         fill.holeId ===
-          spellTurnStartSavingThrowOutcomeHoleId(
-            combatant.combatantId,
-            effect,
-          ),
+          spellTurnStartSavingThrowOutcomeHoleId(combatant.combatantId, effect),
     ),
   );
 }
@@ -2529,7 +3012,9 @@ function sleepRepeatSaveSavingThrowFill(
   fills: readonly BattleFill[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
   return fills.find(
-    (fill): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+    (
+      fill,
+    ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
       fill.kind === "savingThrowOutcome",
   );
 }
@@ -2539,8 +3024,7 @@ function sleepRepeatSaveRouteHoles(
 ): readonly BattleReducerRouteHole[] {
   return battleReducerRouteHoles(
     holes.filter(
-      (hole) =>
-        hole.kind === "savingThrowOutcome" && "sleepRepeatSave" in hole,
+      (hole) => hole.kind === "savingThrowOutcome" && "sleepRepeatSave" in hole,
     ),
   );
 }
@@ -2598,8 +3082,9 @@ function combatantConditionsChanged(
   after: BattleState,
 ): boolean {
   return [...after.combatants.values()].some((combatant) => {
-    const beforeConditions =
-      before.combatants.get(combatant.combatantId)?.conditions;
+    const beforeConditions = before.combatants.get(
+      combatant.combatantId,
+    )?.conditions;
     return (
       beforeConditions !== undefined &&
       !sameBooleanRecord(beforeConditions, combatant.conditions)
@@ -2763,6 +3248,9 @@ function weaponAttackRouteForResolution(
 
   const weaponDamageRoute = event("weaponAttack", "battleHitPoint");
   const routeTail: BattleReducerRouteEvent[] = [];
+  if (battleHasAfterHitAttackDamageAddition(input.state)) {
+    routeTail.push(event("afterHitDamageRider", "battleHitPoint"));
+  }
   if (holes.includes("unitFeatureDecision")) {
     routeTail.push({
       kind: "resolveBattleSubjectWithoutFill",
@@ -2792,7 +3280,30 @@ function weaponAttackRouteForResolution(
   return [weaponDamageRoute, ...routeTail];
 }
 
-function weaponMasteryCleaveRouteStarted(fills: readonly BattleFill[]): boolean {
+function battleHasAfterHitAttackDamageAddition(state: BattleState): boolean {
+  const topFrame = state.interruptStack.at(-1);
+  const additions =
+    topFrame?.kind === "replayContinuation"
+      ? topFrame.continuation.attackDamageAdditions
+      : topFrame?.kind === "interruptCheckpoint"
+        ? topFrame.frame.activeInterrupt?.pendingAttackDamageAdditions
+        : undefined;
+  return additions?.some(isAfterHitAttackDamageAddition) ?? false;
+}
+
+function isAfterHitAttackDamageAddition(
+  addition: AttackSpellDamageAddition,
+): boolean {
+  return (
+    addition.sourceProcedure === "afterHitDamage" ||
+    addition.sourceProcedure === "afterHitTimedDamageAndSave" ||
+    addition.sourceProcedure === "afterHitDamageAndIllumination"
+  );
+}
+
+function weaponMasteryCleaveRouteStarted(
+  fills: readonly BattleFill[],
+): boolean {
   return fills.some((fill) => fill.kind === "unitFeatureDecision");
 }
 
@@ -3121,6 +3632,7 @@ function battleReducerRouteHole(
   hole: BattleHole,
 ): readonly BattleReducerRouteHole[] {
   const family = battleHoleFamilyKind(hole);
+  if (family === "abilityCheck") return ["abilityCheck"];
   if (family === "attackRoll") return ["attackRoll"];
   if (family === "commandOptionChoice") return ["commandOptionChoice"];
   if (family === "concentrationSavingThrow") {
@@ -3147,6 +3659,7 @@ function battleReducerRouteFill(
   fill: BattleFill,
 ): BattleReducerRouteFill | undefined {
   const kind = battleFillKind(fill);
+  if (kind === "abilityCheck") return "abilityCheck";
   if (kind === "attackRoll") return "attackRoll";
   if (kind === "concentrationSavingThrow") return "concentrationSavingThrow";
   if (kind === "damageTypeChoice") return "damageTypeChoice";
@@ -3166,8 +3679,8 @@ function battleReducerRouteFill(
 }
 
 function spellAttackProcedureRouteOwners(input: {
-  fill: BattleFill,
-  result: BattleResolutionResult,
+  fill: BattleFill;
+  result: BattleResolutionResult;
 }): readonly BattleReducerRouteOwnerGroup[] {
   const kind = battleFillKind(input.fill);
   if (kind === "attackRoll") {
@@ -3229,10 +3742,7 @@ function zeroHitPointSpellEffectTeardownRouteForResolution(
   if (result.tag === "invalid") {
     return [];
   }
-  const teardown = zeroHitPointConcentrationTeardown(
-    input.state,
-    result.state,
-  );
+  const teardown = zeroHitPointConcentrationTeardown(input.state, result.state);
   if (teardown === undefined) {
     return [];
   }
@@ -3276,10 +3786,9 @@ function zeroHitPointConcentrationTeardown(
       continue;
     }
     return {
-      concentratingEffectRemoved: concentratingActiveEffectCount(
-        before,
-        beforeCombatant.combatantId,
-      ) > concentratingActiveEffectCount(after, beforeCombatant.combatantId),
+      concentratingEffectRemoved:
+        concentratingActiveEffectCount(before, beforeCombatant.combatantId) >
+        concentratingActiveEffectCount(after, beforeCombatant.combatantId),
     };
   }
   return undefined;

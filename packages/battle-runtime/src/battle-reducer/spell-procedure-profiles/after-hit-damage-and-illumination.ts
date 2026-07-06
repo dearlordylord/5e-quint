@@ -338,6 +338,7 @@ function resolveAfterHitDamageAndIllumination(
 
   const damageAddition: AttackSpellDamageAddition = {
     kind: "attackSpellDamageAddition",
+    sourceProcedure: "afterHitDamageAndIllumination",
     sourceSpellId: input.invocation.spell.id,
     sourceCombatantId: input.input.subject.casterId,
     damage: {

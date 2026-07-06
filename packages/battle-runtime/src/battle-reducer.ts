@@ -188,9 +188,7 @@ import type {
   CharacterId,
   InitiativeScore,
 } from "./identity.ts";
-import type {
-  BattleReducerRouteEvents,
-} from "./battle-reducer/reducer-route.ts";
+import type { BattleReducerRouteEvents } from "./battle-reducer/reducer-route.ts";
 import {
   BattleCombatantSide,
   BattleId,
@@ -817,7 +815,10 @@ export type BattleOngoingSpellTargetWithinRangeFact = {
   readonly rangeFeet: MovementFeet;
 };
 type BattleConcentrationOrDurationExpiration =
-  | (Extract<BattleActiveEffectExpiration, { readonly kind: "concentration" }> & {
+  | (Extract<
+      BattleActiveEffectExpiration,
+      { readonly kind: "concentration" }
+    > & {
       readonly durationTicks: ElapsedTimeTicks;
     })
   | Extract<BattleActiveEffectExpiration, { readonly kind: "duration" }>;
@@ -4062,6 +4063,11 @@ export type SpellAttackDamageComponent = {
 };
 export type AttackSpellDamageAddition = SpellAttackDamageComponent & {
   readonly kind: "attackSpellDamageAddition";
+  readonly sourceProcedure:
+    | "afterHitDamage"
+    | "afterHitTimedDamageAndSave"
+    | "afterHitDamageAndIllumination"
+    | "spellHostedWeaponAttack";
 };
 export type MarkedDamageRiderFindingAdvantage = {
   readonly kind: "findingAdvantage";
@@ -6416,10 +6422,7 @@ export type BattleFill =
   | {
       readonly kind: "unitFeatureDecision";
       readonly holeId: BattleHoleId;
-      readonly value:
-        | "use"
-        | "attempt"
-        | OpenHandTechniqueDecisionChoice;
+      readonly value: "use" | "attempt" | OpenHandTechniqueDecisionChoice;
     }
   | {
       readonly kind: "hitPointHealingDistribution";

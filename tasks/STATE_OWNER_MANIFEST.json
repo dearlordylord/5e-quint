@@ -1,57 +1,82 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-001",
+  "taskId": "CRPI-BLOCK-002",
   "durableFields": [
     {
       "fieldPath": "BattleState.currentTurnResources.currentHasBonusAction",
       "owner": "battle-state",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing battle turn-resource field owns whether the current actor still has a Bonus Action available. Adrenaline Rush spends this field through the public battle reducer route."
+      "derivability": { "tag": "canonical-source" },
+      "notes": "Existing turn-resource field owns Bonus Action availability for after-hit smite-style spell choices."
     },
     {
-      "fieldPath": "BattleState.currentTurnResources.actionResources",
+      "fieldPath": "BattleState.currentTurnResources.levelOnePlusSpellCastsThisTurn",
       "owner": "battle-state",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing battle turn-resource field owns feature-resource spends for battle-time Unit feature activations, including the Adrenaline Rush use spent by the Bonus Action Dash."
+      "derivability": { "tag": "canonical-source" },
+      "notes": "Existing turn-resource field owns the level-1-plus spell-cast commitment used by slot and slotless after-hit spell spends."
     },
     {
-      "fieldPath": "BattleState.currentTurnResources.dashMovementBonusFeet",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing battle turn-resource field owns accumulated Dash bonus Movement. Adrenaline Rush supplies Speed from the unit/creature facts and stores only the resulting battle movement budget."
+      "fieldPath": "CharacterBattleSpellSlotState.expended",
+      "owner": "character-battle-resource-state",
+      "introducedIn": "packages/battle-runtime/src/character-battle-resources.ts",
+      "derivability": { "tag": "canonical-source" },
+      "notes": "Existing character battle spell-slot state owns slotted after-hit spell expenditure."
     },
     {
-      "fieldPath": "BattleCreatureState.tempHp",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing combatant field owns Temporary Hit Points. Adrenaline Rush replaces the value only when its Proficiency Bonus grant is higher, matching the non-stacking Temporary Hit Points rule."
+      "fieldPath": "CharacterBattleResourceState.usesRemaining",
+      "owner": "character-battle-resource-state",
+      "introducedIn": "packages/battle-runtime/src/character-battle-resources.ts",
+      "derivability": { "tag": "canonical-source" },
+      "notes": "Existing feature resource state owns slotless class-feature free-cast spends."
     },
     {
-      "fieldPath": "BattleCreatureState.origin.characterUnitRefs",
+      "fieldPath": "BattleCreatureState.hp",
       "owner": "battle-state",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing character-origin unit references supply the feature payload, Speed-derived Dash subject, and Proficiency Bonus-based Temporary Hit Points amount. Task 2 adds no duplicate Speed or Proficiency Bonus state to BattleState."
+      "derivability": { "tag": "canonical-source" },
+      "notes": "Existing combatant Hit Point field owns after-hit weapon/rider damage and timed Spell Effect damage."
+    },
+    {
+      "fieldPath": "BattleCreatureState.conditions.restrained",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": { "tag": "canonical-source" },
+      "notes": "Existing condition lifecycle state owns save-gated Restrained admission and escape cleanup."
+    },
+    {
+      "fieldPath": "BattleCreatureState.concentration",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": { "tag": "canonical-source" },
+      "notes": "Existing concentration state owns after-hit spell Concentration start, break, and cleanup."
+    },
+    {
+      "fieldPath": "BattleCreatureState.activeEffects",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": { "tag": "canonical-source" },
+      "notes": "Existing active Spell Effect state owns timed damage/save effects and Shining Smite illumination admission/cleanup."
+    },
+    {
+      "fieldPath": "BattleActiveEffect.spellTurnStartDamageAndSave.source",
+      "owner": "battle-state-active-effect",
+      "introducedIn": "packages/battle-runtime/src/active-effect/types.ts",
+      "derivability": { "tag": "canonical-source" },
+      "notes": "Typed source fact distinguishes after-hit timed damage/save effects from generic turn-boundary damage/save effects for route ownership without dispatching on spell identity."
+    },
+    {
+      "fieldPath": "AttackSpellDamageAddition.sourceProcedure",
+      "owner": "battle-interrupt-continuation",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": { "tag": "canonical-source" },
+      "notes": "Typed procedure fact distinguishes after-hit attack damage additions from other spell-hosted weapon damage additions when emitting hit-point route evidence."
     }
   ],
   "notes": [
-    "Task 2 introduced no new durable BattleState or BattleCreatureState fields.",
-    "qRoute target replay evidence is derived from the public battle reducer route harness and the copied Adrenaline Rush route connector.",
-    "Short and Long Rest restoration remains the character sheet feature-resource owner and is intentionally outside this battle route replay.",
-    "Production runtime does not dispatch on QNT branch names, witness labels, connector filenames, or authored names."
+    "Task 3 introduced no whole-battle after-hit accumulator and no new top-level BattleState, BattleCreatureState, or character battle resource fields.",
+    "qRoute target replay evidence is derived from public battle reducer routeEvents emitted by packages/battle-runtime/src/battle-reducer/reducer-route.ts and observed in the focused MBT harness.",
+    "The afterHitDamageRider route vocabulary is execution evidence for existing owner fields; the added source/procedure facts are retained on the existing effect/addition projections that require route disambiguation.",
+    "Production runtime does not dispatch on QNT branch names, fixture labels, selected spell identity, or route connector names."
   ]
 }

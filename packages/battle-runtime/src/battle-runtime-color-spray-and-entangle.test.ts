@@ -348,6 +348,7 @@ describe("battle runtime: Color Spray and Entangle", () => {
         }),
       ],
     });
+    expect(escapeAct?.routeEvents).toBeUndefined();
     if (
       escapeAct?.subject.tag !== "action" ||
       escapeAct.subject.action !== "escapeSpellRestraint"
@@ -485,6 +486,7 @@ describe("battle runtime: Color Spray and Entangle", () => {
     ) {
       throw new Error("Expected second Druid Entangle escape action.");
     }
+    expect(secondDruidEscape.routeEvents).toBeUndefined();
 
     const escapedSecondDruidRestraint = requireResolved(
       resolveBattleSubject({
