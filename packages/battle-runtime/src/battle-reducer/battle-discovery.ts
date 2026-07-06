@@ -203,7 +203,10 @@ import { battleReducerRouteEventsForDiscoveredAct } from "./reducer-route.ts";
 export function discoverBattleActs(
   state: BattleState,
 ): readonly AvailableBattleAct[] {
-  return withReducerRouteEvents(discoverBattleActsWithoutRouteEvents(state));
+  return withReducerRouteEvents(
+    state,
+    discoverBattleActsWithoutRouteEvents(state),
+  );
 }
 
 function discoverBattleActsWithoutRouteEvents(
@@ -671,10 +674,11 @@ function discoverBattleActsWithoutRouteEvents(
 }
 
 function withReducerRouteEvents(
+  state: BattleState,
   acts: readonly AvailableBattleAct[],
 ): readonly AvailableBattleAct[] {
   return acts.map((act) => {
-    const routeEvents = battleReducerRouteEventsForDiscoveredAct(act);
+    const routeEvents = battleReducerRouteEventsForDiscoveredAct(state, act);
     return routeEvents === undefined ? act : { ...act, routeEvents };
   });
 }

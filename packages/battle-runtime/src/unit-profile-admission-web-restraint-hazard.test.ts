@@ -369,6 +369,7 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
     ) {
       throw new Error("Expected Web escape action.");
     }
+    expect(escapeAct.routeEvents).toBeUndefined();
     const escaped = resolveBattleSubject({
       state: restrained.state,
       subject: escapeAct.subject,
@@ -509,7 +510,9 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
         ),
       },
     );
-    const expiredCombatants = tickDurationEffects(nearlyExpiredCombatants).value;
+    const expiredCombatants = tickDurationEffects(
+      nearlyExpiredCombatants,
+    ).value;
 
     expect(expiredCombatants.get(spellCasterId)).toMatchObject({
       concentration: null,

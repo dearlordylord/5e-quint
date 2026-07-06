@@ -87,6 +87,106 @@
       }
     },
     {
+      "taskId": "CRPI-BLOCK-002",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "ac527340663b1ca087e7d78fe68c190c1331b7c3a80c6a4de825cf9c6cb89897"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "3f509ca51f631f9287209ba74fe795302c8ec591bcbd06edba7951f0fd8cc1ee"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "dc25a15dd2926f21d2130abb72a5b38c99d4862eedab5715ab40f2abb03f190c"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-002.json",
+          "sha256": "7754a1bbfc29111fc7e43cb66c3c729b45ee311bbe76d4256638a4f6ee50044c",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-002.json#driver:packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doDiscoverWeaponHit#trace:MBT_TRACES=1 MBT_STEPS=60 action=doDiscoverWeaponHit qRoute=after-hit-damage-riders-public-reducer-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-002.json#driver:packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doChooseDivineSmiteSlot#trace:MBT_TRACES=1 MBT_STEPS=60 action=doChooseDivineSmiteSlot qRoute=after-hit-damage-riders-public-reducer-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-002.json#driver:packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt#step:doFillSearingStartTurnDamageAndSave#trace:MBT_TRACES=1 MBT_STEPS=60 action=doFillSearingStartTurnDamageAndSave qRoute=after-hit-damage-riders-public-reducer-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "START=$(date +%s); ( while true; do sleep 60; echo \"PROGRESS: $(( $(date +%s) - START ))s\"; done ) & reporter=$!; ( MBT_TRACES=1 MBT_STEPS=60 pnpm --filter @dnd/battle-runtime exec vitest run src/after-hit-damage-riders.mbt.test.ts ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; kill \"$reporter\" 2>/dev/null || true; wait \"$reporter\" 2>/dev/null || true; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "status": "pass",
+          "detail": "Focused after-hit semantic and route replay passed after round-3 strict public routeEvents fix; 2 tests passed; TOTAL: 57s."
+        },
+        {
+          "command": "START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=17 pnpm --filter @dnd/battle-runtime exec vitest run src/after-hit-damage-riders.mbt.test.ts -t \"routes after-hit\" ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "status": "pass",
+          "detail": "Strict qRoute replay passed with exact public route event kind, subject, owner, fill, and holes; 1 test passed; TOTAL: 14s."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec vitest run src/battle-runtime-color-spray-and-entangle.test.ts src/unit-profile-admission-web-restraint-hazard.test.ts",
+          "status": "pass",
+          "detail": "Non-after-hit Entangle and Web escape route regressions passed; 15 tests passed."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec vitest run src/turn-boundary-effect-lifecycle.mbt.test.ts -t \"splits mixed death-save and turn-boundary discovery route ownership\"",
+          "status": "pass",
+          "detail": "Generic turn-boundary lifecycle route regression passed without afterHitDamageRider relabeling; 1 test passed."
+        },
+        {
+          "command": "node task-scoped validateTargetReplayEvidence for packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+          "status": "pass",
+          "detail": "Validated by pnpm cleanroom-branch-coverage:check; 738 obligations, 24 sampled inputs."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "cleanroom branch coverage passed (738 obligations, 24 sampled inputs)."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "All quality gates passed; app lint emitted 61 warnings and exited 0."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 verified after-hit route ownership against SRD Bonus Actions, Making an Attack, Damage Rolls, Hit Points, Spell Slots, Casting without Slots, Concentration, Restrained, Bright Light, and the cited smite/strike spell passages. Round 2 fixed the reviewer finding by deriving qRoute from public reducer routeEvents. Round 3 fixed overbroad generic escape/turn-boundary classifiers and required exact public route event kind, subject, owner, fill, and holes. Rechecked no whole-battle rider accumulator, duplicate source state, or authored-identity runtime dispatch was introduced."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-002",
+            "impact": "unblocked"
+          },
+          {
+            "taskId": "CRPI-BLOCK-015",
+            "impact": "left unchanged"
+          }
+        ],
+        "observations": [
+          "After-hit damage rider route replay is supported by exact public battle reducer routeEvents and existing split BattleState owners; no whole-battle after-hit rider accumulator is needed.",
+          "Generic escapeSpellRestraint actions and generic spellTurnStartDamageAndSave turn-boundary lifecycle effects must remain on their non-after-hit route subjects; after-hit routing now depends on typed source/procedure facts and after-hit active-effect shape.",
+          "Future selected smite/strike tasks should reuse the generic after-hit owner surfaces and must not dispatch production behavior by selected spell identity."
+        ],
+        "requiredPlanEdits": "none"
+      }
+    },
+    {
       "taskId": "CRPI-BLOCK-047",
       "assignmentId": "reducer-spine-diagnostic-character-creation",
       "laneId": "creation",
@@ -3071,9 +3171,7 @@
       "assignmentId": "reducer-spine-diagnostic-battle",
       "laneId": "rules-core",
       "status": "accepted",
-      "selectedDrivers": [
-        "packages/battle-runtime/rule-core-features.mbt.qnt"
-      ],
+      "selectedDrivers": ["packages/battle-runtime/rule-core-features.mbt.qnt"],
       "observedExistingSplitDrivers": [
         "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
         "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
@@ -3909,9 +4007,7 @@
       "taskId": "CRPI-READY-030",
       "assignmentId": "reducer-spine-diagnostic-battle",
       "laneId": "battle",
-      "selectedDrivers": [
-        "packages/battle-runtime/rule-core-movement.mbt.qnt"
-      ],
+      "selectedDrivers": ["packages/battle-runtime/rule-core-movement.mbt.qnt"],
       "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
       "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
       "artifacts": {

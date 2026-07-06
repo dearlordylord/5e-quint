@@ -326,6 +326,12 @@ export type SpiritualWeaponActiveEffect = BattleSpellEffectBase & {
   readonly attackBonus: AttackBonus;
   readonly expiresAt: SpellConcentrationOrStoredDurationExpiration;
 };
+export const SPELL_TURN_START_DAMAGE_AND_SAVE_SOURCES = [
+  "afterHitTimedDamageAndSave",
+  "turnBoundaryEffectLifecycle",
+] as const;
+export type SpellTurnStartDamageAndSaveSource =
+  (typeof SPELL_TURN_START_DAMAGE_AND_SAVE_SOURCES)[number];
 export type GlyphDurableOccurrenceAnchor =
   | {
       readonly kind: "surface";
@@ -962,6 +968,7 @@ export type BattleActiveEffect =
     })
   | (BattleSpellEffectBase & {
       readonly kind: "spellTurnStartDamageAndSave";
+      readonly source: SpellTurnStartDamageAndSaveSource;
       readonly damage: SpellTurnStartDamage;
       readonly save: SpellTurnStartDamageSave;
       readonly expiresAt: BattleActiveEffectExpiration;

@@ -317,6 +317,13 @@ describe("turn-boundary effect lifecycle MBT", () => {
         owner: "battleTurnBoundary",
       },
     ]);
+    expect(
+      routeEventsOf(awaitingBoundary, "mixed death-save route discovery"),
+    ).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ subject: "afterHitDamageRider" }),
+      ]),
+    );
   });
 
   it("splits mixed repeat-save and turn-boundary discovery route ownership", () => {
@@ -974,6 +981,7 @@ function endTurnOngoingFeature(): ActiveOngoingFeatureOccurrence {
 function turnStartDamageEffect(): BattleActiveEffect {
   return {
     kind: "spellTurnStartDamageAndSave",
+    source: "turnBoundaryEffectLifecycle",
     sourceSpellId: turnStartDamageSpellId,
     sourceCombatantId: fighterId,
     damage: {
