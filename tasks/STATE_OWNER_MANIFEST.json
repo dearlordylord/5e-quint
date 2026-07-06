@@ -1,31 +1,57 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-047",
+  "taskId": "CRPI-BLOCK-001",
   "durableFields": [
     {
-      "owner": "CharacterBuildOwner",
-      "fields": [
-        "CharacterBuild.progression",
-        "CharacterBuild.features[kind=selectedClassChoice].selectedFromUnitId",
-        "CharacterBuild.features[kind=selectedClassChoice].unitId",
-        "CharacterBuild.unitRefs derived by characterBuildUnitRefs",
-        "CharacterBuild.feature refs derived by characterBuildFeatureUnitIds"
-      ],
-      "notes": "Owns finalized CharacterBuild class-choice refs produced by character creation finalization. Task 93 reuses these existing build facts for Weapon Mastery selected weapon refs and adds no parallel selected-weapon cache."
+      "fieldPath": "BattleState.currentTurnResources.currentHasBonusAction",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing battle turn-resource field owns whether the current actor still has a Bonus Action available. Adrenaline Rush spends this field through the public battle reducer route."
     },
     {
-      "owner": "CreationSelectedReferenceOwner",
-      "fields": [
-        "CharacterCreationRouteEvent kind=retainCreationSelectedReferences subject=selectedReference owner=creationSelectedReference",
-        "Character Creation qRoute selected-reference retention event after public creation finalization"
-      ],
-      "notes": "Owns creation-time selected-reference retention evidence for Weapon Mastery finalization. This is route/projection evidence only; selected mastery-property combat execution is outside this owner."
+      "fieldPath": "BattleState.currentTurnResources.actionResources",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing battle turn-resource field owns feature-resource spends for battle-time Unit feature activations, including the Adrenaline Rush use spent by the Bonus Action Dash."
+    },
+    {
+      "fieldPath": "BattleState.currentTurnResources.dashMovementBonusFeet",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing battle turn-resource field owns accumulated Dash bonus Movement. Adrenaline Rush supplies Speed from the unit/creature facts and stores only the resulting battle movement budget."
+    },
+    {
+      "fieldPath": "BattleCreatureState.tempHp",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing combatant field owns Temporary Hit Points. Adrenaline Rush replaces the value only when its Proficiency Bonus grant is higher, matching the non-stacking Temporary Hit Points rule."
+    },
+    {
+      "fieldPath": "BattleCreatureState.origin.characterUnitRefs",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing character-origin unit references supply the feature payload, Speed-derived Dash subject, and Proficiency Bonus-based Temporary Hit Points amount. Task 2 adds no duplicate Speed or Proficiency Bonus state to BattleState."
     }
   ],
   "notes": [
-    "Task 93 introduced no new durable CharacterDraft, CharacterBuild, or Character Creation state fields.",
-    "qRoute target replay evidence is derived from the public Character Creation reducer route harness and the copied route connector.",
-    "Weapon Mastery property behavior is intentionally outside this selected-reference replay.",
+    "Task 2 introduced no new durable BattleState or BattleCreatureState fields.",
+    "qRoute target replay evidence is derived from the public battle reducer route harness and the copied Adrenaline Rush route connector.",
+    "Short and Long Rest restoration remains the character sheet feature-resource owner and is intentionally outside this battle route replay.",
     "Production runtime does not dispatch on QNT branch names, witness labels, connector filenames, or authored names."
   ]
 }

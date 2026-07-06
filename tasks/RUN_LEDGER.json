@@ -4,6 +4,89 @@
   "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
   "entries": [
     {
+      "taskId": "CRPI-BLOCK-001",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-adrenaline-rush.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "21e06273876b6e87eedf09f4d06642d397ba8cde10f2ee5a7991372392e412cd"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "349b2fe1470898664e382980e02861ae251c3e260236fae7fabbcf7035cec682"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "58378bb4fbcd9101f616dcb575f532b8d3b7b3bef688419e0ba02deba0e52e76"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-001.json",
+          "sha256": "7c5abcb0bb36e31cfdb530887aad3e089d61b0036e86bbfe0789e6b818238794",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-001.json#driver:packages/battle-runtime/battle-runtime-adrenaline-rush.mbt.qnt#step:doAdrenalineRushDash#trace:MBT_TRACES=1 MBT_STEPS=2 action=doAdrenalineRushDash qRoute=adrenaline-rush-public-reducer-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-001.json#driver:packages/battle-runtime/battle-runtime-adrenaline-rush.mbt.qnt#step:doRejectSecondDash#trace:MBT_TRACES=1 MBT_STEPS=2 action=doRejectSecondDash qRoute=adrenaline-rush-public-reducer-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=2 pnpm --filter @dnd/battle-runtime exec vitest run src/adrenaline-rush.mbt.test.ts -t \"Adrenaline Rush\" ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "status": "pass",
+          "detail": "Focused Adrenaline Rush semantic and route replay passed."
+        },
+        {
+          "command": "node task-scoped validateTargetReplayEvidence for packages/battle-runtime/battle-runtime-adrenaline-rush.mbt.qnt",
+          "status": "pass",
+          "detail": "Selected packages/battle-runtime/battle-runtime-adrenaline-rush.mbt.qnt from source inventory and validated tasks/target-replay-evidence/CRPI-BLOCK-001.json with scripts/cleanroom-branch-coverage-check.cjs#validateTargetReplayEvidence; 2 obligations covered."
+        },
+        {
+          "command": "node JSON parse check for CRPI-BLOCK-001 artifacts",
+          "status": "pass",
+          "detail": "Evidence, run ledger, engine depth manifest, and state owner manifest parsed."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "All quality gates passed."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 verified Adrenaline Rush route ownership against SRD Orc, Actions, Bonus Actions, and Temporary Hit Points text and existing public battle reducer route replay. Round 2 rechecked no duplicate Speed, Proficiency Bonus, feature-restoration, or authored-identity dispatch state was introduced."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-001",
+            "impact": "unblocked"
+          },
+          {
+            "taskId": "CRPI-BLOCK-002",
+            "impact": "left unchanged"
+          }
+        ],
+        "observations": [
+          "Adrenaline Rush route replay is already supported by the public battle reducer surface: startBattle initializes turn resources, discoverBattleActs exposes the feature resource owner, and resolveBattleSubject observes action-economy, feature-resource, movement-resource, and Temporary Hit Point owners.",
+          "No future task should add duplicate BattleState Speed or Proficiency Bonus fields for Adrenaline Rush; Speed and Proficiency Bonus remain source/unit facts supplied to the battle feature, while Short/Long Rest restoration remains a character sheet feature-resource concern."
+        ],
+        "requiredPlanEdits": "none"
+      }
+    },
+    {
       "taskId": "CRPI-BLOCK-047",
       "assignmentId": "reducer-spine-diagnostic-character-creation",
       "laneId": "creation",

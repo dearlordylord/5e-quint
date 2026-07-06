@@ -7,9 +7,11 @@ import {
   MBT_TEST_TIMEOUT_MS,
   adrenalineRushStateCheck,
   createAdrenalineRushDriver,
+  createAdrenalineRushRouteDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
+  reducerRoutedAdrenalineRushStateCheck,
   run,
   runSelectedUnitIdentityReplay,
   type AdrenalineRushSelectedUnitIdentityReplay,
@@ -80,6 +82,22 @@ describe("Adrenaline Rush MBT", () => {
       nTraces: mbtTraceCount(),
       maxSteps: focusedMbtMaxSteps(2),
       stateCheck: adrenalineRushStateCheck,
+    });
+  }, MBT_TEST_TIMEOUT_MS);
+
+  it("routes Orc Adrenaline Rush through reducer owners", async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-adrenaline-rush.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "step",
+      driver: createAdrenalineRushRouteDriver(adrenalineRushDriverSchema),
+      backend: "typescript",
+      nTraces: mbtTraceCount(),
+      maxSteps: focusedMbtMaxSteps(2),
+      stateCheck: reducerRoutedAdrenalineRushStateCheck,
     });
   }, MBT_TEST_TIMEOUT_MS);
 });

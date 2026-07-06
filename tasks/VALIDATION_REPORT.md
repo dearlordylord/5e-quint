@@ -1,5 +1,94 @@
 # Validation Report
 
+## CRPI-BLOCK-001
+
+Status: `pass`
+
+- Task: 2
+- Driver path: `packages/battle-runtime/battle-runtime-adrenaline-rush.mbt.qnt`
+- Route connector path: `packages/battle-runtime/battle-runtime-adrenaline-rush.route.mbt.qnt`
+- Route class: `reducer-routed`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-001.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/battle-runtime/battle-runtime-adrenaline-rush.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-adrenaline-rush.route.mbt.qnt`
+- `packages/battle-runtime/src/adrenaline-rush.mbt.test.ts`
+- `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts`
+- `packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts`
+- `packages/battle-runtime/src/battle-reducer.ts`
+- `packages/battle-runtime/src/battle-reducer/dispatcher.ts`
+- `packages/battle-runtime/src/battle-reducer/attack-resolution.ts`
+- `packages/battle-runtime/src/battle-reducer/damage-apply.ts`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-convergence-backlog.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Character-Origins.md`
+- `.references/srd-5.2.1/Playing-the-Game.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+Task 2 accepts the Adrenaline Rush battle-time route through public battle
+reducer entrypoints. The focused replay now runs
+`battle-runtime-adrenaline-rush.route.mbt.qnt` from
+`packages/battle-runtime/src/adrenaline-rush.mbt.test.ts`, reusing the existing
+route driver that calls public `startBattle`, `discoverBattleActs`, and
+`resolveBattleSubject` paths. `BattleState.currentTurnResources` owns Bonus
+Action availability, feature-resource spend, and Dash bonus Movement;
+`BattleCreatureState.tempHp` owns Temporary Hit Point replacement; and character
+unit refs supply the source feature facts. No duplicate Speed, Proficiency
+Bonus, or Short/Long Rest restoration state was added.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-adrenaline-rush.mbt.qnt#step:doAdrenalineRushDash` | `tasks/target-replay-evidence/CRPI-BLOCK-001.json#driver:packages/battle-runtime/battle-runtime-adrenaline-rush.mbt.qnt#step:doAdrenalineRushDash#trace:MBT_TRACES=1 MBT_STEPS=2 action=doAdrenalineRushDash qRoute=adrenaline-rush-public-reducer-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-adrenaline-rush.mbt.qnt#step:doRejectSecondDash` | `tasks/target-replay-evidence/CRPI-BLOCK-001.json#driver:packages/battle-runtime/battle-runtime-adrenaline-rush.mbt.qnt#step:doRejectSecondDash#trace:MBT_TRACES=1 MBT_STEPS=2 action=doRejectSecondDash qRoute=adrenaline-rush-public-reducer-route` | `_none_` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-001.json`
+- Reproduction trace family: `MBT_TRACES=1 MBT_STEPS=2 action=<branch> qRoute=adrenaline-rush-public-reducer-route`
+- The copied connector projection source is `packages/battle-runtime/battle-runtime-adrenaline-rush.route.mbt.qnt#qRoute`; the observed projection source is the public battle reducer sequence in `packages/battle-runtime/src/adrenaline-rush.mbt.test.ts` using `packages/battle-runtime/src/index.ts#startBattle`, `#discoverBattleActs`, and `#resolveBattleSubject`.
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-001/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 2.
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Character-Origins.md#Orc` defines Adrenaline Rush as a Bonus Action Dash trait that grants Temporary Hit Points equal to Proficiency Bonus and spends a Proficiency Bonus use pool restored on Short or Long Rest.
+- SRD 5.2.1 `Playing-the-Game.md#Actions` defines Dash as extra Movement equal to Speed.
+- SRD 5.2.1 `Playing-the-Game.md#Bonus Actions` defines the one-Bonus-Action-per-turn availability consumed by this route.
+- SRD 5.2.1 `Playing-the-Game.md#Temporary Hit Points` defines Temporary Hit Points as a separate non-stacking buffer.
+- `UBIQUITOUS_LANGUAGE.md` defines Bonus Action, Movement, Speed, Pool, Spend, Proficiency Bonus, and Temporary Hit Points, preserving the task boundary between battle execution and rest restoration.
+
+Verification results:
+
+- Base check passed: declared base ref `ralph/cleanroom-adrenaline-rush-route-20260706T035135Z/integration` and `HEAD` both resolved to `ebb133e75 Merge Adrenaline Rush Ralph index fix`; Base SHA `ebb133e75f55f7385dc4ff78359ce64b822a3a83` is an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against SRD 5.2.1 Orc, Actions, Bonus Actions, Temporary Hit Points text, and `UBIQUITOUS_LANGUAGE.md`.
+- Task-scoped evidence validation passed: selected `packages/battle-runtime/battle-runtime-adrenaline-rush.mbt.qnt` from source inventory and validated `tasks/target-replay-evidence/CRPI-BLOCK-001.json` with `scripts/cleanroom-branch-coverage-check.cjs#validateTargetReplayEvidence`; 2 obligations covered.
+- Focused replay passed: `START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=2 pnpm --filter @dnd/battle-runtime exec vitest run src/adrenaline-rush.mbt.test.ts -t "Adrenaline Rush" ) 2>&1 & pid=$!; wait "$pid"; status=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"`.
+- Final broad verification and JSON validation are recorded in `tasks/RUN_LEDGER.json`.
+- Reviewer-loop convergence passed: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks found no remaining reasonable Task 2 findings after confirming qRoute observation through public battle reducer entrypoints and no duplicate durable state or authored-identity runtime dispatch.
+
 ## CRPI-BLOCK-047
 
 Status: `pass`
