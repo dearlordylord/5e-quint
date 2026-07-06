@@ -2271,12 +2271,12 @@
         "packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "CreationSelectedReferenceOwner owns Weapon Mastery selected weapon reference retention during character creation finalization; CharacterBuildOwner owns the finalized CharacterBuild class-choice refs. Selected mastery-property execution is not owned by this creation selected-reference replay.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
       "targetTaskId": "CRPI-BLOCK-047",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-047"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt",
