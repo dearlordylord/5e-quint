@@ -1,5 +1,70 @@
 # Validation Report
 
+## CRPI-BLOCK-012
+
+Status: `pass`
+
+- Task: 18
+- Driver path: `packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt`
+- Route connector path: `packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt`
+- Route class: `catalog-after-substrate`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-012.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `e8ededa80ac8cdfd875f4725149078879450eefb855b922cd7e1bba86f4edc43`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Behavior implemented:
+
+Task 18 accepts Find Familiar selected-identity route replay through public
+battle reducer route events. The selected spell and familiar form remain
+catalog/admission/fixture inputs, while public BattleState entrypoints now expose
+the selected creation, replacement, temporary dismissal/reappearance, and touch
+delivery branches through the companion lifecycle and touch-delivery `qRoute`
+surfaces. Temporary dismissal and reappearance now emit companion-lifecycle route
+events, making the route connector's dismissal/reappearance claim executable.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt#step:doCastFindFamiliar` | `tasks/target-replay-evidence/CRPI-BLOCK-012.json#driver:packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt#step:doCastFindFamiliar#trace:MBT_TRACES=1 MBT_STEPS=5 action=doCastFindFamiliar qRoute=find-familiar-selected-companion-lifecycle-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt#step:doRecastFindFamiliarReplacement` | `tasks/target-replay-evidence/CRPI-BLOCK-012.json#driver:packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt#step:doRecastFindFamiliarReplacement#trace:MBT_TRACES=1 MBT_STEPS=5 action=doRecastFindFamiliarReplacement qRoute=find-familiar-selected-companion-lifecycle-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt#step:doDismissAndReappearFindFamiliar` | `tasks/target-replay-evidence/CRPI-BLOCK-012.json#driver:packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt#step:doDismissAndReappearFindFamiliar#trace:MBT_TRACES=1 MBT_STEPS=5 action=doDismissAndReappearFindFamiliar qRoute=find-familiar-selected-companion-lifecycle-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt#step:doDeliverTouchSpellThroughFindFamiliar` | `tasks/target-replay-evidence/CRPI-BLOCK-012.json#driver:packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt#step:doDeliverTouchSpellThroughFindFamiliar#trace:MBT_TRACES=1 MBT_STEPS=5 action=doDeliverTouchSpellThroughFindFamiliar qRoute=find-familiar-selected-touch-delivery-route` | `_none_` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-012.json`
+- Reproduction trace family: `MBT_TRACES=1 MBT_STEPS=5 action=<branchAction> qRoute=<public-route>`
+- The copied connector projection source is `packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt#qRoute`; the observed projection source is public battle runtime route events in `packages/battle-runtime/src/find-familiar-selected-identity.mbt.test.ts` and the focused connector replay in `packages/battle-runtime/src/find-familiar-companion-lifecycle.mbt.test.ts`.
+
+Harness artifacts:
+
+- Immutable history: `tasks/history/CRPI-BLOCK-012/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Spells/Descriptions-E-L.md#Find Familiar` defines familiar creation, one familiar at a time, temporary dismissal/reappearance, shared senses, Touch spell delivery through the familiar's Reaction, and independent combat turns.
+- SRD 5.2.1 `Playing-the-Game.md#Reactions`, `Playing-the-Game.md#Actions`, `Spells/Gaining-and-Casting.md#Spell Slots`, and `Rules-Glossary.md#Hit Points` define the action-economy, Reaction, spell-slot, and Hit Point owners used by the route.
+- `UBIQUITOUS_LANGUAGE.md` defines Companion, Companion Control, Spell Invocation, Bonus Action, Reaction, Attack Roll, and Hit Points.
+
+Verification results:
+
+- Task-base check passed: base ref `ralph/cleanroom-battle-unblocked-batch-20260706T130150Z/integration` and `HEAD` both resolved to `051d20788 Mark Ralph task 17 done`; Base SHA `051d207887fc75415989ef252f5c9c89d6e830c7` is an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against the SRD 5.2.1 and `UBIQUITOUS_LANGUAGE.md` passages listed above.
+- Focused deterministic public route assertion passed: `pnpm --filter @dnd/battle-runtime exec vitest run src/find-familiar-selected-identity.mbt.test.ts -t "observes selected Find Familiar qRoute"` passed 1 test, with 1 skipped by filter.
+- Focused replay passed: `START=$(date +%s); ( while true; do sleep 60; echo "PROGRESS: $(( $(date +%s) - START ))s"; done ) & reporter=$!; ( MBT_TRACES=1 MBT_STEPS=5 pnpm --filter @dnd/battle-runtime exec vitest run src/find-familiar-selected-identity.mbt.test.ts src/find-familiar-companion-lifecycle.mbt.test.ts ) 2>&1 & pid=$!; wait "$pid"; status=$?; kill "$reporter" 2>/dev/null || true; wait "$reporter" 2>/dev/null || true; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"` passed 7 tests with `TOTAL: 9s`.
+- TypeScript passed: `pnpm --filter @dnd/battle-runtime exec tsc --noEmit --pretty false`.
+- Task-scoped target replay evidence validation passed: direct `scripts/cleanroom-branch-coverage-check.cjs#validateTargetReplayEvidence` call with `requireAllObligations: false` covered 4 obligations in `tasks/target-replay-evidence/CRPI-BLOCK-012.json`.
+- Diagnostic target-only `pnpm cleanroom-branch-coverage:check -- --target-replay-evidence tasks/target-replay-evidence/CRPI-BLOCK-012.json` failed on unrelated broad missing-evidence baseline across the full corpus; the direct task-scoped validator above found no Task 18 evidence issues.
+- `git diff --check` passed.
+- `pnpm quality` passed all gates; app lint emitted 61 warnings and exited 0.
+- Reviewer-loop convergence passed: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks found no remaining reasonable Task 18 findings after confirming `qRoute` observation through public battle runtime entrypoints and no duplicate durable state or authored-identity runtime dispatch.
+
 ## CRPI-BLOCK-005
 
 Status: `pass`

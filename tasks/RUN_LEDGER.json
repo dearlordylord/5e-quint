@@ -4,6 +4,114 @@
   "sourceBranchInventorySha256": "e8ededa80ac8cdfd875f4725149078879450eefb855b922cd7e1bba86f4edc43",
   "entries": [
     {
+      "taskId": "CRPI-BLOCK-012",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "e8ededa80ac8cdfd875f4725149078879450eefb855b922cd7e1bba86f4edc43",
+      "artifacts": {
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "5b356f1c446bec36cf704cfe377fee3d269b976f0c1f449ef10bed7573a679ee"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-BLOCK-012/README.md",
+          "sha256": "d747b911d8c97663c9a5dbca6dcc9aa51f286df12bdf610bf5ad3191a570190a"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-012.json",
+          "sha256": "3455c9f1c78c104650224934452e285a49b815e02b2e4b18ab97475295b18d7c",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-012.json#driver:packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt#step:doCastFindFamiliar#trace:MBT_TRACES=1 MBT_STEPS=5 action=doCastFindFamiliar qRoute=find-familiar-selected-companion-lifecycle-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-012.json#driver:packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt#step:doRecastFindFamiliarReplacement#trace:MBT_TRACES=1 MBT_STEPS=5 action=doRecastFindFamiliarReplacement qRoute=find-familiar-selected-companion-lifecycle-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-012.json#driver:packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt#step:doDismissAndReappearFindFamiliar#trace:MBT_TRACES=1 MBT_STEPS=5 action=doDismissAndReappearFindFamiliar qRoute=find-familiar-selected-companion-lifecycle-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-012.json#driver:packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt#step:doDeliverTouchSpellThroughFindFamiliar#trace:MBT_TRACES=1 MBT_STEPS=5 action=doDeliverTouchSpellThroughFindFamiliar qRoute=find-familiar-selected-touch-delivery-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-battle-unblocked-batch-20260706T130150Z/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor 051d207887fc75415989ef252f5c9c89d6e830c7 HEAD",
+          "status": "pass",
+          "detail": "Base ref and HEAD both resolved to 051d20788 Mark Ralph task 17 done; Base SHA is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language check for Find Familiar, Reactions, Actions, Spell Slots, Hit Points, Companion, Companion Control, Spell Invocation, Bonus Action, Reaction, Attack Roll, and Hit Points",
+          "status": "pass",
+          "detail": "Checked .references/srd-5.2.1/Spells/Descriptions-E-L.md, .references/srd-5.2.1/Playing-the-Game.md, .references/srd-5.2.1/Spells/Gaining-and-Casting.md, .references/srd-5.2.1/Rules-Glossary.md, and UBIQUITOUS_LANGUAGE.md before route/runtime changes."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec vitest run src/find-familiar-selected-identity.mbt.test.ts -t \"observes selected Find Familiar qRoute\"",
+          "status": "pass",
+          "detail": "Focused deterministic public route assertion passed; 1 test passed and 1 filtered test skipped."
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Pre-MBT process check found no active vitest or quint_evaluator process; the only matches were Ralph status-monitor shell command text containing the search terms."
+        },
+        {
+          "command": "START=$(date +%s); ( while true; do sleep 60; echo \"PROGRESS: $(( $(date +%s) - START ))s\"; done ) & reporter=$!; ( MBT_TRACES=1 MBT_STEPS=5 pnpm --filter @dnd/battle-runtime exec vitest run src/find-familiar-selected-identity.mbt.test.ts src/find-familiar-companion-lifecycle.mbt.test.ts ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; kill \"$reporter\" 2>/dev/null || true; wait \"$reporter\" 2>/dev/null || true; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "status": "pass",
+          "detail": "Focused Find Familiar selected-identity semantic replay and companion lifecycle route connector replay passed; 7 tests passed; TOTAL: 9s."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec tsc --noEmit --pretty false",
+          "status": "pass",
+          "detail": "Battle runtime TypeScript check passed after adding dismissal/reappearance route observability and selected qRoute replay assertions."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass",
+          "detail": "Whitespace check passed."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check -- --target-replay-evidence tasks/target-replay-evidence/CRPI-BLOCK-012.json",
+          "status": "fail",
+          "detail": "Diagnostic target-only check failed on unrelated broad missing-evidence baseline across the full corpus; it was not a Task 18 evidence-shape failure."
+        },
+        {
+          "command": "node task-scoped validateTargetReplayEvidence for packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt",
+          "status": "pass",
+          "detail": "Validated tasks/target-replay-evidence/CRPI-BLOCK-012.json with scripts/cleanroom-branch-coverage-check.cjs#validateTargetReplayEvidence and requireAllObligations=false; 4 obligations covered."
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "All quality gates passed; app lint emitted 61 warnings and exited 0."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 verified Find Familiar route ownership against SRD Find Familiar, Reactions, Actions, Spell Slots, Hit Points, and ubiquitous-language terms. Round 2 confirmed qRoute observation flows from public BattleState entrypoints for selected creation, replacement, dismissal/reappearance, and touch delivery without duplicate durable state or authored-identity production dispatch."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-012",
+            "impact": "unblocked"
+          },
+          {
+            "taskId": "CRPI-BLOCK-013",
+            "impact": "left unchanged"
+          }
+        ],
+        "observations": [
+          "Find Familiar selected-identity qRoute is accepted through public BattleState routeEvents for selected companion creation, one-familiar replacement, temporary dismissal/reappearance, and touch delivery.",
+          "Temporary dismissal and reappearance now emit the existing companionLifecycle route surface; no separate dismissal ledger or selected spell/form identity dispatch was added.",
+          "The broad target-evidence checker still reports unrelated missing-evidence baseline when invoked for the full corpus with one evidence file; task-scoped validation covers the four Task 18 obligations."
+        ],
+        "requiredPlanEdits": "none"
+      }
+    },
+    {
       "taskId": "CRPI-BLOCK-009",
       "assignmentId": "reducer-spine-diagnostic-battle",
       "laneId": "battle",

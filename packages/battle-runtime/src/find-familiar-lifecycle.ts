@@ -842,6 +842,7 @@ export function temporarilyDismissFindFamiliar(
         ? {}
         : { heldObjectIds: input.heldObjectIds }),
     }),
+    findFamiliarCompanionLifecycleRouteEvents(),
   );
 }
 
@@ -960,7 +961,11 @@ export function reappearTemporarilyDismissedFindFamiliar(
   });
   return nextState.tag === "invalid"
     ? nextState
-    : resolvedFindFamiliarResult(nextState.state, []);
+    : resolvedFindFamiliarResult(
+        nextState.state,
+        [],
+        findFamiliarCompanionLifecycleRouteEvents(),
+      );
 }
 
 function resolveStoredFindFamiliarForm(input: {
