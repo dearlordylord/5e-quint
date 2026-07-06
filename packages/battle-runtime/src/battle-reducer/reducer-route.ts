@@ -102,6 +102,10 @@ export type BattleReducerRouteSubjectFamily =
   | "unitFeatureBonusAction"
   | "activeFeatureSpellSaveDc"
   | "activeFeatureSpellAttackRollMode"
+  | "companionLifecycle"
+  | "companionSharedSenses"
+  | "companionTouchDelivery"
+  | "companionReactionAttack"
   | "slotSpell"
   | "spellAttackProcedure"
   | "weaponAttack"
@@ -111,6 +115,7 @@ export type BattleReducerRouteOwnerGroup =
   | "battleActionEconomy"
   | "battleAttackActionProcedure"
   | "battleSpellSlotAndActionEconomy"
+  | "battleCompanion"
   | "battleHoleFrontier"
   | "battleTargetSelection"
   | "battleAreaShape"
@@ -130,6 +135,7 @@ export type BattleReducerRouteOwnerGroup =
   | "battleCreatureState"
   | "battleDamageAdjustment"
   | "battleFeatureResource"
+  | "battleStatBlockAction"
   | "battleMovementResource"
   | "battleTemporaryHitPoint"
   | "battleInterruptStack"
@@ -372,6 +378,10 @@ export function battleReducerRouteEventsForDiscoveredAct(
         owner: "battleFeatureResource",
       },
     ];
+  }
+  const companionRoute = companionRouteForDiscoveredAct(act);
+  if (companionRoute !== undefined) {
+    return [companionRoute];
   }
   if (isTwinnedEffectiveSpellLevelDiscoveryAct(act)) {
     return [
@@ -756,6 +766,13 @@ export function battleReducerRouteForResolution(
   if (activeFeatureBonusActionRoute !== undefined) {
     return composeWithActiveFormLifecycleTerminalRoute(
       activeFeatureBonusActionRoute,
+      activeFormLifecycleTerminalRoute,
+    );
+  }
+  const companionRoute = companionRouteForResolution(input, result);
+  if (companionRoute !== undefined) {
+    return composeWithActiveFormLifecycleTerminalRoute(
+      companionRoute,
       activeFormLifecycleTerminalRoute,
     );
   }
@@ -3849,6 +3866,196 @@ function scalarBuffResolveWithoutFill(
     holes,
     owner,
   };
+}
+
+export function findFamiliarCompanionLifecycleRouteEvents(): BattleReducerRouteEvents {
+  return [
+    {
+      kind: "discoverBattleActs",
+      subject: "companionLifecycle",
+      holes: [],
+      owner: "battleCompanion",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "companionLifecycle",
+      holes: [],
+      owner: "battleCompanion",
+    },
+  ];
+}
+
+function companionRouteForDiscoveredAct(
+  act: AvailableBattleAct,
+): BattleReducerRouteEvent | undefined {
+  if (act.subject.tag === "companionLifecycle") {
+    return {
+      kind: "discoverBattleActs",
+      subject: "companionLifecycle",
+      holes: battleReducerRouteHoles(act.initialHoles),
+      owner: "battleCompanion",
+    };
+  }
+  if (act.subject.tag === "findFamiliarSharedSenses") {
+    return {
+      kind: "discoverBattleActs",
+      subject: "companionSharedSenses",
+      holes: battleReducerRouteHoles(act.initialHoles),
+      owner: "battleCompanion",
+    };
+  }
+  if (act.subject.tag === "findFamiliarTouchSpell") {
+    return {
+      kind: "discoverBattleActs",
+      subject: "companionTouchDelivery",
+      holes: battleReducerRouteHoles(act.initialHoles),
+      owner: "battleSpellSlotAndActionEconomy",
+    };
+  }
+  if (act.subject.tag === "pactOfTheChainFamiliarAttack") {
+    return {
+      kind: "discoverBattleActs",
+      subject: "companionReactionAttack",
+      holes: battleReducerRouteHoles(act.initialHoles),
+      owner: "battleCompanion",
+    };
+  }
+  return undefined;
+}
+
+function companionRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  if (result.tag === "invalid") {
+    return undefined;
+  }
+  if (input.subject.tag === "companionLifecycle") {
+    return [
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "companionLifecycle",
+        holes:
+          result.tag === "needsHoles"
+            ? battleReducerRouteHoles(result.holes)
+            : [],
+        owner: "battleCompanion",
+      },
+    ];
+  }
+  if (input.subject.tag === "findFamiliarSharedSenses") {
+    return result.tag === "resolved"
+      ? [
+          {
+            kind: "resolveBattleSubjectWithoutFill",
+            subject: "companionSharedSenses",
+            holes: [],
+            owner: "battleActionEconomy",
+          },
+          {
+            kind: "resolveBattleSubjectWithoutFill",
+            subject: "companionSharedSenses",
+            holes: [],
+            owner: "battleActiveEffect",
+          },
+        ]
+      : undefined;
+  }
+  if (input.subject.tag === "findFamiliarTouchSpell") {
+    return findFamiliarTouchDeliveryRouteForResolution(input, result);
+  }
+  if (input.subject.tag === "pactOfTheChainFamiliarAttack") {
+    return pactFamiliarReactionAttackRouteForResolution(input, result);
+  }
+  return undefined;
+}
+
+function findFamiliarTouchDeliveryRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  const fill = input.fills.at(-1);
+  if (fill === undefined) {
+    return undefined;
+  }
+  const routeFill = battleReducerRouteFill(fill);
+  if (routeFill !== "targetChoice" && routeFill !== "rolledDice") {
+    return undefined;
+  }
+  const event: BattleReducerRouteEvent = {
+    kind: "resolveBattleSubject",
+    subject: "companionTouchDelivery",
+    fill: routeFill,
+    holes:
+      result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [],
+    owner:
+      routeFill === "targetChoice"
+        ? "battleCompanion"
+        : "battleSpellSlotAndActionEconomy",
+  };
+  return routeFill === "rolledDice" && result.tag === "resolved"
+    ? [
+        event,
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "companionTouchDelivery",
+          holes: [],
+          owner: "battleActionEconomy",
+        },
+      ]
+    : [event];
+}
+
+function pactFamiliarReactionAttackRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  const fill = input.fills.at(-1);
+  if (fill === undefined) {
+    return [
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "companionReactionAttack",
+        holes:
+          result.tag === "needsHoles"
+            ? battleReducerRouteHoles(result.holes)
+            : [],
+        owner: "battleStatBlockAction",
+      },
+    ];
+  }
+  const routeFill = battleReducerRouteFill(fill);
+  if (
+    routeFill !== "targetChoice" &&
+    routeFill !== "attackRoll" &&
+    routeFill !== "rolledDice"
+  ) {
+    return undefined;
+  }
+  const event: BattleReducerRouteEvent = {
+    kind: "resolveBattleSubject",
+    subject: "companionReactionAttack",
+    fill: routeFill,
+    holes:
+      result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [],
+    owner:
+      routeFill === "targetChoice"
+        ? "battleTargetSelection"
+        : routeFill === "attackRoll"
+          ? "battleAttackRoll"
+          : "battleHitPoint",
+  };
+  return routeFill === "rolledDice" && result.tag === "resolved"
+    ? [
+        event,
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "companionReactionAttack",
+          holes: [],
+          owner: "battleActionEconomy",
+        },
+      ]
+    : [event];
 }
 
 function sleepRepeatSaveRouteForDiscoveredAct(
