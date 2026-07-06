@@ -61,7 +61,7 @@
     {
       "number": 10,
       "id": "CRPI-BLOCK-006",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Blocked route replay: battle-runtime-creature-type-protection-and-charm-selected-identity"
     },
     {
@@ -1308,7 +1308,7 @@ Plan Impact:
 
 ### Task 10 - CRPI-BLOCK-006
 
-Status: `ready-for-research`
+Status: `done`
 
 Blocker Type: none
 
