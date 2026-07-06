@@ -14,7 +14,7 @@
 // promoted spell procedures. It intentionally does not add new generated
 // coverage markers, catalog rows, geometry, or new spell semantics.
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
-import { Hp, type DamageType } from "@dnd/shared/types";
+import { Hp } from "@dnd/shared/types";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
@@ -45,6 +45,7 @@ import {
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   bonusSpellAct,
+  damageTypeChoiceFill,
   maybeBonusSpellAct,
   knownWillingSpellTargetListFill,
   spellAct,
@@ -614,17 +615,6 @@ function dragonsBreathSpell(): SpellRecord {
     throw new Error("Expected Dragon's Breath fixture to decode as a spell.");
   }
   return unit;
-}
-
-function damageTypeChoiceFill(
-  hole: Extract<BattleHole, { readonly kind: "damageTypeChoice" }>,
-  damageType: DamageType,
-): Extract<BattleFill, { readonly kind: "damageTypeChoice" }> {
-  return {
-    kind: "damageTypeChoice",
-    holeId: hole.holeId,
-    value: damageType,
-  };
 }
 
 function dragonsBreathSavingThrowOutcomeFill(

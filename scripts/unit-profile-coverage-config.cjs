@@ -315,6 +315,16 @@ function coveragePaths(root) {
       coverageDir,
       "LEVEL1_4_FULL_SUPPORT.md",
     ),
+    level15FullSupport: path.join(coverageDir, "level1-5-full-support.json"),
+    level15FullSupportReport: path.join(
+      coverageDir,
+      "LEVEL1_5_FULL_SUPPORT.md",
+    ),
+    level16FullSupport: path.join(coverageDir, "level1-6-full-support.json"),
+    level16FullSupportReport: path.join(
+      coverageDir,
+      "LEVEL1_6_FULL_SUPPORT.md",
+    ),
     levelOneSevenMiningAudit: path.join(
       coverageDir,
       "level1-7-mining-audit.json",

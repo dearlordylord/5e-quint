@@ -5814,6 +5814,7 @@ function renderSrdUnitInventory(report) {
 module.exports = {
   buildSrdUnitInventory,
   characterSheetOwnerEvidenceReferenceIssues,
+  countBattleReadiness,
   renderSrdUnitInventory,
   validateSrdUnitInventory,
 };
