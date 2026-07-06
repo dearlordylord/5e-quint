@@ -55,7 +55,7 @@
     {
       "number": 9,
       "id": "CRPI-BLOCK-005",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Blocked route replay: battle-runtime-condition-saving-throw-selected-identity"
     },
     {
@@ -661,7 +661,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRPI-BLOCK-004` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-READY-003` | `done` | none | target replay evidence and owner implementation |
 | `CRP07-DSR-05` | `done` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-005` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-005` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-006` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-007` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRP07-DSR-04` | `ready-for-research` | none | target replay evidence and owner implementation |
@@ -1251,7 +1251,7 @@ Plan Impact:
 
 ### Task 9 - CRPI-BLOCK-005
 
-Status: `ready-for-research`
+Status: `done`
 
 Blocker Type: none
 

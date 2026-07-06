@@ -1,16 +1,7 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-007",
+  "taskId": "CRPI-BLOCK-005",
   "durableFields": [
-    {
-      "fieldPath": "BattleCreatureState.origin.passiveSavingThrowRollModeProfiles",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing character-origin profile map owns admitted passive Saving Throw roll-mode support facts, including Danger Sense's Dexterity Saving Throw Advantage scope."
-    },
     {
       "fieldPath": "BattleCreatureState.conditions",
       "owner": "battle-state",
@@ -18,39 +9,48 @@
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing condition lifecycle state owns Incapacitated, which suppresses Danger Sense's passive Saving Throw roll-mode projection."
+      "notes": "Existing condition lifecycle state owns Blinded, Restrained, Incapacitated, Prone, and Unconscious outcomes for save-gated and repeat-save condition spells."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=passiveSavingThrowRollMode",
+      "fieldPath": "BattleCreatureState.activeEffects",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing active effects own spell condition duration, Sleep pending repeat-save and Unconscious effects, and repeat-save cleanup state."
+    },
+    {
+      "fieldPath": "BattleCreatureState.concentration",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing Concentration state owns concentrating caster cleanup when a repeat-save condition spell ends."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.subject=repeatSaveConditionEffect",
       "owner": "battle-reducer-route-projection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "runtime-projection"
       },
-      "notes": "Route events are derived from existing passive Saving Throw support-profile and condition facts; no route event is stored in BattleState."
+      "notes": "Route events are derived from owner-local End Turn repeat-save hole ids and condition/active-effect/Concentration state deltas; no route event or pending-hole cache is stored in BattleState."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.owner=battleSavingThrowRollMode",
+      "fieldPath": "BattleReducerRouteEvent.subject=saveGatedSpell",
       "owner": "battle-reducer-route-projection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "runtime-projection"
       },
-      "notes": "The saving-throw roll-mode route owner projects discovery and successful Dexterity Saving Throw Advantage resolution."
-    },
-    {
-      "fieldPath": "BattleReducerRouteEvent.owner=battleConditionLifecycle",
-      "owner": "battle-reducer-route-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "derivability": {
-        "tag": "runtime-projection"
-      },
-      "notes": "The condition-lifecycle route owner projects Incapacitated suppression of the passive Saving Throw roll mode."
+      "notes": "Existing save-gated spell route projection owns action-economy discovery and Saving Throw outcome fill order for Color Spray and Entangle selected-identity branches."
     }
   ],
   "notes": [
-    "Task 11 introduced no new durable BattleState or BattleCreatureState fields.",
-    "The new route subject family passiveSavingThrowRollMode is a runtime projection in reducer-route.ts, not stored state.",
-    "Production behavior is admitted by support-profile shape and BattleState-owned condition state; it does not dispatch on class feature name, authored slug, QNT action name, or connector filename."
+    "Task 9 introduced no new durable BattleState or BattleCreatureState fields.",
+    "The new repeatSaveConditionEffect route projection is derived from existing owner hole-id projections and state deltas, not selected spell id, authored name, QNT action name, connector filename, or a duplicate route-local state cache.",
+    "Condition-choice catalog identity remains a support-profile admission/input boundary and is not stored as production reducer dispatch state."
   ]
 }
