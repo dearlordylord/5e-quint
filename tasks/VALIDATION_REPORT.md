@@ -1,5 +1,100 @@
 # Validation Report
 
+## CRPI-BLOCK-047
+
+Status: `pass`
+
+- Task: 93
+- Driver path: `packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt`
+- Route connector path: `packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.route.mbt.qnt`
+- Route class: `reducer-routed`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-047.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt`
+- `packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.route.mbt.qnt`
+- `packages/character-creation-runtime/character-creation-reducer-route.qnt`
+- `packages/character-creation-runtime/character-creation-route-fixtures.qnt`
+- `packages/character-creation-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts`
+- `packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts`
+- `packages/character-creation-runtime/src/finalization.ts`
+- `packages/character-creation-runtime/src/index.ts`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-convergence-backlog.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Equipment.md`
+- `.references/srd-5.2.1/Classes/Barbarian.md`
+- `.references/srd-5.2.1/Classes/Fighter.md`
+- `.references/srd-5.2.1/Classes/Paladin.md`
+- `.references/srd-5.2.1/Classes/Ranger.md`
+- `.references/srd-5.2.1/Classes/Rogue.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+Task 93 accepts the Character Creation Weapon Mastery selected-reference route
+through public target entrypoints. The existing public creation reducer path
+creates a draft, discovers holes, fills supported initial choices, finalizes the
+draft into `CharacterBuild`, and retains selected Weapon Mastery weapon refs as
+`CharacterBuild.features` selected-class-choice facts. The copied route
+connector's `qRoute` is observed through
+`packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#createCompletedReducerRouteDriver`,
+which delegates to public `createCharacterDraft`, `discoverCreationHoles`,
+`fillCreationHoles`, and `finalizeCharacterDraft` APIs before appending the
+selected-reference retention event. No production module, duplicate selected
+weapon cache, or mastery-property execution behavior was added.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt#step:doFinalizeFighterWeaponMastery` | `tasks/target-replay-evidence/CRPI-BLOCK-047.json#driver:packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt#step:doFinalizeFighterWeaponMastery#trace:public-route=completedReducerSurfaceRoute action=doFinalizeFighterWeaponMastery qRoute=character-creation-weapon-mastery-selected-reference-route` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt#step:doFinalizeBarbarianWeaponMastery` | `tasks/target-replay-evidence/CRPI-BLOCK-047.json#driver:packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt#step:doFinalizeBarbarianWeaponMastery#trace:public-route=completedReducerSurfaceRoute action=doFinalizeBarbarianWeaponMastery qRoute=character-creation-weapon-mastery-selected-reference-route` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt#step:doFinalizePaladinWeaponMastery` | `tasks/target-replay-evidence/CRPI-BLOCK-047.json#driver:packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt#step:doFinalizePaladinWeaponMastery#trace:public-route=completedReducerSurfaceRoute action=doFinalizePaladinWeaponMastery qRoute=character-creation-weapon-mastery-selected-reference-route` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt#step:doFinalizeRangerWeaponMastery` | `tasks/target-replay-evidence/CRPI-BLOCK-047.json#driver:packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt#step:doFinalizeRangerWeaponMastery#trace:public-route=completedReducerSurfaceRoute action=doFinalizeRangerWeaponMastery qRoute=character-creation-weapon-mastery-selected-reference-route` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt#step:doFinalizeRogueWeaponMastery` | `tasks/target-replay-evidence/CRPI-BLOCK-047.json#driver:packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt#step:doFinalizeRogueWeaponMastery#trace:public-route=completedReducerSurfaceRoute action=doFinalizeRogueWeaponMastery qRoute=character-creation-weapon-mastery-selected-reference-route` | `_none_` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-047.json`
+- Reproduction trace family: `public-route=completedReducerSurfaceRoute qRoute=character-creation-weapon-mastery-selected-reference-route`
+- The copied connector projection source is `packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.route.mbt.qnt#qRoute`; the observed projection source is the public Character Creation reducer sequence in `packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#createCompletedReducerRouteDriver`.
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-047/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 93.
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Classes/Fighter.md#Level 1: Weapon Mastery` defines three selected Simple or Martial weapon kinds at level 1.
+- SRD 5.2.1 `Classes/Barbarian.md#Level 1: Weapon Mastery` defines two selected Simple or Martial Melee weapon kinds at level 1.
+- SRD 5.2.1 `Classes/Paladin.md#Level 1: Weapon Mastery`, `Classes/Ranger.md#Level 1: Weapon Mastery`, and `Classes/Rogue.md#Level 1: Weapon Mastery` define two selected proficient weapon kinds at level 1.
+- SRD 5.2.1 `Equipment.md#Weapon Mastery` and `Equipment.md#Mastery Properties` define mastery properties as weapon facts usable only when a feature unlocks them.
+- `UBIQUITOUS_LANGUAGE.md` defines Weapon Mastery and Mastery Property, preserving the task boundary: selected references are modeled here, not mastery-property combat behavior.
+
+Verification results:
+
+- Base check passed: reviewed base ref `master` and `HEAD` both resolved to `c12e2ffd8 Merge CRPI-BLOCK-047 unblock`; Base SHA `c12e2ffd89ef105e9a95c09ca3575bb62ed29b18` is an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against SRD 5.2.1 Weapon Mastery class-feature text, Equipment mastery text, and `UBIQUITOUS_LANGUAGE.md`.
+- Focused replay passed: `START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/character-creation-runtime exec vitest run src/weapon-mastery-containers-selected-identity.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "Weapon Mastery container|routes Weapon Mastery" ) 2>&1 & pid=$!; wait "$pid"; status=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"` passed with 4 tests, 8 skipped, and `TOTAL: 8s`.
+- Final broad verification and JSON validation are recorded in `tasks/RUN_LEDGER.json`.
+- Reviewer-loop convergence passed: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks found no remaining reasonable Task 93 findings after confirming the public route harness already observes the copied selected-reference `qRoute`, selected refs remain CharacterBuild selected-class-choice facts, and no production state or authored-identity dispatch was introduced.
+
 ## CRPI-BLOCK-055
 
 Status: `pass`

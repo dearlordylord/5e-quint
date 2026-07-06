@@ -559,7 +559,7 @@
     {
       "number": 93,
       "id": "CRPI-BLOCK-047",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: character-creation-weapon-mastery-containers-selected-identity"
     },
     {
@@ -745,7 +745,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRP04-CCF-02` | `done` | none | target replay evidence and owner implementation |
 | `CRP04-CCF-03` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-046` | `blocked` | blocked by task body | blocker resolution before implementation |
-| `CRPI-BLOCK-047` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-047` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-048` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-049` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-050` | `ready-for-research` | none | target replay evidence and owner implementation |
@@ -5993,7 +5993,7 @@ Plan Impact:
 
 ### Task 93 - CRPI-BLOCK-047
 
-Status: `ready-for-research`
+Status: `done`
 
 Owner Decision Applied:
 

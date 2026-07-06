@@ -1,38 +1,30 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-055",
+  "taskId": "CRPI-BLOCK-047",
   "durableFields": [
     {
-      "owner": "CharacterSheetBuildProjectionOwner",
+      "owner": "CharacterBuildOwner",
       "fields": [
         "CharacterBuild.progression",
         "CharacterBuild.features[kind=selectedClassChoice].selectedFromUnitId",
         "CharacterBuild.features[kind=selectedClassChoice].unitId",
-        "UnitRecord.mechanics.family=weapon_mastery_choice",
-        "WeaponMasteryChoiceProfile.choiceCount",
-        "WeaponMasteryChoiceProfile.longRestChangeCount",
-        "WeaponMasteryChoiceProfile.eligibleWeapons"
+        "CharacterBuild.unitRefs derived by characterBuildUnitRefs",
+        "CharacterBuild.feature refs derived by characterBuildFeatureUnitIds"
       ],
-      "notes": "Owns build and Surface facts used to derive Weapon Mastery selected-reference projection, eligibility, choice count, and Long Rest change count. Task 103 threads these existing facts through public projection entrypoints instead of adding a parallel selected-weapon or eligibility cache."
+      "notes": "Owns finalized CharacterBuild class-choice refs produced by character creation finalization. Task 93 reuses these existing build facts for Weapon Mastery selected weapon refs and adds no parallel selected-weapon cache."
     },
     {
-      "owner": "CharacterSheetSelectedReferenceOwner",
+      "owner": "CreationSelectedReferenceOwner",
       "fields": [
-        "CharacterSheetWeaponMasterySelectedReferenceProjection.qRoute",
-        "CharacterSheetWeaponMasteryReselectionRouteResult.qRoute",
-        "CharacterSheetWeaponMasteryReselectionRouteResult.route",
-        "CharacterSheetRouteEvent kind=retainCharacterSheetSelectedReferences subject=selectedReferenceProjection owner=selectedReference",
-        "CharacterSheetRouteEvent kind=completeCharacterSheetRest subject=selectedReferenceProjection fill=projectionSelection owner=selectedReference",
-        "CharacterSheetRouteEvent kind=resolveCharacterSheetSubject subject=selectedReferenceProjection fill=projectionSelection owner=selectedReference",
-        "CharacterSheetRouteEvent holes=projectionChoice"
+        "CharacterCreationRouteEvent kind=retainCreationSelectedReferences subject=selectedReference owner=creationSelectedReference",
+        "Character Creation qRoute selected-reference retention event after public creation finalization"
       ],
-      "notes": "Owns retained selected weapon reference evidence and Long Rest reselection route outcomes. Accepted reselection updates existing CharacterBuild selected-class-choice refs through completeLongRest; Weapon Mastery reselection failures expose a projection-choice hole without storing rejection state; unrelated completeLongRest failures return route=none with empty qRoute."
+      "notes": "Owns creation-time selected-reference retention evidence for Weapon Mastery finalization. This is route/projection evidence only; selected mastery-property combat execution is outside this owner."
     }
   ],
   "notes": [
-    "Task 103 introduced no new durable CharacterSheet state fields.",
-    "qRoute target replay evidence is derived from public characterSheetWeaponMasterySelectedReferenceProjection and completeLongRestWeaponMasteryReselectionWithRoute entrypoints plus the copied route connector.",
-    "completeLongRestWeaponMasteryReselectionWithRoute emits selected-reference rejection qRoute only for failures proven by the Weapon Mastery reselection precheck; unrelated Long Rest failures are unrouted.",
+    "Task 93 introduced no new durable CharacterDraft, CharacterBuild, or Character Creation state fields.",
+    "qRoute target replay evidence is derived from the public Character Creation reducer route harness and the copied route connector.",
     "Weapon Mastery property behavior is intentionally outside this selected-reference replay.",
     "Production runtime does not dispatch on QNT branch names, witness labels, connector filenames, or authored names."
   ]
