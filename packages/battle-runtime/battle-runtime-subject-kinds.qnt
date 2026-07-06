@@ -42,6 +42,7 @@ module battleRuntimeSubjectKinds {
     | RuntimeEffectControlSubjectKind
     | RuntimeHeldObjectReleaseSubjectKind
     | RuntimeProtectionSaveSubjectKind
+    | RuntimeProtectionPreventionSubjectKind
     | RuntimeTransformationModeSubjectKind
     | RuntimeCompelledActionSubjectKind
     | RuntimeAltitudeControlSubjectKind

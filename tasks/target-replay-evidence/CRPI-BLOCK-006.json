@@ -1,0 +1,367 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/creature-type-protection-and-charm-selected-identity.mbt.test.ts Creature Type Protection and Charm public reducer qRoute replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "f07a33f783419b9f8f88eed9d679faadace779ec658d2a990ae56bc963d55387",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "a6e8fbb495c3f01f51297148e02b970dfde9d6e1acbb6297cd08a3ac5995edc0",
+      "routeConnectorSha256": "b8526e3b624e585ad77cde0d2662e1a06f138c57b02e387bb03d495ac49cd98a",
+      "branchFamily": "step",
+      "branchAction": "doDiscoverAnimalFriendshipBeastTargetAdmission",
+      "observedActionTaken": "doDiscoverAnimalFriendshipBeastTargetAdmission",
+      "harnessTestPath": "packages/battle-runtime/src/creature-type-protection-and-charm-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=1 action=doDiscoverAnimalFriendshipBeastTargetAdmission qRoute=protection-charm-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "053039b7078132653428af61c79eca843b373def19a8e095413db7db6149a3a3",
+        "observedProjectionSha256": "053039b7078132653428af61c79eca843b373def19a8e095413db7db6149a3a3",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs"
+          ],
+          "routeEventSource": "Public battle reducer route events from battleReducerStartRouteEvent and AvailableBattleAct.routeEvents while discovering Animal Friendship target admission.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#discoverBattleActs"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleReducerRouteEvent.subject=creatureTypeTargetAdmission",
+          "BattleReducerRouteEvent.owner=battleSpellSlotAndActionEconomy",
+          "BattleSubject.actionSpell.invocation.procedure=saveGatedCondition"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "a6e8fbb495c3f01f51297148e02b970dfde9d6e1acbb6297cd08a3ac5995edc0",
+      "routeConnectorSha256": "b8526e3b624e585ad77cde0d2662e1a06f138c57b02e387bb03d495ac49cd98a",
+      "branchFamily": "step",
+      "branchAction": "doResolveAnimalFriendshipFailedSaveCharmed",
+      "observedActionTaken": "doResolveAnimalFriendshipFailedSaveCharmed",
+      "harnessTestPath": "packages/battle-runtime/src/creature-type-protection-and-charm-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=1 action=doResolveAnimalFriendshipFailedSaveCharmed qRoute=protection-charm-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "5730ac4c4b269a31c97925bd3aa64541998ad3d30866166afd690f83439bb89d",
+        "observedProjectionSha256": "5730ac4c4b269a31c97925bd3aa64541998ad3d30866166afd690f83439bb89d",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "Public battle reducer route events from Animal Friendship discovery and BattleResolutionResult.routeEvents for target choice and failed saving throw fills.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=protectionCharmActiveEffect",
+          "BattleReducerRouteEvent.owner=battleTargetSelection",
+          "BattleReducerRouteEvent.owner=battleSavingThrowOutcome",
+          "BattleReducerRouteEvent.owner=battleConditionLifecycle",
+          "BattleReducerRouteEvent.owner=battleActiveEffect",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects.kind=spellCondition"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "a6e8fbb495c3f01f51297148e02b970dfde9d6e1acbb6297cd08a3ac5995edc0",
+      "routeConnectorSha256": "b8526e3b624e585ad77cde0d2662e1a06f138c57b02e387bb03d495ac49cd98a",
+      "branchFamily": "step",
+      "branchAction": "doResolveAnimalFriendshipCasterDamageBreak",
+      "observedActionTaken": "doResolveAnimalFriendshipCasterDamageBreak",
+      "harnessTestPath": "packages/battle-runtime/src/creature-type-protection-and-charm-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=1 action=doResolveAnimalFriendshipCasterDamageBreak qRoute=protection-charm-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "2833c35f0640b20689076c62a625f053e34aab1151b3bc3343fd8c8a81440708",
+        "observedProjectionSha256": "2833c35f0640b20689076c62a625f053e34aab1151b3bc3343fd8c8a81440708",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "end_turn",
+            "packages/battle-runtime/src/index.ts#endTurn",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "Public battle reducer route events from Animal Friendship failed-save resolution plus ally weapon damage BattleResolutionResult.routeEvents that remove the damage-break charm effect.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=charmSourceDamageBreak",
+          "BattleReducerRouteEvent.owner=battleHitPoint",
+          "BattleReducerRouteEvent.owner=battleConditionLifecycle",
+          "BattleReducerRouteEvent.owner=battleActiveEffect",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.activeEffects"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "a6e8fbb495c3f01f51297148e02b970dfde9d6e1acbb6297cd08a3ac5995edc0",
+      "routeConnectorSha256": "b8526e3b624e585ad77cde0d2662e1a06f138c57b02e387bb03d495ac49cd98a",
+      "branchFamily": "step",
+      "branchAction": "doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection",
+      "observedActionTaken": "doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection",
+      "harnessTestPath": "packages/battle-runtime/src/creature-type-protection-and-charm-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=1 action=doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection qRoute=protection-charm-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "bfcdca4c63e5b7feb2cbbfd9604bb0d0e8740bdada44c7cad1d5bcade8e140a1",
+        "observedProjectionSha256": "bfcdca4c63e5b7feb2cbbfd9604bb0d0e8740bdada44c7cad1d5bcade8e140a1",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "Public battle reducer route events from Protection from Evil and Good discovery and target-choice resolution.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=protectionCharmActiveEffect",
+          "BattleReducerRouteEvent.owner=battleSpellSlotAndActionEconomy",
+          "BattleReducerRouteEvent.owner=battleTargetSelection",
+          "BattleReducerRouteEvent.owner=battleActiveEffect",
+          "BattleReducerRouteEvent.owner=battleConcentration",
+          "BattleCreatureState.activeEffects.kind=creatureTypeProtection",
+          "BattleCreatureState.concentration"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "a6e8fbb495c3f01f51297148e02b970dfde9d6e1acbb6297cd08a3ac5995edc0",
+      "routeConnectorSha256": "b8526e3b624e585ad77cde0d2662e1a06f138c57b02e387bb03d495ac49cd98a",
+      "branchFamily": "step",
+      "branchAction": "doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage",
+      "observedActionTaken": "doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage",
+      "harnessTestPath": "packages/battle-runtime/src/creature-type-protection-and-charm-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=1 action=doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage qRoute=protection-charm-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "c43f25761d9914425f9900d6d632efaed8f9c8f9c9fd8a612b49a89026a1c1e2",
+        "observedProjectionSha256": "c43f25761d9914425f9900d6d632efaed8f9c8f9c9fd8a612b49a89026a1c1e2",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "Public weapon attack BattleResolutionResult.routeEvents project creature-type protection attack-roll disadvantage from active effect scope.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=protectionCharmActiveEffect",
+          "BattleReducerRouteEvent.owner=battleActiveEffect",
+          "BattleReducerRouteEvent.owner=battleAttackRoll",
+          "BattleCreatureState.activeEffects.kind=creatureTypeProtection",
+          "BattleHole.kind=attackRoll",
+          "BattleHole.rollMode=disadvantage"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "a6e8fbb495c3f01f51297148e02b970dfde9d6e1acbb6297cd08a3ac5995edc0",
+      "routeConnectorSha256": "b8526e3b624e585ad77cde0d2662e1a06f138c57b02e387bb03d495ac49cd98a",
+      "branchFamily": "step",
+      "branchAction": "doPreventProtectionFromEvilAndGoodScopedCharmAndPossession",
+      "observedActionTaken": "doPreventProtectionFromEvilAndGoodScopedCharmAndPossession",
+      "harnessTestPath": "packages/battle-runtime/src/creature-type-protection-and-charm-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=1 action=doPreventProtectionFromEvilAndGoodScopedCharmAndPossession qRoute=protection-charm-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "a0a0c3effd14a51ede3687c19f7ce8504b76fccb4f38b27e0e3641714649a051",
+        "observedProjectionSha256": "a0a0c3effd14a51ede3687c19f7ce8504b76fccb4f38b27e0e3641714649a051",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts#resolveCreatureTypeProtectionPossessionAttemptCommand",
+            "packages/battle-runtime/src/battle-reducer/dispatcher.ts#resolveCreatureTypeProtectionConditionAttemptCommand",
+            "packages/battle-runtime/src/battle-reducer/reducer-route.ts#protectionConditionAttemptRouteForResolution",
+            "packages/battle-runtime/src/battle-reducer/reducer-route.ts#protectionPossessionAttemptRouteForResolution"
+          ],
+          "routeEventSource": "BattleResolutionResult.routeEvents from public resolveBattleSubject calls for creature-type-protection Charmed condition-attempt and possession-attempt runtime command resolution with a scoped Fey source.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=protectionCharmActiveEffect",
+          "BattleReducerRouteEvent.owner=battleActiveEffect",
+          "BattleReducerRouteEvent.owner=battleConditionLifecycle",
+          "BattleReducerRouteEvent.owner=battleCreatureState",
+          "BattleCreatureState.activeEffects.kind=creatureTypeProtection",
+          "BattleCreatureState.conditions"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "a6e8fbb495c3f01f51297148e02b970dfde9d6e1acbb6297cd08a3ac5995edc0",
+      "routeConnectorSha256": "b8526e3b624e585ad77cde0d2662e1a06f138c57b02e387bb03d495ac49cd98a",
+      "branchFamily": "step",
+      "branchAction": "doResolveProtectionFromEvilAndGoodRelevantCharmSaveAdvantage",
+      "observedActionTaken": "doResolveProtectionFromEvilAndGoodRelevantCharmSaveAdvantage",
+      "harnessTestPath": "packages/battle-runtime/src/creature-type-protection-and-charm-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=1 action=doResolveProtectionFromEvilAndGoodRelevantCharmSaveAdvantage qRoute=protection-charm-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "bee9d34c297aa31f32b5bba058aefc68a67cfeb0eb2ba24d5101f0179741be03",
+        "observedProjectionSha256": "bee9d34c297aa31f32b5bba058aefc68a67cfeb0eb2ba24d5101f0179741be03",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "Public protectionRelevantEffectSave BattleResolutionResult.routeEvents project active-effect scoped saving throw advantage.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=protectionCharmActiveEffect",
+          "BattleReducerRouteEvent.owner=battleActiveEffect",
+          "BattleReducerRouteEvent.owner=battleSavingThrowRollMode",
+          "BattleCreatureState.activeEffects.kind=creatureTypeProtection",
+          "BattleCreatureState.activeEffects.kind=spellConditionRepeatSave",
+          "BattleHole.kind=savingThrowOutcome",
+          "BattleHole.rollMode=advantage"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}

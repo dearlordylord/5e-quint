@@ -27,14 +27,14 @@
     "qntRegistry[]": "Derived from packages/**/*.qnt excluding .mbt.qnt drivers and *-tests.qnt files, qnt-owner-roles.jsonl, and checker-owned qntRegistryExemptions."
   },
   "battleHoleFrontierSummary": {
-    "total": 166,
+    "total": 167,
     "bySubject": {
       "battle-hole-family": 82,
       "battle-fill-kind": 48,
-      "battle-subject-kind": 36
+      "battle-subject-kind": 37
     },
     "byClassification": {
-      "semantic-frontier": 135,
+      "semantic-frontier": 136,
       "deterministic-boundary-projection": 0,
       "table-owned-fact": 31,
       "unsupported-dead-branch": 0
@@ -6616,6 +6616,17 @@
       "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
       "subject": "battle-subject-kind",
       "subjectKind": "runtimeProtectionSave"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "runtimeProtectionPrevention",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeProtectionPrevention"
     },
     {
       "classification": "semantic-frontier",

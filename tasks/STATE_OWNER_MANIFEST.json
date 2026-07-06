@@ -1,52 +1,7 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-004",
+  "taskId": "CRPI-BLOCK-006",
   "durableFields": [
-    {
-      "fieldPath": "BattleCreatureState.activeEffects.kind=commandPending",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing active Spell Effect state owns the failed-save pending Command option until the target next-turn consequence resolves or expires."
-    },
-    {
-      "fieldPath": "BattleCreatureState.conditions",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing condition lifecycle state owns Grovel Prone application."
-    },
-    {
-      "fieldPath": "BattleCreatureState.movementSpentFeet",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing movement-resource state owns Approach and Flee movement spending."
-    },
-    {
-      "fieldPath": "BattleState.currentTurnResources.commandHalt",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing turn-resource state owns Halt action, Bonus Action, and movement suppression for the target turn."
-    },
-    {
-      "fieldPath": "BattleState.interruptStack",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing interrupt stack owns Flee Opportunity Attack windows and continuation after decline."
-    },
     {
       "fieldPath": "AvailableBattleAct.routeEvents",
       "owner": "battle-reducer-route-projection",
@@ -54,7 +9,7 @@
       "derivability": {
         "tag": "runtime-projection"
       },
-      "notes": "Public discovery route events project Command effect subjects and frontiers from existing act subjects and holes."
+      "notes": "Public discovery route events project creature-type target admission and creature-type protection active-effect admission from supported spell invocation facts and initial holes."
     },
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
@@ -63,12 +18,66 @@
       "derivability": {
         "tag": "runtime-projection"
       },
-      "notes": "Public resolution route events project Command effect fill, owner, hole, and interrupt-stack route facts for qRoute replay."
+      "notes": "Public resolution route events project target selection, saving throw outcome, active-effect, concentration, hit point, condition lifecycle, attack roll, creature-state, and saving throw roll-mode ownership for protection/charm routes."
+    },
+    {
+      "fieldPath": "BattleCreatureState.activeEffects.kind=creatureTypeProtection",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing active Spell Effect state owns Protection from Evil and Good scope, protected creature types, prevented conditions, attack roll disadvantage, and relevant-effect save advantage."
+    },
+    {
+      "fieldPath": "BattleCreatureState.activeEffects.kind=spellCondition",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing active Spell Effect state owns Animal Friendship Charmed application and source-damage-break expiration facts."
+    },
+    {
+      "fieldPath": "BattleCreatureState.activeEffects.kind=spellConditionRepeatSave",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing repeated-save active Spell Effect state owns relevant Charmed save roll-mode projection when creature-type protection applies."
+    },
+    {
+      "fieldPath": "BattleCreatureState.conditions",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing condition lifecycle state owns Charmed application, Charmed prevention, and charm source-damage-break condition removal."
+    },
+    {
+      "fieldPath": "BattleCreatureState.concentration",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing concentration state owns Protection from Evil and Good concentration after a successful cast."
+    },
+    {
+      "fieldPath": "BattleCreatureState.hp",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing hit point state owns ally damage that breaks Animal Friendship."
     }
   ],
   "notes": [
-    "Task 6 introduced no new durable BattleState, BattleCreatureState, or character resource fields.",
-    "Command option identity remains a typed fill/procedure fact and commandPending active effect; production routing does not dispatch on spell name, option label as catalog identity, QNT action name, or connector filename.",
-    "Held-object inventory and route geometry remain table/caller boundary fills, not duplicated BattleState."
+    "Task 10 introduced no new durable BattleState or BattleCreatureState fields.",
+    "New route subject families creatureTypeTargetAdmission, protectionCharmActiveEffect, and charmSourceDamageBreak are runtime projections in reducer-route.ts, not stored state.",
+    "Production behavior is admitted by support-profile shape, creature-type facts, active-effect scope, and typed possession disposition; it does not dispatch on spell id, spell name, authored slug, QNT action name, or connector filename."
   ]
 }

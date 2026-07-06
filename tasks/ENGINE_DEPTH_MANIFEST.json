@@ -1,38 +1,68 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-004",
+  "taskId": "CRPI-BLOCK-006",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt",
       "quarantinedWitnessNames": [
         "qProtocol",
-        "qRoute"
+        "qState"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-004.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-006.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/command-option-next-turn.mbt.test.ts",
+      "path": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.route.mbt.qnt",
       "quarantinedWitnessNames": [
-        "CommandOptionNextTurnProjection.route",
-        "applyScenarioSegment"
+        "qRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-004.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-006.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/src/creature-type-protection-and-charm-selected-identity.mbt.test.ts",
+      "quarantinedWitnessNames": [
+        "CreatureTypeProtectionAndCharmSelectedIdentityProjection",
+        "createPublicProtectionCharmRouteDriver"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-006.json"
       ]
     }
   ],
-  "productionModulesExtended": [],
+  "productionModulesExtended": [
+    {
+      "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "notes": "Projects creature-type target admission, protection/charm active-effect, and charm source-damage-break owner routes from existing BattleState subjects, fills, holes, active effects, creature-type facts, and resolution results."
+    },
+    {
+      "path": "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+      "notes": "Resolves the creature-type-protection condition-attempt and possession-attempt runtime commands through the public battle reducer surface, reusing typed protection predicates without adding durable state."
+    },
+    {
+      "path": "packages/battle-runtime/src/battle-subjects.ts",
+      "notes": "Adds public runtime command subject schemas for creature-type-protection condition-attempt and possession-attempt resolution."
+    },
+    {
+      "path": "packages/battle-runtime/src/battle-protocol-kinds.ts",
+      "notes": "Folds the condition-attempt and possession-attempt runtime commands into the runtimeProtectionPrevention protocol family, separate from protectionRelevantEffectSave."
+    }
+  ],
   "expectedNextReuse": [
     {
       "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "notes": "Future Command route tasks should keep using public routeEvents from discoverBattleActs, resolveBattleSubject, and resolveBattleInterrupt instead of adding a Command-specific route ledger."
+      "notes": "Future protection/charm route tasks should keep deriving qRoute from public routeEvents and typed effect/source facts rather than adding selected spell identity dispatch or a parallel route ledger."
+    },
+    {
+      "path": "packages/battle-runtime/src/battle-reducer/spell-condition-effects-helpers.ts",
+      "notes": "Reducer-route possession projection should continue to reuse the typed BattlePossessionAttemptDisposition and creatureTypeProtection active effect scope rather than adding a second route helper."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 6 observes Command option next-turn qRoute through public battle reducer route events. No durable BattleState fields or production modules were added; selected Command option remains the existing commandPending active effect plus typed runtime command subjects and fills."
+    "notes": "Task 10 observes the copied protection/charm qRoute through public battle runtime entrypoints. No new durable BattleState fields were added; creature type and selected spell identity remain boundary/support-profile facts feeding typed target admission and active effect scope."
   }
 }
