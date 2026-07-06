@@ -201,7 +201,7 @@ for both reroll options.
 No MBT run is needed for this boundary task because no runtime behavior changed.
 
 Future implementation slices should verify with focused runtime tests, focused
-QNT owner tests, selected-identity MBT only after runtime and QNT witnesses
+QNT owner tests, selected-identity replay only after runtime and QNT witnesses
 exist, and then:
 
 - `pnpm unit-profile-coverage:check -- --write`

@@ -1,0 +1,422 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/character-creation-runtime/src/character-creation-runtime.mbt.test.ts and reducer-route-connectors.mbt.test.ts choice cardinality/support-profile replay"
+  },
+  "cleanroomManifestSourceCommitSha": "84e17424ba5882f076783f4bd0780b34d2a0a58e",
+  "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+      "qntFileSha256": "4d75053e9c7ecd7e89a8299349905c7f06207870cbe245a8a7f166b52fe6aa34",
+      "branchFamily": "step",
+      "branchAction": "doRejectUnsupportedLanguage",
+      "observedActionTaken": "doRejectUnsupportedLanguage",
+      "harnessTestPath": "packages/character-creation-runtime/src/character-creation-runtime.mbt.test.ts",
+      "traceId": "deterministic-rejection-contract action=doRejectUnsupportedLanguage projection=qState",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qState",
+        "comparator": "character-creation-runtime-state",
+        "expectedProjectionSha256": "1e3917a276b29bd69a0ac14620a3aa5cdde7cadbe313d3b711f083a6ae3cdeff",
+        "observedProjectionSha256": "1e3917a276b29bd69a0ac14620a3aa5cdde7cadbe313d3b711f083a6ae3cdeff",
+        "observedProjectionSource": {
+          "tag": "semantic-projection",
+          "targetEntrypointSequence": [
+            "packages/character-creation-runtime/src/index.ts#createCharacterDraft",
+            "packages/character-creation-runtime/src/index.ts#fillCreationHoles",
+            "packages/character-creation-runtime/src/index.ts#discoverCreationHoles",
+            "packages/character-creation-runtime/src/index.ts#finalizeCharacterDraft"
+          ],
+          "semanticProjectionSource": "public character creation reducer qState observed from fillCreationHoles rejected result for valid unsupported language choice",
+          "targetPublicApiPath": "packages/character-creation-runtime/src/index.ts#fillCreationHoles"
+        },
+        "qntAcceptance": {
+          "tag": "qnt-semantic",
+          "ownerPath": "packages/character-creation-runtime/character-creation-runtime-slice.qnt"
+        },
+        "checkedTargetStateFields": [
+          "CreationBatchFillResult.tag=rejected",
+          "CreationBatchFillResult.issues includes illegalFill unsupportedChoice for Languages hole",
+          "CreationBatchFillResult.issues excludes illegalBatch entries",
+          "CharacterDraft.revision unchanged at 0",
+          "CharacterDraft.selections.languages remains absent",
+          "CreationBatchFillResult.holes equals discoverCreationHoles(original draft)",
+          "CreationBatchFillResult.finalization equals finalizeCharacterDraft(original draft)"
+        ]
+      },
+      "result": { "tag": "pass" }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+      "qntFileSha256": "4d75053e9c7ecd7e89a8299349905c7f06207870cbe245a8a7f166b52fe6aa34",
+      "branchFamily": "step",
+      "branchAction": "doRejectUnsupportedLanguage",
+      "observedActionTaken": "doRejectUnsupportedLanguage",
+      "harnessTestPath": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "deterministic-rejection-contract action=doRejectUnsupportedLanguage projection=qRoute",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "1d4c2d9f69e5b8b4ffab255692d4e93c512ba1bc01d1d4a61aaacc433c42a973",
+        "observedProjectionSha256": "1d4c2d9f69e5b8b4ffab255692d4e93c512ba1bc01d1d4a61aaacc433c42a973",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "packages/character-creation-runtime/src/index.ts#createCharacterDraft",
+            "packages/character-creation-runtime/src/index.ts#fillCreationHoles",
+            "packages/character-creation-runtime/src/index.ts#discoverCreationHoles"
+          ],
+          "routeEventSource": "public reducer replay observed from character creation rejected fill batch route harness for valid unsupported language choice",
+          "reducerPublicApiPath": "packages/character-creation-runtime/src/index.ts#fillCreationHoles"
+        },
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt"
+        },
+        "checkedTargetStateFields": [
+          "RouteApplyCreationFillBatch.subject=CreationFillBatchRouteSubject",
+          "RouteApplyCreationFillBatch.owner=CreationSupportProfileAdmissionOwner",
+          "RouteDiscoverCreationHoles.subject=CreationOptionDiscoveryRouteSubject",
+          "RouteDiscoverCreationHoles.owner=CreationHoleFrontierOwner"
+        ]
+      },
+      "result": { "tag": "pass" }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+      "qntFileSha256": "4d75053e9c7ecd7e89a8299349905c7f06207870cbe245a8a7f166b52fe6aa34",
+      "branchFamily": "step",
+      "branchAction": "doRejectDuplicateLanguage",
+      "observedActionTaken": "doRejectDuplicateLanguage",
+      "harnessTestPath": "packages/character-creation-runtime/src/character-creation-runtime.mbt.test.ts",
+      "traceId": "deterministic-rejection-contract action=doRejectDuplicateLanguage projection=qState",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qState",
+        "comparator": "character-creation-runtime-state",
+        "expectedProjectionSha256": "0048658ce62cdddfd19d05480a2b695407634c6f3a30a815428b6d9db96bbdc8",
+        "observedProjectionSha256": "0048658ce62cdddfd19d05480a2b695407634c6f3a30a815428b6d9db96bbdc8",
+        "observedProjectionSource": {
+          "tag": "semantic-projection",
+          "targetEntrypointSequence": [
+            "packages/character-creation-runtime/src/index.ts#createCharacterDraft",
+            "packages/character-creation-runtime/src/index.ts#fillCreationHoles",
+            "packages/character-creation-runtime/src/index.ts#discoverCreationHoles",
+            "packages/character-creation-runtime/src/index.ts#finalizeCharacterDraft"
+          ],
+          "semanticProjectionSource": "public character creation reducer qState observed from fillCreationHoles rejected result for duplicate language option inside one fill",
+          "targetPublicApiPath": "packages/character-creation-runtime/src/index.ts#fillCreationHoles"
+        },
+        "qntAcceptance": {
+          "tag": "qnt-semantic",
+          "ownerPath": "packages/character-creation-runtime/character-creation-runtime-slice.qnt"
+        },
+        "checkedTargetStateFields": [
+          "CreationBatchFillResult.tag=rejected",
+          "CreationBatchFillResult.issues includes illegalFill invalidChoice for duplicate option in Languages hole",
+          "CreationBatchFillResult.issues excludes illegalBatch entries",
+          "CharacterDraft.revision unchanged at 0",
+          "CharacterDraft.selections.languages remains absent",
+          "CreationBatchFillResult.holes equals discoverCreationHoles(original draft)",
+          "CreationBatchFillResult.finalization equals finalizeCharacterDraft(original draft)"
+        ]
+      },
+      "result": { "tag": "pass" }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+      "qntFileSha256": "4d75053e9c7ecd7e89a8299349905c7f06207870cbe245a8a7f166b52fe6aa34",
+      "branchFamily": "step",
+      "branchAction": "doRejectDuplicateLanguage",
+      "observedActionTaken": "doRejectDuplicateLanguage",
+      "harnessTestPath": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "deterministic-rejection-contract action=doRejectDuplicateLanguage projection=qRoute",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "91a33a7905d4b9ac4280ea79fe954d5b1cf96e91899711a6cec63011b614c3a0",
+        "observedProjectionSha256": "91a33a7905d4b9ac4280ea79fe954d5b1cf96e91899711a6cec63011b614c3a0",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "packages/character-creation-runtime/src/index.ts#createCharacterDraft",
+            "packages/character-creation-runtime/src/index.ts#fillCreationHoles",
+            "packages/character-creation-runtime/src/index.ts#discoverCreationHoles"
+          ],
+          "routeEventSource": "public reducer replay observed from character creation rejected fill batch route harness for duplicate language option inside one fill",
+          "reducerPublicApiPath": "packages/character-creation-runtime/src/index.ts#fillCreationHoles"
+        },
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt"
+        },
+        "checkedTargetStateFields": [
+          "RouteApplyCreationFillBatch.subject=CreationFillBatchRouteSubject",
+          "RouteApplyCreationFillBatch.owner=CharacterDraftOwner",
+          "RouteDiscoverCreationHoles.subject=CreationOptionDiscoveryRouteSubject",
+          "RouteDiscoverCreationHoles.owner=CreationHoleFrontierOwner"
+        ]
+      },
+      "result": { "tag": "pass" }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+      "qntFileSha256": "4d75053e9c7ecd7e89a8299349905c7f06207870cbe245a8a7f166b52fe6aa34",
+      "branchFamily": "step",
+      "branchAction": "doRejectTooFewLanguages",
+      "observedActionTaken": "doRejectTooFewLanguages",
+      "harnessTestPath": "packages/character-creation-runtime/src/character-creation-runtime.mbt.test.ts",
+      "traceId": "deterministic-rejection-contract action=doRejectTooFewLanguages projection=qState",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qState",
+        "comparator": "character-creation-runtime-state",
+        "expectedProjectionSha256": "e6ddfb295017936239639cfce528cd5ef3fbbd662d6aabcf48d9cbf46d305399",
+        "observedProjectionSha256": "e6ddfb295017936239639cfce528cd5ef3fbbd662d6aabcf48d9cbf46d305399",
+        "observedProjectionSource": {
+          "tag": "semantic-projection",
+          "targetEntrypointSequence": [
+            "packages/character-creation-runtime/src/index.ts#createCharacterDraft",
+            "packages/character-creation-runtime/src/index.ts#fillCreationHoles",
+            "packages/character-creation-runtime/src/index.ts#discoverCreationHoles",
+            "packages/character-creation-runtime/src/index.ts#finalizeCharacterDraft"
+          ],
+          "semanticProjectionSource": "public character creation reducer qState observed from fillCreationHoles rejected result for too few language choices",
+          "targetPublicApiPath": "packages/character-creation-runtime/src/index.ts#fillCreationHoles"
+        },
+        "qntAcceptance": {
+          "tag": "qnt-semantic",
+          "ownerPath": "packages/character-creation-runtime/character-creation-runtime-slice.qnt"
+        },
+        "checkedTargetStateFields": [
+          "CreationBatchFillResult.tag=rejected",
+          "CreationBatchFillResult.issues includes illegalFill tooFewChoices for Languages hole",
+          "CreationBatchFillResult.issues excludes illegalBatch entries",
+          "CharacterDraft.revision unchanged at 0",
+          "CharacterDraft.selections.languages remains absent",
+          "CreationBatchFillResult.holes equals discoverCreationHoles(original draft)",
+          "CreationBatchFillResult.finalization equals finalizeCharacterDraft(original draft)"
+        ]
+      },
+      "result": { "tag": "pass" }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+      "qntFileSha256": "4d75053e9c7ecd7e89a8299349905c7f06207870cbe245a8a7f166b52fe6aa34",
+      "branchFamily": "step",
+      "branchAction": "doRejectTooFewLanguages",
+      "observedActionTaken": "doRejectTooFewLanguages",
+      "harnessTestPath": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "deterministic-rejection-contract action=doRejectTooFewLanguages projection=qRoute",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "01c83174930aec8ddceef3392de015fcb828aed8be30509e0fd4605bd5f7eeb3",
+        "observedProjectionSha256": "01c83174930aec8ddceef3392de015fcb828aed8be30509e0fd4605bd5f7eeb3",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "packages/character-creation-runtime/src/index.ts#createCharacterDraft",
+            "packages/character-creation-runtime/src/index.ts#fillCreationHoles",
+            "packages/character-creation-runtime/src/index.ts#discoverCreationHoles"
+          ],
+          "routeEventSource": "public reducer replay observed from character creation rejected fill batch route harness for too few language choices",
+          "reducerPublicApiPath": "packages/character-creation-runtime/src/index.ts#fillCreationHoles"
+        },
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt"
+        },
+        "checkedTargetStateFields": [
+          "RouteApplyCreationFillBatch.subject=CreationFillBatchRouteSubject",
+          "RouteApplyCreationFillBatch.owner=CharacterDraftOwner",
+          "RouteDiscoverCreationHoles.subject=CreationOptionDiscoveryRouteSubject",
+          "RouteDiscoverCreationHoles.owner=CreationHoleFrontierOwner"
+        ]
+      },
+      "result": { "tag": "pass" }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+      "qntFileSha256": "4d75053e9c7ecd7e89a8299349905c7f06207870cbe245a8a7f166b52fe6aa34",
+      "branchFamily": "step",
+      "branchAction": "doRejectTooManyLanguages",
+      "observedActionTaken": "doRejectTooManyLanguages",
+      "harnessTestPath": "packages/character-creation-runtime/src/character-creation-runtime.mbt.test.ts",
+      "traceId": "deterministic-rejection-contract action=doRejectTooManyLanguages projection=qState",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qState",
+        "comparator": "character-creation-runtime-state",
+        "expectedProjectionSha256": "ed41eef3bc0d9617489f1677ac7f3f8db37701690719fa1f2dc4629b4a2ece8a",
+        "observedProjectionSha256": "ed41eef3bc0d9617489f1677ac7f3f8db37701690719fa1f2dc4629b4a2ece8a",
+        "observedProjectionSource": {
+          "tag": "semantic-projection",
+          "targetEntrypointSequence": [
+            "packages/character-creation-runtime/src/index.ts#createCharacterDraft",
+            "packages/character-creation-runtime/src/index.ts#fillCreationHoles",
+            "packages/character-creation-runtime/src/index.ts#discoverCreationHoles",
+            "packages/character-creation-runtime/src/index.ts#finalizeCharacterDraft"
+          ],
+          "semanticProjectionSource": "public character creation reducer qState observed from fillCreationHoles rejected result for too many language choices",
+          "targetPublicApiPath": "packages/character-creation-runtime/src/index.ts#fillCreationHoles"
+        },
+        "qntAcceptance": {
+          "tag": "qnt-semantic",
+          "ownerPath": "packages/character-creation-runtime/character-creation-runtime-slice.qnt"
+        },
+        "checkedTargetStateFields": [
+          "CreationBatchFillResult.tag=rejected",
+          "CreationBatchFillResult.issues includes illegalFill tooManyChoices and unsupportedChoice for Languages hole",
+          "CreationBatchFillResult.issues excludes illegalBatch entries",
+          "CharacterDraft.revision unchanged at 0",
+          "CharacterDraft.selections.languages remains absent",
+          "CreationBatchFillResult.holes equals discoverCreationHoles(original draft)",
+          "CreationBatchFillResult.finalization equals finalizeCharacterDraft(original draft)"
+        ]
+      },
+      "result": { "tag": "pass" }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+      "qntFileSha256": "4d75053e9c7ecd7e89a8299349905c7f06207870cbe245a8a7f166b52fe6aa34",
+      "branchFamily": "step",
+      "branchAction": "doRejectTooManyLanguages",
+      "observedActionTaken": "doRejectTooManyLanguages",
+      "harnessTestPath": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "deterministic-rejection-contract action=doRejectTooManyLanguages projection=qRoute",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "2c47111b9d97d080cf097b785cb623c2e7933971af1af12beb5bb11163e585b6",
+        "observedProjectionSha256": "2c47111b9d97d080cf097b785cb623c2e7933971af1af12beb5bb11163e585b6",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "packages/character-creation-runtime/src/index.ts#createCharacterDraft",
+            "packages/character-creation-runtime/src/index.ts#fillCreationHoles",
+            "packages/character-creation-runtime/src/index.ts#discoverCreationHoles"
+          ],
+          "routeEventSource": "public reducer replay observed from character creation rejected fill batch route harness for too many language choices",
+          "reducerPublicApiPath": "packages/character-creation-runtime/src/index.ts#fillCreationHoles"
+        },
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt"
+        },
+        "checkedTargetStateFields": [
+          "RouteApplyCreationFillBatch.subject=CreationFillBatchRouteSubject",
+          "RouteApplyCreationFillBatch.owner=CharacterDraftOwner",
+          "RouteDiscoverCreationHoles.subject=CreationOptionDiscoveryRouteSubject",
+          "RouteDiscoverCreationHoles.owner=CreationHoleFrontierOwner"
+        ]
+      },
+      "result": { "tag": "pass" }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+      "qntFileSha256": "4d75053e9c7ecd7e89a8299349905c7f06207870cbe245a8a7f166b52fe6aa34",
+      "branchFamily": "step",
+      "branchAction": "doRejectUnsupportedClassEquipment",
+      "observedActionTaken": "doRejectUnsupportedClassEquipment",
+      "harnessTestPath": "packages/character-creation-runtime/src/character-creation-runtime.mbt.test.ts",
+      "traceId": "deterministic-rejection-contract action=doRejectUnsupportedClassEquipment projection=qState",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qState",
+        "comparator": "character-creation-runtime-state",
+        "expectedProjectionSha256": "a6e4d33d7d7fe547e59b118f5297afe8b1334ec77d8818f5f350cf1e17112f75",
+        "observedProjectionSha256": "a6e4d33d7d7fe547e59b118f5297afe8b1334ec77d8818f5f350cf1e17112f75",
+        "observedProjectionSource": {
+          "tag": "semantic-projection",
+          "targetEntrypointSequence": [
+            "packages/character-creation-runtime/src/index.ts#createCharacterDraft",
+            "packages/character-creation-runtime/src/index.ts#fillCreationHoles",
+            "packages/character-creation-runtime/src/index.ts#discoverCreationHoles",
+            "packages/character-creation-runtime/src/index.ts#finalizeCharacterDraft"
+          ],
+          "semanticProjectionSource": "public character creation reducer qState observed from fillCreationHoles rejected result for valid unsupported class equipment choice",
+          "targetPublicApiPath": "packages/character-creation-runtime/src/index.ts#fillCreationHoles"
+        },
+        "qntAcceptance": {
+          "tag": "qnt-semantic",
+          "ownerPath": "packages/character-creation-runtime/character-creation-runtime-slice.qnt"
+        },
+        "checkedTargetStateFields": [
+          "CreationBatchFillResult.tag=rejected",
+          "CreationBatchFillResult.issues includes illegalFill unsupportedChoice for Class Equipment hole",
+          "CreationBatchFillResult.issues excludes illegalBatch entries",
+          "CharacterDraft.revision unchanged at 1",
+          "CharacterDraft.selections.choices excludes class_equipment_choice",
+          "CreationBatchFillResult.holes equals discoverCreationHoles(original draft)",
+          "CreationBatchFillResult.finalization equals finalizeCharacterDraft(original draft)"
+        ]
+      },
+      "result": { "tag": "pass" }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+      "qntFileSha256": "4d75053e9c7ecd7e89a8299349905c7f06207870cbe245a8a7f166b52fe6aa34",
+      "branchFamily": "step",
+      "branchAction": "doRejectUnsupportedClassEquipment",
+      "observedActionTaken": "doRejectUnsupportedClassEquipment",
+      "harnessTestPath": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "deterministic-rejection-contract action=doRejectUnsupportedClassEquipment projection=qRoute",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "6daaa69799169faebbf6908254b8d1c1df089cc8c8b3b7559838a32bccd39f63",
+        "observedProjectionSha256": "6daaa69799169faebbf6908254b8d1c1df089cc8c8b3b7559838a32bccd39f63",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "packages/character-creation-runtime/src/index.ts#createCharacterDraft",
+            "packages/character-creation-runtime/src/index.ts#fillCreationHoles",
+            "packages/character-creation-runtime/src/index.ts#discoverCreationHoles"
+          ],
+          "routeEventSource": "public reducer replay observed from character creation rejected fill batch route harness for valid unsupported class equipment choice",
+          "reducerPublicApiPath": "packages/character-creation-runtime/src/index.ts#fillCreationHoles"
+        },
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt"
+        },
+        "checkedTargetStateFields": [
+          "RouteApplyCreationFillBatch.subject=CreationFillBatchRouteSubject",
+          "RouteApplyCreationFillBatch.owner=CreationSupportProfileAdmissionOwner",
+          "RouteDiscoverCreationHoles.subject=CreationOptionDiscoveryRouteSubject",
+          "RouteDiscoverCreationHoles.owner=CreationHoleFrontierOwner"
+        ]
+      },
+      "result": { "tag": "pass" }
+    }
+  ]
+}

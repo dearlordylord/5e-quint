@@ -1,3 +1,13 @@
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE glyph_of_warding
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE glyph_of_warding
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE glyph_of_warding
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION glyph_of_warding
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-GLYPH-STORED-SUMMON-OBJECT-PLACEMENT glyph_of_warding
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-GLYPH-STORED-REMAINING-CONCENTRATION glyph_of_warding
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-GLYPH-STORED-AREA-ONGOING-CONCENTRATION glyph_of_warding
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-GLYPH-STORED-AREA-CONTROL-CONCENTRATION glyph_of_warding
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-GLYPH-STORED-SINGLE-CREATURE-ACTIVE-EFFECT-CONCENTRATION glyph_of_warding
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-GLYPH-STORED-SELF-TRANSFORMATION-CONCENTRATION glyph_of_warding
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE glyph_of_warding
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE glyph_of_warding
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE glyph_of_warding
@@ -8,6 +18,16 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GLYPH-STORED-AREA-CONTROL-CONCENTRATION glyph_of_warding
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GLYPH-STORED-SINGLE-CREATURE-ACTIVE-EFFECT-CONCENTRATION glyph_of_warding
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-GLYPH-STORED-SELF-TRANSFORMATION-CONCENTRATION glyph_of_warding
+// UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE glyph_of_warding doReplayGlyphDurableOccurrence
+// UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-GLYPH-EXPLOSIVE-RUNE-RELEASE glyph_of_warding doReplayGlyphExplosiveRuneRelease
+// UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-GLYPH-STORED-SPELL-RELEASE glyph_of_warding doReplayGlyphStoredSpellRelease
+// UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-GLYPH-STORED-CONCENTRATION glyph_of_warding doReplayGlyphStoredConcentration
+// UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-GLYPH-STORED-SUMMON-OBJECT-PLACEMENT glyph_of_warding doReplayGlyphStoredSummonObjectPlacement
+// UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-GLYPH-STORED-REMAINING-CONCENTRATION glyph_of_warding doReplayGlyphStoredRemainingConcentration
+// UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-GLYPH-STORED-AREA-ONGOING-CONCENTRATION glyph_of_warding doReplayGlyphStoredAreaOngoingConcentration
+// UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-GLYPH-STORED-AREA-CONTROL-CONCENTRATION glyph_of_warding doReplayGlyphStoredAreaControlConcentration
+// UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-GLYPH-STORED-SINGLE-CREATURE-ACTIVE-EFFECT-CONCENTRATION glyph_of_warding doReplayGlyphStoredSingleCreatureActiveEffectConcentration
+// UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-GLYPH-STORED-SELF-TRANSFORMATION-CONCENTRATION glyph_of_warding doReplayGlyphStoredSelfTransformationConcentration
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-glyph-durable-occurrence spell.invocation-glyph-explosive-rune-release spell.invocation-glyph-stored-spell-release spell.invocation-glyph-stored-concentration-full-duration spell.invocation-glyph-stored-summon-object-placement
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.GLYPH_DURABLE_OCCURRENCE_LIFECYCLE BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -97,6 +117,7 @@ import {
   unitLibrary,
   webUnitId,
 } from "./unit-profile-admission-catalog-support.ts";
+import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.ts";
 import {
   attackRollFill,
   interruptDecisionFill,
@@ -4460,4 +4481,121 @@ function testBattleSpellEffectLevel(value: number) {
     throw new Error(`Expected ${value} to be a valid battle spell level.`);
   }
   return parsed;
+}
+
+defineSelectedIdentityReplayWitness({
+  describeLabel: "Glyph of Warding selected identity replay",
+  taskId: "L3-FOLLOWUP-GLYPH-DURABLE-OCCURRENCE",
+  initialProjection: {
+    unitId: glyphOfWardingUnitId,
+    procedure: "initial",
+    profileAdmitted: false,
+  },
+  units: [
+    {
+      unitId: glyphOfWardingUnitId,
+      procedures: [
+        glyphReplayProcedure(
+          "doReplayGlyphDurableOccurrence",
+          "glyphDurableOccurrence",
+          () =>
+            glyphDurableOccurrenceProfileForSpell(
+              spellRecord(glyphOfWardingUnitId),
+            ) !== null,
+        ),
+        glyphReplayProcedure(
+          "doReplayGlyphExplosiveRuneRelease",
+          "glyphExplosiveRuneRelease",
+          () =>
+            glyphExplosiveRuneReleaseProfileForSpell(
+              spellRecord(glyphOfWardingUnitId),
+            ) !== null,
+        ),
+        glyphReplayProcedure(
+          "doReplayGlyphStoredSpellRelease",
+          "glyphStoredSpellRelease",
+          () =>
+            glyphStoredSpellReleaseProfileForSpell(
+              spellRecord(glyphOfWardingUnitId),
+            ) !== null,
+        ),
+        glyphReplayProcedure(
+          "doReplayGlyphStoredConcentration",
+          "glyphStoredConcentrationFullDuration",
+          () =>
+            glyphStoredSpellReleaseProfileForSpell(
+              spellRecord(glyphOfWardingUnitId),
+            )?.release.concentration.ifStoredSpellRequiresConcentration ===
+            "lasts_full_duration",
+        ),
+        glyphReplayProcedure(
+          "doReplayGlyphStoredSummonObjectPlacement",
+          "glyphStoredSummonObjectPlacement",
+          () =>
+            storedSpellInvocation(
+              spiritualWeaponUnitId,
+              2,
+              "spiritualWeaponAttackProxy",
+            ).procedure === "spiritualWeaponAttackProxy",
+        ),
+        glyphReplayProcedure(
+          "doReplayGlyphStoredRemainingConcentration",
+          "glyphStoredRemainingConcentration",
+          () =>
+            storedSpellInvocation(mindSpikeUnitId, 2, "saveGatedDamage")
+              .procedure === "saveGatedDamage",
+        ),
+        glyphReplayProcedure(
+          "doReplayGlyphStoredAreaOngoingConcentration",
+          "glyphStoredAreaOngoingConcentration",
+          () =>
+            storedSpellInvocation(fogCloudUnitId, 1, "fogCloudObscurement")
+              .procedure === "fogCloudObscurement",
+        ),
+        glyphReplayProcedure(
+          "doReplayGlyphStoredAreaControlConcentration",
+          "glyphStoredAreaControlConcentration",
+          () =>
+            storedSpellInvocation(hypnoticPatternUnitId, 3, "hypnoticPattern")
+              .procedure === "hypnoticPattern",
+        ),
+        glyphReplayProcedure(
+          "doReplayGlyphStoredSingleCreatureActiveEffectConcentration",
+          "glyphStoredSingleCreatureActiveEffectConcentration",
+          () =>
+            storedSpellInvocation(hasteUnitId, 3, "hastePositive").procedure ===
+            "hastePositive",
+        ),
+        glyphReplayProcedure(
+          "doReplayGlyphStoredSelfTransformationConcentration",
+          "glyphStoredSelfTransformationConcentration",
+          () =>
+            storedSpellInvocation(alterSelfUnitId, 2, "selfTransformationMode")
+              .procedure === "selfTransformationMode",
+        ),
+      ],
+    },
+  ],
+});
+
+function glyphReplayProcedure(
+  actionName: `do${string}`,
+  procedure: string,
+  admit: () => boolean,
+) {
+  const projection = {
+    unitId: glyphOfWardingUnitId,
+    procedure,
+    profileAdmitted: true,
+  };
+  return {
+    actionName,
+    projectionAfter: projection,
+    discover: () => {
+      if (!admit()) {
+        throw new Error(`Expected selected Glyph replay for ${procedure}.`);
+      }
+      return projection;
+    },
+  };
 }

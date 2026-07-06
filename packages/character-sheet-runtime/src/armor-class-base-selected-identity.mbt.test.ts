@@ -1,6 +1,6 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt armor-class-base-formula barbarian_unarmored_defense monk_unarmored_defense
-// UNIT-IDENTITY-MBT-REPLAY: armor-class-base-formula barbarian_unarmored_defense doSelectBarbarianUnarmoredDefense doSelectBarbarianUnarmoredDefenseWithShield
-// UNIT-IDENTITY-MBT-REPLAY: armor-class-base-formula monk_unarmored_defense doSelectMonkUnarmoredDefense
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay armor-class-base-formula barbarian_unarmored_defense monk_unarmored_defense
+// UNIT-IDENTITY-REPLAY: armor-class-base-formula barbarian_unarmored_defense doSelectBarbarianUnarmoredDefense doSelectBarbarianUnarmoredDefenseWithShield
+// UNIT-IDENTITY-REPLAY: armor-class-base-formula monk_unarmored_defense doSelectMonkUnarmoredDefense
 // KERNEL-COVERAGE: parity-witness SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE
 import * as path from "node:path";
 
@@ -306,7 +306,7 @@ const armorFormulaReplays = [
   },
 ] as const satisfies ReadonlyArray<ArmorFormulaReplay>;
 
-describe("Character Sheet Armor Class base selected identity MBT", () => {
+describe("Character Sheet Armor Class base selected identity replay", () => {
   it("replays selected Unit identities deterministically", async () => {
     for (const replay of selectedUnitIdentityReplays) {
       const replayedActions =

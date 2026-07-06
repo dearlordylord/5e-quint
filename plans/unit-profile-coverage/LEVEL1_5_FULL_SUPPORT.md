@@ -17,7 +17,7 @@ Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
 | Strict runtime/profile support | 165/262 (63%) |
 | Strict target closure | 262/262 (100%) |
 | Selected identity readiness | 191/191 (100%) |
-| Diagnostic product readiness | 769/770 (99.9%) |
+| Diagnostic product readiness | 770/770 (100%) |
 | SRD authored product readiness | 115/115 (100%) |
 | Rules-kernel profile join | 109/109 (100%) |
 | Rules-kernel covered profile join | 109/109 (100%) |
@@ -25,7 +25,7 @@ Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
-The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 769/770 (99.9%) while the claim gate reports **pass** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
+The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 770/770 (100%) while the claim gate reports **pass** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
 
 ### Diagnostic Product Readiness Accounting
 
@@ -33,13 +33,12 @@ Diagnostic product readiness keeps lower-layer planning pressure visible. Rows i
 
 | Status | Rows |
 | --- | ---: |
-| accepted | 494 |
+| accepted | 495 |
 | accepted-no-battle-effect | 275 |
-| owner-evidence-required | 1 |
 
 ### Selected Identity Replay Accounting
 
-This is the selected-identity gate layer for the strict denominator. `witness-present` means a concrete selected Unit identity reaches an MBT/QNT replay owner; `not-applicable` is an explicit whole-claim non-applicable disposition; `not-required` is outside this gate denominator rather than a green row. `missing-witness-deferred-not-applicable` means the claim still lacks a replay witness for its supported runtime portion while the deferred closed portion is explicitly outside selected-identity replay.
+This is the selected-identity gate layer for the strict denominator. `witness-present` means a concrete selected Unit identity reaches a selected identity replay owner; `not-applicable` is an explicit whole-claim non-applicable disposition; `not-required` is outside this gate denominator rather than a green row. `missing-witness-deferred-not-applicable` means the claim still lacks a replay witness for its supported runtime portion while the deferred closed portion is explicitly outside selected-identity replay.
 
 | Selected identity status | Rows |
 | --- | ---: |

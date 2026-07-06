@@ -36,6 +36,15 @@ module damageComponentAdjustments {
     secondAmount: int,
   }
 
+  type DamagePairScalarReductionAllocation =
+    | DamagePairNoDamage
+    | DamagePairReductionApplied({
+      firstBaseReduction: int,
+      secondBaseReduction: int,
+      firstExtraReduction: int,
+      secondExtraReduction: int,
+    })
+
   pure def emptyDamageByType: DamageByType = Map(
     AcidDamage -> 0,
     BludgeoningDamage -> 0,
@@ -230,45 +239,53 @@ module damageComponentAdjustments {
     else if (reduction > total) total
     else reduction
 
-  pure def largestRemainderBonusGoesToFirst(
+  pure def damagePairScalarReductionAllocation(
     firstAmount: int,
     secondAmount: int,
-    reduction: int
-  ): bool = {
-    val total = firstAmount + secondAmount
-    val firstProduct = firstAmount * reduction
-    val secondProduct = secondAmount * reduction
-    val firstBase = firstProduct / total
-    val secondBase = secondProduct / total
-    val firstRemainder = firstProduct - (firstBase * total)
-    val secondRemainder = secondProduct - (secondBase * total)
-    firstRemainder >= secondRemainder
+    rawReduction: int
+  ): DamagePairScalarReductionAllocation = {
+    val first = nonnegative(firstAmount)
+    val second = nonnegative(secondAmount)
+    val total = first + second
+    if (total == 0) DamagePairNoDamage
+    else {
+      val reduction = cappedReduction(total, rawReduction)
+      val firstProduct = first * reduction
+      val secondProduct = second * reduction
+      val firstBase = firstProduct / total
+      val secondBase = secondProduct / total
+      val baseReduction = firstBase + secondBase
+      val extraReduction = reduction - baseReduction
+      val firstRemainder = firstProduct - (firstBase * total)
+      val secondRemainder = secondProduct - (secondBase * total)
+      val firstGetsExtra = extraReduction > 0 and firstRemainder >= secondRemainder
+      val secondGetsExtra = extraReduction > 0 and not(firstGetsExtra)
+      DamagePairReductionApplied({
+        firstBaseReduction: firstBase,
+        secondBaseReduction: secondBase,
+        firstExtraReduction: if (firstGetsExtra) 1 else 0,
+        secondExtraReduction: if (secondGetsExtra) 1 else 0,
+      })
+    }
   }
 
   pure def damagePairAfterScalarReduction(pair: DamagePair, rawReduction: int): DamagePair = {
     val first = nonnegative(pair.firstAmount)
     val second = nonnegative(pair.secondAmount)
-    val total = first + second
-    if (total == 0) {
-      firstType: pair.firstType,
-      firstAmount: 0,
-      secondType: pair.secondType,
-      secondAmount: 0,
-    } else {
-      val reduction = cappedReduction(total, rawReduction)
-      val firstBase = (first * reduction) / total
-      val secondBase = (second * reduction) / total
-      val baseReduction = firstBase + secondBase
-      val extraReduction = reduction - baseReduction
-      val firstGetsExtra =
-        extraReduction > 0 and largestRemainderBonusGoesToFirst(first, second, reduction)
-      val secondGetsExtra = extraReduction > 0 and not(firstGetsExtra)
-      {
-        firstType: pair.firstType,
-        firstAmount: first - firstBase - (if (firstGetsExtra) 1 else 0),
-        secondType: pair.secondType,
-        secondAmount: second - secondBase - (if (secondGetsExtra) 1 else 0),
-      }
+    val allocation = damagePairScalarReductionAllocation(first, second, rawReduction)
+    match allocation {
+      | DamagePairNoDamage => {
+          firstType: pair.firstType,
+          firstAmount: 0,
+          secondType: pair.secondType,
+          secondAmount: 0,
+        }
+      | DamagePairReductionApplied(data) => {
+          firstType: pair.firstType,
+          firstAmount: first - data.firstBaseReduction - data.firstExtraReduction,
+          secondType: pair.secondType,
+          secondAmount: second - data.secondBaseReduction - data.secondExtraReduction,
+        }
     }
   }
 

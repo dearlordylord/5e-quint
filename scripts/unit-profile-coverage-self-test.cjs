@@ -6,11 +6,11 @@ const {
   deterministicAdmissionProjectionEvidenceTag,
   executableProfileKinds,
   mcpScenarioWitnessKind,
-  selectedIdentityMbtEvidenceTag,
+  selectedIdentityReplayEvidenceTag,
 } = require("./unit-profile-coverage-config.cjs");
 const {
   extractDriverSchemaActionNames,
-  extractMbtFixtureActionSet,
+  extractReplayQntActionSet,
   extractSelectedUnitIdentityReplays,
 } = require("./unit-profile-coverage-claim-scan.cjs");
 const {
@@ -473,8 +473,7 @@ function mindSpikeDeferredSelectedIdentityUnit(withSelectedIdentityEvidence) {
           mechanic:
             "failed-save same-plane location knowledge, Hidden prevention, and observer-scoped Invisible benefit denial",
           battleReadinessClosure: {
-            kind:
-              battleReadinessClosureKind.outsideRuntimePresentationExploration,
+            kind: battleReadinessClosureKind.outsideRuntimePresentationExploration,
             owner: "runtime-detached table/perception/knowledge owner",
             reason:
               "The promoted battle runtime does not store duplicate table/perception knowledge state.",
@@ -491,7 +490,7 @@ function mindSpikeDeferredSelectedIdentityUnit(withSelectedIdentityEvidence) {
     evidence: withSelectedIdentityEvidence
       ? [
           {
-            tag: selectedIdentityMbtEvidenceTag,
+            tag: selectedIdentityReplayEvidenceTag,
             taskId: mindSpikeFixture.selectedIdentityTaskId,
             ownerPath: mindSpikeFixture.selectedIdentityOwnerPath,
           },
@@ -512,7 +511,7 @@ function mindSpikeDeferredSelectedIdentityReadinessRow(
     claimTag: unit.claim.tag,
     selectedIdentity: selectedIdentityEvidenceStatus(
       unit,
-      selectedIdentityMbtEvidenceTag,
+      selectedIdentityReplayEvidenceTag,
     ),
     sourceRecordPath: unit.sourceRecordPath,
   };
@@ -604,7 +603,7 @@ function assertSelectedIdentityMetricExcludesWholeClaimNotApplicable() {
         {
           unitId: "fixture_identity_replay",
           evidence: {
-            tag: selectedIdentityMbtEvidenceTag,
+            tag: selectedIdentityReplayEvidenceTag,
             taskId: "FIXTURE-SELECTED-IDENTITY",
             ownerPath: "fixture/identity-replay.mbt.test.ts",
           },
@@ -617,10 +616,10 @@ function assertSelectedIdentityMetricExcludesWholeClaimNotApplicable() {
     {
       executableProfileKinds,
       deterministicAdmissionProjectionEvidenceTag,
-      selectedIdentityMbtEvidenceTag,
+      selectedIdentityReplayEvidenceTag,
     },
   );
-  const metric = matrix.metrics.selectedIdentityMbtCoverage;
+  const metric = matrix.metrics.selectedIdentityReplayCoverage;
   if (
     metric.numerator !== 1 ||
     metric.denominator !== 1 ||
@@ -1122,7 +1121,7 @@ function runSelfTest(root) {
           },
         ],
       },
-      selectedIdentityMbtEvidenceTag,
+      selectedIdentityReplayEvidenceTag,
       unitMatrix: { units: [] },
     });
     const incompleteScope = requireSelfTestScope(ultraGoldenGate, "level-1");
@@ -1200,8 +1199,7 @@ function runSelfTest(root) {
     const completeLevel13ScopeId = "level-1-3";
     const completeLevel13ObligationId = "BATTLE.FIXTURE.COMPLETE";
     const completeLevel13McpFlowId = "fixture-covered-flow";
-    const completeLevel13McpTaskId =
-      "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED";
+    const completeLevel13McpTaskId = "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED";
     const completeLevel13Report = fullSupportReportFixture({
       scopeTitle: "Fixture complete level 1-3",
       claimGate: {
@@ -1257,8 +1255,7 @@ function runSelfTest(root) {
             flowId: completeLevel13McpFlowId,
             scopeIds: [completeLevel13ScopeId],
             scenarioId: "fixture-covered-scenario",
-            ownerPath:
-              "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+            ownerPath: "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
             testPath: "packages/mcp/src/mcp-protocol.test.ts",
             taskId: completeLevel13McpTaskId,
             summary: "fixture MCP scenario evidence",
@@ -1295,7 +1292,7 @@ function runSelfTest(root) {
           },
         ],
       },
-      selectedIdentityMbtEvidenceTag,
+      selectedIdentityReplayEvidenceTag,
       unitMatrix: { units: [] },
     });
     const completeLevel13PassScope = requireSelfTestScope(
@@ -1329,9 +1326,8 @@ function runSelfTest(root) {
         );
       }
     }
-    const renderedCompleteLevel13Gate = renderUltraGoldenGate(
-      completeLevel13Gate,
-    );
+    const renderedCompleteLevel13Gate =
+      renderUltraGoldenGate(completeLevel13Gate);
     for (const expectedRow of [
       "Ultra-golden gate: **pass**.",
       `| ${completeLevel13ScopeId} | pass | 4/4 | 1 |`,
@@ -1394,7 +1390,7 @@ function runSelfTest(root) {
       "});",
       "",
     ].join("\n");
-    const fixtureActionSet = extractMbtFixtureActionSet(
+    const fixtureActionSet = extractReplayQntActionSet(
       root,
       testText,
       testPath,
@@ -1405,7 +1401,7 @@ function runSelfTest(root) {
       [],
       {
         unitEvidence: [],
-        unitIdentityMbtReplays: [
+        unitIdentityReplays: [
           {
             ownerPath: "fixture/rule-core-features.mbt.test.ts",
             line: 1,
@@ -1413,6 +1409,31 @@ function runSelfTest(root) {
             unitId: "fixture_unit",
             actionNames: ["doDriverOnly"],
             declaredActions: extractDriverSchemaActionNames(testText),
+          },
+          {
+            ownerPath: "fixture/rule-core-features.mbt.test.ts",
+            line: 2,
+            taskId: "QMBT10",
+            unitId: "fixture_unit",
+            actionNames: ["doReachableAction"],
+            declaredActions: extractDriverSchemaActionNames(testText),
+          },
+          {
+            ownerPath: "fixture/rule-core-features.mbt.test.ts",
+            line: 3,
+            taskId: "QMBT10",
+            unitId: "fixture_unit",
+            actionNames: ["doReachableAction", "doDriverOnly"],
+            declaredActions: extractDriverSchemaActionNames(testText),
+          },
+        ],
+        unitIdentityQntReplays: [
+          {
+            ownerPath: "fixture/rule-core-features.mbt.test.ts",
+            line: 1,
+            taskId: "QMBT10",
+            unitId: "fixture_unit",
+            actionNames: ["doDriverOnly"],
             stepActionNames: fixtureActionSet.actionNames,
             stepDescription: fixtureActionSet.description,
           },
@@ -1422,7 +1443,6 @@ function runSelfTest(root) {
             taskId: "QMBT10",
             unitId: "fixture_unit",
             actionNames: ["doReachableAction"],
-            declaredActions: extractDriverSchemaActionNames(testText),
             stepActionNames: fixtureActionSet.actionNames,
             stepDescription: fixtureActionSet.description,
           },
@@ -1432,7 +1452,6 @@ function runSelfTest(root) {
             taskId: "QMBT10",
             unitId: "fixture_unit",
             actionNames: ["doReachableAction", "doDriverOnly"],
-            declaredActions: extractDriverSchemaActionNames(testText),
             stepActionNames: fixtureActionSet.actionNames,
             stepDescription: fixtureActionSet.description,
           },
@@ -1452,20 +1471,20 @@ function runSelfTest(root) {
           unitId: "fixture_unit",
           evidence: {
             ownerPath: "fixture/rule-core-features.mbt.test.ts",
-            tag: selectedIdentityMbtEvidenceTag,
+            tag: selectedIdentityReplayEvidenceTag,
             taskId: "QMBT10",
           },
         },
       ],
     );
-    const expected = `fixture/rule-core-features.mbt.test.ts:1 cites Unit identity MBT replay action doDriverOnly that is not reachable from ${toRepoPath(root, specPath)} step.`;
+    const expected = `fixture/rule-core-features.mbt.test.ts:1 cites Unit identity QNT replay action doDriverOnly that is not reachable from ${toRepoPath(root, specPath)} step.`;
     if (!issues.includes(expected)) {
       fail(
         `Self-test failed: expected unreachable Quint step action issue, got ${JSON.stringify(issues)}`,
       );
     }
     const actionMismatchExpected =
-      "fixture/rule-core-features.mbt.test.ts:3 claims selected identity MBT replay actions for fixture_unit that do not match deterministic replay data.";
+      "fixture/rule-core-features.mbt.test.ts:3 claims selected identity replay actions for fixture_unit that do not match deterministic replay data.";
     if (!issues.includes(actionMismatchExpected)) {
       fail(
         `Self-test failed: expected deterministic replay action mismatch issue, got ${JSON.stringify(issues)}`,
@@ -1474,11 +1493,82 @@ function runSelfTest(root) {
     const boundaryIssue = issues.find(
       (issue) =>
         issue ===
-        "fixture/rule-core-features.mbt.test.ts:2 claims selected identity MBT replay actions for fixture_unit that do not match deterministic replay data.",
+        "fixture/rule-core-features.mbt.test.ts:2 claims selected identity replay actions for fixture_unit that do not match deterministic replay data.",
     );
     if (boundaryIssue !== undefined) {
       fail(
         `Self-test failed: expected matching deterministic replay action marker to pass, got ${JSON.stringify(issues)}`,
+      );
+    }
+    const splitReplayOwnerPath = path.join(
+      tempDir,
+      "packages/battle-runtime/src/split-selected-identity.test.ts",
+    );
+    const splitReplayDataPath = path.join(
+      tempDir,
+      "packages/battle-runtime/src/split-selected-identity.replay-data.test-support.ts",
+    );
+    const splitReplayOwnerText = [
+      `// UNIT-IDENTITY-${"REPLAY"}: QMBT10 fixture_unit doMarkerOnly`,
+      'import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.ts";',
+      'import { splitSelectedIdentityReplay } from "./split-selected-identity.replay-data.test-support.ts";',
+      "defineSelectedIdentityReplayWitness(splitSelectedIdentityReplay);",
+      "",
+    ].join("\n");
+    const splitReplayDataText = [
+      "export const splitSelectedIdentityReplay = {",
+      '  describeLabel: "Split selected identity replay",',
+      '  taskId: "QMBT10",',
+      '  initialProjection: { lastResult: "init" },',
+      "  units: [{",
+      '    unitId: "fixture_unit",',
+      "    procedures: [{",
+      '      actionName: "doActualImportedReplay",',
+      '      projectionAfter: { lastResult: "actual" },',
+      "      discover: () => undefined,",
+      "    }],",
+      "  }],",
+      "};",
+      "",
+    ].join("\n");
+    fs.mkdirSync(path.dirname(splitReplayOwnerPath), { recursive: true });
+    fs.writeFileSync(splitReplayOwnerPath, splitReplayOwnerText);
+    fs.writeFileSync(splitReplayDataPath, splitReplayDataText);
+    const splitDeclaredActions = extractDriverSchemaActionNames(
+      splitReplayOwnerText,
+      splitReplayOwnerPath,
+    );
+    if (splitDeclaredActions.has("doMarkerOnly")) {
+      fail(
+        `Self-test failed: marker-only action was accepted as replay data, got ${JSON.stringify([...splitDeclaredActions])}`,
+      );
+    }
+    if (!splitDeclaredActions.has("doActualImportedReplay")) {
+      fail(
+        `Self-test failed: imported replay-data action was not scanned, got ${JSON.stringify([...splitDeclaredActions])}`,
+      );
+    }
+    const splitRows = extractSelectedUnitIdentityReplays(
+      tempDir,
+      splitReplayOwnerText,
+      splitReplayOwnerPath,
+    );
+    if (splitRows.length !== 0) {
+      fail(
+        `Self-test failed: marker-only split replay row should not satisfy deterministic replay data, got ${JSON.stringify(splitRows)}`,
+      );
+    }
+    const splitWrongUnitOwnerText = splitReplayOwnerText
+      .replace("doMarkerOnly", "doActualImportedReplay")
+      .replace("fixture_unit", "claimed_other_unit");
+    const splitWrongUnitRows = extractSelectedUnitIdentityReplays(
+      tempDir,
+      splitWrongUnitOwnerText,
+      splitReplayOwnerPath,
+    );
+    if (splitWrongUnitRows.length !== 0) {
+      fail(
+        `Self-test failed: split replay marker with matching action but wrong Unit id should not satisfy deterministic replay data, got ${JSON.stringify(splitWrongUnitRows)}`,
       );
     }
     const reachableOwnerPath = path.join(
@@ -1490,10 +1580,11 @@ function runSelfTest(root) {
       "packages/battle-runtime/src/unreachable-selected-identity.mbt.test.ts",
     );
     const selectedReplayText = [
+      'const fixtureUnitId = "fixture_unit";',
       "const selectedUnitIdentityReplays = [",
       "  {",
       '    taskId: "QMBT10",',
-      '    unitId: "fixture_unit",',
+      "    unitId: fixtureUnitId,",
       '    actions: ["doReachableAction"],',
       "    sequences: [],",
       "  },",
@@ -1524,6 +1615,11 @@ function runSelfTest(root) {
         `Self-test failed: expected selected identity owner to reach production runtime entrypoints, got ${JSON.stringify(reachableRows)}`,
       );
     }
+    if (reachableRows[0]?.unitId !== "fixture_unit") {
+      fail(
+        `Self-test failed: expected const-backed selected identity Unit id to resolve, got ${JSON.stringify(reachableRows)}`,
+      );
+    }
     if (unreachableRows[0]?.reducerReachability?.reachable !== false) {
       fail(
         `Self-test failed: expected selected identity owner without runtime imports to fail reachability, got ${JSON.stringify(unreachableRows)}`,
@@ -1535,7 +1631,7 @@ function runSelfTest(root) {
       [],
       {
         unitEvidence: [],
-        unitIdentityMbtReplays: [],
+        unitIdentityReplays: [],
         selectedUnitIdentityReplays: unreachableRows.map((replay) => ({
           ownerPath:
             "packages/battle-runtime/src/unreachable-selected-identity.mbt.test.ts",
@@ -1554,7 +1650,7 @@ function runSelfTest(root) {
           evidence: {
             ownerPath:
               "packages/battle-runtime/src/unreachable-selected-identity.mbt.test.ts",
-            tag: selectedIdentityMbtEvidenceTag,
+            tag: selectedIdentityReplayEvidenceTag,
             taskId: "QMBT10",
           },
         },
@@ -1607,7 +1703,7 @@ function runSelfTest(root) {
       ],
       {
         unitEvidence: [],
-        unitIdentityMbtReplays: [],
+        unitIdentityReplays: [],
         selectedUnitIdentityReplays: [],
         selectedUnitIdentityReplayConsumers: [],
       },
@@ -1664,7 +1760,7 @@ function runSelfTest(root) {
       ],
       {
         unitEvidence: [],
-        unitIdentityMbtReplays: [],
+        unitIdentityReplays: [],
         selectedUnitIdentityReplays: [],
         selectedUnitIdentityReplayConsumers: [],
       },
@@ -1721,7 +1817,7 @@ function runSelfTest(root) {
       scannedClaims: {
         profileClaims: [],
         unitEvidence: [],
-        unitIdentityMbtReplays: [],
+        unitIdentityReplays: [],
         selectedUnitIdentityReplays: [],
         selectedUnitIdentityReplayConsumers: [],
       },
@@ -1780,7 +1876,7 @@ function runSelfTest(root) {
       scannedClaims: {
         profileClaims: [],
         unitEvidence: [],
-        unitIdentityMbtReplays: [],
+        unitIdentityReplays: [],
         selectedUnitIdentityReplays: [],
         selectedUnitIdentityReplayConsumers: [],
       },
@@ -1832,7 +1928,8 @@ function runSelfTest(root) {
       ],
       rulesKernelProfileJoin,
     );
-    const fixtureProfileGap = rulesKernelSupportedUnitJoin.units[0]?.profiles[0];
+    const fixtureProfileGap =
+      rulesKernelSupportedUnitJoin.units[0]?.profiles[0];
     if (
       fixtureProfileGap?.joinStatus !== "unmapped" ||
       fixtureProfileGap.followUpTaskIds?.[0] !==
@@ -2068,7 +2165,7 @@ function runSelfTest(root) {
         {
           unitId: "",
           evidence: {
-            tag: selectedIdentityMbtEvidenceTag,
+            tag: selectedIdentityReplayEvidenceTag,
             taskId: "B2",
             ownerPath: "fixture/selected.mbt.test.ts",
           },
@@ -2076,7 +2173,7 @@ function runSelfTest(root) {
         {
           unitId: "fixture_unit",
           evidence: {
-            tag: selectedIdentityMbtEvidenceTag,
+            tag: selectedIdentityReplayEvidenceTag,
             taskId: "B2",
             ownerPath: "fixture/selected.mbt.test.ts",
             note: "ambiguous optional evidence text",
@@ -2085,7 +2182,7 @@ function runSelfTest(root) {
         {
           unitId: "missing_fixture_unit",
           evidence: {
-            tag: selectedIdentityMbtEvidenceTag,
+            tag: selectedIdentityReplayEvidenceTag,
             taskId: "B2",
             ownerPath: "fixture/selected.mbt.test.ts",
           },
@@ -2109,7 +2206,7 @@ function runSelfTest(root) {
         {
           unitId: "fixture_unit",
           evidence: {
-            tag: selectedIdentityMbtEvidenceTag,
+            tag: selectedIdentityReplayEvidenceTag,
             taskId: "B2",
             ownerPath: "fixture/source.test.ts",
           },
@@ -2117,7 +2214,7 @@ function runSelfTest(root) {
         {
           unitId: "fixture_unit",
           evidence: {
-            tag: selectedIdentityMbtEvidenceTag,
+            tag: selectedIdentityReplayEvidenceTag,
             taskId: "B2",
             ownerPath: "fixture/missing-selected.mbt.test.ts",
           },
@@ -2128,7 +2225,7 @@ function runSelfTest(root) {
       scannedClaims: {
         profileClaims: [],
         unitEvidence: [],
-        unitIdentityMbtReplays: [],
+        unitIdentityReplays: [],
         selectedUnitIdentityReplays: [],
         selectedUnitIdentityReplayConsumers: [],
       },
@@ -2140,7 +2237,6 @@ function runSelfTest(root) {
       "Unit evidence references unknown Unit id missing_fixture_unit.",
       "Unit evidence for fixture_unit has unknown tag selected-identity.",
       "Unit evidence for fixture_unit ownerPath must be a repo-relative source path.",
-      "Selected identity MBT evidence for fixture_unit ownerPath must be a repo-relative .mbt.test.ts source test path.",
       "Unit evidence for fixture_unit references missing owner fixture/missing-selected.mbt.test.ts.",
     ]) {
       if (!malformedUnitEvidenceIssues.includes(expectedIssue)) {
@@ -2219,14 +2315,16 @@ function runSelfTest(root) {
                   battleReadinessClosure: {
                     kind: "outside-battle-runtime",
                     owner: "fixture self-test",
-                    reason: "The fixture closed portion has no selected identity replay entrypoint.",
+                    reason:
+                      "The fixture closed portion has no selected identity replay entrypoint.",
                   },
                 },
               ],
               selectedIdentityEvidenceDisposition: {
                 tag: "not-applicable",
                 owner: "fixture self-test",
-                reason: "The fixture closed portion has no selected identity replay entrypoint.",
+                reason:
+                  "The fixture closed portion has no selected identity replay entrypoint.",
               },
             },
           },
@@ -2242,7 +2340,7 @@ function runSelfTest(root) {
         scannedClaims: {
           profileClaims: [],
           unitEvidence: [],
-          unitIdentityMbtReplays: [],
+          unitIdentityReplays: [],
           selectedUnitIdentityReplays: [],
           selectedUnitIdentityReplayConsumers: [],
         },
@@ -2250,14 +2348,13 @@ function runSelfTest(root) {
       { selectedIdentityHardGate: true },
     );
     const missingIdentityExpected =
-      "Supported executable Unit fixture_missing_identity has no selected-identity-mbt evidence and no selectedIdentityEvidenceDisposition not-applicable classification.";
+      "Supported executable Unit fixture_missing_identity has no selected-identity-replay evidence and no selectedIdentityEvidenceDisposition not-applicable classification.";
     if (!selectedIdentityHardGateIssues.includes(missingIdentityExpected)) {
       fail(
         `Self-test failed: expected selected identity hard-gate issue ${JSON.stringify(missingIdentityExpected)}, got ${JSON.stringify(selectedIdentityHardGateIssues)}`,
       );
     }
-    const mindSpikeMissingIdentityExpected =
-      `Supported executable Unit ${mindSpikeFixture.unitId} has no selected-identity-mbt evidence and no selectedIdentityEvidenceDisposition not-applicable classification.`;
+    const mindSpikeMissingIdentityExpected = `Supported executable Unit ${mindSpikeFixture.unitId} has no selected-identity-replay evidence and no selectedIdentityEvidenceDisposition not-applicable classification.`;
     if (
       !selectedIdentityHardGateIssues.includes(mindSpikeMissingIdentityExpected)
     ) {
@@ -2316,7 +2413,7 @@ function runSelfTest(root) {
       scannedClaims: {
         profileClaims: [],
         unitEvidence: [],
-        unitIdentityMbtReplays: [],
+        unitIdentityReplays: [],
         selectedUnitIdentityReplays: [],
         selectedUnitIdentityReplayConsumers: [],
       },

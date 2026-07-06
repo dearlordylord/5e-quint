@@ -198,7 +198,18 @@ import {
   SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS,
   discoverLegendaryActionActs,
 } from "../battle-reducer.ts";
+import { battleReducerRouteEventsForDiscoveredAct } from "./reducer-route.ts";
+
 export function discoverBattleActs(
+  state: BattleState,
+): readonly AvailableBattleAct[] {
+  return withReducerRouteEvents(
+    state,
+    discoverBattleActsWithoutRouteEvents(state),
+  );
+}
+
+function discoverBattleActsWithoutRouteEvents(
   state: BattleState,
 ): readonly AvailableBattleAct[] {
   const actorId = currentActorId(state);
@@ -654,11 +665,22 @@ export function discoverBattleActs(
   acts.push(...fogCloudStrongWindDispersalActs(state, actorId));
   acts.push(...webAreaRemovalActs(state, actorId));
   acts.push(...wardingBondSeparationActs(state, actorId));
+  acts.push(...endConcentrationActs(state, actorId));
   acts.push(endTurnAct(actorId));
   acts.push(...readiedSpellReleaseActs(state, actorId));
   acts.push(...discoverLegendaryActionActs(state));
 
   return acts;
+}
+
+function withReducerRouteEvents(
+  state: BattleState,
+  acts: readonly AvailableBattleAct[],
+): readonly AvailableBattleAct[] {
+  return acts.map((act) => {
+    const routeEvents = battleReducerRouteEventsForDiscoveredAct(state, act);
+    return routeEvents === undefined ? act : { ...act, routeEvents };
+  });
 }
 
 function companionProtocolActs(
@@ -1020,6 +1042,24 @@ function endTurnAct(actorId: CombatantId): AvailableBattleAct {
     summary: "End the current combatant's turn.",
     initialHoles: [],
   };
+}
+
+function endConcentrationActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly AvailableBattleAct[] {
+  const actor = state.combatants.get(actorId);
+  if (actor === undefined || actor.concentration === null) {
+    return [];
+  }
+  return [
+    {
+      subject: { tag: "runtimeCommand", actorId, command: "endConcentration" },
+      label: "End Concentration",
+      summary: "End Concentration without spending an action.",
+      initialHoles: [],
+    },
+  ];
 }
 
 function readiedSpellReleaseActs(

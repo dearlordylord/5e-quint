@@ -4,6 +4,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT40 barbarian_fast_movement
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT44 ranger_roving
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-AUTHOR-MONK-UNARMORED-MOVEMENT monk_unarmored_movement
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection CRPI-READY-028 rogue_second_story_work
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants
 import { describe, expect, test } from "vitest";
 import {
@@ -16,11 +17,14 @@ import {
   paladinExtraAttackUnitId,
   rangerExtraAttackUnitId,
   rangerRovingUnitId,
+  rogueSecondStoryWorkUnitId,
+  partySide,
   spellCasterId,
   spellTargetId,
   unitLibrary,
 } from "./unit-profile-admission-catalog-support.ts";
 import {
+  characterCreature,
   attackRollFill,
   attackTargetFill,
   movementFill,
@@ -49,15 +53,19 @@ import {
 import {
   battlePassiveSpeedKindGrantsSupportForUnit,
   battleUnitRefWithSupportProfiles,
+  battleId,
   classLevel,
+  combatantId,
   difficultyClass,
   discoverBattleActs,
   Either,
   movementDeltaFeet,
   movementFeet,
   parseSupportedUnitFeatureProfile,
+  PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE,
   resolveBattleSubject,
   snapshotBattle,
+  startBattle,
 } from "./unit-profile-admission-test-support.ts";
 import type {
   BattleState,
@@ -67,6 +75,7 @@ import type { ClassFeatureExtraAttackActionResource } from "./battle-reducer/bat
 
 const syntheticExtraAttackCounts = [1, 2, 3] as const;
 type SyntheticExtraAttackCount = (typeof syntheticExtraAttackCounts)[number];
+const secondStoryWorkActorId = combatantId("second-story-work-rogue");
 
 describe("QMBT37 deterministic Extra Attack admission", () => {
   test.each([
@@ -826,6 +835,85 @@ describe("L12G-AUTHOR-MONK-UNARMORED-MOVEMENT deterministic admission", () => {
   });
 });
 
+describe("CRPI-READY-028 deterministic Second-Story Work admission", () => {
+  test("rogue_second_story_work is admitted as a linked Climb Speed grant", () => {
+    const unit = unitLibrary.requireUnit(rogueSecondStoryWorkUnitId);
+    const profile = parseSupportedUnitFeatureProfile(unit, [
+      { className: "rogue", level: classLevel(3) },
+    ]);
+
+    expect(
+      battleUnitRefWithSupportProfiles({
+        unitRef: { unitId: unit.id },
+        unit,
+      }),
+    ).toEqual(
+      Either.right({
+        unitId: rogueSecondStoryWorkUnitId,
+        supportProfiles: [secondStoryWorkSupportProfile()],
+      }),
+    );
+    expect(profile).toEqual(
+      expect.objectContaining({
+        kind: "passiveSpeedKindGrants",
+        unit,
+        speedKindGrants: {
+          grants: secondStoryWorkSpeedKindGrants(),
+        },
+      }),
+    );
+  });
+
+  test("Second-Story Work projects Climb Speed from current Speed without storing a second speed value", () => {
+    const state = secondStoryWorkBattle();
+    expect(snapshotBattle(state).combatants).toContainEqual(
+      expect.objectContaining({
+        combatantId: secondStoryWorkActorId,
+        movement: expect.objectContaining({
+          speedFeet: 30,
+          remainingFeet: 30,
+          speedKinds: [
+            { kind: "walk", speedFeet: 30, remainingFeet: 30 },
+            { kind: "climb", speedFeet: 30, remainingFeet: 30 },
+          ],
+        }),
+      }),
+    );
+
+    const moved = resolveBattleSubject({
+      state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: secondStoryWorkActorId,
+        command: "move",
+      },
+      fills: [
+        movementFill(secondStoryWorkMovementHole(state), {
+          speedKind: "climb",
+          movementCostFeet: 15,
+          provokedOpportunityAttacks: [],
+        }),
+      ],
+    });
+    expect(moved).toMatchObject({ tag: "resolved" });
+    if (moved.tag !== "resolved") {
+      throw new Error("Expected Second-Story Work climb Movement to resolve.");
+    }
+    expect(moved.snapshot.combatants).toContainEqual(
+      expect.objectContaining({
+        combatantId: secondStoryWorkActorId,
+        movement: expect.objectContaining({
+          spentFeet: 15,
+          speedKinds: [
+            { kind: "walk", speedFeet: 30, remainingFeet: 15 },
+            { kind: "climb", speedFeet: 30, remainingFeet: 15 },
+          ],
+        }),
+      }),
+    );
+  });
+});
+
 describe("QMBT44 deterministic Roving admission", () => {
   test("ranger_roving is admitted as passive Speed-kind grants", () => {
     const unit = unitLibrary.requireUnit(rangerRovingUnitId);
@@ -1004,14 +1092,6 @@ describe("QMBT44 deterministic Roving admission", () => {
     const adjacentUnits = [
       {
         ...unit,
-        id: "test_roving_only_climb",
-        mechanics: {
-          ...unit.mechanics,
-          parts: [speedPart, { ...specialSpeedPart, grants: [climbEffect] }],
-        },
-      },
-      {
-        ...unit,
         id: "test_roving_fixed_swim",
         mechanics: {
           ...unit.mechanics,
@@ -1047,3 +1127,70 @@ describe("QMBT44 deterministic Roving admission", () => {
     }
   });
 });
+
+function secondStoryWorkSupportProfile() {
+  return {
+    kind: PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE,
+    grants: secondStoryWorkSpeedKindGrants(),
+  } as const;
+}
+
+function secondStoryWorkSpeedKindGrants() {
+  return [{ speedKind: "climb", feet: { kind: "walkSpeed" } }] as const;
+}
+
+function secondStoryWorkBattle(): BattleState {
+  const unit = unitLibrary.requireUnit(rogueSecondStoryWorkUnitId);
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+  });
+  expect(unitRef).toEqual(
+    Either.right({
+      unitId: rogueSecondStoryWorkUnitId,
+      supportProfiles: [secondStoryWorkSupportProfile()],
+    }),
+  );
+  if (Either.isLeft(unitRef)) {
+    throw new Error(unitRef.left.message);
+  }
+
+  const result = startBattle({
+    battleId: battleId("unit-profile-second-story-work-admission"),
+    combatants: [
+      characterCreature({
+        combatantId: secondStoryWorkActorId,
+        displayName: "Second-Story Work Rogue",
+        initiative: 20,
+        side: partySide,
+        characterUnitRefs: [unitRef.right],
+        classLevels: [{ className: "rogue", level: classLevel(3) }],
+        unitFeatures: [{ unit }],
+      }),
+      characterCreature({
+        combatantId: spellTargetId,
+        displayName: "Target",
+        initiative: 10,
+        side: partySide,
+      }),
+    ],
+  });
+  expect(Either.isRight(result)).toBe(true);
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
+function secondStoryWorkMovementHole(state: BattleState) {
+  const act = discoverBattleActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.actorId === secondStoryWorkActorId &&
+      candidate.subject.command === "move",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Second-Story Work Movement act.");
+  }
+  return requireHole(act.initialHoles, "movement");
+}

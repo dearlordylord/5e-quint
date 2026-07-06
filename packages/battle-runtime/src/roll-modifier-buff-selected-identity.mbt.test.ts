@@ -1,9 +1,9 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt roll-modifier-buff bless bane guidance resistance shield_of_faith
-// UNIT-IDENTITY-MBT-REPLAY: roll-modifier-buff bless doBlessAttackAndSaveModifier
-// UNIT-IDENTITY-MBT-REPLAY: roll-modifier-buff bane doBaneFailedSavePenalty
-// UNIT-IDENTITY-MBT-REPLAY: roll-modifier-buff guidance doGuidanceSkillAbilityCheckModifier
-// UNIT-IDENTITY-MBT-REPLAY: roll-modifier-buff resistance doResistanceReducesMatchingDamage
-// UNIT-IDENTITY-MBT-REPLAY: roll-modifier-buff shield_of_faith doShieldOfFaithArmorClassBonus
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay roll-modifier-buff bless bane guidance resistance shield_of_faith
+// UNIT-IDENTITY-REPLAY: roll-modifier-buff bless doBlessAttackAndSaveModifier
+// UNIT-IDENTITY-REPLAY: roll-modifier-buff bane doBaneFailedSavePenalty
+// UNIT-IDENTITY-REPLAY: roll-modifier-buff guidance doGuidanceSkillAbilityCheckModifier
+// UNIT-IDENTITY-REPLAY: roll-modifier-buff resistance doResistanceReducesMatchingDamage
+// UNIT-IDENTITY-REPLAY: roll-modifier-buff shield_of_faith doShieldOfFaithArmorClassBonus
 // KERNEL-COVERAGE: parity-witness BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION
 import { describe, expect, it } from "vitest";
 import { Either } from "effect";
@@ -63,7 +63,7 @@ import {
   stateCheck,
   type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { damageTypeChoiceFill } from "./unit-profile-admission-spell-fill-support.ts";
 
 const rollModifierBuffSpellIds = [
@@ -134,8 +134,8 @@ if (unitCatalogResult.tag !== "ok") {
 }
 const unitLibrary = unitCatalogResult.catalog;
 
-defineSelectedIdentityWitness({
-  describeLabel: "Roll modifier buff selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Roll modifier buff selected identity replay",
   taskId: "roll-modifier-buff",
   specFile: mbtSpecPath(
     import.meta.dirname,
@@ -180,15 +180,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doBlessAttackAndSaveModifier",
-          projectionAfter: expectedProjection({
-            casterConcentrating: true,
-            primaryTargetEffectCount: 1,
-            secondaryTargetEffectCount: 1,
-            d20ModifierSign: "+",
-            d20ModifierAttackRoll: true,
-            d20ModifierSavingThrow: true,
-            lastResult: "bless",
-          }),
           discover: blessAttackAndSaveModifier,
         },
       ],
@@ -198,14 +189,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doBaneFailedSavePenalty",
-          projectionAfter: expectedProjection({
-            casterConcentrating: true,
-            primaryTargetEffectCount: 1,
-            d20ModifierSign: "-",
-            d20ModifierAttackRoll: true,
-            d20ModifierSavingThrow: true,
-            lastResult: "bane",
-          }),
           discover: baneFailedSavePenalty,
         },
       ],
@@ -215,15 +198,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doGuidanceSkillAbilityCheckModifier",
-          projectionAfter: expectedProjection({
-            casterConcentrating: true,
-            casterEffectCount: 1,
-            d20ModifierSign: "+",
-            d20ModifierAbilityCheck: true,
-            d20ModifierSkill: "stealth",
-            invalidTargetRejected: true,
-            lastResult: "guidance",
-          }),
           discover: guidanceSkillAbilityCheckModifier,
         },
       ],
@@ -233,13 +207,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doResistanceReducesMatchingDamage",
-          projectionAfter: expectedProjection({
-            casterConcentrating: true,
-            casterEffectCount: 1,
-            damageReductionType: "bludgeoning",
-            damageReductionUsed: true,
-            lastResult: "resistance",
-          }),
           discover: resistanceReducesMatchingDamage,
         },
       ],
@@ -249,12 +216,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doShieldOfFaithArmorClassBonus",
-          projectionAfter: expectedProjection({
-            casterConcentrating: true,
-            primaryTargetEffectCount: 1,
-            primaryTargetArmorClass: 12,
-            lastResult: "shieldOfFaith",
-          }),
           discover: shieldOfFaithArmorClassBonus,
         },
       ],

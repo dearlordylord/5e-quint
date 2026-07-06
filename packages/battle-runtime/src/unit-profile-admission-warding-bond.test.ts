@@ -1079,6 +1079,7 @@ function withTurnStartDamageOnTarget(state: BattleState): BattleState {
         ...target.activeEffects,
         {
           kind: "spellTurnStartDamageAndSave" as const,
+          source: "afterHitTimedDamageAndSave" as const,
           sourceSpellId: searingSmiteUnitId,
           sourceCombatantId: spellCasterId,
           damage: {

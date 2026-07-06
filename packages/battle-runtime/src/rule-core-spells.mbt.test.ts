@@ -1,17 +1,17 @@
 // RAW-COVERAGE: verification-owner:focused-mbt RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-damage-save-or-attack spell.hit-point-restoration spell.reaction-shield spell.readied-action-time-spell
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS BATTLE.SPELL.HIT_POINT_RESTORATION BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt spell-procedure-core magic_missile ray_of_frost acid_splash
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt healing-stabilization healing_word cure_wounds
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-MASS-CURE-WOUNDS mass_cure_wounds
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-MASS-HEALING-WORD mass_healing_word
-// UNIT-IDENTITY-MBT-REPLAY: spell-procedure-core magic_missile doMagicMissileNeedsAllocation doMagicMissileLow doReadySpellHold doReleaseReadiedSpell
-// UNIT-IDENTITY-MBT-REPLAY: spell-procedure-core ray_of_frost doRayOfFrostNeedsTarget doRayOfFrostNeedsAttackRoll doRayOfFrostNeedsDamageRoll doRayOfFrostMiss doRayOfFrostHit doRayOfFrostCritical
-// UNIT-IDENTITY-MBT-REPLAY: spell-procedure-core acid_splash doAcidSplashNeedsSavingThrow doAcidSplashNeedsDamageRoll doAcidSplashAllSuccess doAcidSplashOneFail
-// UNIT-IDENTITY-MBT-REPLAY: healing-stabilization healing_word doHealingWordNeedsTarget doHealingWordNeedsHealingRoll doHealingWordWounded doHealingWordZeroHp
-// UNIT-IDENTITY-MBT-REPLAY: healing-stabilization cure_wounds doCureWoundsNeedsTarget doCureWoundsNeedsHealingRoll doCureWoundsWounded
-// UNIT-IDENTITY-MBT-REPLAY: L1H-MASS-CURE-WOUNDS mass_cure_wounds doMassCureWoundsNeedsTargetList doMassCureWoundsNeedsHealingRoll doMassCureWoundsWounded
-// UNIT-IDENTITY-MBT-REPLAY: L1H-MASS-HEALING-WORD mass_healing_word doMassHealingWordNeedsTargetList doMassHealingWordNeedsHealingRoll doMassHealingWordWounded
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay spell-procedure-core magic_missile ray_of_frost acid_splash
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay healing-stabilization healing_word cure_wounds
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-MASS-CURE-WOUNDS mass_cure_wounds
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-MASS-HEALING-WORD mass_healing_word
+// UNIT-IDENTITY-REPLAY: spell-procedure-core magic_missile doMagicMissileNeedsAllocation doMagicMissileLow doReadySpellHold doReleaseReadiedSpell
+// UNIT-IDENTITY-REPLAY: spell-procedure-core ray_of_frost doRayOfFrostNeedsTarget doRayOfFrostNeedsAttackRoll doRayOfFrostNeedsDamageRoll doRayOfFrostMiss doRayOfFrostHit doRayOfFrostCritical
+// UNIT-IDENTITY-REPLAY: spell-procedure-core acid_splash doAcidSplashNeedsSavingThrow doAcidSplashNeedsDamageRoll doAcidSplashAllSuccess doAcidSplashOneFail
+// UNIT-IDENTITY-REPLAY: healing-stabilization healing_word doHealingWordNeedsTarget doHealingWordNeedsHealingRoll doHealingWordWounded doHealingWordZeroHp
+// UNIT-IDENTITY-REPLAY: healing-stabilization cure_wounds doCureWoundsNeedsTarget doCureWoundsNeedsHealingRoll doCureWoundsWounded
+// UNIT-IDENTITY-REPLAY: L1H-MASS-CURE-WOUNDS mass_cure_wounds doMassCureWoundsNeedsTargetList doMassCureWoundsNeedsHealingRoll doMassCureWoundsWounded
+// UNIT-IDENTITY-REPLAY: L1H-MASS-HEALING-WORD mass_healing_word doMassHealingWordNeedsTargetList doMassHealingWordNeedsHealingRoll doMassHealingWordWounded
 import { isDeepStrictEqual } from "node:util";
 
 import {
@@ -1484,10 +1484,73 @@ describe("rule-core Spell focused MBT", () => {
   });
 
   it(
-    "replays QCORE10 spell procedure parity through battle-runtime reducers",
+    "replays QCORE10 damage spell procedure family through battle-runtime reducers",
     async () => {
       await run({
-        spec: mbtSpecPath(import.meta.dirname, "rule-core-spells.mbt.qnt"),
+        spec: mbtSpecPath(import.meta.dirname, "rule-core-spell-damage.mbt.qnt"),
+        init: "init",
+        step: "step",
+        driver: createRuleCoreSpellDriver(),
+        backend: "typescript",
+        seed: process.env["QUINT_SEED"],
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(ruleCoreSpellDefaultMbtSteps),
+        stateCheck: spellStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "replays QCORE10 hit point restoration spell procedure family through battle-runtime reducers",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "rule-core-spell-restoration.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createRuleCoreSpellDriver(),
+        backend: "typescript",
+        seed: process.env["QUINT_SEED"],
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(ruleCoreSpellDefaultMbtSteps),
+        stateCheck: spellStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "replays QCORE10 defensive effect spell procedure family through battle-runtime reducers",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "rule-core-spell-defensive-effect.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createRuleCoreSpellDriver(),
+        backend: "typescript",
+        seed: process.env["QUINT_SEED"],
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(ruleCoreSpellDefaultMbtSteps),
+        stateCheck: spellStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    "replays QCORE10 readied response spell procedure family through battle-runtime reducers",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "rule-core-spell-readied-response.mbt.qnt",
+        ),
         init: "init",
         step: "step",
         driver: createRuleCoreSpellDriver(),

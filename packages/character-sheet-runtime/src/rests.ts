@@ -42,7 +42,10 @@ import {
   druidCircleLandAfterLongRest,
   druidWildShapeKnownFormsAfterLongRest,
 } from "./druid-features.ts";
-import { completeShortRestBenefits } from "./healing-rest-benefit.ts";
+import {
+  completeShortRestArcaneRecoveryBenefitsWithOwner,
+  completeShortRestBenefits,
+} from "./healing-rest-benefit.ts";
 import {
   characterSheetCurrentHp,
   characterSheetHitPointMaximum,
@@ -52,6 +55,7 @@ import {
   CHARACTER_SHEET_LONG_REST_BASE_TICKS,
   CHARACTER_SHEET_LONG_REST_WAIT_TICKS,
   CHARACTER_SHEET_SHORT_REST_TICKS,
+  ARCANE_RECOVERY_REST_FEATURE_TAG,
   CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE,
   MAGICAL_CUNNING_REST_FEATURE_TAG,
   characterSheetIssue,
@@ -63,6 +67,7 @@ import {
   type CharacterSheet,
   type CharacterSheetHeroicInspiration,
   type CharacterSheetIssue,
+  type CharacterSheetArcaneRecoveryRestRouteResult,
   type CharacterSheetLongRestCalendarGate,
   type CharacterSheetLongRestCompletion,
   type CharacterSheetLongRestCompletionInput,
@@ -75,6 +80,7 @@ import {
   type CharacterSheetLongRestStartTiming,
   type CharacterSheetMagicalCunningInput,
   type CharacterSheetPactSlotState,
+  type CharacterSheetRouteEvent,
   type CharacterSheetShortRestCompletion,
   type CharacterSheetShortRestCompletionInput,
   type CharacterSheetShortRestInput,
@@ -83,6 +89,9 @@ import {
   type CharacterSheetShortRestStart,
   type CharacterSheetShortRestStartInput,
   type CharacterSheetWeaponMasteryReselection,
+  type CharacterSheetWeaponMasteryReselectionAcceptedRoute,
+  type CharacterSheetWeaponMasteryReselectionRejectedRoute,
+  type CharacterSheetWeaponMasteryReselectionRouteResult,
 } from "./sheet-types.ts";
 import {
   characterSheetPactSlots,
@@ -165,6 +174,45 @@ export function completeShortRest(
     arcaneRecovery: input.arcaneRecovery,
     sorcerousRestoration: input.sorcerousRestoration,
   });
+}
+
+export function completeShortRestArcaneRecoveryWithRoute(
+  input: CharacterSheetShortRestInput & {
+    readonly arcaneRecovery: NonNullable<
+      CharacterSheetShortRestInput["arcaneRecovery"]
+    >;
+  },
+): CharacterSheetArcaneRecoveryRestRouteResult {
+  const result = completeShortRestArcaneRecoveryBenefitsWithOwner({
+    sheet: input.completion.startedRest.sheet,
+    unitLibrary: input.unitLibrary,
+    hpGate: "requiresShortRestStartHp",
+    spendHitDice: input.spendHitDice,
+    arcaneRecovery: input.arcaneRecovery,
+    sorcerousRestoration: input.sorcerousRestoration,
+  });
+  if (result.tag === "accepted") {
+    return {
+      tag: "accepted",
+      route: "arcaneRecovery",
+      sheet: result.sheet,
+      qRoute: [completeArcaneRecoverySpellSlotRestRouteEvent()],
+    };
+  }
+  if (result.owner === undefined) {
+    return {
+      tag: "rejected",
+      route: "none",
+      issue: result.issue,
+      qRoute: [],
+    };
+  }
+  return {
+    tag: "rejected",
+    route: "arcaneRecovery",
+    issue: result.issue,
+    qRoute: [rejectArcaneRecoveryRouteEvent(result.owner)],
+  };
 }
 
 export function characterSheetLongRestCalendarGate(
@@ -330,6 +378,74 @@ export function completeLongRest(
   });
 }
 
+export function completeLongRestArcaneRecoveryResetWithRoute(
+  input: CharacterSheetLongRestInput,
+): CharacterSheetArcaneRecoveryRestRouteResult {
+  const sheet = input.completion.startedRest.sheet;
+  const resetsArcaneRecovery =
+    isCharacterSheetWithSpellSlots(sheet) &&
+    sheet.restFeatureUses.some(
+      (use) => use.tag === ARCANE_RECOVERY_REST_FEATURE_TAG,
+    );
+  const result = completeLongRest(input);
+  if (Either.isRight(result)) {
+    if (!resetsArcaneRecovery) {
+      return {
+        tag: "accepted",
+        route: "none",
+        sheet: result.right,
+        qRoute: [],
+      };
+    }
+    return {
+      tag: "accepted",
+      route: "arcaneRecovery",
+      sheet: result.right,
+      qRoute: [completeArcaneRecoverySpellSlotRestRouteEvent()],
+    };
+  }
+  return {
+    tag: "rejected",
+    route: "none",
+    issue: result.left,
+    qRoute: [],
+  };
+}
+
+export function completeLongRestWeaponMasteryReselectionWithRoute(
+  input: CharacterSheetLongRestInput & {
+    readonly weaponMasteryReselections: NonNullable<
+      CharacterSheetLongRestInput["weaponMasteryReselections"]
+    >;
+  },
+): CharacterSheetWeaponMasteryReselectionRouteResult {
+  const sheet = input.completion.startedRest.sheet;
+  const reselectionBuild = characterSheetLongRestBuild(input, sheet.build);
+  if (Either.isLeft(reselectionBuild)) {
+    return {
+      tag: "rejected",
+      route: "weaponMastery",
+      issue: reselectionBuild.left,
+      qRoute: rejectedWeaponMasteryReselectionRoute(),
+    };
+  }
+  const result = completeLongRest(input);
+  if (Either.isRight(result)) {
+    return {
+      tag: "accepted",
+      route: "weaponMastery",
+      sheet: result.right,
+      qRoute: acceptedWeaponMasteryReselectionRoute(),
+    };
+  }
+  return {
+    tag: "rejected",
+    route: "none",
+    issue: result.left,
+    qRoute: [],
+  };
+}
+
 function characterSheetLongRestHitPoints(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
@@ -398,6 +514,57 @@ function isLongRestHeroicInspirationFeature(
     unit.mechanics.trigger.rest === "long" &&
     unit.mechanics.grant.kind === "heroic_inspiration"
   );
+}
+
+function completeArcaneRecoverySpellSlotRestRouteEvent(): CharacterSheetRouteEvent {
+  return {
+    kind: "completeCharacterSheetRest",
+    subject: "spellResource",
+    fill: "recoverySelection",
+    holes: [],
+    owner: "spellSlot",
+  };
+}
+
+function acceptedWeaponMasteryReselectionRoute(): CharacterSheetWeaponMasteryReselectionAcceptedRoute {
+  return [
+    {
+      kind: "retainCharacterSheetSelectedReferences",
+      subject: "selectedReferenceProjection",
+      owner: "selectedReference",
+    },
+    {
+      kind: "completeCharacterSheetRest",
+      subject: "selectedReferenceProjection",
+      fill: "projectionSelection",
+      holes: [],
+      owner: "selectedReference",
+    },
+  ];
+}
+
+function rejectedWeaponMasteryReselectionRoute(): CharacterSheetWeaponMasteryReselectionRejectedRoute {
+  return [
+    {
+      kind: "resolveCharacterSheetSubject",
+      subject: "selectedReferenceProjection",
+      fill: "projectionSelection",
+      holes: ["projectionChoice"],
+      owner: "selectedReference",
+    },
+  ];
+}
+
+function rejectArcaneRecoveryRouteEvent(
+  owner: "featureResource" | "pactSlot" | "spellSlot",
+): CharacterSheetRouteEvent {
+  return {
+    kind: "resolveCharacterSheetSubject",
+    subject: owner === "featureResource" ? "featureResource" : "spellResource",
+    fill: "recoverySelection",
+    holes: ["recoveryChoice"],
+    owner,
+  };
 }
 
 export function interruptLongRest(

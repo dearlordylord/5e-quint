@@ -1,6 +1,6 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.metamagic-cast-component-suppression
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT sorcerer_metamagic
-// UNIT-IDENTITY-MBT-REPLAY: PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT sorcerer_metamagic doResolveSubtleFalseLife doRejectSubtleFalseLifeWithoutSorceryPoints
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT sorcerer_metamagic
+// UNIT-IDENTITY-REPLAY: PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT sorcerer_metamagic doResolveSubtleFalseLife doRejectSubtleFalseLifeWithoutSorceryPoints
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_SUBTLE_COMPONENT_SUPPRESSION
 // RAW trace:
 // - .references/srd-5.2.1/Classes/Sorcerer.md#Subtle Spell: spending
@@ -11,7 +11,7 @@
 // - .references/srd-5.2.1/Spells/Gaining-and-Casting.md#Components:
 //   component requirements are canonical Spell Definition facts.
 import { resourceCount } from "@dnd/shared/types";
-import { expect } from "vitest";
+import { expect, it } from "vitest";
 
 import {
   admitSpellMetamagicApplications,
@@ -24,10 +24,18 @@ import {
   type CharacterBattleMetamagicOptionFact,
   type CharacterBattlePointPoolResourceState,
 } from "./character-battle-resources.ts";
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { damageRollFillWithGroups } from "./battle-runtime-test-support.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
 import {
+  defineDriver,
+  focusedMbtMaxSteps,
+  MBT_TEST_TIMEOUT_MS,
+  mbtSpecPath,
+  reducerRoutedMetamagicStateCheck,
+  run,
+} from "./battle-runtime-mbt-driver-kit.ts";
+import { damageRollFillWithGroups } from "./battle-runtime-test-support.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
+import {
+  barkskinUnitId,
   falseLifeUnitId,
   spellCasterId,
   unitLibrary,
@@ -36,6 +44,13 @@ import { requireHole } from "./unit-profile-admission-creature-fixture-support.t
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import { spellAct } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
+import {
+  battleReducerStartRouteEvent,
+  discoverBattleActs,
+  type AvailableBattleAct,
+  type BattleReducerRouteEvent,
+  type BattleSubject,
+} from "./index.ts";
 import {
   resolveBattleSubject,
   spellSlotInvocationRef,
@@ -55,8 +70,23 @@ type SubtleFalseLifeProjection = {
     | "unaffordableSubtleFalseLife";
 };
 
-defineSelectedIdentityWitness({
-  describeLabel: "Sorcerer Subtle Spell component suppression selected identity MBT",
+const subtleMetamagicRouteReplayDriverSchema = {
+  init: {},
+  doRouteSpellComponentProjection: {},
+  stepRouteSpellComponentProjection: {},
+} as const;
+
+type SubtleMetamagicRouteReplayProjection = {
+  readonly route: readonly BattleReducerRouteEvent[];
+};
+
+type SubtleFalseLifeAct = AvailableBattleAct & {
+  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+};
+
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel:
+    "Sorcerer Subtle Spell component suppression selected identity replay",
   taskId: "PPW-T05-SUBTLE-METAMAGIC-FOCUSED-MBT",
   specFile: mbtSpecPath(
     import.meta.dirname,
@@ -99,33 +129,70 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doResolveSubtleFalseLife",
-          projectionAfter: {
-            verbalSuppressed: true,
-            somaticSuppressed: true,
-            materialSuppressed: true,
-            materialPreserved: false,
-            sorceryPointsRemaining: 1,
-            tempHp: 11,
-            lastResult: "subtleFalseLife",
-          },
           discover: () => subtleFalseLifeProjection(resolveSubtleFalseLife()),
         },
         {
           actionName: "doRejectSubtleFalseLifeWithoutSorceryPoints",
-          projectionAfter: {
-            verbalSuppressed: false,
-            somaticSuppressed: false,
-            materialSuppressed: false,
-            materialPreserved: false,
-            sorceryPointsRemaining: 0,
-            tempHp: 0,
-            lastResult: "unaffordableSubtleFalseLife",
-          },
           discover: () => rejectSubtleFalseLifeWithoutSorceryPoints(),
         },
       ],
     },
   ],
+});
+
+it(
+  "compares Subtle Spell component-projection public reducer route to copied qRoute",
+  async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "stepRouteSpellComponentProjection",
+      driver: createSubtleMetamagicRouteReplayDriver(),
+      backend: "typescript",
+      nTraces: 1,
+      maxSteps: focusedMbtMaxSteps(1),
+      stateCheck: reducerRoutedMetamagicStateCheck,
+    });
+  },
+  MBT_TEST_TIMEOUT_MS,
+);
+
+it("labels public Subtle scalar-buff acts as Subtle Spell", () => {
+  const act = subtleFalseLifeAct(subtleFalseLifeBattle({ sorceryPoints: 2 }));
+
+  expect(act.label).toBe("False Life (Subtle Spell)");
+  expect(act.summary).toContain("Subtle Spell.");
+  expect(act.label).not.toContain("Quickened Spell");
+  expect(act.summary).not.toContain("Quickened Spell");
+});
+
+it("does not discover Subtle bonus-action scalar-buff acts rejected by admission", () => {
+  const state = subtleBarkskinBattle({ sorceryPoints: 2 });
+  const acts = discoverBattleActs(state);
+
+  expect(
+    acts.some(
+      (candidate) =>
+        candidate.subject.tag === "bonusActionSpell" &&
+        candidate.subject.invocation.spellId === barkskinUnitId &&
+        candidate.subject.invocation.procedure === "scalarBuff" &&
+        candidate.subject.metamagic === undefined,
+    ),
+  ).toBe(true);
+  expect(
+    acts.some(
+      (candidate) =>
+        candidate.subject.tag === "bonusActionSpell" &&
+        candidate.subject.invocation.spellId === barkskinUnitId &&
+        candidate.subject.invocation.procedure === "scalarBuff" &&
+        candidate.subject.metamagic?.some(
+          (selection) => selection.effectKind === SUBTLE_METAMAGIC_EFFECT_KIND,
+        ) === true,
+    ),
+  ).toBe(false);
 });
 
 function resolveSubtleFalseLife(): {
@@ -136,11 +203,12 @@ function resolveSubtleFalseLife(): {
   >;
 } {
   const state = subtleFalseLifeBattle({ sorceryPoints: 2 });
-  const subject = subtleFalseLifeSubject();
   const actor = state.combatants.get(spellCasterId);
   if (actor === undefined) {
     throw new Error("Expected Subtle Spell caster.");
   }
+  const act = subtleFalseLifeAct(state);
+  const subject = act.subject;
   const falseLifeSpell = spellRecord(falseLifeUnitId);
   const admitted = admitSpellMetamagicApplications({
     state,
@@ -163,10 +231,7 @@ function resolveSubtleFalseLife(): {
     s: true,
     m: "a drop of alcohol",
   });
-  const rollHole = requireHole(
-    spellAct({ state, spellId: falseLifeUnitId }).initialHoles,
-    "rolledDice",
-  );
+  const rollHole = requireHole(act.initialHoles, "rolledDice");
   const resolved = resolveBattleSubject({
     state,
     subject,
@@ -192,6 +257,55 @@ function resolveSubtleFalseLife(): {
       materialPreserved: projection.preservedComponents.length > 0,
     },
   };
+}
+
+function createSubtleMetamagicRouteReplayDriver() {
+  return defineDriver(subtleMetamagicRouteReplayDriverSchema, () => {
+    let route: readonly BattleReducerRouteEvent[] =
+      observeSubtleFalseLifeInitialRoute();
+
+    function reset(): void {
+      route = observeSubtleFalseLifeInitialRoute();
+    }
+
+    function recordResolvedRoute(): void {
+      route = observeSubtleFalseLifeRoute();
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doRouteSpellComponentProjection: recordResolvedRoute,
+      stepRouteSpellComponentProjection: recordResolvedRoute,
+      getState: (): SubtleMetamagicRouteReplayProjection => ({ route }),
+    };
+  });
+}
+
+function observeSubtleFalseLifeInitialRoute() {
+  return [battleReducerStartRouteEvent()] as const;
+}
+
+function observeSubtleFalseLifeRoute() {
+  const state = subtleFalseLifeBattle({ sorceryPoints: 2 });
+  const act = subtleFalseLifeAct(state);
+  const rollHole = requireHole(act.initialHoles, "rolledDice");
+  const resolved = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [damageRollFillWithGroups(rollHole, [[4, 3]])],
+  });
+  if (resolved.tag !== "resolved") {
+    throw new Error(
+      `Expected Subtle False Life route replay to resolve, got ${resolved.tag}.`,
+    );
+  }
+  return [
+    battleReducerStartRouteEvent(),
+    ...(act.routeEvents ?? []),
+    ...(resolved.routeEvents ?? []),
+  ];
 }
 
 function rejectSubtleFalseLifeWithoutSorceryPoints(): SubtleFalseLifeProjection {
@@ -222,6 +336,22 @@ function rejectSubtleFalseLifeWithoutSorceryPoints(): SubtleFalseLifeProjection 
   };
 }
 
+function subtleFalseLifeAct(state: BattleState): SubtleFalseLifeAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is SubtleFalseLifeAct =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.invocation.spellId === falseLifeUnitId &&
+      candidate.subject.invocation.procedure === "scalarBuff" &&
+      candidate.subject.metamagic?.some(
+        (selection) => selection.effectKind === SUBTLE_METAMAGIC_EFFECT_KIND,
+      ) === true,
+  );
+  if (act === undefined || act.subject.tag !== "actionSpell") {
+    throw new Error("Expected Subtle False Life spell act.");
+  }
+  return act;
+}
+
 function subtleFalseLifeProjection(input: {
   readonly state: BattleState;
   readonly projection: Omit<
@@ -244,6 +374,27 @@ function subtleFalseLifeBattle(input: {
   return spellBattle({
     preparedSpells: [spell],
     casterClassLevels: [{ className: "sorcerer", level: 2 }],
+    casterResources: [
+      {
+        unit: unitLibrary.requireUnit("sorcerer_font_of_magic"),
+        pointsRemaining: resourceCount(input.sorceryPoints),
+      },
+    ],
+    casterMetamagic: {
+      sorceryPointResourceUnitId: "sorcerer_font_of_magic",
+      spellUseLimit: "one_per_spell_unless_option_allows_stacking",
+      knownOptions: [subtleMetamagicOption()],
+    },
+  });
+}
+
+function subtleBarkskinBattle(input: {
+  readonly sorceryPoints: number;
+}): BattleState {
+  return spellBattle({
+    preparedSpells: [spellRecord(barkskinUnitId)],
+    spellSlots: [{ spellLevel: 2, count: 1 }],
+    casterClassLevels: [{ className: "sorcerer", level: 3 }],
     casterResources: [
       {
         unit: unitLibrary.requireUnit("sorcerer_font_of_magic"),

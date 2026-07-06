@@ -153,7 +153,7 @@ module spellInvocationResourceCore {
     facts: SpellInvocationResourceFacts,
     actionCost: ActionCost
   ): SpellInvocationResult = {
-    val spentTurn = spendActionCost(state.turn, actionCost)
+    val actionSpend = spendActionCost(state.turn, actionCost)
     val slotExpenditureState = spellInvocationExpenditureState(state)
     val slotExpenditure = applySpellSlotExpenditure(
       slotExpenditureState,
@@ -163,7 +163,7 @@ module spellInvocationResourceCore {
       facts.hasSpellAccess,
       legalSpellInvocationResourceFacts(facts),
       legalSpellcastingProcedureState(state),
-      spentTurn != state.turn,
+      actionSpend.admitted,
       spellSlotExpenditureAccepted(slotExpenditure),
     }
     val slotExpended = admitted and spellSlotWasExpended(slotExpenditure)
@@ -172,7 +172,7 @@ module spellInvocationResourceCore {
       state:
         if (not(admitted)) state
         else {
-          turn: spentTurn,
+          turn: actionSpend.turn,
           slotLedger: nextSlotExpenditureState.slotLedger,
           slotSpellCastThisTurn: nextSlotExpenditureState.slotSpellCastThisTurn,
         },
@@ -236,4 +236,5 @@ module spellInvocationResourceCore {
       invocation,
       repeatedDamageAllocationInvocationResourceFacts(facts)
     )
+
 }

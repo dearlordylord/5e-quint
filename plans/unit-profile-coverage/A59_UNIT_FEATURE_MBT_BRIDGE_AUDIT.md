@@ -29,11 +29,11 @@ The broader generated matrix is also green for supported runtime parity:
 - `plans/unit-profile-coverage/unit-matrix.json` reports
   `runtimeParityCoverage` as `96/96`.
 - `plans/unit-profile-coverage/unit-matrix.json` reports
-  `selectedIdentityMbtCoverage` as `144/144`.
+  `selectedIdentityReplayCoverage` as `144/144`.
 - A read-only scan of `unit-feature.` rows found 37 feature Units, 38
   unit/profile rows, and 0 rows missing either `focused-mbt` or `runtime-test`
   parity ownership.
-- The same scan found 0 feature Units missing `selected-identity-mbt` evidence.
+- The same scan found 0 feature Units missing `selected-identity-replay` evidence.
 
 ## Follow-Up Tasks
 

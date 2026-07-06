@@ -1,4 +1,4 @@
-# PRD: Unit Profile Coverage and Specific Unit Parity MBT
+# PRD: Unit Profile Coverage and Selected identity replay
 
 Date: 2026-05-06
 
@@ -39,13 +39,14 @@ Keep the architecture split into two verification layers.
 compare QCORE-observable projections against production reducers for bounded
 procedure profiles. They do not enumerate authored Units.
 
-**Specific Unit Parity MBT** proves selected authored identities. It binds
+**Selected identity replay** proves selected authored identities. It binds
 concrete Unit ids from the Unit profile matrix into production runtime fixtures
-and compares the same scalar projections used by Procedure Parity MBT. This is
-selective: representative and high-risk Units get MBT by identity.
+and compares the same scalar projections used by Procedure Parity MBT. It is
+selective wiring evidence, not QNT or MBT by itself.
 
 Every executable Unit should receive deterministic matrix/projection/admission
-coverage. MBT by identity is not required for every Unit.
+coverage. Deterministic QNT replay or MBT by concrete Unit id is separate and
+is not required for every Unit.
 
 The source artifacts for implementation detail are:
 
@@ -65,7 +66,7 @@ authored Unit sources
   -> QNT Procedure Parity profiles
   -> focused QMBT Procedure Parity
   -> matrix profile/evidence accounting
-  -> selective Specific Unit Parity MBT
+  -> selective Selected identity replay
 ```
 
 For not-yet-implemented mechanics, the preferred red/green flow may start from
@@ -77,7 +78,7 @@ matrix gap or authored-source pressure
   -> focused Procedure Parity MBT expectation
   -> TypeScript catalog/support/runtime implementation
   -> deterministic admission/projection evidence
-  -> selective Specific Unit Parity MBT when identity risk justifies it
+  -> selective Selected identity replay when identity risk justifies it
 ```
 
 Authored Unit sources are not all the same boundary. SRD-backed Unit records
@@ -101,12 +102,13 @@ and runtime projection remain separate throughout the flow.
    parity" has a concrete scope.
 6. As a tester, I want deterministic projection/admission tests to cover every
    executable Unit, so that broad catalog regressions are cheap to catch.
-7. As a tester, I want MBT by concrete Unit id only for representative or
-   high-risk Units, so that MBT remains useful without becoming a catalog loop.
+7. As a tester, I want selected identity replay for representative or high-risk
+   Units, with QNT replay or MBT only when the risk justifies it, so that MBT
+   remains useful without becoming a catalog loop.
 8. As a feature implementer, I want the matrix to support red/green work from a
    missing profile to QNT, runtime support, deterministic admission, and
-   selective MBT evidence.
-9. As a maintainer, I want Procedure Parity MBT and Specific Unit Parity MBT to
+   selective selected identity replay evidence.
+9. As a maintainer, I want Procedure Parity MBT and Selected identity replay to
    share projection vocabulary where it is genuinely shared, so that tests
    compose without forcing a catch-all helper layer.
 10. As a project owner, I want profile coverage percentages to be measurable,
@@ -114,7 +116,7 @@ and runtime projection remain separate throughout the flow.
 
 ## Implementation Decisions
 
-- Procedure Parity MBT and Specific Unit Parity MBT are distinct concepts.
+- Procedure Parity MBT and Selected identity replay are distinct concepts.
 - Existing QMBT2-QMBT6 lanes are Procedure Parity MBT.
 - The Unit profile matrix owns concrete authored Unit identity coverage.
 - QNT must not enumerate all Units or import authored Surface records.
@@ -126,7 +128,7 @@ and runtime projection remain separate throughout the flow.
   evidence.
 - Every executable Unit must have deterministic matrix/projection/admission
   coverage before it is considered covered as authored content.
-- Specific Unit Parity MBT should be chosen from risk, profile pressure, and
+- Selected identity replay should be chosen from risk, profile pressure, and
   representative identity value.
 - Matrix-only edits must not require broad battle MBT.
 - Matrix gaps can lead implementation for not-yet-implemented mechanics; the
@@ -152,7 +154,7 @@ and runtime projection remain separate throughout the flow.
   from authored Surface records into supported runtime profiles.
 - Focused MBT should cover behavior through production reducer entrypoints and
   compare scalar QCORE-observable projections, not full runtime state.
-- Specific Unit Parity MBT should reuse focused projection vocabulary where it
+- Selected identity replay should reuse focused projection vocabulary where it
   naturally matches existing QMBT lanes.
 - MBT runs are reserved for completed behavior changes or selected identity
   parity slices. They are not used for exploratory matrix edits.
@@ -166,13 +168,15 @@ and runtime projection remain separate throughout the flow.
 - Making the Unit profile matrix a runtime registry.
 - Treating unsupported profile rows as runtime behavior.
 - Mixing SRD and Classic non-SRD provenance in one authored collection.
-- Solving every unsupported Unit profile in the first Specific Unit Parity
+- Solving every unsupported Unit profile in the first selected identity replay
   slice.
 - Broad battle MBT as a matrix verification gate.
 
 ## Further Notes
 
-Current matrix status after QMBT66:
+Historical matrix status after QMBT66. This section is retained for PRD
+provenance; current generated counts live in
+`plans/unit-profile-coverage/UNIT_REPORT.md`.
 
 - 59 authored Units classified in the installed coverage collections.
 - 25 stable executable profiles.
@@ -189,8 +193,8 @@ Current matrix status after QMBT66:
   `orc_relentless_endurance`, QMBT53 `orc_adrenaline_rush`, and QMBT56
   `feat_boon_of_combat_prowess`, QMBT59 `monk_deflect_attacks`, and QMBT62
   `fighter_tactical_mind`, plus QMBT65 `bard_cutting_words`.
-- selected identity MBT covers 10 of 33 supported Unit identities. QMBT16
-  explicitly decided not to add selected identity MBT for currently supported
+- selected identity replay covers 10 of 33 supported Unit identities. QMBT16
+  explicitly decided not to add selected identity replay for currently supported
   spell Units unless later evidence introduces identity-specific risk.
 - authored Surface Unit catalog admission gaps are explicit in the generated
   report and matrix.
@@ -209,7 +213,7 @@ Current matrix status after QMBT66:
   admission/projection evidence.
 - QMBT31 counted `feat_savage_attacker` as a supported
   `unit-feature.weapon-damage-dice-roll-choice` Unit with deterministic
-  admission/projection evidence and selected identity MBT evidence.
+  admission/projection evidence and selected identity replay evidence.
 - QMBT32 counted `cure_wounds` and `mass_healing_word` as supported
   `spell.hit-point-restoration` Units with deterministic admission/projection
   evidence.

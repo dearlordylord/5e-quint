@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "taskId": "CRPI-BLOCK-004",
+  "durableFields": [
+    {
+      "fieldPath": "BattleCreatureState.activeEffects.kind=commandPending",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing active Spell Effect state owns the failed-save pending Command option until the target next-turn consequence resolves or expires."
+    },
+    {
+      "fieldPath": "BattleCreatureState.conditions",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing condition lifecycle state owns Grovel Prone application."
+    },
+    {
+      "fieldPath": "BattleCreatureState.movementSpentFeet",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing movement-resource state owns Approach and Flee movement spending."
+    },
+    {
+      "fieldPath": "BattleState.currentTurnResources.commandHalt",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing turn-resource state owns Halt action, Bonus Action, and movement suppression for the target turn."
+    },
+    {
+      "fieldPath": "BattleState.interruptStack",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing interrupt stack owns Flee Opportunity Attack windows and continuation after decline."
+    },
+    {
+      "fieldPath": "AvailableBattleAct.routeEvents",
+      "owner": "battle-reducer-route-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "runtime-projection"
+      },
+      "notes": "Public discovery route events project Command effect subjects and frontiers from existing act subjects and holes."
+    },
+    {
+      "fieldPath": "BattleResolutionResult.routeEvents",
+      "owner": "battle-reducer-route-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "runtime-projection"
+      },
+      "notes": "Public resolution route events project Command effect fill, owner, hole, and interrupt-stack route facts for qRoute replay."
+    }
+  ],
+  "notes": [
+    "Task 6 introduced no new durable BattleState, BattleCreatureState, or character resource fields.",
+    "Command option identity remains a typed fill/procedure fact and commandPending active effect; production routing does not dispatch on spell name, option label as catalog identity, QNT action name, or connector filename.",
+    "Held-object inventory and route geometry remain table/caller boundary fills, not duplicated BattleState."
+  ]
+}

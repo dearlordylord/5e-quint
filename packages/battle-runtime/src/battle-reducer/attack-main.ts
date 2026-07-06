@@ -141,7 +141,6 @@ import {
   selectedCunningStrikeContext,
 } from "./cunning-strike.ts";
 import { applyStatBlockAttackHitConditionRiders } from "./statblock-attack-hit-condition-riders.ts";
-import { HUNTERS_PREY_SUPPORT_PROFILE } from "../unit-feature-support.ts";
 import { grapplerSupportProfileRefForCombatant } from "./grappler-support-profile.ts";
 
 import {
@@ -498,16 +497,6 @@ export function resolveSelectedAttackProcedure(
       input.state,
       "invalidFill",
       "Attack target is outside the selected attack's supported target constraint.",
-    );
-  }
-  if (
-    attack.kind === "weapon" &&
-    huntersPreyMissingSelectedOption(input.state, attackerId)
-  ) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Hunter's Prey requires a retained selected option before resolving weapon attacks.",
     );
   }
   if (
@@ -3172,24 +3161,5 @@ function hordeBreakerAttackFillIsAbsent(
     fillSet.huntersPreyHordeBreakerAttackRoll === undefined &&
     fillSet.huntersPreyHordeBreakerDamageRoll === undefined &&
     !fillSet.huntersPreyHordeBreakerDamageDispositionFilled
-  );
-}
-
-function huntersPreyMissingSelectedOption(
-  state: BattleState,
-  attackerId: CombatantId,
-): boolean {
-  const attacker = state.combatants.get(attackerId);
-  if (attacker?.origin.kind !== "character") {
-    return false;
-  }
-  return attacker.origin.characterUnitRefs.some(
-    (unitRef) =>
-      unitRef.selectedOption === undefined &&
-      unitRef.supportProfiles.some(
-        (profile) =>
-          typeof profile === "object" &&
-          profile.kind === HUNTERS_PREY_SUPPORT_PROFILE,
-      ),
   );
 }

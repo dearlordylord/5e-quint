@@ -25,6 +25,8 @@ import {
   type CharacterSheetSpellbookRitualAccess,
   type CharacterSheetSpellbookRitualAccessInput,
   type CharacterSheetSpellbookRitualInvocation,
+  type CharacterSheetSpellbookRitualInvocationProjection,
+  type CharacterSheetSpellbookRitualInvocationRoute,
   type SpellcastingCharacterBuild,
 } from "./sheet-types.ts";
 
@@ -99,6 +101,24 @@ export function characterSheetSpellbookRitualAccessesForBuild(input: {
     }
   }
   return Either.right(accesses);
+}
+
+export function characterSheetSpellbookRitualInvocationProjection(
+  input: CharacterSheetSpellInvocationInput,
+): CharacterSheetSpellbookRitualInvocationProjection {
+  const invocation = characterSheetSpellbookRitualInvocation(input);
+  if (Either.isRight(invocation)) {
+    return {
+      tag: "accepted",
+      invocation: invocation.right,
+      qRoute: CHARACTER_SHEET_SPELLBOOK_RITUAL_ACCEPTED_ROUTE,
+    };
+  }
+  return {
+    tag: "rejected",
+    issue: invocation.left,
+    qRoute: CHARACTER_SHEET_SPELLBOOK_RITUAL_REJECTED_ROUTE,
+  };
 }
 
 export function characterBuildHasSpellbookSpell(input: {
@@ -319,6 +339,36 @@ function isSpellcastingBuild(
 ): build is SpellcastingCharacterBuild {
   return build.spellcasting !== undefined;
 }
+
+const CHARACTER_SHEET_SPELLBOOK_RITUAL_ACCEPTED_ROUTE = [
+  {
+    kind: "retainCharacterSheetSelectedReferences",
+    subject: "selectedReferenceProjection",
+    owner: "selectedReference",
+  },
+  {
+    kind: "resolveCharacterSheetSubject",
+    subject: "spellResource",
+    fill: "projectionSelection",
+    holes: [],
+    owner: "selectedReference",
+  },
+] as const satisfies CharacterSheetSpellbookRitualInvocationRoute;
+
+const CHARACTER_SHEET_SPELLBOOK_RITUAL_REJECTED_ROUTE = [
+  {
+    kind: "retainCharacterSheetSelectedReferences",
+    subject: "selectedReferenceProjection",
+    owner: "selectedReference",
+  },
+  {
+    kind: "resolveCharacterSheetSubject",
+    subject: "spellResource",
+    fill: "projectionSelection",
+    holes: ["projectionChoice"],
+    owner: "selectedReference",
+  },
+] as const satisfies CharacterSheetSpellbookRitualInvocationRoute;
 
 function isSpellbookRitualAccessFeature(
   unit: UnitRecord,

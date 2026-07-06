@@ -35,7 +35,7 @@ promoted species traits with `missing-witness`:
 - `dwarf_dwarven_resilience`
 - `species_goliath_powerful_build`
 
-`species_dragonborn_breath_weapon` already had selected-identity MBT replay
+`species_dragonborn_breath_weapon` already had selected-identity replay
 through `packages/battle-runtime/src/dragonborn-breath-weapon-runtime.mbt.test.ts`.
 `barbarian_frenzy` also already had selected-identity replay, but it is a class
 feature rather than a species trait.
@@ -83,7 +83,7 @@ Round 1 RAW and ubiquitous-language pass:
 Round 2 architecture and connascence pass:
 
 - The strongest coupling is between `UNIT-IDENTITY-EVIDENCE` rows,
-  `UNIT-IDENTITY-MBT-REPLAY` actions, QNT `step` actions, and runtime
+  `UNIT-IDENTITY-REPLAY` actions, QNT `step` actions, and runtime
   discovery functions. The selected-identity witness localizes those facts in
   one test/QNT pair.
 - No duplicate damage-type state was added. Dragonborn Damage Resistance

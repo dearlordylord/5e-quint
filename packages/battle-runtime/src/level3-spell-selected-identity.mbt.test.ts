@@ -1,9 +1,9 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES glyph_of_warding haste protection_from_energy sleet_storm slow
-// UNIT-IDENTITY-MBT-REPLAY: L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES glyph_of_warding doDiscoverGlyphDurableOccurrence doDiscoverGlyphExplosiveRuneRelease doDiscoverGlyphStoredSpellRelease
-// UNIT-IDENTITY-MBT-REPLAY: L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES haste doDiscoverHastePositiveEffects
-// UNIT-IDENTITY-MBT-REPLAY: L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES protection_from_energy doDiscoverProtectionFromEnergyResistance
-// UNIT-IDENTITY-MBT-REPLAY: L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES sleet_storm doDiscoverSleetStormAreaHazard
-// UNIT-IDENTITY-MBT-REPLAY: L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES slow doDiscoverSlowActivePenalties
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES glyph_of_warding haste protection_from_energy sleet_storm slow
+// UNIT-IDENTITY-REPLAY: L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES glyph_of_warding doDiscoverGlyphDurableOccurrence doDiscoverGlyphExplosiveRuneRelease doDiscoverGlyphStoredSpellRelease
+// UNIT-IDENTITY-REPLAY: L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES haste doDiscoverHastePositiveEffects
+// UNIT-IDENTITY-REPLAY: L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES protection_from_energy doDiscoverProtectionFromEnergyResistance
+// UNIT-IDENTITY-REPLAY: L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES sleet_storm doDiscoverSleetStormAreaHazard
+// UNIT-IDENTITY-REPLAY: L5UG-GATE-04-LEVEL15-SELECTED-IDENTITY-WITNESSES slow doDiscoverSlowActivePenalties
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { expect } from "vitest";
 
@@ -13,7 +13,7 @@ import {
   glyphStoredSpellReleaseProfileForSpell,
 } from "./battle-reducer/glyph-durable-occurrence.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
   glyphOfWardingUnitId,
   hasteUnitId,
@@ -79,8 +79,8 @@ type Level3ActionSpellProcedure = Parameters<
   typeof spellSlotInvocationRef
 >[2];
 
-defineSelectedIdentityWitness({
-  describeLabel: "Level 3 spell selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Level 3 spell selected identity replay",
   taskId: LEVEL3_SPELL_SELECTED_IDENTITY_TASK_ID,
   specFile: mbtSpecPath(
     import.meta.dirname,
@@ -101,17 +101,14 @@ defineSelectedIdentityWitness({
       procedures: [
         selectedProcedure(
           "doDiscoverGlyphDurableOccurrence",
-          "glyphDurableOccurrence",
           discoverGlyphDurableOccurrence,
         ),
         selectedProcedure(
           "doDiscoverGlyphExplosiveRuneRelease",
-          "glyphExplosiveRuneRelease",
           discoverGlyphExplosiveRuneRelease,
         ),
         selectedProcedure(
           "doDiscoverGlyphStoredSpellRelease",
-          "glyphStoredSpellRelease",
           discoverGlyphStoredSpellRelease,
         ),
       ],
@@ -121,7 +118,6 @@ defineSelectedIdentityWitness({
       procedures: [
         selectedProcedure(
           "doDiscoverHastePositiveEffects",
-          "hastePositiveEffects",
           () =>
             discoverLevel3ActionSpell({
               spellId: hasteUnitId,
@@ -137,7 +133,6 @@ defineSelectedIdentityWitness({
       procedures: [
         selectedProcedure(
           "doDiscoverProtectionFromEnergyResistance",
-          "protectionFromEnergyResistance",
           () =>
             discoverLevel3ActionSpell({
               spellId: protectionFromEnergyUnitId,
@@ -153,7 +148,6 @@ defineSelectedIdentityWitness({
       procedures: [
         selectedProcedure(
           "doDiscoverSleetStormAreaHazard",
-          "sleetStormAreaHazard",
           () =>
             discoverLevel3ActionSpell({
               spellId: sleetStormUnitId,
@@ -169,7 +163,6 @@ defineSelectedIdentityWitness({
       procedures: [
         selectedProcedure(
           "doDiscoverSlowActivePenalties",
-          "slowActivePenalties",
           () =>
             discoverLevel3ActionSpell({
               spellId: slowUnitId,
@@ -185,12 +178,10 @@ defineSelectedIdentityWitness({
 
 function selectedProcedure(
   actionName: `do${string}`,
-  result: Exclude<Level3SpellSelectedIdentityResult, "init">,
   discover: () => Level3SpellSelectedIdentityProjection,
 ) {
   return {
     actionName,
-    projectionAfter: expectedProjection(result),
     discover,
   };
 }

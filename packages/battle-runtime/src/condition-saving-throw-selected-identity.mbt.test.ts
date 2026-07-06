@@ -1,11 +1,11 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt condition-saving-throw-lifecycle blindness_deafness color_spray entangle hideous_laughter hold_person hypnotic_pattern sleep
-// UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle blindness_deafness doResolveBlindnessDeafnessBlindedSavingThrow doResolveBlindnessDeafnessDeafenedSavingThrow
-// UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle color_spray doResolveColorSprayFailedSavingThrow
-// UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle entangle doResolveEntangleFailedSavingThrow
-// UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle hideous_laughter doResolveHideousLaughterRepeatSavingThrowSuccess
-// UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle hold_person doResolveHoldPersonFailedSavingThrow doResolveHoldPersonRepeatSavingThrowSuccess
-// UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle hypnotic_pattern doResolveHypnoticPatternFailedSavingThrow
-// UNIT-IDENTITY-MBT-REPLAY: condition-saving-throw-lifecycle sleep doResolveSleepRepeatSavingThrowFailure
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay condition-saving-throw-lifecycle blindness_deafness color_spray entangle hideous_laughter hold_person hypnotic_pattern sleep
+// UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle blindness_deafness doResolveBlindnessDeafnessBlindedSavingThrow doResolveBlindnessDeafnessDeafenedSavingThrow
+// UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle color_spray doResolveColorSprayFailedSavingThrow
+// UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle entangle doResolveEntangleFailedSavingThrow
+// UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle hideous_laughter doResolveHideousLaughterRepeatSavingThrowSuccess
+// UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle hold_person doResolveHoldPersonFailedSavingThrow doResolveHoldPersonRepeatSavingThrowSuccess
+// UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle hypnotic_pattern doResolveHypnoticPatternFailedSavingThrow
+// UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle sleep doResolveSleepRepeatSavingThrowFailure
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE
 import { Either } from "effect";
 
@@ -47,7 +47,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { spellConditionChoiceFill } from "./unit-profile-admission-spell-fill-support.ts";
 
@@ -109,8 +109,8 @@ if (unitCatalogResult.tag !== "ok") {
 const unitLibrary = unitCatalogResult.catalog;
 const hypnoticPatternSpell = decodeHypnoticPatternSpellRecord();
 
-defineSelectedIdentityWitness({
-  describeLabel: "Condition Saving Throw selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Condition Saving Throw selected identity replay",
   taskId: "condition-saving-throw-lifecycle",
   specFile: mbtSpecPath(
     import.meta.dirname,
@@ -142,12 +142,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doResolveBlindnessDeafnessBlindedSavingThrow",
-          projectionAfter: expectedProjection({
-            targetBlinded: true,
-            actionAvailable: false,
-            secondLevelSlotsExpended: 1,
-            lastResult: "resolved",
-          }),
           discover: () =>
             resolvedProjection(
               resolveBlindnessDeafnessFailedSavingThrow("blinded"),
@@ -155,12 +149,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doResolveBlindnessDeafnessDeafenedSavingThrow",
-          projectionAfter: expectedProjection({
-            targetDeafened: true,
-            actionAvailable: false,
-            secondLevelSlotsExpended: 1,
-            lastResult: "resolved",
-          }),
           discover: () =>
             resolvedProjection(
               resolveBlindnessDeafnessFailedSavingThrow("deafened"),
@@ -173,12 +161,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doResolveColorSprayFailedSavingThrow",
-          projectionAfter: expectedProjection({
-            targetBlinded: true,
-            actionAvailable: false,
-            firstLevelSlotsExpended: 1,
-            lastResult: "resolved",
-          }),
           discover: () =>
             resolvedProjection(
               resolveAreaSavingThrowSpell(
@@ -194,14 +176,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doResolveEntangleFailedSavingThrow",
-          projectionAfter: expectedProjection({
-            targetRestrained: true,
-            casterConcentrating: true,
-            actionAvailable: false,
-            targetWalkSpeedFeet: 0,
-            firstLevelSlotsExpended: 1,
-            lastResult: "resolved",
-          }),
           discover: () =>
             resolvedProjection(
               resolveAreaSavingThrowSpell(
@@ -217,11 +191,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doResolveHideousLaughterRepeatSavingThrowSuccess",
-          projectionAfter: expectedProjection({
-            actionAvailable: true,
-            firstLevelSlotsExpended: 1,
-            lastResult: "resolved",
-          }),
           discover: () =>
             resolvedProjection(
               resolveHideousLaughterRepeatSavingThrowSuccess(),
@@ -234,25 +203,11 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doResolveHoldPersonFailedSavingThrow",
-          projectionAfter: expectedProjection({
-            targetParalyzed: true,
-            targetIncapacitated: true,
-            casterConcentrating: true,
-            actionAvailable: false,
-            targetWalkSpeedFeet: 0,
-            secondLevelSlotsExpended: 1,
-            lastResult: "resolved",
-          }),
           discover: () =>
             resolvedProjection(resolveHoldPersonFailedSavingThrow()),
         },
         {
           actionName: "doResolveHoldPersonRepeatSavingThrowSuccess",
-          projectionAfter: expectedProjection({
-            actionAvailable: true,
-            secondLevelSlotsExpended: 1,
-            lastResult: "resolved",
-          }),
           discover: () =>
             resolvedProjection(resolveHoldPersonRepeatSavingThrowSuccess()),
         },
@@ -263,15 +218,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doResolveHypnoticPatternFailedSavingThrow",
-          projectionAfter: expectedProjection({
-            targetCharmed: true,
-            targetIncapacitated: true,
-            casterConcentrating: true,
-            actionAvailable: false,
-            targetWalkSpeedFeet: 0,
-            thirdLevelSlotsExpended: 1,
-            lastResult: "resolved",
-          }),
           discover: () =>
             resolvedProjection(resolveHypnoticPatternFailedSavingThrow()),
         },
@@ -282,16 +228,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doResolveSleepRepeatSavingThrowFailure",
-          projectionAfter: expectedProjection({
-            targetIncapacitated: true,
-            targetUnconscious: true,
-            targetProne: true,
-            casterConcentrating: true,
-            actionAvailable: true,
-            targetWalkSpeedFeet: 0,
-            firstLevelSlotsExpended: 1,
-            lastResult: "resolved",
-          }),
           discover: () =>
             resolvedProjection(resolveSleepRepeatSavingThrowFailure()),
         },

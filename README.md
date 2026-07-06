@@ -97,6 +97,7 @@ coverage without merging the two denominators.
 
 ```sh
 pnpm quality                    # coverage gates, lint, circular checks, and typecheck
+pnpm proof:qnt                  # conscious QNT proof lanes: inventory, closure, run-block proofs, and QNT slice parity
 pnpm test                       # workspace package tests
 pnpm dev                        # React UI
 ```

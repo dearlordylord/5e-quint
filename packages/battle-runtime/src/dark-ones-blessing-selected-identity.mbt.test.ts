@@ -1,7 +1,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.enemy-zero-hit-point-temporary-hit-points
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3PUTB-02 warlock_dark_ones_blessing
-// UNIT-IDENTITY-MBT-REPLAY: L3PUTB-02 warlock_dark_ones_blessing doSelfKill doNearbyOtherKill doSameSideOtherKill doRejectOutOfRangeOtherKill doRejectNonEnemyKill doMinimumTemporaryHitPoints doTemporaryHitPointReplacement
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3PUTB-02 warlock_dark_ones_blessing
+// UNIT-IDENTITY-REPLAY: L3PUTB-02 warlock_dark_ones_blessing doSelfKill doNearbyOtherKill doSameSideOtherKill doRejectOutOfRangeOtherKill doRejectNonEnemyKill doMinimumTemporaryHitPoints doTemporaryHitPointReplacement
 import { Hp, movementFeet } from "@dnd/shared/types";
 
 import {
@@ -18,7 +18,7 @@ import {
   unitLibrary,
 } from "./battle-runtime-test-support.ts";
 import type { BattleTargetSpatialFact } from "./battle-reducer.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { battleEnemyZeroHitPointTemporaryHitPointsSupportForUnit } from "./unit-feature-support.ts";
 
@@ -62,8 +62,8 @@ const unitId = "warlock_dark_ones_blessing";
 const unit = unitLibrary.requireUnit(unitId);
 const supportProfile = requireDarkOnesBlessingSupportProfile();
 
-defineSelectedIdentityWitness({
-  describeLabel: "Dark One's Blessing selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Dark One's Blessing selected identity replay",
   taskId: "L3PUTB-02",
   specFile: mbtSpecPath(
     import.meta.dirname,
@@ -73,7 +73,9 @@ defineSelectedIdentityWitness({
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
   quintFieldNames: { lastResult: "qScenarioOutcome" },
-  quintVariantFieldTags: { lastResult: DARK_ONES_BLESSING_SCENARIO_OUTCOME_BY_TAG },
+  quintVariantFieldTags: {
+    lastResult: DARK_ONES_BLESSING_SCENARIO_OUTCOME_BY_TAG,
+  },
   projectionSchema: {
     warlockTempHp: "int",
     targetHp: "int",
@@ -86,11 +88,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doSelfKill",
-          projectionAfter: expectedProjection({
-            warlockTempHp: 6,
-            targetHp: 0,
-            lastResult: "selfKill",
-          }),
           discover: () =>
             projectBattleState(
               damageEnemyToZero({
@@ -105,11 +102,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doNearbyOtherKill",
-          projectionAfter: expectedProjection({
-            warlockTempHp: 6,
-            targetHp: 0,
-            lastResult: "nearbyOtherKill",
-          }),
           discover: () =>
             projectBattleState(
               damageEnemyToZero({
@@ -125,11 +117,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doSameSideOtherKill",
-          projectionAfter: expectedProjection({
-            warlockTempHp: 6,
-            targetHp: 0,
-            lastResult: "sameSideOtherKill",
-          }),
           discover: () =>
             projectBattleState(
               damageEnemyToZero({
@@ -147,11 +134,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doRejectOutOfRangeOtherKill",
-          projectionAfter: expectedProjection({
-            warlockTempHp: 0,
-            targetHp: 0,
-            lastResult: "outOfRangeRejected",
-          }),
           discover: () =>
             projectBattleState(
               damageEnemyToZero({
@@ -166,11 +148,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doRejectNonEnemyKill",
-          projectionAfter: expectedProjection({
-            warlockTempHp: 0,
-            targetHp: 0,
-            lastResult: "nonEnemyRejected",
-          }),
           discover: () =>
             projectBattleState(
               damageEnemyToZero({
@@ -187,11 +164,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doMinimumTemporaryHitPoints",
-          projectionAfter: expectedProjection({
-            warlockTempHp: 1,
-            targetHp: 0,
-            lastResult: "minimumTemporaryHitPoints",
-          }),
           discover: () =>
             projectBattleState(
               damageEnemyToZero({
@@ -206,11 +178,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doTemporaryHitPointReplacement",
-          projectionAfter: expectedProjection({
-            warlockTempHp: 8,
-            targetHp: 0,
-            lastResult: "temporaryHitPointReplacement",
-          }),
           discover: () =>
             projectBattleState(
               damageEnemyToZero({

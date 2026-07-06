@@ -40,7 +40,7 @@ profile-subset-supported claim. The promoted `bonusActionRewrite` procedures in
 | `saveGatedConditionImmunity` | Quickened Calm Emotions governor MBT coverage |
 | `directCondition` | Quickened Invisibility governor MBT coverage |
 | `rollModifier` | Quickened Bless governor MBT coverage |
-| `spellAttackDamage` | Quickened Ray of Frost runtime and selected-identity MBT coverage |
+| `spellAttackDamage` | Quickened Ray of Frost runtime and selected-identity replay coverage |
 
 Small evidence note: `unit-feature-quickened-action-spell-procedure-support-core.qnt`
 admits `QuickenedSaveGatedDamageProcedure`, but
@@ -140,7 +140,7 @@ Recommended scope:
      Quickened same-turn level 1+ lock after the cantrip.
    - At least one Spell Slot `spellAttackSequence` case, using Scorching Ray,
      to confirm Spell Slot spend and same-turn spell-slot accounting.
-3. Add a selected-identity MBT witness for the promoted procedure, preferably a
+3. Add a selected-identity QNT replay witness for the promoted procedure, preferably a
    narrow Eldritch Blast literal projection. Keep the driver as a leaf witness;
    do not import behavioral rule modules.
 4. Add the `QuickenedSpellAttackSequenceProcedure` variant or equivalent
@@ -167,7 +167,7 @@ For this survey task, no MBT run is needed because no behavior changed.
 Task 7 should verify the implementation with:
 
 - `pnpm --filter @dnd/battle-runtime exec vitest run src/battle-runtime-metamagic-resource.test.ts`
-- A focused selected-identity MBT run for the new Quickened spell-attack-sequence witness, using the AGENTS.md timing/background protocol.
+- A focused selected-identity QNT replay run for the new Quickened spell-attack-sequence witness, using the AGENTS.md timing/background protocol.
 - `pnpm unit-profile-coverage:check -- --write`
 - `pnpm unit-profile-coverage:check`
 - `pnpm rules-kernel-coverage:check -- --write`

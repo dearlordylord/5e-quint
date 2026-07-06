@@ -119,6 +119,7 @@ import {
   characterSpellcasting,
   settleCharacterSheetFromBattle,
   startBattleFromCharacterBuildAndStatBlock,
+  startBattleFromCharacterSheetAndStatBlock,
 } from "./index.ts";
 
 const build = defenseBuild({ wearingArmor: false });
@@ -161,6 +162,97 @@ function createFreshCharacterSheet(input: CharacterSheetTestInput) {
 }
 
 describe("Character Sheet battle handoff", () => {
+  test("composes sheet and stat block participants into battle runtime entry", () => {
+    const characterCombatantId = combatantId("combatant:sheet-entry");
+    const monsterCombatantId = combatantId("combatant:stat-block-entry");
+    const sheet = createFreshCharacterSheet({
+      characterId: characterSheetId("character:sheet-entry"),
+      build,
+      currentHp: Hp(10),
+      tempHp: Hp(0),
+      unitLibrary,
+    });
+    expect(Either.isRight(sheet)).toBe(true);
+    if (Either.isLeft(sheet)) return;
+
+    const entry = startBattleFromCharacterSheetAndStatBlock({
+      battleId: battleId("battle:sheet-entry"),
+      character: {
+        sheet: sheet.right,
+        unitLibrary,
+        statBlockCatalog,
+        combatantId: characterCombatantId,
+        displayName: "Character",
+        initiative: initiativeScore(20),
+        side: battleCombatantSide("party"),
+      },
+      statBlockBattleInput: {
+        combatantId: monsterCombatantId,
+        statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+        initiative: initiativeScore(10),
+        side: battleCombatantSide("monsters"),
+      },
+    });
+
+    expect(Either.isRight(entry)).toBe(true);
+    if (Either.isLeft(entry)) return;
+
+    expect([...entry.right.state.combatants.keys()]).toEqual([
+      characterCombatantId,
+      monsterCombatantId,
+    ]);
+    expect(entry.right.state.combatants.get(characterCombatantId)?.side).toBe(
+      battleCombatantSide("party"),
+    );
+    expect(entry.right.state.combatants.get(monsterCombatantId)?.side).toBe(
+      battleCombatantSide("monsters"),
+    );
+    expect(
+      entry.right.state.initiative.stillToAct.map((turn) => turn.creature),
+    ).toEqual([characterCombatantId, monsterCombatantId]);
+    expect(entry.right.state.initiative.stillToAct[0]?.creature).toBe(
+      characterCombatantId,
+    );
+    expect(entry.right.encounterCompositionRouteEvents).toEqual([
+      {
+        kind: "projectCharacterSheetToBattle",
+        subject: "sheetToBattleInit",
+        owner: "characterBattleInitProjection",
+      },
+      {
+        kind: "composeBattleEncounter",
+        subject: "handoffParticipantMembership",
+        facts: [
+          "encounterSideRelationshipOwnership",
+          "nonSheetParticipantMembership",
+          "sheetDerivedParticipantCandidate",
+        ],
+        owner: "characterBattleEncounterSetup",
+      },
+      {
+        kind: "composeBattleEncounter",
+        subject: "handoffSubjectProfileAvailability",
+        facts: ["subjectProfileAvailabilityOwnership"],
+        owner: "characterBattleSubjectProfile",
+      },
+      {
+        kind: "composeBattleEncounter",
+        subject: "handoffInitiativeCurrentActor",
+        facts: [
+          "currentActorOwnership",
+          "initiativeCountOwnership",
+          "stableInitiativeOrderOwnership",
+        ],
+        owner: "characterBattleInitiative",
+      },
+      {
+        kind: "enterBattleRuntime",
+        subject: "handoffEncounterComposition",
+        owner: "characterBattleRuntime",
+      },
+    ]);
+  });
+
   test("projects Alert Proficiency Bonus into the character Initiative score", () => {
     const result = characterBattleInitiativeScore({
       build: {
@@ -1291,7 +1383,7 @@ describe("Character Sheet battle handoff", () => {
     );
   });
 
-  test("projects retained Hunter's Prey selected option into battle Unit refs", () => {
+  test("projects retained Hunter's Prey selected option into semantic battle support", () => {
     const refs = expectRight(
       characterUnitRefsWithBattleSupportProfiles(
         hunterRangerHordeBreakerBuild(),
@@ -1305,13 +1397,20 @@ describe("Character Sheet battle handoff", () => {
       expect.arrayContaining([
         expect.objectContaining({
           unitId: "ranger_hunters_prey",
-          selectedOption: { kind: "huntersPrey", optionId: "hordeBreaker" },
           supportProfiles: expect.arrayContaining([
-            expect.objectContaining({ kind: "huntersPrey" }),
+            expect.objectContaining({
+              kind: "huntersPrey",
+              huntersPrey: expect.objectContaining({
+                kind: "nearbyDifferentTargetSameWeaponAttack",
+              }),
+            }),
           ]),
         }),
       ]),
     );
+    expect(
+      refs.find((ref) => ref.unitId === "ranger_hunters_prey"),
+    ).not.toHaveProperty("selectedOption");
   });
 
   test("rejects Dragonborn Breath Weapon support without selected Draconic Ancestry", () => {
@@ -5195,7 +5294,10 @@ function hunterRangerHordeBreakerBuild(): CharacterBuild {
         kind: "selectedClassChoice",
         selectedFromUnitId: "ranger_hunters_prey",
         unitId: "ranger_hunters_prey",
-        selectedOption: { kind: "huntersPrey", optionId: "hordeBreaker" },
+        selectedOption: {
+          kind: "huntersPrey",
+          selection: "nearbyDifferentTargetSameWeaponAttack",
+        },
       },
     ],
   };

@@ -1,0 +1,72 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/sorcerer-metamagic-empowered-selected-identity.mbt.test.ts Empowered Spell copied qRoute versus public reducer replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-empowered-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      "qntFileSha256": "6c8d16425805d63c31d06667412678146ed3d129015ddb06b58384a3d86b45d8",
+      "routeConnectorSha256": "4526d365f6d9a639190e523dc7dd71d0dab38d25319ba63b1fafdff03159f10f",
+      "branchFamily": "step",
+      "branchAction": "doResolveEmpoweredSpellDamageReroll",
+      "observedActionTaken": "doResolveEmpoweredSpellDamageReroll",
+      "harnessTestPath": "packages/battle-runtime/src/sorcerer-metamagic-empowered-selected-identity.mbt.test.ts",
+      "traceId": "public-route=metamagicDamageDiceReroll action=doResolveEmpoweredSpellDamageReroll qRoute=metamagic-damage-dice-reroll-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "stepRouteDamageDiceReroll",
+        "delegatedAction": "doRouteDamageDiceReroll",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/sorcerer-metamagic-empowered-selected-identity.mbt.test.ts#createEmpoweredMetamagicRouteReplayDriver"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "7107a1322b4f5074a277289896fb4c705cd4fe6616e0d6611347039f78c88515",
+        "observedProjectionSha256": "7107a1322b4f5074a277289896fb4c705cd4fe6616e0d6611347039f78c88515",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+          "stepAction": "stepRouteDamageDiceReroll",
+          "delegatedAction": "doRouteDamageDiceReroll",
+          "qntStateField": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "public-reducer-route-events",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(state) and BattleResolutionResult.routeEvents during Empowered Ray of Frost damage-reroll resolution",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=metamagicDamageDiceReroll",
+          "BattleReducerRouteEvent.owner=battleFeatureResource",
+          "BattleReducerRouteEvent.owner=battleDamageRoll",
+          "BattleReducerRouteEvent.owner=battleHitPoint",
+          "BattleSpellDamageRollHole.spellDamageRerolls.effectKind=damage_dice_reroll",
+          "BattleRolledDiceFill.spellDamageReroll.effectKind=damage_dice_reroll",
+          "BattleSubject.actionSpell.invocation.procedure=spellAttackDamage",
+          "CharacterBattlePointPoolResourceState.pointsRemaining",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.activeEffects"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}

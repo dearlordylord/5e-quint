@@ -56,9 +56,9 @@ supported-profile evidence for the four named Unit ids:
 | Unit | Profile | Current Evidence Signal |
 | --- | --- | --- |
 | `bard_jack_of_all_trades` | `character-sheet.ability-check-proficiency-bonus` | Character Sheet runtime tests and selected-identity replay evidence exist. |
-| `cleric_disciple_of_life` | `unit-feature.spell-slot-healing-modifier` | Unit claim, deterministic admission/projection evidence, selected-identity MBT evidence, and rules-kernel obligation mapping exist. |
-| `fighter_remarkable_athlete` | `unit-feature.remarkable-athlete` | Unit claim, deterministic admission/projection evidence, selected-identity MBT evidence for roll modes and critical movement, and rules-kernel obligation mapping exist. |
-| `rogue_steady_aim` | `unit-feature.rogue-steady-aim` | Unit claim, deterministic admission/projection evidence, selected-identity MBT evidence, and rules-kernel obligation mapping exist. |
+| `cleric_disciple_of_life` | `unit-feature.spell-slot-healing-modifier` | Unit claim, deterministic admission/projection evidence, selected-identity replay evidence, and rules-kernel obligation mapping exist. |
+| `fighter_remarkable_athlete` | `unit-feature.remarkable-athlete` | Unit claim, deterministic admission/projection evidence, selected-identity replay evidence for roll modes and critical movement, and rules-kernel obligation mapping exist. |
+| `rogue_steady_aim` | `unit-feature.rogue-steady-aim` | Unit claim, deterministic admission/projection evidence, selected-identity replay evidence, and rules-kernel obligation mapping exist. |
 
 The next tasks should therefore begin by checking whether their target branch
 needs implementation or only row-level checker reconciliation. In either case,

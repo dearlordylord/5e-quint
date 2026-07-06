@@ -37,6 +37,16 @@ module characterSheetWeaponMasteryContainersSelectedIdentityRouteMbt {
       )
     )
 
+  pure def selectWeaponMasteryRoute(
+    route: List[CharacterSheetRouteEvent],
+  ): List[CharacterSheetRouteEvent] =
+    retainWeaponMasteryRoute(route).append(
+      routeProjectCharacterSheetFacts(
+        SheetBuildFactsProjectionRouteSubject,
+        CharacterSheetBuildProjectionOwner,
+      )
+    )
+
   pure def reselectWeaponMasteryOnRestRoute(
     route: List[CharacterSheetRouteEvent],
   ): List[CharacterSheetRouteEvent] =
@@ -77,7 +87,7 @@ module characterSheetWeaponMasteryContainersSelectedIdentityRouteMbt {
 
   action doSelectPaladinWeaponMastery = all {
     qState.ready,
-    recordRoute(retainWeaponMasteryRoute(qRoute)),
+    recordRoute(selectWeaponMasteryRoute(qRoute)),
   }
 
   action doReselectPaladinWeaponMasteryOnLongRest = all {
@@ -87,7 +97,7 @@ module characterSheetWeaponMasteryContainersSelectedIdentityRouteMbt {
 
   action doSelectRangerWeaponMastery = all {
     qState.ready,
-    recordRoute(retainWeaponMasteryRoute(qRoute)),
+    recordRoute(selectWeaponMasteryRoute(qRoute)),
   }
 
   action doReselectRangerWeaponMasteryOnLongRest = all {
@@ -97,7 +107,7 @@ module characterSheetWeaponMasteryContainersSelectedIdentityRouteMbt {
 
   action doSelectRogueWeaponMastery = all {
     qState.ready,
-    recordRoute(retainWeaponMasteryRoute(qRoute)),
+    recordRoute(selectWeaponMasteryRoute(qRoute)),
   }
 
   action doReselectRogueWeaponMasteryOnLongRest = all {

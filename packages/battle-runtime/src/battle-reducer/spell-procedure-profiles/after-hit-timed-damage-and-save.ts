@@ -144,6 +144,7 @@ function admitAfterHitTimedDamageAndSave(
           },
           activeEffect: {
             kind: "spellTurnStartDamageAndSave",
+            source: "afterHitTimedDamageAndSave",
             sourceSpellId: spell.id,
             sourceCombatantId: ctx.actor.combatantId,
             damage: {
@@ -344,6 +345,7 @@ function resolveAfterHitTimedDamageAndSave(
   }
   const damageAddition: AttackSpellDamageAddition = {
     kind: "attackSpellDamageAddition",
+    sourceProcedure: "afterHitTimedDamageAndSave",
     sourceSpellId: input.invocation.spell.id,
     sourceCombatantId: input.input.subject.casterId,
     damage: {

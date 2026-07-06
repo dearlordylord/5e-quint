@@ -373,17 +373,50 @@ describe("QMBT14 deterministic Command control option admission", () => {
         fills: [],
       }),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
-    expect(
-      resolveBattleSubject({
-        state: targetTurn.state,
-        subject: {
-          tag: "runtimeCommand",
-          actorId: spellTargetId,
-          command: "move",
-        },
-        fills: [],
-      }),
-    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+    const suppressedMove = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellTargetId,
+        command: "move",
+      },
+      fills: [],
+    });
+    expect(suppressedMove).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+    });
+    expect(suppressedMove).not.toHaveProperty("routeEvents");
+    const staleCommandGrovel = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellTargetId,
+        command: "commandGrovel",
+        sourceCombatantId: spellCasterId,
+        sourceSpellId: spellId(commandUnitId),
+      },
+      fills: [],
+    });
+    expect(staleCommandGrovel).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+    });
+    expect(staleCommandGrovel).not.toHaveProperty("routeEvents");
+    const wrongActorHaltEndTurn = resolveBattleSubject({
+      state: targetTurn.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellCasterId,
+        command: "endTurn",
+      },
+      fills: [],
+    });
+    expect(wrongActorHaltEndTurn).toMatchObject({
+      tag: "invalid",
+      reason: "wrongActor",
+    });
+    expect(wrongActorHaltEndTurn).not.toHaveProperty("routeEvents");
 
     const ended = endTurn({ state: targetTurn.state, actorId: spellTargetId });
     if (ended.tag !== "resolved") {

@@ -7,7 +7,7 @@
       "deterministic-qnt-replay",
       "focused-mbt"
     ],
-    "rowPolicy": "Every supported unit-feature profile fact must emit an obligation evidence row with profile-scoped QNT owners and focused MBT or deterministic QNT replay witnesses, or an explicit gap row."
+    "rowPolicy": "Every supported unit-feature profile fact must emit an obligation evidence row with profile-scoped QNT owners and obligation-scoped focused MBT or deterministic QNT replay witnesses, or an explicit gap row."
   },
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "scopes": [
@@ -42,13 +42,99 @@
           "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationQntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-extra-attack.mbt.qnt",
+              "stepAction": "stepSpendAllSlots"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/dark-ones-blessing-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/disciple-of-life-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "obligationStatus": "covered",
           "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -96,11 +182,44 @@
           ],
           "profileId": "unit-feature.bonus-action-ongoing-rage",
           "profileKind": "persistent-effect",
-          "qntMbtWitnesses": [
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "barbarian_rage"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationQntMbtWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -146,28 +265,31 @@
               "stepAction": "step"
             }
           ],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "barbarian_rage"
-        },
-        {
-          "evidenceStatus": "evidence-present",
-          "gaps": [],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
           "obligationStatus": "covered",
           "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -215,11 +337,44 @@
           ],
           "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
           "profileKind": "resource",
-          "qntMbtWitnesses": [
+          "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
+              "role": "proof-only"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "bard_bardic_inspiration"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationQntMbtWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -265,28 +420,31 @@
               "stepAction": "step"
             }
           ],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
-              "role": "proof-only"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "bard_bardic_inspiration"
-        },
-        {
-          "evidenceStatus": "evidence-present",
-          "gaps": [],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
           "obligationStatus": "covered",
           "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -334,11 +492,44 @@
           ],
           "profileId": "unit-feature.bardic-inspiration-grant",
           "profileKind": "bonus-action",
-          "qntMbtWitnesses": [
+          "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
+              "role": "proof-only"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "bard_bardic_inspiration"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationQntMbtWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -384,28 +575,31 @@
               "stepAction": "step"
             }
           ],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
-              "role": "proof-only"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "bard_bardic_inspiration"
-        },
-        {
-          "evidenceStatus": "evidence-present",
-          "gaps": [],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
           "obligationStatus": "covered",
           "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -453,11 +647,44 @@
           ],
           "profileId": "unit-feature.self-bonus-action-healing",
           "profileKind": "bonus-action",
-          "qntMbtWitnesses": [
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "fighter_second_wind"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationQntMbtWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -503,28 +730,31 @@
               "stepAction": "step"
             }
           ],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "fighter_second_wind"
-        },
-        {
-          "evidenceStatus": "evidence-present",
-          "gaps": [],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
           "obligationStatus": "covered",
           "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -572,11 +802,44 @@
           ],
           "profileId": "unit-feature.martial-arts-attack-projection",
           "profileKind": "passive",
-          "qntMbtWitnesses": [
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "monk_martial_arts"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationQntMbtWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -622,28 +885,31 @@
               "stepAction": "step"
             }
           ],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "monk_martial_arts"
-        },
-        {
-          "evidenceStatus": "evidence-present",
-          "gaps": [],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
           "obligationStatus": "covered",
           "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -691,11 +957,48 @@
           ],
           "profileId": "unit-feature.attack-damage-rider",
           "profileKind": "persistent-effect",
-          "qntMbtWitnesses": [
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "rogue_sneak_attack"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationQntMbtWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -741,32 +1044,31 @@
               "stepAction": "step"
             }
           ],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "rogue_sneak_attack"
-        },
-        {
-          "evidenceStatus": "evidence-present",
-          "gaps": [],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
           "obligationStatus": "covered",
           "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -814,56 +1116,6 @@
           ],
           "profileId": "unit-feature.innate-sorcery-activation",
           "profileKind": "persistent-effect",
-          "qntMbtWitnesses": [
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-extra-attack.mbt.qnt",
-              "stepAction": "stepSpendAllSlots"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/dark-ones-blessing-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/disciple-of-life-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
-              "stepAction": "step"
-            }
-          ],
           "qntOwners": [
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
@@ -910,13 +1162,99 @@
           "gaps": [],
           "joinStatus": "covered",
           "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationQntMbtWitnesses": [
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-extra-attack.mbt.qnt",
+              "stepAction": "stepSpendAllSlots"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/dark-ones-blessing-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/disciple-of-life-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
+              "stepAction": "step"
+            }
+          ],
           "obligationStatus": "covered",
           "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -964,11 +1302,44 @@
           ],
           "profileId": "unit-feature.passive-saving-throw-roll-mode",
           "profileKind": "passive",
-          "qntMbtWitnesses": [
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "barbarian_danger_sense"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationQntMbtWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -1014,28 +1385,31 @@
               "stepAction": "step"
             }
           ],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "barbarian_danger_sense"
-        },
-        {
-          "evidenceStatus": "evidence-present",
-          "gaps": [],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
           "obligationStatus": "covered",
           "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -1083,11 +1457,44 @@
           ],
           "profileId": "unit-feature.bonus-action-ongoing-rage",
           "profileKind": "persistent-effect",
-          "qntMbtWitnesses": [
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "barbarian_rage"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationQntMbtWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -1133,28 +1540,31 @@
               "stepAction": "step"
             }
           ],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "barbarian_rage"
-        },
-        {
-          "evidenceStatus": "evidence-present",
-          "gaps": [],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
           "obligationStatus": "covered",
           "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -1202,11 +1612,44 @@
           ],
           "profileId": "unit-feature.first-attack-roll-reckless-advantage",
           "profileKind": "persistent-effect",
-          "qntMbtWitnesses": [
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "barbarian_reckless_attack"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationQntMbtWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -1252,28 +1695,31 @@
               "stepAction": "step"
             }
           ],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "barbarian_reckless_attack"
-        },
-        {
-          "evidenceStatus": "evidence-present",
-          "gaps": [],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
           "obligationStatus": "covered",
           "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -1321,11 +1767,44 @@
           ],
           "profileId": "unit-feature.bardic-inspiration-failed-d20-test",
           "profileKind": "resource",
-          "qntMbtWitnesses": [
+          "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
+              "role": "proof-only"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "bard_bardic_inspiration"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationQntMbtWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -1371,28 +1850,31 @@
               "stepAction": "step"
             }
           ],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
-              "role": "proof-only"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "bard_bardic_inspiration"
-        },
-        {
-          "evidenceStatus": "evidence-present",
-          "gaps": [],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
           "obligationStatus": "covered",
           "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -1440,11 +1922,44 @@
           ],
           "profileId": "unit-feature.bardic-inspiration-grant",
           "profileKind": "bonus-action",
-          "qntMbtWitnesses": [
+          "qntOwners": [
+            {
+              "ownerPath": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
+              "role": "proof-only"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "bard_bardic_inspiration"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationQntMbtWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -1490,28 +2005,31 @@
               "stepAction": "step"
             }
           ],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
-              "role": "proof-only"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "bard_bardic_inspiration"
-        },
-        {
-          "evidenceStatus": "evidence-present",
-          "gaps": [],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
           "obligationStatus": "covered",
           "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -1559,11 +2077,44 @@
           ],
           "profileId": "unit-feature.action-surge-resource",
           "profileKind": "resource",
-          "qntMbtWitnesses": [
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "fighter_action_surge"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationQntMbtWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -1609,28 +2160,31 @@
               "stepAction": "step"
             }
           ],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "fighter_action_surge"
-        },
-        {
-          "evidenceStatus": "evidence-present",
-          "gaps": [],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
           "obligationStatus": "covered",
           "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -1678,11 +2232,44 @@
           ],
           "profileId": "unit-feature.self-bonus-action-healing",
           "profileKind": "bonus-action",
-          "qntMbtWitnesses": [
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "fighter_second_wind"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationQntMbtWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -1728,28 +2315,31 @@
               "stepAction": "step"
             }
           ],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "fighter_second_wind"
-        },
-        {
-          "evidenceStatus": "evidence-present",
-          "gaps": [],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
           "obligationStatus": "covered",
           "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -1797,11 +2387,44 @@
           ],
           "profileId": "unit-feature.failed-ability-check-resource-boost",
           "profileKind": "resource",
-          "qntMbtWitnesses": [
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "fighter_tactical_mind"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationQntMbtWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -1847,28 +2470,31 @@
               "stepAction": "step"
             }
           ],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "fighter_tactical_mind"
-        },
-        {
-          "evidenceStatus": "evidence-present",
-          "gaps": [],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
           "obligationStatus": "covered",
           "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -1916,11 +2542,44 @@
           ],
           "profileId": "unit-feature.martial-arts-attack-projection",
           "profileKind": "passive",
-          "qntMbtWitnesses": [
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "monk_martial_arts"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationQntMbtWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -1966,28 +2625,31 @@
               "stepAction": "step"
             }
           ],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "monk_martial_arts"
-        },
-        {
-          "evidenceStatus": "evidence-present",
-          "gaps": [],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
           "obligationStatus": "covered",
           "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -2035,11 +2697,44 @@
           ],
           "profileId": "unit-feature.passive-speed-bonus",
           "profileKind": "passive",
-          "qntMbtWitnesses": [
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "monk_unarmored_movement"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationQntMbtWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -2085,28 +2780,31 @@
               "stepAction": "step"
             }
           ],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "monk_unarmored_movement"
-        },
-        {
-          "evidenceStatus": "evidence-present",
-          "gaps": [],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
           "obligationStatus": "covered",
           "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -2154,11 +2852,44 @@
           ],
           "profileId": "unit-feature.alternate-action-cost",
           "profileKind": "bonus-action",
-          "qntMbtWitnesses": [
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "rogue_cunning_action"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationQntMbtWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -2204,28 +2935,31 @@
               "stepAction": "step"
             }
           ],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "rogue_cunning_action"
-        },
-        {
-          "evidenceStatus": "evidence-present",
-          "gaps": [],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
           "obligationStatus": "covered",
           "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -2273,11 +3007,48 @@
           ],
           "profileId": "unit-feature.attack-damage-rider",
           "profileKind": "persistent-effect",
-          "qntMbtWitnesses": [
+          "qntOwners": [
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
+              "role": "semantic-core"
+            },
+            {
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
+              "role": "semantic-core"
+            }
+          ],
+          "runtime": "battle",
+          "tag": "obligation-evidence",
+          "unitId": "rogue_sneak_attack"
+        },
+        {
+          "evidenceStatus": "evidence-present",
+          "gaps": [],
+          "joinStatus": "covered",
+          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+          "obligationQntMbtWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -2323,32 +3094,31 @@
               "stepAction": "step"
             }
           ],
-          "qntOwners": [
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
-              "role": "semantic-core"
-            },
-            {
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt",
-              "role": "semantic-core"
-            }
-          ],
-          "runtime": "battle",
-          "tag": "obligation-evidence",
-          "unitId": "rogue_sneak_attack"
-        },
-        {
-          "evidenceStatus": "evidence-present",
-          "gaps": [],
-          "joinStatus": "covered",
-          "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
           "obligationStatus": "covered",
           "obligationTitle": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes",
           "parityWitnesses": [
             {
               "kind": "focused-mbt",
               "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+              "stepAction": "step"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+              "qntSpecPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
               "stepAction": "step"
             },
             {
@@ -2396,56 +3166,6 @@
           ],
           "profileId": "unit-feature.innate-sorcery-activation",
           "profileKind": "persistent-effect",
-          "qntMbtWitnesses": [
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/rule-core-features.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/extra-attack-count.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-extra-attack.mbt.qnt",
-              "stepAction": "stepSpendAllSlots"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/rogue-steady-aim.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/dark-ones-blessing-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/disciple-of-life-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/preserve-life-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/open-hand-technique-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt",
-              "stepAction": "step"
-            },
-            {
-              "kind": "focused-mbt",
-              "ownerPath": "packages/battle-runtime/src/slow-fall-selected-identity.mbt.test.ts",
-              "qntSpecPath": "packages/battle-runtime/battle-runtime-slow-fall-selected-identity.mbt.qnt",
-              "stepAction": "step"
-            }
-          ],
           "qntOwners": [
             {
               "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",

@@ -1,0 +1,581 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/character-sheet-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts and reducer-route-connectors.mbt.test.ts Weapon Mastery copied qRoute versus public selected-reference projection and Long Rest reselection replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "acceptance": {
+    "driverPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt",
+    "connectorPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.route.mbt.qnt",
+    "routeClass": "reducer-routed",
+    "durableOwner": "CharacterSheetSelectedReferenceOwner owns selected weapon references and Long Rest reselection; CharacterSheetBuildProjectionOwner owns eligibility and count projection from build and Surface facts. Weapon Mastery property behavior is not owned by this sheet selected-reference replay.",
+    "acceptedProjection": "qRoute"
+  },
+  "status": "pass",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "7bbd5f0e229f1646877193707d28fc62d691a1aecd7ecee55fc57fe3a345e561",
+      "routeConnectorSha256": "1b7b2206889154932114b0853d0efc4c727f79d2a906ffa737e12cd946c02f4b",
+      "branchFamily": "step",
+      "branchAction": "doSelectPaladinWeaponMastery",
+      "observedActionTaken": "doSelectPaladinWeaponMastery",
+      "harnessTestPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=characterSheetWeaponMasterySelectedReferenceProjection action=doSelectPaladinWeaponMastery qRoute=weapon-mastery-selected-identity-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doSelectPaladinWeaponMastery",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#createReadyRouteDriver",
+        "routeSubject": "SheetSelectedReferenceProjectionRouteSubject",
+        "owners": [
+          "CharacterSheetSelectedReferenceOwner",
+          "CharacterSheetBuildProjectionOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "617983350c0f2f223bafefa1e7f5ab92aa760c7949bba6c293da1bbca1815164",
+        "observedProjectionSha256": "617983350c0f2f223bafefa1e7f5ab92aa760c7949bba6c293da1bbca1815164",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "SheetBuildFactsProjectionRouteSubject",
+            "SheetSelectedReferenceProjectionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_sheet",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "project_weapon_mastery_selected_references",
+            "packages/character-sheet-runtime/src/weapon-mastery.ts#characterSheetWeaponMasterySelectedReferenceProjection",
+            "read_public_qRoute",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterSheetRouteQuintState"
+          ],
+          "routeEventSource": "Character Sheet qRoute events returned by public characterSheetWeaponMasterySelectedReferenceProjection after deriving Paladin selected weapon refs, choice count, Long Rest change count, and eligible weapons from CharacterBuild selected class choices plus Surface Weapon Mastery profile facts.",
+          "reducerPublicApiPath": "packages/character-sheet-runtime/src/weapon-mastery.ts#characterSheetWeaponMasterySelectedReferenceProjection"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.progression",
+          "CharacterBuild.features[kind=selectedClassChoice]",
+          "UnitRecord.mechanics.family=weapon_mastery_choice",
+          "WeaponMasteryChoiceProfile.choiceCount",
+          "WeaponMasteryChoiceProfile.longRestChangeCount",
+          "WeaponMasteryChoiceProfile.eligibleWeapons",
+          "CharacterSheetRouteEvent.kind=retainCharacterSheetSelectedReferences",
+          "CharacterSheetRouteEvent.kind=projectCharacterSheetFacts",
+          "CharacterSheetRouteEvent.owner=selectedReference",
+          "CharacterSheetRouteEvent.owner=buildProjection"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Paladin Weapon Mastery selected weapon refs project through the public selected-reference projection route."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "7bbd5f0e229f1646877193707d28fc62d691a1aecd7ecee55fc57fe3a345e561",
+      "routeConnectorSha256": "1b7b2206889154932114b0853d0efc4c727f79d2a906ffa737e12cd946c02f4b",
+      "branchFamily": "step",
+      "branchAction": "doReselectPaladinWeaponMasteryOnLongRest",
+      "observedActionTaken": "doReselectPaladinWeaponMasteryOnLongRest",
+      "harnessTestPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=completeLongRestWeaponMasteryReselectionWithRoute action=doReselectPaladinWeaponMasteryOnLongRest qRoute=weapon-mastery-selected-identity-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doReselectPaladinWeaponMasteryOnLongRest",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#createReadyRouteDriver",
+        "routeSubject": "SheetSelectedReferenceProjectionRouteSubject",
+        "owners": [
+          "CharacterSheetSelectedReferenceOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "e361559e276fbb36a9bfb43d2bde765757cc56db80824331caadbd49b1800ff8",
+        "observedProjectionSha256": "e361559e276fbb36a9bfb43d2bde765757cc56db80824331caadbd49b1800ff8",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "SheetBuildFactsProjectionRouteSubject",
+            "SheetSelectedReferenceProjectionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_sheet",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "start_long_rest",
+            "finish_long_rest",
+            "complete_weapon_mastery_long_rest_reselection",
+            "packages/character-sheet-runtime/src/rests.ts#completeLongRestWeaponMasteryReselectionWithRoute",
+            "packages/character-sheet-runtime/src/rests.ts#completeLongRest",
+            "read_public_qRoute",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterSheetRouteQuintState"
+          ],
+          "routeEventSource": "Character Sheet qRoute events returned by public completeLongRestWeaponMasteryReselectionWithRoute after accepting Paladin Long Rest weapon reselection through completeLongRest.",
+          "reducerPublicApiPath": "packages/character-sheet-runtime/src/rests.ts#completeLongRestWeaponMasteryReselectionWithRoute"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.features[kind=selectedClassChoice]",
+          "CharacterSheetLongRestInput.weaponMasteryReselections",
+          "WeaponMasteryChoiceProfile.choiceCount",
+          "WeaponMasteryChoiceProfile.longRestChangeCount",
+          "WeaponMasteryChoiceProfile.eligibleWeapons",
+          "CharacterSheetRouteEvent.kind=retainCharacterSheetSelectedReferences",
+          "CharacterSheetRouteEvent.kind=completeCharacterSheetRest",
+          "CharacterSheetRouteEvent.owner=selectedReference"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Paladin Long Rest Weapon Mastery reselection accepts through the public rest reducer route."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "7bbd5f0e229f1646877193707d28fc62d691a1aecd7ecee55fc57fe3a345e561",
+      "routeConnectorSha256": "1b7b2206889154932114b0853d0efc4c727f79d2a906ffa737e12cd946c02f4b",
+      "branchFamily": "step",
+      "branchAction": "doSelectRangerWeaponMastery",
+      "observedActionTaken": "doSelectRangerWeaponMastery",
+      "harnessTestPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=characterSheetWeaponMasterySelectedReferenceProjection action=doSelectRangerWeaponMastery qRoute=weapon-mastery-selected-identity-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doSelectRangerWeaponMastery",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#createReadyRouteDriver",
+        "routeSubject": "SheetSelectedReferenceProjectionRouteSubject",
+        "owners": [
+          "CharacterSheetSelectedReferenceOwner",
+          "CharacterSheetBuildProjectionOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "617983350c0f2f223bafefa1e7f5ab92aa760c7949bba6c293da1bbca1815164",
+        "observedProjectionSha256": "617983350c0f2f223bafefa1e7f5ab92aa760c7949bba6c293da1bbca1815164",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "SheetBuildFactsProjectionRouteSubject",
+            "SheetSelectedReferenceProjectionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_sheet",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "project_weapon_mastery_selected_references",
+            "packages/character-sheet-runtime/src/weapon-mastery.ts#characterSheetWeaponMasterySelectedReferenceProjection",
+            "read_public_qRoute",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterSheetRouteQuintState"
+          ],
+          "routeEventSource": "Character Sheet qRoute events returned by public characterSheetWeaponMasterySelectedReferenceProjection after deriving Ranger selected weapon refs, choice count, Long Rest change count, and eligible weapons from CharacterBuild selected class choices plus Surface Weapon Mastery profile facts.",
+          "reducerPublicApiPath": "packages/character-sheet-runtime/src/weapon-mastery.ts#characterSheetWeaponMasterySelectedReferenceProjection"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.progression",
+          "CharacterBuild.features[kind=selectedClassChoice]",
+          "UnitRecord.mechanics.family=weapon_mastery_choice",
+          "WeaponMasteryChoiceProfile.choiceCount",
+          "WeaponMasteryChoiceProfile.longRestChangeCount",
+          "WeaponMasteryChoiceProfile.eligibleWeapons",
+          "CharacterSheetRouteEvent.kind=retainCharacterSheetSelectedReferences",
+          "CharacterSheetRouteEvent.kind=projectCharacterSheetFacts",
+          "CharacterSheetRouteEvent.owner=selectedReference",
+          "CharacterSheetRouteEvent.owner=buildProjection"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Ranger Weapon Mastery selected weapon refs project through the public selected-reference projection route."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "7bbd5f0e229f1646877193707d28fc62d691a1aecd7ecee55fc57fe3a345e561",
+      "routeConnectorSha256": "1b7b2206889154932114b0853d0efc4c727f79d2a906ffa737e12cd946c02f4b",
+      "branchFamily": "step",
+      "branchAction": "doReselectRangerWeaponMasteryOnLongRest",
+      "observedActionTaken": "doReselectRangerWeaponMasteryOnLongRest",
+      "harnessTestPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=completeLongRestWeaponMasteryReselectionWithRoute action=doReselectRangerWeaponMasteryOnLongRest qRoute=weapon-mastery-selected-identity-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doReselectRangerWeaponMasteryOnLongRest",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#createReadyRouteDriver",
+        "routeSubject": "SheetSelectedReferenceProjectionRouteSubject",
+        "owners": [
+          "CharacterSheetSelectedReferenceOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "e361559e276fbb36a9bfb43d2bde765757cc56db80824331caadbd49b1800ff8",
+        "observedProjectionSha256": "e361559e276fbb36a9bfb43d2bde765757cc56db80824331caadbd49b1800ff8",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "SheetBuildFactsProjectionRouteSubject",
+            "SheetSelectedReferenceProjectionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_sheet",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "start_long_rest",
+            "finish_long_rest",
+            "complete_weapon_mastery_long_rest_reselection",
+            "packages/character-sheet-runtime/src/rests.ts#completeLongRestWeaponMasteryReselectionWithRoute",
+            "packages/character-sheet-runtime/src/rests.ts#completeLongRest",
+            "read_public_qRoute",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterSheetRouteQuintState"
+          ],
+          "routeEventSource": "Character Sheet qRoute events returned by public completeLongRestWeaponMasteryReselectionWithRoute after accepting Ranger Long Rest weapon reselection through completeLongRest.",
+          "reducerPublicApiPath": "packages/character-sheet-runtime/src/rests.ts#completeLongRestWeaponMasteryReselectionWithRoute"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.features[kind=selectedClassChoice]",
+          "CharacterSheetLongRestInput.weaponMasteryReselections",
+          "WeaponMasteryChoiceProfile.choiceCount",
+          "WeaponMasteryChoiceProfile.longRestChangeCount",
+          "WeaponMasteryChoiceProfile.eligibleWeapons",
+          "CharacterSheetRouteEvent.kind=retainCharacterSheetSelectedReferences",
+          "CharacterSheetRouteEvent.kind=completeCharacterSheetRest",
+          "CharacterSheetRouteEvent.owner=selectedReference"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Ranger Long Rest Weapon Mastery reselection accepts through the public rest reducer route."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "7bbd5f0e229f1646877193707d28fc62d691a1aecd7ecee55fc57fe3a345e561",
+      "routeConnectorSha256": "1b7b2206889154932114b0853d0efc4c727f79d2a906ffa737e12cd946c02f4b",
+      "branchFamily": "step",
+      "branchAction": "doSelectRogueWeaponMastery",
+      "observedActionTaken": "doSelectRogueWeaponMastery",
+      "harnessTestPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=characterSheetWeaponMasterySelectedReferenceProjection action=doSelectRogueWeaponMastery qRoute=weapon-mastery-selected-identity-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doSelectRogueWeaponMastery",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#createReadyRouteDriver",
+        "routeSubject": "SheetSelectedReferenceProjectionRouteSubject",
+        "owners": [
+          "CharacterSheetSelectedReferenceOwner",
+          "CharacterSheetBuildProjectionOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "617983350c0f2f223bafefa1e7f5ab92aa760c7949bba6c293da1bbca1815164",
+        "observedProjectionSha256": "617983350c0f2f223bafefa1e7f5ab92aa760c7949bba6c293da1bbca1815164",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "SheetBuildFactsProjectionRouteSubject",
+            "SheetSelectedReferenceProjectionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_sheet",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "project_weapon_mastery_selected_references",
+            "packages/character-sheet-runtime/src/weapon-mastery.ts#characterSheetWeaponMasterySelectedReferenceProjection",
+            "read_public_qRoute",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterSheetRouteQuintState"
+          ],
+          "routeEventSource": "Character Sheet qRoute events returned by public characterSheetWeaponMasterySelectedReferenceProjection after deriving Rogue selected weapon refs, choice count, Long Rest change count, and eligible weapons from CharacterBuild selected class choices plus Surface Weapon Mastery profile facts.",
+          "reducerPublicApiPath": "packages/character-sheet-runtime/src/weapon-mastery.ts#characterSheetWeaponMasterySelectedReferenceProjection"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.progression",
+          "CharacterBuild.features[kind=selectedClassChoice]",
+          "UnitRecord.mechanics.family=weapon_mastery_choice",
+          "WeaponMasteryChoiceProfile.choiceCount",
+          "WeaponMasteryChoiceProfile.longRestChangeCount",
+          "WeaponMasteryChoiceProfile.eligibleWeapons",
+          "CharacterSheetRouteEvent.kind=retainCharacterSheetSelectedReferences",
+          "CharacterSheetRouteEvent.kind=projectCharacterSheetFacts",
+          "CharacterSheetRouteEvent.owner=selectedReference",
+          "CharacterSheetRouteEvent.owner=buildProjection"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Rogue Weapon Mastery selected weapon refs project through the public selected-reference projection route."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "7bbd5f0e229f1646877193707d28fc62d691a1aecd7ecee55fc57fe3a345e561",
+      "routeConnectorSha256": "1b7b2206889154932114b0853d0efc4c727f79d2a906ffa737e12cd946c02f4b",
+      "branchFamily": "step",
+      "branchAction": "doReselectRogueWeaponMasteryOnLongRest",
+      "observedActionTaken": "doReselectRogueWeaponMasteryOnLongRest",
+      "harnessTestPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=completeLongRestWeaponMasteryReselectionWithRoute action=doReselectRogueWeaponMasteryOnLongRest qRoute=weapon-mastery-selected-identity-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doReselectRogueWeaponMasteryOnLongRest",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#createReadyRouteDriver",
+        "routeSubject": "SheetSelectedReferenceProjectionRouteSubject",
+        "owners": [
+          "CharacterSheetSelectedReferenceOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "e361559e276fbb36a9bfb43d2bde765757cc56db80824331caadbd49b1800ff8",
+        "observedProjectionSha256": "e361559e276fbb36a9bfb43d2bde765757cc56db80824331caadbd49b1800ff8",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "SheetBuildFactsProjectionRouteSubject",
+            "SheetSelectedReferenceProjectionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_sheet",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "start_long_rest",
+            "finish_long_rest",
+            "complete_weapon_mastery_long_rest_reselection",
+            "packages/character-sheet-runtime/src/rests.ts#completeLongRestWeaponMasteryReselectionWithRoute",
+            "packages/character-sheet-runtime/src/rests.ts#completeLongRest",
+            "read_public_qRoute",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterSheetRouteQuintState"
+          ],
+          "routeEventSource": "Character Sheet qRoute events returned by public completeLongRestWeaponMasteryReselectionWithRoute after accepting Rogue Long Rest weapon reselection through completeLongRest.",
+          "reducerPublicApiPath": "packages/character-sheet-runtime/src/rests.ts#completeLongRestWeaponMasteryReselectionWithRoute"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.features[kind=selectedClassChoice]",
+          "CharacterSheetLongRestInput.weaponMasteryReselections",
+          "WeaponMasteryChoiceProfile.choiceCount",
+          "WeaponMasteryChoiceProfile.longRestChangeCount",
+          "WeaponMasteryChoiceProfile.eligibleWeapons",
+          "CharacterSheetRouteEvent.kind=retainCharacterSheetSelectedReferences",
+          "CharacterSheetRouteEvent.kind=completeCharacterSheetRest",
+          "CharacterSheetRouteEvent.owner=selectedReference"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Rogue Long Rest Weapon Mastery reselection accepts through the public rest reducer route."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "7bbd5f0e229f1646877193707d28fc62d691a1aecd7ecee55fc57fe3a345e561",
+      "routeConnectorSha256": "1b7b2206889154932114b0853d0efc4c727f79d2a906ffa737e12cd946c02f4b",
+      "branchFamily": "step",
+      "branchAction": "doAcceptOneChangeWeaponMasteryReselection",
+      "observedActionTaken": "doAcceptOneChangeWeaponMasteryReselection",
+      "harnessTestPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=completeLongRestWeaponMasteryReselectionWithRoute action=doAcceptOneChangeWeaponMasteryReselection qRoute=weapon-mastery-selected-identity-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doAcceptOneChangeWeaponMasteryReselection",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#createReadyRouteDriver",
+        "routeSubject": "SheetSelectedReferenceProjectionRouteSubject",
+        "owners": [
+          "CharacterSheetSelectedReferenceOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "e361559e276fbb36a9bfb43d2bde765757cc56db80824331caadbd49b1800ff8",
+        "observedProjectionSha256": "e361559e276fbb36a9bfb43d2bde765757cc56db80824331caadbd49b1800ff8",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "SheetBuildFactsProjectionRouteSubject",
+            "SheetSelectedReferenceProjectionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_sheet",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "start_long_rest",
+            "finish_long_rest",
+            "complete_weapon_mastery_long_rest_reselection",
+            "packages/character-sheet-runtime/src/rests.ts#completeLongRestWeaponMasteryReselectionWithRoute",
+            "packages/character-sheet-runtime/src/rests.ts#completeLongRest",
+            "read_public_qRoute",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterSheetRouteQuintState"
+          ],
+          "routeEventSource": "Character Sheet qRoute events returned by public completeLongRestWeaponMasteryReselectionWithRoute after accepting one Fighter Long Rest weapon change under the one-change limit.",
+          "reducerPublicApiPath": "packages/character-sheet-runtime/src/rests.ts#completeLongRestWeaponMasteryReselectionWithRoute"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.features[kind=selectedClassChoice]",
+          "CharacterSheetLongRestInput.weaponMasteryReselections",
+          "WeaponMasteryChoiceProfile.choiceCount",
+          "WeaponMasteryChoiceProfile.longRestChangeCount=1",
+          "WeaponMasteryChoiceProfile.eligibleWeapons",
+          "CharacterSheetRouteEvent.kind=retainCharacterSheetSelectedReferences",
+          "CharacterSheetRouteEvent.kind=completeCharacterSheetRest",
+          "CharacterSheetRouteEvent.owner=selectedReference"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "A one-change Fighter Weapon Mastery Long Rest reselection accepts through the public rest reducer route."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "7bbd5f0e229f1646877193707d28fc62d691a1aecd7ecee55fc57fe3a345e561",
+      "routeConnectorSha256": "1b7b2206889154932114b0853d0efc4c727f79d2a906ffa737e12cd946c02f4b",
+      "branchFamily": "step",
+      "branchAction": "doRejectTooManyChangesWeaponMasteryReselection",
+      "observedActionTaken": "doRejectTooManyChangesWeaponMasteryReselection",
+      "harnessTestPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=completeLongRestWeaponMasteryReselectionWithRoute action=doRejectTooManyChangesWeaponMasteryReselection qRoute=weapon-mastery-selected-identity-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRejectTooManyChangesWeaponMasteryReselection",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#createReadyRouteDriver",
+        "routeSubject": "SheetSelectedReferenceProjectionRouteSubject",
+        "owners": [
+          "CharacterSheetSelectedReferenceOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "43cd3eb6e5f74966a80e0df0f4970517fd04d9038f2b3c55af55af7c3f98fc2a",
+        "observedProjectionSha256": "43cd3eb6e5f74966a80e0df0f4970517fd04d9038f2b3c55af55af7c3f98fc2a",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "SheetBuildFactsProjectionRouteSubject",
+            "SheetSelectedReferenceProjectionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_sheet",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "start_long_rest",
+            "finish_long_rest",
+            "complete_weapon_mastery_long_rest_reselection",
+            "packages/character-sheet-runtime/src/rests.ts#completeLongRestWeaponMasteryReselectionWithRoute",
+            "packages/character-sheet-runtime/src/rests.ts#completeLongRest",
+            "read_public_qRoute",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterSheetRouteQuintState"
+          ],
+          "routeEventSource": "Character Sheet qRoute events returned by public completeLongRestWeaponMasteryReselectionWithRoute after rejecting too many Fighter Long Rest weapon changes under the one-change limit.",
+          "reducerPublicApiPath": "packages/character-sheet-runtime/src/rests.ts#completeLongRestWeaponMasteryReselectionWithRoute"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.features[kind=selectedClassChoice]",
+          "CharacterSheetLongRestInput.weaponMasteryReselections",
+          "WeaponMasteryChoiceProfile.choiceCount",
+          "WeaponMasteryChoiceProfile.longRestChangeCount=1",
+          "WeaponMasteryChoiceProfile.eligibleWeapons",
+          "CharacterSheetIssue.message",
+          "CharacterSheetRouteEvent.kind=resolveCharacterSheetSubject",
+          "CharacterSheetRouteEvent.holes=projectionChoice",
+          "CharacterSheetRouteEvent.owner=selectedReference"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "A too-many-changes Fighter Weapon Mastery Long Rest reselection rejects through the public rest reducer route."
+      }
+    }
+  ]
+}

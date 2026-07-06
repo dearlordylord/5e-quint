@@ -1,7 +1,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.magic-action-healing-pool
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3PUTB-04 cleric_preserve_life
-// UNIT-IDENTITY-MBT-REPLAY: L3PUTB-04 cleric_preserve_life doDistributeHealing doSelfHealing doRejectNonBloodied doRejectOverPool doRejectOverCap doRejectMissingRange doRejectMissingResource doRejectMissingMagicAction
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3PUTB-04 cleric_preserve_life
+// UNIT-IDENTITY-REPLAY: L3PUTB-04 cleric_preserve_life doDistributeHealing doSelfHealing doRejectNonBloodied doRejectOverPool doRejectOverCap doRejectMissingRange doRejectMissingResource doRejectMissingMagicAction
 import { Hp, movementFeet } from "@dnd/shared/types";
 import * as Either from "effect/Either";
 
@@ -14,7 +14,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
   clericChannelDivinityUnitId,
   clericPreserveLifeUnitId,
@@ -65,8 +65,8 @@ const channelDivinityUnit = unitLibrary.requireUnit(
 const preserveLifeUnitRef = requirePreserveLifeUnitRef();
 const secondTargetId = combatantId("preserve-life-selected-second-target");
 
-defineSelectedIdentityWitness({
-  describeLabel: "Preserve Life selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Preserve Life selected identity replay",
   taskId: "L3PUTB-04",
   specFile: mbtSpecPath(
     import.meta.dirname,
@@ -104,13 +104,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doDistributeHealing",
-          projectionAfter: expectedProjection({
-            targetHp: 10,
-            secondTargetHp: 10,
-            channelDivinityUsesRemaining: 1,
-            actionResourcesRemaining: 0,
-            lastResult: "distributed",
-          }),
           discover: () =>
             projectBattleState(
               recordResolvedState(
@@ -124,13 +117,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doSelfHealing",
-          projectionAfter: expectedProjection({
-            casterHp: 10,
-            targetHp: 12,
-            channelDivinityUsesRemaining: 1,
-            actionResourcesRemaining: 0,
-            lastResult: "self",
-          }),
           discover: () =>
             projectBattleState(
               recordResolvedState(
@@ -144,10 +130,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doRejectNonBloodied",
-          projectionAfter: expectedProjection({
-            targetHp: 11,
-            lastResult: "rejectNonBloodied",
-          }),
           discover: () => {
             const state = preserveLifeBattle({ targetHp: 11 });
             recordInvalidResult(
@@ -160,11 +142,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doRejectOverPool",
-          projectionAfter: expectedProjection({
-            targetHp: 0,
-            secondTargetHp: 0,
-            lastResult: "rejectOverPool",
-          }),
           discover: () => {
             const state = preserveLifeBattle({
               targetHp: 0,
@@ -181,9 +158,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doRejectOverCap",
-          projectionAfter: expectedProjection({
-            lastResult: "rejectOverCap",
-          }),
           discover: () => {
             const state = preserveLifeBattle();
             recordInvalidResult(
@@ -196,9 +170,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doRejectMissingRange",
-          projectionAfter: expectedProjection({
-            lastResult: "rejectMissingRange",
-          }),
           discover: () => {
             const state = preserveLifeBattle();
             const act = preserveLifeAct(state);
@@ -225,10 +196,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doRejectMissingResource",
-          projectionAfter: expectedProjection({
-            channelDivinityUsesRemaining: 0,
-            lastResult: "rejectMissingResource",
-          }),
           discover: () => {
             const state = preserveLifeBattle({
               channelDivinityUsesRemaining: 0,
@@ -245,10 +212,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doRejectMissingMagicAction",
-          projectionAfter: expectedProjection({
-            actionResourcesRemaining: 0,
-            lastResult: "rejectMissingMagicAction",
-          }),
           discover: () => {
             const base = preserveLifeBattle();
             const act = preserveLifeAct(base);

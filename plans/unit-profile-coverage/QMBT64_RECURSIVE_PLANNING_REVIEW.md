@@ -29,7 +29,7 @@ append:
   one profile.
 - QMBT62 refreshed matrix artifacts to 59 installed Units, 25 stable
   executable profiles, 32/45 supported executable Unit coverage, 32/32
-  deterministic admission/projection coverage, and 10/32 selected identity MBT
+  deterministic admission/projection coverage, and 10/32 selected identity replay
   coverage.
 - QMBT63 selected `bard_cutting_words` as the next narrow feature-style
   widening slice. The selected boundary is the missing Ability Check branch of

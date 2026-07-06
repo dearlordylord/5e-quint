@@ -123,6 +123,53 @@ module battleRuntimeConcentrationBreakTeardownRouteMbt {
         )
       )
 
+  pure def concentrationEndDiscoveryRoute(route: List[ReducerRouteEvent]): List[ReducerRouteEvent] =
+    route.append(
+      routeDiscoverBattleActs(
+        ConcentrationTeardownRouteSubject,
+        Set(),
+        BattleConcentrationOwner,
+      )
+    )
+
+  pure def concentrationReplacementCastRoute(route: List[ReducerRouteEvent]): List[ReducerRouteEvent] =
+    route
+      .append(
+        routeDiscoverBattleActs(
+          ConcentrationTeardownRouteSubject,
+          Set(),
+          BattleSpellSlotAndActionEconomyOwner,
+        )
+      )
+      .append(
+        routeResolveBattleSubjectWithoutFill(
+          ConcentrationTeardownRouteSubject,
+          Set(),
+          BattleConcentrationOwner,
+        )
+      )
+      .append(
+        routeResolveBattleSubjectWithoutFill(
+          ConcentrationTeardownRouteSubject,
+          Set(),
+          BattleActiveEffectOwner,
+        )
+      )
+      .append(
+        routeResolveBattleSubjectWithoutFill(
+          ConcentrationTeardownRouteSubject,
+          Set(),
+          BattleActiveEffectOwner,
+        )
+      )
+      .append(
+        routeResolveBattleSubjectWithoutFill(
+          ConcentrationTeardownRouteSubject,
+          Set(),
+          BattleConcentrationOwner,
+        )
+      )
+
   action init = recordProjection(
     Init,
     0,
@@ -234,7 +281,9 @@ module battleRuntimeConcentrationBreakTeardownRouteMbt {
       true,
       false,
       witnessResolved(ConcentrationBreakTeardown),
-      concentrationBreakCleanupRoute(concentrationCastRoute(qRoute)),
+      concentrationBreakCleanupRoute(
+        concentrationEndDiscoveryRoute(concentrationCastRoute(qRoute))
+      ),
     ),
   }
 
@@ -252,7 +301,7 @@ module battleRuntimeConcentrationBreakTeardownRouteMbt {
       false,
       true,
       witnessResolved(ConcentrationBreakTeardown),
-      concentrationCastRoute(concentrationBreakCleanupRoute(qRoute)),
+      concentrationReplacementCastRoute(qRoute),
     ),
   }
 

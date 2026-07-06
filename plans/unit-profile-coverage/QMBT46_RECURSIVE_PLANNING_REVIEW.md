@@ -32,7 +32,7 @@ Append:
   death-prevention state.
 - The current generated matrix reports 59 installed Units, 20 stable executable
   profiles, 27/45 supported executable Unit coverage, 27/27 deterministic
-  admission/projection coverage, and 10/27 selected identity MBT coverage.
+  admission/projection coverage, and 10/27 selected identity replay coverage.
 
 ## Source Check
 

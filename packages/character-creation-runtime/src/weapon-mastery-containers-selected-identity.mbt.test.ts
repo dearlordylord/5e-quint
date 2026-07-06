@@ -1,10 +1,10 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1D2-WEAPON-MASTERY-CONTAINERS fighter_weapon_mastery barbarian_weapon_mastery paladin_weapon_mastery ranger_weapon_mastery rogue_weapon_mastery
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1D2-WEAPON-MASTERY-CONTAINERS fighter_weapon_mastery barbarian_weapon_mastery paladin_weapon_mastery ranger_weapon_mastery rogue_weapon_mastery
 // KERNEL-COVERAGE: parity-witness CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION
-// UNIT-IDENTITY-MBT-REPLAY: L1D2-WEAPON-MASTERY-CONTAINERS fighter_weapon_mastery doFinalizeFighterWeaponMastery
-// UNIT-IDENTITY-MBT-REPLAY: L1D2-WEAPON-MASTERY-CONTAINERS barbarian_weapon_mastery doFinalizeBarbarianWeaponMastery
-// UNIT-IDENTITY-MBT-REPLAY: L1D2-WEAPON-MASTERY-CONTAINERS paladin_weapon_mastery doFinalizePaladinWeaponMastery
-// UNIT-IDENTITY-MBT-REPLAY: L1D2-WEAPON-MASTERY-CONTAINERS ranger_weapon_mastery doFinalizeRangerWeaponMastery
-// UNIT-IDENTITY-MBT-REPLAY: L1D2-WEAPON-MASTERY-CONTAINERS rogue_weapon_mastery doFinalizeRogueWeaponMastery
+// UNIT-IDENTITY-REPLAY: L1D2-WEAPON-MASTERY-CONTAINERS fighter_weapon_mastery doFinalizeFighterWeaponMastery
+// UNIT-IDENTITY-REPLAY: L1D2-WEAPON-MASTERY-CONTAINERS barbarian_weapon_mastery doFinalizeBarbarianWeaponMastery
+// UNIT-IDENTITY-REPLAY: L1D2-WEAPON-MASTERY-CONTAINERS paladin_weapon_mastery doFinalizePaladinWeaponMastery
+// UNIT-IDENTITY-REPLAY: L1D2-WEAPON-MASTERY-CONTAINERS ranger_weapon_mastery doFinalizeRangerWeaponMastery
+// UNIT-IDENTITY-REPLAY: L1D2-WEAPON-MASTERY-CONTAINERS rogue_weapon_mastery doFinalizeRogueWeaponMastery
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -447,7 +447,7 @@ function nullaryVariantTag(raw: unknown, field: string): string {
   throw new Error(`Expected Quint variant field ${field}.`);
 }
 
-describe("Character Creation Weapon Mastery containers selected identity MBT", () => {
+describe("Character Creation Weapon Mastery containers selected identity replay", () => {
   it("replays selected Unit identities deterministically", async () => {
     for (const replay of selectedUnitIdentityReplays) {
       const replayedActions =

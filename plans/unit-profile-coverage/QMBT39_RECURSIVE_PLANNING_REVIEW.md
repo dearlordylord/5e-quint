@@ -32,7 +32,7 @@ Append:
   and Dash derived from effective Speed.
 - The current generated matrix reports 57 installed Units, 18 stable
   executable profiles, 25/43 supported executable Unit coverage, 25/25
-  deterministic admission/projection coverage, and 10/25 selected identity MBT
+  deterministic admission/projection coverage, and 10/25 selected identity replay
   coverage.
 
 ## Source Check

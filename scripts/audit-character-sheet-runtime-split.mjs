@@ -29,12 +29,17 @@ const EXPECTED_EXPORTS = [
   "CharacterSheetAbilityCheckOtherProficiencyBonusState",
   "CharacterSheetAbilityCheckProficiencyBonus",
   "CharacterSheetAbilityCheckProficiencyBonusInput",
+  "CharacterSheetArcaneRecoveryRestRouteResult",
   "CharacterSheetArcaneRecoverySlotRefund",
   "CharacterSheetArmorClassBaseChoice",
+  "CharacterSheetArmorClassProjection",
+  "CharacterSheetArmorClassProjectionRoute",
   "CharacterSheetArmorClassStateInput",
   "CharacterSheetBookOfShadowsPresence",
   "CharacterSheetBookOfShadowsRitualInvocation",
   "CharacterSheetClassFeaturePreparedSpellAccess",
+  "CharacterSheetClassFeatureSelectedReferenceProjection",
+  "CharacterSheetClassFeatureSelectedReferenceProjectionRoute",
   "CharacterSheetCompanion",
   "CharacterSheetCompanionCreatureTypeOverride",
   "CharacterSheetCompanionFormSelection",
@@ -51,6 +56,8 @@ const EXPECTED_EXPORTS = [
   "CharacterSheetFontOfMagicSpellSlotSource",
   "CharacterSheetHitDieSpend",
   "CharacterSheetHitDieState",
+  "CharacterSheetHitPointMaximumProjection",
+  "CharacterSheetHitPointMaximumProjectionRoute",
   "CharacterSheetHitPoints",
   "CharacterSheetHitPointsInput",
   "CharacterSheetHeroicInspiration",
@@ -61,6 +68,8 @@ const EXPECTED_EXPORTS = [
   "CharacterSheetJumpDistanceAbilityInput",
   "CharacterSheetJumpDistanceAbilitySubstitution",
   "CharacterSheetLayOnHandsInput",
+  "CharacterSheetLayOnHandsRoute",
+  "CharacterSheetLayOnHandsRouteResult",
   "CharacterSheetLayOnHandsResult",
   "CharacterSheetLinkedSpeedGrant",
   "CharacterSheetLongRestCalendarGate",
@@ -94,6 +103,12 @@ const EXPECTED_EXPORTS = [
   "CharacterSheetRetainedCompanionState",
   "CharacterSheetResourceExpenditure",
   "CharacterSheetResourceState",
+  "CharacterSheetRouteEvent",
+  "CharacterSheetRouteFact",
+  "CharacterSheetRouteFill",
+  "CharacterSheetRouteHole",
+  "CharacterSheetRouteOwner",
+  "CharacterSheetRouteSubject",
   "CharacterSheetRestActivityInterruption",
   "CharacterSheetRestFeatureUse",
   "CharacterSheetShortRestCompletion",
@@ -116,30 +131,43 @@ const EXPECTED_EXPORTS = [
   "CharacterSheetSpellbookRitualAccess",
   "CharacterSheetSpellbookRitualAccessInput",
   "CharacterSheetSpellbookRitualInvocation",
+  "CharacterSheetSpellbookRitualInvocationProjection",
+  "CharacterSheetSpellbookRitualInvocationRoute",
   "CharacterSheetSpentHitDiePool",
   "CharacterSheetStableRecovery",
   "CharacterSheetTimePassedInput",
   "CharacterSheetUseCountResourceUnitId",
   "CharacterSheetWeaponMasteryReselection",
+  "CharacterSheetWeaponMasteryReselectionAcceptedRoute",
+  "CharacterSheetWeaponMasteryReselectionRejectedRoute",
+  "CharacterSheetWeaponMasteryReselectionRouteResult",
+  "CharacterSheetWeaponMasterySelectedReferenceProjection",
+  "CharacterSheetWeaponMasterySelectedReferenceProjectionRoute",
   "CharacterSheetZeroHpLifecycle",
   "CharacterSheetZeroHpLifecycleInput",
   "CharacterSpellSlotExpenditure",
   "applyCharacterSheetSpellRestBenefit",
   "applyLayOnHands",
+  "applyLayOnHandsWithRoute",
   "characterBuildHasSpellbookSpell",
   "characterSheetAbilityCheckAbility",
   "characterSheetAbilityCheckProficiencyBonus",
+  "characterSheetAbilityCheckProficiencyBonusProjection",
   "characterSheetArmorClass",
+  "characterSheetArmorClassProjection",
   "characterSheetArmorClassState",
   "characterSheetClassFeaturePreparedSpellAccessesForBuild",
+  "characterSheetClassFeatureSelectedReferenceProjection",
   "characterSheetCompanion",
   "characterSheetCurrentHp",
   "characterSheetDruidCircleLandPreparedSpellAccess",
   "characterSheetDruidWildShapeKnownForms",
   "characterSheetHitDice",
   "characterSheetHitPointMaximum",
+  "characterSheetHitPointMaximumProjection",
   "characterSheetHitPoints",
   "characterSheetHitPointsCurrentHp",
+  "characterSheetNormalHitPointMaximum",
   "characterSheetId",
   "characterSheetIssue",
   "characterSheetJumpDistanceAbility",
@@ -156,10 +184,15 @@ const EXPECTED_EXPORTS = [
   "characterSheetSpellSlots",
   "characterSheetSpellbookRitualAccess",
   "characterSheetSpellbookRitualAccessesForBuild",
+  "characterSheetSpellbookRitualInvocationProjection",
+  "characterSheetWeaponMasterySelectedReferenceProjection",
   "characterSheetTempHp",
   "completeLongRest",
+  "completeLongRestArcaneRecoveryResetWithRoute",
+  "completeLongRestWeaponMasteryReselectionWithRoute",
   "completeMagicalCunningRite",
   "completeShortRest",
+  "completeShortRestArcaneRecoveryWithRoute",
   "convertFontOfMagicSorceryPointsToSpellSlot",
   "convertFontOfMagicSpellSlotToSorceryPoints",
   "createFreshCharacterSheet",
@@ -171,6 +204,7 @@ const EXPECTED_EXPORTS = [
   "isCharacterSheetPointPoolResourceUnitId",
   "isCharacterSheetUseCountResourceUnitId",
   "parseCharacterSheet",
+  "replaceOrdinarySpellSlotExpenditure",
   "replaceCharacterSheetSpellSlotSourceState",
   "replaceCharacterSheetCompanion",
   "retainedCompanionProtocolFacts",
@@ -187,6 +221,178 @@ const EXPECTED_MOVED_FUNCTIONS = [
   {
     name: "timePassed",
     hash: "6aa391ed5b26d5bc",
+  },
+];
+const EXPECTED_EXPORT_RECONCILIATION_REASONS = [
+  {
+    name: "characterSheetNormalHitPointMaximum",
+    reason:
+      "Character Sheet owns HP maximum projections from build facts and mutable maximum-reduction state; exposing the normal maximum keeps callers from storing derived capacity beside the sheet source facts.",
+  },
+  {
+    name: "characterSheetHitPointMaximumProjection",
+    reason:
+      "Character Sheet owns effective Hit Point Maximum projection from build-derived normal maximum and sheet-owned maximum reduction; exposing the projection-with-route entrypoint lets route replay observe qRoute without adapter-local route assembly.",
+  },
+  {
+    name: "CharacterSheetHitPointMaximumProjection",
+    reason:
+      "Character Sheet owns the typed Hit Point Maximum projection result so normal maximum, effective maximum, maximum reduction, and qRoute evidence remain one public projection outcome without adding durable duplicate state.",
+  },
+  {
+    name: "CharacterSheetHitPointMaximumProjectionRoute",
+    reason:
+      "Character Sheet owns the Hit Point projection and build arithmetic-input fact-recording route shape; exporting it keeps the route event tuple typed at the projection boundary.",
+  },
+  {
+    name: "replaceOrdinarySpellSlotExpenditure",
+    reason:
+      "Character Sheet owns ordinary Spell Slot expenditure state; battle handoff settlement reuses this canonical updater instead of duplicating the replacement/sort convention in character-battle-runtime.",
+  },
+  {
+    name: "characterSheetAbilityCheckProficiencyBonusProjection",
+    reason:
+      "Character Sheet owns Ability Check Proficiency Bonus projection from build facts; exposing the projection-with-route entrypoint lets route replay observe the qRoute event without maintaining an adapter-local route projection.",
+  },
+  {
+    name: "characterSheetArmorClassProjection",
+    reason:
+      "Character Sheet owns Armor Class projection from build, loadout, armor training, ability scores, and Surface Unit mechanics; exposing the projection-with-route entrypoint lets route replay observe selected-reference and Armor Class qRoute events without maintaining an adapter-local route projection.",
+  },
+  {
+    name: "CharacterSheetArmorClassProjection",
+    reason:
+      "Character Sheet owns the typed Armor Class projection-with-route result so derived Armor Class state and qRoute evidence remain explicit without adding duplicated durable sheet state.",
+  },
+  {
+    name: "CharacterSheetArmorClassProjectionRoute",
+    reason:
+      "Character Sheet owns the Armor Class selected-reference retention and build-projection route shape; exporting it keeps the route event tuple typed at the projection boundary.",
+  },
+  {
+    name: "characterSheetClassFeatureSelectedReferenceProjection",
+    reason:
+      "Character Sheet owns selected class-feature and subclass reference projection from existing sheet build facts; exposing the projection-with-route entrypoint lets route replay observe selected-reference qRoute events without maintaining an adapter-local route projection.",
+  },
+  {
+    name: "CharacterSheetClassFeatureSelectedReferenceProjection",
+    reason:
+      "Character Sheet owns the typed class-feature selected-reference projection result so retained reference evidence and qRoute events remain explicit without adding duplicated durable sheet state.",
+  },
+  {
+    name: "CharacterSheetClassFeatureSelectedReferenceProjectionRoute",
+    reason:
+      "Character Sheet owns the selected-reference retention and selected-reference build-projection route shape; exporting it keeps the route event tuple typed at the projection boundary.",
+  },
+  {
+    name: "completeShortRestArcaneRecoveryWithRoute",
+    reason:
+      "Character Sheet owns Arcane Recovery Short Rest ordinary Spell Slot refund and Pact Slot rejection routing; exposing the rest-with-route entrypoint lets route replay observe qRoute without duplicating rest reducer state.",
+  },
+  {
+    name: "completeLongRestArcaneRecoveryResetWithRoute",
+    reason:
+      "Character Sheet owns Long Rest reset for ordinary Spell Slots, Pact Slots, and Arcane Recovery use lockout; exposing the reset-with-route entrypoint lets route replay observe qRoute from the public rest reducer path.",
+  },
+  {
+    name: "CharacterSheetArcaneRecoveryRestRouteResult",
+    reason:
+      "Character Sheet owns the typed result returned by Arcane Recovery rest-with-route entrypoints so accepted and rejected route projections remain explicit rather than adapter-local.",
+  },
+  {
+    name: "characterSheetSpellbookRitualInvocationProjection",
+    reason:
+      "Character Sheet owns spellbook Ritual invocation projection from build spellbook Spell Access and Surface ritual facts; exposing the projection-with-route entrypoint lets route replay observe selected-reference qRoute without adapter-local route assembly.",
+  },
+  {
+    name: "CharacterSheetSpellbookRitualInvocationProjection",
+    reason:
+      "Character Sheet owns the typed spellbook Ritual invocation projection result so accepted no-slot invocation and rejected projection-choice route evidence remain one public outcome without adding durable ritual-casting state.",
+  },
+  {
+    name: "CharacterSheetSpellbookRitualInvocationRoute",
+    reason:
+      "Character Sheet owns the spellbook Ritual selected-reference retention and spell-resource projection route shape; exporting it keeps the route event tuple typed at the projection boundary.",
+  },
+  {
+    name: "characterSheetWeaponMasterySelectedReferenceProjection",
+    reason:
+      "Character Sheet owns Weapon Mastery selected-reference projection from CharacterBuild selected class choices and Surface Weapon Mastery profile facts; exposing the projection-with-route entrypoint lets route replay observe selected-reference qRoute without adapter-local route assembly.",
+  },
+  {
+    name: "completeLongRestWeaponMasteryReselectionWithRoute",
+    reason:
+      "Character Sheet owns Long Rest Weapon Mastery reselection through completeLongRest; exposing the route wrapper lets route replay observe accepted and rejected selected-reference qRoute without duplicating reselection state.",
+  },
+  {
+    name: "CharacterSheetWeaponMasterySelectedReferenceProjection",
+    reason:
+      "Character Sheet owns the typed Weapon Mastery selected-reference projection so choice count, eligible weapons, selected weapon refs, and qRoute evidence remain derived from build and Surface facts without adding durable sheet state.",
+  },
+  {
+    name: "CharacterSheetWeaponMasterySelectedReferenceProjectionRoute",
+    reason:
+      "Character Sheet owns the Weapon Mastery selected-reference retention and build-facts projection route shape; exporting it keeps the route event tuple typed at the projection boundary.",
+  },
+  {
+    name: "CharacterSheetWeaponMasteryReselectionRouteResult",
+    reason:
+      "Character Sheet owns accepted/rejected Long Rest Weapon Mastery reselection route evidence so callers can consume qRoute alongside the typed completion result without storing a parallel reselection ledger.",
+  },
+  {
+    name: "CharacterSheetWeaponMasteryReselectionAcceptedRoute",
+    reason:
+      "Character Sheet owns the accepted Long Rest Weapon Mastery selected-reference route tuple, including retained selected refs and rest completion evidence.",
+  },
+  {
+    name: "CharacterSheetWeaponMasteryReselectionRejectedRoute",
+    reason:
+      "Character Sheet owns the rejected Long Rest Weapon Mastery selected-reference route tuple, including the projection-choice hole for invalid reselections.",
+  },
+  {
+    name: "applyLayOnHandsWithRoute",
+    reason:
+      "Character Sheet owns Lay On Hands pool spend, Hit Point restoration, and Poisoned removal routing; exposing the reducer route result lets replay observe qRoute from the public feature-resource owner path instead of adapter-local route assembly.",
+  },
+  {
+    name: "CharacterSheetLayOnHandsRoute",
+    reason:
+      "Character Sheet owns the Lay On Hands resource-spend, Hit Point projection, and feature-resource fact-recording route tuple; exporting it keeps the route event sequence typed at the owner boundary.",
+  },
+  {
+    name: "CharacterSheetLayOnHandsRouteResult",
+    reason:
+      "Character Sheet owns the typed Lay On Hands result returned with qRoute evidence so source, target, and route projection remain one public reducer outcome.",
+  },
+  {
+    name: "CharacterSheetRouteEvent",
+    reason:
+      "Character Sheet owns its reducer route-event vocabulary; exporting it avoids parallel route event structures in public route projection entrypoints.",
+  },
+  {
+    name: "CharacterSheetRouteSubject",
+    reason:
+      "Character Sheet owns its route subject vocabulary; exporting it keeps route projections typed at the owner boundary instead of stringly adapter-local.",
+  },
+  {
+    name: "CharacterSheetRouteHole",
+    reason:
+      "Character Sheet owns its route hole vocabulary; exporting it keeps recovery-choice holes typed in route projection results.",
+  },
+  {
+    name: "CharacterSheetRouteFill",
+    reason:
+      "Character Sheet owns its route fill vocabulary; exporting it keeps recovery-selection fills typed in route projection results.",
+  },
+  {
+    name: "CharacterSheetRouteOwner",
+    reason:
+      "Character Sheet owns its route owner vocabulary; exporting it makes Spell Slot, Pact Slot, and Feature Resource ownership explicit in route projection results.",
+  },
+  {
+    name: "CharacterSheetRouteFact",
+    reason:
+      "Character Sheet owns its route fact vocabulary; exporting it keeps future fact-recording route projections on the same typed surface.",
   },
 ];
 
@@ -334,6 +540,16 @@ function diffLists(expected, actual) {
   };
 }
 
+function invalidExportReconciliationReasons(reasons, expectedExports) {
+  const expectedSet = new Set(expectedExports);
+  return reasons.filter(
+    (entry) =>
+      !expectedSet.has(entry.name) ||
+      typeof entry.reason !== "string" ||
+      entry.reason.trim() === "",
+  );
+}
+
 function readBaseIndex(ref) {
   return execFileSync("git", ["show", `${ref}:${indexPath}`], {
     cwd: repoRoot,
@@ -365,6 +581,10 @@ const expectedExports =
   baseRef === null
     ? [...EXPECTED_EXPORTS].sort()
     : extractExportNames(readBaseIndex(baseRef), `${baseRef}:${indexPath}`);
+const invalidReconciliationReasons = invalidExportReconciliationReasons(
+  EXPECTED_EXPORT_RECONCILIATION_REASONS,
+  expectedExports,
+);
 const checkedInExpectedDiff =
   baseRef === null
     ? { missing: [], added: [] }
@@ -432,6 +652,8 @@ const report = {
   invalidStatements: currentBarrel.invalidStatements,
   duplicateCurrentExports,
   surfaceDiff: currentDiff,
+  reconciledExportOwnership: EXPECTED_EXPORT_RECONCILIATION_REASONS,
+  invalidReconciliationReasons,
   checkedInExpectedDiff,
   moduleResolution: {
     unresolvedModules,
@@ -451,6 +673,7 @@ const failed =
   duplicateCurrentExports.length > 0 ||
   currentDiff.missing.length > 0 ||
   currentDiff.added.length > 0 ||
+  invalidReconciliationReasons.length > 0 ||
   checkedInExpectedDiff.missing.length > 0 ||
   checkedInExpectedDiff.added.length > 0 ||
   unresolvedModules.length > 0 ||

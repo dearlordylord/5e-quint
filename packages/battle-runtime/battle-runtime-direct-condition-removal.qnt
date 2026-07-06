@@ -128,7 +128,7 @@ module battleRuntimeDirectConditionRemoval {
     ) {
       val afterCasterEarlyEnd = battleStateAfterTargetActionEarlyEndForActor(state, Fighter)
       commitActorSpellSlotUse(
-        spendFighterSpellActionCost(directConditionRemovalTargetedState(afterCasterEarlyEnd, target, choice), SpellBonusAction),
+        spendFighterSpellActionCost(directConditionRemovalTargetedState(afterCasterEarlyEnd, target, choice), SpellBonusAction).state,
         Fighter,
       )
     } else {

@@ -48,12 +48,12 @@ Scope: the nine concepts in
 | --- | --- | --- | --- | --- | --- |
 | 1 | Hole, Fill, And Witness Ownership | Partial-to-direct for battle protocol vocabulary and witness result; partial for table-owned ownership as a whole | Contract test plus focused MBT drivers that import witness protocol | Copied; some related drivers branch-selected | Not a single complete source-owned concept contract yet |
 | 2 | Source Fact, Table Witness, Runtime Projection | Partial, strong for light/spatial witness slices | Focused spatial witness MBT and runtime tests | Copied and branch-selected for level-1 spatial witness | Covers representative slices, not the general ownership taxonomy |
-| 3 | Support-Profile Admission | Direct for many profile facts; non-QNT remainder for no identity dispatch | Rule-core QNT, selected-identity MBTs, profile coverage checks | Copied and broadly branch-selected | Strong source QNT for admission facts, but source/target static gates still matter |
+| 3 | Support-Profile Admission | Direct for many profile facts; non-QNT remainder for no identity dispatch | Rule-core QNT, selected-identity replay owners, profile coverage checks | Copied and broadly branch-selected | Strong source QNT for admission facts, but source/target static gates still matter |
 | 4 | Result Taxonomy | Partial; typed witness protocol exists, but result strings remain elsewhere | Many MBT drivers use `WitnessProtocol`; character creation has typed batch results | Copied through imported witness protocol and selected drivers | Needs migration before "resolved / needs holes / invalid" is universal |
 | 5 | Procedure Lifecycle And Replay Protocol | Direct for current battle command/reaction/replay obligations | Focused MBT for command ordering, reactions, interrupt stack resume | Copied; command and interrupt drivers branch-selected | Strong for covered battle procedures, not tagged as a general lifecycle concept |
 | 6 | Runtime Occurrence State | Partial across active-effect lifecycle slices | Focused MBT/runtime tests for direct conditions, roll modifiers, scalar buffs, light | Copied; only some occurrence drivers branch-selected today | Needs a source-owned occurrence ownership contract if we want general coverage |
 | 7 | Character Draft, Build, Sheet, Battle, Handoff | Direct/strong across creation, sheet, battle init, and settlement source obligations | Focused MBT and deterministic QNT replay tests | Copied; creation/sheet drivers selected, battle handoff mostly source-obligation-only today | Strong source QNT, partial current cleanroom branch selection |
-| 8 | Authored Identity, Provenance, Runtime Projection | Partial in QNT through typed profile facts and selected identity; non-QNT remainder is central | Selected-identity MBTs and static authored-id dispatch checks | Copied for QNT facts; static target enforcement is not QNT-only | Cannot honestly become QNT-only coverage |
+| 8 | Authored Identity, Provenance, Runtime Projection | Partial in QNT through typed profile facts and selected identity; non-QNT remainder is central | Selected-identity replay owners, deterministic QNT replay owners, and static authored-id dispatch checks | Copied for QNT facts; static target enforcement is not QNT-only | Cannot honestly become QNT-only coverage |
 | 9 | Encounter Relationships And Side | Narrow and direct for current side-equality model | QNT owner participates in source feature obligations; MCP/runtime tests cover setup input | Copied, but not direct branch-selected | Covered for current narrow model, not promoted as standalone cleanroom task |
 
 ## 1. Hole, Fill, And Witness Ownership
@@ -180,9 +180,10 @@ Source TS/MBT tie:
   `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` and
   `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` as covered, with rule-core QNT
   owners and focused MBT witnesses.
-- Selected-identity MBT drivers in battle, character creation, sheet, and
+- Selected-identity replay owners in battle, character creation, sheet, and
   character battle prove that concrete selected records are admitted through
-  typed facts at package boundaries.
+  typed facts at package boundaries. Separate deterministic QNT replay owners
+  provide QNT harness evidence where the owner has a focused driver.
 - `scripts/check-authored-id-dispatch-boundary.cjs` is the non-QNT static check
   for the identity-dispatch side of the concept.
 
@@ -419,8 +420,9 @@ Source QNT evidence:
 
 Source TS/MBT tie:
 
-- Selected-identity MBT tests tie source runtime behavior to QNT-selected
-  boundary facts.
+- Selected-identity replay tests tie source runtime behavior to selected
+  boundary facts. Separate deterministic QNT replay tests tie those selected
+  facts to focused QNT drivers where present.
 - `scripts/check-authored-id-dispatch-boundary.cjs` owns the source-code
   scanning part of the concept.
 - `ARCHITECTURE.md` and `AGENTS.md` state that runtime semantics must use

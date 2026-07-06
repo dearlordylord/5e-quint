@@ -83,7 +83,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.attack-action-attack-count-scaling"
@@ -152,7 +152,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.passive-speed-bonus"
@@ -3284,7 +3284,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.attack-action-attack-count-scaling"
@@ -3456,7 +3456,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.attack-action-attack-count-scaling"
@@ -3525,7 +3525,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.stunning-strike"
@@ -3643,7 +3643,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.attack-action-attack-count-scaling"
@@ -3815,7 +3815,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.attack-action-attack-count-scaling"
@@ -3933,7 +3933,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.cunning-strike"
@@ -4002,7 +4002,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.reaction-roll-or-damage-reduction"
@@ -13738,7 +13738,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.bonus-action-ongoing-rage"
@@ -13804,7 +13804,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "character-sheet.armor-class-base-formula"
@@ -14306,7 +14306,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.passive-saving-throw-roll-mode"
@@ -14372,7 +14372,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.first-attack-roll-reckless-advantage"
@@ -14481,7 +14481,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.attack-damage-rider"
@@ -14813,7 +14813,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.attack-action-attack-count-scaling"
@@ -14882,7 +14882,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.passive-speed-bonus"
@@ -15043,7 +15043,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.bardic-inspiration-grant",
@@ -15586,7 +15586,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "character-creation.skill-expertise-choice"
@@ -15654,7 +15654,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "character-sheet.ability-check-proficiency-bonus"
@@ -15822,7 +15822,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.reaction-roll-or-damage-reduction"
@@ -19823,7 +19823,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "character-creation.class-feature-option-projection"
@@ -20321,7 +20321,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "character-creation.class-feature-resource-projection"
@@ -20432,7 +20432,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.spell-slot-healing-modifier"
@@ -20498,7 +20498,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.magic-action-healing-pool"
@@ -23982,7 +23982,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "character-creation.class-feature-option-projection"
@@ -24522,7 +24522,7 @@
       "ownerBoundaryEvidence": {
         "claimTag": "profile-subset-supported",
         "evidenceTags": [
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "character-creation.class-feature-source-fact-projection"
@@ -24593,7 +24593,7 @@
         "claimTag": "profile-subset-supported",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "character-creation.class-feature-resource-projection",
@@ -24722,7 +24722,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.magic-action-area-save-damage-healing"
@@ -28317,7 +28317,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.self-bonus-action-healing"
@@ -28817,7 +28817,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.action-surge-resource"
@@ -28883,7 +28883,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.failed-ability-check-resource-boost"
@@ -28992,7 +28992,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.weapon-critical-range-19"
@@ -29058,7 +29058,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.remarkable-athlete"
@@ -29314,7 +29314,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.attack-action-attack-count-scaling"
@@ -29529,7 +29529,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.martial-arts-attack-projection"
@@ -29597,7 +29597,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "character-sheet.armor-class-base-formula"
@@ -30095,7 +30095,7 @@
         "claimTag": "profile-subset-supported",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "character-creation.class-feature-resource-projection",
@@ -30177,7 +30177,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.passive-speed-bonus"
@@ -30243,7 +30243,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "character-creation.class-feature-source-fact-projection",
@@ -30362,7 +30362,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.attack-damage-reduction-zero-damage-redirect"
@@ -30428,7 +30428,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.open-hand-technique"
@@ -30637,7 +30637,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.reaction-roll-or-damage-reduction"
@@ -30750,7 +30750,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.attack-action-attack-count-scaling"
@@ -30819,7 +30819,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.stunning-strike"
@@ -30976,7 +30976,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "character-sheet.healing-resource-action"
@@ -31574,7 +31574,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "spell.invocation-after-hit-damage"
@@ -31755,7 +31755,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.paladin-sacred-weapon"
@@ -32058,7 +32058,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.attack-action-attack-count-scaling"
@@ -33467,7 +33467,7 @@
         "claimTag": "profile-subset-supported",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "spell.invocation-marked-damage-rider"
@@ -34017,7 +34017,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "character-creation.skill-expertise-choice"
@@ -34225,7 +34225,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.hunters-prey"
@@ -34485,7 +34485,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.attack-action-attack-count-scaling"
@@ -36038,7 +36038,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "character-creation.skill-expertise-choice"
@@ -36111,7 +36111,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.attack-damage-rider"
@@ -36707,7 +36707,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.alternate-action-cost"
@@ -36882,14 +36882,45 @@
       "category": "class feature",
       "className": "Rogue",
       "concept": "Rogue Second-Story Work",
-      "finalDisposition": "catalog-installed-owner-evidence-required",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
       "levelBand": "level-3",
-      "nextAction": "Promote Second-Story Work by projecting Climb Speed equal to Speed and by adding a jump-distance ability substitution that uses Dexterity rather than Strength, without storing duplicated climb or jump values beside the base Speed and Ability Score facts.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "ownerBoundaryEvidence": {
+        "claimTag": "supported-profile",
+        "evidenceTags": [
+          "deterministic-admission-projection"
+        ],
+        "profileIds": [
+          "character-sheet.linked-speed-grant-projection",
+          "character-sheet.jump-distance-ability-substitution"
+        ],
+        "profileOwnerBoundaries": [
+          "character-sheet"
+        ],
+        "rowEvidenceOwnerBoundaries": [
+          "character-sheet"
+        ],
+        "selectedIdentityEvidenceDisposition": {
+          "owner": "character-sheet deterministic projection owner",
+          "reason": "Second-Story Work support is selected-subclass Character Sheet projection for linked Speed and optional jump-distance Ability choice. It has no battle-runtime selected Unit identity replay boundary; deterministic admission/projection tests bind the authored Unit identity to the executable Surface facts.",
+          "tag": "not-applicable"
+        },
+        "source": "unit-profile-owner-evidence",
+        "unclassifiedProfileIds": [],
+        "unitEvidenceOwnerBoundaries": [
+          "character-battle-to-battle",
+          "character-sheet"
+        ],
+        "unitEvidenceOwnerPaths": [
+          "packages/battle-runtime/src/unit-profile-admission-extra-attack-and-speed-features.test.ts",
+          "packages/character-sheet-runtime/src/ability-checks.test.ts"
+        ]
+      },
       "ownerBoundaryStatus": "resolved",
-      "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
+      "proposedOwnerBoundary": "multi-owner-sdk-split",
       "rowId": "srd521:classes/rogue:level-3:class-feature-grant:rogue_second_story_work",
       "rowKind": "class-feature-grant",
-      "sdkInventoryDisposition": "future-owner-before-sdk",
+      "sdkInventoryDisposition": "sdk-scenario-needed",
       "source": {
         "lineEnd": 174,
         "lineStart": 167,
@@ -36903,7 +36934,7 @@
         },
         "battleReadiness": {
           "state": "recorded",
-          "status": "owner-evidence-required"
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -36912,7 +36943,7 @@
           "state": "installed",
           "unitId": "rogue_second_story_work"
         },
-        "finalDisposition": "catalog-installed-owner-evidence-required",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
           "disposition": "supported-profile",
           "state": "recorded"
@@ -36932,7 +36963,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.rogue-steady-aim"
@@ -37188,7 +37219,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.cunning-strike"
@@ -37257,7 +37288,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.reaction-roll-or-damage-reduction"
@@ -37418,7 +37449,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.innate-sorcery-activation"
@@ -37917,7 +37948,7 @@
         "claimTag": "profile-subset-supported",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "character-creation.class-feature-resource-projection",
@@ -37999,7 +38030,7 @@
         "claimTag": "profile-subset-supported",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "character-creation.class-feature-option-projection",
@@ -38043,10 +38074,10 @@
           "packages/battle-runtime/src/sorcerer-metamagic-seeking-selected-identity.mbt.test.ts",
           "packages/battle-runtime/src/sorcerer-metamagic-selected-identity.mbt.test.ts",
           "packages/battle-runtime/src/sorcerer-metamagic-spell-attack-selected-identity.mbt.test.ts",
-          "packages/battle-runtime/src/sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.test.ts",
+          "packages/battle-runtime/src/sorcerer-metamagic-spell-attack-sequence-selected-identity.test.ts",
           "packages/battle-runtime/src/sorcerer-metamagic-subtle-selected-identity.mbt.test.ts",
-          "packages/battle-runtime/src/sorcerer-metamagic-transmuted-selected-identity.mbt.test.ts",
-          "packages/battle-runtime/src/sorcerer-metamagic-twinned-selected-identity.mbt.test.ts",
+          "packages/battle-runtime/src/sorcerer-metamagic-transmuted-selected-identity.test.ts",
+          "packages/battle-runtime/src/sorcerer-metamagic-twinned-selected-identity.test.ts",
           "packages/battle-runtime/src/unit-profile-admission-enlarge-reduce.test.ts",
           "packages/battle-runtime/src/unit-profile-admission-object-light-spells.test.ts",
           "packages/character-creation-runtime/src/class-feature-projections.mbt.test.ts",
@@ -43146,7 +43177,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "character-sheet.pact-slot-recovery"
@@ -43257,7 +43288,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.enemy-zero-hit-point-temporary-hit-points"
@@ -45616,7 +45647,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "character-sheet.short-rest-spell-slot-recovery"
@@ -45684,7 +45715,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "character-sheet.spellbook-ritual-invocation"
@@ -46182,7 +46213,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "character-creation.skill-expertise-choice"
@@ -46293,7 +46324,7 @@
         "claimTag": "profile-subset-supported",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "character-creation.wizard-spellbook-learning-choice"
@@ -46365,7 +46396,7 @@
         "claimTag": "supported-profile",
         "evidenceTags": [
           "deterministic-admission-projection",
-          "selected-identity-mbt"
+          "selected-identity-replay"
         ],
         "profileIds": [
           "unit-feature.potent-cantrip"
@@ -55550,12 +55581,11 @@
       ],
       "productReadiness": {
         "denominator": 607,
-        "numerator": 606,
-        "percent": "99.8%",
+        "numerator": 607,
+        "percent": "100%",
         "rowsByStatus": {
-          "accepted": 446,
-          "accepted-no-battle-effect": 160,
-          "owner-evidence-required": 1
+          "accepted": 447,
+          "accepted-no-battle-effect": 160
         }
       },
       "sourcePath": "plans/unit-profile-coverage/level1-3-full-support.json",
@@ -57828,12 +57858,11 @@
       ],
       "productReadiness": {
         "denominator": 632,
-        "numerator": 631,
-        "percent": "99.8%",
+        "numerator": 632,
+        "percent": "100%",
         "rowsByStatus": {
-          "accepted": 447,
-          "accepted-no-battle-effect": 184,
-          "owner-evidence-required": 1
+          "accepted": 448,
+          "accepted-no-battle-effect": 184
         }
       },
       "sourcePath": "plans/unit-profile-coverage/level1-4-full-support.json",
@@ -57912,12 +57941,11 @@
         "nonSupportedFrontier": 51,
         "productReadiness": {
           "denominator": 607,
-          "numerator": 606,
-          "percent": "99.8%",
+          "numerator": 607,
+          "percent": "100%",
           "rowsByStatus": {
-            "accepted": 446,
-            "accepted-no-battle-effect": 160,
-            "owner-evidence-required": 1
+            "accepted": 447,
+            "accepted-no-battle-effect": 160
           }
         },
         "strictDenominator": 197,
@@ -57931,12 +57959,11 @@
         "nonSupportedFrontier": 63,
         "productReadiness": {
           "denominator": 632,
-          "numerator": 631,
-          "percent": "99.8%",
+          "numerator": 632,
+          "percent": "100%",
           "rowsByStatus": {
-            "accepted": 447,
-            "accepted-no-battle-effect": 184,
-            "owner-evidence-required": 1
+            "accepted": 448,
+            "accepted-no-battle-effect": 184
           }
         },
         "strictDenominator": 210,
@@ -57998,8 +58025,8 @@
       "character-sheet": 8,
       "character-sheet-spell-access": 12,
       "class-feature-closure-review": 2,
-      "future-runtime-owner-before-sdk": 66,
-      "multi-owner-sdk-split": 10,
+      "future-runtime-owner-before-sdk": 65,
+      "multi-owner-sdk-split": 11,
       "spell-effect-owner-review": 106,
       "table-only-closure": 26
     },
@@ -58024,8 +58051,8 @@
       "closure-review-needed": 108,
       "explicit-closure-needed": 48,
       "explicit-closure-recorded": 12,
-      "future-owner-before-sdk": 66,
-      "sdk-scenario-needed": 399,
+      "future-owner-before-sdk": 65,
+      "sdk-scenario-needed": 400,
       "seed-scenario-present": 111,
       "table-only-closure-needed": 26
     },
@@ -58040,8 +58067,8 @@
       "character-sheet-sdk": 7,
       "explicit-closure": 60,
       "feature-owner-review": 2,
-      "future-owner-before-sdk": 34,
-      "multi-owner-feature-sdk": 9,
+      "future-owner-before-sdk": 33,
+      "multi-owner-feature-sdk": 10,
       "seed-present": 111,
       "sheet-spell-access-sdk": 12,
       "spell-effect-owner-review": 34,
@@ -78782,61 +78809,6 @@
     },
     {
       "candidateUnitIds": [
-        "rogue_second_story_work"
-      ],
-      "categories": [
-        "class feature"
-      ],
-      "classNames": [
-        "Rogue"
-      ],
-      "groupId": "l15-sdk-raw-05:future-owner-before-sdk:rogue-second-story-work",
-      "lane": "future-owner-before-sdk",
-      "levelBands": [
-        "level-3"
-      ],
-      "ownerBoundaryStatuses": [
-        "resolved"
-      ],
-      "proposedOwnerBoundaries": [
-        "future-runtime-owner-before-sdk"
-      ],
-      "rawGroupKey": "[\"L15-SDK-RAW-05\",\"future-owner-before-sdk\",\"rogue_second_story_work\"]",
-      "rawSources": [
-        ".references/srd-5.2.1/Classes/Rogue.md:167"
-      ],
-      "rowCount": 1,
-      "rowKinds": [
-        "class-feature-grant"
-      ],
-      "rows": [
-        {
-          "candidateUnitId": "rogue_second_story_work",
-          "className": "Rogue",
-          "concept": "Rogue Second-Story Work",
-          "levelBand": "level-3",
-          "ownerBoundaryStatus": "resolved",
-          "proposedOwnerBoundary": "future-runtime-owner-before-sdk",
-          "rowId": "srd521:classes/rogue:level-3:class-feature-grant:rogue_second_story_work",
-          "sdkInventoryDisposition": "future-owner-before-sdk",
-          "source": {
-            "lineEnd": 174,
-            "lineStart": 167,
-            "path": ".references/srd-5.2.1/Classes/Rogue.md"
-          }
-        }
-      ],
-      "sampleConcepts": [
-        "Rogue Second-Story Work"
-      ],
-      "sdkInventoryDispositions": [
-        "future-owner-before-sdk"
-      ],
-      "suggestedScenario": "Do not write a skipped SDK test; complete or split the owning runtime/spec work first, then add the SDK scenario.",
-      "taskId": "L15-SDK-RAW-05"
-    },
-    {
-      "candidateUnitIds": [
         "barbarian_primal_knowledge"
       ],
       "categories": [
@@ -78938,6 +78910,61 @@
       ],
       "sampleConcepts": [
         "Ranger Hunter's Prey"
+      ],
+      "sdkInventoryDispositions": [
+        "sdk-scenario-needed"
+      ],
+      "suggestedScenario": "Split the SDK coverage by profile owner: assert build/sheet facts at their owner, then add battle projection/resolution only for the executable profile facts.",
+      "taskId": "L15-SDK-RAW-05"
+    },
+    {
+      "candidateUnitIds": [
+        "rogue_second_story_work"
+      ],
+      "categories": [
+        "class feature"
+      ],
+      "classNames": [
+        "Rogue"
+      ],
+      "groupId": "l15-sdk-raw-05:multi-owner-feature-sdk:rogue-second-story-work",
+      "lane": "multi-owner-feature-sdk",
+      "levelBands": [
+        "level-3"
+      ],
+      "ownerBoundaryStatuses": [
+        "resolved"
+      ],
+      "proposedOwnerBoundaries": [
+        "multi-owner-sdk-split"
+      ],
+      "rawGroupKey": "[\"L15-SDK-RAW-05\",\"multi-owner-feature-sdk\",\"rogue_second_story_work\"]",
+      "rawSources": [
+        ".references/srd-5.2.1/Classes/Rogue.md:167"
+      ],
+      "rowCount": 1,
+      "rowKinds": [
+        "class-feature-grant"
+      ],
+      "rows": [
+        {
+          "candidateUnitId": "rogue_second_story_work",
+          "className": "Rogue",
+          "concept": "Rogue Second-Story Work",
+          "levelBand": "level-3",
+          "ownerBoundaryStatus": "resolved",
+          "proposedOwnerBoundary": "multi-owner-sdk-split",
+          "rowId": "srd521:classes/rogue:level-3:class-feature-grant:rogue_second_story_work",
+          "sdkInventoryDisposition": "sdk-scenario-needed",
+          "source": {
+            "lineEnd": 174,
+            "lineStart": 167,
+            "path": ".references/srd-5.2.1/Classes/Rogue.md"
+          }
+        }
+      ],
+      "sampleConcepts": [
+        "Rogue Second-Story Work"
       ],
       "sdkInventoryDispositions": [
         "sdk-scenario-needed"

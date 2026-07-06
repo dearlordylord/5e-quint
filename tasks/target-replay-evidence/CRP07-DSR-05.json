@@ -1,0 +1,256 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts Concentration public reducer route-event replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-concentration-break-teardown.route.mbt.qnt",
+      "qntFileSha256": "23ec0b1e6ab09e2577fdb70a112ebc4040692beaf3e7fa3d3518951278a37adb",
+      "routeConnectorSha256": "37a1308e3f707f635f290589a022e3af133a3d14c69ae55fb25096642d5ac365",
+      "branchFamily": "step",
+      "branchAction": "doCastConcentrationSpell",
+      "observedActionTaken": "doCastConcentrationSpell",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=3 action=doCastConcentrationSpell",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "7f4a20bdfb350a1f9da3948180348231bbce8bf0072015418ef6c580bffb9e94",
+        "observedProjectionSha256": "7f4a20bdfb350a1f9da3948180348231bbce8bf0072015418ef6c580bffb9e94",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), AvailableBattleAct.routeEvent from discoverBattleActs, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleCreatureState.concentration",
+          "BattleCreatureState.activeEffects[kind=spellEffect]",
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleSubject.runtimeCommand.command=endConcentration",
+          "AvailableBattleAct.routeEvent",
+          "BattleHole.kind=concentrationSavingThrow",
+          "BattleFill.kind=concentrationSavingThrow",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-concentration-break-teardown.route.mbt.qnt",
+      "qntFileSha256": "23ec0b1e6ab09e2577fdb70a112ebc4040692beaf3e7fa3d3518951278a37adb",
+      "routeConnectorSha256": "37a1308e3f707f635f290589a022e3af133a3d14c69ae55fb25096642d5ac365",
+      "branchFamily": "step",
+      "branchAction": "doDamageRequestsConcentrationSave",
+      "observedActionTaken": "doDamageRequestsConcentrationSave",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=3 action=doDamageRequestsConcentrationSave damageDiePip=4",
+      "sampledInputs": [
+        {
+          "name": "damageDiePip",
+          "value": 4
+        }
+      ],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "06dcfa43d393e65f0996710b516f6f4e15060439549234603f265a4dae461a56",
+        "observedProjectionSha256": "06dcfa43d393e65f0996710b516f6f4e15060439549234603f265a4dae461a56",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), AvailableBattleAct.routeEvent from discoverBattleActs, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleCreatureState.concentration",
+          "BattleCreatureState.activeEffects[kind=spellEffect]",
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleSubject.runtimeCommand.command=endConcentration",
+          "AvailableBattleAct.routeEvent",
+          "BattleHole.kind=concentrationSavingThrow",
+          "BattleFill.kind=concentrationSavingThrow",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-concentration-break-teardown.route.mbt.qnt",
+      "qntFileSha256": "23ec0b1e6ab09e2577fdb70a112ebc4040692beaf3e7fa3d3518951278a37adb",
+      "routeConnectorSha256": "37a1308e3f707f635f290589a022e3af133a3d14c69ae55fb25096642d5ac365",
+      "branchFamily": "step",
+      "branchAction": "doFailConcentrationSave",
+      "observedActionTaken": "doFailConcentrationSave",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=3 action=doFailConcentrationSave damageDiePip=4 saveRollTotal=9",
+      "sampledInputs": [
+        {
+          "name": "damageDiePip",
+          "value": 4
+        },
+        {
+          "name": "saveRollTotal",
+          "value": 9
+        }
+      ],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "14a042ac9c8c57c641cb6b8367bb52ae295f0696b759e993193580ac37fb772a",
+        "observedProjectionSha256": "14a042ac9c8c57c641cb6b8367bb52ae295f0696b759e993193580ac37fb772a",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), AvailableBattleAct.routeEvent from discoverBattleActs, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleCreatureState.concentration",
+          "BattleCreatureState.activeEffects[kind=spellEffect]",
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleSubject.runtimeCommand.command=endConcentration",
+          "AvailableBattleAct.routeEvent",
+          "BattleHole.kind=concentrationSavingThrow",
+          "BattleFill.kind=concentrationSavingThrow",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-concentration-break-teardown.route.mbt.qnt",
+      "qntFileSha256": "23ec0b1e6ab09e2577fdb70a112ebc4040692beaf3e7fa3d3518951278a37adb",
+      "routeConnectorSha256": "37a1308e3f707f635f290589a022e3af133a3d14c69ae55fb25096642d5ac365",
+      "branchFamily": "step",
+      "branchAction": "doVoluntaryEndConcentration",
+      "observedActionTaken": "doVoluntaryEndConcentration",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=3 action=doVoluntaryEndConcentration",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "980726dc38d2bf8b66557d34dce58ef3e429edfa310e4ce7fa390d32026f2254",
+        "observedProjectionSha256": "980726dc38d2bf8b66557d34dce58ef3e429edfa310e4ce7fa390d32026f2254",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), AvailableBattleAct.routeEvent from discoverBattleActs, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleCreatureState.concentration",
+          "BattleCreatureState.activeEffects[kind=spellEffect]",
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleSubject.runtimeCommand.command=endConcentration",
+          "AvailableBattleAct.routeEvent",
+          "BattleHole.kind=concentrationSavingThrow",
+          "BattleFill.kind=concentrationSavingThrow",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-concentration-break-teardown.route.mbt.qnt",
+      "qntFileSha256": "23ec0b1e6ab09e2577fdb70a112ebc4040692beaf3e7fa3d3518951278a37adb",
+      "routeConnectorSha256": "37a1308e3f707f635f290589a022e3af133a3d14c69ae55fb25096642d5ac365",
+      "branchFamily": "step",
+      "branchAction": "doCastReplacementConcentrationSpell",
+      "observedActionTaken": "doCastReplacementConcentrationSpell",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=3 action=doCastReplacementConcentrationSpell",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "aa46e299bcc70377a416cbf9a365bfab504bbf26b473a585b22115d8a238e0d7",
+        "observedProjectionSha256": "aa46e299bcc70377a416cbf9a365bfab504bbf26b473a585b22115d8a238e0d7",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), AvailableBattleAct.routeEvent from discoverBattleActs, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleCreatureState.concentration",
+          "BattleCreatureState.activeEffects[kind=spellEffect]",
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleSubject.runtimeCommand.command=endConcentration",
+          "AvailableBattleAct.routeEvent",
+          "BattleHole.kind=concentrationSavingThrow",
+          "BattleFill.kind=concentrationSavingThrow",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}

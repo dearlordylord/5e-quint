@@ -19,9 +19,9 @@ import {
   quintStateRecord,
   quintVariantMappedValue,
   quintVariantTag,
+  quintVariantValue,
   run,
   stateCheck,
-  stringLiteralField,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import {
   attackRollFill,
@@ -58,6 +58,7 @@ type AcidArrowScenario =
   | "miss"
   | "missComplete";
 type AcidArrowTurnRole = "caster" | "target";
+type AcidArrowDelayedDamageTiming = "none" | "targetEndOfNextTurn";
 type AcidArrowHole =
   | "TargetChoice"
   | "AttackRoll"
@@ -70,7 +71,7 @@ type AcidArrowTimingState = {
   readonly targetHp: number;
   readonly actionAvailable: boolean;
   readonly spellAvailable: boolean;
-  readonly delayedDamageActive: boolean;
+  readonly delayedDamageTiming: AcidArrowDelayedDamageTiming;
   readonly holes: readonly AcidArrowHole[];
   readonly lastResult: "init" | "needsHoles" | "resolved" | "invalid";
 };
@@ -110,6 +111,11 @@ const ACID_ARROW_SCENARIO_BY_TAG = {
   MissScenario: "miss",
   MissComplete: "missComplete",
 } as const satisfies Readonly<Record<string, AcidArrowScenario>>;
+
+const ACID_ARROW_TURN_ROLE_BY_TAG = {
+  AcidArrowCasterTurn: "caster",
+  AcidArrowTargetTurn: "target",
+} as const satisfies Readonly<Record<string, AcidArrowTurnRole>>;
 
 const acidArrowDriverSchema = {
   init: {},
@@ -423,14 +429,22 @@ function acidArrowProjection(
     spellAvailable:
       state.currentTurnRole === "caster" &&
       spellActAvailable(state.battle),
-    delayedDamageActive: target.activeEffects.some(
-      (effect) =>
-        effect.kind === "spellTurnEndDamage" &&
-        effect.sourceSpellId === acidArrowUnitId,
-    ),
+    delayedDamageTiming: acidArrowDelayedDamageTimingForTarget(target),
     holes: battleHolesToAcidHoles(state.holes, state.pending),
     lastResult: state.lastResult,
   };
+}
+
+function acidArrowDelayedDamageTimingForTarget(
+  target: ReturnType<typeof requireCombatant>,
+): AcidArrowDelayedDamageTiming {
+  return target.activeEffects.some(
+    (effect) =>
+      effect.kind === "spellTurnEndDamage" &&
+      effect.sourceSpellId === acidArrowUnitId,
+  )
+    ? "targetEndOfNextTurn"
+    : "none";
 }
 
 function spellActAvailable(state: BattleState): boolean {
@@ -473,14 +487,13 @@ function normalizeAcidArrowQuintState(raw: unknown): AcidArrowTimingState {
   });
   return {
     scenario: acidArrowScenario(state["qScenario"]),
-    currentTurnRole: stringLiteralField(state, "qCurrentTurnRole", [
-      "caster",
-      "target",
-    ]),
+    currentTurnRole: acidArrowTurnRole(state["qCurrentTurnRole"]),
     targetHp: numberFromQuintInt(state["qTargetHp"], "qTargetHp"),
     actionAvailable: booleanField(state, "qActionAvailable"),
     spellAvailable: booleanField(state, "qSpellAvailable"),
-    delayedDamageActive: booleanField(state, "qDelayedDamageActive"),
+    delayedDamageTiming: acidArrowDelayedDamageTiming(
+      state["qDelayedDamageTiming"],
+    ),
     holes: protocol.holes,
     lastResult: protocol.lastResult,
   };
@@ -519,6 +532,34 @@ function acidArrowScenario(raw: unknown): AcidArrowScenario {
     ACID_ARROW_SCENARIO_BY_TAG,
     "Acid Arrow scenario",
   );
+}
+
+function acidArrowTurnRole(raw: unknown): AcidArrowTurnRole {
+  return quintVariantMappedValue(
+    raw,
+    "qCurrentTurnRole",
+    ACID_ARROW_TURN_ROLE_BY_TAG,
+    "Acid Arrow turn role",
+  );
+}
+
+function acidArrowDelayedDamageTiming(
+  raw: unknown,
+): AcidArrowDelayedDamageTiming {
+  const tag = quintVariantTag(raw, "qDelayedDamageTiming");
+  if (tag === "NoAcidArrowDelayedDamage") {
+    return "none";
+  }
+  if (tag === "AcidArrowDelayedDamageAt") {
+    const anchor = quintVariantTag(
+      quintVariantValue(raw, tag, "qDelayedDamageTiming"),
+      "qDelayedDamageTiming.value",
+    );
+    if (anchor === "AcidArrowTargetEndOfNextTurn") {
+      return "targetEndOfNextTurn";
+    }
+  }
+  throw new Error(`Unknown Acid Arrow delayed damage timing: ${String(raw)}.`);
 }
 
 function acidArrowHole(raw: unknown): AcidArrowHole {

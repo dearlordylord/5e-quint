@@ -204,25 +204,22 @@ const openHandTechniqueSupport = {
       base: 8,
       ability: "wis",
     },
-    choices: [
-      {
-        id: "addle",
-        effect: {
-          kind: "denyOpportunityAttacks",
-          expires: "startOfTargetNextTurn",
-        },
+    effects: {
+      denyOpportunityAttacks: {
+        kind: "denyOpportunityAttacks",
+        expires: "startOfTargetNextTurn",
       },
-      {
-        id: "push",
+      pushAwayOnFailedSave: {
+        kind: "pushAwayOnFailedSave",
         save: { ability: "str" },
-        onFail: { kind: "pushAway", distanceFeet: movementFeet(15) },
+        distanceFeet: movementFeet(15),
       },
-      {
-        id: "topple",
+      applyConditionOnFailedSave: {
+        kind: "applyConditionOnFailedSave",
         save: { ability: "dex" },
-        onFail: { kind: "applyCondition", condition: "prone" },
+        condition: "prone",
       },
-    ],
+    },
   },
 } as const;
 
@@ -251,37 +248,36 @@ const sacredWeaponSupport = {
   },
 } as const;
 
-const huntersPreySupport = {
+const huntersPreyWoundedTargetWeaponDamageSupport = {
   kind: HUNTERS_PREY_SUPPORT_PROFILE,
   huntersPrey: {
-    choice: { kind: "chooseOne", replaceOn: "shortOrLongRest" },
-    options: [
-      {
-        id: "colossusSlayer",
-        trigger: "hitCreatureWithWeapon",
-        targetPredicate: "missingAnyHitPoints",
-        usageLimit: "oncePerTurn",
-        damage: {
-          kind: "addAttackDamageDice",
-          dice: { dice: 1, dieSize: 8 },
-          damageType: "sameAsAttack",
-        },
+    kind: "woundedTargetWeaponDamage",
+    trigger: "hitCreatureWithWeapon",
+    targetPredicate: "missingAnyHitPoints",
+    usageLimit: "oncePerTurn",
+    damage: {
+      kind: "addAttackDamageDice",
+      dice: { dice: 1, dieSize: 8 },
+      damageType: "sameAsAttack",
+    },
+  },
+} as const;
+
+const huntersPreyNearbyDifferentTargetSameWeaponAttackSupport = {
+  kind: HUNTERS_PREY_SUPPORT_PROFILE,
+  huntersPrey: {
+    kind: "nearbyDifferentTargetSameWeaponAttack",
+    trigger: "makeWeaponAttack",
+    usageLimit: "oncePerTurn",
+    extraAttack: {
+      weapon: "sameWeapon",
+      target: {
+        kind: "differentCreatureNearOriginalTarget",
+        withinFeetOfOriginalTarget: movementFeet(5),
+        withinWeaponRange: true,
+        notAttackedThisTurn: true,
       },
-      {
-        id: "hordeBreaker",
-        trigger: "makeWeaponAttack",
-        usageLimit: "oncePerTurn",
-        extraAttack: {
-          weapon: "sameWeapon",
-          target: {
-            kind: "differentCreatureNearOriginalTarget",
-            withinFeetOfOriginalTarget: movementFeet(5),
-            withinWeaponRange: true,
-            notAttackedThisTurn: true,
-          },
-        },
-      },
-    ],
+    },
   },
 } as const;
 
@@ -329,13 +325,6 @@ const admissionCases = [
     support: sacredWeaponSupport,
     supportForUnit: battlePaladinSacredWeaponSupportForUnit,
     payloadKey: "sacredWeapon",
-  },
-  {
-    unitId: rangerHuntersPreyUnitId,
-    className: "ranger",
-    support: huntersPreySupport,
-    supportForUnit: battleHuntersPreySupportForUnit,
-    payloadKey: "huntersPrey",
   },
   {
     unitId: rogueSteadyAimUnitId,
@@ -403,6 +392,71 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
         { level: 3, unitId: wizardPotentCantripUnitId },
       ]),
     });
+  });
+
+  test("Hunter's Prey selected options project to semantic battle support", () => {
+    const unit = unitLibrary.requireUnit(rangerHuntersPreyUnitId);
+
+    expect(
+      battleUnitRefWithSupportProfiles({
+        unitRef: {
+          unitId: unit.id,
+          selectedOption: {
+            kind: "huntersPrey",
+            selection: "woundedTargetWeaponDamage",
+          },
+        },
+        unit,
+      }),
+    ).toEqual(
+      Either.right({
+        unitId: rangerHuntersPreyUnitId,
+        supportProfiles: [huntersPreyWoundedTargetWeaponDamageSupport],
+      }),
+    );
+    expect(
+      battleUnitRefWithSupportProfiles({
+        unitRef: {
+          unitId: unit.id,
+          selectedOption: {
+            kind: "huntersPrey",
+            selection: "nearbyDifferentTargetSameWeaponAttack",
+          },
+        },
+        unit,
+      }),
+    ).toEqual(
+      Either.right({
+        unitId: rangerHuntersPreyUnitId,
+        supportProfiles: [
+          huntersPreyNearbyDifferentTargetSameWeaponAttackSupport,
+        ],
+      }),
+    );
+    expect(
+      battleUnitRefWithSupportProfiles({
+        unitRef: { unitId: unit.id },
+        unit,
+      }),
+    ).toEqual(
+      Either.left({
+        tag: "battleUnitSupportProfileIssue",
+        message:
+          "Battle Unit ref ranger_hunters_prey requires a retained Hunter's Prey selection before battle initialization.",
+      }),
+    );
+    expect(battleHuntersPreySupportForUnit(unit)).toBeNull();
+    expect(
+      battleHuntersPreySupportForUnit(unit, {
+        kind: "huntersPrey",
+        selection: "nearbyDifferentTargetSameWeaponAttack",
+      }),
+    ).toEqual(huntersPreyNearbyDifferentTargetSameWeaponAttackSupport);
+    expect(
+      parseSupportedUnitFeatureProfile(unit, [
+        { className: "ranger", level: classLevel(3) },
+      ]),
+    ).toBeNull();
   });
 
   test.each(admissionCases)(
@@ -946,6 +1000,36 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
     ) {
       throw new Error("Expected Task 18 level-3 feature mechanics.");
     }
+    const openHandDenyOpportunityAttacks =
+      openHandTechnique.mechanics.choices.find(
+        (choice) =>
+          "effect" in choice &&
+          choice.effect.kind === "deny_opportunity_attacks",
+      );
+    const openHandPushAway = openHandTechnique.mechanics.choices.find(
+      (choice) =>
+        "save" in choice &&
+        "onFail" in choice &&
+        choice.save.ability === "str" &&
+        choice.onFail.kind === "push_away",
+    );
+    const openHandApplyProne = openHandTechnique.mechanics.choices.find(
+      (choice) =>
+        "save" in choice &&
+        "onFail" in choice &&
+        choice.save.ability === "dex" &&
+        choice.onFail.kind === "apply_condition",
+    );
+    if (
+      openHandDenyOpportunityAttacks === undefined ||
+      openHandPushAway === undefined ||
+      openHandApplyProne === undefined
+    ) {
+      throw new Error("Expected Open Hand Technique semantic effects.");
+    }
+    if (!("onFail" in openHandPushAway)) {
+      throw new Error("Expected Open Hand Technique push failed-save effect.");
+    }
 
     expect(
       battleRemarkableAthleteSupportForUnit(
@@ -964,19 +1048,34 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
     expect(
       battleOpenHandTechniqueSupportForUnit(
         unitMechanicsVariant(openHandTechnique, {
+          id: "monk_open_hand_technique_reordered_effects",
+          mechanics: {
+            ...openHandTechnique.mechanics,
+            choices: [
+              openHandApplyProne,
+              openHandDenyOpportunityAttacks,
+              openHandPushAway,
+            ],
+          },
+        }),
+      ),
+    ).toEqual(openHandTechniqueSupport);
+    expect(
+      battleOpenHandTechniqueSupportForUnit(
+        unitMechanicsVariant(openHandTechnique, {
           id: "monk_open_hand_technique_wrong_push_distance",
           mechanics: {
             ...openHandTechnique.mechanics,
             choices: [
-              openHandTechnique.mechanics.choices[0],
+              openHandDenyOpportunityAttacks,
               {
-                ...openHandTechnique.mechanics.choices[1],
+                ...openHandPushAway,
                 onFail: {
-                  ...openHandTechnique.mechanics.choices[1].onFail,
+                  ...openHandPushAway.onFail,
                   distanceFeet: 10,
                 },
               },
-              openHandTechnique.mechanics.choices[2],
+              openHandApplyProne,
             ],
           },
         }),

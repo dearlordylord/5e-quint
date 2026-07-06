@@ -102,6 +102,7 @@ import {
   MIRROR_IMAGE_DUPLICATE_DIE_SIZE,
   MIRROR_IMAGE_DUPLICATE_SUCCESS_AT_LEAST,
   MIRROR_IMAGE_UNAFFECTED_SENSES,
+  OPEN_HAND_TECHNIQUE_DECISION_CHOICES,
   SELF_TRANSFORMATION_MODE_KINDS,
   SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT,
   THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
@@ -1912,10 +1913,10 @@ export const BattleHoleSchema = Schema.Union(
       Schema.Tuple(Schema.Literal("use"), Schema.Literal("decline")),
       Schema.Tuple(Schema.Literal("attempt"), Schema.Literal("decline")),
       Schema.Tuple(
-        Schema.Literal("addle"),
-        Schema.Literal("push"),
-        Schema.Literal("topple"),
-        Schema.Literal("decline"),
+        Schema.Literal(OPEN_HAND_TECHNIQUE_DECISION_CHOICES[0]),
+        Schema.Literal(OPEN_HAND_TECHNIQUE_DECISION_CHOICES[1]),
+        Schema.Literal(OPEN_HAND_TECHNIQUE_DECISION_CHOICES[2]),
+        Schema.Literal(OPEN_HAND_TECHNIQUE_DECISION_CHOICES[3]),
       ),
     ),
   }),
@@ -3035,10 +3036,7 @@ type BattleFillEncoded =
       readonly value:
         | "use"
         | "attempt"
-        | "addle"
-        | "push"
-        | "topple"
-        | "decline";
+        | (typeof OPEN_HAND_TECHNIQUE_DECISION_CHOICES)[number];
     }
   | {
       readonly kind: "hitPointHealingDistribution";
@@ -3920,10 +3918,7 @@ export const BattleFillSchema: Schema.Schema<
       value: Schema.Literal(
         "use",
         "attempt",
-        "addle",
-        "push",
-        "topple",
-        "decline",
+        ...OPEN_HAND_TECHNIQUE_DECISION_CHOICES,
       ),
     }),
     Schema.Struct({

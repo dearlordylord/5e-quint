@@ -28,6 +28,7 @@ const requiredReviewChecklists = [
   "state-owner-derivability",
   "authored-identity-dispatch",
   "report-honesty",
+  "verification-contract",
 ];
 
 const requiredDeciderGates = [
@@ -38,6 +39,7 @@ const requiredDeciderGates = [
   "state-owner-derivability",
   "authored-identity-dispatch",
   "report-honesty",
+  "task-template-contract",
   "reviewer-loop-convergence",
 ];
 
@@ -72,6 +74,12 @@ const harnessWitnessProtocolNames = [
   "comparator",
   "expectedProjectionSha256",
   "observedProjectionSha256",
+  "observedProjectionSource",
+  "targetEntrypointSequence",
+  "routeEventSource",
+  "reducerPublicApiPath",
+  "semanticProjectionSource",
+  "targetPublicApiPath",
   "checkedTargetStateFields",
   "harnessTestPath",
 ];
@@ -1282,12 +1290,7 @@ function forbiddenWitnessNamesForSelection(selected) {
 }
 
 function productionSourceScanWitnessNamesForSelection(selected) {
-  return Array.from(
-    new Set([
-      ...protocolNamesForObligations(selected),
-      ...harnessWitnessProtocolNames,
-    ]),
-  ).sort();
+  return forbiddenWitnessNamesForSelection(selected);
 }
 
 function validateManifestPath({
@@ -2473,7 +2476,21 @@ function validFixture(rootPath) {
         qntFileSha256: qntSha,
         branchFamily: "step",
         branchAction: "doFillMagicMissileDamage",
-        pickName: "dartRollTotal",
+        pickName: "damage",
+      },
+      {
+        driverPath,
+        qntFileSha256: qntSha,
+        branchFamily: "step",
+        branchAction: "doFillMagicMissileDamage",
+        pickName: "hit",
+      },
+      {
+        driverPath,
+        qntFileSha256: qntSha,
+        branchFamily: "step",
+        branchAction: "doFillMagicMissileDamage",
+        pickName: "roll",
       },
     ],
   };
@@ -2598,11 +2615,27 @@ function validFixture(rootPath) {
         observedProjectionSha256: sha256Text(
           `projection ${obligation.branchAction}`,
         ),
+        observedProjectionSource: {
+          tag: "qRoute",
+          targetEntrypointSequence: [
+            "engine.battle.startBattle",
+            "engine.battle.discoverBattleActs",
+            "engine.battle.resolveBattleSubject",
+          ],
+          routeEventSource: "BattleEntrypointTrace.route_events",
+          reducerPublicApiPath: "engine.battle.resolveBattleSubject",
+        },
         checkedTargetStateFields: ["BattleState.pendingForceProjectiles"],
       },
       result: { tag: "pass" },
       ...(obligation.branchAction === "doFillMagicMissileDamage"
-        ? { sampledInputs: [{ pickName: "dartRollTotal", value: 7 }] }
+        ? {
+            sampledInputs: [
+              { pickName: "damage", value: 7 },
+              { pickName: "hit", value: true },
+              { pickName: "roll", value: 14 },
+            ],
+          }
         : {}),
     })),
   });
@@ -2613,7 +2646,7 @@ function validFixture(rootPath) {
       {
         path: "engine/rules/force_projectiles.aster",
         role: "domain-engine",
-        domainApis: ["allocateForceProjectiles", "resolveForceProjectileDamage"],
+        domainApis: ["allocateForceProjectiles", "resolveProjectileImpact"],
       },
     ],
     adapterModules: [
@@ -2622,7 +2655,9 @@ function validFixture(rootPath) {
         quarantinedWitnessNames: [
           "doFillMagicMissileAllocation",
           "doFillMagicMissileDamage",
-          "dartRollTotal",
+          "damage",
+          "hit",
+          "roll",
           ...harnessWitnessProtocolNames,
         ],
         targetReplayEvidence: ["tasks/target-replay-evidence/mm.json"],
@@ -2633,7 +2668,7 @@ function validFixture(rootPath) {
       {
         driver: "cleanroom-input/qnt/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
         module: "engine/rules/force_projectiles.aster",
-        api: "resolveForceProjectileDamage",
+        api: "resolveProjectileImpact",
       },
     ],
   });
@@ -2704,7 +2739,11 @@ function validFixture(rootPath) {
   fs.mkdirSync(path.join(rootPath, "engine/rules"), { recursive: true });
   fs.writeFileSync(
     path.join(rootPath, "engine/rules/force_projectiles.aster"),
-    "fn resolveForceProjectileDamage(input) = input\n",
+    [
+      "fn allocateForceProjectiles(input) = input\n",
+      "fn resolveProjectileImpact(input) = input\n",
+      "fn resolveProjectileCheck(input) = input\n",
+    ].join(""),
   );
   fs.mkdirSync(path.join(rootPath, "engine/qnt-adapters"), { recursive: true });
   fs.writeFileSync(
@@ -2734,6 +2773,20 @@ function expectFailure(
     throw new Error(
       `${name}: expected issue containing ${JSON.stringify(expectedSubstring)}, got ${JSON.stringify(issues)}`,
     );
+  }
+}
+
+function expectSuccess(validRoot, profile, name, mutate) {
+  const goodRoot = fs.mkdtempSync(path.join(os.tmpdir(), `cleanroom-harness-${name}-`));
+  fs.cpSync(validRoot, goodRoot, { recursive: true });
+  mutate(goodRoot);
+  const issues = validateTaskArtifacts({
+    taskRoot: goodRoot,
+    profile,
+  });
+  fs.rmSync(goodRoot, { recursive: true, force: true });
+  if (issues.length > 0) {
+    throw new Error(`${name}: expected pass, got ${JSON.stringify(issues)}`);
   }
 }
 
@@ -2968,14 +3021,27 @@ function runSelfTest() {
     expectFailure(
       validRoot,
       profile,
-      "sampled-input-leak",
+      "sampled-input-missing-quarantine",
+      (rootPath) => {
+        updateFixtureLedgerArtifact(rootPath, "engineDepth", (manifest) => {
+          manifest.adapterModules[0].quarantinedWitnessNames =
+            manifest.adapterModules[0].quarantinedWitnessNames.filter(
+              (name) => name !== "roll",
+            );
+        });
+      },
+      "adapter quarantine is missing witness protocol name roll",
+    );
+    expectSuccess(
+      validRoot,
+      profile,
+      "sampled-input-domain-vocabulary",
       (rootPath) => {
         fs.appendFileSync(
           path.join(rootPath, "engine/rules/force_projectiles.aster"),
-          "fn leakedPick(dartRollTotal) = dartRollTotal\n",
+          "fn projectileDomainVocabulary(impact, count, force) = impact\n",
         );
       },
-      "leaks witness protocol name dartRollTotal",
     );
     expectFailure(
       validRoot,
@@ -3175,7 +3241,7 @@ function runSelfTest() {
             "if (",
             "  spell.name",
             "  == \"Magic Missile\"",
-            ") { resolveForceProjectileDamage(spell) }",
+            ") { resolveProjectileImpact(spell) }",
             "",
           ].join("\n"),
         );
@@ -3189,7 +3255,7 @@ function runSelfTest() {
       (rootPath) => {
         fs.appendFileSync(
           path.join(rootPath, "engine/rules/force_projectiles.aster"),
-          "if spell.source == \"PHB\" { resolveForceProjectileDamage(spell) }\n",
+          "if spell.source == \"PHB\" { resolveProjectileImpact(spell) }\n",
         );
       },
       "authored identity dispatch",

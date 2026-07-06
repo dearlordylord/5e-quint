@@ -1,10 +1,10 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.creature-space-movement-permission
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME species_halfling_nimbleness
-// UNIT-IDENTITY-MBT-REPLAY: L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME species_halfling_nimbleness doMoveThroughLargerCreatureSpace doRejectOccupiedStop doRejectMissingProfile doRejectSameSizeTraversal
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME species_halfling_nimbleness
+// UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME species_halfling_nimbleness doMoveThroughLargerCreatureSpace doRejectOccupiedStop doRejectMissingProfile doRejectSameSizeTraversal
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
   battleId,
   battleTablePositionId,
@@ -45,14 +45,16 @@ type HalflingNimblenessProjection = {
 };
 
 const speciesHalflingNimblenessUnitId = "species_halfling_nimbleness";
-const nimbleMoverId = combatantId("halfling-nimbleness-selected-identity-mover");
+const nimbleMoverId = combatantId(
+  "halfling-nimbleness-selected-identity-mover",
+);
 const blockerId = combatantId("halfling-nimbleness-selected-identity-blocker");
 const occupiedPositionId = battleTablePositionId(
   "halfling-nimbleness-occupied-space",
 );
 
-defineSelectedIdentityWitness({
-  describeLabel: "Halfling Nimbleness selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Halfling Nimbleness selected identity replay",
   taskId: "L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME",
   specFile: mbtSpecPath(
     import.meta.dirname,
@@ -85,11 +87,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doMoveThroughLargerCreatureSpace",
-          projectionAfter: expectedProjection({
-            traversalAccepted: true,
-            acceptedMovementSpentFeet: 10,
-            lastResult: "moveThroughLargerCreatureSpace",
-          }),
           discover: () =>
             projectAcceptedTraversal(
               halflingNimblenessBattle({ selected: true }),
@@ -97,10 +94,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doRejectOccupiedStop",
-          projectionAfter: expectedProjection({
-            occupiedStopRejected: true,
-            lastResult: "rejectOccupiedStop",
-          }),
           discover: () =>
             projectRejectedTraversal({
               state: halflingNimblenessBattle({ selected: true }),
@@ -117,10 +110,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doRejectMissingProfile",
-          projectionAfter: expectedProjection({
-            missingProfileRejected: true,
-            lastResult: "rejectMissingProfile",
-          }),
           discover: () =>
             projectRejectedTraversal({
               state: halflingNimblenessBattle({ selected: false }),
@@ -138,10 +127,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doRejectSameSizeTraversal",
-          projectionAfter: expectedProjection({
-            sameSizeRejected: true,
-            lastResult: "rejectSameSizeTraversal",
-          }),
           discover: () =>
             projectRejectedTraversal({
               state: halflingNimblenessBattle({
@@ -230,7 +215,9 @@ function projectAcceptedTraversal(
     },
   });
   if (result.tag !== "resolved") {
-    throw new Error(`Expected accepted Nimbleness Movement, got ${result.tag}.`);
+    throw new Error(
+      `Expected accepted Nimbleness Movement, got ${result.tag}.`,
+    );
   }
   return expectedProjection({
     traversalAccepted: true,
@@ -259,7 +246,9 @@ function projectRejectedTraversal(input: {
     destination: input.destination,
   });
   if (result.tag !== "invalid") {
-    throw new Error(`Expected rejected Nimbleness Movement, got ${result.tag}.`);
+    throw new Error(
+      `Expected rejected Nimbleness Movement, got ${result.tag}.`,
+    );
   }
   if (result.message !== input.expectedMessage) {
     throw new Error(result.message);

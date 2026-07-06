@@ -1,0 +1,77 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/sorcerer-metamagic-spell-attack-selected-identity.mbt.test.ts Quickened Spell attack copied qRoute versus public reducer replay"
+  },
+  "cleanroomManifestSourceCommitSha": "0da15bfe0871d5a45782c7ac355d622be8907d44",
+  "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      "qntFileSha256": "7564c32f2140ade1ab5a10bcd40151b0014dd21b2bdc95ca5bfaf86ad4ca0e2e",
+      "routeConnectorSha256": "7173b5a2dfe717d962ff1425f6415a125cc45c92dd52dd3fc8d6778e2d4d3568",
+      "branchFamily": "step",
+      "branchAction": "doResolveQuickenedSpellAttack",
+      "observedActionTaken": "doResolveQuickenedSpellAttack",
+      "harnessTestPath": "packages/battle-runtime/src/sorcerer-metamagic-spell-attack-selected-identity.mbt.test.ts",
+      "traceId": "public-route=metamagicBonusActionCastingTime action=doResolveQuickenedSpellAttack qRoute=metamagic-quickened-spell-attack-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "stepRouteBonusActionCastingTime",
+        "delegatedAction": "doRouteBonusActionCastingTime",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/sorcerer-metamagic-spell-attack-selected-identity.mbt.test.ts#createQuickenedSpellAttackRouteReplayDriver"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "7c092708d81a47714e78e12751872bdd808dd36c78d8da51d8cb22d7774693b2",
+        "observedProjectionSha256": "7c092708d81a47714e78e12751872bdd808dd36c78d8da51d8cb22d7774693b2",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+          "stepAction": "stepRouteBonusActionCastingTime",
+          "delegatedAction": "doRouteBonusActionCastingTime",
+          "qntStateField": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "public-reducer-route-events",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(state), AvailableBattleAct.routeEvents, and BattleResolutionResult.routeEvents during Quickened Spell Ray of Frost spell Attack resolution",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=metamagicBonusActionCastingTime",
+          "BattleReducerRouteEvent.owner=battleFeatureResource",
+          "BattleReducerRouteEvent.owner=battleActionEconomy",
+          "BattleReducerRouteEvent.owner=battleSpellSlotAndActionEconomy",
+          "BattleReducerRouteEvent.owner=battleTargetSelection",
+          "BattleReducerRouteEvent.owner=battleSpellAttackProcedure",
+          "BattleReducerRouteEvent.owner=battleTurnBoundary",
+          "BattleSubject.bonusActionSpell.metamagic.effectKind=action_casting_time_to_bonus_action_with_spell_turn_limit",
+          "BattleSubject.bonusActionSpell.invocation.procedure=spellAttackDamage",
+          "CharacterBattlePointPoolResourceState.pointsRemaining",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.activeEffects"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}

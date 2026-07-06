@@ -1,0 +1,108 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts Magic Missile public reducer route-event replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-magic-missile.route.mbt.qnt",
+      "qntFileSha256": "283d6e322f72c2b9051045897ddb450eef4bbfe88841ec67c086af52d6caccf4",
+      "routeConnectorSha256": "f91f7c392b838d06ea22e610499613ab634e036ea7a1a80dfe4f0b72f7cc36af",
+      "branchFamily": "step",
+      "branchAction": "doFillMagicMissileAllocation",
+      "observedActionTaken": "doFillMagicMissileAllocation",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=2 action=doFillMagicMissileAllocation",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "0d1302380c856e4ffb4db6000b2415e6cabe2df1f3d0a7a0dacefc51d1bd9717",
+        "observedProjectionSha256": "0d1302380c856e4ffb4db6000b2415e6cabe2df1f3d0a7a0dacefc51d1bd9717",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), AvailableBattleAct.routeEvents from discoverBattleActs, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure=repeatedDamageAllocation",
+          "BattleSubject.actionSpell.invocation.tag=spellSlot",
+          "AvailableBattleAct.routeEvents",
+          "BattleHole.kind=spellTargetAllocation",
+          "BattleFill.kind=spellTargetAllocation",
+          "BattleResolutionResult.routeEvents",
+          "BattleResolutionResult.holes"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-magic-missile.route.mbt.qnt",
+      "qntFileSha256": "283d6e322f72c2b9051045897ddb450eef4bbfe88841ec67c086af52d6caccf4",
+      "routeConnectorSha256": "f91f7c392b838d06ea22e610499613ab634e036ea7a1a80dfe4f0b72f7cc36af",
+      "branchFamily": "step",
+      "branchAction": "doFillMagicMissileDamage",
+      "observedActionTaken": "doFillMagicMissileDamage",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=2 action=doFillMagicMissileDamage dartRollTotal=3",
+      "sampledInputs": [
+        {
+          "pickName": "dartRollTotal",
+          "value": 3
+        }
+      ],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "37bb621a3770c15b29678e54d3c9d505b51a3b053f8a0060b6a7263f38317a60",
+        "observedProjectionSha256": "37bb621a3770c15b29678e54d3c9d505b51a3b053f8a0060b6a7263f38317a60",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), AvailableBattleAct.routeEvents from discoverBattleActs, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.actionSpell.invocation.procedure=repeatedDamageAllocation",
+          "BattleSubject.actionSpell.invocation.tag=spellSlot",
+          "BattleState.currentTurnResources",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.zeroHpLifecycle",
+          "BattleResolutionResult.routeEvents",
+          "BattleResolutionResult.holes",
+          "CharacterBattleSpellcastingState.spellSlots"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}

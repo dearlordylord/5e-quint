@@ -61,7 +61,7 @@ module battleRuntimeProtectionFromPoison {
       not(fighterHasRage(state))
     ) {
       commitActorSpellSlotUse(
-        spendFighterSpellActionCost(protectionFromPoisonTargetedState(state, target), SpellMagicAction),
+        spendFighterSpellActionCost(protectionFromPoisonTargetedState(state, target), SpellMagicAction).state,
         Fighter,
       )
     } else {

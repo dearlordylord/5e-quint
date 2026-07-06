@@ -20,6 +20,7 @@ export {
 } from "./sheet-types.ts";
 export {
   characterSheetAbilityCheckAbility,
+  characterSheetAbilityCheckProficiencyBonusProjection,
   characterSheetAbilityCheckProficiencyBonus,
   characterSheetJumpDistanceAbility,
   characterSheetLinkedSpeedGrants,
@@ -27,9 +28,13 @@ export {
 } from "./ability-checks.ts";
 export {
   characterSheetArmorClass,
+  characterSheetArmorClassProjection,
   characterSheetArmorClassState,
 } from "./armor-class.ts";
-export { characterSheetClassFeaturePreparedSpellAccessesForBuild } from "./class-feature-spells.ts";
+export {
+  characterSheetClassFeaturePreparedSpellAccessesForBuild,
+  characterSheetClassFeatureSelectedReferenceProjection,
+} from "./class-feature-spells.ts";
 export {
   characterSheetDruidCircleLandPreparedSpellAccess,
   characterSheetDruidWildShapeKnownForms,
@@ -42,11 +47,13 @@ export {
 export {
   applyCharacterSheetSpellRestBenefit,
   applyLayOnHands,
+  applyLayOnHandsWithRoute,
   characterSheetHitDice,
 } from "./healing-rest-benefit.ts";
 export {
   characterSheetCurrentHp,
   characterSheetHitPointMaximum,
+  characterSheetHitPointMaximumProjection,
   characterSheetHitPoints,
   characterSheetHitPointsCurrentHp,
   characterSheetNormalHitPointMaximum,
@@ -60,7 +67,10 @@ export {
 } from "./resources.ts";
 export {
   characterSheetLongRestCalendarGate,
+  completeLongRestArcaneRecoveryResetWithRoute,
+  completeLongRestWeaponMasteryReselectionWithRoute,
   completeLongRest,
+  completeShortRestArcaneRecoveryWithRoute,
   completeMagicalCunningRite,
   completeShortRest,
   finishLongRest,
@@ -71,10 +81,14 @@ export {
   startShortRest,
 } from "./rests.ts";
 export {
+  characterSheetWeaponMasterySelectedReferenceProjection,
+} from "./weapon-mastery.ts";
+export {
   characterBuildHasSpellbookSpell,
   characterSheetSpellInvocation,
   characterSheetSpellbookRitualAccess,
   characterSheetSpellbookRitualAccessesForBuild,
+  characterSheetSpellbookRitualInvocationProjection,
 } from "./spell-invocation.ts";
 export {
   characterSheetPactSlots,
@@ -96,11 +110,16 @@ export type {
   CharacterSheetAbilityCheckProficiencyBonus,
   CharacterSheetAbilityCheckProficiencyBonusInput,
   CharacterSheetArcaneRecoverySlotRefund,
+  CharacterSheetArcaneRecoveryRestRouteResult,
   CharacterSheetArmorClassBaseChoice,
+  CharacterSheetArmorClassProjection,
+  CharacterSheetArmorClassProjectionRoute,
   CharacterSheetArmorClassStateInput,
   CharacterSheetBookOfShadowsPresence,
   CharacterSheetBookOfShadowsRitualInvocation,
   CharacterSheetClassFeaturePreparedSpellAccess,
+  CharacterSheetClassFeatureSelectedReferenceProjection,
+  CharacterSheetClassFeatureSelectedReferenceProjectionRoute,
   CharacterSheetCompanion,
   CharacterSheetCompanionCreatureTypeOverride,
   CharacterSheetCompanionFormSelection,
@@ -117,6 +136,8 @@ export type {
   CharacterSheetFontOfMagicSpellSlotSource,
   CharacterSheetHitDieSpend,
   CharacterSheetHitDieState,
+  CharacterSheetHitPointMaximumProjection,
+  CharacterSheetHitPointMaximumProjectionRoute,
   CharacterSheetHitPoints,
   CharacterSheetHitPointsInput,
   CharacterSheetHeroicInspiration,
@@ -127,6 +148,8 @@ export type {
   CharacterSheetJumpDistanceAbilityInput,
   CharacterSheetJumpDistanceAbilitySubstitution,
   CharacterSheetLayOnHandsInput,
+  CharacterSheetLayOnHandsRoute,
+  CharacterSheetLayOnHandsRouteResult,
   CharacterSheetLayOnHandsResult,
   CharacterSheetLinkedSpeedGrant,
   CharacterSheetLongRestCalendarGate,
@@ -160,6 +183,12 @@ export type {
   CharacterSheetRetainedCompanionState,
   CharacterSheetResourceExpenditure,
   CharacterSheetResourceState,
+  CharacterSheetRouteEvent,
+  CharacterSheetRouteFact,
+  CharacterSheetRouteFill,
+  CharacterSheetRouteHole,
+  CharacterSheetRouteOwner,
+  CharacterSheetRouteSubject,
   CharacterSheetRestActivityInterruption,
   CharacterSheetRestFeatureUse,
   CharacterSheetShortRestCompletion,
@@ -182,11 +211,18 @@ export type {
   CharacterSheetSpellbookRitualAccess,
   CharacterSheetSpellbookRitualAccessInput,
   CharacterSheetSpellbookRitualInvocation,
+  CharacterSheetSpellbookRitualInvocationProjection,
+  CharacterSheetSpellbookRitualInvocationRoute,
   CharacterSheetSpentHitDiePool,
   CharacterSheetStableRecovery,
   CharacterSheetTimePassedInput,
   CharacterSheetUseCountResourceUnitId,
   CharacterSheetWeaponMasteryReselection,
+  CharacterSheetWeaponMasteryReselectionAcceptedRoute,
+  CharacterSheetWeaponMasteryReselectionRejectedRoute,
+  CharacterSheetWeaponMasteryReselectionRouteResult,
+  CharacterSheetWeaponMasterySelectedReferenceProjection,
+  CharacterSheetWeaponMasterySelectedReferenceProjectionRoute,
   CharacterSheetZeroHpLifecycle,
   CharacterSheetZeroHpLifecycleInput,
   CharacterSpellSlotExpenditure,

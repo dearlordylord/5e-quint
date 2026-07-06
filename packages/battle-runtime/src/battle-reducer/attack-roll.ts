@@ -1296,8 +1296,6 @@ function huntersPreyHordeBreakerSelection(
   }
   const unitRef = attacker.origin.characterUnitRefs.find(
     (candidate) =>
-      candidate.selectedOption?.kind === "huntersPrey" &&
-      candidate.selectedOption.optionId === "hordeBreaker" &&
       !state.currentTurnResources.huntersPreyHordeBreakerUsedThisTurn.some(
         (usage) =>
           usage.attackerId === attackerId && usage.unitId === candidate.unitId,
@@ -1305,7 +1303,9 @@ function huntersPreyHordeBreakerSelection(
       candidate.supportProfiles.some(
         (profile) =>
           typeof profile === "object" &&
-          profile.kind === HUNTERS_PREY_SUPPORT_PROFILE,
+          profile.kind === HUNTERS_PREY_SUPPORT_PROFILE &&
+          profile.huntersPrey.kind ===
+            "nearbyDifferentTargetSameWeaponAttack",
       ),
   );
   return unitRef === undefined ? null : { unitId: unitRef.unitId };

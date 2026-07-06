@@ -26,6 +26,7 @@ import {
   type CharacterSheetAbilityCheckAbility,
   type CharacterSheetAbilityCheckAbilityInput,
   type CharacterSheetAbilityCheckAbilitySubstitution,
+  type CharacterSheetAbilityCheckProficiencyBonusProjection,
   type CharacterSheetAbilityCheckProficiencyBonus,
   type CharacterSheetAbilityCheckProficiencyBonusInput,
   type CharacterSheetIssue,
@@ -34,6 +35,12 @@ import {
   type CharacterSheetJumpDistanceAbilitySubstitution,
   type CharacterSheetLinkedSpeedGrant,
 } from "./sheet-types.ts";
+
+const CHARACTER_SHEET_ABILITY_CHECK_PROFICIENCY_BONUS_ROUTE_EVENT = {
+  kind: "projectCharacterSheetFacts",
+  subject: "abilityCheckProjection",
+  owner: "buildProjection",
+} as const;
 
 export function characterSheetProficiencyBonusForCharacterLevel(
   totalLevel: CharacterLevel,
@@ -104,6 +111,23 @@ export function characterSheetAbilityCheckProficiencyBonus(
           }),
     ),
     Match.exhaustive,
+  );
+}
+
+export function characterSheetAbilityCheckProficiencyBonusProjection(
+  input: CharacterSheetAbilityCheckProficiencyBonusInput,
+): Either.Either<
+  CharacterSheetAbilityCheckProficiencyBonusProjection,
+  CharacterSheetIssue
+> {
+  return Either.map(
+    characterSheetAbilityCheckProficiencyBonus(input),
+    (proficiencyBonus) => ({
+      proficiencyBonus,
+      qRoute: [
+        CHARACTER_SHEET_ABILITY_CHECK_PROFICIENCY_BONUS_ROUTE_EVENT,
+      ] as const,
+    }),
   );
 }
 

@@ -1,26 +1,26 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-DIVINE-FAVOR divine_favor
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-DIVINE-SMITE divine_smite
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-ENSNARING-STRIKE ensnaring_strike
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-FALSE-LIFE false_life
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-HEROISM heroism
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-HUNTERS-MARK hunters_mark
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-HEX hex
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-LONGSTRIDER longstrider
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-SEARING-SMITE searing_smite
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-SHILLELAGH shillelagh
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1E-TRUE-STRIKE true_strike
-// UNIT-IDENTITY-MBT-REPLAY: L1E-DIVINE-FAVOR divine_favor doDivineFavorWeaponDamageRider
-// UNIT-IDENTITY-MBT-REPLAY: L1E-DIVINE-SMITE divine_smite doDivineSmiteAfterHitDamage
-// UNIT-IDENTITY-MBT-REPLAY: L1E-ENSNARING-STRIKE ensnaring_strike doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape
-// UNIT-IDENTITY-MBT-REPLAY: L1E-FALSE-LIFE false_life doFalseLifeTemporaryHitPoints
-// UNIT-IDENTITY-MBT-REPLAY: L1E-HEROISM heroism doHeroismFrightenedImmunityTurnStartTemporaryHitPoints doHeroismFrightenedImmunityTurnStartTemporaryHitPointsCleanup
-// UNIT-IDENTITY-MBT-REPLAY: L1E-HUNTERS-MARK hunters_mark doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer
-// UNIT-IDENTITY-MBT-REPLAY: L1E-HEX hex doHexMarkedDamageRiderAndLaterTurnTransfer
-// UNIT-IDENTITY-MBT-REPLAY: L1E-LONGSTRIDER longstrider doLongstriderSpeedIncrease
-// UNIT-IDENTITY-MBT-REPLAY: L1E-SEARING-SMITE searing_smite doSearingSmiteAfterHitTimedDamageAndSaveCleanup
-// UNIT-IDENTITY-MBT-REPLAY: L1E-SHILLELAGH shillelagh doShillelaghWeaponAttackOverride
-// UNIT-IDENTITY-MBT-REPLAY: L1E-TRUE-STRIKE true_strike doTrueStrikeSpellHostedWeaponAttack
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1E-DIVINE-FAVOR divine_favor
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1E-DIVINE-SMITE divine_smite
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1E-ENSNARING-STRIKE ensnaring_strike
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1E-FALSE-LIFE false_life
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1E-HEROISM heroism
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1E-HUNTERS-MARK hunters_mark
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1E-HEX hex
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1E-LONGSTRIDER longstrider
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1E-SEARING-SMITE searing_smite
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1E-SHILLELAGH shillelagh
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1E-TRUE-STRIKE true_strike
+// UNIT-IDENTITY-REPLAY: L1E-DIVINE-FAVOR divine_favor doDivineFavorWeaponDamageRider
+// UNIT-IDENTITY-REPLAY: L1E-DIVINE-SMITE divine_smite doDivineSmiteAfterHitDamage
+// UNIT-IDENTITY-REPLAY: L1E-ENSNARING-STRIKE ensnaring_strike doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape
+// UNIT-IDENTITY-REPLAY: L1E-FALSE-LIFE false_life doFalseLifeTemporaryHitPoints
+// UNIT-IDENTITY-REPLAY: L1E-HEROISM heroism doHeroismFrightenedImmunityTurnStartTemporaryHitPoints doHeroismFrightenedImmunityTurnStartTemporaryHitPointsCleanup
+// UNIT-IDENTITY-REPLAY: L1E-HUNTERS-MARK hunters_mark doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer
+// UNIT-IDENTITY-REPLAY: L1E-HEX hex doHexMarkedDamageRiderAndLaterTurnTransfer
+// UNIT-IDENTITY-REPLAY: L1E-LONGSTRIDER longstrider doLongstriderSpeedIncrease
+// UNIT-IDENTITY-REPLAY: L1E-SEARING-SMITE searing_smite doSearingSmiteAfterHitTimedDamageAndSaveCleanup
+// UNIT-IDENTITY-REPLAY: L1E-SHILLELAGH shillelagh doShillelaghWeaponAttackOverride
+// UNIT-IDENTITY-REPLAY: L1E-TRUE-STRIKE true_strike doTrueStrikeSpellHostedWeaponAttack
 import { Either } from "effect";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
@@ -96,7 +96,7 @@ import {
   quintStateRecord,
   quintVariantTag,
 } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { damageTypeChoiceFill } from "./unit-profile-admission-spell-fill-support.ts";
 
 type Level1BuffMarkSmiteSelectedIdentityAction =
@@ -820,8 +820,8 @@ const selectedUnitIdentityReplays = [
   },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
-defineSelectedIdentityWitness({
-  describeLabel: "Level 1 buff mark smite selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Level 1 buff mark smite selected identity replay",
   taskId: "level1-buff-mark-smite-selected-identity",
   specFile: mbtSpecPath(
     import.meta.dirname,
@@ -844,7 +844,6 @@ defineSelectedIdentityWitness({
       );
       return {
         actionName,
-        projectionAfter: sequence.expected,
         discover: () => replayLevel1BuffMarkSmiteAction(actionName),
       };
     }),
@@ -873,735 +872,724 @@ function replayLevel1BuffMarkSmiteAction(
 }
 
 function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
-    let state = level1BuffMarkSmiteBattle();
-    let damageRider:
-      | NonNullable<BattleDamageRollHole["spellWeaponDamageRiders"]>[number]
-      | undefined;
-    let hexDamageHoleRider:
-      | NonNullable<BattleDamageRollHole["spellMarkedDamageRiders"]>[number]
-      | undefined;
-    let huntersMarkDamageHoleRider:
-      | NonNullable<BattleDamageRollHole["spellMarkedDamageRiders"]>[number]
-      | undefined;
-    let huntersMarkTransferKindOnDropTurn: HuntersMarkTransferKind = "none";
-    let huntersMarkTransferVisibleOnDropTurn = false;
-    let hexTransferKindOnDropTurn: HexTransferKind = "none";
-    let hexTransferVisibleOnDropTurn = false;
-    let hexAfterCleanupAbilityRollMode: HexAbilityCheckRollMode = "none";
-    let ensnaringStrikeLifecycle = defaultEnsnaringStrikeLifecycleProjection();
-    let falseLifeTemporaryHitPoints =
+  let state = level1BuffMarkSmiteBattle();
+  let damageRider:
+    | NonNullable<BattleDamageRollHole["spellWeaponDamageRiders"]>[number]
+    | undefined;
+  let hexDamageHoleRider:
+    | NonNullable<BattleDamageRollHole["spellMarkedDamageRiders"]>[number]
+    | undefined;
+  let huntersMarkDamageHoleRider:
+    | NonNullable<BattleDamageRollHole["spellMarkedDamageRiders"]>[number]
+    | undefined;
+  let huntersMarkTransferKindOnDropTurn: HuntersMarkTransferKind = "none";
+  let huntersMarkTransferVisibleOnDropTurn = false;
+  let hexTransferKindOnDropTurn: HexTransferKind = "none";
+  let hexTransferVisibleOnDropTurn = false;
+  let hexAfterCleanupAbilityRollMode: HexAbilityCheckRollMode = "none";
+  let ensnaringStrikeLifecycle = defaultEnsnaringStrikeLifecycleProjection();
+  let falseLifeTemporaryHitPoints =
+    defaultFalseLifeTemporaryHitPointsProjection();
+  let heroismEffects = defaultHeroismEffectsProjection();
+  let searingSmiteLifecycle = defaultSearingSmiteLifecycleProjection();
+  let shillelaghWeaponAttackOverride =
+    defaultShillelaghWeaponAttackOverrideProjection();
+  let trueStrikeSpellHostedWeaponAttack =
+    defaultTrueStrikeSpellHostedWeaponAttackProjection();
+  let lastResult: Level1BuffMarkSmiteSelectedIdentityProjection["lastResult"] =
+    "init";
+
+  function resetProcedureProjections(): void {
+    damageRider = undefined;
+    hexDamageHoleRider = undefined;
+    huntersMarkDamageHoleRider = undefined;
+    huntersMarkTransferKindOnDropTurn = "none";
+    huntersMarkTransferVisibleOnDropTurn = false;
+    hexTransferKindOnDropTurn = "none";
+    hexTransferVisibleOnDropTurn = false;
+    hexAfterCleanupAbilityRollMode = "none";
+    ensnaringStrikeLifecycle = defaultEnsnaringStrikeLifecycleProjection();
+    falseLifeTemporaryHitPoints =
       defaultFalseLifeTemporaryHitPointsProjection();
-    let heroismEffects = defaultHeroismEffectsProjection();
-    let searingSmiteLifecycle = defaultSearingSmiteLifecycleProjection();
-    let shillelaghWeaponAttackOverride =
+    heroismEffects = defaultHeroismEffectsProjection();
+    searingSmiteLifecycle = defaultSearingSmiteLifecycleProjection();
+    shillelaghWeaponAttackOverride =
       defaultShillelaghWeaponAttackOverrideProjection();
-    let trueStrikeSpellHostedWeaponAttack =
+    trueStrikeSpellHostedWeaponAttack =
       defaultTrueStrikeSpellHostedWeaponAttackProjection();
-    let lastResult: Level1BuffMarkSmiteSelectedIdentityProjection["lastResult"] =
-      "init";
+  }
 
-    function resetProcedureProjections(): void {
-      damageRider = undefined;
-      hexDamageHoleRider = undefined;
-      huntersMarkDamageHoleRider = undefined;
-      huntersMarkTransferKindOnDropTurn = "none";
-      huntersMarkTransferVisibleOnDropTurn = false;
-      hexTransferKindOnDropTurn = "none";
-      hexTransferVisibleOnDropTurn = false;
-      hexAfterCleanupAbilityRollMode = "none";
-      ensnaringStrikeLifecycle = defaultEnsnaringStrikeLifecycleProjection();
-      falseLifeTemporaryHitPoints =
-        defaultFalseLifeTemporaryHitPointsProjection();
-      heroismEffects = defaultHeroismEffectsProjection();
-      searingSmiteLifecycle = defaultSearingSmiteLifecycleProjection();
-      shillelaghWeaponAttackOverride =
-        defaultShillelaghWeaponAttackOverrideProjection();
-      trueStrikeSpellHostedWeaponAttack =
-        defaultTrueStrikeSpellHostedWeaponAttackProjection();
+  function reset(): void {
+    state = level1BuffMarkSmiteBattle();
+    resetProcedureProjections();
+    lastResult = "init";
+  }
+
+  function resolveHeroismThroughCasterStartTurn(): void {
+    state = level1BuffMarkSmiteBattle({
+      preparedSpells: [spellRecord(heroismUnitId)],
+    });
+    const caster = state.combatants.get(casterId);
+    if (caster === undefined) {
+      throw new Error("Expected Heroism caster.");
+    }
+    state = {
+      ...state,
+      combatants: new Map(state.combatants).set(casterId, {
+        ...caster,
+        conditions: KnockedOutConditionState(
+          applyCondition(caster.conditions, "frightened"),
+        ),
+      }),
+    };
+    resetProcedureProjections();
+
+    const act = actionSpellAct(state, heroismUnitId);
+    const target = requireHole(act.initialHoles, "targetChoice");
+    const cast = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [spellTargetFill(target, heroismUnitId, casterId, casterId)],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error(`Expected Heroism to resolve, got ${cast.tag}.`);
     }
 
-    function reset(): void {
-      state = level1BuffMarkSmiteBattle();
-      resetProcedureProjections();
-      lastResult = "init";
+    const targetTurn = endTurn({
+      state: cast.state,
+      actorId: casterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error(
+        `Expected Heroism caster turn to end, got ${targetTurn.tag}.`,
+      );
     }
+    const refreshed = endTurn({
+      state: targetTurn.state,
+      actorId: targetId,
+    });
+    recordResolvedResult(refreshed, "heroism");
+    heroismEffects = heroismEffectsProjection(state);
+  }
 
-    function resolveHeroismThroughCasterStartTurn(): void {
+  function recordResolvedResult(
+    result: BattleResolutionResult,
+    resultKind: Exclude<
+      Level1BuffMarkSmiteSelectedIdentityProjection["lastResult"],
+      "init"
+    >,
+  ): void {
+    if (result.tag !== "resolved") {
+      throw new Error(
+        `Expected Level 1 buff mark smite action to resolve, got ${result.tag}.`,
+      );
+    }
+    state = result.state;
+    lastResult = resultKind;
+  }
+
+  return {
+    init: reset,
+    doDivineFavorWeaponDamageRider: () => {
       state = level1BuffMarkSmiteBattle({
-        preparedSpells: [spellRecord(heroismUnitId)],
+        preparedSpells: [spellRecord(divineFavorUnitId)],
       });
-      const caster = state.combatants.get(casterId);
-      if (caster === undefined) {
-        throw new Error("Expected Heroism caster.");
-      }
-      state = {
-        ...state,
-        combatants: new Map(state.combatants).set(casterId, {
-          ...caster,
-          conditions: KnockedOutConditionState(
-            applyCondition(caster.conditions, "frightened"),
-          ),
-        }),
-      };
       resetProcedureProjections();
 
-      const act = actionSpellAct(state, heroismUnitId);
-      const target = requireHole(act.initialHoles, "targetChoice");
       const cast = resolveBattleSubject({
         state,
-        subject: act.subject,
-        fills: [spellTargetFill(target, heroismUnitId, casterId, casterId)],
+        subject: bonusActionSpellAct(state, divineFavorUnitId).subject,
+        fills: [],
       });
       if (cast.tag !== "resolved") {
-        throw new Error(`Expected Heroism to resolve, got ${cast.tag}.`);
+        throw new Error(`Expected Divine Favor to resolve, got ${cast.tag}.`);
+      }
+      state = cast.state;
+
+      const attack = resolveLongswordHit({ state });
+      damageRider = attack.damageRider;
+      recordResolvedResult(attack.result, "divineFavor");
+    },
+    doDivineSmiteAfterHitDamage: () => {
+      state = level1BuffMarkSmiteBattle({
+        preparedSpells: [spellRecord(divineSmiteUnitId)],
+      });
+      resetProcedureProjections();
+
+      const hit = resolveLongswordHitWithAttackRoll({ state });
+      const attackHitWindow = requireAttackHitWindow(hit.afterAttackRoll);
+      const smiteChoice = attackHitBonusActionSpellChoice(
+        attackHitWindow,
+        divineSmiteUnitId,
+      );
+      const afterSmite = resolveBattleInterrupt({
+        state: attackHitWindow.state,
+        fill: interruptDecisionFill(
+          requireHole(attackHitWindow.holes, "interruptDecision"),
+          {
+            kind: "resolve",
+            responderId: casterId,
+            choice: {
+              kind: "castAttackHitBonusActionSpell",
+              invocation: smiteChoice.invocation,
+              fills: [],
+            },
+          },
+        ),
+      });
+      const afterSmiteDamage = requireNeedsHoles(afterSmite);
+      const damage = requireDamageRollHole(afterSmiteDamage);
+      damageRider = spellWeaponDamageRider(damage, divineSmiteUnitId);
+      recordResolvedResult(
+        resolveBattleSubject({
+          state: afterSmiteDamage.state,
+          subject: hit.subject,
+          fills: [
+            hit.targetFill,
+            hit.attackFill,
+            damageRollFillWithGroups(damage, [[4], [3, 4]]),
+          ],
+        }),
+        "divineSmite",
+      );
+    },
+    doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape: () => {
+      state = level1BuffMarkSmiteBattle({
+        preparedSpells: [spellRecord(ensnaringStrikeUnitId)],
+        sourceClassName: "ranger",
+      });
+      resetProcedureProjections();
+
+      const hit = resolveLongswordHitWithAttackRoll({ state });
+      const attackHitWindow = requireAttackHitWindow(hit.afterAttackRoll);
+      const ensnaringChoice = attackHitBonusActionSpellChoice(
+        attackHitWindow,
+        ensnaringStrikeUnitId,
+      );
+      const save = requireHole(
+        ensnaringChoice.initialHoles,
+        "savingThrowOutcome",
+      );
+      const afterEnsnaring = resolveBattleInterrupt({
+        state: attackHitWindow.state,
+        fill: interruptDecisionFill(
+          requireHole(attackHitWindow.holes, "interruptDecision"),
+          {
+            kind: "resolve",
+            responderId: casterId,
+            choice: {
+              kind: "castAttackHitBonusActionSpell",
+              invocation: ensnaringChoice.invocation,
+              fills: [
+                savingThrowOutcomeFill(save, [{ targetId, succeeded: false }]),
+              ],
+            },
+          },
+        ),
+      });
+      const afterEnsnaringDamage = requireNeedsHoles(afterEnsnaring);
+      const weaponDamage = requireDamageRollHole(afterEnsnaringDamage);
+      const afterWeaponDamage = resolveBattleSubject({
+        state: afterEnsnaringDamage.state,
+        subject: hit.subject,
+        fills: [
+          hit.targetFill,
+          hit.attackFill,
+          damageRollFillWithGroups(weaponDamage, [[3]]),
+        ],
+      });
+      if (afterWeaponDamage.tag !== "resolved") {
+        throw new Error("Expected Ensnaring Strike host attack to resolve.");
+      }
+      const restrainedBeforeEscape = ensnaringStrikeRestrainsTarget(
+        afterWeaponDamage.state,
+      );
+      if (!restrainedBeforeEscape) {
+        throw new Error("Expected Ensnaring Strike to restrain the target.");
       }
 
+      const awaitingTurnStartDamage = requireNeedsHoles(
+        endTurn({
+          state: afterWeaponDamage.state,
+          actorId: casterId,
+        }),
+      );
+      const turnStartDamage = requireSpellTurnStartDamageRollHole(
+        awaitingTurnStartDamage,
+      );
       const targetTurn = endTurn({
-        state: cast.state,
+        state: afterWeaponDamage.state,
         actorId: casterId,
+        fills: [damageRollFillWithGroups(turnStartDamage, [[4]])],
       });
       if (targetTurn.tag !== "resolved") {
         throw new Error(
-          `Expected Heroism caster turn to end, got ${targetTurn.tag}.`,
+          "Expected Ensnaring Strike turn-start damage to resolve.",
         );
       }
-      const refreshed = endTurn({
-        state: targetTurn.state,
-        actorId: targetId,
+
+      const escapeAct = spellRestraintEscapeAct(targetTurn.state);
+      const escapeCheck = requireHole(escapeAct.initialHoles, "abilityCheck");
+      recordResolvedResult(
+        resolveBattleSubject({
+          state: targetTurn.state,
+          subject: escapeAct.subject,
+          fills: [abilityCheckFill(escapeCheck, 13)],
+        }),
+        "ensnaringStrike",
+      );
+      ensnaringStrikeLifecycle = {
+        ensnaringStrikeRestrainedBeforeEscape: restrainedBeforeEscape,
+        ensnaringStrikeSaveSourceSpellId:
+          ensnaringStrikeSaveSourceSpellId(save),
+        ensnaringStrikeSaveAbility: save.ability === "str" ? "str" : "none",
+        turnStartDamageSourceSpellId:
+          ensnaringStrikeTurnStartDamageSourceSpellId(turnStartDamage),
+        turnStartDamageDamageType:
+          turnStartDamage.spellTurnStartDamage.damage.damageType === "piercing"
+            ? "piercing"
+            : "none",
+        turnStartDamageDice:
+          turnStartDamage.spellTurnStartDamage.damage.expr.dice,
+        turnStartDamageDieSize:
+          turnStartDamage.spellTurnStartDamage.damage.expr.dieSize,
+        escapeCheckAbility: escapeCheck.ability === "str" ? "str" : "none",
+        escapeCheckSkill:
+          escapeCheck.skill === "athletics" ? "athletics" : "none",
+      };
+    },
+    doFalseLifeTemporaryHitPoints: () => {
+      state = level1BuffMarkSmiteBattle({
+        preparedSpells: [spellRecord(falseLifeUnitId)],
+        sourceClassName: "wizard",
       });
-      recordResolvedResult(refreshed, "heroism");
-      heroismEffects = heroismEffectsProjection(state);
-    }
+      resetProcedureProjections();
 
-    function recordResolvedResult(
-      result: BattleResolutionResult,
-      resultKind: Exclude<
-        Level1BuffMarkSmiteSelectedIdentityProjection["lastResult"],
-        "init"
-      >,
-    ): void {
-      if (result.tag !== "resolved") {
+      const act = actionSpellAct(state, falseLifeUnitId);
+      const temporaryHitPointsRoll =
+        requireScalarBuffTemporaryHitPointsRollHole(
+          requireHole(act.initialHoles, "rolledDice"),
+        );
+      falseLifeTemporaryHitPoints = falseLifeTemporaryHitPointsProjection(
+        temporaryHitPointsRoll,
+      );
+      recordResolvedResult(
+        resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [damageRollFillWithGroups(temporaryHitPointsRoll, [[4, 3]])],
+        }),
+        "falseLife",
+      );
+    },
+    doHeroismFrightenedImmunityTurnStartTemporaryHitPoints: () => {
+      resolveHeroismThroughCasterStartTurn();
+    },
+    doHeroismFrightenedImmunityTurnStartTemporaryHitPointsCleanup: () => {
+      resolveHeroismThroughCasterStartTurn();
+      state = breakBattleConcentration(state, casterId);
+      heroismEffects = heroismEffectsProjection(state);
+    },
+    doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer: () => {
+      state = level1BuffMarkSmiteBattle({
+        preparedSpells: [spellRecord(huntersMarkUnitId)],
+        sourceClassName: "ranger",
+        targetKind: "statBlock",
+        includeMarkedDamageTransferTarget: true,
+      });
+      resetProcedureProjections();
+
+      const castAct = bonusActionSpellAct(state, huntersMarkUnitId);
+      const castTarget = requireHole(castAct.initialHoles, "targetChoice");
+      const cast = resolveBattleSubject({
+        state,
+        subject: castAct.subject,
+        fills: [
+          spellTargetFill(castTarget, huntersMarkUnitId, casterId, targetId),
+        ],
+      });
+      if (cast.tag !== "resolved") {
+        throw new Error(`Expected Hunter's Mark to resolve, got ${cast.tag}.`);
+      }
+
+      state = advanceMarkedDamageRoundToCasterTurn(cast.state);
+      const hit = resolveLongswordHitWithAttackRoll({ state });
+      const damage = requireDamageRollHole(
+        requireNeedsHoles(hit.afterAttackRoll),
+      );
+      huntersMarkDamageHoleRider = spellMarkedDamageRider(
+        damage,
+        huntersMarkUnitId,
+      );
+      const damaged = resolveBattleSubject({
+        state,
+        subject: hit.subject,
+        fills: [
+          hit.targetFill,
+          hit.attackFill,
+          damageRollFillWithGroups(damage, [[4], [5]]),
+        ],
+      });
+      if (damaged.tag !== "resolved") {
         throw new Error(
-          `Expected Level 1 buff mark smite action to resolve, got ${result.tag}.`,
+          `Expected Hunter's Mark attack to resolve, got ${damaged.tag}.`,
         );
       }
-      state = result.state;
-      lastResult = resultKind;
-    }
 
-    return {
-      init: reset,
-      doDivineFavorWeaponDamageRider: () => {
-        state = level1BuffMarkSmiteBattle({
-          preparedSpells: [spellRecord(divineFavorUnitId)],
-        });
-        resetProcedureProjections();
+      state = damaged.state;
+      const markedTarget = state.combatants.get(targetId);
+      if (markedTarget === undefined) {
+        throw new Error("Expected Hunter's Mark target.");
+      }
+      state = applyBattleHitPointDamage({
+        state,
+        target: markedTarget,
+        damageAmount: 1,
+        deathFailuresAtZeroHp: 1,
+        damageSourceId: casterId,
+      });
+      huntersMarkTransferVisibleOnDropTurn = markedDamageTransferActVisible(
+        state,
+        huntersMarkUnitId,
+      );
+      huntersMarkTransferKindOnDropTurn = huntersMarkActiveMarkTransferKind(
+        huntersMarkActiveMarkEffect(state),
+      );
 
-        const cast = resolveBattleSubject({
+      const transferAct = markedDamageTransferAct(state, huntersMarkUnitId);
+      const transferTarget = requireHole(
+        transferAct.initialHoles,
+        "targetChoice",
+      );
+      recordResolvedResult(
+        resolveBattleSubject({
           state,
-          subject: bonusActionSpellAct(state, divineFavorUnitId).subject,
-          fills: [],
-        });
-        if (cast.tag !== "resolved") {
-          throw new Error(`Expected Divine Favor to resolve, got ${cast.tag}.`);
-        }
-        state = cast.state;
-
-        const attack = resolveLongswordHit({ state });
-        damageRider = attack.damageRider;
-        recordResolvedResult(attack.result, "divineFavor");
-      },
-      doDivineSmiteAfterHitDamage: () => {
-        state = level1BuffMarkSmiteBattle({
-          preparedSpells: [spellRecord(divineSmiteUnitId)],
-        });
-        resetProcedureProjections();
-
-        const hit = resolveLongswordHitWithAttackRoll({ state });
-        const attackHitWindow = requireAttackHitWindow(hit.afterAttackRoll);
-        const smiteChoice = attackHitBonusActionSpellChoice(
-          attackHitWindow,
-          divineSmiteUnitId,
-        );
-        const afterSmite = resolveBattleInterrupt({
-          state: attackHitWindow.state,
-          fill: interruptDecisionFill(
-            requireHole(attackHitWindow.holes, "interruptDecision"),
-            {
-              kind: "resolve",
-              responderId: casterId,
-              choice: {
-                kind: "castAttackHitBonusActionSpell",
-                invocation: smiteChoice.invocation,
-                fills: [],
-              },
-            },
-          ),
-        });
-        const afterSmiteDamage = requireNeedsHoles(afterSmite);
-        const damage = requireDamageRollHole(afterSmiteDamage);
-        damageRider = spellWeaponDamageRider(damage, divineSmiteUnitId);
-        recordResolvedResult(
-          resolveBattleSubject({
-            state: afterSmiteDamage.state,
-            subject: hit.subject,
-            fills: [
-              hit.targetFill,
-              hit.attackFill,
-              damageRollFillWithGroups(damage, [[4], [3, 4]]),
-            ],
-          }),
-          "divineSmite",
-        );
-      },
-      doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape: () => {
-        state = level1BuffMarkSmiteBattle({
-          preparedSpells: [spellRecord(ensnaringStrikeUnitId)],
-          sourceClassName: "ranger",
-        });
-        resetProcedureProjections();
-
-        const hit = resolveLongswordHitWithAttackRoll({ state });
-        const attackHitWindow = requireAttackHitWindow(hit.afterAttackRoll);
-        const ensnaringChoice = attackHitBonusActionSpellChoice(
-          attackHitWindow,
-          ensnaringStrikeUnitId,
-        );
-        const save = requireHole(
-          ensnaringChoice.initialHoles,
-          "savingThrowOutcome",
-        );
-        const afterEnsnaring = resolveBattleInterrupt({
-          state: attackHitWindow.state,
-          fill: interruptDecisionFill(
-            requireHole(attackHitWindow.holes, "interruptDecision"),
-            {
-              kind: "resolve",
-              responderId: casterId,
-              choice: {
-                kind: "castAttackHitBonusActionSpell",
-                invocation: ensnaringChoice.invocation,
-                fills: [
-                  savingThrowOutcomeFill(save, [
-                    { targetId, succeeded: false },
-                  ]),
-                ],
-              },
-            },
-          ),
-        });
-        const afterEnsnaringDamage = requireNeedsHoles(afterEnsnaring);
-        const weaponDamage = requireDamageRollHole(afterEnsnaringDamage);
-        const afterWeaponDamage = resolveBattleSubject({
-          state: afterEnsnaringDamage.state,
-          subject: hit.subject,
+          subject: transferAct.subject,
           fills: [
-            hit.targetFill,
-            hit.attackFill,
-            damageRollFillWithGroups(weaponDamage, [[3]]),
+            spellTargetFill(
+              transferTarget,
+              huntersMarkUnitId,
+              casterId,
+              markedDamageTransferTargetId,
+            ),
           ],
-        });
-        if (afterWeaponDamage.tag !== "resolved") {
-          throw new Error("Expected Ensnaring Strike host attack to resolve.");
-        }
-        const restrainedBeforeEscape = ensnaringStrikeRestrainsTarget(
-          afterWeaponDamage.state,
-        );
-        if (!restrainedBeforeEscape) {
-          throw new Error("Expected Ensnaring Strike to restrain the target.");
-        }
+        }),
+        "huntersMark",
+      );
+    },
+    doHexMarkedDamageRiderAndLaterTurnTransfer: () => {
+      state = level1BuffMarkSmiteBattle({
+        preparedSpells: [spellRecord(hexUnitId)],
+        sourceClassName: "warlock",
+        targetKind: "statBlock",
+        includeMarkedDamageTransferTarget: true,
+      });
+      resetProcedureProjections();
 
-        const awaitingTurnStartDamage = requireNeedsHoles(
-          endTurn({
-            state: afterWeaponDamage.state,
-            actorId: casterId,
-          }),
-        );
-        const turnStartDamage = requireSpellTurnStartDamageRollHole(
-          awaitingTurnStartDamage,
-        );
-        const targetTurn = endTurn({
+      const castAct = bonusActionSpellAct(state, hexUnitId);
+      const castTarget = requireHole(castAct.initialHoles, "targetChoice");
+      const chosenAbility = requireHole(castAct.initialHoles, "abilityChoice");
+      const cast = resolveBattleSubject({
+        state,
+        subject: castAct.subject,
+        fills: [
+          spellTargetFill(castTarget, hexUnitId, casterId, targetId),
+          abilityChoiceFill(chosenAbility, "wis"),
+        ],
+      });
+      if (cast.tag !== "resolved") {
+        throw new Error(`Expected Hex to resolve, got ${cast.tag}.`);
+      }
+
+      state = advanceMarkedDamageRoundToCasterTurn(cast.state);
+      const hit = resolveLongswordHitWithAttackRoll({ state });
+      const damage = requireDamageRollHole(
+        requireNeedsHoles(hit.afterAttackRoll),
+      );
+      hexDamageHoleRider = spellMarkedDamageRider(damage, hexUnitId);
+      const damaged = resolveBattleSubject({
+        state,
+        subject: hit.subject,
+        fills: [
+          hit.targetFill,
+          hit.attackFill,
+          damageRollFillWithGroups(damage, [[4], [5]]),
+        ],
+      });
+      if (damaged.tag !== "resolved") {
+        throw new Error(`Expected Hex attack to resolve, got ${damaged.tag}.`);
+      }
+
+      state = advanceMarkedDamageRoundToCasterTurn(damaged.state);
+      const cursedTarget = state.combatants.get(targetId);
+      if (cursedTarget === undefined) {
+        throw new Error("Expected Hex cursed target.");
+      }
+      state = applyBattleHitPointDamage({
+        state,
+        target: cursedTarget,
+        damageAmount: 1,
+        deathFailuresAtZeroHp: 1,
+        damageSourceId: casterId,
+      });
+      hexTransferVisibleOnDropTurn = markedDamageTransferActVisible(
+        state,
+        hexUnitId,
+      );
+      hexTransferKindOnDropTurn = hexActiveMarkTransferKind(
+        hexActiveMarkEffect(state),
+      );
+
+      state = advanceMarkedDamageRoundToCasterTurn(state);
+      const transferAct = markedDamageTransferAct(state, hexUnitId);
+      const transferTarget = requireHole(
+        transferAct.initialHoles,
+        "targetChoice",
+      );
+      recordResolvedResult(
+        resolveBattleSubject({
+          state,
+          subject: transferAct.subject,
+          fills: [
+            spellTargetFill(
+              transferTarget,
+              hexUnitId,
+              casterId,
+              markedDamageTransferTargetId,
+            ),
+          ],
+        }),
+        "hex",
+      );
+      hexAfterCleanupAbilityRollMode = hexAbilityCheckRollModeFor(
+        breakBattleConcentration(state, casterId),
+        markedDamageTransferTargetId,
+        "wis",
+      );
+    },
+    doLongstriderSpeedIncrease: () => {
+      state = level1BuffMarkSmiteBattle({
+        preparedSpells: [spellRecord(longstriderUnitId)],
+        sourceClassName: "ranger",
+      });
+      resetProcedureProjections();
+
+      const act = actionSpellAct(state, longstriderUnitId);
+      const target = requireHole(act.initialHoles, "targetChoice");
+      recordResolvedResult(
+        resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [
+            spellTargetFill(target, longstriderUnitId, casterId, targetId),
+          ],
+        }),
+        "longstrider",
+      );
+    },
+    doSearingSmiteAfterHitTimedDamageAndSaveCleanup: () => {
+      state = level1BuffMarkSmiteBattle({
+        preparedSpells: [spellRecord(searingSmiteUnitId)],
+      });
+      resetProcedureProjections();
+
+      const hit = resolveLongswordHitWithAttackRoll({ state });
+      const attackHitWindow = requireAttackHitWindow(hit.afterAttackRoll);
+      const searingSmiteChoice = attackHitBonusActionSpellChoice(
+        attackHitWindow,
+        searingSmiteUnitId,
+      );
+      const afterSearingSmite = resolveBattleInterrupt({
+        state: attackHitWindow.state,
+        fill: interruptDecisionFill(
+          requireHole(attackHitWindow.holes, "interruptDecision"),
+          {
+            kind: "resolve",
+            responderId: casterId,
+            choice: {
+              kind: "castAttackHitBonusActionSpell",
+              invocation: searingSmiteChoice.invocation,
+              fills: [],
+            },
+          },
+        ),
+      });
+      const afterSearingSmiteDamage = requireNeedsHoles(afterSearingSmite);
+      const weaponDamage = requireDamageRollHole(afterSearingSmiteDamage);
+      const immediateDamage = spellWeaponDamageRider(
+        weaponDamage,
+        searingSmiteUnitId,
+      );
+      const afterWeaponDamage = resolveBattleSubject({
+        state: afterSearingSmiteDamage.state,
+        subject: hit.subject,
+        fills: [
+          hit.targetFill,
+          hit.attackFill,
+          damageRollFillWithGroups(weaponDamage, [[4], [3]]),
+        ],
+      });
+      if (afterWeaponDamage.tag !== "resolved") {
+        throw new Error("Expected Searing Smite host attack to resolve.");
+      }
+      const activeBeforeSuccessfulSave =
+        searingSmiteActiveEffect(afterWeaponDamage.state) !== undefined;
+
+      const awaitingTurnStart = requireNeedsHoles(
+        endTurn({
           state: afterWeaponDamage.state,
           actorId: casterId,
-          fills: [damageRollFillWithGroups(turnStartDamage, [[4]])],
-        });
-        if (targetTurn.tag !== "resolved") {
-          throw new Error(
-            "Expected Ensnaring Strike turn-start damage to resolve.",
-          );
-        }
-
-        const escapeAct = spellRestraintEscapeAct(targetTurn.state);
-        const escapeCheck = requireHole(escapeAct.initialHoles, "abilityCheck");
-        recordResolvedResult(
-          resolveBattleSubject({
-            state: targetTurn.state,
-            subject: escapeAct.subject,
-            fills: [abilityCheckFill(escapeCheck, 13)],
-          }),
-          "ensnaringStrike",
-        );
-        ensnaringStrikeLifecycle = {
-          ensnaringStrikeRestrainedBeforeEscape: restrainedBeforeEscape,
-          ensnaringStrikeSaveSourceSpellId:
-            ensnaringStrikeSaveSourceSpellId(save),
-          ensnaringStrikeSaveAbility: save.ability === "str" ? "str" : "none",
-          turnStartDamageSourceSpellId:
-            ensnaringStrikeTurnStartDamageSourceSpellId(turnStartDamage),
-          turnStartDamageDamageType:
-            turnStartDamage.spellTurnStartDamage.damage.damageType ===
-            "piercing"
-              ? "piercing"
-              : "none",
-          turnStartDamageDice:
-            turnStartDamage.spellTurnStartDamage.damage.expr.dice,
-          turnStartDamageDieSize:
-            turnStartDamage.spellTurnStartDamage.damage.expr.dieSize,
-          escapeCheckAbility: escapeCheck.ability === "str" ? "str" : "none",
-          escapeCheckSkill:
-            escapeCheck.skill === "athletics" ? "athletics" : "none",
-        };
-      },
-      doFalseLifeTemporaryHitPoints: () => {
-        state = level1BuffMarkSmiteBattle({
-          preparedSpells: [spellRecord(falseLifeUnitId)],
-          sourceClassName: "wizard",
-        });
-        resetProcedureProjections();
-
-        const act = actionSpellAct(state, falseLifeUnitId);
-        const temporaryHitPointsRoll =
-          requireScalarBuffTemporaryHitPointsRollHole(
-            requireHole(act.initialHoles, "rolledDice"),
-          );
-        falseLifeTemporaryHitPoints = falseLifeTemporaryHitPointsProjection(
-          temporaryHitPointsRoll,
-        );
-        recordResolvedResult(
-          resolveBattleSubject({
-            state,
-            subject: act.subject,
-            fills: [damageRollFillWithGroups(temporaryHitPointsRoll, [[4, 3]])],
-          }),
-          "falseLife",
-        );
-      },
-      doHeroismFrightenedImmunityTurnStartTemporaryHitPoints: () => {
-        resolveHeroismThroughCasterStartTurn();
-      },
-      doHeroismFrightenedImmunityTurnStartTemporaryHitPointsCleanup: () => {
-        resolveHeroismThroughCasterStartTurn();
-        state = breakBattleConcentration(state, casterId);
-        heroismEffects = heroismEffectsProjection(state);
-      },
-      doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer: () => {
-        state = level1BuffMarkSmiteBattle({
-          preparedSpells: [spellRecord(huntersMarkUnitId)],
-          sourceClassName: "ranger",
-          targetKind: "statBlock",
-          includeMarkedDamageTransferTarget: true,
-        });
-        resetProcedureProjections();
-
-        const castAct = bonusActionSpellAct(state, huntersMarkUnitId);
-        const castTarget = requireHole(castAct.initialHoles, "targetChoice");
-        const cast = resolveBattleSubject({
-          state,
-          subject: castAct.subject,
+        }),
+      );
+      const turnStartDamage =
+        requireSpellTurnStartDamageRollHole(awaitingTurnStart);
+      const turnStartSave =
+        requireSpellTurnStartSavingThrowOutcomeHole(awaitingTurnStart);
+      recordResolvedResult(
+        endTurn({
+          state: afterWeaponDamage.state,
+          actorId: casterId,
           fills: [
-            spellTargetFill(castTarget, huntersMarkUnitId, casterId, targetId),
+            damageRollFillWithGroups(turnStartDamage, [[4]]),
+            savingThrowOutcomeFill(turnStartSave, [
+              { targetId, succeeded: true },
+            ]),
           ],
-        });
-        if (cast.tag !== "resolved") {
-          throw new Error(
-            `Expected Hunter's Mark to resolve, got ${cast.tag}.`,
-          );
-        }
+        }),
+        "searingSmite",
+      );
+      searingSmiteLifecycle = searingSmiteLifecycleProjection({
+        immediateDamage,
+        activeBeforeSuccessfulSave,
+        turnStartDamage,
+        turnStartSave,
+        stateAfterSuccessfulSave: state,
+      });
+    },
+    doShillelaghWeaponAttackOverride: () => {
+      state = level1BuffMarkSmiteBattle({
+        cantrips: [spellRecord(shillelaghUnitId)],
+        sourceClassName: "druid",
+        attack: zeroAbilityWeaponAttack(shillelaghQuarterstaffUnitId),
+      });
+      resetProcedureProjections();
 
-        state = advanceMarkedDamageRoundToCasterTurn(cast.state);
-        const hit = resolveLongswordHitWithAttackRoll({ state });
-        const damage = requireDamageRollHole(
-          requireNeedsHoles(hit.afterAttackRoll),
-        );
-        huntersMarkDamageHoleRider = spellMarkedDamageRider(
+      const cast = resolveBattleSubject({
+        state,
+        subject: bonusActionSpellAct(state, shillelaghUnitId).subject,
+        fills: [],
+      });
+      if (cast.tag !== "resolved") {
+        throw new Error(`Expected Shillelagh to resolve, got ${cast.tag}.`);
+      }
+      state = cast.state;
+
+      const hit = resolveWeaponHitWithAttackRoll({
+        state,
+        attackName: shillelaghQuarterstaffForceAttackName,
+      });
+      const damage = requireDamageRollHole(
+        requireNeedsHoles(hit.afterAttackRoll),
+      );
+      shillelaghWeaponAttackOverride = shillelaghWeaponAttackOverrideProjection(
+        {
+          state,
+          attackRoll: hit.attackRoll,
           damage,
-          huntersMarkUnitId,
-        );
-        const damaged = resolveBattleSubject({
+        },
+      );
+      recordResolvedResult(
+        resolveBattleSubject({
           state,
           subject: hit.subject,
           fills: [
             hit.targetFill,
             hit.attackFill,
-            damageRollFillWithGroups(damage, [[4], [5]]),
+            damageRollFillWithGroups(damage, [[4]]),
           ],
-        });
-        if (damaged.tag !== "resolved") {
-          throw new Error(
-            `Expected Hunter's Mark attack to resolve, got ${damaged.tag}.`,
-          );
-        }
+        }),
+        "shillelagh",
+      );
+    },
+    doTrueStrikeSpellHostedWeaponAttack: () => {
+      state = level1BuffMarkSmiteBattle({
+        cantrips: [spellRecord(trueStrikeUnitId)],
+        sourceClassName: "wizard",
+        attack: zeroAbilityWeaponAttack(trueStrikeDaggerUnitId),
+        weaponProficiencies: [{ kind: "weapon_category", category: "simple" }],
+      });
+      resetProcedureProjections();
 
-        state = damaged.state;
-        const markedTarget = state.combatants.get(targetId);
-        if (markedTarget === undefined) {
-          throw new Error("Expected Hunter's Mark target.");
-        }
-        state = applyBattleHitPointDamage({
-          state,
-          target: markedTarget,
-          damageAmount: 1,
-          deathFailuresAtZeroHp: 1,
-          damageSourceId: casterId,
-        });
-        huntersMarkTransferVisibleOnDropTurn = markedDamageTransferActVisible(
-          state,
-          huntersMarkUnitId,
-        );
-        huntersMarkTransferKindOnDropTurn = huntersMarkActiveMarkTransferKind(
-          huntersMarkActiveMarkEffect(state),
-        );
-
-        const transferAct = markedDamageTransferAct(state, huntersMarkUnitId);
-        const transferTarget = requireHole(
-          transferAct.initialHoles,
-          "targetChoice",
-        );
-        recordResolvedResult(
-          resolveBattleSubject({
-            state,
-            subject: transferAct.subject,
-            fills: [
-              spellTargetFill(
-                transferTarget,
-                huntersMarkUnitId,
-                casterId,
-                markedDamageTransferTargetId,
-              ),
-            ],
-          }),
-          "huntersMark",
-        );
-      },
-      doHexMarkedDamageRiderAndLaterTurnTransfer: () => {
-        state = level1BuffMarkSmiteBattle({
-          preparedSpells: [spellRecord(hexUnitId)],
-          sourceClassName: "warlock",
-          targetKind: "statBlock",
-          includeMarkedDamageTransferTarget: true,
-        });
-        resetProcedureProjections();
-
-        const castAct = bonusActionSpellAct(state, hexUnitId);
-        const castTarget = requireHole(castAct.initialHoles, "targetChoice");
-        const chosenAbility = requireHole(
-          castAct.initialHoles,
-          "abilityChoice",
-        );
-        const cast = resolveBattleSubject({
-          state,
-          subject: castAct.subject,
-          fills: [
-            spellTargetFill(castTarget, hexUnitId, casterId, targetId),
-            abilityChoiceFill(chosenAbility, "wis"),
-          ],
-        });
-        if (cast.tag !== "resolved") {
-          throw new Error(`Expected Hex to resolve, got ${cast.tag}.`);
-        }
-
-        state = advanceMarkedDamageRoundToCasterTurn(cast.state);
-        const hit = resolveLongswordHitWithAttackRoll({ state });
-        const damage = requireDamageRollHole(
-          requireNeedsHoles(hit.afterAttackRoll),
-        );
-        hexDamageHoleRider = spellMarkedDamageRider(damage, hexUnitId);
-        const damaged = resolveBattleSubject({
-          state,
-          subject: hit.subject,
-          fills: [
-            hit.targetFill,
-            hit.attackFill,
-            damageRollFillWithGroups(damage, [[4], [5]]),
-          ],
-        });
-        if (damaged.tag !== "resolved") {
-          throw new Error(
-            `Expected Hex attack to resolve, got ${damaged.tag}.`,
-          );
-        }
-
-        state = advanceMarkedDamageRoundToCasterTurn(damaged.state);
-        const cursedTarget = state.combatants.get(targetId);
-        if (cursedTarget === undefined) {
-          throw new Error("Expected Hex cursed target.");
-        }
-        state = applyBattleHitPointDamage({
-          state,
-          target: cursedTarget,
-          damageAmount: 1,
-          deathFailuresAtZeroHp: 1,
-          damageSourceId: casterId,
-        });
-        hexTransferVisibleOnDropTurn = markedDamageTransferActVisible(
-          state,
-          hexUnitId,
-        );
-        hexTransferKindOnDropTurn = hexActiveMarkTransferKind(
-          hexActiveMarkEffect(state),
-        );
-
-        state = advanceMarkedDamageRoundToCasterTurn(state);
-        const transferAct = markedDamageTransferAct(state, hexUnitId);
-        const transferTarget = requireHole(
-          transferAct.initialHoles,
-          "targetChoice",
-        );
-        recordResolvedResult(
-          resolveBattleSubject({
-            state,
-            subject: transferAct.subject,
-            fills: [
-              spellTargetFill(
-                transferTarget,
-                hexUnitId,
-                casterId,
-                markedDamageTransferTargetId,
-              ),
-            ],
-          }),
-          "hex",
-        );
-        hexAfterCleanupAbilityRollMode = hexAbilityCheckRollModeFor(
-          breakBattleConcentration(state, casterId),
-          markedDamageTransferTargetId,
-          "wis",
-        );
-      },
-      doLongstriderSpeedIncrease: () => {
-        state = level1BuffMarkSmiteBattle({
-          preparedSpells: [spellRecord(longstriderUnitId)],
-          sourceClassName: "ranger",
-        });
-        resetProcedureProjections();
-
-        const act = actionSpellAct(state, longstriderUnitId);
-        const target = requireHole(act.initialHoles, "targetChoice");
-        recordResolvedResult(
+      const act = actionSpellAct(state, trueStrikeUnitId);
+      const damageType = requireHole(act.initialHoles, "damageTypeChoice");
+      const target = requireHole(act.initialHoles, "targetChoice");
+      const damageTypeFill = damageTypeChoiceFill(damageType, "radiant");
+      const targetFill = attackTargetFill(target, trueStrikeDaggerAttackName);
+      const attackRoll = requireBattleAttackRollHole(
+        requireResultHole(
           resolveBattleSubject({
             state,
             subject: act.subject,
-            fills: [
-              spellTargetFill(target, longstriderUnitId, casterId, targetId),
-            ],
+            fills: [damageTypeFill, targetFill],
           }),
-          "longstrider",
-        );
-      },
-      doSearingSmiteAfterHitTimedDamageAndSaveCleanup: () => {
-        state = level1BuffMarkSmiteBattle({
-          preparedSpells: [spellRecord(searingSmiteUnitId)],
-        });
-        resetProcedureProjections();
-
-        const hit = resolveLongswordHitWithAttackRoll({ state });
-        const attackHitWindow = requireAttackHitWindow(hit.afterAttackRoll);
-        const searingSmiteChoice = attackHitBonusActionSpellChoice(
-          attackHitWindow,
-          searingSmiteUnitId,
-        );
-        const afterSearingSmite = resolveBattleInterrupt({
-          state: attackHitWindow.state,
-          fill: interruptDecisionFill(
-            requireHole(attackHitWindow.holes, "interruptDecision"),
-            {
-              kind: "resolve",
-              responderId: casterId,
-              choice: {
-                kind: "castAttackHitBonusActionSpell",
-                invocation: searingSmiteChoice.invocation,
-                fills: [],
-              },
-            },
-          ),
-        });
-        const afterSearingSmiteDamage = requireNeedsHoles(afterSearingSmite);
-        const weaponDamage = requireDamageRollHole(afterSearingSmiteDamage);
-        const immediateDamage = spellWeaponDamageRider(
-          weaponDamage,
-          searingSmiteUnitId,
-        );
-        const afterWeaponDamage = resolveBattleSubject({
-          state: afterSearingSmiteDamage.state,
-          subject: hit.subject,
-          fills: [
-            hit.targetFill,
-            hit.attackFill,
-            damageRollFillWithGroups(weaponDamage, [[4], [3]]),
-          ],
-        });
-        if (afterWeaponDamage.tag !== "resolved") {
-          throw new Error("Expected Searing Smite host attack to resolve.");
-        }
-        const activeBeforeSuccessfulSave =
-          searingSmiteActiveEffect(afterWeaponDamage.state) !== undefined;
-
-        const awaitingTurnStart = requireNeedsHoles(
-          endTurn({
-            state: afterWeaponDamage.state,
-            actorId: casterId,
-          }),
-        );
-        const turnStartDamage =
-          requireSpellTurnStartDamageRollHole(awaitingTurnStart);
-        const turnStartSave =
-          requireSpellTurnStartSavingThrowOutcomeHole(awaitingTurnStart);
-        recordResolvedResult(
-          endTurn({
-            state: afterWeaponDamage.state,
-            actorId: casterId,
-            fills: [
-              damageRollFillWithGroups(turnStartDamage, [[4]]),
-              savingThrowOutcomeFill(turnStartSave, [
-                { targetId, succeeded: true },
-              ]),
-            ],
-          }),
-          "searingSmite",
-        );
-        searingSmiteLifecycle = searingSmiteLifecycleProjection({
-          immediateDamage,
-          activeBeforeSuccessfulSave,
-          turnStartDamage,
-          turnStartSave,
-          stateAfterSuccessfulSave: state,
-        });
-      },
-      doShillelaghWeaponAttackOverride: () => {
-        state = level1BuffMarkSmiteBattle({
-          cantrips: [spellRecord(shillelaghUnitId)],
-          sourceClassName: "druid",
-          attack: zeroAbilityWeaponAttack(shillelaghQuarterstaffUnitId),
-        });
-        resetProcedureProjections();
-
-        const cast = resolveBattleSubject({
-          state,
-          subject: bonusActionSpellAct(state, shillelaghUnitId).subject,
-          fills: [],
-        });
-        if (cast.tag !== "resolved") {
-          throw new Error(`Expected Shillelagh to resolve, got ${cast.tag}.`);
-        }
-        state = cast.state;
-
-        const hit = resolveWeaponHitWithAttackRoll({
-          state,
-          attackName: shillelaghQuarterstaffForceAttackName,
-        });
-        const damage = requireDamageRollHole(
-          requireNeedsHoles(hit.afterAttackRoll),
-        );
-        shillelaghWeaponAttackOverride =
-          shillelaghWeaponAttackOverrideProjection({
-            state,
-            attackRoll: hit.attackRoll,
-            damage,
-          });
-        recordResolvedResult(
-          resolveBattleSubject({
-            state,
-            subject: hit.subject,
-            fills: [
-              hit.targetFill,
-              hit.attackFill,
-              damageRollFillWithGroups(damage, [[4]]),
-            ],
-          }),
-          "shillelagh",
-        );
-      },
-      doTrueStrikeSpellHostedWeaponAttack: () => {
-        state = level1BuffMarkSmiteBattle({
-          cantrips: [spellRecord(trueStrikeUnitId)],
-          sourceClassName: "wizard",
-          attack: zeroAbilityWeaponAttack(trueStrikeDaggerUnitId),
-          weaponProficiencies: [
-            { kind: "weapon_category", category: "simple" },
-          ],
-        });
-        resetProcedureProjections();
-
-        const act = actionSpellAct(state, trueStrikeUnitId);
-        const damageType = requireHole(act.initialHoles, "damageTypeChoice");
-        const target = requireHole(act.initialHoles, "targetChoice");
-        const damageTypeFill = damageTypeChoiceFill(damageType, "radiant");
-        const targetFill = attackTargetFill(target, trueStrikeDaggerAttackName);
-        const attackRoll = requireBattleAttackRollHole(
-          requireResultHole(
-            resolveBattleSubject({
-              state,
-              subject: act.subject,
-              fills: [damageTypeFill, targetFill],
-            }),
-            "attackRoll",
-          ),
-        );
-        const attackFill = attackRollFill(attackRoll, {
-          total: 15,
-          naturalD20: 10,
-        });
-        const damage = requireDamageRollHole(
-          requireNeedsHoles(
-            resolveBattleSubject({
-              state,
-              subject: act.subject,
-              fills: [damageTypeFill, targetFill, attackFill],
-            }),
-          ),
-        );
-        trueStrikeSpellHostedWeaponAttack =
-          trueStrikeSpellHostedWeaponAttackProjection({
-            state,
-            act,
-            attackRoll,
-            damage,
-          });
-        recordResolvedResult(
-          resolveBattleSubject({
-            state,
-            subject: act.subject,
-            fills: [
-              damageTypeFill,
-              targetFill,
-              attackFill,
-              damageRollFillWithGroups(damage, [[4]]),
-            ],
-          }),
-          "trueStrike",
-        );
-      },
-      step: () => {},
-      getState: () =>
-        projectLevel1BuffMarkSmiteSelectedIdentityState(
-          state,
-          damageRider,
-          huntersMarkDamageHoleRider,
-          huntersMarkTransferKindOnDropTurn,
-          huntersMarkTransferVisibleOnDropTurn,
-          hexDamageHoleRider,
-          hexTransferKindOnDropTurn,
-          hexTransferVisibleOnDropTurn,
-          hexAfterCleanupAbilityRollMode,
-          ensnaringStrikeLifecycle,
-          falseLifeTemporaryHitPoints,
-          heroismEffects,
-          searingSmiteLifecycle,
-          shillelaghWeaponAttackOverride,
-          trueStrikeSpellHostedWeaponAttack,
-          lastResult,
+          "attackRoll",
         ),
-    };
+      );
+      const attackFill = attackRollFill(attackRoll, {
+        total: 15,
+        naturalD20: 10,
+      });
+      const damage = requireDamageRollHole(
+        requireNeedsHoles(
+          resolveBattleSubject({
+            state,
+            subject: act.subject,
+            fills: [damageTypeFill, targetFill, attackFill],
+          }),
+        ),
+      );
+      trueStrikeSpellHostedWeaponAttack =
+        trueStrikeSpellHostedWeaponAttackProjection({
+          state,
+          act,
+          attackRoll,
+          damage,
+        });
+      recordResolvedResult(
+        resolveBattleSubject({
+          state,
+          subject: act.subject,
+          fills: [
+            damageTypeFill,
+            targetFill,
+            attackFill,
+            damageRollFillWithGroups(damage, [[4]]),
+          ],
+        }),
+        "trueStrike",
+      );
+    },
+    step: () => {},
+    getState: () =>
+      projectLevel1BuffMarkSmiteSelectedIdentityState(
+        state,
+        damageRider,
+        huntersMarkDamageHoleRider,
+        huntersMarkTransferKindOnDropTurn,
+        huntersMarkTransferVisibleOnDropTurn,
+        hexDamageHoleRider,
+        hexTransferKindOnDropTurn,
+        hexTransferVisibleOnDropTurn,
+        hexAfterCleanupAbilityRollMode,
+        ensnaringStrikeLifecycle,
+        falseLifeTemporaryHitPoints,
+        heroismEffects,
+        searingSmiteLifecycle,
+        shillelaghWeaponAttackOverride,
+        trueStrikeSpellHostedWeaponAttack,
+        lastResult,
+      ),
+  };
 }
 
 function expectedProjection(
@@ -2872,7 +2860,9 @@ function projectLevel1BuffMarkSmiteSelectedIdentityState(
     casterTempHp: caster.tempHp,
     casterFrightened: snapshotHasCondition(caster.conditions, "frightened"),
     spellSlotSpentThisTurn:
-      state.currentTurnResources.spellSlotUsesThisTurn.some((use) => use.kind === "committed"),
+      state.currentTurnResources.spellSlotUsesThisTurn.some(
+        (use) => use.kind === "committed",
+      ),
     level1SlotsRemaining: level1SlotsRemaining(state),
     divineFavorActiveRiderCount: divineFavorActiveRiderCount(state),
     damageRiderSourceSpellId: damageRiderSourceSpellId(damageRider),

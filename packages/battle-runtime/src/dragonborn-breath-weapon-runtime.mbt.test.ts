@@ -2,8 +2,8 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-action-area-save-damage-replacement
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.attack-action-area-save-damage-replacement
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME species_dragonborn_breath_weapon
-// UNIT-IDENTITY-MBT-REPLAY: L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME species_dragonborn_breath_weapon doResolveBreathWeapon doOpenExtraAttackSlot doRejectMissingResource doRejectMismatchedArea doRejectInvalidDamageRoll
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME species_dragonborn_breath_weapon
+// UNIT-IDENTITY-REPLAY: L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME species_dragonborn_breath_weapon doResolveBreathWeapon doOpenExtraAttackSlot doRejectMissingResource doRejectMismatchedArea doRejectInvalidDamageRoll
 import { describe, expect, test } from "vitest";
 
 import { DieRollResult } from "@dnd/shared/types";
@@ -40,7 +40,7 @@ import {
   startBattle,
 } from "./unit-profile-admission-test-support.ts";
 import { extraAttackBattleUnitRef } from "./unit-profile-admission-feature-fixture-support.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 
 type BreathWeaponLastResult =
@@ -73,8 +73,8 @@ const breathWeaponUnit = unitLibrary.requireUnit(
 );
 const secondTargetId = combatantId("dragonborn-breath-second-target");
 
-defineSelectedIdentityWitness({
-  describeLabel: "Dragonborn Breath Weapon selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Dragonborn Breath Weapon selected identity replay",
   taskId: "L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME",
   specFile: mbtSpecPath(
     import.meta.dirname,
@@ -84,7 +84,9 @@ defineSelectedIdentityWitness({
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
   quintFieldNames: { lastResult: "qScenarioOutcome" },
-  quintVariantFieldTags: { lastResult: DRAGONBORN_BREATH_WEAPON_SCENARIO_OUTCOME_BY_TAG },
+  quintVariantFieldTags: {
+    lastResult: DRAGONBORN_BREATH_WEAPON_SCENARIO_OUTCOME_BY_TAG,
+  },
   witnessInvalidScenarioReasons: {
     rejectMissingResource: "invalidFill",
     rejectMismatchedArea: "invalidFill",
@@ -104,13 +106,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doResolveBreathWeapon",
-          projectionAfter: expectedProjection({
-            targetHp: 10,
-            secondTargetHp: 15,
-            breathWeaponUsesRemaining: 2,
-            actionResourcesRemaining: 0,
-            lastResult: "resolved",
-          }),
           discover: () =>
             projectBattleState(
               recordResolvedState(
@@ -128,12 +123,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doOpenExtraAttackSlot",
-          projectionAfter: expectedProjection({
-            targetHp: 10,
-            breathWeaponUsesRemaining: 2,
-            actionResourcesRemaining: 1,
-            lastResult: "openedExtraAttack",
-          }),
           discover: () =>
             projectBattleState(
               recordResolvedState(
@@ -148,10 +137,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doRejectMissingResource",
-          projectionAfter: expectedProjection({
-            breathWeaponUsesRemaining: 0,
-            lastResult: "rejectMissingResource",
-          }),
           discover: () => {
             const state = breathWeaponBattle({ usesRemaining: 0 });
             recordInvalidResult(
@@ -166,9 +151,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doRejectMismatchedArea",
-          projectionAfter: expectedProjection({
-            lastResult: "rejectMismatchedArea",
-          }),
           discover: () => {
             const state = breathWeaponBattle();
             recordInvalidResult(
@@ -182,9 +164,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doRejectInvalidDamageRoll",
-          projectionAfter: expectedProjection({
-            lastResult: "rejectInvalidDamageRoll",
-          }),
           discover: () => {
             const state = breathWeaponBattle();
             recordInvalidResult(

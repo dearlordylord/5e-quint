@@ -12,14 +12,19 @@ import { defineConfig } from "vitest/config"
 // barely affects them.
 //
 // Discovery, resolution, and globals are left at vitest defaults on purpose:
-// this file only adds the pool bound, nothing else.
+// this file only adds execution bounds, nothing else.
 //
 // maxForks 6: each fork that is running an MBT file also has one live Quint
 // evaluator subprocess, so ~6 forks keeps total processes near the core count
 // (one evaluator per core) instead of oversubscribing. Tune for your machine's
 // RAM if needed -- lower is safer, higher is faster on idle hardware.
+//
+// maxConcurrency 3: the opt-in QNT proof lane is one Vitest file with
+// `test.concurrent.each(...)`; this keeps its child `quint test` processes
+// attributable without launching the whole proof corpus at once.
 export default defineConfig({
   test: {
+    maxConcurrency: 3,
     pool: "forks",
     poolOptions: {
       forks: {

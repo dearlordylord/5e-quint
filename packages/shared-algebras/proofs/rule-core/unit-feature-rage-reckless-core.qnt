@@ -130,7 +130,7 @@ module unitFeatureRageRecklessCore {
     }
     if (not(admitted)) state
     else {
-      turn: spendActionCost(state.turn, BonusActionCost),
+      turn: spendActionCost(state.turn, BonusActionCost).turn,
       pool: spendFeatureUsePool(state.pool),
       occurrence:
         if (facts.persistentRage) PersistentRageTenMinuteDuration
@@ -188,7 +188,7 @@ module unitFeatureRageRecklessCore {
       unblocked
     } else {
       turn:
-        if (facts.spendsBonusAction) spendActionCost(unblocked.turn, BonusActionCost)
+        if (facts.spendsBonusAction) spendActionCost(unblocked.turn, BonusActionCost).turn
         else unblocked.turn,
       pool: unblocked.pool,
       occurrence: RageUntilEndOfNextTurn,

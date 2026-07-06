@@ -39,6 +39,11 @@
       "evidence": "tasks/VALIDATION_REPORT.md"
     },
     {
+      "gate": "task-template-contract",
+      "status": "pass",
+      "evidence": "task artifact, tasks/BLOCKERS.md, and tasks/TARGET_REPLAY_EVIDENCE.example.json"
+    },
+    {
       "gate": "reviewer-loop-convergence",
       "status": "pass",
       "evidence": "tasks/REVIEW_LOOP.json"

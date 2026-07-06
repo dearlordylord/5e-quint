@@ -26,7 +26,7 @@ selected-identity implementation tasks that add executable replay evidence.
 | --- | ---: |
 | Installed collection inventory count | 144 Units |
 | Deterministic admission/projection coverage | 93/93 (100%) |
-| Selected identity MBT coverage | 47/93 (50.5%) |
+| Selected identity replay coverage | 47/93 (50.5%) |
 | Strict runtime/profile support | 67/93 (72%) |
 | Strict target closure | 82/93 (88.2%) |
 | Product readiness | 367/367 (100%) |
@@ -35,9 +35,9 @@ selected-identity implementation tasks that add executable replay evidence.
 
 Every planned Loop F Unit is installed, classified as `supported-profile`,
 covered by deterministic admission/projection evidence, and still lacks
-`selected-identity-mbt` evidence.
+`selected-identity-replay` evidence.
 
-| Task | Unit | Supported profile ids | Current deterministic owner | Selected identity MBT |
+| Task | Unit | Supported profile ids | Current deterministic owner | Selected identity replay |
 | --- | --- | --- | --- | --- |
 | L1F-DANCING-LIGHTS | `dancing_lights` | `spell.invocation-dancing-lights-movable-dim-light` | `packages/battle-runtime/src/unit-profile-admission.test.ts` | missing |
 | L1F-FAERIE-FIRE | `faerie_fire` | `spell.invocation-attack-roll-advantage-save` | `packages/battle-runtime/src/unit-profile-admission.test.ts` | missing |
@@ -57,8 +57,8 @@ frontier based on the current checker-visible `table-caller` profiles:
 
 | Unit | Current selected-identity state | Reconciliation outcome |
 | --- | --- | --- |
-| `command` | already has `selected-identity-mbt` evidence in `packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts` | leave outside Loop F |
-| `sleep` | already has `selected-identity-mbt` evidence in `packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts` | leave outside Loop F |
+| `command` | already has `selected-identity-replay` evidence in `packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts` | leave outside Loop F |
+| `sleep` | already has `selected-identity-replay` evidence in `packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts` | leave outside Loop F |
 
 The strict report's remaining open-profile-accounting rows are class-choice or
 outside-battle-runtime accounting work, not selected spatial/table-witness Unit
@@ -68,7 +68,7 @@ identity replay work for this loop.
 
 - Tasks 2 through 5 and 8 through 11 remain unblocked by this precheck.
 - Tasks 6 and 7 still share the single `grease` Unit identity. Add one
-  `selected-identity-mbt` evidence row for the eventual shared owner path, not
+  `selected-identity-replay` evidence row for the eventual shared owner path, not
   duplicate evidence rows.
 - `produce_flame` has both damage and held-light profile ids, but
   selected-identity evidence is Unit-level. Its replay should bind

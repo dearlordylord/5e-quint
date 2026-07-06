@@ -92,7 +92,7 @@ Coverage ledgers:
   line of effect, object inventory discovery, flammable/unworn object
   discovery, and grid geometry derivation.
 - `plans/unit-profile-coverage/unit-evidence.jsonl` already records
-  deterministic admission projection and selected-identity MBT evidence for
+  deterministic admission projection and selected-identity replay evidence for
   Fireball.
 - `plans/unit-profile-coverage/profiles.jsonl` binds
   `spell.invocation-damage-save-or-attack` to the shared spell procedure QNT,
@@ -129,6 +129,6 @@ generic object/hazard ownership rather than strengthening this profile.
   or Burning hazard state. Those facts are not currently canonical in
   `BattleState` and would duplicate future generic object/hazard ownership.
 - Round 2: promoted the Unit claim because the existing Surface, QNT, runtime,
-  deterministic tests, and selected-identity MBT witness all route Fireball's
+  deterministic tests, and selected-identity QNT replay witness all route Fireball's
   caller-supplied flammable-object ignition facts through the production
   `saveGatedDamage` reducer path.

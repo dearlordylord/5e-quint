@@ -28,7 +28,7 @@ Append:
   separate markers.
 - QMBT53 refreshed matrix artifacts to 59 installed Units, 22 stable
   executable profiles, 29/45 supported executable Unit coverage, 29/29
-  deterministic admission/projection coverage, and 10/29 selected identity MBT
+  deterministic admission/projection coverage, and 10/29 selected identity replay
   coverage.
 - QMBT54 selected `feat_boon_of_combat_prowess` as a narrow attack-roll
   miss-to-hit replacement slice. The decision keeps Peerless Aim distinct from

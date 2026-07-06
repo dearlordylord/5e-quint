@@ -1,13 +1,13 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt level1-damage-spell-selected-identity burning_hands chromatic_orb ice_knife poison_spray ray_of_sickness sacred_flame sorcerous_burst starry_wisp vicious_mockery
-// UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity burning_hands doResolveBurningHandsMixedConeSavingThrows
-// UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity chromatic_orb doResolveChromaticOrbDuplicateDamageLeap
-// UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity ice_knife doResolveIceKnifeHitAttackDamageAndBurstSavingThrows doResolveIceKnifeMissBurstSavingThrows
-// UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity poison_spray doResolvePoisonSpraySpellAttackDamage
-// UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity ray_of_sickness doResolveRayOfSicknessSpellAttackDamageAndPoisoned
-// UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity sacred_flame doResolveSacredFlameDexteritySavingThrowRadiantDamage
-// UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity sorcerous_burst doResolveSorcerousBurstSpellAttackDamage
-// UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity starry_wisp doResolveStarryWispObjectSpellAttackDamageAndDimLight
-// UNIT-IDENTITY-MBT-REPLAY: level1-damage-spell-selected-identity vicious_mockery doResolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay level1-damage-spell-selected-identity burning_hands chromatic_orb ice_knife poison_spray ray_of_sickness sacred_flame sorcerous_burst starry_wisp vicious_mockery
+// UNIT-IDENTITY-REPLAY: level1-damage-spell-selected-identity burning_hands doResolveBurningHandsMixedConeSavingThrows
+// UNIT-IDENTITY-REPLAY: level1-damage-spell-selected-identity chromatic_orb doResolveChromaticOrbDuplicateDamageLeap
+// UNIT-IDENTITY-REPLAY: level1-damage-spell-selected-identity ice_knife doResolveIceKnifeHitAttackDamageAndBurstSavingThrows doResolveIceKnifeMissBurstSavingThrows
+// UNIT-IDENTITY-REPLAY: level1-damage-spell-selected-identity poison_spray doResolvePoisonSpraySpellAttackDamage
+// UNIT-IDENTITY-REPLAY: level1-damage-spell-selected-identity ray_of_sickness doResolveRayOfSicknessSpellAttackDamageAndPoisoned
+// UNIT-IDENTITY-REPLAY: level1-damage-spell-selected-identity sacred_flame doResolveSacredFlameDexteritySavingThrowRadiantDamage
+// UNIT-IDENTITY-REPLAY: level1-damage-spell-selected-identity sorcerous_burst doResolveSorcerousBurstSpellAttackDamage
+// UNIT-IDENTITY-REPLAY: level1-damage-spell-selected-identity starry_wisp doResolveStarryWispObjectSpellAttackDamageAndDimLight
+// UNIT-IDENTITY-REPLAY: level1-damage-spell-selected-identity vicious_mockery doResolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage
 import { Either } from "effect";
 
 import {
@@ -58,7 +58,7 @@ import {
   CHROMATIC_ORB_LEAP_RANGE_FEET,
 } from "./battle-reducer/domain-constants.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { damageTypeChoiceFill } from "./unit-profile-admission-spell-fill-support.ts";
 
 const level1DamageSpellUnitIds = [
@@ -528,18 +528,25 @@ const LEVEL1_DAMAGE_SPELL_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
   Init: "init",
   BurningHandsMixedConeSavingThrows: "burningHandsMixedConeSavingThrows",
   ChromaticOrbDuplicateDamageLeap: "chromaticOrbDuplicateDamageLeap",
-  IceKnifeHitAttackDamageAndBurstSavingThrows: "iceKnifeHitAttackDamageAndBurstSavingThrows",
+  IceKnifeHitAttackDamageAndBurstSavingThrows:
+    "iceKnifeHitAttackDamageAndBurstSavingThrows",
   IceKnifeMissBurstSavingThrows: "iceKnifeMissBurstSavingThrows",
   PoisonSpraySpellAttackDamage: "poisonSpraySpellAttackDamage",
-  RayOfSicknessSpellAttackDamageAndPoisoned: "rayOfSicknessSpellAttackDamageAndPoisoned",
-  SacredFlameDexteritySavingThrowRadiantDamage: "sacredFlameDexteritySavingThrowRadiantDamage",
+  RayOfSicknessSpellAttackDamageAndPoisoned:
+    "rayOfSicknessSpellAttackDamageAndPoisoned",
+  SacredFlameDexteritySavingThrowRadiantDamage:
+    "sacredFlameDexteritySavingThrowRadiantDamage",
   SorcerousBurstSpellAttackDamage: "sorcerousBurstSpellAttackDamage",
-  StarryWispObjectSpellAttackDamageAndDimLight: "starryWispObjectSpellAttackDamageAndDimLight",
-  ViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage: "viciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage",
-} as const satisfies Readonly<Record<string, Level1DamageSpellSelectedIdentityResult>>;
+  StarryWispObjectSpellAttackDamageAndDimLight:
+    "starryWispObjectSpellAttackDamageAndDimLight",
+  ViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage:
+    "viciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage",
+} as const satisfies Readonly<
+  Record<string, Level1DamageSpellSelectedIdentityResult>
+>;
 
-defineSelectedIdentityWitness({
-  describeLabel: "Level 1 damage spell selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Level 1 damage spell selected identity replay",
   taskId: "level1-damage-spell-selected-identity",
   specFile: mbtSpecPath(
     import.meta.dirname,
@@ -573,7 +580,6 @@ defineSelectedIdentityWitness({
       );
       return {
         actionName,
-        projectionAfter: sequence.expected,
         discover: level1DamageSpellDiscoveries[actionName],
       };
     }),
@@ -2056,7 +2062,9 @@ function projectLevel1DamageSpellSelectedIdentityState(
       (resource) => resource.source === "turn",
     ),
     spellSlotSpentThisTurn:
-      state.currentTurnResources.spellSlotUsesThisTurn.some((use) => use.kind === "committed"),
+      state.currentTurnResources.spellSlotUsesThisTurn.some(
+        (use) => use.kind === "committed",
+      ),
     level1SlotsRemaining: level1SlotsRemaining(state, casterId),
     primaryTargetHp: primaryTarget.hp,
     primaryTargetPoisoned: primaryTarget.conditions.includes("poisoned"),

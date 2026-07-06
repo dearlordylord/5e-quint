@@ -28,7 +28,7 @@ Append:
   family.
 - QMBT56 refreshed matrix artifacts to 59 installed Units, 23 stable
   executable profiles, 30/45 supported executable Unit coverage, 30/30
-  deterministic admission/projection coverage, and 10/30 selected identity MBT
+  deterministic admission/projection coverage, and 10/30 selected identity replay
   coverage.
 - QMBT57 selected `monk_deflect_attacks` as the next narrow feature widening
   slice. The selected boundary is the redirect-on-zero follow-up after the

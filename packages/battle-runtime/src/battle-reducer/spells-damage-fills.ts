@@ -984,10 +984,21 @@ export function carefulSpellProtectedTargetsHole(
   };
 }
 
+const HEIGHTENED_SPELL_TARGET_CHOICE_HOLE_ID_PREFIX =
+  "battle:spell:heightened-spell:target:";
+
 export function heightenedSpellTargetChoiceHoleId(
   invocation: SupportedSpellInvocation,
 ): BattleHoleId {
-  return holeId(`battle:spell:heightened-spell:target:${invocation.spell.id}`);
+  return holeId(
+    `${HEIGHTENED_SPELL_TARGET_CHOICE_HOLE_ID_PREFIX}${invocation.spell.id}`,
+  );
+}
+
+export function isHeightenedSpellTargetChoiceHoleId(
+  candidate: BattleHoleId,
+): boolean {
+  return candidate.startsWith(HEIGHTENED_SPELL_TARGET_CHOICE_HOLE_ID_PREFIX);
 }
 
 export function heightenedSpellTargetChoiceHole(
@@ -999,7 +1010,7 @@ export function heightenedSpellTargetChoiceHole(
     kind: "targetChoice",
     holeId: heightenedSpellTargetChoiceHoleId(invocation),
     holeInstanceKey: holeInstanceKey(
-      `battle:spell:heightened-spell:target:${invocation.spell.id}`,
+      `${HEIGHTENED_SPELL_TARGET_CHOICE_HOLE_ID_PREFIX}${invocation.spell.id}`,
     ),
     label: `${invocation.spell.name} Heightened Spell target`,
     choices: [...state.combatants.keys()].filter(

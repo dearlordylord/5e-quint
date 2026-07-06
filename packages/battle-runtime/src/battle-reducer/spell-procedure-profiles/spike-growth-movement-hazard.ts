@@ -79,7 +79,6 @@ type SpikeGrowthMovementHazardProfileShape = {
 const SPIKE_GROWTH_LEVEL = 2;
 const SPIKE_GROWTH_RANGE_FEET = 150;
 const SPIKE_GROWTH_DURATION_MINUTES = 10;
-const SPIKE_GROWTH_OPERATION_COUNT = 2;
 const SPIKE_GROWTH_RADIUS_FEET = 20;
 const SPIKE_GROWTH_DAMAGE_PER_FEET = 5;
 const SPIKE_GROWTH_DAMAGE_DICE = 2;
@@ -154,7 +153,6 @@ function spikeGrowthMovementHazardSpell(
     spell.mechanics.duration.kind !== "concentration" ||
     spell.mechanics.duration.upTo.unit !== "minute" ||
     spell.mechanics.duration.upTo.amount !== SPIKE_GROWTH_DURATION_MINUTES ||
-    spell.mechanics.operations.length !== SPIKE_GROWTH_OPERATION_COUNT ||
     durationTicks === null ||
     Either.isLeft(durationTicks) ||
     attachment.kind !== "hole" ||

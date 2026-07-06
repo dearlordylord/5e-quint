@@ -67,7 +67,7 @@
       "kind": "spell",
       "reason": "Friendly disposition, the Charmed condition's Social Advantage, social interaction adjudication, and target knowledge when the spell ends are social/knowledge facts outside promoted battle runtime state.",
       "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
+        "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/charm_person.json",
@@ -605,7 +605,7 @@
       "kind": "class_feature",
       "reason": "The remaining Favored Enemy free-cast count changes first occur at Ranger level 5, outside the character-level-1-through-3 support claim.",
       "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
+        "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/ranger_favored_enemy.json",
@@ -807,7 +807,7 @@
       "kind": "spell",
       "reason": "Thaumaturgy's non-Booming minor wonders alter appearance, flames, doors/windows, sounds, and tremors; promoted battle runtime owns only Booming Voice's check Advantage and consumes total active-effect count witnesses for the shared cap.",
       "selectedIdentity": {
-        "reason": "The Unit has selected-identity-mbt evidence.",
+        "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"
       },
       "sourceRecordPath": "packages/surface/content/thaumaturgy.json",

@@ -35,7 +35,7 @@ Unit matrix metrics after the same refresh:
 - Runtime mapping coverage: 42/42, 100%
 - Runtime parity coverage: 42/42, 100%
 - Deterministic admission/projection coverage: 59/63, 93.7%
-- Selected identity MBT coverage: 10/63, 15.9%
+- Selected identity replay coverage: 10/63, 15.9%
 
 SRDINV42-SRDINV47 moved Command, Dissonant Whispers, Thunderwave,
 Expeditious Retreat, Jump, and Feather Fall out of Surface-widening pressure.

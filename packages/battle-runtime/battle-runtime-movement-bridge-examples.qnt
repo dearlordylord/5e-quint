@@ -79,8 +79,10 @@ module battleRuntimeMovementBridgeExamples {
       grappleEscapeDc: 0,
     }
     all {
-      assert(not(battleRuntimeSpendAttackAction(projection).actionAvailable)),
-      assert(not(battleRuntimeSpendMagicAction(projection).actionAvailable)),
+      assert(battleRuntimeSpendAttackAction(projection).admitted),
+      assert(not(battleRuntimeSpendAttackAction(projection).step.actionAvailable)),
+      assert(battleRuntimeSpendMagicAction(projection).admitted),
+      assert(not(battleRuntimeSpendMagicAction(projection).step.actionAvailable)),
     }
   }
 
@@ -102,8 +104,9 @@ module battleRuntimeMovementBridgeExamples {
       grappleEscapeDc: 0,
     })
     all {
-      assert(spent.actionAvailable),
-      assert(not(spent.bonusActionAvailable)),
+      assert(spent.admitted),
+      assert(spent.step.actionAvailable),
+      assert(not(spent.step.bonusActionAvailable)),
     }
   }
 }

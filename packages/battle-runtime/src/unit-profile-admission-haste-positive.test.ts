@@ -1,5 +1,9 @@
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L5-C17-HASTE-POSITIVE-RUNTIME haste
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L5-C18-HASTE-LETHARGY-RUNTIME haste
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L5-C17-HASTE-POSITIVE-RUNTIME haste
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L5-C18-HASTE-LETHARGY-RUNTIME haste
+// UNIT-IDENTITY-REPLAY: L5-C17-HASTE-POSITIVE-RUNTIME haste doReplayHastePositiveEffects
+// UNIT-IDENTITY-REPLAY: L5-C18-HASTE-LETHARGY-RUNTIME haste doReplayHasteLethargy
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-haste-positive
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE
@@ -43,6 +47,7 @@ import {
   resolveBattleSubject,
   spellSlotInvocationRef,
 } from "./unit-profile-admission-test-support.ts";
+import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.ts";
 import type { RuntimeActionResource } from "@dnd/shared-algebras/action-economy-algebra";
 import type {
   BattleActiveEffect,
@@ -743,4 +748,84 @@ function stateAfterSpendingResource(
       ),
     },
   };
+}
+
+defineSelectedIdentityReplayWitness({
+  describeLabel: "L5-C17/L5-C18 Haste selected identity replay",
+  taskId: "L5-C17-HASTE-POSITIVE-RUNTIME",
+  initialProjection: {
+    unitId: hasteUnitId,
+    procedure: "initial",
+    targetHasHaste: false,
+    targetLethargic: false,
+  },
+  units: [
+    {
+      unitId: hasteUnitId,
+      procedures: [
+        {
+          actionName: "doReplayHastePositiveEffects",
+          projectionAfter: {
+            unitId: hasteUnitId,
+            procedure: "hastePositive",
+            targetHasHaste: true,
+            targetLethargic: false,
+          },
+          discover: () => {
+            const resolved = replayHasteCast();
+            return {
+              unitId: hasteUnitId,
+              procedure: "hastePositive",
+              targetHasHaste: hasHastePositiveEffects(
+                requireCombatant(resolved.state, spellTargetId),
+              ),
+              targetLethargic: hasCondition(
+                requireCombatant(resolved.state, spellTargetId).conditions,
+                "incapacitated",
+              ),
+            };
+          },
+        },
+        {
+          actionName: "doReplayHasteLethargy",
+          projectionAfter: {
+            unitId: hasteUnitId,
+            procedure: "hasteLethargy",
+            targetHasHaste: false,
+            targetLethargic: true,
+          },
+          discover: () => {
+            const resolved = replayHasteCast();
+            const ended = breakBattleConcentration(
+              resolved.state,
+              spellCasterId,
+            );
+            const target = requireCombatant(ended, spellTargetId);
+            return {
+              unitId: hasteUnitId,
+              procedure: "hasteLethargy",
+              targetHasHaste: hasHastePositiveEffects(target),
+              targetLethargic: hasCondition(target.conditions, "incapacitated"),
+            };
+          },
+        },
+      ],
+    },
+  ],
+});
+
+function replayHasteCast(): {
+  readonly state: BattleState;
+} {
+  const spell = spellRecord(hasteUnitId);
+  const state = spellBattle({
+    preparedSpells: [spell],
+    spellSlots: [{ spellLevel: 3, count: 1 }],
+  });
+  const act = spellAct({ state, spellId: hasteUnitId, slotLevel: 3 });
+  return resolveHaste({
+    state,
+    subject: act.subject,
+    targetHole: requireHole(act.initialHoles, "targetChoice"),
+  });
 }

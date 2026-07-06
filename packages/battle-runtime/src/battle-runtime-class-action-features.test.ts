@@ -858,7 +858,7 @@ describe("battle runtime: class action features", () => {
         },
         fills: [],
       }),
-    ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
+    ).toMatchObject({ tag: "invalid", reason: "unsupportedActOption" });
   });
 
   test("Rage breaking Concentration dissipates a held readied spell", () => {

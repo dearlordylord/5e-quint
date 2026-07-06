@@ -1,5 +1,5 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L14G-03A-MONK-SLOW-FALL-RUNTIME monk_slow_fall
-// UNIT-IDENTITY-MBT-REPLAY: L14G-03A-MONK-SLOW-FALL-RUNTIME monk_slow_fall doSlowFallReduceDamage doSlowFallPreventDamage
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L14G-03A-MONK-SLOW-FALL-RUNTIME monk_slow_fall
+// UNIT-IDENTITY-REPLAY: L14G-03A-MONK-SLOW-FALL-RUNTIME monk_slow_fall doSlowFallReduceDamage doSlowFallPreventDamage
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.reaction-roll-or-damage-reduction
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 import {
@@ -23,7 +23,7 @@ import {
   unitLibrary,
 } from "./battle-runtime-test-support.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE } from "./unit-feature-support.ts";
 
 type SlowFallLastResult = "init" | "reducedDamage" | "preventedDamage";
@@ -37,8 +37,8 @@ type SlowFallProjection = {
 const monkId = combatantId("slow-fall-selected-identity-monk");
 const slowFallUnitId = "monk_slow_fall";
 
-defineSelectedIdentityWitness({
-  describeLabel: "Slow Fall selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Slow Fall selected identity replay",
   taskId: "L14G-03A-MONK-SLOW-FALL-RUNTIME",
   specFile: mbtSpecPath(
     import.meta.dirname,
@@ -72,12 +72,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doSlowFallReduceDamage",
-          projectionAfter: {
-            reactionAvailable: false,
-            effectiveFallDamage: 3,
-            fallingProne: true,
-            lastResult: "reducedDamage",
-          },
           discover: () =>
             resolveSlowFallScenario({
               level: 5,
@@ -87,12 +81,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doSlowFallPreventDamage",
-          projectionAfter: {
-            reactionAvailable: false,
-            effectiveFallDamage: 0,
-            fallingProne: false,
-            lastResult: "preventedDamage",
-          },
           discover: () =>
             resolveSlowFallScenario({
               level: 4,

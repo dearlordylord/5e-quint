@@ -33,6 +33,10 @@ import {
   type TimeSpanDuration,
 } from "@dnd/shared/elapsed-time";
 import type {
+  ArmorClass,
+  ArmorClassState,
+} from "@dnd/shared-algebras/armor-class-algebra";
+import type {
   DeathSaveCount,
   DeathSaves,
 } from "@dnd/shared-algebras/death-saves-algebra";
@@ -629,6 +633,30 @@ export type CharacterSheetWeaponMasteryReselection = {
   readonly selectedWeaponUnitIds: ReadonlyNonEmptyArray<UnitRecord["id"]>;
 };
 
+export type CharacterSheetWeaponMasterySelectedReferenceProjectionRoute =
+  readonly [
+    {
+      readonly kind: "retainCharacterSheetSelectedReferences";
+      readonly subject: "selectedReferenceProjection";
+      readonly owner: "selectedReference";
+    },
+    {
+      readonly kind: "projectCharacterSheetFacts";
+      readonly subject: "buildFactsProjection";
+      readonly owner: "buildProjection";
+    },
+  ];
+
+export type CharacterSheetWeaponMasterySelectedReferenceProjection = {
+  readonly featureUnitId: UnitRecord["id"];
+  readonly classUnitId: UnitRecord["id"];
+  readonly selectedWeaponUnitIds: readonly UnitRecord["id"][];
+  readonly choiceCount: number;
+  readonly longRestChangeCount: number;
+  readonly eligibleWeaponUnitIds: readonly UnitRecord["id"][];
+  readonly qRoute: CharacterSheetWeaponMasterySelectedReferenceProjectionRoute;
+};
+
 export type CharacterSheetLongRestStartTiming =
   | { readonly tag: "noPriorLongRest" }
   | {
@@ -681,6 +709,52 @@ export type CharacterSheetLongRestInput = {
   readonly statBlockCatalog?: StatBlockCatalog;
 };
 
+export type CharacterSheetWeaponMasteryReselectionAcceptedRoute =
+  readonly [
+    {
+      readonly kind: "retainCharacterSheetSelectedReferences";
+      readonly subject: "selectedReferenceProjection";
+      readonly owner: "selectedReference";
+    },
+    {
+      readonly kind: "completeCharacterSheetRest";
+      readonly subject: "selectedReferenceProjection";
+      readonly fill: "projectionSelection";
+      readonly holes: readonly [];
+      readonly owner: "selectedReference";
+    },
+  ];
+
+export type CharacterSheetWeaponMasteryReselectionRejectedRoute = readonly [
+  {
+    readonly kind: "resolveCharacterSheetSubject";
+    readonly subject: "selectedReferenceProjection";
+    readonly fill: "projectionSelection";
+    readonly holes: readonly ["projectionChoice"];
+    readonly owner: "selectedReference";
+  },
+];
+
+export type CharacterSheetWeaponMasteryReselectionRouteResult =
+  | {
+      readonly tag: "accepted";
+      readonly route: "weaponMastery";
+      readonly sheet: CharacterSheet;
+      readonly qRoute: CharacterSheetWeaponMasteryReselectionAcceptedRoute;
+    }
+  | {
+      readonly tag: "rejected";
+      readonly route: "weaponMastery";
+      readonly issue: CharacterSheetIssue;
+      readonly qRoute: CharacterSheetWeaponMasteryReselectionRejectedRoute;
+    }
+  | {
+      readonly tag: "rejected";
+      readonly route: "none";
+      readonly issue: CharacterSheetIssue;
+      readonly qRoute: readonly [];
+    };
+
 export type CharacterSheetLongRestInterruptionInput = {
   readonly rest: CharacterSheetLongRestStart;
   readonly unitLibrary: UnitCatalog;
@@ -721,6 +795,32 @@ export type CharacterSheetLayOnHandsResult = {
   readonly source: CharacterSheet;
   readonly target: CharacterSheet;
 };
+
+export type CharacterSheetLayOnHandsRoute = readonly [
+  {
+    readonly kind: "resolveCharacterSheetSubject";
+    readonly subject: "featureResource";
+    readonly fill: "resourceSpend";
+    readonly holes: readonly [];
+    readonly owner: "featureResource";
+  },
+  {
+    readonly kind: "projectCharacterSheetFacts";
+    readonly subject: "hitPoint";
+    readonly owner: "hitPoint";
+  },
+  {
+    readonly kind: "recordCharacterSheetFacts";
+    readonly subject: "featureResource";
+    readonly facts: readonly ["featureResourceSpend"];
+    readonly owner: "featureResource";
+  },
+];
+
+export type CharacterSheetLayOnHandsRouteResult =
+  CharacterSheetLayOnHandsResult & {
+    readonly qRoute: CharacterSheetLayOnHandsRoute;
+  };
 
 export type CharacterSheetSpellRestBenefitRecipientEligibility = {
   readonly remainedWithinRangeForEntireCasting: true;
@@ -839,6 +939,27 @@ export type CharacterSheetHitPointsInput = {
   readonly zeroHpLifecycle?: CharacterSheetZeroHpLifecycleInput;
 };
 
+export type CharacterSheetHitPointMaximumProjectionRoute = readonly [
+  {
+    readonly kind: "projectCharacterSheetFacts";
+    readonly subject: "hitPoint";
+    readonly owner: "hitPoint";
+  },
+  {
+    readonly kind: "recordCharacterSheetFacts";
+    readonly subject: "hitPoint";
+    readonly facts: readonly ["hitPointMaximumArithmeticInput"];
+    readonly owner: "buildProjection";
+  },
+];
+
+export type CharacterSheetHitPointMaximumProjection = {
+  readonly normalHitPointMaximum: HpType;
+  readonly effectiveHitPointMaximum: HpType;
+  readonly hitPointMaximumReduction: HpType;
+  readonly qRoute: CharacterSheetHitPointMaximumProjectionRoute;
+};
+
 export type CharacterSheetIssue = {
   readonly tag: "characterSheetIssue";
   readonly message: string;
@@ -904,6 +1025,45 @@ export type CharacterSheetArmorClassStateInput = {
   readonly baseChoice?: CharacterSheetArmorClassBaseChoice;
 };
 
+export type CharacterSheetArmorClassProjectionRoute = readonly [
+  {
+    readonly kind: "retainCharacterSheetSelectedReferences";
+    readonly subject: "selectedReferenceProjection";
+    readonly owner: "selectedReference";
+  },
+  {
+    readonly kind: "projectCharacterSheetFacts";
+    readonly subject: "armorClassProjection";
+    readonly owner: "buildProjection";
+  },
+];
+
+export type CharacterSheetArmorClassProjection = {
+  readonly state: ArmorClassState;
+  readonly armorClass: ArmorClass;
+  readonly qRoute: CharacterSheetArmorClassProjectionRoute;
+};
+
+export type CharacterSheetClassFeatureSelectedReferenceProjectionRoute =
+  readonly [
+    {
+      readonly kind: "retainCharacterSheetSelectedReferences";
+      readonly subject: "selectedReferenceProjection";
+      readonly owner: "selectedReference";
+    },
+    {
+      readonly kind: "projectCharacterSheetFacts";
+      readonly subject: "selectedReferenceProjection";
+      readonly owner: "buildProjection";
+    },
+  ];
+
+export type CharacterSheetClassFeatureSelectedReferenceProjection = {
+  readonly classFeatureUnitIds: readonly UnitRecord["id"][];
+  readonly selectedClassChoiceUnitIds: readonly UnitRecord["id"][];
+  readonly qRoute: CharacterSheetClassFeatureSelectedReferenceProjectionRoute;
+};
+
 export type CharacterSheetAbilityCheckOtherProficiencyBonusState =
   | { readonly tag: "noOtherProficiencyBonus" }
   | { readonly tag: "otherProficiencyBonusApplies" };
@@ -943,6 +1103,141 @@ export type CharacterSheetAbilityCheckProficiencyBonus =
       readonly sourceUnitId: UnitRecord["id"];
       readonly skill: SurfaceSkill;
       readonly bonus: number;
+    };
+
+export const CHARACTER_SHEET_ROUTE_SUBJECTS = [
+  "sheetState",
+  "hitPoint",
+  "rest",
+  "featureResource",
+  "spellResource",
+  "buildFactsProjection",
+  "armorClassProjection",
+  "abilityCheckProjection",
+  "selectedReferenceProjection",
+] as const;
+export type CharacterSheetRouteSubject =
+  (typeof CHARACTER_SHEET_ROUTE_SUBJECTS)[number];
+
+export const CHARACTER_SHEET_ROUTE_HOLES = [
+  "hitDiceSpend",
+  "restBenefitChoice",
+  "resourceSpend",
+  "recoveryChoice",
+  "projectionChoice",
+] as const;
+export type CharacterSheetRouteHole =
+  (typeof CHARACTER_SHEET_ROUTE_HOLES)[number];
+
+export const CHARACTER_SHEET_ROUTE_FILLS = [
+  "hitDiceSpend",
+  "restDuration",
+  "resourceSpend",
+  "recoverySelection",
+  "projectionSelection",
+] as const;
+export type CharacterSheetRouteFill =
+  (typeof CHARACTER_SHEET_ROUTE_FILLS)[number];
+
+export const CHARACTER_SHEET_ROUTE_OWNERS = [
+  "characterSheetState",
+  "hitPoint",
+  "hitDice",
+  "spellSlot",
+  "pactSlot",
+  "featureResource",
+  "buildProjection",
+  "selectedReference",
+] as const;
+export type CharacterSheetRouteOwner =
+  (typeof CHARACTER_SHEET_ROUTE_OWNERS)[number];
+
+export const CHARACTER_SHEET_ROUTE_FACTS = [
+  "ordinarySpellSlotDelta",
+  "pactSlotDelta",
+  "createdSlotExpiry",
+  "restBenefitWindow",
+  "featureRecoveryState",
+  "featureResourceSpend",
+  "hitPointMaximumArithmeticInput",
+  "spellResourceRejection",
+] as const;
+export type CharacterSheetRouteFact =
+  (typeof CHARACTER_SHEET_ROUTE_FACTS)[number];
+
+export type CharacterSheetRouteEvent =
+  | {
+      readonly kind: "createCharacterSheet";
+      readonly owner: CharacterSheetRouteOwner;
+    }
+  | {
+      readonly kind: "projectCharacterSheetFacts";
+      readonly subject: CharacterSheetRouteSubject;
+      readonly owner: CharacterSheetRouteOwner;
+    }
+  | {
+      readonly kind: "retainCharacterSheetSelectedReferences";
+      readonly subject: CharacterSheetRouteSubject;
+      readonly owner: CharacterSheetRouteOwner;
+    }
+  | {
+      readonly kind: "resolveCharacterSheetSubject";
+      readonly subject: CharacterSheetRouteSubject;
+      readonly fill: CharacterSheetRouteFill;
+      readonly holes: readonly CharacterSheetRouteHole[];
+      readonly owner: CharacterSheetRouteOwner;
+    }
+  | {
+      readonly kind: "completeCharacterSheetRest";
+      readonly subject: CharacterSheetRouteSubject;
+      readonly fill: CharacterSheetRouteFill;
+      readonly holes: readonly CharacterSheetRouteHole[];
+      readonly owner: CharacterSheetRouteOwner;
+    }
+  | {
+      readonly kind: "recordCharacterSheetFacts";
+      readonly subject: CharacterSheetRouteSubject;
+      readonly facts: readonly CharacterSheetRouteFact[];
+      readonly owner: CharacterSheetRouteOwner;
+    };
+
+export type CharacterSheetAbilityCheckProficiencyBonusRouteEvent = {
+  readonly kind: "projectCharacterSheetFacts";
+  readonly subject: "abilityCheckProjection";
+  readonly owner: "buildProjection";
+};
+
+export type CharacterSheetAbilityCheckProficiencyBonusProjection = {
+  readonly proficiencyBonus: CharacterSheetAbilityCheckProficiencyBonus;
+  readonly qRoute: readonly [
+    CharacterSheetAbilityCheckProficiencyBonusRouteEvent,
+  ];
+};
+
+export type CharacterSheetArcaneRecoveryRestRouteResult =
+  | {
+      readonly tag: "accepted";
+      readonly route: "arcaneRecovery";
+      readonly sheet: CharacterSheet;
+      readonly qRoute: readonly [CharacterSheetRouteEvent];
+    }
+  | {
+      readonly tag: "accepted";
+      readonly route: "none";
+      readonly sheet: CharacterSheet;
+      readonly qRoute: readonly [];
+    }
+  | {
+      readonly tag: "rejected";
+      readonly route: "arcaneRecovery";
+      readonly issue: CharacterSheetIssue;
+      readonly qRoute: readonly [CharacterSheetRouteEvent];
+    }
+  | {
+      readonly tag: "rejected";
+      readonly route: "none";
+      readonly issue: CharacterSheetIssue;
+      readonly qRoute: readonly [];
     };
 
 export type CharacterSheetAbilityCheckAbilityInput = {
@@ -1023,6 +1318,56 @@ export type CharacterSheetSpellbookRitualInvocation = {
   readonly additionalCastingTimeMinutes: typeof RITUAL_ADDITIONAL_CASTING_TIME_MINUTES;
   readonly requiresReadingSpellbook: true;
 };
+
+type CharacterSheetSpellbookRitualInvocationRetainRouteEvent = {
+  readonly kind: "retainCharacterSheetSelectedReferences";
+  readonly subject: "selectedReferenceProjection";
+  readonly owner: "selectedReference";
+};
+
+type CharacterSheetSpellbookRitualInvocationResolveRouteEvent<
+  Holes extends readonly [] | readonly ["projectionChoice"],
+> = {
+  readonly kind: "resolveCharacterSheetSubject";
+  readonly subject: "spellResource";
+  readonly fill: "projectionSelection";
+  readonly holes: Holes;
+  readonly owner: "selectedReference";
+};
+
+export type CharacterSheetSpellbookRitualAcceptedInvocationRoute = readonly [
+  CharacterSheetSpellbookRitualInvocationRetainRouteEvent,
+  {
+    readonly kind: "resolveCharacterSheetSubject";
+    readonly subject: "spellResource";
+    readonly fill: "projectionSelection";
+    readonly holes: readonly [];
+    readonly owner: "selectedReference";
+  },
+];
+
+export type CharacterSheetSpellbookRitualRejectedInvocationRoute = readonly [
+  CharacterSheetSpellbookRitualInvocationRetainRouteEvent,
+  CharacterSheetSpellbookRitualInvocationResolveRouteEvent<
+    readonly ["projectionChoice"]
+  >,
+];
+
+export type CharacterSheetSpellbookRitualInvocationRoute =
+  | CharacterSheetSpellbookRitualAcceptedInvocationRoute
+  | CharacterSheetSpellbookRitualRejectedInvocationRoute;
+
+export type CharacterSheetSpellbookRitualInvocationProjection =
+  | {
+      readonly tag: "accepted";
+      readonly invocation: CharacterSheetSpellbookRitualInvocation;
+      readonly qRoute: CharacterSheetSpellbookRitualAcceptedInvocationRoute;
+    }
+  | {
+      readonly tag: "rejected";
+      readonly issue: CharacterSheetIssue;
+      readonly qRoute: CharacterSheetSpellbookRitualRejectedInvocationRoute;
+    };
 
 export type CharacterSheetBookOfShadowsRitualInvocation = {
   readonly tag: "bookOfShadowsRitual";

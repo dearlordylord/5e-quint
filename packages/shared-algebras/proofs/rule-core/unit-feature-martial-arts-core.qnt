@@ -122,7 +122,7 @@ module unitFeatureMartialArtsCore {
   ): MartialArtsBonusUnarmedStrikeResult = {
     val admitted = turn.bonusActionAvailable and martialArtsAttackEligible(facts)
     {
-      turn: if (admitted) spendActionCost(turn, BonusActionCost) else turn,
+      turn: if (admitted) spendActionCost(turn, BonusActionCost).turn else turn,
       admitted: admitted,
     }
   }

@@ -78,6 +78,9 @@ Current executable state:
   ritual-tagged Surface Spell Definition, and the installed spellbook Ritual
   Access feature. It does not store a separate ritual spell list or treat the
   retained feature Unit reference as execution evidence by itself.
+- `characterSheetSpellbookRitualInvocationProjection` exposes that spellbook
+  Ritual admission/rejection with selected-reference `qRoute` evidence for the
+  public reducer route lane; it does not add a separate ritual-casting ledger.
 - `characterSheetArmorClassState` projects build ability scores, current
   loadout armor and Shield facts, and installed class-feature AC formulas into
   a single current Armor Class calculation. Barbarian and Monk Unarmored

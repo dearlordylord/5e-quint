@@ -1,0 +1,73 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/sorcerer-metamagic-distant-selected-identity.mbt.test.ts Distant Spell copied qRoute versus public reducer replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-distant-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      "qntFileSha256": "99c86cd0247dd278efbfcd8bca30260773e5abfa177d9ff3025de7efa4c72e01",
+      "routeConnectorSha256": "f7a31f5e911cecfd905ca1544742a31f2774701e715babd14c9eb7afbd68a53e",
+      "branchFamily": "step",
+      "branchAction": "doResolveDistantObjectLight",
+      "observedActionTaken": "doResolveDistantObjectLight",
+      "harnessTestPath": "packages/battle-runtime/src/sorcerer-metamagic-distant-selected-identity.mbt.test.ts",
+      "traceId": "public-route=metamagicSpellRangeProjection action=doResolveDistantObjectLight qRoute=metamagic-spell-range-projection-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "stepRouteSpellRangeProjection",
+        "delegatedAction": "doRouteSpellRangeProjection",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/sorcerer-metamagic-distant-selected-identity.mbt.test.ts#createDistantMetamagicRouteReplayDriver"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "c77adb2887d05533ac2fff30693fb1ca8bd60d69fd5c99dce935660a77758373",
+        "observedProjectionSha256": "c77adb2887d05533ac2fff30693fb1ca8bd60d69fd5c99dce935660a77758373",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+          "stepAction": "stepRouteSpellRangeProjection",
+          "delegatedAction": "doRouteSpellRangeProjection",
+          "qntStateField": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "public-reducer-route-events",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(state), AvailableBattleAct.routeEvents, and BattleResolutionResult.routeEvents during Distant Spell object-light resolution",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=metamagicSpellRangeProjection",
+          "BattleReducerRouteEvent.owner=battleFeatureResource",
+          "BattleReducerRouteEvent.owner=battleObjectTargetBoundary",
+          "BattleReducerRouteEvent.owner=battleTargetSelection",
+          "BattleSubject.actionSpell.metamagic.effectKind=spell_range_increase",
+          "BattleSubject.actionSpell.invocation.procedure=objectLight",
+          "CharacterBattlePointPoolResourceState.pointsRemaining",
+          "BattleState.lightEmitters"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}

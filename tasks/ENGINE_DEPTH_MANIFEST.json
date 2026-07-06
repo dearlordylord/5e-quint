@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "taskId": "CRPI-BLOCK-004",
+  "accumulatorGrowth": [],
+  "adapterModules": [
+    {
+      "path": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
+      "quarantinedWitnessNames": [
+        "qProtocol",
+        "qRoute"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-004.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/src/command-option-next-turn.mbt.test.ts",
+      "quarantinedWitnessNames": [
+        "CommandOptionNextTurnProjection.route",
+        "applyScenarioSegment"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-004.json"
+      ]
+    }
+  ],
+  "productionModulesExtended": [],
+  "expectedNextReuse": [
+    {
+      "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "notes": "Future Command route tasks should keep using public routeEvents from discoverBattleActs, resolveBattleSubject, and resolveBattleInterrupt instead of adding a Command-specific route ledger."
+    }
+  ],
+  "completion": {
+    "tag": "accepted",
+    "notes": "Task 6 observes Command option next-turn qRoute through public battle reducer route events. No durable BattleState fields or production modules were added; selected Command option remains the existing commandPending active effect plus typed runtime command subjects and fills."
+  }
+}

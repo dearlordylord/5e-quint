@@ -1,10 +1,11 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt attack-spell-shape fire_bolt chill_touch guiding_bolt inflict_wounds shocking_grasp
-// UNIT-IDENTITY-MBT-REPLAY: attack-spell-shape fire_bolt doFireBoltHit
-// UNIT-IDENTITY-MBT-REPLAY: attack-spell-shape chill_touch doChillTouchHitPointRegainPrevention
-// UNIT-IDENTITY-MBT-REPLAY: attack-spell-shape guiding_bolt doGuidingBoltNextAttackAdvantage
-// UNIT-IDENTITY-MBT-REPLAY: attack-spell-shape inflict_wounds doInflictWoundsFailedSave doInflictWoundsSuccessfulSave
-// UNIT-IDENTITY-MBT-REPLAY: attack-spell-shape shocking_grasp doShockingGraspOpportunityAttackDenied
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay attack-spell-shape fire_bolt chill_touch guiding_bolt inflict_wounds shocking_grasp
+// UNIT-IDENTITY-REPLAY: attack-spell-shape fire_bolt doFireBoltHit
+// UNIT-IDENTITY-REPLAY: attack-spell-shape chill_touch doChillTouchHitPointRegainPrevention
+// UNIT-IDENTITY-REPLAY: attack-spell-shape guiding_bolt doGuidingBoltNextAttackAdvantage
+// UNIT-IDENTITY-REPLAY: attack-spell-shape inflict_wounds doInflictWoundsFailedSave doInflictWoundsSuccessfulSave
+// UNIT-IDENTITY-REPLAY: attack-spell-shape shocking_grasp doShockingGraspOpportunityAttackDenied
 import { Either } from "effect";
+import { expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
@@ -26,6 +27,7 @@ import {
   battleId,
   characterId,
   combatantId,
+  battleReducerStartRouteEvent,
   discoverBattleActs,
   initiativeScore,
   resolveBattleSubject,
@@ -36,6 +38,7 @@ import {
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
+  type BattleReducerRouteEvent,
   type BattleResolutionResult,
   type BattleRolledDiceFill,
   type BattleState,
@@ -43,7 +46,7 @@ import {
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 
 const attackSpellShapeSpellIds = [
@@ -105,8 +108,106 @@ if (unitCatalogResult.tag !== "ok") {
 }
 const unitLibrary = unitCatalogResult.catalog;
 
-defineSelectedIdentityWitness({
-  describeLabel: "Attack spell shape selected identity MBT",
+it("observes selected attack spell shape qRoute through public reducer events", () => {
+  expect(
+    resolveSpellAttackHitRoute({
+      state: attackSpellShapeBattle({
+        sourceClassName: "wizard",
+        cantrips: [spellRecord("fire_bolt")],
+      }),
+      spellId: "fire_bolt",
+      damageGroups: [[4]],
+    }),
+  ).toEqual(
+    spellAttackHitRoute({
+      discoveryOwner: "battleActionEconomy",
+      includesObjectTargetBoundary: true,
+    }),
+  );
+
+  expect(
+    resolveSpellAttackHitRoute({
+      state: attackSpellShapeBattle({
+        sourceClassName: "wizard",
+        cantrips: [spellRecord("chill_touch")],
+      }),
+      spellId: "chill_touch",
+      damageGroups: [[4]],
+    }),
+  ).toEqual([
+    ...spellAttackHitRoute({
+      discoveryOwner: "battleActionEconomy",
+      includesObjectTargetBoundary: true,
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: "hitPointRegainPrevention",
+      owner: "battleActiveEffect",
+    }),
+  ]);
+
+  expect(
+    resolveSpellAttackHitRoute({
+      state: attackSpellShapeBattle({
+        sourceClassName: "cleric",
+        preparedSpells: [spellRecord("guiding_bolt")],
+      }),
+      spellId: "guiding_bolt",
+      damageGroups: [[1, 1, 1, 1]],
+    }),
+  ).toEqual([
+    ...spellAttackHitRoute({
+      discoveryOwner: "battleSpellSlotAndActionEconomy",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: "nextAttackRollMode",
+      owner: "battleActiveEffect",
+    }),
+  ]);
+
+  expect(
+    resolveSaveDamageRoute({
+      state: attackSpellShapeBattle({
+        sourceClassName: "cleric",
+        preparedSpells: [spellRecord("inflict_wounds")],
+      }),
+      spellId: "inflict_wounds",
+      succeeded: false,
+      damageGroups: [[3, 3]],
+    }),
+  ).toEqual(saveGatedDamageRoute());
+
+  expect(
+    resolveSaveDamageRoute({
+      state: attackSpellShapeBattle({
+        sourceClassName: "cleric",
+        preparedSpells: [spellRecord("inflict_wounds")],
+      }),
+      spellId: "inflict_wounds",
+      succeeded: true,
+      damageGroups: [[3, 3]],
+    }),
+  ).toEqual(saveGatedDamageRoute());
+
+  expect(
+    resolveSpellAttackHitRoute({
+      state: attackSpellShapeBattle({
+        sourceClassName: "wizard",
+        cantrips: [spellRecord("shocking_grasp")],
+      }),
+      spellId: "shocking_grasp",
+      damageGroups: [[4]],
+    }),
+  ).toEqual([
+    ...spellAttackHitRoute({ discoveryOwner: "battleActionEconomy" }),
+    routeResolveSubjectWithoutFill({
+      subject: "reactionInterdiction",
+      owner: "battleActiveEffect",
+    }),
+  ]);
+});
+
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Attack spell shape selected identity replay",
   taskId: "attack-spell-shape",
   specFile: mbtSpecPath(
     import.meta.dirname,
@@ -134,10 +235,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doFireBoltHit",
-          projectionAfter: expectedProjection({
-            targetHp: 8,
-            lastResult: "fireBolt",
-          }),
           discover: () =>
             resolveAttackSpellShapeProjection({
               state: attackSpellShapeBattle({
@@ -156,12 +253,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doChillTouchHitPointRegainPrevention",
-          projectionAfter: expectedProjection({
-            targetHp: 8,
-            activeEffectKind: "hitPointRegainPrevented",
-            activeEffectCount: 1,
-            lastResult: "chillTouch",
-          }),
           discover: () =>
             resolveAttackSpellShapeProjection({
               state: attackSpellShapeBattle({
@@ -180,14 +271,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doGuidingBoltNextAttackAdvantage",
-          projectionAfter: expectedProjection({
-            targetHp: 8,
-            spellSlotSpentThisTurn: true,
-            level1SlotsRemaining: 1,
-            activeEffectKind: "nextAttackRollAgainstSelf",
-            activeEffectCount: 1,
-            lastResult: "guidingBolt",
-          }),
           discover: () =>
             resolveAttackSpellShapeProjection({
               state: attackSpellShapeBattle({
@@ -206,12 +289,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doInflictWoundsFailedSave",
-          projectionAfter: expectedProjection({
-            targetHp: 6,
-            spellSlotSpentThisTurn: true,
-            level1SlotsRemaining: 1,
-            lastResult: "inflictWoundsFailure",
-          }),
           discover: () =>
             resolveSaveDamageProjection({
               state: attackSpellShapeBattle({
@@ -226,12 +303,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doInflictWoundsSuccessfulSave",
-          projectionAfter: expectedProjection({
-            targetHp: 9,
-            spellSlotSpentThisTurn: true,
-            level1SlotsRemaining: 1,
-            lastResult: "inflictWoundsSuccess",
-          }),
           discover: () =>
             resolveSaveDamageProjection({
               state: attackSpellShapeBattle({
@@ -251,12 +322,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doShockingGraspOpportunityAttackDenied",
-          projectionAfter: expectedProjection({
-            targetHp: 8,
-            activeEffectKind: "opportunityAttackDenied",
-            activeEffectCount: 1,
-            lastResult: "shockingGrasp",
-          }),
           discover: () =>
             resolveAttackSpellShapeProjection({
               state: attackSpellShapeBattle({
@@ -298,6 +363,236 @@ function requireResolvedAttackSpellShape(
     );
   }
   return result;
+}
+
+function resolveSpellAttackHitRoute(input: {
+  readonly state: BattleState;
+  readonly spellId: Exclude<AttackSpellShapeSpellId, "inflict_wounds">;
+  readonly damageGroups: readonly (readonly number[])[];
+}): readonly BattleReducerRouteEvent[] {
+  const act = actionSpellAct(input.state, input.spellId);
+  const target = requireTypedHole(act.initialHoles, "targetChoice");
+  const targetFill = spellTargetFill(target, input.spellId);
+  const awaitingAttack = requireNeedsHoles(
+    resolveBattleSubject({
+      state: input.state,
+      subject: act.subject,
+      fills: [targetFill],
+    }),
+  );
+  const attack = requireTypedHole(awaitingAttack.holes, "attackRoll");
+  const attackFill = attackRollFill(attack, {
+    total: 18,
+    naturalD20: 12,
+  });
+  const awaitingDamage = requireNeedsHoles(
+    resolveBattleSubject({
+      state: input.state,
+      subject: act.subject,
+      fills: [targetFill, attackFill],
+    }),
+  );
+  const damage = requireTypedHole(awaitingDamage.holes, "rolledDice");
+  const resolved = requireResolvedAttackSpellShape(
+    resolveBattleSubject({
+      state: input.state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        attackFill,
+        damageRollFillWithGroups(damage, input.damageGroups),
+      ],
+    }),
+  );
+  return [
+    battleReducerStartRouteEvent(),
+    ...routeEventsOf(act, "spell attack discovery"),
+    ...routeEventsOf(awaitingAttack, "spell attack target"),
+    ...routeEventsOf(awaitingDamage, "spell attack roll"),
+    ...routeEventsOf(resolved, "spell attack damage"),
+  ];
+}
+
+function resolveSaveDamageRoute(input: {
+  readonly state: BattleState;
+  readonly spellId: Extract<AttackSpellShapeSpellId, "inflict_wounds">;
+  readonly succeeded: boolean;
+  readonly damageGroups: readonly (readonly number[])[];
+}): readonly BattleReducerRouteEvent[] {
+  const act = actionSpellAct(input.state, input.spellId);
+  const target = requireTypedHole(act.initialHoles, "targetChoice");
+  const targetFill = spellTargetFill(target, input.spellId);
+  const awaitingSave = requireNeedsHoles(
+    resolveBattleSubject({
+      state: input.state,
+      subject: act.subject,
+      fills: [targetFill],
+    }),
+  );
+  const save = requireTypedHole(awaitingSave.holes, "savingThrowOutcome");
+  const saveFill = savingThrowOutcomeFill(save, input.succeeded);
+  const awaitingDamage = requireNeedsHoles(
+    resolveBattleSubject({
+      state: input.state,
+      subject: act.subject,
+      fills: [targetFill, saveFill],
+    }),
+  );
+  const damage = requireTypedHole(awaitingDamage.holes, "rolledDice");
+  const resolved = requireResolvedAttackSpellShape(
+    resolveBattleSubject({
+      state: input.state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        saveFill,
+        damageRollFillWithGroups(damage, input.damageGroups),
+      ],
+    }),
+  );
+  return [
+    battleReducerStartRouteEvent(),
+    ...routeEventsOf(act, "save-gated discovery"),
+    ...routeEventsOf(awaitingSave, "save-gated target"),
+    ...routeEventsOf(awaitingDamage, "save-gated saving throw"),
+    ...routeEventsOf(resolved, "save-gated damage"),
+  ];
+}
+
+function spellAttackHitRoute(input: {
+  readonly discoveryOwner: Extract<
+    BattleReducerRouteEvent,
+    { readonly kind: "discoverBattleActs" }
+  >["owner"];
+  readonly includesObjectTargetBoundary?: boolean;
+}): readonly BattleReducerRouteEvent[] {
+  return [
+    battleReducerStartRouteEvent(),
+    routeDiscoverBattleActs({
+      subject: "spellAttackProcedure",
+      holes: ["targetChoice"],
+      owner: input.discoveryOwner,
+    }),
+    ...(input.includesObjectTargetBoundary === true
+      ? [
+          routeDiscoverBattleActs({
+            subject: "spellAttackProcedure",
+            holes: ["targetChoice"],
+            owner: "battleObjectTargetBoundary",
+          }),
+        ]
+      : []),
+    routeResolveSubject({
+      subject: "spellAttackProcedure",
+      fill: "targetChoice",
+      holes: ["attackRoll"],
+      owner: "battleTargetSelection",
+    }),
+    routeResolveSubject({
+      subject: "spellAttackProcedure",
+      fill: "attackRoll",
+      holes: ["rolledDice"],
+      owner: "battleAttackRoll",
+    }),
+    routeResolveSubject({
+      subject: "spellAttackProcedure",
+      fill: "rolledDice",
+      holes: [],
+      owner: "battleHitPoint",
+    }),
+  ];
+}
+
+function saveGatedDamageRoute(): readonly BattleReducerRouteEvent[] {
+  return [
+    battleReducerStartRouteEvent(),
+    routeDiscoverBattleActs({
+      subject: "saveGatedSpell",
+      holes: ["targetChoice"],
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    routeResolveSubject({
+      subject: "saveGatedSpell",
+      fill: "targetChoice",
+      holes: ["savingThrowOutcome"],
+      owner: "battleTargetSelection",
+    }),
+    routeResolveSubject({
+      subject: "saveGatedSpell",
+      fill: "savingThrowOutcome",
+      holes: ["rolledDice"],
+      owner: "battleHoleFrontier",
+    }),
+    routeResolveSubject({
+      subject: "saveGatedSpell",
+      fill: "rolledDice",
+      holes: [],
+      owner: "battleHitPoint",
+    }),
+  ];
+}
+
+function routeDiscoverBattleActs(
+  input: Omit<
+    Extract<BattleReducerRouteEvent, { readonly kind: "discoverBattleActs" }>,
+    "kind"
+  >,
+): BattleReducerRouteEvent {
+  return { kind: "discoverBattleActs", ...input };
+}
+
+function routeResolveSubject(
+  input: Omit<
+    Extract<BattleReducerRouteEvent, { readonly kind: "resolveBattleSubject" }>,
+    "kind"
+  >,
+): BattleReducerRouteEvent {
+  return { kind: "resolveBattleSubject", ...input };
+}
+
+function routeResolveSubjectWithoutFill(
+  input: Omit<
+    Extract<
+      BattleReducerRouteEvent,
+      { readonly kind: "resolveBattleSubjectWithoutFill" }
+    >,
+    "kind" | "holes"
+  >,
+): BattleReducerRouteEvent {
+  return { kind: "resolveBattleSubjectWithoutFill", holes: [], ...input };
+}
+
+function routeEventsOf(
+  source: { readonly routeEvents?: readonly BattleReducerRouteEvent[] },
+  label: string,
+): readonly BattleReducerRouteEvent[] {
+  if (source.routeEvents === undefined) {
+    throw new Error(`Expected ${label} route events.`);
+  }
+  return source.routeEvents;
+}
+
+function requireNeedsHoles(
+  result: BattleResolutionResult,
+): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> {
+  if (result.tag !== "needsHoles") {
+    throw new Error(`Expected needsHoles result, got ${result.tag}.`);
+  }
+  return result;
+}
+
+function requireTypedHole<K extends BattleHole["kind"]>(
+  holes: readonly BattleHole[],
+  kind: K,
+): Extract<BattleHole, { readonly kind: K }> {
+  const hole = holes.find(
+    (candidate): candidate is Extract<BattleHole, { readonly kind: K }> =>
+      candidate.kind === kind,
+  );
+  if (hole === undefined) {
+    throw new Error(`Expected ${kind} hole.`);
+  }
+  return hole;
 }
 
 function resolveAttackSpellShapeProjection(input: {

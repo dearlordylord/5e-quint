@@ -1,9 +1,34 @@
 // -*- mode: Bluespec; -*-
 
 module battleRuntimeStarryWispObjectMbt {
-  import battleRuntimeModel.* from "./battle-runtime-model"
-  import battleRuntimeSpellAttack.* from "./battle-runtime-spell-attack"
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+
+  type Actor = | Fighter
+  type DamageType = | Radiant
+  type SpellInvocation = | StarryWisp
+  type ObjectTarget = | StarryWispObjectTarget
+  type Hole = TargetChoice | ObjectTargetChoice | AttackRoll | SpellDamageRoll
+
+  type ObjectDamageOutcome =
+    | ObjectHitPointDamage({
+        object: ObjectTarget,
+        damageType: DamageType,
+        rolledDamage: int,
+        effectiveDamage: int,
+        priorHitPoints: int,
+        nextHitPoints: int,
+        destroyed: bool,
+      })
+
+  type LightEmitter =
+    | ObjectInvisibleRevealLightEmitter({
+        source: Actor,
+        sourceSpell: SpellInvocation,
+        object: ObjectTarget,
+        dimLightRadiusFeet: int,
+        expiresAtActor: Actor,
+        expiresAtRound: int,
+      })
 
   type ObjectDamageOutcomeOption =
     | NoObjectDamage
@@ -16,14 +41,47 @@ module battleRuntimeStarryWispObjectMbt {
 
   pure def openHoles: Set[Hole] = qProtocol.holes
 
-  pure val starryWispObjectArmorClass: int = 13
   pure val starryWispObjectHitPoints: int = 5
+  pure val starryWispDimLightRadiusFeet: int = 10
+  pure val starryWispExpiresAtRound: int = 2
 
   pure def starryWispObjectProtocolForProjection(
     holes: Set[Hole],
     result: WitnessResult,
   ): WitnessProtocol[Hole] =
     witnessProtocolFromResult(holes, TargetChoice, result)
+
+  pure val starryWispObjectDamageLow: ObjectDamageOutcome =
+    ObjectHitPointDamage({
+      object: StarryWispObjectTarget,
+      damageType: Radiant,
+      rolledDamage: 4,
+      effectiveDamage: 4,
+      priorHitPoints: starryWispObjectHitPoints,
+      nextHitPoints: 1,
+      destroyed: false,
+    })
+
+  pure val starryWispObjectDamageHigh: ObjectDamageOutcome =
+    ObjectHitPointDamage({
+      object: StarryWispObjectTarget,
+      damageType: Radiant,
+      rolledDamage: 6,
+      effectiveDamage: 6,
+      priorHitPoints: starryWispObjectHitPoints,
+      nextHitPoints: 0,
+      destroyed: true,
+    })
+
+  pure val starryWispObjectDimLightEmitter: LightEmitter =
+    ObjectInvisibleRevealLightEmitter({
+      source: Fighter,
+      sourceSpell: StarryWisp,
+      object: StarryWispObjectTarget,
+      dimLightRadiusFeet: starryWispDimLightRadiusFeet,
+      expiresAtActor: Fighter,
+      expiresAtRound: starryWispExpiresAtRound,
+    })
 
   action init = all {
     qActionAvailable' = true,
@@ -76,17 +134,8 @@ module battleRuntimeStarryWispObjectMbt {
     openHoles == Set(SpellDamageRoll),
     qActionAvailable' = false,
     qProtocol' = starryWispObjectProtocolForProjection(Set(), WResolved),
-    qObjectDamage' = SomeObjectDamage(spellObjectDamageOutcome(
-      StarryWispSpellAttack,
-      StarryWispObjectTarget,
-      4,
-      ObjectHitPoints({ hitPoints: starryWispObjectHitPoints }),
-    )),
-    qLightEmitters' = Set(starryWispDimLightEmitter(
-      initialState,
-      Fighter,
-      ObjectLightEmitter({ object: StarryWispObjectTarget }),
-    )),
+    qObjectDamage' = SomeObjectDamage(starryWispObjectDamageLow),
+    qLightEmitters' = Set(starryWispObjectDimLightEmitter),
   }
 
   action doFillObjectDamageHigh = all {
@@ -94,17 +143,8 @@ module battleRuntimeStarryWispObjectMbt {
     openHoles == Set(SpellDamageRoll),
     qActionAvailable' = false,
     qProtocol' = starryWispObjectProtocolForProjection(Set(), WResolved),
-    qObjectDamage' = SomeObjectDamage(spellObjectDamageOutcome(
-      StarryWispSpellAttack,
-      StarryWispObjectTarget,
-      6,
-      ObjectHitPoints({ hitPoints: starryWispObjectHitPoints }),
-    )),
-    qLightEmitters' = Set(starryWispDimLightEmitter(
-      initialState,
-      Fighter,
-      ObjectLightEmitter({ object: StarryWispObjectTarget }),
-    )),
+    qObjectDamage' = SomeObjectDamage(starryWispObjectDamageHigh),
+    qLightEmitters' = Set(starryWispObjectDimLightEmitter),
   }
 
   action doRejectStaleAfterResolved = all {

@@ -1,0 +1,1922 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts Spell procedure profile copied qComponentRoute versus component-first target replay across split rule-core spell connectors"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "acceptance": {
+    "driverPath": "packages/battle-runtime/rule-core-spells.mbt.qnt",
+    "driverPathStatus": "split-corpus-path-not-present-in-worktree",
+    "splitDriverPaths": [
+      "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+      "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt"
+    ],
+    "connectorPaths": [
+      "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+      "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt"
+    ],
+    "routeClass": "component-first",
+    "durableOwner": "RuleCoreSpellProcedureProfileOwner",
+    "acceptedProjection": "qComponentRoute"
+  },
+  "status": "pass",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "qntFileSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
+      "componentConnectorSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
+      "branchFamily": "step",
+      "branchAction": "doAcidSplashAllSuccess",
+      "observedActionTaken": "doAcidSplashAllSuccess",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+      "traceId": "component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doAcidSplashAllSuccess qComponentRoute=spell-procedure-profile-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doAcidSplashAllSuccess",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#createRuleCoreSpellDriver",
+        "componentOwner": "RuleCoreSpellProcedureProfileOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "observedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreSpellProcedureProfileOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#normalizeRuleCoreSpellQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Spell procedure calls produce runtime projections for direct damage, spell attack damage, and save-gated damage before downstream battle spell routes consume the owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreSpellProcedureProfileOwner",
+          "BattleTurnState.actionResources",
+          "BattleTurnState.bonusActionAvailable",
+          "BattleCreatureState.reactionAvailable",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves",
+          "BattleCreatureState.origin.spellcasting.spellSlots",
+          "BattleCreatureState.activeEffects",
+          "BattleState.readiedSpells",
+          "BattleCreatureState.concentration",
+          "BattleHole.kind=targetChoice|spellTargetAllocation|spellTargetList|attackRoll|savingThrowOutcome|rolledDice",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "qntFileSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
+      "componentConnectorSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
+      "branchFamily": "step",
+      "branchAction": "doAcidSplashNeedsDamageRoll",
+      "observedActionTaken": "doAcidSplashNeedsDamageRoll",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+      "traceId": "component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doAcidSplashNeedsDamageRoll qComponentRoute=spell-procedure-profile-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doAcidSplashNeedsDamageRoll",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#createRuleCoreSpellDriver",
+        "componentOwner": "RuleCoreSpellProcedureProfileOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "observedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreSpellProcedureProfileOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#normalizeRuleCoreSpellQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Spell procedure calls produce runtime projections for direct damage, spell attack damage, and save-gated damage before downstream battle spell routes consume the owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreSpellProcedureProfileOwner",
+          "BattleTurnState.actionResources",
+          "BattleTurnState.bonusActionAvailable",
+          "BattleCreatureState.reactionAvailable",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves",
+          "BattleCreatureState.origin.spellcasting.spellSlots",
+          "BattleCreatureState.activeEffects",
+          "BattleState.readiedSpells",
+          "BattleCreatureState.concentration",
+          "BattleHole.kind=targetChoice|spellTargetAllocation|spellTargetList|attackRoll|savingThrowOutcome|rolledDice",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "qntFileSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
+      "componentConnectorSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
+      "branchFamily": "step",
+      "branchAction": "doAcidSplashNeedsSavingThrow",
+      "observedActionTaken": "doAcidSplashNeedsSavingThrow",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+      "traceId": "component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doAcidSplashNeedsSavingThrow qComponentRoute=spell-procedure-profile-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doAcidSplashNeedsSavingThrow",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#createRuleCoreSpellDriver",
+        "componentOwner": "RuleCoreSpellProcedureProfileOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "observedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreSpellProcedureProfileOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#normalizeRuleCoreSpellQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Spell procedure calls produce runtime projections for direct damage, spell attack damage, and save-gated damage before downstream battle spell routes consume the owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreSpellProcedureProfileOwner",
+          "BattleTurnState.actionResources",
+          "BattleTurnState.bonusActionAvailable",
+          "BattleCreatureState.reactionAvailable",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves",
+          "BattleCreatureState.origin.spellcasting.spellSlots",
+          "BattleCreatureState.activeEffects",
+          "BattleState.readiedSpells",
+          "BattleCreatureState.concentration",
+          "BattleHole.kind=targetChoice|spellTargetAllocation|spellTargetList|attackRoll|savingThrowOutcome|rolledDice",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "qntFileSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
+      "componentConnectorSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
+      "branchFamily": "step",
+      "branchAction": "doAcidSplashOneFail",
+      "observedActionTaken": "doAcidSplashOneFail",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+      "traceId": "component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doAcidSplashOneFail qComponentRoute=spell-procedure-profile-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doAcidSplashOneFail",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#createRuleCoreSpellDriver",
+        "componentOwner": "RuleCoreSpellProcedureProfileOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "observedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreSpellProcedureProfileOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#normalizeRuleCoreSpellQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Spell procedure calls produce runtime projections for direct damage, spell attack damage, and save-gated damage before downstream battle spell routes consume the owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreSpellProcedureProfileOwner",
+          "BattleTurnState.actionResources",
+          "BattleTurnState.bonusActionAvailable",
+          "BattleCreatureState.reactionAvailable",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves",
+          "BattleCreatureState.origin.spellcasting.spellSlots",
+          "BattleCreatureState.activeEffects",
+          "BattleState.readiedSpells",
+          "BattleCreatureState.concentration",
+          "BattleHole.kind=targetChoice|spellTargetAllocation|spellTargetList|attackRoll|savingThrowOutcome|rolledDice",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "qntFileSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
+      "componentConnectorSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
+      "branchFamily": "step",
+      "branchAction": "doMagicMissileLow",
+      "observedActionTaken": "doMagicMissileLow",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+      "traceId": "component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doMagicMissileLow qComponentRoute=spell-procedure-profile-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doMagicMissileLow",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#createRuleCoreSpellDriver",
+        "componentOwner": "RuleCoreSpellProcedureProfileOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "observedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreSpellProcedureProfileOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#normalizeRuleCoreSpellQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Spell procedure calls produce runtime projections for direct damage, spell attack damage, and save-gated damage before downstream battle spell routes consume the owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreSpellProcedureProfileOwner",
+          "BattleTurnState.actionResources",
+          "BattleTurnState.bonusActionAvailable",
+          "BattleCreatureState.reactionAvailable",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves",
+          "BattleCreatureState.origin.spellcasting.spellSlots",
+          "BattleCreatureState.activeEffects",
+          "BattleState.readiedSpells",
+          "BattleCreatureState.concentration",
+          "BattleHole.kind=targetChoice|spellTargetAllocation|spellTargetList|attackRoll|savingThrowOutcome|rolledDice",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "qntFileSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
+      "componentConnectorSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
+      "branchFamily": "step",
+      "branchAction": "doMagicMissileNeedsAllocation",
+      "observedActionTaken": "doMagicMissileNeedsAllocation",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+      "traceId": "component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doMagicMissileNeedsAllocation qComponentRoute=spell-procedure-profile-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doMagicMissileNeedsAllocation",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#createRuleCoreSpellDriver",
+        "componentOwner": "RuleCoreSpellProcedureProfileOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "observedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreSpellProcedureProfileOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#normalizeRuleCoreSpellQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Spell procedure calls produce runtime projections for direct damage, spell attack damage, and save-gated damage before downstream battle spell routes consume the owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreSpellProcedureProfileOwner",
+          "BattleTurnState.actionResources",
+          "BattleTurnState.bonusActionAvailable",
+          "BattleCreatureState.reactionAvailable",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves",
+          "BattleCreatureState.origin.spellcasting.spellSlots",
+          "BattleCreatureState.activeEffects",
+          "BattleState.readiedSpells",
+          "BattleCreatureState.concentration",
+          "BattleHole.kind=targetChoice|spellTargetAllocation|spellTargetList|attackRoll|savingThrowOutcome|rolledDice",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "qntFileSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
+      "componentConnectorSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
+      "branchFamily": "step",
+      "branchAction": "doRayOfFrostCritical",
+      "observedActionTaken": "doRayOfFrostCritical",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+      "traceId": "component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doRayOfFrostCritical qComponentRoute=spell-procedure-profile-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRayOfFrostCritical",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#createRuleCoreSpellDriver",
+        "componentOwner": "RuleCoreSpellProcedureProfileOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "observedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreSpellProcedureProfileOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#normalizeRuleCoreSpellQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Spell procedure calls produce runtime projections for direct damage, spell attack damage, and save-gated damage before downstream battle spell routes consume the owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreSpellProcedureProfileOwner",
+          "BattleTurnState.actionResources",
+          "BattleTurnState.bonusActionAvailable",
+          "BattleCreatureState.reactionAvailable",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves",
+          "BattleCreatureState.origin.spellcasting.spellSlots",
+          "BattleCreatureState.activeEffects",
+          "BattleState.readiedSpells",
+          "BattleCreatureState.concentration",
+          "BattleHole.kind=targetChoice|spellTargetAllocation|spellTargetList|attackRoll|savingThrowOutcome|rolledDice",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "qntFileSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
+      "componentConnectorSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
+      "branchFamily": "step",
+      "branchAction": "doRayOfFrostHit",
+      "observedActionTaken": "doRayOfFrostHit",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+      "traceId": "component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doRayOfFrostHit qComponentRoute=spell-procedure-profile-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRayOfFrostHit",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#createRuleCoreSpellDriver",
+        "componentOwner": "RuleCoreSpellProcedureProfileOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "observedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreSpellProcedureProfileOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#normalizeRuleCoreSpellQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Spell procedure calls produce runtime projections for direct damage, spell attack damage, and save-gated damage before downstream battle spell routes consume the owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreSpellProcedureProfileOwner",
+          "BattleTurnState.actionResources",
+          "BattleTurnState.bonusActionAvailable",
+          "BattleCreatureState.reactionAvailable",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves",
+          "BattleCreatureState.origin.spellcasting.spellSlots",
+          "BattleCreatureState.activeEffects",
+          "BattleState.readiedSpells",
+          "BattleCreatureState.concentration",
+          "BattleHole.kind=targetChoice|spellTargetAllocation|spellTargetList|attackRoll|savingThrowOutcome|rolledDice",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "qntFileSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
+      "componentConnectorSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
+      "branchFamily": "step",
+      "branchAction": "doRayOfFrostMiss",
+      "observedActionTaken": "doRayOfFrostMiss",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+      "traceId": "component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doRayOfFrostMiss qComponentRoute=spell-procedure-profile-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRayOfFrostMiss",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#createRuleCoreSpellDriver",
+        "componentOwner": "RuleCoreSpellProcedureProfileOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "observedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreSpellProcedureProfileOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#normalizeRuleCoreSpellQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Spell procedure calls produce runtime projections for direct damage, spell attack damage, and save-gated damage before downstream battle spell routes consume the owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreSpellProcedureProfileOwner",
+          "BattleTurnState.actionResources",
+          "BattleTurnState.bonusActionAvailable",
+          "BattleCreatureState.reactionAvailable",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves",
+          "BattleCreatureState.origin.spellcasting.spellSlots",
+          "BattleCreatureState.activeEffects",
+          "BattleState.readiedSpells",
+          "BattleCreatureState.concentration",
+          "BattleHole.kind=targetChoice|spellTargetAllocation|spellTargetList|attackRoll|savingThrowOutcome|rolledDice",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "qntFileSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
+      "componentConnectorSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
+      "branchFamily": "step",
+      "branchAction": "doRayOfFrostNeedsAttackRoll",
+      "observedActionTaken": "doRayOfFrostNeedsAttackRoll",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+      "traceId": "component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doRayOfFrostNeedsAttackRoll qComponentRoute=spell-procedure-profile-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRayOfFrostNeedsAttackRoll",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#createRuleCoreSpellDriver",
+        "componentOwner": "RuleCoreSpellProcedureProfileOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "observedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreSpellProcedureProfileOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#normalizeRuleCoreSpellQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Spell procedure calls produce runtime projections for direct damage, spell attack damage, and save-gated damage before downstream battle spell routes consume the owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreSpellProcedureProfileOwner",
+          "BattleTurnState.actionResources",
+          "BattleTurnState.bonusActionAvailable",
+          "BattleCreatureState.reactionAvailable",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves",
+          "BattleCreatureState.origin.spellcasting.spellSlots",
+          "BattleCreatureState.activeEffects",
+          "BattleState.readiedSpells",
+          "BattleCreatureState.concentration",
+          "BattleHole.kind=targetChoice|spellTargetAllocation|spellTargetList|attackRoll|savingThrowOutcome|rolledDice",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "qntFileSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
+      "componentConnectorSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
+      "branchFamily": "step",
+      "branchAction": "doRayOfFrostNeedsDamageRoll",
+      "observedActionTaken": "doRayOfFrostNeedsDamageRoll",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+      "traceId": "component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doRayOfFrostNeedsDamageRoll qComponentRoute=spell-procedure-profile-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRayOfFrostNeedsDamageRoll",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#createRuleCoreSpellDriver",
+        "componentOwner": "RuleCoreSpellProcedureProfileOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "observedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreSpellProcedureProfileOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#normalizeRuleCoreSpellQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Spell procedure calls produce runtime projections for direct damage, spell attack damage, and save-gated damage before downstream battle spell routes consume the owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreSpellProcedureProfileOwner",
+          "BattleTurnState.actionResources",
+          "BattleTurnState.bonusActionAvailable",
+          "BattleCreatureState.reactionAvailable",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves",
+          "BattleCreatureState.origin.spellcasting.spellSlots",
+          "BattleCreatureState.activeEffects",
+          "BattleState.readiedSpells",
+          "BattleCreatureState.concentration",
+          "BattleHole.kind=targetChoice|spellTargetAllocation|spellTargetList|attackRoll|savingThrowOutcome|rolledDice",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "qntFileSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
+      "componentConnectorSha256": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
+      "branchFamily": "step",
+      "branchAction": "doRayOfFrostNeedsTarget",
+      "observedActionTaken": "doRayOfFrostNeedsTarget",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+      "traceId": "component-route=RuleCoreSpellProcedureProfileOwner connector=spell-damage action=doRayOfFrostNeedsTarget qComponentRoute=spell-procedure-profile-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRayOfFrostNeedsTarget",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#createRuleCoreSpellDriver",
+        "componentOwner": "RuleCoreSpellProcedureProfileOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "observedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreSpellProcedureProfileOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#normalizeRuleCoreSpellQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Spell procedure calls produce runtime projections for direct damage, spell attack damage, and save-gated damage before downstream battle spell routes consume the owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreSpellProcedureProfileOwner",
+          "BattleTurnState.actionResources",
+          "BattleTurnState.bonusActionAvailable",
+          "BattleCreatureState.reactionAvailable",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves",
+          "BattleCreatureState.origin.spellcasting.spellSlots",
+          "BattleCreatureState.activeEffects",
+          "BattleState.readiedSpells",
+          "BattleCreatureState.concentration",
+          "BattleHole.kind=targetChoice|spellTargetAllocation|spellTargetList|attackRoll|savingThrowOutcome|rolledDice",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+      "qntFileSha256": "35e513c1e3c15b21e7e1622a195ba1c17688e6ac2724ac22d0bc3cc869654ae4",
+      "componentConnectorSha256": "35e513c1e3c15b21e7e1622a195ba1c17688e6ac2724ac22d0bc3cc869654ae4",
+      "branchFamily": "step",
+      "branchAction": "doMageArmor",
+      "observedActionTaken": "doMageArmor",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+      "traceId": "component-route=RuleCoreSpellProcedureProfileOwner connector=spell-defensive-effect action=doMageArmor qComponentRoute=spell-procedure-profile-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doMageArmor",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#createRuleCoreSpellDriver",
+        "componentOwner": "RuleCoreSpellProcedureProfileOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "observedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreSpellProcedureProfileOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#normalizeRuleCoreSpellQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Spell procedure calls produce runtime projections for defensive active Spell Effect admission before downstream battle spell routes consume the owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreSpellProcedureProfileOwner",
+          "BattleTurnState.actionResources",
+          "BattleTurnState.bonusActionAvailable",
+          "BattleCreatureState.reactionAvailable",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves",
+          "BattleCreatureState.origin.spellcasting.spellSlots",
+          "BattleCreatureState.activeEffects",
+          "BattleState.readiedSpells",
+          "BattleCreatureState.concentration",
+          "BattleHole.kind=targetChoice|spellTargetAllocation|spellTargetList|attackRoll|savingThrowOutcome|rolledDice",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+      "qntFileSha256": "35e513c1e3c15b21e7e1622a195ba1c17688e6ac2724ac22d0bc3cc869654ae4",
+      "componentConnectorSha256": "35e513c1e3c15b21e7e1622a195ba1c17688e6ac2724ac22d0bc3cc869654ae4",
+      "branchFamily": "step",
+      "branchAction": "doMageArmorNeedsTarget",
+      "observedActionTaken": "doMageArmorNeedsTarget",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+      "traceId": "component-route=RuleCoreSpellProcedureProfileOwner connector=spell-defensive-effect action=doMageArmorNeedsTarget qComponentRoute=spell-procedure-profile-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doMageArmorNeedsTarget",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#createRuleCoreSpellDriver",
+        "componentOwner": "RuleCoreSpellProcedureProfileOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "observedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreSpellProcedureProfileOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#normalizeRuleCoreSpellQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Spell procedure calls produce runtime projections for defensive active Spell Effect admission before downstream battle spell routes consume the owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreSpellProcedureProfileOwner",
+          "BattleTurnState.actionResources",
+          "BattleTurnState.bonusActionAvailable",
+          "BattleCreatureState.reactionAvailable",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves",
+          "BattleCreatureState.origin.spellcasting.spellSlots",
+          "BattleCreatureState.activeEffects",
+          "BattleState.readiedSpells",
+          "BattleCreatureState.concentration",
+          "BattleHole.kind=targetChoice|spellTargetAllocation|spellTargetList|attackRoll|savingThrowOutcome|rolledDice",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
+      "qntFileSha256": "0d6f773b5c2ea557eda92c9f3257d36c46b7f1db8506238d8029f6a729d0a8ff",
+      "componentConnectorSha256": "0d6f773b5c2ea557eda92c9f3257d36c46b7f1db8506238d8029f6a729d0a8ff",
+      "branchFamily": "step",
+      "branchAction": "doReadySpellHold",
+      "observedActionTaken": "doReadySpellHold",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+      "traceId": "component-route=RuleCoreSpellProcedureProfileOwner connector=spell-readied-response action=doReadySpellHold qComponentRoute=spell-procedure-profile-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doReadySpellHold",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#createRuleCoreSpellDriver",
+        "componentOwner": "RuleCoreSpellProcedureProfileOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "observedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreSpellProcedureProfileOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#normalizeRuleCoreSpellQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Spell procedure calls produce runtime projections for spell-slot economy, Ready action spell holding, and Reaction release before downstream battle spell routes consume the owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreSpellProcedureProfileOwner",
+          "BattleTurnState.actionResources",
+          "BattleTurnState.bonusActionAvailable",
+          "BattleCreatureState.reactionAvailable",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves",
+          "BattleCreatureState.origin.spellcasting.spellSlots",
+          "BattleCreatureState.activeEffects",
+          "BattleState.readiedSpells",
+          "BattleCreatureState.concentration",
+          "BattleHole.kind=targetChoice|spellTargetAllocation|spellTargetList|attackRoll|savingThrowOutcome|rolledDice",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
+      "qntFileSha256": "0d6f773b5c2ea557eda92c9f3257d36c46b7f1db8506238d8029f6a729d0a8ff",
+      "componentConnectorSha256": "0d6f773b5c2ea557eda92c9f3257d36c46b7f1db8506238d8029f6a729d0a8ff",
+      "branchFamily": "step",
+      "branchAction": "doRejectSecondSlotSpell",
+      "observedActionTaken": "doRejectSecondSlotSpell",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+      "traceId": "component-route=RuleCoreSpellProcedureProfileOwner connector=spell-readied-response action=doRejectSecondSlotSpell qComponentRoute=spell-procedure-profile-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRejectSecondSlotSpell",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#createRuleCoreSpellDriver",
+        "componentOwner": "RuleCoreSpellProcedureProfileOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "observedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreSpellProcedureProfileOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#normalizeRuleCoreSpellQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Spell procedure calls produce runtime projections for spell-slot economy, Ready action spell holding, and Reaction release before downstream battle spell routes consume the owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreSpellProcedureProfileOwner",
+          "BattleTurnState.actionResources",
+          "BattleTurnState.bonusActionAvailable",
+          "BattleCreatureState.reactionAvailable",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves",
+          "BattleCreatureState.origin.spellcasting.spellSlots",
+          "BattleCreatureState.activeEffects",
+          "BattleState.readiedSpells",
+          "BattleCreatureState.concentration",
+          "BattleHole.kind=targetChoice|spellTargetAllocation|spellTargetList|attackRoll|savingThrowOutcome|rolledDice",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
+      "qntFileSha256": "0d6f773b5c2ea557eda92c9f3257d36c46b7f1db8506238d8029f6a729d0a8ff",
+      "componentConnectorSha256": "0d6f773b5c2ea557eda92c9f3257d36c46b7f1db8506238d8029f6a729d0a8ff",
+      "branchFamily": "step",
+      "branchAction": "doReleaseReadiedSpell",
+      "observedActionTaken": "doReleaseReadiedSpell",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+      "traceId": "component-route=RuleCoreSpellProcedureProfileOwner connector=spell-readied-response action=doReleaseReadiedSpell qComponentRoute=spell-procedure-profile-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doReleaseReadiedSpell",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#createRuleCoreSpellDriver",
+        "componentOwner": "RuleCoreSpellProcedureProfileOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "observedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreSpellProcedureProfileOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#normalizeRuleCoreSpellQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Spell procedure calls produce runtime projections for spell-slot economy, Ready action spell holding, and Reaction release before downstream battle spell routes consume the owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreSpellProcedureProfileOwner",
+          "BattleTurnState.actionResources",
+          "BattleTurnState.bonusActionAvailable",
+          "BattleCreatureState.reactionAvailable",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves",
+          "BattleCreatureState.origin.spellcasting.spellSlots",
+          "BattleCreatureState.activeEffects",
+          "BattleState.readiedSpells",
+          "BattleCreatureState.concentration",
+          "BattleHole.kind=targetChoice|spellTargetAllocation|spellTargetList|attackRoll|savingThrowOutcome|rolledDice",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "qntFileSha256": "d52342e15f53ff79df9ed84488e70c88b2fc9216fb6773d45320576b0e05257c",
+      "componentConnectorSha256": "d52342e15f53ff79df9ed84488e70c88b2fc9216fb6773d45320576b0e05257c",
+      "branchFamily": "step",
+      "branchAction": "doCureWoundsNeedsHealingRoll",
+      "observedActionTaken": "doCureWoundsNeedsHealingRoll",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+      "traceId": "component-route=RuleCoreSpellProcedureProfileOwner connector=spell-restoration action=doCureWoundsNeedsHealingRoll qComponentRoute=spell-procedure-profile-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doCureWoundsNeedsHealingRoll",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#createRuleCoreSpellDriver",
+        "componentOwner": "RuleCoreSpellProcedureProfileOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "observedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreSpellProcedureProfileOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#normalizeRuleCoreSpellQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Spell procedure calls produce runtime projections for single-target Hit Point restoration and zero-Hit-Point recovery before downstream battle spell routes consume the owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreSpellProcedureProfileOwner",
+          "BattleTurnState.actionResources",
+          "BattleTurnState.bonusActionAvailable",
+          "BattleCreatureState.reactionAvailable",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves",
+          "BattleCreatureState.origin.spellcasting.spellSlots",
+          "BattleCreatureState.activeEffects",
+          "BattleState.readiedSpells",
+          "BattleCreatureState.concentration",
+          "BattleHole.kind=targetChoice|spellTargetAllocation|spellTargetList|attackRoll|savingThrowOutcome|rolledDice",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "qntFileSha256": "d52342e15f53ff79df9ed84488e70c88b2fc9216fb6773d45320576b0e05257c",
+      "componentConnectorSha256": "d52342e15f53ff79df9ed84488e70c88b2fc9216fb6773d45320576b0e05257c",
+      "branchFamily": "step",
+      "branchAction": "doCureWoundsNeedsTarget",
+      "observedActionTaken": "doCureWoundsNeedsTarget",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+      "traceId": "component-route=RuleCoreSpellProcedureProfileOwner connector=spell-restoration action=doCureWoundsNeedsTarget qComponentRoute=spell-procedure-profile-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doCureWoundsNeedsTarget",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#createRuleCoreSpellDriver",
+        "componentOwner": "RuleCoreSpellProcedureProfileOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "observedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreSpellProcedureProfileOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#normalizeRuleCoreSpellQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Spell procedure calls produce runtime projections for single-target Hit Point restoration and zero-Hit-Point recovery before downstream battle spell routes consume the owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreSpellProcedureProfileOwner",
+          "BattleTurnState.actionResources",
+          "BattleTurnState.bonusActionAvailable",
+          "BattleCreatureState.reactionAvailable",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves",
+          "BattleCreatureState.origin.spellcasting.spellSlots",
+          "BattleCreatureState.activeEffects",
+          "BattleState.readiedSpells",
+          "BattleCreatureState.concentration",
+          "BattleHole.kind=targetChoice|spellTargetAllocation|spellTargetList|attackRoll|savingThrowOutcome|rolledDice",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "qntFileSha256": "d52342e15f53ff79df9ed84488e70c88b2fc9216fb6773d45320576b0e05257c",
+      "componentConnectorSha256": "d52342e15f53ff79df9ed84488e70c88b2fc9216fb6773d45320576b0e05257c",
+      "branchFamily": "step",
+      "branchAction": "doCureWoundsWounded",
+      "observedActionTaken": "doCureWoundsWounded",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+      "traceId": "component-route=RuleCoreSpellProcedureProfileOwner connector=spell-restoration action=doCureWoundsWounded qComponentRoute=spell-procedure-profile-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doCureWoundsWounded",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#createRuleCoreSpellDriver",
+        "componentOwner": "RuleCoreSpellProcedureProfileOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "observedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreSpellProcedureProfileOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#normalizeRuleCoreSpellQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Spell procedure calls produce runtime projections for single-target Hit Point restoration and zero-Hit-Point recovery before downstream battle spell routes consume the owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreSpellProcedureProfileOwner",
+          "BattleTurnState.actionResources",
+          "BattleTurnState.bonusActionAvailable",
+          "BattleCreatureState.reactionAvailable",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves",
+          "BattleCreatureState.origin.spellcasting.spellSlots",
+          "BattleCreatureState.activeEffects",
+          "BattleState.readiedSpells",
+          "BattleCreatureState.concentration",
+          "BattleHole.kind=targetChoice|spellTargetAllocation|spellTargetList|attackRoll|savingThrowOutcome|rolledDice",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "qntFileSha256": "d52342e15f53ff79df9ed84488e70c88b2fc9216fb6773d45320576b0e05257c",
+      "componentConnectorSha256": "d52342e15f53ff79df9ed84488e70c88b2fc9216fb6773d45320576b0e05257c",
+      "branchFamily": "step",
+      "branchAction": "doHealingWordNeedsHealingRoll",
+      "observedActionTaken": "doHealingWordNeedsHealingRoll",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+      "traceId": "component-route=RuleCoreSpellProcedureProfileOwner connector=spell-restoration action=doHealingWordNeedsHealingRoll qComponentRoute=spell-procedure-profile-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doHealingWordNeedsHealingRoll",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#createRuleCoreSpellDriver",
+        "componentOwner": "RuleCoreSpellProcedureProfileOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "observedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreSpellProcedureProfileOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#normalizeRuleCoreSpellQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Spell procedure calls produce runtime projections for single-target Hit Point restoration and zero-Hit-Point recovery before downstream battle spell routes consume the owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreSpellProcedureProfileOwner",
+          "BattleTurnState.actionResources",
+          "BattleTurnState.bonusActionAvailable",
+          "BattleCreatureState.reactionAvailable",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves",
+          "BattleCreatureState.origin.spellcasting.spellSlots",
+          "BattleCreatureState.activeEffects",
+          "BattleState.readiedSpells",
+          "BattleCreatureState.concentration",
+          "BattleHole.kind=targetChoice|spellTargetAllocation|spellTargetList|attackRoll|savingThrowOutcome|rolledDice",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "qntFileSha256": "d52342e15f53ff79df9ed84488e70c88b2fc9216fb6773d45320576b0e05257c",
+      "componentConnectorSha256": "d52342e15f53ff79df9ed84488e70c88b2fc9216fb6773d45320576b0e05257c",
+      "branchFamily": "step",
+      "branchAction": "doHealingWordNeedsTarget",
+      "observedActionTaken": "doHealingWordNeedsTarget",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+      "traceId": "component-route=RuleCoreSpellProcedureProfileOwner connector=spell-restoration action=doHealingWordNeedsTarget qComponentRoute=spell-procedure-profile-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doHealingWordNeedsTarget",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#createRuleCoreSpellDriver",
+        "componentOwner": "RuleCoreSpellProcedureProfileOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "observedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreSpellProcedureProfileOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#normalizeRuleCoreSpellQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Spell procedure calls produce runtime projections for single-target Hit Point restoration and zero-Hit-Point recovery before downstream battle spell routes consume the owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreSpellProcedureProfileOwner",
+          "BattleTurnState.actionResources",
+          "BattleTurnState.bonusActionAvailable",
+          "BattleCreatureState.reactionAvailable",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves",
+          "BattleCreatureState.origin.spellcasting.spellSlots",
+          "BattleCreatureState.activeEffects",
+          "BattleState.readiedSpells",
+          "BattleCreatureState.concentration",
+          "BattleHole.kind=targetChoice|spellTargetAllocation|spellTargetList|attackRoll|savingThrowOutcome|rolledDice",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "qntFileSha256": "d52342e15f53ff79df9ed84488e70c88b2fc9216fb6773d45320576b0e05257c",
+      "componentConnectorSha256": "d52342e15f53ff79df9ed84488e70c88b2fc9216fb6773d45320576b0e05257c",
+      "branchFamily": "step",
+      "branchAction": "doHealingWordWounded",
+      "observedActionTaken": "doHealingWordWounded",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+      "traceId": "component-route=RuleCoreSpellProcedureProfileOwner connector=spell-restoration action=doHealingWordWounded qComponentRoute=spell-procedure-profile-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doHealingWordWounded",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#createRuleCoreSpellDriver",
+        "componentOwner": "RuleCoreSpellProcedureProfileOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "observedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreSpellProcedureProfileOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#normalizeRuleCoreSpellQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Spell procedure calls produce runtime projections for single-target Hit Point restoration and zero-Hit-Point recovery before downstream battle spell routes consume the owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreSpellProcedureProfileOwner",
+          "BattleTurnState.actionResources",
+          "BattleTurnState.bonusActionAvailable",
+          "BattleCreatureState.reactionAvailable",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves",
+          "BattleCreatureState.origin.spellcasting.spellSlots",
+          "BattleCreatureState.activeEffects",
+          "BattleState.readiedSpells",
+          "BattleCreatureState.concentration",
+          "BattleHole.kind=targetChoice|spellTargetAllocation|spellTargetList|attackRoll|savingThrowOutcome|rolledDice",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "qntFileSha256": "d52342e15f53ff79df9ed84488e70c88b2fc9216fb6773d45320576b0e05257c",
+      "componentConnectorSha256": "d52342e15f53ff79df9ed84488e70c88b2fc9216fb6773d45320576b0e05257c",
+      "branchFamily": "step",
+      "branchAction": "doHealingWordZeroHp",
+      "observedActionTaken": "doHealingWordZeroHp",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+      "traceId": "component-route=RuleCoreSpellProcedureProfileOwner connector=spell-restoration action=doHealingWordZeroHp qComponentRoute=spell-procedure-profile-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doHealingWordZeroHp",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#createRuleCoreSpellDriver",
+        "componentOwner": "RuleCoreSpellProcedureProfileOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "observedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreSpellProcedureProfileOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#normalizeRuleCoreSpellQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Spell procedure calls produce runtime projections for single-target Hit Point restoration and zero-Hit-Point recovery before downstream battle spell routes consume the owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreSpellProcedureProfileOwner",
+          "BattleTurnState.actionResources",
+          "BattleTurnState.bonusActionAvailable",
+          "BattleCreatureState.reactionAvailable",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves",
+          "BattleCreatureState.origin.spellcasting.spellSlots",
+          "BattleCreatureState.activeEffects",
+          "BattleState.readiedSpells",
+          "BattleCreatureState.concentration",
+          "BattleHole.kind=targetChoice|spellTargetAllocation|spellTargetList|attackRoll|savingThrowOutcome|rolledDice",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "qntFileSha256": "d52342e15f53ff79df9ed84488e70c88b2fc9216fb6773d45320576b0e05257c",
+      "componentConnectorSha256": "d52342e15f53ff79df9ed84488e70c88b2fc9216fb6773d45320576b0e05257c",
+      "branchFamily": "step",
+      "branchAction": "doMassHealingWordNeedsHealingRoll",
+      "observedActionTaken": "doMassHealingWordNeedsHealingRoll",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+      "traceId": "component-route=RuleCoreSpellProcedureProfileOwner connector=spell-restoration action=doMassHealingWordNeedsHealingRoll qComponentRoute=spell-procedure-profile-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doMassHealingWordNeedsHealingRoll",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#createRuleCoreSpellDriver",
+        "componentOwner": "RuleCoreSpellProcedureProfileOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "observedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreSpellProcedureProfileOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#normalizeRuleCoreSpellQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Spell procedure calls produce runtime projections for single-target and multi-target Hit Point restoration before downstream battle spell routes consume the owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreSpellProcedureProfileOwner",
+          "BattleTurnState.actionResources",
+          "BattleTurnState.bonusActionAvailable",
+          "BattleCreatureState.reactionAvailable",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves",
+          "BattleCreatureState.origin.spellcasting.spellSlots",
+          "BattleCreatureState.activeEffects",
+          "BattleState.readiedSpells",
+          "BattleCreatureState.concentration",
+          "BattleHole.kind=targetChoice|spellTargetAllocation|spellTargetList|attackRoll|savingThrowOutcome|rolledDice",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "qntFileSha256": "d52342e15f53ff79df9ed84488e70c88b2fc9216fb6773d45320576b0e05257c",
+      "componentConnectorSha256": "d52342e15f53ff79df9ed84488e70c88b2fc9216fb6773d45320576b0e05257c",
+      "branchFamily": "step",
+      "branchAction": "doMassHealingWordNeedsTargetList",
+      "observedActionTaken": "doMassHealingWordNeedsTargetList",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+      "traceId": "component-route=RuleCoreSpellProcedureProfileOwner connector=spell-restoration action=doMassHealingWordNeedsTargetList qComponentRoute=spell-procedure-profile-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doMassHealingWordNeedsTargetList",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#createRuleCoreSpellDriver",
+        "componentOwner": "RuleCoreSpellProcedureProfileOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "observedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreSpellProcedureProfileOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#normalizeRuleCoreSpellQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Spell procedure calls produce runtime projections for single-target and multi-target Hit Point restoration before downstream battle spell routes consume the owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreSpellProcedureProfileOwner",
+          "BattleTurnState.actionResources",
+          "BattleTurnState.bonusActionAvailable",
+          "BattleCreatureState.reactionAvailable",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves",
+          "BattleCreatureState.origin.spellcasting.spellSlots",
+          "BattleCreatureState.activeEffects",
+          "BattleState.readiedSpells",
+          "BattleCreatureState.concentration",
+          "BattleHole.kind=targetChoice|spellTargetAllocation|spellTargetList|attackRoll|savingThrowOutcome|rolledDice",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "qntFileSha256": "d52342e15f53ff79df9ed84488e70c88b2fc9216fb6773d45320576b0e05257c",
+      "componentConnectorSha256": "d52342e15f53ff79df9ed84488e70c88b2fc9216fb6773d45320576b0e05257c",
+      "branchFamily": "step",
+      "branchAction": "doMassHealingWordWounded",
+      "observedActionTaken": "doMassHealingWordWounded",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+      "traceId": "component-route=RuleCoreSpellProcedureProfileOwner connector=spell-restoration action=doMassHealingWordWounded qComponentRoute=spell-procedure-profile-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doMassHealingWordWounded",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#createRuleCoreSpellDriver",
+        "componentOwner": "RuleCoreSpellProcedureProfileOwner"
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "observedProjectionSha256": "d0c1a18c6a5651e2b065fa0c905eb8f854e69d769de7ab4c01cfddae56aa1635",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreSpellProcedureProfileOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#normalizeRuleCoreSpellQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime Spell procedure calls produce runtime projections for single-target and multi-target Hit Point restoration before downstream battle spell routes consume the owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts#discoverBattleActs|resolveBattleSubject|resolveBattleInterrupt"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreSpellProcedureProfileOwner",
+          "BattleTurnState.actionResources",
+          "BattleTurnState.bonusActionAvailable",
+          "BattleCreatureState.reactionAvailable",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves",
+          "BattleCreatureState.origin.spellcasting.spellSlots",
+          "BattleCreatureState.activeEffects",
+          "BattleState.readiedSpells",
+          "BattleCreatureState.concentration",
+          "BattleHole.kind=targetChoice|spellTargetAllocation|spellTargetList|attackRoll|savingThrowOutcome|rolledDice",
+          "BattleResolutionResult.tag"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}

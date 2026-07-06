@@ -49,13 +49,13 @@ Surface schema, Unit catalog admission, or generated coverage files.
   first eligible Reckless Strength hit while Raging, are recorded as used this
   turn, and do not appear when Reckless Attack happened before Rage was active.
 - `packages/battle-runtime/src/rule-core-features.mbt.test.ts` already carries
-  selected-identity MBT replay evidence for `barbarian_frenzy` through
+  selected-identity replay evidence for `barbarian_frenzy` through
   `doFrenzy`.
 - `plans/unit-profile-coverage/unit-claims.jsonl`,
   `plans/unit-profile-coverage/unit-evidence.jsonl`, and
   `plans/unit-profile-coverage/UNIT_REPORT.md` already classify
   `barbarian_frenzy` as supported by `unit-feature.attack-damage-rider` with
-  deterministic admission and selected-identity MBT evidence.
+  deterministic admission and selected-identity replay evidence.
 - `plans/rules-kernel-coverage/qnt-owner-roles.jsonl` already records
   `unit-feature-rage-reckless-core.qnt` as the semantic core owner for Rage,
   Reckless Attack, and Frenzy first-hit semantics.
@@ -71,7 +71,7 @@ No missing Frenzy runtime slice was found. The current owners cover:
 - dice count: derived from the active Rage Damage bonus;
 - limit: once per turn with runtime used-rider state;
 - evidence: deterministic admission, production reducer tests, rule-core bridge
-  examples, and selected-identity MBT replay.
+  examples, and selected-identity replay.
 
 Task 9 should not implement a second Frenzy runtime vertical. A new Task 9
 implementation would duplicate already-owned attack-damage rider behavior and

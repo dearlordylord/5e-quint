@@ -24,19 +24,21 @@ Invocation or Spell Effect paths rather than to driver-local projections.
 ## Existing Gate
 
 `scripts/unit-profile-coverage-claim-scan.cjs` extracts every
-`UNIT-IDENTITY-MBT-REPLAY` marker, the selected replay data consumed by the
+`UNIT-IDENTITY-REPLAY` marker, the selected replay data consumed by the
 deterministic test, the focused QNT `step` action set, and the owner/import
 closure's runtime entrypoints.
 
 `scripts/unit-profile-coverage-validation.cjs` rejects selected-identity replay
 data when any of these facts are missing or stale:
 
-- matching `unit-evidence.jsonl` `selected-identity-mbt` row;
+- matching `unit-evidence.jsonl` `selected-identity-replay` row;
 - deterministic replay consumer;
 - non-empty replay actions;
-- matching `UNIT-IDENTITY-MBT-REPLAY` marker and action set;
-- action names declared by the driver schema or `defineSelectedIdentityWitness`;
-- action names reachable from the focused QNT `step`;
+- matching `UNIT-IDENTITY-REPLAY` marker and action set;
+- action names declared by the driver schema or
+  `defineSelectedIdentityReplayWitness`;
+- action names reachable from a joined focused QNT replay `step` when that
+  owner exists;
 - production runtime entrypoint reachability.
 
 For `packages/battle-runtime`, the reachability check requires the selected
@@ -53,7 +55,7 @@ Read-only audit queries found:
 - 108 supported or profile-subset-supported `kind: "spell"` Units with
   `spell.*` profiles.
 - 0 supported or profile-subset-supported spell Units missing
-  `selected-identity-mbt` evidence.
+  `selected-identity-replay` evidence.
 - 108 promoted supported or profile-subset-supported spell Unit identities with
   selected-identity replay evidence.
 - 109 `kind: "spell"` Unit identities total with selected-identity replay
@@ -64,7 +66,7 @@ Read-only audit queries found:
 - 0 selected-identity replay gaps in
   `plans/unit-profile-coverage/unit-matrix.json`.
 
-The headline `selectedIdentityMbtCoverage` metric remains `157/161` because
+The headline `selectedIdentityReplayCoverage` metric remains `157/161` because
 that metric's denominator is installed Units with `supported-profile` claims.
 The four `supported-profile` Units without direct evidence are non-spell
 deterministic Character Creation or Character Sheet projection rows with
@@ -75,7 +77,7 @@ feature row is also outside selected-identity replay. None of those rows are
 promoted spell profiles or Task 11 work.
 
 The two spell rows with deferred selected-identity non-applicable dispositions
-still have selected-identity MBT evidence for their promoted runtime-owned
+still have selected-identity replay evidence for their promoted runtime-owned
 spell portions. Their deferred mechanics remain outside the promoted battle
 runtime boundary and do not create replay gaps.
 
@@ -104,7 +106,7 @@ selected-identity evidence is the explicit hard-gate command:
 - L3MSPELL-12 should treat selected-identity replay as already green for
   promoted spell profiles and should consume this note when consolidating
   spell-boundary evidence.
-- The remaining `selectedIdentityMbtCoverage` denominator gap is non-spell
+- The remaining `selectedIdentityReplayCoverage` denominator gap is non-spell
   deterministic projection work and should not block spell boundary
   consolidation.
 

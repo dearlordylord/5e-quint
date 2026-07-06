@@ -4,7 +4,7 @@
 
 Task 14 resolves the remaining Heightened Spell repeat-save carry-through
 shape after the combatant-owned Hideous Laughter slice. It does not promote new
-runtime behavior, QNT behavior, selected-identity MBT evidence, or generated
+runtime behavior, QNT behavior, selected-identity replay evidence, or generated
 ledger rows.
 
 RAW and domain checks consulted:
@@ -135,8 +135,9 @@ runtime tests, focused QNT parity, and selected-identity evidence:
    later end-turn save.
 
 Each slice should update the focused QNT owner before runtime support is
-opened. Selected-identity MBT rows should be added only after runtime and QNT
-owners carry the occurrence-local rider.
+opened. Selected-identity replay rows, and paired QNT replay owners when needed,
+should be added only after runtime and QNT owners carry the occurrence-local
+rider.
 
 ## Connascence Check
 
@@ -185,7 +186,7 @@ Reviewer-loop convergence:
   closed.
 
 Future implementation slices should verify with focused runtime tests, focused
-QNT owner tests, selected-identity MBT only after runtime and QNT witnesses
+QNT owner tests, selected-identity replay only after runtime and QNT witnesses
 exist, and then:
 
 - `pnpm unit-profile-coverage:check -- --write`

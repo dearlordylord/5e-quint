@@ -1,6 +1,6 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.metamagic-cast-duration-and-concentration
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3MMETA-16-EXTENDED-CAST-DURATION-CONCENTRATION-SLICE sorcerer_metamagic
-// UNIT-IDENTITY-MBT-REPLAY: L3MMETA-16-EXTENDED-CAST-DURATION-CONCENTRATION-SLICE sorcerer_metamagic doResolveExtendedCreatureSizeIncrease
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3MMETA-16-EXTENDED-CAST-DURATION-CONCENTRATION-SLICE sorcerer_metamagic
+// UNIT-IDENTITY-REPLAY: L3MMETA-16-EXTENDED-CAST-DURATION-CONCENTRATION-SLICE sorcerer_metamagic doResolveExtendedCreatureSizeIncrease
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_EXTENDED_CAST_DURATION_CONCENTRATION
 // RAW trace:
 // - .references/srd-5.2.1/Classes/Sorcerer.md#Extended Spell: a spell with
@@ -8,6 +8,7 @@
 //   when it requires Concentration, grants Advantage on maintenance saves.
 // - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Enlarge/Reduce:
 //   Concentration up to 1 minute and a creature size-change effect.
+import { it } from "vitest";
 import { resourceCount } from "@dnd/shared/types";
 
 import { concentrationSavingThrowHole } from "./battle-reducer/damage-apply.ts";
@@ -17,13 +18,24 @@ import {
   type CharacterBattleMetamagicOptionFact,
   type CharacterBattlePointPoolResourceState,
 } from "./character-battle-resources.ts";
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import {
+  defineDriver,
+  focusedMbtMaxSteps,
+  MBT_TEST_TIMEOUT_MS,
+  mbtSpecPath,
+  reducerRoutedMetamagicStateCheck,
+  run,
+} from "./battle-runtime-mbt-driver-kit.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
   enlargeReduceUnitId,
   spellCasterId,
   unitLibrary,
 } from "./unit-profile-admission-catalog-support.ts";
+import {
+  battleReducerStartRouteEvent,
+  type BattleReducerRouteEvent,
+} from "./index.ts";
 import { requireHole } from "./unit-profile-admission-creature-fixture-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import { knownWillingSpellTargetFill } from "./unit-profile-admission-spell-fill-support.ts";
@@ -41,8 +53,18 @@ type ExtendedCreatureSizeProjection = {
   readonly lastResult: "init" | "extendedCreatureSizeIncrease";
 };
 
-defineSelectedIdentityWitness({
-  describeLabel: "Sorcerer Extended Spell creature-size selected identity MBT",
+const extendedMetamagicRouteReplayDriverSchema = {
+  init: {},
+  doRouteSpellDurationProjection: {},
+} as const;
+
+type ExtendedMetamagicRouteReplayProjection = {
+  readonly route: readonly BattleReducerRouteEvent[];
+};
+
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel:
+    "Sorcerer Extended Spell creature-size selected identity replay",
   taskId: "L3MMETA-16-EXTENDED-CAST-DURATION-CONCENTRATION-SLICE",
   specFile: mbtSpecPath(
     import.meta.dirname,
@@ -75,12 +97,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doResolveExtendedCreatureSizeIncrease",
-          projectionAfter: {
-            sorceryPointsRemaining: 1,
-            durationTicks: 20,
-            concentrationSavingThrowMode: "advantage",
-            lastResult: "extendedCreatureSizeIncrease",
-          },
           discover: () =>
             extendedCreatureSizeProjection(
               resolveExtendedCreatureSizeIncrease(),
@@ -91,7 +107,67 @@ defineSelectedIdentityWitness({
   ],
 });
 
+it(
+  "compares Extended Spell duration-projection public reducer route to copied qRoute",
+  async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "stepRouteSpellDurationProjection",
+      driver: createExtendedMetamagicRouteReplayDriver(),
+      backend: "typescript",
+      nTraces: 1,
+      maxSteps: focusedMbtMaxSteps(1),
+      stateCheck: reducerRoutedMetamagicStateCheck,
+    });
+  },
+  MBT_TEST_TIMEOUT_MS,
+);
+
 function resolveExtendedCreatureSizeIncrease(): BattleState {
+  return resolveExtendedCreatureSizeIncreaseSubject().state;
+}
+
+function observeExtendedCreatureSizeIncreaseRoute() {
+  const resolved = resolveExtendedCreatureSizeIncreaseSubject();
+  return [
+    battleReducerStartRouteEvent(),
+    ...(resolved.act.routeEvents ?? []),
+    ...(resolved.routeEvents ?? []),
+  ];
+}
+
+function createExtendedMetamagicRouteReplayDriver() {
+  return defineDriver(extendedMetamagicRouteReplayDriverSchema, () => {
+    let route: readonly BattleReducerRouteEvent[] =
+      observeExtendedCreatureSizeIncreaseInitialRoute();
+
+    function reset(): void {
+      route = observeExtendedCreatureSizeIncreaseInitialRoute();
+    }
+
+    function recordResolvedRoute(): void {
+      route = observeExtendedCreatureSizeIncreaseRoute();
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doRouteSpellDurationProjection: recordResolvedRoute,
+      getState: (): ExtendedMetamagicRouteReplayProjection => ({ route }),
+    };
+  });
+}
+
+function observeExtendedCreatureSizeIncreaseInitialRoute() {
+  return [battleReducerStartRouteEvent()];
+}
+
+function resolveExtendedCreatureSizeIncreaseSubject() {
   const spell = spellRecord(enlargeReduceUnitId);
   const state = spellBattle({
     preparedSpells: [spell],
@@ -138,7 +214,7 @@ function resolveExtendedCreatureSizeIncrease(): BattleState {
       `Expected Extended Enlarge/Reduce to resolve, got ${resolved.tag}.`,
     );
   }
-  return resolved.state;
+  return { initialState: state, act: extendedAct, ...resolved };
 }
 
 function extendedMetamagicOption(): CharacterBattleMetamagicOptionFact {

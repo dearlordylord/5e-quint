@@ -1,5 +1,5 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt short-rest-spell-slot-recovery wizard_arcane_recovery
-// UNIT-IDENTITY-MBT-REPLAY: short-rest-spell-slot-recovery wizard_arcane_recovery doRecoverSecondLevelSpellSlot doResetArcaneRecoveryOnLongRest doRejectPactSlotArcaneRecovery
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay short-rest-spell-slot-recovery wizard_arcane_recovery
+// UNIT-IDENTITY-REPLAY: short-rest-spell-slot-recovery wizard_arcane_recovery doRecoverSecondLevelSpellSlot doResetArcaneRecoveryOnLongRest doRejectPactSlotArcaneRecovery
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
@@ -174,7 +174,7 @@ const selectedUnitIdentityReplays = [
   },
 ] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
 
-describe("Character Sheet Arcane Recovery selected identity MBT", () => {
+describe("Character Sheet Arcane Recovery selected identity replay", () => {
   it("replays selected Unit identities deterministically", async () => {
     for (const replay of selectedUnitIdentityReplays) {
       const replayedActions =

@@ -47,6 +47,7 @@ import {
   applyLayOnHands,
   characterSheetAbilityCheckAbility,
   characterSheetAbilityCheckProficiencyBonus,
+  characterSheetArmorClassProjection,
   characterSheetArmorClassState,
   characterSheetClassFeaturePreparedSpellAccessesForBuild,
   characterSheetCurrentHp,
@@ -64,8 +65,11 @@ import {
   characterSheetSpellInvocation,
   characterSheetSpellSlotSourceState,
   characterSheetSpellSlots,
+  completeLongRestArcaneRecoveryResetWithRoute as completeLongRestArcaneRecoveryResetWithRouteCore,
+  completeLongRestWeaponMasteryReselectionWithRoute as completeLongRestWeaponMasteryReselectionWithRouteCore,
   completeLongRest as completeLongRestCore,
   completeMagicalCunningRite,
+  completeShortRestArcaneRecoveryWithRoute as completeShortRestArcaneRecoveryWithRouteCore,
   completeShortRest as completeShortRestCore,
   convertFontOfMagicSpellSlotToSorceryPoints,
   convertFontOfMagicSorceryPointsToSpellSlot,
@@ -126,6 +130,7 @@ export {
   applyLayOnHands,
   characterSheetAbilityCheckAbility,
   characterSheetAbilityCheckProficiencyBonus,
+  characterSheetArmorClassProjection,
   characterSheetArmorClassState,
   characterSheetClassFeaturePreparedSpellAccessesForBuild,
   characterSheetCurrentHp,
@@ -338,6 +343,84 @@ export function completeLongRest(
   });
 }
 
+export function completeShortRestArcaneRecoveryWithRoute(
+  input: Omit<CharacterSheetShortRestInput, "completion" | "arcaneRecovery"> & {
+    readonly sheet: CharacterSheet;
+    readonly restedTicks?: ElapsedTimeTicks;
+    readonly arcaneRecovery: NonNullable<
+      CharacterSheetShortRestInput["arcaneRecovery"]
+    >;
+  },
+) {
+  const { sheet, restedTicks, ...benefits } = input;
+  const rest = requireRight(startShortRest({ sheet }));
+  const completion = requireRight(
+    finishShortRest({
+      rest,
+      restedTicks: restedTicks ?? CHARACTER_SHEET_SHORT_REST_TICKS,
+    }),
+  );
+  return completeShortRestArcaneRecoveryWithRouteCore({
+    ...benefits,
+    completion,
+  });
+}
+
+export function completeLongRestArcaneRecoveryResetWithRoute(
+  input: Omit<CharacterSheetLongRestInput, "completion"> & {
+    readonly sheet: CharacterSheet;
+    readonly restedTicks?: ElapsedTimeTicks;
+    readonly timing?: CharacterSheetLongRestStartTiming;
+  },
+) {
+  const { sheet, restedTicks, timing, ...benefits } = input;
+  const rest = requireRight(
+    startLongRest({
+      sheet,
+      timing: timing ?? { tag: "noPriorLongRest" },
+    }),
+  );
+  const completion = requireRight(
+    finishLongRest({
+      rest,
+      restedTicks: restedTicks ?? rest.requiredRestTicks,
+    }),
+  );
+  return completeLongRestArcaneRecoveryResetWithRouteCore({
+    ...benefits,
+    completion,
+  });
+}
+
+export function completeLongRestWeaponMasteryReselectionWithRoute(
+  input: Omit<CharacterSheetLongRestInput, "completion"> & {
+    readonly sheet: CharacterSheet;
+    readonly weaponMasteryReselections: NonNullable<
+      CharacterSheetLongRestInput["weaponMasteryReselections"]
+    >;
+    readonly restedTicks?: ElapsedTimeTicks;
+    readonly timing?: CharacterSheetLongRestStartTiming;
+  },
+) {
+  const { sheet, restedTicks, timing, ...benefits } = input;
+  const rest = requireRight(
+    startLongRest({
+      sheet,
+      timing: timing ?? { tag: "noPriorLongRest" },
+    }),
+  );
+  const completion = requireRight(
+    finishLongRest({
+      rest,
+      restedTicks: restedTicks ?? rest.requiredRestTicks,
+    }),
+  );
+  return completeLongRestWeaponMasteryReselectionWithRouteCore({
+    ...benefits,
+    completion,
+  });
+}
+
 export function interruptShortRest(input: {
   readonly sheet: CharacterSheet;
   readonly interruption: CharacterSheetShortRestInterruption;
@@ -432,7 +515,7 @@ export function spellbookRitualSheet(input: {
           },
         },
       },
-      currentHp: Hp(8),
+      currentHp: Hp(7),
       tempHp: Hp(0),
       unitLibrary,
     }),

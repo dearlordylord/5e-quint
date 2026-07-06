@@ -142,7 +142,7 @@ module unitFeaturePoolCostCore {
       state.occurrence == NoInnateSorceryOccurrence,
     }
     {
-      turn: if (admitted) spendActionCost(state.turn, BonusActionCost) else state.turn,
+      turn: if (admitted) spendActionCost(state.turn, BonusActionCost).turn else state.turn,
       pool: if (admitted) spendFeatureUsePool(state.pool) else state.pool,
       occurrence: if (admitted) InnateSorceryOneMinuteDuration else state.occurrence,
     }
@@ -168,7 +168,7 @@ module unitFeaturePoolCostCore {
       canSpendBonusAction(turn),
       pool.usesRemaining > 0,
     }
-    val spentTurn = if (admitted) spendActionCost(turn, BonusActionCost) else turn
+    val spentTurn = if (admitted) spendActionCost(turn, BonusActionCost).turn else turn
     val spentPool = if (admitted) spendFeatureUsePool(pool) else pool
     {
       turn: spentTurn,

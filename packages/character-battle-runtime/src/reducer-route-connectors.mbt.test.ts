@@ -4,6 +4,35 @@ import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import type { SimpleActionMap, SimpleDriver } from "@firfi/quint-connect";
 import { describe, expect, it } from "vitest";
 
+import {
+  characterBattleEncounterCompositionRouteStep,
+  characterBattleInitProjectionRouteStep,
+  characterBattleSettlementRouteStep,
+  characterSessionSheetDerivedBattleActsRouteStep,
+  CHARACTER_BATTLE_SETTLEMENT_ROUTE_ACTIONS,
+  composeBattleEncounterRoute as composeBattleEncounter,
+  enterBattleRuntimeRoute as enterBattleRuntime,
+  initialCharacterBattleEncounterCompositionRoute,
+  initialCharacterBattleInitProjectionRoute,
+  initialCharacterBattleSettlementRoute,
+  initialCharacterSessionSheetDerivedBattleActsRoute,
+  projectCharacterSheetToBattleRoute as projectCharacterSheetToBattle,
+  recordCharacterBattleHandoffFactsRoute as recordCharacterBattleHandoffFacts,
+  rejectCharacterBattleHandoffRoute as rejectCharacterBattleHandoff,
+  settleBattleToCharacterSheetRoute as settleBattleToCharacterSheet,
+  type CharacterBattleEncounterCompositionRouteAction,
+  type CharacterBattleInitProjectionRouteAction,
+  type CharacterBattleRouteCompositionFact,
+  type CharacterBattleRouteEvent,
+  type CharacterBattleRouteFill,
+  type CharacterBattleRouteHandoffFact,
+  type CharacterBattleRouteHole,
+  type CharacterBattleRouteOwner,
+  type CharacterBattleRouteSubject,
+  type CharacterBattleSettlementRouteAction,
+  type CharacterSessionSheetDerivedBattleActsRouteAction,
+} from "./index.ts";
+
 const MBT_TEST_TIMEOUT_MS = 120_000;
 
 const SUBJECT_BY_TAG = {
@@ -20,8 +49,6 @@ const SUBJECT_BY_TAG = {
     "handoffSubjectProfileAvailability",
   HandoffInitiativeCurrentActorRouteSubject: "handoffInitiativeCurrentActor",
 } as const;
-type CharacterBattleRouteSubject =
-  (typeof SUBJECT_BY_TAG)[keyof typeof SUBJECT_BY_TAG];
 
 const HOLE_BY_TAG = {
   HandoffIdentityMatchHoleFamily: "identityMatch",
@@ -30,8 +57,6 @@ const HOLE_BY_TAG = {
   HandoffFeatureResourceProjectionHoleFamily: "featureResourceProjection",
   HandoffSettlementConflictHoleFamily: "settlementConflict",
 } as const;
-type CharacterBattleRouteHole =
-  (typeof HOLE_BY_TAG)[keyof typeof HOLE_BY_TAG];
 
 const FILL_BY_TAG = {
   HandoffSheetProjectionFill: "sheetProjection",
@@ -39,8 +64,6 @@ const FILL_BY_TAG = {
   HandoffResourceDeltaFill: "resourceDelta",
   HandoffSettlementRejectionFill: "settlementRejection",
 } as const;
-type CharacterBattleRouteFill =
-  (typeof FILL_BY_TAG)[keyof typeof FILL_BY_TAG];
 
 const COMPOSITION_FACT_BY_TAG = {
   SheetDerivedParticipantCandidateRouteFact:
@@ -55,8 +78,6 @@ const COMPOSITION_FACT_BY_TAG = {
     "stableInitiativeOrderOwnership",
   CurrentActorOwnershipRouteFact: "currentActorOwnership",
 } as const;
-type CharacterBattleRouteCompositionFact =
-  (typeof COMPOSITION_FACT_BY_TAG)[keyof typeof COMPOSITION_FACT_BY_TAG];
 
 const HANDOFF_FACT_BY_TAG = {
   HandoffSelectedReferenceRetentionFact: "selectedReferenceRetention",
@@ -67,8 +88,6 @@ const HANDOFF_FACT_BY_TAG = {
   HandoffZeroHpStableLifecycleFact: "zeroHpStableLifecycle",
   HandoffBuildHitPointMaximumInputFact: "buildHitPointMaximumInput",
 } as const;
-type CharacterBattleRouteHandoffFact =
-  (typeof HANDOFF_FACT_BY_TAG)[keyof typeof HANDOFF_FACT_BY_TAG];
 
 const OWNER_BY_TAG = {
   CharacterBattleSheetOwner: "characterBattleSheet",
@@ -81,46 +100,6 @@ const OWNER_BY_TAG = {
   CharacterBattleSubjectProfileOwner: "characterBattleSubjectProfile",
   CharacterBattleInitiativeOwner: "characterBattleInitiative",
 } as const;
-type CharacterBattleRouteOwner =
-  (typeof OWNER_BY_TAG)[keyof typeof OWNER_BY_TAG];
-
-type CharacterBattleRouteEvent =
-  | {
-      readonly kind: "projectCharacterSheetToBattle";
-      readonly subject: CharacterBattleRouteSubject;
-      readonly owner: CharacterBattleRouteOwner;
-    }
-  | {
-      readonly kind: "enterBattleRuntime";
-      readonly subject: CharacterBattleRouteSubject;
-      readonly owner: CharacterBattleRouteOwner;
-    }
-  | {
-      readonly kind: "composeBattleEncounter";
-      readonly subject: CharacterBattleRouteSubject;
-      readonly facts: readonly CharacterBattleRouteCompositionFact[];
-      readonly owner: CharacterBattleRouteOwner;
-    }
-  | {
-      readonly kind: "settleBattleToCharacterSheet";
-      readonly subject: CharacterBattleRouteSubject;
-      readonly fill: CharacterBattleRouteFill;
-      readonly holes: readonly CharacterBattleRouteHole[];
-      readonly owner: CharacterBattleRouteOwner;
-    }
-  | {
-      readonly kind: "rejectCharacterBattleHandoff";
-      readonly subject: CharacterBattleRouteSubject;
-      readonly fill: CharacterBattleRouteFill;
-      readonly holes: readonly CharacterBattleRouteHole[];
-      readonly owner: CharacterBattleRouteOwner;
-    }
-  | {
-      readonly kind: "recordCharacterBattleHandoffFacts";
-      readonly subject: CharacterBattleRouteSubject;
-      readonly facts: readonly CharacterBattleRouteHandoffFact[];
-      readonly owner: CharacterBattleRouteOwner;
-    };
 
 type RouteProjection = {
   readonly route: readonly CharacterBattleRouteEvent[];
@@ -165,6 +144,13 @@ const encounterCompositionRouteDriverSchema = {
   doComposeSubjectProfiles: {},
   doComposeInitiativeCurrentActor: {},
   doEnterComposedBattleRuntime: {},
+  step: {},
+} as const;
+
+const sheetDerivedBattleActsRouteDriverSchema = {
+  init: {},
+  doEnterSheetDerivedSessionBattle: {},
+  doSettleSheetDerivedSpellSlot: {},
   step: {},
 } as const;
 
@@ -228,7 +214,7 @@ describe("character battle reducer route connector MBT", () => {
       driver: createIndexedRouteDriver(
         battleInitRouteDriverSchema,
         battleInitRouteActions,
-        initialBattleInitRoute,
+        initialCharacterBattleInitProjectionRoute,
       ),
       maxSteps: 6,
     });
@@ -253,9 +239,21 @@ describe("character battle reducer route connector MBT", () => {
       driver: createIndexedRouteDriver(
         encounterCompositionRouteDriverSchema,
         encounterCompositionRouteActions,
-        initialEncounterCompositionRoute,
+        initialCharacterBattleEncounterCompositionRoute,
       ),
       maxSteps: 5,
+    });
+  }, MBT_TEST_TIMEOUT_MS);
+
+  it("routes sheet-derived battle acts and source-exact slot settlement", async () => {
+    await runRouteMbt({
+      specFileName: "character-session-sheet-derived-battle-acts.route.mbt.qnt",
+      driver: createIndexedRouteDriver(
+        sheetDerivedBattleActsRouteDriverSchema,
+        sheetDerivedBattleActsRouteActions,
+        initialCharacterSessionSheetDerivedBattleActsRoute,
+      ),
+      maxSteps: 2,
     });
   }, MBT_TEST_TIMEOUT_MS);
 
@@ -265,7 +263,7 @@ describe("character battle reducer route connector MBT", () => {
       driver: createIndexedRouteDriver(
         settlementRouteDriverSchema,
         settlementRouteActions,
-        initialBattleSettlementRoute,
+        initialCharacterBattleSettlementRoute,
       ),
       maxSteps: 11,
     });
@@ -301,21 +299,29 @@ const battleInitRouteActions = indexedActionEntries(
   [
     [
       "doProjectSheetHitPointsArmorClassConditionsAndProfiles",
-      sheetHitPointsArmorClassConditionsAndProfilesRoute,
+      initProjectionRouteStep(
+        "doProjectSheetHitPointsArmorClassConditionsAndProfiles",
+      ),
     ],
     [
       "doProjectSheetSpellcastingAndMetamagic",
-      sheetSpellcastingAndMetamagicRoute,
+      initProjectionRouteStep("doProjectSheetSpellcastingAndMetamagic"),
     ],
-    ["doProjectPurePactMagicSlot", purePactMagicSlotRoute],
+    [
+      "doProjectPurePactMagicSlot",
+      initProjectionRouteStep("doProjectPurePactMagicSlot"),
+    ],
     [
       "doRejectMixedSpellAndPactSlotInit",
-      rejectMixedSpellAndPactSlotRoute,
+      initProjectionRouteStep("doRejectMixedSpellAndPactSlotInit"),
     ],
-    ["doRejectBuildMaximumAboveBuildMaximum", rejectMaximumRoute],
+    [
+      "doRejectBuildMaximumAboveBuildMaximum",
+      initProjectionRouteStep("doRejectBuildMaximumAboveBuildMaximum"),
+    ],
     [
       "doRejectStableRecoveryProgressDuringInit",
-      rejectStableRecoveryRoute,
+      initProjectionRouteStep("doRejectStableRecoveryProgressDuringInit"),
     ],
   ],
 );
@@ -330,42 +336,45 @@ const encounterCompositionRouteActions = indexedActionEntries(
   [
     [
       "doProjectSheetCombatantForEncounter",
-      projectSheetCombatantForEncounterRoute,
+      encounterCompositionRouteStep("doProjectSheetCombatantForEncounter"),
     ],
-    ["doComposeParticipantMembership", composeParticipantMembershipRoute],
-    ["doComposeSubjectProfiles", composeSubjectProfilesRoute],
+    [
+      "doComposeParticipantMembership",
+      encounterCompositionRouteStep("doComposeParticipantMembership"),
+    ],
+    [
+      "doComposeSubjectProfiles",
+      encounterCompositionRouteStep("doComposeSubjectProfiles"),
+    ],
     [
       "doComposeInitiativeCurrentActor",
-      composeInitiativeCurrentActorRoute,
+      encounterCompositionRouteStep("doComposeInitiativeCurrentActor"),
     ],
-    ["doEnterComposedBattleRuntime", enterComposedBattleRuntimeRoute],
+    [
+      "doEnterComposedBattleRuntime",
+      encounterCompositionRouteStep("doEnterComposedBattleRuntime"),
+    ],
+  ],
+);
+
+const sheetDerivedBattleActsRouteActions = indexedActionEntries(
+  sheetDerivedBattleActsRouteDriverSchema,
+  [
+    [
+      "doEnterSheetDerivedSessionBattle",
+      sheetDerivedBattleActsRouteStep("doEnterSheetDerivedSessionBattle"),
+    ],
+    [
+      "doSettleSheetDerivedSpellSlot",
+      sheetDerivedBattleActsRouteStep("doSettleSheetDerivedSpellSlot"),
+    ],
   ],
 );
 
 const settlementRouteActions = indexedActionEntries(settlementRouteDriverSchema, [
-  [
-    "doSettleHitPointsConditionsSlotsAndPreservedSheetState",
-    settleHitPointsConditionsSlotsAndPreservedSheetStateRoute,
-  ],
-  [
-    "doSettlePurePactMagicSlotExpenditure",
-    settlePurePactMagicSlotExpenditureRoute,
-  ],
-  [
-    "doRejectMixedSpellAndPactSlotSettlement",
-    rejectMixedSpellAndPactSlotSettlementRoute,
-  ],
-  ["doSettleFeatureResourceExpenditure", settleFeatureResourceExpenditureRoute],
-  [
-    "doRejectAmbiguousCreatedSpellSlotSource",
-    rejectAmbiguousCreatedSpellSlotSourceRoute,
-  ],
-  ["doRejectMismatchedCharacterIdentity", rejectIdentityMismatchRoute],
-  ["doRejectMaximumHpDrift", rejectMaximumHpDriftRoute],
-  ["doRejectActiveWildShapeHandoff", rejectSettlementConflictRoute],
-  ["doRejectActiveBattleStateHandoff", rejectSettlementConflictRoute],
-  ["doRejectStableRecoveryProgressHandoff", rejectSettlementConflictRoute],
-  ["doSettleZeroHpStableLifecycle", settleZeroHpStableLifecycleRoute],
+  ...CHARACTER_BATTLE_SETTLEMENT_ROUTE_ACTIONS.map(
+    (action) => [action, settlementRouteStep(action)] as const,
+  ),
 ]);
 
 const lifecycleRouteActions = indexedActionEntries(lifecycleRouteDriverSchema, [
@@ -417,29 +426,32 @@ const featureResourceRouteActions = indexedActionEntries(
   ],
 );
 
-function initialBattleInitRoute(): readonly CharacterBattleRouteEvent[] {
-  return [];
+function initProjectionRouteStep(
+  action: CharacterBattleInitProjectionRouteAction,
+): RouteAppender {
+  return (route) => characterBattleInitProjectionRouteStep(route, action);
 }
 
 function initialOriginFeatRoute(): readonly CharacterBattleRouteEvent[] {
   return [];
 }
 
-function initialEncounterCompositionRoute(): readonly CharacterBattleRouteEvent[] {
-  return [];
+function encounterCompositionRouteStep(
+  action: CharacterBattleEncounterCompositionRouteAction,
+): RouteAppender {
+  return (route) => characterBattleEncounterCompositionRouteStep(route, action);
 }
 
-function initialBattleSettlementRoute(): readonly CharacterBattleRouteEvent[] {
-  return [
-    projectCharacterSheetToBattle({
-      subject: "sheetToBattleInit",
-      owner: "characterBattleSheet",
-    }),
-    enterBattleRuntime({
-      subject: "handoffBattleMutation",
-      owner: "characterBattleRuntime",
-    }),
-  ];
+function sheetDerivedBattleActsRouteStep(
+  action: CharacterSessionSheetDerivedBattleActsRouteAction,
+): RouteAppender {
+  return (route) => characterSessionSheetDerivedBattleActsRouteStep(route, action);
+}
+
+function settlementRouteStep(
+  action: CharacterBattleSettlementRouteAction,
+): RouteAppender {
+  return (route) => characterBattleSettlementRouteStep(route, action);
 }
 
 function initialCharacterLayerRoute(): readonly CharacterBattleRouteEvent[] {
@@ -451,124 +463,6 @@ function initialFeatureResourceHandoffRoute(): readonly CharacterBattleRouteEven
     projectCharacterSheetToBattle({
       subject: "handoffFeatureResourceProjection",
       owner: "characterBattleSheet",
-    }),
-  ];
-}
-
-function sheetHitPointsArmorClassConditionsAndProfilesRoute(
-  route: readonly CharacterBattleRouteEvent[],
-): readonly CharacterBattleRouteEvent[] {
-  return [
-    ...route,
-    projectCharacterSheetToBattle({
-      subject: "sheetToBattleInit",
-      owner: "characterBattleSheet",
-    }),
-    projectCharacterSheetToBattle({
-      subject: "sheetToBattleInit",
-      owner: "characterBattleBuildProjection",
-    }),
-    recordCharacterBattleHandoffFacts({
-      subject: "sheetToBattleInit",
-      facts: ["buildHitPointMaximumInput"],
-      owner: "characterBattleBuildProjection",
-    }),
-    enterBattleRuntime({
-      subject: "sheetToBattleInit",
-      owner: "characterBattleInitProjection",
-    }),
-  ];
-}
-
-function sheetSpellcastingAndMetamagicRoute(
-  route: readonly CharacterBattleRouteEvent[],
-): readonly CharacterBattleRouteEvent[] {
-  return [
-    ...route,
-    projectCharacterSheetToBattle({
-      subject: "handoffResourceProjection",
-      owner: "characterBattleSheet",
-    }),
-    projectCharacterSheetToBattle({
-      subject: "handoffFeatureResourceProjection",
-      owner: "characterBattleResourceProjection",
-    }),
-    recordCharacterBattleHandoffFacts({
-      subject: "handoffResourceProjection",
-      facts: ["sourceExactSpellSlotDelta"],
-      owner: "characterBattleResourceProjection",
-    }),
-    recordCharacterBattleHandoffFacts({
-      subject: "handoffFeatureResourceProjection",
-      facts: ["featureResourceDelta"],
-      owner: "characterBattleResourceProjection",
-    }),
-    enterBattleRuntime({
-      subject: "handoffResourceProjection",
-      owner: "characterBattleInitProjection",
-    }),
-  ];
-}
-
-function purePactMagicSlotRoute(
-  route: readonly CharacterBattleRouteEvent[],
-): readonly CharacterBattleRouteEvent[] {
-  return [
-    ...route,
-    projectCharacterSheetToBattle({
-      subject: "handoffResourceProjection",
-      owner: "characterBattleResourceProjection",
-    }),
-    recordCharacterBattleHandoffFacts({
-      subject: "handoffResourceProjection",
-      facts: ["sourceExactPactSlotDelta"],
-      owner: "characterBattleResourceProjection",
-    }),
-    enterBattleRuntime({
-      subject: "handoffResourceProjection",
-      owner: "characterBattleInitProjection",
-    }),
-  ];
-}
-
-function rejectMixedSpellAndPactSlotRoute(
-  route: readonly CharacterBattleRouteEvent[],
-): readonly CharacterBattleRouteEvent[] {
-  return [
-    ...route,
-    rejectCharacterBattleHandoff({
-      subject: "handoffResourceProjection",
-      fill: "resourceDelta",
-      holes: ["spellResourceProjection"],
-      owner: "characterBattleResourceProjection",
-    }),
-  ];
-}
-
-function rejectMaximumRoute(
-  route: readonly CharacterBattleRouteEvent[],
-): readonly CharacterBattleRouteEvent[] {
-  return [
-    ...route,
-    rejectCharacterBattleHandoff({
-      subject: "sheetToBattleInit",
-      fill: "sheetProjection",
-      holes: ["hitPointProjection"],
-      owner: "characterBattleBuildProjection",
-    }),
-  ];
-}
-
-function rejectStableRecoveryRoute(
-  route: readonly CharacterBattleRouteEvent[],
-): readonly CharacterBattleRouteEvent[] {
-  return [
-    ...route,
-    rejectCharacterBattleHandoff({
-      subject: "sheetToBattleInit",
-      fill: "sheetProjection",
-      holes: ["settlementConflict"],
-      owner: "characterBattleInitProjection",
     }),
   ];
 }
@@ -602,248 +496,6 @@ function projectInitiativeHandoffRoute(
     enterBattleRuntime({
       subject: "handoffSelectedReference",
       owner: "characterBattleRuntime",
-    }),
-  ];
-}
-
-function projectSheetCombatantForEncounterRoute(
-  route: readonly CharacterBattleRouteEvent[],
-): readonly CharacterBattleRouteEvent[] {
-  return [
-    ...route,
-    projectCharacterSheetToBattle({
-      subject: "sheetToBattleInit",
-      owner: "characterBattleInitProjection",
-    }),
-  ];
-}
-
-function composeParticipantMembershipRoute(
-  route: readonly CharacterBattleRouteEvent[],
-): readonly CharacterBattleRouteEvent[] {
-  return [
-    ...route,
-    composeBattleEncounter({
-      subject: "handoffParticipantMembership",
-      facts: [
-        "encounterSideRelationshipOwnership",
-        "nonSheetParticipantMembership",
-        "sheetDerivedParticipantCandidate",
-      ],
-      owner: "characterBattleEncounterSetup",
-    }),
-  ];
-}
-
-function composeSubjectProfilesRoute(
-  route: readonly CharacterBattleRouteEvent[],
-): readonly CharacterBattleRouteEvent[] {
-  return [
-    ...route,
-    composeBattleEncounter({
-      subject: "handoffSubjectProfileAvailability",
-      facts: ["subjectProfileAvailabilityOwnership"],
-      owner: "characterBattleSubjectProfile",
-    }),
-  ];
-}
-
-function composeInitiativeCurrentActorRoute(
-  route: readonly CharacterBattleRouteEvent[],
-): readonly CharacterBattleRouteEvent[] {
-  return [
-    ...route,
-    composeBattleEncounter({
-      subject: "handoffInitiativeCurrentActor",
-      facts: [
-        "currentActorOwnership",
-        "initiativeCountOwnership",
-        "stableInitiativeOrderOwnership",
-      ],
-      owner: "characterBattleInitiative",
-    }),
-  ];
-}
-
-function enterComposedBattleRuntimeRoute(
-  route: readonly CharacterBattleRouteEvent[],
-): readonly CharacterBattleRouteEvent[] {
-  return [
-    ...route,
-    enterBattleRuntime({
-      subject: "handoffEncounterComposition",
-      owner: "characterBattleRuntime",
-    }),
-  ];
-}
-
-function settleHitPointsConditionsSlotsAndPreservedSheetStateRoute(
-  route: readonly CharacterBattleRouteEvent[],
-): readonly CharacterBattleRouteEvent[] {
-  return [
-    ...route,
-    settleBattleToCharacterSheet({
-      subject: "battleToSheetSettlement",
-      fill: "battleDelta",
-      holes: [],
-      owner: "characterBattleSettlement",
-    }),
-    settleBattleToCharacterSheet({
-      subject: "handoffResourceProjection",
-      fill: "resourceDelta",
-      holes: [],
-      owner: "characterBattleResourceProjection",
-    }),
-    recordCharacterBattleHandoffFacts({
-      subject: "handoffResourceProjection",
-      facts: ["sourceExactPactSlotDelta", "sourceExactSpellSlotDelta"],
-      owner: "characterBattleResourceProjection",
-    }),
-    projectCharacterSheetToBattle({
-      subject: "sheetToBattleInit",
-      owner: "characterBattleSheet",
-    }),
-  ];
-}
-
-function settleFeatureResourceExpenditureRoute(
-  route: readonly CharacterBattleRouteEvent[],
-): readonly CharacterBattleRouteEvent[] {
-  return [
-    ...route,
-    settleBattleToCharacterSheet({
-      subject: "handoffFeatureResourceProjection",
-      fill: "resourceDelta",
-      holes: [],
-      owner: "characterBattleResourceProjection",
-    }),
-    recordCharacterBattleHandoffFacts({
-      subject: "handoffFeatureResourceProjection",
-      facts: ["featureResourceDelta"],
-      owner: "characterBattleResourceProjection",
-    }),
-  ];
-}
-
-function settlePurePactMagicSlotExpenditureRoute(
-  route: readonly CharacterBattleRouteEvent[],
-): readonly CharacterBattleRouteEvent[] {
-  return [
-    ...route,
-    settleBattleToCharacterSheet({
-      subject: "handoffResourceProjection",
-      fill: "resourceDelta",
-      holes: [],
-      owner: "characterBattleResourceProjection",
-    }),
-    recordCharacterBattleHandoffFacts({
-      subject: "handoffResourceProjection",
-      facts: ["sourceExactPactSlotDelta"],
-      owner: "characterBattleResourceProjection",
-    }),
-  ];
-}
-
-function rejectMixedSpellAndPactSlotSettlementRoute(
-  route: readonly CharacterBattleRouteEvent[],
-): readonly CharacterBattleRouteEvent[] {
-  return [
-    ...route,
-    rejectCharacterBattleHandoff({
-      subject: "handoffResourceProjection",
-      fill: "settlementRejection",
-      holes: ["settlementConflict", "spellResourceProjection"],
-      owner: "characterBattleResourceProjection",
-    }),
-    recordCharacterBattleHandoffFacts({
-      subject: "handoffResourceProjection",
-      facts: ["settlementConflict"],
-      owner: "characterBattleResourceProjection",
-    }),
-  ];
-}
-
-function rejectAmbiguousCreatedSpellSlotSourceRoute(
-  route: readonly CharacterBattleRouteEvent[],
-): readonly CharacterBattleRouteEvent[] {
-  return [
-    ...route,
-    rejectCharacterBattleHandoff({
-      subject: "handoffResourceProjection",
-      fill: "settlementRejection",
-      holes: ["spellResourceProjection", "settlementConflict"],
-      owner: "characterBattleResourceProjection",
-    }),
-    recordCharacterBattleHandoffFacts({
-      subject: "handoffResourceProjection",
-      facts: ["settlementConflict"],
-      owner: "characterBattleResourceProjection",
-    }),
-  ];
-}
-
-function rejectIdentityMismatchRoute(
-  route: readonly CharacterBattleRouteEvent[],
-): readonly CharacterBattleRouteEvent[] {
-  return [
-    ...route,
-    rejectCharacterBattleHandoff({
-      subject: "battleToSheetSettlement",
-      fill: "settlementRejection",
-      holes: ["identityMatch"],
-      owner: "characterBattleSettlement",
-    }),
-  ];
-}
-
-function rejectMaximumHpDriftRoute(
-  route: readonly CharacterBattleRouteEvent[],
-): readonly CharacterBattleRouteEvent[] {
-  return [
-    ...route,
-    rejectCharacterBattleHandoff({
-      subject: "battleToSheetSettlement",
-      fill: "settlementRejection",
-      holes: ["hitPointProjection"],
-      owner: "characterBattleSettlement",
-    }),
-  ];
-}
-
-function rejectSettlementConflictRoute(
-  route: readonly CharacterBattleRouteEvent[],
-): readonly CharacterBattleRouteEvent[] {
-  return [
-    ...route,
-    rejectCharacterBattleHandoff({
-      subject: "battleToSheetSettlement",
-      fill: "settlementRejection",
-      holes: ["settlementConflict"],
-      owner: "characterBattleSettlement",
-    }),
-    recordCharacterBattleHandoffFacts({
-      subject: "battleToSheetSettlement",
-      facts: ["settlementConflict"],
-      owner: "characterBattleSettlement",
-    }),
-  ];
-}
-
-function settleZeroHpStableLifecycleRoute(
-  route: readonly CharacterBattleRouteEvent[],
-): readonly CharacterBattleRouteEvent[] {
-  return [
-    ...route,
-    settleBattleToCharacterSheet({
-      subject: "battleToSheetSettlement",
-      fill: "battleDelta",
-      holes: [],
-      owner: "characterBattleSettlement",
-    }),
-    recordCharacterBattleHandoffFacts({
-      subject: "battleToSheetSettlement",
-      facts: ["zeroHpStableLifecycle"],
-      owner: "characterBattleSettlement",
     }),
   ];
 }
@@ -1013,84 +665,6 @@ function metamagicBattleBridgeRoute(
       owner: "characterBattleRuntime",
     }),
   ];
-}
-
-function projectCharacterSheetToBattle(input: {
-  readonly subject: CharacterBattleRouteSubject;
-  readonly owner: CharacterBattleRouteOwner;
-}): CharacterBattleRouteEvent {
-  return {
-    kind: "projectCharacterSheetToBattle",
-    subject: input.subject,
-    owner: input.owner,
-  };
-}
-
-function enterBattleRuntime(input: {
-  readonly subject: CharacterBattleRouteSubject;
-  readonly owner: CharacterBattleRouteOwner;
-}): CharacterBattleRouteEvent {
-  return {
-    kind: "enterBattleRuntime",
-    subject: input.subject,
-    owner: input.owner,
-  };
-}
-
-function composeBattleEncounter(input: {
-  readonly subject: CharacterBattleRouteSubject;
-  readonly facts: readonly CharacterBattleRouteCompositionFact[];
-  readonly owner: CharacterBattleRouteOwner;
-}): CharacterBattleRouteEvent {
-  return {
-    kind: "composeBattleEncounter",
-    subject: input.subject,
-    facts: uniqueSorted(input.facts),
-    owner: input.owner,
-  };
-}
-
-function settleBattleToCharacterSheet(input: {
-  readonly subject: CharacterBattleRouteSubject;
-  readonly fill: CharacterBattleRouteFill;
-  readonly holes: readonly CharacterBattleRouteHole[];
-  readonly owner: CharacterBattleRouteOwner;
-}): CharacterBattleRouteEvent {
-  return {
-    kind: "settleBattleToCharacterSheet",
-    subject: input.subject,
-    fill: input.fill,
-    holes: uniqueSorted(input.holes),
-    owner: input.owner,
-  };
-}
-
-function rejectCharacterBattleHandoff(input: {
-  readonly subject: CharacterBattleRouteSubject;
-  readonly fill: CharacterBattleRouteFill;
-  readonly holes: readonly CharacterBattleRouteHole[];
-  readonly owner: CharacterBattleRouteOwner;
-}): CharacterBattleRouteEvent {
-  return {
-    kind: "rejectCharacterBattleHandoff",
-    subject: input.subject,
-    fill: input.fill,
-    holes: uniqueSorted(input.holes),
-    owner: input.owner,
-  };
-}
-
-function recordCharacterBattleHandoffFacts(input: {
-  readonly subject: CharacterBattleRouteSubject;
-  readonly facts: readonly CharacterBattleRouteHandoffFact[];
-  readonly owner: CharacterBattleRouteOwner;
-}): CharacterBattleRouteEvent {
-  return {
-    kind: "recordCharacterBattleHandoffFacts",
-    subject: input.subject,
-    facts: uniqueSorted(input.facts),
-    owner: input.owner,
-  };
 }
 
 function indexedActionEntries<const Schema extends RouteDriverSchema>(

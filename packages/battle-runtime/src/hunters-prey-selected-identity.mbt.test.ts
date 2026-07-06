@@ -1,14 +1,15 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.hunters-prey
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME ranger_hunters_prey
-// UNIT-IDENTITY-MBT-REPLAY: L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME ranger_hunters_prey doColossusSlayer doSkipThenUseColossusSlayer doHordeBreaker doHordeBreakerAfterPrimaryMiss doRejectMissingSelection doRejectSameTarget doRejectInvalidTargetPredicate doSecondHordeBreakerUnavailable
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME ranger_hunters_prey
+// UNIT-IDENTITY-REPLAY: L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME ranger_hunters_prey doColossusSlayer doSkipThenUseColossusSlayer doHordeBreaker doHordeBreakerAfterPrimaryMiss doRejectMissingSelection doRejectSameTarget doRejectInvalidTargetPredicate doSecondHordeBreakerUnavailable
 import { movementFeet } from "@dnd/shared/types";
 
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import type { BattleUnitRef } from "./index.ts";
 import {
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
+  battleUnitRefWithSupportProfiles,
 } from "./unit-feature-support.ts";
 import {
   attackDamageHoleAfterHit,
@@ -20,6 +21,7 @@ import {
   battleId,
   characterSeed,
   damageRollFillWithGroups,
+  Either,
   fighterAttackSubject,
   fighterId,
   goblinId,
@@ -57,10 +59,12 @@ const HUNTERS_PREY_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
   RejectSameTarget: "rejectSameTarget",
   RejectInvalidTargetPredicate: "rejectInvalidTargetPredicate",
   SecondHordeBreakerUnavailable: "secondHordeBreakerUnavailable",
-} as const satisfies Readonly<Record<string, HuntersPreyProjection["lastResult"]>>;
+} as const satisfies Readonly<
+  Record<string, HuntersPreyProjection["lastResult"]>
+>;
 
-defineSelectedIdentityWitness({
-  describeLabel: "Hunter's Prey selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Hunter's Prey selected identity replay",
   taskId: "L3PUTB-07-RANGER-HUNTERS-PREY-RUNTIME",
   specFile: mbtSpecPath(
     import.meta.dirname,
@@ -95,70 +99,34 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doColossusSlayer",
-          projectionAfter: expectedProjection({
-            colossusTargetHp: 1,
-            colossusUsed: true,
-            lastResult: "colossusSlayer",
-          }),
           discover: projectColossusSlayer,
         },
         {
           actionName: "doSkipThenUseColossusSlayer",
-          projectionAfter: expectedProjection({
-            colossusTargetHp: 2,
-            colossusUsed: true,
-            lastResult: "skipThenUseColossusSlayer",
-          }),
           discover: projectSkipThenUseColossusSlayer,
         },
         {
           actionName: "doHordeBreaker",
-          projectionAfter: expectedProjection({
-            hordeTargetHp: 6,
-            hordeBreakerUsed: true,
-            lastResult: "hordeBreaker",
-          }),
           discover: projectHordeBreaker,
         },
         {
           actionName: "doHordeBreakerAfterPrimaryMiss",
-          projectionAfter: expectedProjection({
-            hordeTargetHp: 6,
-            hordeBreakerUsed: true,
-            lastResult: "hordeBreakerAfterPrimaryMiss",
-          }),
           discover: projectHordeBreakerAfterPrimaryMiss,
         },
         {
           actionName: "doRejectMissingSelection",
-          projectionAfter: expectedProjection({
-            lastResult: "rejectMissingSelection",
-            lastInvalidReason: "invalidFill",
-          }),
           discover: projectRejectMissingSelection,
         },
         {
           actionName: "doRejectSameTarget",
-          projectionAfter: expectedProjection({
-            lastResult: "rejectSameTarget",
-            lastInvalidReason: "invalidFill",
-          }),
           discover: projectRejectSameTarget,
         },
         {
           actionName: "doRejectInvalidTargetPredicate",
-          projectionAfter: expectedProjection({
-            lastResult: "rejectInvalidTargetPredicate",
-            lastInvalidReason: "invalidFill",
-          }),
           discover: projectRejectInvalidTargetPredicate,
         },
         {
           actionName: "doSecondHordeBreakerUnavailable",
-          projectionAfter: expectedProjection({
-            hordeBreakerUsed: true,
-            lastResult: "secondHordeBreakerUnavailable",
-          }),
           discover: projectSecondHordeBreakerUnavailable,
         },
       ],
@@ -210,9 +178,7 @@ function projectColossusSlayer(): HuntersPreyProjection {
       fills: [
         targetFill(target, goblinId),
         attackRollFill(roll, { total: 15, naturalD20: 10 }),
-        damageRollFillWithGroups(damage, [[1], [1]], [
-          "ranger_hunters_prey",
-        ]),
+        damageRollFillWithGroups(damage, [[1], [1]], ["ranger_hunters_prey"]),
       ],
     }),
   );
@@ -306,9 +272,11 @@ function projectSkipThenUseColossusSlayer(): HuntersPreyProjection {
       fills: [
         targetFill(secondTarget, skeletonId),
         attackRollFill(secondRoll, { total: 15, naturalD20: 10 }),
-        damageRollFillWithGroups(secondDamage, [[1], [1]], [
-          "ranger_hunters_prey",
-        ]),
+        damageRollFillWithGroups(
+          secondDamage,
+          [[1], [1]],
+          ["ranger_hunters_prey"],
+        ),
       ],
     }),
   );
@@ -332,27 +300,14 @@ function projectHordeBreakerAfterPrimaryMiss(): HuntersPreyProjection {
 }
 
 function projectRejectMissingSelection(): HuntersPreyProjection {
-  const state = startBattleRight({
-    battleId: battleId("battle-hunters-prey-mbt-missing-selection"),
-    combatants: [
-      characterSeed({
-        initiative: 20,
-        characterUnitRefs: [huntersPreyUnitRef()],
-        attack: testLongswordAttack(),
-      }),
-      statBlockCreatureInit({ initiative: 10 }),
-    ],
-  });
-  const subject = fighterAttackSubject("Longsword");
-  const target = attackInitialTargetHole(state, subject);
-  const result = resolveBattleSubject({
-    state,
-    subject,
-    fills: [targetFill(target, goblinId)],
+  const unit = unitLibrary.requireUnit("ranger_hunters_prey");
+  const admitted = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
   });
   return expectedProjection({
     lastResult: "rejectMissingSelection",
-    lastInvalidReason: result.tag === "invalid" ? result.reason : "notInvalid",
+    lastInvalidReason: Either.isLeft(admitted) ? "invalidFill" : "notInvalid",
   });
 }
 
@@ -497,9 +452,10 @@ function hordeBreakerWindow(input: { readonly primaryHit?: boolean } = {}) {
   const state = hordeBreakerBattle();
   const subject = fighterAttackSubject("Longsword");
   const primaryTarget = attackInitialTargetHole(state, subject);
-  const primaryAttackRoll = input.primaryHit === false
-    ? { total: 5, naturalD20: 2 }
-    : { total: 15, naturalD20: 10 };
+  const primaryAttackRoll =
+    input.primaryHit === false
+      ? { total: 5, naturalD20: 2 }
+      : { total: 15, naturalD20: 10 };
   const primaryRoll = attackRollHoleAfterTarget(
     state,
     primaryTarget,
@@ -569,48 +525,43 @@ function hordeBreakerWasUsed(
   );
 }
 
-function huntersPreyUnitRef(optionId?: HuntersPreyOptionId): BattleUnitRef {
+function huntersPreyUnitRef(optionId: HuntersPreyOptionId): BattleUnitRef {
   const unit = unitLibrary.requireUnit("ranger_hunters_prey");
+  const huntersPrey =
+    optionId === "colossusSlayer"
+      ? {
+          kind: "woundedTargetWeaponDamage" as const,
+          trigger: "hitCreatureWithWeapon" as const,
+          targetPredicate: "missingAnyHitPoints" as const,
+          usageLimit: "oncePerTurn" as const,
+          damage: {
+            kind: "addAttackDamageDice" as const,
+            dice: { dice: 1 as const, dieSize: 8 as const },
+            damageType: "sameAsAttack" as const,
+          },
+        }
+      : {
+          kind: "nearbyDifferentTargetSameWeaponAttack" as const,
+          trigger: "makeWeaponAttack" as const,
+          usageLimit: "oncePerTurn" as const,
+          extraAttack: {
+            weapon: "sameWeapon" as const,
+            target: {
+              kind: "differentCreatureNearOriginalTarget" as const,
+              withinFeetOfOriginalTarget: movementFeet(5),
+              withinWeaponRange: true as const,
+              notAttackedThisTurn: true as const,
+            },
+          },
+        };
   return {
     unitId: unit.id,
     supportProfiles: [
       {
         kind: "huntersPrey",
-        huntersPrey: {
-          choice: { kind: "chooseOne", replaceOn: "shortOrLongRest" },
-          options: [
-            {
-              id: "colossusSlayer",
-              trigger: "hitCreatureWithWeapon",
-              targetPredicate: "missingAnyHitPoints",
-              usageLimit: "oncePerTurn",
-              damage: {
-                kind: "addAttackDamageDice",
-                dice: { dice: 1, dieSize: 8 },
-                damageType: "sameAsAttack",
-              },
-            },
-            {
-              id: "hordeBreaker",
-              trigger: "makeWeaponAttack",
-              usageLimit: "oncePerTurn",
-              extraAttack: {
-                weapon: "sameWeapon",
-                target: {
-                  kind: "differentCreatureNearOriginalTarget",
-                  withinFeetOfOriginalTarget: movementFeet(5),
-                  withinWeaponRange: true,
-                  notAttackedThisTurn: true,
-                },
-              },
-            },
-          ],
-        },
+        huntersPrey,
       },
     ],
-    ...(optionId === undefined
-      ? {}
-      : { selectedOption: { kind: "huntersPrey", optionId } }),
   };
 }
 

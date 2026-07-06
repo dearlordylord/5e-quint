@@ -21,7 +21,7 @@ function buildFeatureProcedureMbtEvidenceGate({
     criteria: {
       profileIdPrefix: unitFeatureProfileIdPrefix,
       rowPolicy:
-        "Every supported unit-feature profile fact must emit an obligation evidence row with profile-scoped QNT owners and focused MBT or deterministic QNT replay witnesses, or an explicit gap row.",
+        "Every supported unit-feature profile fact must emit an obligation evidence row with profile-scoped QNT owners and obligation-scoped focused MBT or deterministic QNT replay witnesses, or an explicit gap row.",
       noRuntimeBehavior:
         "This gate is checker/report evidence only and does not change feature reducers, Surface admission, or QNT semantics.",
     },
@@ -41,13 +41,15 @@ function buildFeatureProcedureMbtEvidenceGate({
 function renderFeatureProcedureMbtEvidenceGate(gate) {
   return renderProcedureMbtEvidenceGate({
     description:
-      "This checker-owned report is limited to supported `unit-feature.` profile facts in the level-support scopes. It records each profile's scoped QNT owner evidence plus the rules-kernel parity witness rows for each profile obligation, or emits an explicit gap row. It does not add or change feature behavior.",
+      "This checker-owned report is limited to supported `unit-feature.` profile facts in the level-support scopes. It records each profile's scoped QNT owner evidence plus obligation-scoped rules-kernel parity witness rows for each profile obligation, or emits an explicit gap row. The QNT/MBT witness column is obligation evidence, not a claim that every listed split driver witnesses the specific profile. It does not add or change feature behavior.",
     gate,
     heading: "Feature Procedure QNT/MBT Evidence Gate",
+    includeQntSpecPath: true,
     metricNames,
     statusLineLabel: "Feature procedure QNT/MBT evidence gate",
     summaryProfileColumn: "Feature procedure profiles",
     summaryUnitColumn: "Supported feature Units",
+    witnessColumnLabel: "Obligation QNT/MBT witnesses",
   });
 }
 

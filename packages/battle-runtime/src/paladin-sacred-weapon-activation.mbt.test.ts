@@ -1,13 +1,13 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION paladin_sacred_weapon
-// UNIT-IDENTITY-MBT-REPLAY: L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION paladin_sacred_weapon doActivateSacredWeapon doRejectSacredWeaponNoResource doRejectSacredWeaponRangedWeapon doRecastSacredWeapon
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT paladin_sacred_weapon
-// UNIT-IDENTITY-MBT-REPLAY: L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT paladin_sacred_weapon doProjectSacredWeaponAttackDamageAndLight doDismissSacredWeapon doEndSacredWeaponWhenNotCarryingWeapon
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION paladin_sacred_weapon
+// UNIT-IDENTITY-REPLAY: L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION paladin_sacred_weapon doActivateSacredWeapon doRejectSacredWeaponNoResource doRejectSacredWeaponRangedWeapon doRecastSacredWeapon
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT paladin_sacred_weapon
+// UNIT-IDENTITY-REPLAY: L3CF-04-PALADIN-SACRED-WEAPON-ATTACK-DAMAGE-LIGHT paladin_sacred_weapon doProjectSacredWeaponAttackDamageAndLight doDismissSacredWeapon doEndSacredWeaponWhenNotCarryingWeapon
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.paladin-sacred-weapon
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.paladin-sacred-weapon
 import { describe, expect, test } from "vitest";
 
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
   attackTargetFill,
   battleId,
@@ -237,8 +237,8 @@ describe("Sacred Weapon activation", () => {
   });
 });
 
-defineSelectedIdentityWitness({
-  describeLabel: "Paladin Sacred Weapon selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Paladin Sacred Weapon selected identity replay",
   taskId: "L3CF-03-PALADIN-SACRED-WEAPON-ACTIVATION",
   specFile: mbtSpecPath(
     import.meta.dirname,
@@ -281,16 +281,7 @@ defineSelectedIdentityWitness({
       unitId: paladinSacredWeaponUnitId,
       procedures: [
         {
-          actionName: "doActivateSacredWeapon",
-          projectionAfter: {
-            activationOffered: false,
-            channelDivinityUsesRemaining: 1,
-            boundWeaponItemId: "main:weapon_longsword",
-            activeEffectCount: 1,
-            rejected: false,
-            lastResult: "activated",
-          },
-          discover: () => {
+          actionName: "doActivateSacredWeapon",          discover: () => {
             const state = sacredWeaponBattle({});
             return sacredWeaponProjection(
               resolveSacredWeapon(state, requireSacredWeaponAct(state)),
@@ -299,48 +290,21 @@ defineSelectedIdentityWitness({
           },
         },
         {
-          actionName: "doRejectSacredWeaponNoResource",
-          projectionAfter: {
-            activationOffered: false,
-            channelDivinityUsesRemaining: 0,
-            boundWeaponItemId: "none",
-            activeEffectCount: 0,
-            rejected: true,
-            lastResult: "noResource",
-          },
-          discover: () =>
+          actionName: "doRejectSacredWeaponNoResource",          discover: () =>
             sacredWeaponProjection(
               sacredWeaponBattle({ channelDivinityUsesRemaining: 0 }),
               "noResource",
             ),
         },
         {
-          actionName: "doRejectSacredWeaponRangedWeapon",
-          projectionAfter: {
-            activationOffered: false,
-            channelDivinityUsesRemaining: 2,
-            boundWeaponItemId: "none",
-            activeEffectCount: 0,
-            rejected: true,
-            lastResult: "rangedWeapon",
-          },
-          discover: () =>
+          actionName: "doRejectSacredWeaponRangedWeapon",          discover: () =>
             sacredWeaponProjection(
               sacredWeaponBattle({ weaponUnitId: "weapon_shortbow" }),
               "rangedWeapon",
             ),
         },
         {
-          actionName: "doRecastSacredWeapon",
-          projectionAfter: {
-            activationOffered: false,
-            channelDivinityUsesRemaining: 0,
-            boundWeaponItemId: "second:weapon_longsword",
-            activeEffectCount: 1,
-            rejected: false,
-            lastResult: "recast",
-          },
-          discover: () => {
+          actionName: "doRecastSacredWeapon",          discover: () => {
             const state = sacredWeaponBattle({});
             const first = resolveSacredWeapon(
               state,
@@ -360,16 +324,7 @@ defineSelectedIdentityWitness({
           },
         },
         {
-          actionName: "doProjectSacredWeaponAttackDamageAndLight",
-          projectionAfter: {
-            activationOffered: false,
-            channelDivinityUsesRemaining: 1,
-            boundWeaponItemId: "main:weapon_longsword",
-            activeEffectCount: 1,
-            rejected: false,
-            lastResult: "attackEffects",
-          },
-          discover: () => {
+          actionName: "doProjectSacredWeaponAttackDamageAndLight",          discover: () => {
             const state = sacredWeaponBattle({});
             return sacredWeaponProjection(
               resolveSacredWeapon(state, requireSacredWeaponAct(state)),
@@ -378,16 +333,7 @@ defineSelectedIdentityWitness({
           },
         },
         {
-          actionName: "doDismissSacredWeapon",
-          projectionAfter: {
-            activationOffered: false,
-            channelDivinityUsesRemaining: 1,
-            boundWeaponItemId: "none",
-            activeEffectCount: 0,
-            rejected: false,
-            lastResult: "dismissed",
-          },
-          discover: () => {
+          actionName: "doDismissSacredWeapon",          discover: () => {
             const state = sacredWeaponBattle({});
             const activated = resolveSacredWeapon(
               state,
@@ -409,16 +355,7 @@ defineSelectedIdentityWitness({
           },
         },
         {
-          actionName: "doEndSacredWeaponWhenNotCarryingWeapon",
-          projectionAfter: {
-            activationOffered: false,
-            channelDivinityUsesRemaining: 1,
-            boundWeaponItemId: "none",
-            activeEffectCount: 0,
-            rejected: false,
-            lastResult: "notCarryingWeapon",
-          },
-          discover: () => {
+          actionName: "doEndSacredWeaponWhenNotCarryingWeapon",          discover: () => {
             const state = sacredWeaponBattle({});
             const activated = resolveSacredWeapon(
               state,

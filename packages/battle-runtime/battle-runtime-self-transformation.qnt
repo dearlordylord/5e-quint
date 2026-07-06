@@ -172,7 +172,7 @@ module battleRuntimeSelfTransformation {
           concentrating: true,
         },
       }
-      commitActorSpellSlotUse(spendFighterSpellActionCost(withMode, SpellMagicAction), Fighter)
+      commitActorSpellSlotUse(spendFighterSpellActionCost(withMode, SpellMagicAction).state, Fighter)
     } else {
       state
     }
@@ -195,7 +195,7 @@ module battleRuntimeSelfTransformation {
       spendFighterSpellActionCost({
         ...state,
         fighter: applySelfTransformationMode(state.fighter, Fighter, mode, remainingDuration),
-      }, SpellMagicAction)
+      }, SpellMagicAction).state
     } else {
       state
     }

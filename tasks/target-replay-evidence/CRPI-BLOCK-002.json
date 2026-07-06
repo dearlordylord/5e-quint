@@ -1,0 +1,398 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts public reducer routeEvents qRoute replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "routeConnectorSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+      "branchFamily": "step",
+      "branchAction": "doChooseDivineSmiteFreeCast",
+      "observedActionTaken": "doChooseDivineSmiteFreeCast",
+      "harnessTestPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=60 action=doChooseDivineSmiteFreeCast qRoute=after-hit-damage-riders-public-reducer-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+        "observedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "packages/battle-runtime/src/index.ts#resolveBattleInterrupt",
+            "packages/battle-runtime/src/index.ts#endTurn"
+          ],
+          "routeEventSource": "Public reducer routeEvents emitted from discoverBattleActs, resolveBattleSubject, resolveBattleInterrupt, and endTurn are collected by observeAfterHitPublicRouteSurface and compared to copied connector qRoute events with exact kind, subject, owner, fill, and holes. Missing or relabeled route events fail the replay.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+          "productionRouteMapper": "packages/battle-runtime/src/battle-reducer/reducer-route.ts#afterHitDamageRiderRouteForInterrupt + afterHitDamageRiderTurnBoundaryRouteForResolution + afterHitDamageRiderEscapeRouteForResolution + battleHasAfterHitAttackDamageAddition + isAfterHitDamageRiderConcentrationTeardownSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleState.currentTurnResources.currentHasBonusAction",
+          "CharacterBattleSpellSlotState.expended",
+          "CharacterBattleResourceState.usesRemaining",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.conditions.restrained",
+          "BattleCreatureState.concentration",
+          "BattleCreatureState.activeEffects",
+          "BattleResolutionResult.holes"
+        ]
+      },
+      "result": { "tag": "pass" }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "routeConnectorSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+      "branchFamily": "step",
+      "branchAction": "doChooseDivineSmiteSlot",
+      "observedActionTaken": "doChooseDivineSmiteSlot",
+      "harnessTestPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=60 action=doChooseDivineSmiteSlot qRoute=after-hit-damage-riders-public-reducer-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+        "observedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51"
+      },
+      "result": { "tag": "pass" }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "routeConnectorSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+      "branchFamily": "step",
+      "branchAction": "doChooseEnsnaringStrike",
+      "observedActionTaken": "doChooseEnsnaringStrike",
+      "harnessTestPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=60 action=doChooseEnsnaringStrike qRoute=after-hit-damage-riders-public-reducer-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+        "observedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51"
+      },
+      "result": { "tag": "pass" }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "routeConnectorSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+      "branchFamily": "step",
+      "branchAction": "doChooseSearingSmite",
+      "observedActionTaken": "doChooseSearingSmite",
+      "harnessTestPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=60 action=doChooseSearingSmite qRoute=after-hit-damage-riders-public-reducer-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+        "observedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51"
+      },
+      "result": { "tag": "pass" }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "routeConnectorSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+      "branchFamily": "step",
+      "branchAction": "doDiscoverEnsnaringStartTurnDamage",
+      "observedActionTaken": "doDiscoverEnsnaringStartTurnDamage",
+      "harnessTestPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=60 action=doDiscoverEnsnaringStartTurnDamage qRoute=after-hit-damage-riders-public-reducer-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+        "observedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51"
+      },
+      "result": { "tag": "pass" }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "routeConnectorSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+      "branchFamily": "step",
+      "branchAction": "doDiscoverSearingStartTurnDamageAndSave",
+      "observedActionTaken": "doDiscoverSearingStartTurnDamageAndSave",
+      "harnessTestPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=60 action=doDiscoverSearingStartTurnDamageAndSave qRoute=after-hit-damage-riders-public-reducer-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+        "observedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51"
+      },
+      "result": { "tag": "pass" }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "routeConnectorSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+      "branchFamily": "step",
+      "branchAction": "doDiscoverWeaponHit",
+      "observedActionTaken": "doDiscoverWeaponHit",
+      "harnessTestPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=60 action=doDiscoverWeaponHit qRoute=after-hit-damage-riders-public-reducer-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+        "observedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51"
+      },
+      "result": { "tag": "pass" }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "routeConnectorSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+      "branchFamily": "step",
+      "branchAction": "doFillDivineSmiteDamage",
+      "observedActionTaken": "doFillDivineSmiteDamage",
+      "harnessTestPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=60 action=doFillDivineSmiteDamage qRoute=after-hit-damage-riders-public-reducer-route",
+      "sampledInputs": [
+        { "pickName": "smiteDiePip", "value": 1 },
+        { "pickName": "weaponDiePip", "value": 4 }
+      ],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+        "observedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51"
+      },
+      "result": { "tag": "pass" }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "routeConnectorSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+      "branchFamily": "step",
+      "branchAction": "doFillEnsnaringEscapeCheck",
+      "observedActionTaken": "doFillEnsnaringEscapeCheck",
+      "harnessTestPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=60 action=doFillEnsnaringEscapeCheck qRoute=after-hit-damage-riders-public-reducer-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+        "observedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51"
+      },
+      "result": { "tag": "pass" }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "routeConnectorSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+      "branchFamily": "step",
+      "branchAction": "doFillEnsnaringFailedSave",
+      "observedActionTaken": "doFillEnsnaringFailedSave",
+      "harnessTestPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=60 action=doFillEnsnaringFailedSave qRoute=after-hit-damage-riders-public-reducer-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+        "observedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51"
+      },
+      "result": { "tag": "pass" }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "routeConnectorSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+      "branchFamily": "step",
+      "branchAction": "doFillEnsnaringStartTurnDamage",
+      "observedActionTaken": "doFillEnsnaringStartTurnDamage",
+      "harnessTestPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=60 action=doFillEnsnaringStartTurnDamage qRoute=after-hit-damage-riders-public-reducer-route",
+      "sampledInputs": [{ "pickName": "damageDiePip", "value": 1 }],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+        "observedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51"
+      },
+      "result": { "tag": "pass" }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "routeConnectorSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+      "branchFamily": "step",
+      "branchAction": "doFillEnsnaringSuccessfulSave",
+      "observedActionTaken": "doFillEnsnaringSuccessfulSave",
+      "harnessTestPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=60 action=doFillEnsnaringSuccessfulSave qRoute=after-hit-damage-riders-public-reducer-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+        "observedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51"
+      },
+      "result": { "tag": "pass" }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "routeConnectorSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+      "branchFamily": "step",
+      "branchAction": "doFillEnsnaringWeaponDamage",
+      "observedActionTaken": "doFillEnsnaringWeaponDamage",
+      "harnessTestPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=60 action=doFillEnsnaringWeaponDamage qRoute=after-hit-damage-riders-public-reducer-route",
+      "sampledInputs": [{ "pickName": "weaponDiePip", "value": 4 }],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+        "observedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51"
+      },
+      "result": { "tag": "pass" }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "routeConnectorSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+      "branchFamily": "step",
+      "branchAction": "doFillHitAttackRoll",
+      "observedActionTaken": "doFillHitAttackRoll",
+      "harnessTestPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=60 action=doFillHitAttackRoll qRoute=after-hit-damage-riders-public-reducer-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+        "observedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51"
+      },
+      "result": { "tag": "pass" }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "routeConnectorSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+      "branchFamily": "step",
+      "branchAction": "doFillSearingSmiteDamage",
+      "observedActionTaken": "doFillSearingSmiteDamage",
+      "harnessTestPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=60 action=doFillSearingSmiteDamage qRoute=after-hit-damage-riders-public-reducer-route",
+      "sampledInputs": [
+        { "pickName": "smiteDiePip", "value": 1 },
+        { "pickName": "weaponDiePip", "value": 4 }
+      ],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+        "observedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51"
+      },
+      "result": { "tag": "pass" }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "routeConnectorSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+      "branchFamily": "step",
+      "branchAction": "doFillSearingStartTurnDamageAndSave",
+      "observedActionTaken": "doFillSearingStartTurnDamageAndSave",
+      "harnessTestPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=60 action=doFillSearingStartTurnDamageAndSave qRoute=after-hit-damage-riders-public-reducer-route",
+      "sampledInputs": [{ "pickName": "damageDiePip", "value": 1 }],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+        "observedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51"
+      },
+      "result": { "tag": "pass" }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt",
+      "qntFileSha256": "3561bd1381527a492de03e0805102fc0721b399b162fb697b8dee1c7f1c17276",
+      "routeConnectorSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+      "branchFamily": "step",
+      "branchAction": "doFillTargetChoice",
+      "observedActionTaken": "doFillTargetChoice",
+      "harnessTestPath": "packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=60 action=doFillTargetChoice qRoute=after-hit-damage-riders-public-reducer-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51",
+        "observedProjectionSha256": "9f87a9e55620c60972f44fd2e4f915edb6c7b8438263c6261a1c87914c626e51"
+      },
+      "result": { "tag": "pass" }
+    }
+  ]
+}

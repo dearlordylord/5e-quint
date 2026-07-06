@@ -1,7 +1,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.spell-slot-healing-modifier
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3PUTB-03 cleric_disciple_of_life
-// UNIT-IDENTITY-MBT-REPLAY: L3PUTB-03 cleric_disciple_of_life doSlotHealingModifier doNonModifierSlotHealing doNonSlotHealingExcluded doEachCreatureHealed
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3PUTB-03 cleric_disciple_of_life
+// UNIT-IDENTITY-REPLAY: L3PUTB-03 cleric_disciple_of_life doSlotHealingModifier doNonModifierSlotHealing doNonSlotHealingExcluded doEachCreatureHealed
 import { Hp } from "@dnd/shared/types";
 
 import {
@@ -9,7 +9,7 @@ import {
   type BattleState,
   type CombatantId,
 } from "./battle-runtime-test-support.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import {
   clericDiscipleOfLifeUnitId,
@@ -67,8 +67,8 @@ if (secondTargetId === undefined) {
   throw new Error("Disciple of Life selected identity requires two targets.");
 }
 
-defineSelectedIdentityWitness({
-  describeLabel: "Disciple of Life selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Disciple of Life selected identity replay",
   taskId: "L3PUTB-03",
   specFile: mbtSpecPath(
     import.meta.dirname,
@@ -78,7 +78,9 @@ defineSelectedIdentityWitness({
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
   quintFieldNames: { lastResult: "qScenarioOutcome" },
-  quintVariantFieldTags: { lastResult: DISCIPLE_OF_LIFE_SCENARIO_OUTCOME_BY_TAG },
+  quintVariantFieldTags: {
+    lastResult: DISCIPLE_OF_LIFE_SCENARIO_OUTCOME_BY_TAG,
+  },
   projectionSchema: {
     targetHp: "int",
     secondTargetHp: "int",
@@ -92,11 +94,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doSlotHealingModifier",
-          projectionAfter: expectedProjection({
-            targetHp: 9,
-            spellSlotsRemaining: 0,
-            lastResult: "slotHealingModifier",
-          }),
           discover: () =>
             projectBattleState(
               resolveCureWounds(discipleOfLifeBattle(), {
@@ -108,11 +105,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doNonModifierSlotHealing",
-          projectionAfter: expectedProjection({
-            targetHp: 6,
-            spellSlotsRemaining: 0,
-            lastResult: "nonModifierSlotHealing",
-          }),
           discover: () =>
             projectBattleState(
               resolveCureWounds(healingBattleWithoutModifier(), {
@@ -124,11 +116,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doNonSlotHealingExcluded",
-          projectionAfter: expectedProjection({
-            targetHp: 1,
-            spellSlotsRemaining: 1,
-            lastResult: "nonSlotHealingExcluded",
-          }),
           discover: () =>
             projectBattleState(
               noSlotHealingCantripExcludedBattle(),
@@ -137,12 +124,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doEachCreatureHealed",
-          projectionAfter: expectedProjection({
-            targetHp: 11,
-            secondTargetHp: 11,
-            spellSlotsRemaining: 0,
-            lastResult: "eachCreatureHealed",
-          }),
           discover: () =>
             projectBattleState(
               resolveMassHealingWord({

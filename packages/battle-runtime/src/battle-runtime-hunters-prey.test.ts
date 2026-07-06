@@ -1,7 +1,10 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.hunters-prey
 import { describe, expect, test } from "vitest";
 import { movementFeet } from "@dnd/shared/types";
-import { ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE } from "./unit-feature-support.ts";
+import {
+  ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
+  battleUnitRefWithSupportProfiles,
+} from "./unit-feature-support.ts";
 import {
   attackDamageHoleAfterHit,
   attackInitialTargetHole,
@@ -14,6 +17,7 @@ import {
   damageRollFillWithGroups,
   discoverBattleActs,
   endTurn,
+  Either,
   fighterAttackSubject,
   fighterId,
   findHole,
@@ -40,49 +44,44 @@ import type { BattleState, BattleUnitRef } from "./index.ts";
 const syntheticExtraAttackUnitId = "test_hunters_prey_extra_attack";
 
 function huntersPreyUnitRef(
-  optionId?: "colossusSlayer" | "hordeBreaker",
+  optionId: "colossusSlayer" | "hordeBreaker",
 ): BattleUnitRef {
   const unit = unitLibrary.requireUnit("ranger_hunters_prey");
+  const huntersPrey =
+    optionId === "colossusSlayer"
+      ? {
+          kind: "woundedTargetWeaponDamage" as const,
+          trigger: "hitCreatureWithWeapon" as const,
+          targetPredicate: "missingAnyHitPoints" as const,
+          usageLimit: "oncePerTurn" as const,
+          damage: {
+            kind: "addAttackDamageDice" as const,
+            dice: { dice: 1 as const, dieSize: 8 as const },
+            damageType: "sameAsAttack" as const,
+          },
+        }
+      : {
+          kind: "nearbyDifferentTargetSameWeaponAttack" as const,
+          trigger: "makeWeaponAttack" as const,
+          usageLimit: "oncePerTurn" as const,
+          extraAttack: {
+            weapon: "sameWeapon" as const,
+            target: {
+              kind: "differentCreatureNearOriginalTarget" as const,
+              withinFeetOfOriginalTarget: movementFeet(5),
+              withinWeaponRange: true as const,
+              notAttackedThisTurn: true as const,
+            },
+          },
+        };
   return {
     unitId: unit.id,
     supportProfiles: [
       {
         kind: "huntersPrey",
-        huntersPrey: {
-          choice: { kind: "chooseOne", replaceOn: "shortOrLongRest" },
-          options: [
-            {
-              id: "colossusSlayer",
-              trigger: "hitCreatureWithWeapon",
-              targetPredicate: "missingAnyHitPoints",
-              usageLimit: "oncePerTurn",
-              damage: {
-                kind: "addAttackDamageDice",
-                dice: { dice: 1, dieSize: 8 },
-                damageType: "sameAsAttack",
-              },
-            },
-            {
-              id: "hordeBreaker",
-              trigger: "makeWeaponAttack",
-              usageLimit: "oncePerTurn",
-              extraAttack: {
-                weapon: "sameWeapon",
-                target: {
-                  kind: "differentCreatureNearOriginalTarget",
-                  withinFeetOfOriginalTarget: movementFeet(5),
-                  withinWeaponRange: true,
-                  notAttackedThisTurn: true,
-                },
-              },
-            },
-          ],
-        },
+        huntersPrey,
       },
     ],
-    ...(optionId === undefined
-      ? {}
-      : { selectedOption: { kind: "huntersPrey", optionId } }),
   };
 }
 
@@ -283,32 +282,18 @@ describe("battle runtime: Hunter's Prey", () => {
     ).toEqual([{ attackerId: fighterId, unitId: "ranger_hunters_prey" }]);
   });
 
-  test("Hunter's Prey rejects weapon attacks when the retained selected option is missing", () => {
-    const state = startBattleRight({
-      battleId: battleId("battle-hunters-prey-missing-selection"),
-      combatants: [
-        characterSeed({
-          initiative: 20,
-          characterUnitRefs: [huntersPreyUnitRef()],
-          attack: testLongswordAttack(),
-        }),
-        statBlockCreatureInit({ initiative: 10 }),
-      ],
+  test("Hunter's Prey battle admission rejects a missing retained selection", () => {
+    const unit = unitLibrary.requireUnit("ranger_hunters_prey");
+    const admitted = battleUnitRefWithSupportProfiles({
+      unitRef: { unitId: unit.id },
+      unit,
     });
-    const subject = fighterAttackSubject("Longsword");
-    const target = attackInitialTargetHole(state, subject);
 
-    expect(
-      resolveBattleSubject({
-        state,
-        subject,
-        fills: [targetFill(target, goblinId)],
-      }),
-    ).toMatchObject({
-      tag: "invalid",
-      message:
-        "Hunter's Prey requires a retained selected option before resolving weapon attacks.",
-    });
+    expect(Either.isLeft(admitted)).toBe(true);
+    if (Either.isRight(admitted)) return;
+    expect(admitted.left.message).toBe(
+      "Battle Unit ref ranger_hunters_prey requires a retained Hunter's Prey selection before battle initialization.",
+    );
   });
 
   test("Horde Breaker grants a same-weapon attack against a caller-eligible different target once per turn", () => {

@@ -1,14 +1,14 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B4-CLASS-FEATURE-IDENTITY-BATCH-1 bard_jack_of_all_trades cleric_life_domain_spells druid_circle_of_the_land_spells
-// UNIT-IDENTITY-MBT-REPLAY: B4-CLASS-FEATURE-IDENTITY-BATCH-1 bard_jack_of_all_trades doProjectBardJackOfAllTrades
-// UNIT-IDENTITY-MBT-REPLAY: B4-CLASS-FEATURE-IDENTITY-BATCH-1 cleric_life_domain_spells doProjectClericLifeDomainSpells
-// UNIT-IDENTITY-MBT-REPLAY: B4-CLASS-FEATURE-IDENTITY-BATCH-1 druid_circle_of_the_land_spells doProjectDruidCircleLandSpells
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B5-CLASS-FEATURE-IDENTITY-BATCH-2 paladin_oath_of_devotion_spells paladin_paladins_smite ranger_favored_enemy
-// UNIT-IDENTITY-MBT-REPLAY: B5-CLASS-FEATURE-IDENTITY-BATCH-2 paladin_oath_of_devotion_spells doProjectPaladinOathDevotionSpells
-// UNIT-IDENTITY-MBT-REPLAY: B5-CLASS-FEATURE-IDENTITY-BATCH-2 paladin_paladins_smite doProjectPaladinsSmite
-// UNIT-IDENTITY-MBT-REPLAY: B5-CLASS-FEATURE-IDENTITY-BATCH-2 ranger_favored_enemy doProjectRangerFavoredEnemy
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B6-CLASS-FEATURE-IDENTITY-BATCH-3 sorcerer_draconic_spells warlock_fiend_spells
-// UNIT-IDENTITY-MBT-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 sorcerer_draconic_spells doProjectSorcererDraconicSpells
-// UNIT-IDENTITY-MBT-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 warlock_fiend_spells doProjectWarlockFiendSpells
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay B4-CLASS-FEATURE-IDENTITY-BATCH-1 bard_jack_of_all_trades cleric_life_domain_spells druid_circle_of_the_land_spells
+// UNIT-IDENTITY-REPLAY: B4-CLASS-FEATURE-IDENTITY-BATCH-1 bard_jack_of_all_trades doProjectBardJackOfAllTrades
+// UNIT-IDENTITY-REPLAY: B4-CLASS-FEATURE-IDENTITY-BATCH-1 cleric_life_domain_spells doProjectClericLifeDomainSpells
+// UNIT-IDENTITY-REPLAY: B4-CLASS-FEATURE-IDENTITY-BATCH-1 druid_circle_of_the_land_spells doProjectDruidCircleLandSpells
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay B5-CLASS-FEATURE-IDENTITY-BATCH-2 paladin_oath_of_devotion_spells paladin_paladins_smite ranger_favored_enemy
+// UNIT-IDENTITY-REPLAY: B5-CLASS-FEATURE-IDENTITY-BATCH-2 paladin_oath_of_devotion_spells doProjectPaladinOathDevotionSpells
+// UNIT-IDENTITY-REPLAY: B5-CLASS-FEATURE-IDENTITY-BATCH-2 paladin_paladins_smite doProjectPaladinsSmite
+// UNIT-IDENTITY-REPLAY: B5-CLASS-FEATURE-IDENTITY-BATCH-2 ranger_favored_enemy doProjectRangerFavoredEnemy
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay B6-CLASS-FEATURE-IDENTITY-BATCH-3 sorcerer_draconic_spells warlock_fiend_spells
+// UNIT-IDENTITY-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 sorcerer_draconic_spells doProjectSorcererDraconicSpells
+// UNIT-IDENTITY-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 warlock_fiend_spells doProjectWarlockFiendSpells
 // KERNEL-COVERAGE: parity-witness SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION
 import * as path from "node:path";
 
@@ -251,7 +251,7 @@ const classFeatureSelectedIdentityStateCheck = stateCheck(
   compareClassFeatureSelectedIdentityState,
 );
 
-describe("Character Sheet class-feature selected identity MBT", () => {
+describe("Character Sheet class-feature selected identity replay", () => {
   it("replays selected Unit identities deterministically", async () => {
     for (const replay of selectedUnitIdentityReplays) {
       const replayedActions =

@@ -217,12 +217,12 @@ module movementSpatialGrapple {
     grapple: GrappleState,
     checkTotal: int
   ): EscapeGrappleResult = {
-    val spent = spendActionCost(turn, StandardActionCost(EscapeGrappleAction))
-    if (not(activeGrapple(grapple)) or spent == turn) {
+    val spend = spendActionCost(turn, StandardActionCost(EscapeGrappleAction))
+    if (not(activeGrapple(grapple)) or not(spend.admitted)) {
       turn: turn,
       grapple: grapple,
     } else {
-      turn: spent,
+      turn: spend.turn,
       grapple: if (checkTotal >= grappleEscapeDc(grapple)) NoGrapple else grapple,
     }
   }

@@ -1,8 +1,8 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY lesser_restoration protection_from_poison
-// UNIT-IDENTITY-MBT-REPLAY: RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY lesser_restoration doResolveLesserRestorationChoice doResolveLesserRestorationConcentrationCleanup
-// UNIT-IDENTITY-MBT-REPLAY: RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY protection_from_poison doResolveProtectionFromPoison
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY lesser_restoration protection_from_poison
+// UNIT-IDENTITY-REPLAY: RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY lesser_restoration doResolveLesserRestorationChoice doResolveLesserRestorationConcentrationCleanup
+// UNIT-IDENTITY-REPLAY: RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY protection_from_poison doResolveProtectionFromPoison
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import type { BattleActiveEffect } from "./index.ts";
 import { resolveBattleSubject, snapshotBattle } from "./index.ts";
@@ -68,8 +68,8 @@ type ConditionSavingThrowRollModeEffect = Extract<
   { readonly kind: "conditionSavingThrowRollMode" }
 >;
 
-defineSelectedIdentityWitness({
-  describeLabel: "Condition removal and protection selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Condition removal and protection selected identity replay",
   taskId: "RKBC-SPELL-DIRECT-CONDITION-REMOVAL-PARITY",
   specFile: mbtSpecPath(
     import.meta.dirname,
@@ -79,7 +79,10 @@ defineSelectedIdentityWitness({
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
   quintFieldNames: { lastResult: "qScenarioOutcome" },
-  quintVariantFieldTags: { lastResult: CONDITION_REMOVAL_PROTECTION_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG },
+  quintVariantFieldTags: {
+    lastResult:
+      CONDITION_REMOVAL_PROTECTION_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG,
+  },
   projectionSchema: {
     targetParalyzed: "bool",
     targetPoisoned: "bool",
@@ -99,13 +102,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doResolveLesserRestorationChoice",
-          projectionAfter: expectedProjection({
-            targetPoisoned: true,
-            targetEffectCount: 1,
-            secondLevelSlotsExpended: 1,
-            bonusActionAvailable: false,
-            lastResult: "lesserRestorationChoice",
-          }),
           discover: () =>
             projectConditionRemovalProtectionSelectedIdentityState(
               resolveLesserRestorationChoiceBattle(),
@@ -114,11 +110,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doResolveLesserRestorationConcentrationCleanup",
-          projectionAfter: expectedProjection({
-            secondLevelSlotsExpended: 1,
-            bonusActionAvailable: false,
-            lastResult: "lesserRestorationConcentration",
-          }),
           discover: () =>
             projectConditionRemovalProtectionSelectedIdentityState(
               resolveLesserRestorationConcentrationCleanupBattle(),
@@ -132,14 +123,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doResolveProtectionFromPoison",
-          projectionAfter: expectedProjection({
-            targetEffectCount: 2,
-            targetHasPoisonResistance: true,
-            targetHasPoisonSaveAdvantage: true,
-            secondLevelSlotsExpended: 1,
-            actionAvailable: false,
-            lastResult: "protectionFromPoison",
-          }),
           discover: () =>
             projectConditionRemovalProtectionSelectedIdentityState(
               resolveProtectionFromPoisonBattle(),

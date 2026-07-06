@@ -288,13 +288,11 @@ function createDeathSavesDriver() {
 function createInitiativeDriver() {
   return defineDriver(initiativeDriverSchema, () => {
     let stack = initialInitiativeStack();
-    let lastInsertStatus: InitiativeLastInsert["status"] = "none";
-    let lastTie: readonly string[] = [];
+    let lastInsert: InitiativeLastInsert = { status: "none", tie: [] };
 
     function reset(): void {
       stack = initialInitiativeStack();
-      lastInsertStatus = "none";
-      lastTie = [];
+      lastInsert = { status: "none", tie: [] };
     }
 
     function removeCreature(creature: string): void {
@@ -317,17 +315,14 @@ function createInitiativeDriver() {
       );
       if (result.status === "ok") {
         stack = result.stack;
-        lastInsertStatus = "ok";
-        lastTie = [];
+        lastInsert = { status: "ok", tie: [] };
         return;
       }
       if (result.status === "decide") {
-        lastInsertStatus = "decide";
-        lastTie = result.tie;
+        lastInsert = initiativeLastInsert("decide", result.tie);
         return;
       }
-      lastInsertStatus = "error";
-      lastTie = [];
+      lastInsert = { status: "error", tie: [] };
     }
 
     return {
@@ -342,7 +337,7 @@ function createInitiativeDriver() {
       doInsertCxTieDecision: () => insertCreature("cx", 2, [["c2", "c2b"], 1]),
       doInsertC3WrongDecision: () => insertCreature("c3", 3, [["c1"], 0]),
       step: () => {},
-      getState: () => projectInitiative(stack, lastInsertStatus, lastTie),
+      getState: () => projectInitiative(stack, lastInsert),
     };
   });
 }
@@ -520,14 +515,13 @@ function initiativeTieDecision(
 
 function projectInitiative(
   stack: InitiativeStack<string>,
-  lastInsertStatus: InitiativeLastInsert["status"],
-  lastTie: readonly string[],
+  lastInsert: InitiativeLastInsert,
 ): InitiativeProjection {
   return {
     round: stack.round,
     alreadyActed: stack.alreadyActed.map(projectInitiativeEntry),
     stillToAct: stack.stillToAct.map(projectInitiativeEntry),
-    lastInsert: initiativeLastInsert(lastInsertStatus, lastTie),
+    lastInsert,
   };
 }
 
@@ -605,11 +599,24 @@ function normalizeInitiativeSpecState(raw: unknown): InitiativeProjection {
       normalizeInitiativeEntry,
     ),
     stillToAct: listField(state, "qStillToAct").map(normalizeInitiativeEntry),
-    lastInsert: initiativeLastInsert(
-      normalizeInsertStatus(state["qLastInsertStatus"]),
-      listField(state, "qLastTie").map(stringValue),
-    ),
+    lastInsert: normalizeInitiativeLastInsert(state["qLastInsert"]),
   };
+}
+
+function normalizeInitiativeLastInsert(raw: unknown): InitiativeLastInsert {
+  const variant = quintVariant(raw, "qLastInsert");
+  if (variant.tag === "LastInsertNone") return { status: "none", tie: [] };
+  if (variant.tag === "LastInsertOk") return { status: "ok", tie: [] };
+  if (variant.tag === "LastInsertErrorDecisionSuppliedWithoutTie") {
+    return { status: "error", tie: [] };
+  }
+  if (variant.tag === "LastInsertDecision") {
+    return initiativeLastInsert(
+      "decide",
+      listValue(variant.value, "qLastInsert.value").map(stringValue),
+    );
+  }
+  throw new Error(`Unknown Quint initiative last insert variant ${variant.tag}.`);
 }
 
 function initiativeLastInsert(
@@ -693,16 +700,24 @@ function listField(
   state: Readonly<Record<string, unknown>>,
   field: string,
 ): readonly unknown[] {
-  const value = state[field];
+  return listValue(state[field], field);
+}
+
+function listValue(value: unknown, field: string): readonly unknown[] {
   if (Array.isArray(value)) return value;
   throw new Error(`Expected Quint list field ${field}.`);
 }
 
-function normalizeInsertStatus(raw: unknown): InitiativeLastInsert["status"] {
-  if (raw === "none" || raw === "ok" || raw === "decide" || raw === "error") {
-    return raw;
+function quintVariant(
+  raw: unknown,
+  field: string,
+): { readonly tag: string; readonly value: unknown } {
+  if (typeof raw === "string") return { tag: raw, value: undefined };
+  if (isRecord(raw)) {
+    const tag = raw["tag"];
+    if (typeof tag === "string") return { tag, value: raw["value"] };
   }
-  throw new Error(`Unknown Quint insert status: ${String(raw)}.`);
+  throw new Error(`Expected Quint variant field ${field}.`);
 }
 
 function isRecord(raw: unknown): raw is Readonly<Record<string, unknown>> {

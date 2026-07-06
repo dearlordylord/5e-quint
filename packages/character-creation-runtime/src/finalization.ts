@@ -2527,11 +2527,16 @@ function unitRefForSelectedClassChoice(
 function huntersPreySelectedOption(
   optionId: CreationChoiceOptionId | undefined,
 ): UnitRefSelectedOption | undefined {
+  // authored-id-dispatch-allow: character-creation-selected-choice-runtime-projection-boundary
   if (optionId === "colossus_slayer") {
-    return { kind: "huntersPrey", optionId: "colossusSlayer" };
+    return { kind: "huntersPrey", selection: "woundedTargetWeaponDamage" };
   }
+  // authored-id-dispatch-allow: character-creation-selected-choice-runtime-projection-boundary
   if (optionId === "horde_breaker") {
-    return { kind: "huntersPrey", optionId: "hordeBreaker" };
+    return {
+      kind: "huntersPrey",
+      selection: "nearbyDifferentTargetSameWeaponAttack",
+    };
   }
   return undefined;
 }

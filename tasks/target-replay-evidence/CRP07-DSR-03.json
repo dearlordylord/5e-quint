@@ -1,0 +1,390 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts Hit Point restoration public reducer route-event replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.route.mbt.qnt",
+      "qntFileSha256": "e0cb261cd46b2791a7aeccb4b3d458c47d94059a9a6130b8f791cf03f9543c60",
+      "routeConnectorSha256": "6cbfc11389bbf392a9ab9d7de1e2d221c5a5b89a09915f3649edc1db532cf90a",
+      "branchFamily": "step",
+      "branchAction": "doDiscoverSingleTargetSpellHealing",
+      "observedActionTaken": "doDiscoverSingleTargetSpellHealing",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=4 action=doDiscoverSingleTargetSpellHealing",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "c8077ca498205039d4ae59cfd0737249a5714d0eea0cd8151072c5cd94b02723",
+        "observedProjectionSha256": "c8077ca498205039d4ae59cfd0737249a5714d0eea0cd8151072c5cd94b02723",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result) and AvailableBattleAct.routeEvents from discoverBattleActs",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#discoverBattleActs"
+        },
+        "checkedTargetStateFields": [
+          "BattleState.currentTurnResources",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.zeroHpLifecycle",
+          "BattleSubject.bonusActionSpell.invocation.procedure=directHitPointRestoration",
+          "AvailableBattleAct.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.route.mbt.qnt",
+      "qntFileSha256": "e0cb261cd46b2791a7aeccb4b3d458c47d94059a9a6130b8f791cf03f9543c60",
+      "routeConnectorSha256": "6cbfc11389bbf392a9ab9d7de1e2d221c5a5b89a09915f3649edc1db532cf90a",
+      "branchFamily": "step",
+      "branchAction": "doSubmitHealingRollBeforeTargetChoice",
+      "observedActionTaken": "doSubmitHealingRollBeforeTargetChoice",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=4 action=doSubmitHealingRollBeforeTargetChoice",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "2fb4e9f32a463dedd2f993e43a98479caeef399f63c8c9eb711b48b03c0f58ae",
+        "observedProjectionSha256": "2fb4e9f32a463dedd2f993e43a98479caeef399f63c8c9eb711b48b03c0f58ae",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), AvailableBattleAct.routeEvents from discoverBattleActs, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleHole.kind=targetChoice",
+          "BattleFill.kind=rolledDice",
+          "BattleResolutionResult.routeEvents",
+          "BattleResolutionResult.holes"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.route.mbt.qnt",
+      "qntFileSha256": "e0cb261cd46b2791a7aeccb4b3d458c47d94059a9a6130b8f791cf03f9543c60",
+      "routeConnectorSha256": "6cbfc11389bbf392a9ab9d7de1e2d221c5a5b89a09915f3649edc1db532cf90a",
+      "branchFamily": "step",
+      "branchAction": "doFillSpellHealingTargetChoice",
+      "observedActionTaken": "doFillSpellHealingTargetChoice",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=4 action=doFillSpellHealingTargetChoice",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "f404df40b76edc97123eb7c20fea5a37736a590ac5c9530f4e6d542f631d367c",
+        "observedProjectionSha256": "f404df40b76edc97123eb7c20fea5a37736a590ac5c9530f4e6d542f631d367c",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), AvailableBattleAct.routeEvents from discoverBattleActs, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleFill.kind=targetChoice",
+          "BattleHole.kind=rolledDice",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.route.mbt.qnt",
+      "qntFileSha256": "e0cb261cd46b2791a7aeccb4b3d458c47d94059a9a6130b8f791cf03f9543c60",
+      "routeConnectorSha256": "6cbfc11389bbf392a9ab9d7de1e2d221c5a5b89a09915f3649edc1db532cf90a",
+      "branchFamily": "step",
+      "branchAction": "doDiscoverTargetListSpellHealing",
+      "observedActionTaken": "doDiscoverTargetListSpellHealing",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=4 action=doDiscoverTargetListSpellHealing",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "35dab9231d20b7aa60c8f8a30da212f025dd4f8655af9bf78b2f026fa6a646db",
+        "observedProjectionSha256": "35dab9231d20b7aa60c8f8a30da212f025dd4f8655af9bf78b2f026fa6a646db",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result) and AvailableBattleAct.routeEvents from discoverBattleActs",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#discoverBattleActs"
+        },
+        "checkedTargetStateFields": [
+          "BattleState.currentTurnResources",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.zeroHpLifecycle",
+          "BattleSubject.bonusActionSpell.invocation.procedure=directHitPointRestoration",
+          "AvailableBattleAct.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.route.mbt.qnt",
+      "qntFileSha256": "e0cb261cd46b2791a7aeccb4b3d458c47d94059a9a6130b8f791cf03f9543c60",
+      "routeConnectorSha256": "6cbfc11389bbf392a9ab9d7de1e2d221c5a5b89a09915f3649edc1db532cf90a",
+      "branchFamily": "step",
+      "branchAction": "doSubmitHealingRollBeforeTargetList",
+      "observedActionTaken": "doSubmitHealingRollBeforeTargetList",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=4 action=doSubmitHealingRollBeforeTargetList",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "dba1122322614c2e669671fb668b60393e39f2f7f45aa63d3b41ef27130b7028",
+        "observedProjectionSha256": "dba1122322614c2e669671fb668b60393e39f2f7f45aa63d3b41ef27130b7028",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), AvailableBattleAct.routeEvents from discoverBattleActs, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleHole.kind=spellTargetList",
+          "BattleFill.kind=rolledDice",
+          "BattleResolutionResult.routeEvents",
+          "BattleResolutionResult.holes"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.route.mbt.qnt",
+      "qntFileSha256": "e0cb261cd46b2791a7aeccb4b3d458c47d94059a9a6130b8f791cf03f9543c60",
+      "routeConnectorSha256": "6cbfc11389bbf392a9ab9d7de1e2d221c5a5b89a09915f3649edc1db532cf90a",
+      "branchFamily": "step",
+      "branchAction": "doFillSpellHealingTargetList",
+      "observedActionTaken": "doFillSpellHealingTargetList",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=4 action=doFillSpellHealingTargetList",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "effc7e18d47f8c9cd19dd7ce2bac361d1d04154036cf8b968769ec4d331698ed",
+        "observedProjectionSha256": "effc7e18d47f8c9cd19dd7ce2bac361d1d04154036cf8b968769ec4d331698ed",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), AvailableBattleAct.routeEvents from discoverBattleActs, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleFill.kind=spellTargetList",
+          "BattleHole.kind=rolledDice",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.route.mbt.qnt",
+      "qntFileSha256": "e0cb261cd46b2791a7aeccb4b3d458c47d94059a9a6130b8f791cf03f9543c60",
+      "routeConnectorSha256": "6cbfc11389bbf392a9ab9d7de1e2d221c5a5b89a09915f3649edc1db532cf90a",
+      "branchFamily": "step",
+      "branchAction": "doFillSpellHealingRoll",
+      "observedActionTaken": "doFillSpellHealingRoll",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=4 action=doFillSpellHealingRoll",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "74556b7fbff37f13b90792713d7035be6bab5d14a0138b1fdf0b0f1573726b77",
+        "observedProjectionSha256": "74556b7fbff37f13b90792713d7035be6bab5d14a0138b1fdf0b0f1573726b77",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), AvailableBattleAct.routeEvents from discoverBattleActs, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleCreatureState.hp",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.zeroHpLifecycle",
+          "BattleFill.kind=rolledDice",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.route.mbt.qnt",
+      "qntFileSha256": "e0cb261cd46b2791a7aeccb4b3d458c47d94059a9a6130b8f791cf03f9543c60",
+      "routeConnectorSha256": "6cbfc11389bbf392a9ab9d7de1e2d221c5a5b89a09915f3649edc1db532cf90a",
+      "branchFamily": "step",
+      "branchAction": "doDiscoverFeatureHealingPool",
+      "observedActionTaken": "doDiscoverFeatureHealingPool",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=4 action=doDiscoverFeatureHealingPool",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "871cc7aba9a6594131d02b32185cac317cfe1571014ee8e3efd41d1d1915bf70",
+        "observedProjectionSha256": "871cc7aba9a6594131d02b32185cac317cfe1571014ee8e3efd41d1d1915bf70",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result) and AvailableBattleAct.routeEvents from discoverBattleActs",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#discoverBattleActs"
+        },
+        "checkedTargetStateFields": [
+          "BattleState.currentTurnResources",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.zeroHpLifecycle",
+          "BattleSubject.unitFeature",
+          "AvailableBattleAct.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.route.mbt.qnt",
+      "qntFileSha256": "e0cb261cd46b2791a7aeccb4b3d458c47d94059a9a6130b8f791cf03f9543c60",
+      "routeConnectorSha256": "6cbfc11389bbf392a9ab9d7de1e2d221c5a5b89a09915f3649edc1db532cf90a",
+      "branchFamily": "step",
+      "branchAction": "doFillFeatureHealingDistribution",
+      "observedActionTaken": "doFillFeatureHealingDistribution",
+      "harnessTestPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=4 action=doFillFeatureHealingDistribution",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "bf2997361963901087237a6d4c8deb7fa4a1a18fe3e12d27611fbdbe90be87b2",
+        "observedProjectionSha256": "bf2997361963901087237a6d4c8deb7fa4a1a18fe3e12d27611fbdbe90be87b2",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), AvailableBattleAct.routeEvents from discoverBattleActs, and BattleResolutionResult.routeEvents",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleCreatureState.hp",
+          "BattleCreatureState.conditions",
+          "BattleCreatureState.zeroHpLifecycle",
+          "BattleFill.kind=hitPointHealingDistribution",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}

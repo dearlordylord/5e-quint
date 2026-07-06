@@ -1,5 +1,5 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1D2-SORCERER-INNATE-SORCERY sorcerer_innate_sorcery
-// UNIT-IDENTITY-MBT-REPLAY: L1D2-SORCERER-INNATE-SORCERY sorcerer_innate_sorcery doActivateInnateSorcery doProjectInnateSorcerySpellBenefits doExcludeInnateSorceryNonSorcererSpellBenefits
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1D2-SORCERER-INNATE-SORCERY sorcerer_innate_sorcery
+// UNIT-IDENTITY-REPLAY: L1D2-SORCERER-INNATE-SORCERY sorcerer_innate_sorcery doActivateInnateSorcery doProjectInnateSorcerySpellBenefits doExcludeInnateSorceryNonSorcererSpellBenefits
 import { Either } from "effect";
 import { expect } from "vitest";
 
@@ -41,7 +41,7 @@ import {
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { ongoingFeatureSourceKeyForUnit } from "./battle-reducer/creature-state.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 
 type InnateSorcerySpellAttackRollMode = "none" | "advantage" | "disadvantage";
 type InnateSorcerySelectedIdentityLastResult =
@@ -57,9 +57,7 @@ const FEATURE_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
   NonSorcererExcluded: "nonSorcererExcluded",
 } as const;
 
-type InnateSorceryOccurrenceProjection =
-  | "inactive"
-  | "activeUntilEndOfRound11";
+type InnateSorceryOccurrenceProjection = "inactive" | "activeUntilEndOfRound11";
 type InnateSorcerySelectedIdentityProjection = {
   readonly bonusActionAvailable: boolean;
   readonly featureUsesRemaining: number;
@@ -79,7 +77,6 @@ type ResolvedBattleResult = Extract<
 const innateSorceryUnitId = "sorcerer_innate_sorcery";
 const rayOfFrostUnitId = "ray_of_frost";
 const baseSorcererSpellSaveDc = 13;
-const innateSorcerySpellSaveDc = 14;
 const innateSorceryExpiresRound = 11;
 const activeInnateSorceryOccurrence = "activeUntilEndOfRound11";
 const sorcererId = combatantId("innate-sorcery-selected-identity-sorcerer");
@@ -98,8 +95,8 @@ if (unitCatalogResult.tag !== "ok") {
 }
 const unitLibrary = unitCatalogResult.catalog;
 
-defineSelectedIdentityWitness({
-  describeLabel: "Innate Sorcery selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Innate Sorcery selected identity replay",
   taskId: "L1D2-SORCERER-INNATE-SORCERY",
   specFile: mbtSpecPath(
     import.meta.dirname,
@@ -109,7 +106,9 @@ defineSelectedIdentityWitness({
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
   quintFieldNames: { lastResult: "qScenarioOutcome" },
-  quintVariantFieldTags: { lastResult: FEATURE_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG },
+  quintVariantFieldTags: {
+    lastResult: FEATURE_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG,
+  },
   projectionSchema: {
     bonusActionAvailable: "bool",
     featureUsesRemaining: "int",
@@ -125,13 +124,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doActivateInnateSorcery",
-          projectionAfter: expectedProjection({
-            bonusActionAvailable: false,
-            featureUsesRemaining: 1,
-            innateSorceryOccurrence: activeInnateSorceryOccurrence,
-            spellSaveDc: innateSorcerySpellSaveDc,
-            lastResult: "activated",
-          }),
           discover: () =>
             withSelectedUnitBoundaryCheck("doActivateInnateSorcery", () =>
               projectBattleState(
@@ -143,14 +135,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doProjectInnateSorcerySpellBenefits",
-          projectionAfter: expectedProjection({
-            bonusActionAvailable: false,
-            featureUsesRemaining: 1,
-            innateSorceryOccurrence: activeInnateSorceryOccurrence,
-            spellSaveDc: innateSorcerySpellSaveDc,
-            spellAttackRollMode: "advantage",
-            lastResult: "spellBenefitsProjected",
-          }),
           discover: () =>
             withSelectedUnitBoundaryCheck(
               "doProjectInnateSorcerySpellBenefits",
@@ -168,12 +152,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doExcludeInnateSorceryNonSorcererSpellBenefits",
-          projectionAfter: expectedProjection({
-            bonusActionAvailable: false,
-            featureUsesRemaining: 1,
-            innateSorceryOccurrence: activeInnateSorceryOccurrence,
-            lastResult: "nonSorcererExcluded",
-          }),
           discover: () =>
             withSelectedUnitBoundaryCheck(
               "doExcludeInnateSorceryNonSorcererSpellBenefits",

@@ -1,0 +1,142 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/rule-core-attack-damage-disposition.mbt.test.ts attack damage disposition copied qComponentRoute versus component-first target replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt",
+      "qntFileSha256": "f84dc7f3b8cb3b93e97c31932bf78c158d1e6b6da321833ede53d4b3ac1f6710",
+      "componentConnectorSha256": "f84dc7f3b8cb3b93e97c31932bf78c158d1e6b6da321833ede53d4b3ac1f6710",
+      "branchFamily": "step",
+      "branchAction": "doMeleeKnockOut",
+      "observedActionTaken": "doMeleeKnockOut",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-attack-damage-disposition.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAttackDamageDispositionOwner action=doMeleeKnockOut qComponentRoute=attack-damage-disposition-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doMeleeKnockOut",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-attack-damage-disposition.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAttackDamageDispositionOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "e4e8b0fde9138d1847f4d65bea89b8eb27354e623a6147787adf6ade9ce8a554",
+        "observedProjectionSha256": "e4e8b0fde9138d1847f4d65bea89b8eb27354e623a6147787adf6ade9ce8a554",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAttackDamageDispositionOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-attack-damage-disposition.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-attack-damage-disposition.mbt.test.ts#resolveBattleSubject",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-attack-damage-disposition.mbt.test.ts#normalizeQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime attack damage disposition calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-attack-damage-disposition.mbt.test.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAttackDamageDispositionOwner",
+          "BattleSubject.attack.kind=melee",
+          "AttackDamageDisposition.kind=knockOut",
+          "BattleCreatureState.hp=1",
+          "BattleCreatureState.conditions=unconscious",
+          "BattleCreatureState.zeroHpLifecycle.dead=false",
+          "BattleCreatureState.zeroHpLifecycle.positiveHitPointUnconsciousRecovery=EndsWhenHitPointsRegained"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt",
+      "componentConnectorPath": "packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt",
+      "qntFileSha256": "f84dc7f3b8cb3b93e97c31932bf78c158d1e6b6da321833ede53d4b3ac1f6710",
+      "componentConnectorSha256": "f84dc7f3b8cb3b93e97c31932bf78c158d1e6b6da321833ede53d4b3ac1f6710",
+      "branchFamily": "step",
+      "branchAction": "doRejectRangedKnockOut",
+      "observedActionTaken": "doRejectRangedKnockOut",
+      "harnessTestPath": "packages/battle-runtime/src/rule-core-attack-damage-disposition.mbt.test.ts",
+      "traceId": "component-route=RuleCoreAttackDamageDispositionOwner action=doRejectRangedKnockOut qComponentRoute=attack-damage-disposition-component-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRejectRangedKnockOut",
+        "qntStateField": "qComponentRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/rule-core-attack-damage-disposition.mbt.test.ts#createDriver",
+        "componentOwner": "RuleCoreAttackDamageDispositionOwner"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qComponentRoute",
+        "comparator": "component-route-event-list",
+        "expectedProjectionSha256": "e4e8b0fde9138d1847f4d65bea89b8eb27354e623a6147787adf6ade9ce8a554",
+        "observedProjectionSha256": "e4e8b0fde9138d1847f4d65bea89b8eb27354e623a6147787adf6ade9ce8a554",
+        "expectedProjectionSource": {
+          "tag": "copied-component-connector-qComponentRoute",
+          "componentConnectorPath": "packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qComponentRoute",
+          "componentOwners": [
+            "RuleCoreAttackDamageDispositionOwner"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qComponentRoute",
+          "targetEntrypointSequence": [
+            "component_admission",
+            "packages/battle-runtime/src/rule-core-attack-damage-disposition.mbt.test.ts#withRuleCoreComponentRoute",
+            "component_call",
+            "packages/battle-runtime/src/rule-core-attack-damage-disposition.mbt.test.ts#resolveBattleSubject",
+            "component_projection",
+            "packages/battle-runtime/src/rule-core-attack-damage-disposition.mbt.test.ts#normalizeQuintState"
+          ],
+          "routeEventSource": "Rule-core component route events emitted by withRuleCoreComponentRoute after public battle-runtime attack damage disposition calls produce runtime projections.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/rule-core-attack-damage-disposition.mbt.test.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentParseInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentAdmitInput",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentCall",
+          "RuleCoreComponentRouteEvent.kind=RuleCoreComponentProjectResult",
+          "RuleCoreComponentRouteEvent.owner=RuleCoreAttackDamageDispositionOwner",
+          "BattleSubject.attack.kind=ranged",
+          "AttackDamageDisposition.kind=knockOut",
+          "ResolutionResult.tag=invalid",
+          "BattleCreatureState.hp=3",
+          "BattleCreatureState.conditions excludes unconscious",
+          "BattleCreatureState.zeroHpLifecycle.dead=false"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}

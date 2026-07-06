@@ -1,12 +1,12 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.passive-ability-check-roll-mode unit-feature.passive-damage-resistance unit-feature.passive-saving-throw-roll-mode
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT species_dragonborn_damage_resistance dwarf_dwarven_resilience species_goliath_powerful_build
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME species_halfling_brave
-// UNIT-IDENTITY-MBT-REPLAY: L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT species_dragonborn_damage_resistance doDragonbornDamageResistance
-// UNIT-IDENTITY-MBT-REPLAY: L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT dwarf_dwarven_resilience doDwarvenResilience
-// UNIT-IDENTITY-MBT-REPLAY: L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT species_goliath_powerful_build doGoliathPowerfulBuild
-// UNIT-IDENTITY-MBT-REPLAY: L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME species_halfling_brave doHalflingBrave
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT species_dragonborn_damage_resistance dwarf_dwarven_resilience species_goliath_powerful_build
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME species_halfling_brave
+// UNIT-IDENTITY-REPLAY: L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT species_dragonborn_damage_resistance doDragonbornDamageResistance
+// UNIT-IDENTITY-REPLAY: L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT dwarf_dwarven_resilience doDwarvenResilience
+// UNIT-IDENTITY-REPLAY: L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT species_goliath_powerful_build doGoliathPowerfulBuild
+// UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME species_halfling_brave doHalflingBrave
 import { describe, expect, it } from "vitest";
 
 import {
@@ -40,7 +40,7 @@ import {
   startBattle,
   type BattleState,
 } from "./index.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
   dwarfDwarvenResilienceUnitId,
   oppositionSide,
@@ -96,8 +96,8 @@ type SpeciesPassiveTraitProjection = {
   readonly lastResult: SpeciesPassiveTraitLastResult;
 };
 
-defineSelectedIdentityWitness({
-  describeLabel: "Species passive trait selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Species passive trait selected identity replay",
   taskId: "L3MSPEC-11-SPECIES-SELECTED-IDENTITY-AUDIT",
   specFile: mbtSpecPath(
     import.meta.dirname,
@@ -136,10 +136,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doDragonbornDamageResistance",
-          projectionAfter: expectedProjection({
-            dragonbornFireDamageAfter: 4,
-            lastResult: "dragonbornDamageResistance",
-          }),
           discover: () =>
             projectDragonbornDamageResistance(
               dragonbornDamageResistanceBattle(),
@@ -152,11 +148,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doDwarvenResilience",
-          projectionAfter: expectedProjection({
-            dwarfPoisonDamageAfter: 4,
-            dwarfPoisonedSaveAdvantage: true,
-            lastResult: "dwarvenResilience",
-          }),
           discover: () => projectDwarvenResilience(dwarvenResilienceBattle()),
         },
       ],
@@ -166,11 +157,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doHalflingBrave",
-          projectionAfter: expectedProjection({
-            halflingFrightenedAvoidSaveAdvantage: true,
-            halflingFrightenedEndSaveAdvantage: true,
-            lastResult: "halflingBrave",
-          }),
           discover: () => projectHalflingBrave(halflingBraveBattle()),
         },
       ],
@@ -180,10 +166,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doGoliathPowerfulBuild",
-          projectionAfter: expectedProjection({
-            goliathEscapeRollMode: "advantage",
-            lastResult: "goliathPowerfulBuild",
-          }),
           discover: () => ({
             ...expectedProjection({
               goliathEscapeRollMode: escapeGrappleRollMode({
@@ -378,7 +360,9 @@ function halflingBraveBattle(): BattleState {
   return result.right;
 }
 
-function projectHalflingBrave(state: BattleState): SpeciesPassiveTraitProjection {
+function projectHalflingBrave(
+  state: BattleState,
+): SpeciesPassiveTraitProjection {
   const targetId = combatantId("species-passive-halfling-target");
   const target = state.combatants.get(targetId);
   if (target === undefined) {
@@ -522,21 +506,25 @@ const speciesPassiveTraitSubstrateRouteDriverSchema = {
 } as const;
 
 describe("Species passive trait substrate route MBT", () => {
-  it("routes passive trait substrates through generic battle owners", async () => {
-    await run({
-      spec: mbtSpecPath(
-        import.meta.dirname,
-        "battle-runtime-species-passive-trait-substrates.route.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createSpeciesPassiveTraitSubstrateRouteDriver(),
-      backend: "typescript",
-      nTraces: mbtTraceCount(),
-      maxSteps: focusedMbtMaxSteps(8),
-      stateCheck: speciesPassiveTraitSubstrateRouteStateCheck,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "routes passive trait substrates through generic battle owners",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-species-passive-trait-substrates.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createSpeciesPassiveTraitSubstrateRouteDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(8),
+        stateCheck: speciesPassiveTraitSubstrateRouteStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function createSpeciesPassiveTraitSubstrateRouteDriver() {

@@ -1,0 +1,109 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/sorcerer-metamagic-careful-selected-identity.mbt.test.ts Careful Spell public reducer route observations"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      "qntFileSha256": "406fa53f41e6e60d199e64c5200fa74c5dc528d67d872c5c946335c2ca3c0feb",
+      "routeConnectorSha256": "3a83c1a50d7395d3f4079c734dc8ca6b95b65fdd778495a5a93c5e7074bb5dc9",
+      "branchFamily": "step",
+      "branchAction": "doResolveCarefulSaveGatedDamage",
+      "observedActionTaken": "doResolveCarefulSaveGatedDamage",
+      "harnessTestPath": "packages/battle-runtime/src/sorcerer-metamagic-careful-selected-identity.mbt.test.ts",
+      "traceId": "public-route=metamagicSavingThrowProtection action=doResolveCarefulSaveGatedDamage qRoute=blocked-copied-connector-discovery-frontier",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "route-shape-mismatch",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(state), AvailableBattleAct.routeEvents, and BattleResolutionResult.routeEvents during Careful Burning Hands resolution; the public act first exposes the protected-target spellTargetList frontier before the savingThrowOutcome frontier exists, while the copied metamagic connector starts saving-throw protection at SavingThrowOutcomeFillKind",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=metamagicSavingThrowProtection",
+          "BattleReducerRouteEvent.holes=spellTargetList",
+          "BattleReducerRouteEvent.fill=spellTargetList",
+          "BattleReducerRouteEvent.fill=savingThrowOutcome",
+          "BattleReducerRouteEvent.owner=battleFeatureResource",
+          "BattleReducerRouteEvent.owner=battleSavingThrowOutcome",
+          "BattleReducerRouteEvent.owner=battleDamageAdjustment",
+          "BattleSubject.actionSpell.metamagic.effectKind=saving_throw_protection",
+          "BattleSubject.actionSpell.invocation.procedure=saveGatedDamage",
+          "CharacterBattlePointPoolResourceState.pointsRemaining"
+        ]
+      },
+      "result": {
+        "tag": "fail",
+        "reason": "The target public reducer route for Careful Burning Hands starts with the protected-target spellTargetList frontier. The copied metamagic saving-throw-protection qRoute starts at savingThrowOutcome and does not model that public frontier, so accepting this as copied-connector replay would misrepresent the public act route."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      "qntFileSha256": "406fa53f41e6e60d199e64c5200fa74c5dc528d67d872c5c946335c2ca3c0feb",
+      "routeConnectorSha256": "3a83c1a50d7395d3f4079c734dc8ca6b95b65fdd778495a5a93c5e7074bb5dc9",
+      "branchFamily": "step",
+      "branchAction": "doResolveCarefulSaveGatedNoEffect",
+      "observedActionTaken": "doResolveCarefulSaveGatedNoEffect",
+      "harnessTestPath": "packages/battle-runtime/src/sorcerer-metamagic-careful-selected-identity.mbt.test.ts",
+      "traceId": "public-route=commandEffect action=doResolveCarefulSaveGatedNoEffect qRoute=blocked-copied-connector-damage-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "route-shape-mismatch",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(state), AvailableBattleAct.routeEvents, and BattleResolutionResult.routeEvents during Careful Command resolution; copied metamagic route connector expects MetamagicSavingThrowProtectionRouteSubject with a RolledDiceHoleKind damage-adjustment frontier, but the no-effect Command branch is routed by the target reducer as commandEffect and has no rolled-dice damage frontier",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=commandEffect",
+          "BattleReducerRouteEvent.fill=commandOptionChoice",
+          "BattleReducerRouteEvent.fill=savingThrowOutcome",
+          "BattleReducerRouteEvent.owner=battleSpellSlotAndActionEconomy",
+          "BattleReducerRouteEvent.owner=battleHoleFrontier",
+          "BattleReducerRouteEvent.owner=battleActiveEffect",
+          "BattleSubject.actionSpell.metamagic.effectKind=saving_throw_protection",
+          "BattleSubject.actionSpell.invocation.procedure=command",
+          "CharacterBattlePointPoolResourceState.pointsRemaining"
+        ]
+      },
+      "result": {
+        "tag": "fail",
+        "reason": "The selected-identity no-effect branch is Careful Command. Public reducer ordering routes Command action-spell subjects through commandEffect before metamagicSavingThrowProtection, and Command has no rolled-dice damage-adjustment frontier. The copied metamagic route connector exposes only the damage-shaped saving-throw-protection qRoute, so matching it for Command/no-effect would require synthetic damage route events or duplicate replay-only state."
+      }
+    }
+  ]
+}

@@ -188,6 +188,7 @@ import type {
   CharacterId,
   InitiativeScore,
 } from "./identity.ts";
+import type { BattleReducerRouteEvents } from "./battle-reducer/reducer-route.ts";
 import {
   BattleCombatantSide,
   BattleId,
@@ -250,6 +251,8 @@ import {
   HUNTERS_MARK_FINDING_SKILLS,
   type MirrorImageDuplicateCount,
   type MirrorImageUnaffectedSense,
+  OPEN_HAND_TECHNIQUE_DECISION_CHOICES,
+  type OpenHandTechniqueDecisionChoice,
   type ScorchingRayRayCount,
   type SelfTransformationModeKind,
   THAUMATURGY_MAX_ACTIVE_ONE_MINUTE_EFFECTS,
@@ -268,6 +271,15 @@ export {
   validateWildShapeEquipmentDispositionFill,
   wildShapeLoadoutObjectRefs,
 } from "./battle-reducer/wild-shape-equipment.ts";
+export {
+  battleReducerStartRouteEvent,
+  type BattleReducerRouteEvent,
+  type BattleReducerRouteEvents,
+  type BattleReducerRouteFill,
+  type BattleReducerRouteHole,
+  type BattleReducerRouteOwnerGroup,
+  type BattleReducerRouteSubjectFamily,
+} from "./battle-reducer/reducer-route.ts";
 export {
   addBattleCombatant,
   applyInitiativeSwap,
@@ -803,7 +815,10 @@ export type BattleOngoingSpellTargetWithinRangeFact = {
   readonly rangeFeet: MovementFeet;
 };
 type BattleConcentrationOrDurationExpiration =
-  | (Extract<BattleActiveEffectExpiration, { readonly kind: "concentration" }> & {
+  | (Extract<
+      BattleActiveEffectExpiration,
+      { readonly kind: "concentration" }
+    > & {
       readonly durationTicks: ElapsedTimeTicks;
     })
   | Extract<BattleActiveEffectExpiration, { readonly kind: "duration" }>;
@@ -4048,6 +4063,11 @@ export type SpellAttackDamageComponent = {
 };
 export type AttackSpellDamageAddition = SpellAttackDamageComponent & {
   readonly kind: "attackSpellDamageAddition";
+  readonly sourceProcedure:
+    | "afterHitDamage"
+    | "afterHitTimedDamageAndSave"
+    | "afterHitDamageAndIllumination"
+    | "spellHostedWeaponAttack";
 };
 export type MarkedDamageRiderFindingAdvantage = {
   readonly kind: "findingAdvantage";
@@ -4465,6 +4485,7 @@ export type AvailableBattleAct = {
   readonly label: string;
   readonly summary: string;
   readonly initialHoles: readonly BattleHole[];
+  readonly routeEvents?: BattleReducerRouteEvents;
 };
 
 export type BattleHoleId = HoleId;
@@ -5913,7 +5934,7 @@ export type BattleUnitFeatureDecisionHole = {
   readonly choices:
     | readonly ["use", "decline"]
     | readonly ["attempt", "decline"]
-    | readonly ["addle", "push", "topple", "decline"];
+    | typeof OPEN_HAND_TECHNIQUE_DECISION_CHOICES;
 };
 export type BattleHitPointHealingPoolAllocation = {
   readonly targetId: CombatantId;
@@ -6401,13 +6422,7 @@ export type BattleFill =
   | {
       readonly kind: "unitFeatureDecision";
       readonly holeId: BattleHoleId;
-      readonly value:
-        | "use"
-        | "attempt"
-        | "addle"
-        | "push"
-        | "topple"
-        | "decline";
+      readonly value: "use" | "attempt" | OpenHandTechniqueDecisionChoice;
     }
   | {
       readonly kind: "hitPointHealingDistribution";
@@ -6809,6 +6824,7 @@ export type BattleResolutionResult =
       readonly tag: "resolved";
       readonly state: BattleState;
       readonly snapshot: BattleSnapshot;
+      readonly routeEvents?: BattleReducerRouteEvents;
       readonly objectDamages?: readonly BattleObjectDamageOutcome[];
       readonly objectIgnitions?: readonly BattleObjectIgnitionOutcome[];
       readonly droppedObjects?: readonly BattleDroppedObjectOutcome[];
@@ -6821,12 +6837,14 @@ export type BattleResolutionResult =
       readonly subject: BattleSubject;
       readonly holes: readonly BattleHole[];
       readonly snapshot: BattleSnapshot;
+      readonly routeEvents?: BattleReducerRouteEvents;
     }
   | {
       readonly tag: "invalid";
       readonly reason: BattleInvalidReasonCode;
       readonly message: string;
       readonly snapshot: BattleSnapshot;
+      readonly routeEvents?: BattleReducerRouteEvents;
     };
 export type BattleFeatherFallLandingResult =
   | {

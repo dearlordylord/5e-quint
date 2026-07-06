@@ -1,19 +1,19 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B4-CLASS-FEATURE-IDENTITY-BATCH-1 bard_expertise cleric_channel_divinity druid_wild_shape druid_wild_companion
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay B4-CLASS-FEATURE-IDENTITY-BATCH-1 bard_expertise cleric_channel_divinity druid_wild_shape druid_wild_companion
 // KERNEL-COVERAGE: parity-witness CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION
-// UNIT-IDENTITY-MBT-REPLAY: B4-CLASS-FEATURE-IDENTITY-BATCH-1 bard_expertise doSelectBardExpertise
-// UNIT-IDENTITY-MBT-REPLAY: B4-CLASS-FEATURE-IDENTITY-BATCH-1 cleric_channel_divinity doProjectClericChannelDivinity
-// UNIT-IDENTITY-MBT-REPLAY: B4-CLASS-FEATURE-IDENTITY-BATCH-1 druid_wild_shape doProjectDruidWildShape
-// UNIT-IDENTITY-MBT-REPLAY: B4-CLASS-FEATURE-IDENTITY-BATCH-1 druid_wild_companion doProjectDruidWildCompanion
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B5-CLASS-FEATURE-IDENTITY-BATCH-2 monk_monks_focus monk_uncanny_metabolism paladin_fighting_style ranger_deft_explorer ranger_fighting_style
-// UNIT-IDENTITY-MBT-REPLAY: B5-CLASS-FEATURE-IDENTITY-BATCH-2 monk_monks_focus doProjectMonksFocus
-// UNIT-IDENTITY-MBT-REPLAY: B5-CLASS-FEATURE-IDENTITY-BATCH-2 monk_uncanny_metabolism doProjectMonkUncannyMetabolism
-// UNIT-IDENTITY-MBT-REPLAY: B5-CLASS-FEATURE-IDENTITY-BATCH-2 paladin_fighting_style doSelectPaladinFightingStyle
-// UNIT-IDENTITY-MBT-REPLAY: B5-CLASS-FEATURE-IDENTITY-BATCH-2 ranger_deft_explorer doSelectRangerDeftExplorer
-// UNIT-IDENTITY-MBT-REPLAY: B5-CLASS-FEATURE-IDENTITY-BATCH-2 ranger_fighting_style doSelectRangerFightingStyle
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt B6-CLASS-FEATURE-IDENTITY-BATCH-3 warlock_pact_magic wizard_scholar wizard_evocation_savant
-// UNIT-IDENTITY-MBT-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 warlock_pact_magic doProjectWarlockPactMagic
-// UNIT-IDENTITY-MBT-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 wizard_scholar doSelectWizardScholar
-// UNIT-IDENTITY-MBT-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 wizard_evocation_savant doSelectWizardEvocationSavant
+// UNIT-IDENTITY-REPLAY: B4-CLASS-FEATURE-IDENTITY-BATCH-1 bard_expertise doSelectBardExpertise
+// UNIT-IDENTITY-REPLAY: B4-CLASS-FEATURE-IDENTITY-BATCH-1 cleric_channel_divinity doProjectClericChannelDivinity
+// UNIT-IDENTITY-REPLAY: B4-CLASS-FEATURE-IDENTITY-BATCH-1 druid_wild_shape doProjectDruidWildShape
+// UNIT-IDENTITY-REPLAY: B4-CLASS-FEATURE-IDENTITY-BATCH-1 druid_wild_companion doProjectDruidWildCompanion
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay B5-CLASS-FEATURE-IDENTITY-BATCH-2 monk_monks_focus monk_uncanny_metabolism paladin_fighting_style ranger_deft_explorer ranger_fighting_style
+// UNIT-IDENTITY-REPLAY: B5-CLASS-FEATURE-IDENTITY-BATCH-2 monk_monks_focus doProjectMonksFocus
+// UNIT-IDENTITY-REPLAY: B5-CLASS-FEATURE-IDENTITY-BATCH-2 monk_uncanny_metabolism doProjectMonkUncannyMetabolism
+// UNIT-IDENTITY-REPLAY: B5-CLASS-FEATURE-IDENTITY-BATCH-2 paladin_fighting_style doSelectPaladinFightingStyle
+// UNIT-IDENTITY-REPLAY: B5-CLASS-FEATURE-IDENTITY-BATCH-2 ranger_deft_explorer doSelectRangerDeftExplorer
+// UNIT-IDENTITY-REPLAY: B5-CLASS-FEATURE-IDENTITY-BATCH-2 ranger_fighting_style doSelectRangerFightingStyle
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay B6-CLASS-FEATURE-IDENTITY-BATCH-3 warlock_pact_magic wizard_scholar wizard_evocation_savant
+// UNIT-IDENTITY-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 warlock_pact_magic doProjectWarlockPactMagic
+// UNIT-IDENTITY-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 wizard_scholar doSelectWizardScholar
+// UNIT-IDENTITY-REPLAY: B6-CLASS-FEATURE-IDENTITY-BATCH-3 wizard_evocation_savant doSelectWizardEvocationSavant
 import * as path from "node:path";
 
 import {
@@ -361,7 +361,7 @@ const classFeatureSelectedIdentityStateCheck = stateCheck(
   compareClassFeatureSelectedIdentityState,
 );
 
-describe("Character Creation class-feature selected identity MBT", () => {
+describe("Character Creation class-feature selected identity replay", () => {
   it("replays selected Unit identities deterministically", async () => {
     for (const replay of selectedUnitIdentityReplays) {
       const replayedActions =

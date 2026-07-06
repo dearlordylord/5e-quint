@@ -1,5 +1,9 @@
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME feat_two_weapon_fighting
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-TWO-WEAPON-FIGHTING-DECLINE-RUNTIME feat_two_weapon_fighting
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME feat_two_weapon_fighting
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-TWO-WEAPON-FIGHTING-DECLINE-RUNTIME feat_two_weapon_fighting
+// UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME feat_two_weapon_fighting doReplayTwoWeaponFightingApplyDamageModifier
+// UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-TWO-WEAPON-FIGHTING-DECLINE-RUNTIME feat_two_weapon_fighting doReplayTwoWeaponFightingDeclineDamageModifier
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.light-extra-attack-damage-ability-modifier
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
@@ -37,6 +41,7 @@ import {
   twoWeaponFightingUnitId,
   unitLibrary,
 } from "./unit-profile-admission-catalog-support.ts";
+import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.ts";
 
 describe("L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME deterministic profile slice", () => {
   test("Two-Weapon Fighting is admitted as a Light extra attack damage ability modifier permission", () => {
@@ -556,4 +561,69 @@ function twoWeaponFightingDamageAbilityModifierProfile() {
     modifierSource: "attackAbilityModifier",
     appliesWhen: "notAlreadyAddingAbilityModifier",
   } as const;
+}
+
+defineSelectedIdentityReplayWitness({
+  describeLabel:
+    "L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME selected identity replay",
+  taskId: "L3-FOLLOWUP-TWO-WEAPON-FIGHTING-RUNTIME",
+  initialProjection: {
+    unitId: twoWeaponFightingUnitId,
+    procedure: "initial",
+    targetHp: 10,
+  },
+  units: [
+    {
+      unitId: twoWeaponFightingUnitId,
+      procedures: [
+        {
+          actionName: "doReplayTwoWeaponFightingApplyDamageModifier",
+          projectionAfter: {
+            unitId: twoWeaponFightingUnitId,
+            procedure: "lightExtraAttackDamageAbilityModifierApply",
+            targetHp: 3,
+          },
+          discover: () => replayTwoWeaponFighting("apply"),
+        },
+        {
+          actionName: "doReplayTwoWeaponFightingDeclineDamageModifier",
+          projectionAfter: {
+            unitId: twoWeaponFightingUnitId,
+            procedure: "lightExtraAttackDamageAbilityModifierDecline",
+            targetHp: 6,
+          },
+          discover: () => replayTwoWeaponFighting("decline"),
+        },
+      ],
+    },
+  ],
+});
+
+function replayTwoWeaponFighting(selection: "apply" | "decline"): {
+  readonly unitId: typeof twoWeaponFightingUnitId;
+  readonly procedure:
+    | "lightExtraAttackDamageAbilityModifierApply"
+    | "lightExtraAttackDamageAbilityModifierDecline";
+  readonly targetHp: number;
+} {
+  const result = resolveOffHandHit({
+    state: afterQualifyingLightAttack(
+      lightAttackBattle({
+        characterUnitRefs: [twoWeaponFightingBattleUnitRef()],
+      }),
+    ),
+    damageRoll: 4,
+    attackDamageAbilityModifierSelection: selection,
+  });
+  if (result.resolved.tag !== "resolved") {
+    throw new Error("Expected selected Two-Weapon Fighting replay.");
+  }
+  return {
+    unitId: twoWeaponFightingUnitId,
+    procedure:
+      selection === "apply"
+        ? "lightExtraAttackDamageAbilityModifierApply"
+        : "lightExtraAttackDamageAbilityModifierDecline",
+    targetHp: Number(result.resolved.state.combatants.get(goblinId)?.hp),
+  };
 }

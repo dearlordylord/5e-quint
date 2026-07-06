@@ -3,6 +3,7 @@
 // KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.remarkable-athlete
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.remarkable-athlete
+
 module battleRuntimeRemarkableAthleteRollModes {
   // RAW trace:
   // - .references/srd-5.2.1/Classes/Fighter.md#Level 3: Remarkable Athlete:
@@ -43,46 +44,4 @@ module battleRuntimeRemarkableAthleteRollModes {
     strengthAthleticsAdvantage: false,
   }
 
-  run test_remarkable_athlete_projects_initiative_advantage = {
-    assert(
-      remarkableAthleteInitiativeRollMode(admittedRemarkableAthleteProfile) ==
-      AdvantageRoll
-    )
-  }
-
-  run test_remarkable_athlete_projects_strength_athletics_advantage = {
-    assert(
-      remarkableAthleteAbilityCheckRollMode(
-        admittedRemarkableAthleteProfile,
-        Strength,
-        AthleticsSkill,
-      ) == AdvantageRoll
-    )
-  }
-
-  run test_remarkable_athlete_does_not_project_adjacent_ability_check_modes = {
-    all {
-      assert(
-        remarkableAthleteAbilityCheckRollMode(
-          admittedRemarkableAthleteProfile,
-          Strength,
-          AcrobaticsSkill,
-        ) == NormalRoll
-      ),
-      assert(
-        remarkableAthleteAbilityCheckRollMode(
-          admittedRemarkableAthleteProfile,
-          Dexterity,
-          AthleticsSkill,
-        ) == NormalRoll
-      ),
-      assert(
-        remarkableAthleteAbilityCheckRollMode(
-          unselectedRemarkableAthleteProfile,
-          Strength,
-          AthleticsSkill,
-        ) == NormalRoll
-      ),
-    }
-  }
 }

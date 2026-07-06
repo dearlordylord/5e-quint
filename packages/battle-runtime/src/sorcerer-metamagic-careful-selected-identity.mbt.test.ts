@@ -1,5 +1,5 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3META-04-SORCERER-METAMAGIC-CAREFUL-SAVE-PROFILES sorcerer_metamagic
-// UNIT-IDENTITY-MBT-REPLAY: L3META-04-SORCERER-METAMAGIC-CAREFUL-SAVE-PROFILES sorcerer_metamagic doResolveCarefulSaveGatedDamage doResolveCarefulSaveGatedNoEffect
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3META-04-SORCERER-METAMAGIC-CAREFUL-SAVE-PROFILES sorcerer_metamagic
+// UNIT-IDENTITY-REPLAY: L3META-04-SORCERER-METAMAGIC-CAREFUL-SAVE-PROFILES sorcerer_metamagic doResolveCarefulSaveGatedDamage doResolveCarefulSaveGatedNoEffect
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.metamagic-careful-save-protection
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.METAMAGIC_CAREFUL_SAVE_PROTECTION
 // RAW trace:
@@ -17,17 +17,21 @@
 //   successful save.
 // - UBIQUITOUS_LANGUAGE.md: Magic Action, Spell Invocation, Saving Throw,
 //   Sorcery Points as a Pool, and Spend.
+import { expect, it } from "vitest";
+
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
+  observeCarefulCommandNoEffectRoute,
   carefulSorcererMetamagicBattle,
+  observeCarefulSavingThrowProtectionRoute,
   projectBattleState,
   resolveCarefulBurningHands,
   resolveCarefulCommand,
 } from "./sorcerer-metamagic-selected-identity-support.ts";
 
-defineSelectedIdentityWitness({
-  describeLabel: "Sorcerer Metamagic Careful Spell selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Sorcerer Metamagic Careful Spell selected identity replay",
   taskId: "L3META-04-SORCERER-METAMAGIC-CAREFUL-SAVE-PROFILES",
   specFile: mbtSpecPath(
     import.meta.dirname,
@@ -65,14 +69,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doResolveCarefulSaveGatedDamage",
-          projectionAfter: {
-            magicActionAvailable: false,
-            bonusActionAvailable: true,
-            sorceryPointsRemaining: 3,
-            targetHp: 10,
-            targetActiveEffectCount: 0,
-            lastResult: "carefulSaveGatedDamage",
-          },
           discover: () =>
             projectBattleState(
               resolveCarefulBurningHands(carefulSorcererMetamagicBattle()),
@@ -81,14 +77,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doResolveCarefulSaveGatedNoEffect",
-          projectionAfter: {
-            magicActionAvailable: false,
-            bonusActionAvailable: true,
-            sorceryPointsRemaining: 3,
-            targetHp: 10,
-            targetActiveEffectCount: 0,
-            lastResult: "carefulSaveGatedNoEffect",
-          },
           discover: () =>
             projectBattleState(
               resolveCarefulCommand(carefulSorcererMetamagicBattle()),
@@ -98,4 +86,72 @@ defineSelectedIdentityWitness({
       ],
     },
   ],
+});
+
+it("observes Careful Spell save-protection route through public reducer entrypoints", () => {
+  expect(
+    observeCarefulSavingThrowProtectionRoute(carefulSorcererMetamagicBattle()),
+  ).toEqual([
+    { kind: "startBattle", owner: "battleActionEconomy" },
+    {
+      kind: "discoverBattleActs",
+      subject: "metamagicSavingThrowProtection",
+      holes: ["spellTargetList"],
+      owner: "battleFeatureResource",
+    },
+    {
+      kind: "resolveBattleSubject",
+      subject: "metamagicSavingThrowProtection",
+      fill: "spellTargetList",
+      holes: ["savingThrowOutcome"],
+      owner: "battleFeatureResource",
+    },
+    {
+      kind: "resolveBattleSubject",
+      subject: "metamagicSavingThrowProtection",
+      fill: "savingThrowOutcome",
+      holes: ["rolledDice"],
+      owner: "battleSavingThrowOutcome",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "metamagicSavingThrowProtection",
+      holes: ["rolledDice"],
+      owner: "battleDamageAdjustment",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "metamagicSavingThrowProtection",
+      holes: [],
+      owner: "battleFeatureResource",
+    },
+  ]);
+});
+
+it("observes Careful Command no-effect route through public reducer entrypoints", () => {
+  expect(
+    observeCarefulCommandNoEffectRoute(carefulSorcererMetamagicBattle()),
+  ).toEqual([
+    { kind: "startBattle", owner: "battleActionEconomy" },
+    {
+      kind: "discoverBattleActs",
+      subject: "commandEffect",
+      holes: ["commandOptionChoice", "spellTargetList"],
+      owner: "battleSpellSlotAndActionEconomy",
+    },
+    {
+      kind: "resolveBattleSubject",
+      subject: "commandEffect",
+      fill: "commandOptionChoice",
+      holes: ["savingThrowOutcome"],
+      owner: "battleHoleFrontier",
+    },
+    {
+      kind: "resolveBattleSubject",
+      subject: "commandEffect",
+      fill: "savingThrowOutcome",
+      holes: [],
+      owner: "battleActiveEffect",
+    },
+  ]);
 });

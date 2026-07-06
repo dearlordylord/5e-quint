@@ -376,7 +376,66 @@ function assertNoGenericTargetLeak(text, context) {
   }
 }
 
+function assertIncludesAll(text, context, requiredPatterns) {
+  for (const pattern of requiredPatterns) {
+    const matches =
+      typeof pattern === "string" ? text.includes(pattern) : pattern.test(text);
+    if (!matches) {
+      throw new Error(`${context}: required contract text missing ${pattern}.`);
+    }
+  }
+}
+
+function assertTaskTemplateContract() {
+  const implementerTaskPath = path.join(
+    scaffoldRoot,
+    "tasks/IMPLEMENTER_TASK.template.md",
+  );
+  const implementerTask = fs.readFileSync(implementerTaskPath, "utf8");
+  assertIncludesAll(implementerTask, "tasks/IMPLEMENTER_TASK.template.md", [
+    "## Goal",
+    "## Starting Points",
+    "## Output",
+    "## Acceptance",
+    "## Verification",
+    "## Plan Impact",
+    "reviewer-loop convergence",
+    "RAW traceability",
+    "ubiquitous-language/domain language",
+    /Do not use generic `improve\s+architecture` wording/,
+    "MBT is not a bootstrap verification step",
+    "explicitly names a focused MBT command",
+    "`source-qnt-corpus`",
+    "`source-scope`",
+    "`target-implementation`",
+    /target entrypoint\s+sequence/,
+    "observed projection source",
+    "reducer/public API path",
+  ]);
+  const reviewerChecklist = fs.readFileSync(
+    path.join(scaffoldRoot, "tasks/REVIEWER_CHECKLIST.template.md"),
+    "utf8",
+  );
+  assertIncludesAll(reviewerChecklist, "tasks/REVIEWER_CHECKLIST.template.md", [
+    "### verification-contract",
+    "Goal`, `Starting Points`, `Output`",
+    "MBT is not treated as bootstrap verification",
+    /`source-qnt-corpus`, `source-scope`, or\s+`target-implementation`/,
+    "generic `improve architecture`",
+  ]);
+  const deciderChecklist = fs.readFileSync(
+    path.join(scaffoldRoot, "tasks/DECIDER_CHECKLIST.template.md"),
+    "utf8",
+  );
+  assertIncludesAll(deciderChecklist, "tasks/DECIDER_CHECKLIST.template.md", [
+    "`task-template-contract`",
+    /`source-qnt-corpus`, `source-scope`, or\s+`target-implementation`/,
+    "explicitly named focused command",
+  ]);
+}
+
 function runSelfTest() {
+  assertTaskTemplateContract();
   for (const templatePath of templateFiles) {
     assertNoGenericTargetLeak(
       fs.readFileSync(path.join(scaffoldRoot, templatePath), "utf8"),

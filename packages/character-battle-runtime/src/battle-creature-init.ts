@@ -119,6 +119,9 @@ export type CharacterBuildCreatureInput = {
       >["itemId"];
 };
 
+export const CHARACTER_BATTLE_INIT_MAX_HP_EXCEEDS_BUILD_MAX_MESSAGE =
+  "Character battle initialization max HP exceeds build-derived max HP.";
+
 export type CharacterBattleInitiativeProficiencyChoice = "add" | "omit";
 
 export function characterBattleInitiativeScore(input: {
@@ -212,7 +215,7 @@ export function battleCreatureInitFromCharacterBuild(
   const maxHp = input.hitPointMaximum ?? buildMaximumHp;
   if (maxHp > buildMaximumHp) {
     return battleCreatureInitIssue(
-      "Character battle initialization max HP exceeds build-derived max HP.",
+      CHARACTER_BATTLE_INIT_MAX_HP_EXCEEDS_BUILD_MAX_MESSAGE,
     );
   }
   if (maxHp < Hp(1)) {

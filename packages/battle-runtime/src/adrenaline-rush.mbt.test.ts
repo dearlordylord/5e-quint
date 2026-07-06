@@ -1,15 +1,17 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.bonus-action-dash-temporary-hit-points
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1H-ORC-ADRENALINE-RUSH orc_adrenaline_rush
-// UNIT-IDENTITY-MBT-REPLAY: L1H-ORC-ADRENALINE-RUSH orc_adrenaline_rush doAdrenalineRushDash doRejectSecondDash
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-ORC-ADRENALINE-RUSH orc_adrenaline_rush
+// UNIT-IDENTITY-REPLAY: L1H-ORC-ADRENALINE-RUSH orc_adrenaline_rush doAdrenalineRushDash doRejectSecondDash
 import { describe, expect, it } from "vitest";
 
 import {
   MBT_TEST_TIMEOUT_MS,
   adrenalineRushStateCheck,
   createAdrenalineRushDriver,
+  createAdrenalineRushRouteDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
+  reducerRoutedAdrenalineRushStateCheck,
   run,
   runSelectedUnitIdentityReplay,
   type AdrenalineRushSelectedUnitIdentityReplay,
@@ -80,6 +82,22 @@ describe("Adrenaline Rush MBT", () => {
       nTraces: mbtTraceCount(),
       maxSteps: focusedMbtMaxSteps(2),
       stateCheck: adrenalineRushStateCheck,
+    });
+  }, MBT_TEST_TIMEOUT_MS);
+
+  it("routes Orc Adrenaline Rush through reducer owners", async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-adrenaline-rush.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "step",
+      driver: createAdrenalineRushRouteDriver(adrenalineRushDriverSchema),
+      backend: "typescript",
+      nTraces: mbtTraceCount(),
+      maxSteps: focusedMbtMaxSteps(2),
+      stateCheck: reducerRoutedAdrenalineRushStateCheck,
     });
   }, MBT_TEST_TIMEOUT_MS);
 });

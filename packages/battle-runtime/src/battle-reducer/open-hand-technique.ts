@@ -29,10 +29,12 @@ import { isMonkFocusFlurryOfBlowsActionResource } from "./monk-focus.ts";
 import { combatantProficiencyBonus } from "./movement-speed.ts";
 import { scoreModifier } from "./domain-helpers.ts";
 import {
+  OPEN_HAND_TECHNIQUE_DECISION_CHOICES,
   OPEN_HAND_TECHNIQUE_DECISION_HOLE_ID,
   OPEN_HAND_TECHNIQUE_DECISION_HOLE_INSTANCE,
   OPEN_HAND_TECHNIQUE_SAVE_HOLE_ID,
   OPEN_HAND_TECHNIQUE_SAVE_HOLE_INSTANCE,
+  type OpenHandTechniqueDecisionChoice,
 } from "./domain-constants.ts";
 import {
   savingThrowFlatBonusProjections,
@@ -40,13 +42,10 @@ import {
 } from "./spells-damage-fills.ts";
 import { extendSavingThrowOngoingFeatures } from "./attack-roll.ts";
 
-const OPEN_HAND_TECHNIQUE_CHOICES = [
-  "addle",
-  "push",
-  "topple",
-  "decline",
-] as const;
-type OpenHandTechniqueChoice = (typeof OPEN_HAND_TECHNIQUE_CHOICES)[number];
+type OpenHandTechniqueSavingThrowChoice = Extract<
+  OpenHandTechniqueDecisionChoice,
+  "pushAwayOnFailedSave" | "applyConditionOnFailedSave"
+>;
 
 type OpenHandTechniqueFlurryHit = {
   readonly actorId: CombatantId;
@@ -82,7 +81,7 @@ export function openHandTechniqueDecisionHoleForFlurryHit(
       unitId: hit.unitId,
       label: "Open Hand Technique",
     },
-    choices: OPEN_HAND_TECHNIQUE_CHOICES,
+    choices: OPEN_HAND_TECHNIQUE_DECISION_CHOICES,
   };
 }
 
@@ -138,7 +137,7 @@ export function resolveOpenHandTechniqueAfterHit(input: {
     return {
       tag: "invalid",
       message:
-        "Open Hand Technique decision must choose Addle, Push, Topple, or decline.",
+        "Open Hand Technique decision must choose a supported effect or decline.",
     };
   }
   return Match.value(input.decision.value).pipe(
@@ -152,25 +151,29 @@ export function resolveOpenHandTechniqueAfterHit(input: {
       }
       return { tag: "ok" as const, state: input.state, shovePushes: [] };
     }),
-    Match.when("addle", () => {
+    Match.when("denyOpportunityAttacks", () => {
       if (input.savingThrow !== undefined) {
         return {
           tag: "invalid" as const,
           message:
-            "Open Hand Technique Addle does not use a Saving Throw outcome.",
+            "Open Hand Technique Opportunity Attack denial does not use a Saving Throw outcome.",
         };
       }
       return {
         tag: "ok" as const,
-        state: applyOpenHandTechniqueAddle(input.state, hit),
+        state: applyOpenHandTechniqueOpportunityAttackDenial(input.state, hit),
         shovePushes: [],
       };
     }),
-    Match.when("push", () =>
-      resolveOpenHandTechniqueSaveChoice(input, hit, "push"),
+    Match.when("pushAwayOnFailedSave", () =>
+      resolveOpenHandTechniqueSaveChoice(input, hit, "pushAwayOnFailedSave"),
     ),
-    Match.when("topple", () =>
-      resolveOpenHandTechniqueSaveChoice(input, hit, "topple"),
+    Match.when("applyConditionOnFailedSave", () =>
+      resolveOpenHandTechniqueSaveChoice(
+        input,
+        hit,
+        "applyConditionOnFailedSave",
+      ),
     ),
     Match.exhaustive,
   );
@@ -184,7 +187,7 @@ function resolveOpenHandTechniqueSaveChoice(
       | undefined;
   },
   hit: OpenHandTechniqueFlurryHit,
-  choice: Extract<OpenHandTechniqueChoice, "push" | "topple">,
+  choice: OpenHandTechniqueSavingThrowChoice,
 ): OpenHandTechniqueAfterHitResult {
   if (input.savingThrow === undefined) {
     return {
@@ -212,7 +215,7 @@ function resolveOpenHandTechniqueSaveChoice(
     [hit.targetId],
   );
   const push = openHandTechniquePush(input.savingThrow);
-  if (choice !== "push" && push !== undefined) {
+  if (choice !== "pushAwayOnFailedSave" && push !== undefined) {
     return {
       tag: "invalid",
       message:
@@ -229,17 +232,20 @@ function resolveOpenHandTechniqueSaveChoice(
     }
     return { tag: "ok", state: savingThrowState, shovePushes: [] };
   }
-  return choice === "push"
-    ? applyOpenHandTechniquePush(savingThrowState, hit, push)
-    : applyOpenHandTechniqueTopple(savingThrowState, hit);
+  return choice === "pushAwayOnFailedSave"
+    ? applyOpenHandTechniquePushAway(savingThrowState, hit, push)
+    : applyOpenHandTechniqueApplyProne(savingThrowState, hit);
 }
 
 function openHandTechniqueSavingThrowHole(
   state: BattleState,
   hit: OpenHandTechniqueFlurryHit,
-  choice: Extract<OpenHandTechniqueChoice, "push" | "topple">,
+  choice: OpenHandTechniqueSavingThrowChoice,
 ): BattleUnitFeatureSavingThrowOutcomeHole {
-  const ability = choice === "push" ? "str" : "dex";
+  const ability =
+    choice === "pushAwayOnFailedSave"
+      ? hit.profile.technique.effects.pushAwayOnFailedSave.save.ability
+      : hit.profile.technique.effects.applyConditionOnFailedSave.save.ability;
   const actor = state.combatants.get(hit.actorId);
   if (actor === undefined) {
     throw new Error("Open Hand Technique save hole requires an actor.");
@@ -252,7 +258,7 @@ function openHandTechniqueSavingThrowHole(
     kind: "savingThrowOutcome",
     holeId: OPEN_HAND_TECHNIQUE_SAVE_HOLE_ID,
     holeInstanceKey: OPEN_HAND_TECHNIQUE_SAVE_HOLE_INSTANCE,
-    label: `Open Hand Technique ${choice === "push" ? "Strength" : "Dexterity"} Saving Throw`,
+    label: `Open Hand Technique ${choice === "pushAwayOnFailedSave" ? "Strength" : "Dexterity"} Saving Throw`,
     unitFeature: {
       unitId: hit.unitId,
       label: "Open Hand Technique",
@@ -276,7 +282,7 @@ function openHandTechniqueSavingThrowHole(
   };
 }
 
-function applyOpenHandTechniqueAddle(
+function applyOpenHandTechniqueOpportunityAttackDenial(
   state: BattleState,
   hit: OpenHandTechniqueFlurryHit,
 ): BattleState {
@@ -308,12 +314,13 @@ function applyOpenHandTechniqueAddle(
   };
 }
 
-function applyOpenHandTechniquePush(
+function applyOpenHandTechniquePushAway(
   state: BattleState,
   hit: OpenHandTechniqueFlurryHit,
   push: BattleShovePushOutcome | undefined,
 ): OpenHandTechniqueAfterHitResult {
-  const distanceFeet = hit.profile.technique.choices[1].onFail.distanceFeet;
+  const distanceFeet =
+    hit.profile.technique.effects.pushAwayOnFailedSave.distanceFeet;
   if (push === undefined) {
     return {
       tag: "invalid",
@@ -338,7 +345,7 @@ function applyOpenHandTechniquePush(
   return { tag: "ok", state, shovePushes: [push] };
 }
 
-function applyOpenHandTechniqueTopple(
+function applyOpenHandTechniqueApplyProne(
   state: BattleState,
   hit: OpenHandTechniqueFlurryHit,
 ): OpenHandTechniqueAfterHitResult {
@@ -356,7 +363,10 @@ function applyOpenHandTechniqueTopple(
       combatants: new Map(state.combatants).set(hit.targetId, {
         ...battleCreatureStateWithKnockOutPreservedConditions(
           target,
-          applyCondition(target.conditions, "prone"),
+          applyCondition(
+            target.conditions,
+            hit.profile.technique.effects.applyConditionOnFailedSave.condition,
+          ),
         ),
       }),
     },
@@ -463,6 +473,8 @@ function isMonkFocusFlurryOfBlowsStrikeSubject(
 
 function isOpenHandTechniqueChoice(
   value: Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>["value"],
-): value is OpenHandTechniqueChoice {
-  return OPEN_HAND_TECHNIQUE_CHOICES.some((choice) => choice === value);
+): value is OpenHandTechniqueDecisionChoice {
+  return OPEN_HAND_TECHNIQUE_DECISION_CHOICES.some(
+    (choice) => choice === value,
+  );
 }

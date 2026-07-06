@@ -1,7 +1,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.magic-action-area-save-damage-healing
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3PUTB-08-DRUID-LANDS-AID-RUNTIME druid_lands_aid
-// UNIT-IDENTITY-MBT-REPLAY: L3PUTB-08-DRUID-LANDS-AID-RUNTIME druid_lands_aid doResolveAreaSaveDamageHealing doResolveAreaSaveDamageHealingLevel10 doResolveAreaSaveDamageHealingLevel14 doRejectMissingResource doRejectMissingAreaMembership doRejectDuplicateSaveFill doRejectInvalidHealingTarget doRejectInvalidDamageRoll doRejectInvalidHealingRoll
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3PUTB-08-DRUID-LANDS-AID-RUNTIME druid_lands_aid
+// UNIT-IDENTITY-REPLAY: L3PUTB-08-DRUID-LANDS-AID-RUNTIME druid_lands_aid doResolveAreaSaveDamageHealing doResolveAreaSaveDamageHealingLevel10 doResolveAreaSaveDamageHealingLevel14 doRejectMissingResource doRejectMissingAreaMembership doRejectDuplicateSaveFill doRejectInvalidHealingTarget doRejectInvalidDamageRoll doRejectInvalidHealingRoll
 import { DieRollResult, movementFeet } from "@dnd/shared/types";
 import * as Either from "effect/Either";
 
@@ -18,7 +18,7 @@ import {
   characterSeed,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import {
   druidLandsAidUnitId,
@@ -80,8 +80,8 @@ const wildShapeUnit = unitLibrary.requireUnit(druidWildShapeUnitId);
 const secondTargetId = combatantId("lands-aid-selected-second-target");
 const healingTargetId = combatantId("lands-aid-selected-healing-target");
 
-defineSelectedIdentityWitness({
-  describeLabel: "Druid Land's Aid selected identity MBT",
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Druid Land's Aid selected identity replay",
   taskId: "L3PUTB-08-DRUID-LANDS-AID-RUNTIME",
   specFile: mbtSpecPath(
     import.meta.dirname,
@@ -91,7 +91,9 @@ defineSelectedIdentityWitness({
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
   quintFieldNames: { lastResult: "qScenarioOutcome" },
-  quintVariantFieldTags: { lastResult: DRUID_LANDS_AID_SCENARIO_OUTCOME_BY_TAG },
+  quintVariantFieldTags: {
+    lastResult: DRUID_LANDS_AID_SCENARIO_OUTCOME_BY_TAG,
+  },
   projectionSchema: {
     targetHp: "int",
     secondTargetHp: "int",
@@ -107,14 +109,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doResolveAreaSaveDamageHealing",
-          projectionAfter: expectedProjection({
-            targetHp: 12,
-            secondTargetHp: 16,
-            healingTargetHp: 12,
-            wildShapeUsesRemaining: 1,
-            actionResourcesRemaining: 0,
-            lastResult: "resolved",
-          }),
           discover: () =>
             projectBattleState(
               recordResolvedState(
@@ -138,14 +132,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doResolveAreaSaveDamageHealingLevel10",
-          projectionAfter: expectedProjection({
-            targetHp: 8,
-            secondTargetHp: 14,
-            healingTargetHp: 17,
-            wildShapeUsesRemaining: 1,
-            actionResourcesRemaining: 0,
-            lastResult: "resolved",
-          }),
           discover: () =>
             projectBattleState(
               recordResolvedState(
@@ -169,14 +155,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doResolveAreaSaveDamageHealingLevel14",
-          projectionAfter: expectedProjection({
-            targetHp: 4,
-            secondTargetHp: 12,
-            healingTargetHp: 20,
-            wildShapeUsesRemaining: 1,
-            actionResourcesRemaining: 0,
-            lastResult: "resolved",
-          }),
           discover: () =>
             projectBattleState(
               recordResolvedState(
@@ -200,10 +178,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doRejectMissingResource",
-          projectionAfter: expectedProjection({
-            wildShapeUsesRemaining: 0,
-            lastResult: "rejectMissingResource",
-          }),
           discover: () => {
             const state = landsAidBattle({ wildShapeUsesRemaining: 0 });
             recordInvalidResult(
@@ -218,9 +192,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doRejectMissingAreaMembership",
-          projectionAfter: expectedProjection({
-            lastResult: "rejectMissingAreaMembership",
-          }),
           discover: () => {
             const state = landsAidBattle();
             recordInvalidResult(
@@ -237,9 +208,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doRejectDuplicateSaveFill",
-          projectionAfter: expectedProjection({
-            lastResult: "rejectDuplicateSaveFill",
-          }),
           discover: () => {
             const state = landsAidBattle();
             recordInvalidResult(
@@ -259,9 +227,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doRejectInvalidHealingTarget",
-          projectionAfter: expectedProjection({
-            lastResult: "rejectInvalidHealingTarget",
-          }),
           discover: () => {
             const state = landsAidBattle();
             recordInvalidResult(
@@ -278,9 +243,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doRejectInvalidDamageRoll",
-          projectionAfter: expectedProjection({
-            lastResult: "rejectInvalidDamageRoll",
-          }),
           discover: () => {
             const state = landsAidBattle();
             recordInvalidResult(
@@ -297,9 +259,6 @@ defineSelectedIdentityWitness({
         },
         {
           actionName: "doRejectInvalidHealingRoll",
-          projectionAfter: expectedProjection({
-            lastResult: "rejectInvalidHealingRoll",
-          }),
           discover: () => {
             const state = landsAidBattle();
             recordInvalidResult(

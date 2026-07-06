@@ -80,6 +80,19 @@ export const EXTENDED_SPELL_METAMAGIC_SELECTION = [
   { effectKind: EXTENDED_METAMAGIC_EFFECT_KIND },
 ] as const satisfies readonly [SpellMetamagicSelection];
 
+const SPELL_METAMAGIC_EFFECT_KIND_LABELS = {
+  [CAREFUL_METAMAGIC_EFFECT_KIND]: "Careful Spell",
+  [DISTANT_METAMAGIC_EFFECT_KIND]: "Distant Spell",
+  [EMPOWERED_METAMAGIC_EFFECT_KIND]: "Empowered Spell",
+  [EXTENDED_METAMAGIC_EFFECT_KIND]: "Extended Spell",
+  [HEIGHTENED_METAMAGIC_EFFECT_KIND]: "Heightened Spell",
+  [QUICKENED_METAMAGIC_EFFECT_KIND]: "Quickened Spell",
+  [SEEKING_METAMAGIC_EFFECT_KIND]: "Seeking Spell",
+  [SUBTLE_METAMAGIC_EFFECT_KIND]: "Subtle Spell",
+  [TRANSMUTED_METAMAGIC_EFFECT_KIND]: "Transmuted Spell",
+  [TWINNED_METAMAGIC_EFFECT_KIND]: "Twinned Spell",
+} as const satisfies Record<CharacterBattleMetamagicEffectKind, string>;
+
 export { TRANSMUTED_METAMAGIC_EFFECT_KIND } from "./metamagic-transmuted-facts.ts";
 export type { TransmutedSpellDamageType } from "./metamagic-transmuted-facts.ts";
 
@@ -353,6 +366,39 @@ export function discoverExtendedSpellMetamagicSelections(input: {
   return [EXTENDED_SPELL_METAMAGIC_SELECTION];
 }
 
+export function discoverSubtleSpellMetamagicSelections(input: {
+  readonly actor: BattleCreatureState | undefined;
+  readonly invocation: SupportedSpellInvocation;
+  readonly subject: Pick<SpellMetamagicSubject, "tag" | "mode">;
+}): readonly (readonly [SpellMetamagicSelection])[] {
+  if (
+    input.actor?.origin.kind !== "character" ||
+    input.actor.origin.metamagic === undefined
+  ) {
+    return [];
+  }
+  const subtle = input.actor.origin.metamagic.knownOptions.find(
+    (application) => application.effectKind === SUBTLE_METAMAGIC_EFFECT_KIND,
+  );
+  if (subtle === undefined) {
+    return [];
+  }
+  if (
+    subtleSpellComponentProjectionIssue({
+      applications: [subtle],
+      invocation: input.invocation,
+      subject: input.subject,
+    }) !== null ||
+    metamagicSorceryPointSpendIssue({
+      actor: input.actor,
+      applications: [subtle],
+    }) !== null
+  ) {
+    return [];
+  }
+  return [[{ effectKind: SUBTLE_METAMAGIC_EFFECT_KIND }]];
+}
+
 export function metamagicActionCostOverride(
   applications: readonly CharacterBattleMetamagicOptionFact[],
 ): "bonusAction" | undefined {
@@ -422,19 +468,12 @@ export function spellMetamagicApplications(
 }
 
 export function spellMetamagicLabel(
-  metamagic: readonly Pick<SpellMetamagicSelection, "effectKind">[],
+  metamagic: readonly [
+    Pick<SpellMetamagicSelection, "effectKind">,
+    ...Pick<SpellMetamagicSelection, "effectKind">[],
+  ],
 ): string {
-  return metamagic[0]?.effectKind === CAREFUL_METAMAGIC_EFFECT_KIND
-    ? "Careful Spell"
-    : metamagic[0]?.effectKind === HEIGHTENED_METAMAGIC_EFFECT_KIND
-      ? "Heightened Spell"
-      : metamagic[0]?.effectKind === TWINNED_METAMAGIC_EFFECT_KIND
-        ? "Twinned Spell"
-        : metamagic[0]?.effectKind === DISTANT_METAMAGIC_EFFECT_KIND
-          ? "Distant Spell"
-          : metamagic[0]?.effectKind === EXTENDED_METAMAGIC_EFFECT_KIND
-            ? "Extended Spell"
-            : "Quickened Spell";
+  return SPELL_METAMAGIC_EFFECT_KIND_LABELS[metamagic[0].effectKind];
 }
 
 export function transmutedSpellMetamagicLabel(
@@ -715,7 +754,7 @@ export function extendedSpellDurationModifierForApplications(
 }
 
 export function subtleSpellComponentProjectionIssue(input: {
-  readonly applications: readonly SpellMetamagicApplicationFact[];
+  readonly applications: readonly Pick<SpellMetamagicApplicationFact, "effectKind">[];
   readonly invocation: SupportedSpellInvocation;
   readonly subject: Pick<SpellMetamagicSubject, "tag" | "mode">;
 }): string | null {

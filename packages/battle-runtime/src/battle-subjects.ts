@@ -72,6 +72,7 @@ export type BattleSubjectBonusAction =
 
 export const BATTLE_RUNTIME_COMMANDS = [
   "endTurn",
+  "endConcentration",
   "move",
   "standFromProne",
   "releaseReadiedSpell",
@@ -674,6 +675,11 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("endTurn"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("endConcentration"),
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),

@@ -83,6 +83,11 @@ type CreationFillAcceptance = {
   readonly acceptedFills: readonly AcceptedCreationFillEntry[];
 };
 
+type AcceptedCreationBatchFillResult = Extract<
+  CreationBatchFillResult,
+  { readonly tag: "accepted" }
+>;
+
 type DraftSourcedCreationHole = CreationHole & {
   readonly source: DraftCreationHoleSource;
 };
@@ -148,11 +153,21 @@ export function fillCreationHoles(
       finalization,
     };
   }
-  const nextInput = { draft: nextDraft.right, unitLibrary: input.unitLibrary };
+
+  return acceptedCreationBatchFillResult(input, nextDraft.right);
+}
+
+function acceptedCreationBatchFillResult(
+  input: CreationBatchFillInput & {
+    readonly unitLibrary: UnitCatalog;
+  },
+  draft: CharacterDraft,
+): AcceptedCreationBatchFillResult {
+  const nextInput = { draft, unitLibrary: input.unitLibrary };
 
   return {
     tag: "accepted",
-    draft: nextDraft.right,
+    draft,
     holes: discoverCreationHoles(nextInput),
     finalization: finalizeCharacterDraft(nextInput),
   };

@@ -1924,7 +1924,7 @@ Inputs:
 - `plans/unit-profile-coverage/LEVEL1_5_FULL_SUPPORT.md`
 - `plans/unit-profile-coverage/unit-claims.jsonl`
 - `plans/unit-profile-coverage/unit-evidence.jsonl`
-- Existing selected-identity MBT/runtime-test owners named in
+- Existing selected-identity replay/runtime-test owners named in
   `plans/unit-profile-coverage/ULTRA_GOLDEN_GATE.md`
 - Relevant SRD spell text under `.references/srd-5.2.1/Spells/`
 - `UBIQUITOUS_LANGUAGE.md`
@@ -1972,7 +1972,7 @@ Verification:
 
 Plan Impact:
 
-- Applied. Added checker-visible selected-identity MBT evidence for
+- Applied. Added checker-visible selected-identity replay evidence for
   `glyph_of_warding`, `haste`, `protection_from_energy`, `sleet_storm`, and
   `slow` through the focused level-3 spell selected-identity owner.
 - `level1-5-full-support.json` now reports zero selected-identity blockers for

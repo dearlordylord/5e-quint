@@ -1,6 +1,6 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1D2-CLERIC-DRUID-ORDER cleric_divine_order druid_primal_order
-// UNIT-IDENTITY-MBT-REPLAY: L1D2-CLERIC-DRUID-ORDER cleric_divine_order doSelectClericProtectorOrder doSelectClericThaumaturgeOrder
-// UNIT-IDENTITY-MBT-REPLAY: L1D2-CLERIC-DRUID-ORDER druid_primal_order doSelectDruidMagicianOrder doSelectDruidWardenOrder
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1D2-CLERIC-DRUID-ORDER cleric_divine_order druid_primal_order
+// UNIT-IDENTITY-REPLAY: L1D2-CLERIC-DRUID-ORDER cleric_divine_order doSelectClericProtectorOrder doSelectClericThaumaturgeOrder
+// UNIT-IDENTITY-REPLAY: L1D2-CLERIC-DRUID-ORDER druid_primal_order doSelectDruidMagicianOrder doSelectDruidWardenOrder
 // KERNEL-COVERAGE: parity-witness CREATION.CLASS_FEATURE_OPTION.PROJECTION
 import * as path from "node:path";
 
@@ -318,7 +318,7 @@ function nullaryVariantTag(raw: unknown, field: string): string {
   throw new Error(`Expected Quint variant field ${field}.`);
 }
 
-describe("Character Creation Cleric and Druid Order selected identity MBT", () => {
+describe("Character Creation Cleric and Druid Order selected identity replay", () => {
   it("replays selected Unit identities deterministically", async () => {
     for (const replay of selectedUnitIdentityReplays) {
       const replayedActions = new Set<OrderDriverAction>();

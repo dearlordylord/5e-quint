@@ -1,5 +1,5 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L1D2-WARLOCK-ELDRITCH-INVOCATIONS warlock_eldritch_invocations
-// UNIT-IDENTITY-MBT-REPLAY: L1D2-WARLOCK-ELDRITCH-INVOCATIONS warlock_eldritch_invocations doSelectLevelOneArmorOfShadows doGainLevelTwoInvocations doReplaceArmorWithEldritchMindOnWarlockLevelGain doReplaceRepeatableInvocationByChoice doRejectPrerequisiteRetainedInvocationReplacement doRejectDuplicateInvocationSelections
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1D2-WARLOCK-ELDRITCH-INVOCATIONS warlock_eldritch_invocations
+// UNIT-IDENTITY-REPLAY: L1D2-WARLOCK-ELDRITCH-INVOCATIONS warlock_eldritch_invocations doSelectLevelOneArmorOfShadows doGainLevelTwoInvocations doReplaceArmorWithEldritchMindOnWarlockLevelGain doReplaceRepeatableInvocationByChoice doRejectPrerequisiteRetainedInvocationReplacement doRejectDuplicateInvocationSelections
 // KERNEL-COVERAGE: parity-witness CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE
 import * as path from "node:path";
 
@@ -434,7 +434,7 @@ function nullaryVariantTag(raw: unknown, field: string): string {
   throw new Error(`Expected Quint variant field ${field}.`);
 }
 
-describe("Character Creation Warlock Eldritch Invocations selected identity MBT", () => {
+describe("Character Creation Warlock Eldritch Invocations selected identity replay", () => {
   it("replays selected Unit identities deterministically", async () => {
     for (const replay of selectedUnitIdentityReplays) {
       const replayedActions =

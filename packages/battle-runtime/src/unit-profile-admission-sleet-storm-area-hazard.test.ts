@@ -1,4 +1,6 @@
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME sleet_storm
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME sleet_storm
+// UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME sleet_storm doReplaySleetStormAreaHazard
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-sleet-storm-area-hazard
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
 import { describe, expect, test } from "vitest";
@@ -37,6 +39,7 @@ import {
   spellTargetId,
 } from "./unit-profile-admission-test-support.ts";
 import { discoverBattleActs } from "./index.ts";
+import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.ts";
 
 const syntheticTargetConcentrationSpellId =
   "synthetic_sleet_storm_concentration_fixture";
@@ -494,7 +497,8 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Sleet Storm save was already resolved for this target this turn.",
+      message:
+        "Sleet Storm save was already resolved for this target this turn.",
     });
     expect(
       requireCombatant(entryResolved.state, spellCasterId).activeEffects,
@@ -601,7 +605,8 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message: "Sleet Storm save was already resolved for this target this turn.",
+      message:
+        "Sleet Storm save was already resolved for this target this turn.",
     });
     expect(
       requireCombatant(startTurnResolved.state, spellCasterId).activeEffects,
@@ -612,4 +617,43 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
       }),
     ]);
   });
+});
+
+defineSelectedIdentityReplayWitness({
+  describeLabel:
+    "L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME selected identity replay",
+  taskId: "L3-FOLLOWUP-SLEET-STORM-AREA-HAZARD-RUNTIME",
+  initialProjection: {
+    unitId: sleetStormUnitId,
+    procedure: "initial",
+    areaEffects: 0,
+  },
+  units: [
+    {
+      unitId: sleetStormUnitId,
+      procedures: [
+        {
+          actionName: "doReplaySleetStormAreaHazard",
+          projectionAfter: {
+            unitId: sleetStormUnitId,
+            procedure: "sleetStormAreaHazard",
+            areaEffects: 1,
+          },
+          discover: () => {
+            const { cast } = castSleetStorm();
+            const caster = requireCombatant(cast, spellCasterId);
+            return {
+              unitId: sleetStormUnitId,
+              procedure: "sleetStormAreaHazard",
+              areaEffects: caster.activeEffects.filter(
+                (effect) =>
+                  effect.kind === "sleetStormAreaHazard" &&
+                  effect.sourceSpellId === sleetStormUnitId,
+              ).length,
+            };
+          },
+        },
+      ],
+    },
+  ],
 });

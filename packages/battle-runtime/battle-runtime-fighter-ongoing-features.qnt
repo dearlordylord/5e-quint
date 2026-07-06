@@ -283,43 +283,4 @@ module battleRuntimeFighterOngoingFeatures {
   pure def goblinAttackAgainstFighterHasAdvantage(state: BattleState): bool =
     battleRuntimeRecklessAttackGrantsIncomingAttackAdvantage(fighterHasRecklessAttack(state))
 
-  run test_fighter_ongoing_feature_occurrences_have_exact_rage_slot = {
-    val rage = ActiveRoundExtendedOngoingFeature({
-      expiresAtEndOfFighterTurnRound: 2,
-      maxExpiresRound: 101,
-    })
-    val raging = {
-      ...initialState,
-      fighter: {
-        ...initialState.fighter,
-        activeOngoingFeatureOccurrences: {
-          ...initialState.fighter.activeOngoingFeatureOccurrences,
-          rage: rage,
-        },
-      },
-    }
-    all {
-      assert(fighterRageOccurrence(raging) == rage),
-      assert(fighterRecklessAttackOccurrence(raging) == NoActiveOngoingFeatureOccurrence),
-      assert(fighterHasRage(raging)),
-    }
-  }
-
-  run test_fighter_ongoing_feature_occurrences_have_exact_reckless_attack_slot = {
-    val reckless = {
-      ...initialState,
-      fighter: {
-        ...initialState.fighter,
-        activeOngoingFeatureOccurrences: {
-          ...initialState.fighter.activeOngoingFeatureOccurrences,
-          recklessAttack: ActiveStartOfTurnOngoingFeature,
-        },
-      },
-    }
-    all {
-      assert(fighterRageOccurrence(reckless) == NoActiveOngoingFeatureOccurrence),
-      assert(fighterRecklessAttackOccurrence(reckless) == ActiveStartOfTurnOngoingFeature),
-      assert(fighterHasRecklessAttack(reckless)),
-    }
-  }
 }

@@ -399,6 +399,7 @@ export function subjectName(
   | "findFamiliarSharedSenses"
   | "findFamiliarTouchSpell"
   | "endTurn"
+  | "endConcentration"
   | "move"
   | "standFromProne"
   | "releaseGrapple"

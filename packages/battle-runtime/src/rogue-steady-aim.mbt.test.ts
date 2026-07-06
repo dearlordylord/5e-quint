@@ -1,7 +1,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.rogue-steady-aim
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt L3PUTB-01-ROGUE-STEADY-AIM-RUNTIME rogue_steady_aim
-// UNIT-IDENTITY-MBT-REPLAY: L3PUTB-01-ROGUE-STEADY-AIM-RUNTIME rogue_steady_aim doSteadyAim doRejectAfterMoved doRejectSecondAim
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3PUTB-01-ROGUE-STEADY-AIM-RUNTIME rogue_steady_aim
+// UNIT-IDENTITY-REPLAY: L3PUTB-01-ROGUE-STEADY-AIM-RUNTIME rogue_steady_aim doSteadyAim doRejectAfterMoved doRejectSecondAim
 import { describe, expect, it } from "vitest";
 
 import {

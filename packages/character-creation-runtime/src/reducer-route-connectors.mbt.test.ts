@@ -289,6 +289,160 @@ describe("character creation reducer route connector MBT", () => {
     });
   }, MBT_TEST_TIMEOUT_MS);
 
+  it("routes language and equipment fill rejections to draft or support-profile owners", () => {
+    const rejectedLanguageRouteCases = [
+      {
+        name: "doRejectUnsupportedLanguage",
+        optionIds: ["Dwarvish", "Elvish"],
+        owner: "creationSupportProfileAdmission",
+        issueCodes: ["unsupportedChoice"],
+      },
+      {
+        name: "doRejectDuplicateLanguage",
+        optionIds: ["Dwarvish", "Dwarvish"],
+        owner: "characterDraft",
+        issueCodes: ["invalidChoice"],
+      },
+      {
+        name: "doRejectTooFewLanguages",
+        optionIds: ["Dwarvish"],
+        owner: "characterDraft",
+        issueCodes: ["tooFewChoices"],
+      },
+      {
+        name: "doRejectTooManyLanguages",
+        optionIds: ["Dwarvish", "Goblin", "Elvish"],
+        owner: "characterDraft",
+        issueCodes: ["tooManyChoices", "unsupportedChoice"],
+      },
+    ] as const satisfies ReadonlyArray<{
+      readonly name: string;
+      readonly optionIds: readonly string[];
+      readonly owner: CharacterCreationRouteOwner;
+      readonly issueCodes: readonly string[];
+    }>;
+
+    for (const routeCase of rejectedLanguageRouteCases) {
+      const session = createRouteReducerSession(`cc:route-${routeCase.name}`);
+      const result = submitCreationFillBatch(session, {
+        fills: [
+          choiceFill(
+            choiceHoleByDraftPath(session.holes, "draft.languages"),
+            routeCase.optionIds,
+          ),
+        ],
+        owner: routeCase.owner,
+      });
+      const applyEvent = lastRouteEventOfKind(
+        session.route,
+        "applyCreationFillBatch",
+      );
+      const discoveryEvent = lastRouteEventOfKind(
+        session.route,
+        "discoverCreationHoles",
+      );
+
+      expect(result.tag, routeCase.name).toBe("rejected");
+      if (result.tag !== "rejected") {
+        throw new Error(`${routeCase.name} should be rejected.`);
+      }
+      expect(
+        result.issues
+          .filter((issue) => issue.tag === "illegalFill")
+          .map((issue) => issue.code)
+          .sort(),
+        routeCase.name,
+      ).toEqual([...routeCase.issueCodes].sort());
+      expect(result.draft, routeCase.name).toEqual(
+        createRuntimeCharacterDraft({
+          draftId: characterDraftId(`cc:route-${routeCase.name}`),
+        }),
+      );
+      expect(applyEvent, routeCase.name).toEqual(
+        applyCreationFillBatch({
+          subject: "fillBatch",
+          fills: ["choiceSet"],
+          holes: ["abilityScore", "draftStructure"],
+          owner: routeCase.owner,
+        }),
+      );
+      expect(discoveryEvent, routeCase.name).toEqual(
+        discoverCreationHoles({
+          subject: "optionDiscovery",
+          holes: ["abilityScore", "draftStructure"],
+          owner: "creationHoleFrontier",
+        }),
+      );
+    }
+
+    const classEquipmentSession = createRouteReducerSession(
+      "cc:route-doRejectUnsupportedClassEquipment",
+    );
+    const initialManifestResult = submitCreationFillBatch(
+      classEquipmentSession,
+      {
+        fills: initialManifestFills(classEquipmentSession.holes),
+        owner: "characterDraft",
+      },
+    );
+    expect(initialManifestResult.tag).toBe("accepted");
+    if (initialManifestResult.tag !== "accepted") {
+      throw new Error("Initial manifest fixture should be accepted.");
+    }
+    const rejectedClassEquipmentResult = submitCreationFillBatch(
+      classEquipmentSession,
+      {
+        fills: [
+          choiceFill(
+            choiceHoleByUnit(
+              classEquipmentSession.holes,
+              PHASE1_CLASS_FIGHTER_UNIT_ID,
+              CLASS_EQUIPMENT_CHOICE_KEY,
+            ),
+            ["option_a"],
+          ),
+        ],
+        owner: "creationSupportProfileAdmission",
+      },
+    );
+    const classEquipmentApplyEvent = lastRouteEventOfKind(
+      classEquipmentSession.route,
+      "applyCreationFillBatch",
+    );
+    const classEquipmentDiscoveryEvent = lastRouteEventOfKind(
+      classEquipmentSession.route,
+      "discoverCreationHoles",
+    );
+
+    expect(rejectedClassEquipmentResult.tag).toBe("rejected");
+    if (rejectedClassEquipmentResult.tag !== "rejected") {
+      throw new Error("doRejectUnsupportedClassEquipment should be rejected.");
+    }
+    expect(
+      rejectedClassEquipmentResult.issues
+        .filter((issue) => issue.tag === "illegalFill")
+        .map((issue) => issue.code),
+    ).toEqual(["unsupportedChoice"]);
+    expect(rejectedClassEquipmentResult.draft).toEqual(
+      initialManifestResult.draft,
+    );
+    expect(classEquipmentApplyEvent).toEqual(
+      applyCreationFillBatch({
+        subject: "fillBatch",
+        fills: ["equipmentSelection"],
+        holes: ["equipmentSelection", "unitChoice"],
+        owner: "creationSupportProfileAdmission",
+      }),
+    );
+    expect(classEquipmentDiscoveryEvent).toEqual(
+      discoverCreationHoles({
+        subject: "optionDiscovery",
+        holes: ["equipmentSelection", "unitChoice"],
+        owner: "creationHoleFrontier",
+      }),
+    );
+  });
+
   it("routes class-feature build projections through the creation reducer surface", async () => {
     await runRouteMbt({
       specFileName: "character-creation-class-feature-projections.route.mbt.qnt",
@@ -750,6 +904,34 @@ function appendCreationFactRoute(
   },
 ): void {
   session.route = [...session.route, recordCreationFacts(input)];
+}
+
+function lastRouteEventOfKind<
+  Kind extends CharacterCreationRouteEvent["kind"],
+>(
+  route: readonly CharacterCreationRouteEvent[],
+  kind: Kind,
+): Extract<CharacterCreationRouteEvent, { readonly kind: Kind }> | undefined {
+  for (
+    let routePosition = route.length - 1;
+    routePosition >= 0;
+    routePosition -= 1
+  ) {
+    const event = route[routePosition];
+    if (isRouteEventOfKind(event, kind)) {
+      return event;
+    }
+  }
+  return undefined;
+}
+
+function isRouteEventOfKind<
+  Kind extends CharacterCreationRouteEvent["kind"],
+>(
+  event: CharacterCreationRouteEvent | undefined,
+  kind: Kind,
+): event is Extract<CharacterCreationRouteEvent, { readonly kind: Kind }> {
+  return event?.kind === kind;
 }
 
 function routeHoleFamilies(

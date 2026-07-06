@@ -1,0 +1,77 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/sorcerer-metamagic-selected-identity.mbt.test.ts Quickened Spell save-gated damage copied qRoute versus public reducer replay"
+  },
+  "cleanroomManifestSourceCommitSha": "0da15bfe0871d5a45782c7ac355d622be8907d44",
+  "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      "qntFileSha256": "def83ff1519175092a18aac1f5323d0130ac1527be54b4d6f3066af544cbb088",
+      "routeConnectorSha256": "0588fd8b9c5de0ea725dec3837f1f22b98b868befe4c2bd9ea74b4b0dbb7c3c7",
+      "branchFamily": "step",
+      "branchAction": "doResolveQuickenedSaveGatedDamage",
+      "observedActionTaken": "doResolveQuickenedSaveGatedDamage",
+      "harnessTestPath": "packages/battle-runtime/src/sorcerer-metamagic-selected-identity.mbt.test.ts",
+      "traceId": "public-route=metamagicBonusActionCastingTime action=doResolveQuickenedSaveGatedDamage qRoute=metamagic-quickened-save-gated-damage-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "stepRouteQuickenedSaveGatedDamage",
+        "delegatedAction": "doResolveQuickenedSaveGatedDamage",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/sorcerer-metamagic-selected-identity.mbt.test.ts#createQuickenedSaveGatedDamageRouteReplayDriver"
+      },
+      "stateCheck": {
+        "tag": "copied-qroute-public-reducer-state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "2d6c0c7213c966e76a69d9a9be911d40355eaa41b6bbbfe7d3463227b296a534",
+        "observedProjectionSha256": "2d6c0c7213c966e76a69d9a9be911d40355eaa41b6bbbfe7d3463227b296a534",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+          "stepAction": "stepRouteQuickenedSaveGatedDamage",
+          "delegatedAction": "doResolveQuickenedSaveGatedDamage",
+          "qntStateField": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "public-reducer-route-events",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(state), AvailableBattleAct.routeEvents, and BattleResolutionResult.routeEvents during Quickened Spell Burning Hands save-gated damage resolution",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=metamagicBonusActionCastingTime",
+          "BattleReducerRouteEvent.owner=battleFeatureResource",
+          "BattleReducerRouteEvent.owner=battleActionEconomy",
+          "BattleReducerRouteEvent.owner=battleSpellSlotAndActionEconomy",
+          "BattleReducerRouteEvent.owner=battleSavingThrowOutcome",
+          "BattleReducerRouteEvent.owner=battleDamageRoll",
+          "BattleReducerRouteEvent.owner=battleTurnBoundary",
+          "BattleSubject.bonusActionSpell.metamagic.effectKind=action_casting_time_to_bonus_action_with_spell_turn_limit",
+          "BattleSubject.bonusActionSpell.invocation.procedure=saveGatedDamage",
+          "CharacterBattlePointPoolResourceState.pointsRemaining",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.activeEffects"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}

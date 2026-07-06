@@ -485,7 +485,8 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/shared-algebras/proofs/rule-core/spell-independent-attack-sequence-core.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/shared-algebras/proofs/rule-core/spell-invocation-action-slot-core.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
-| `packages/battle-runtime/battle-runtime-acid-arrow.qnt` | proof-only | `BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING` |
+| `packages/battle-runtime/battle-runtime-acid-arrow.qnt` | semantic-core | `BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING` |
+| `packages/battle-runtime/battle-runtime-acid-arrow-tests.qnt` | proof-only | _none_ |
 | `packages/shared-algebras/proofs/rule-core/spell-invocation-target-cardinality-core.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/shared-algebras/proofs/rule-core/spell-object-hit-point-damage-core.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/shared-algebras/proofs/rule-core/spell-hit-point-restoration-core.qnt` | semantic-core | `BATTLE.SPELL.HIT_POINT_RESTORATION` |
@@ -607,7 +608,7 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | Owner | Classification | Detail |
 | --- | --- | --- |
 | `packages/battle-runtime/battle-runtime-ability-check-search.qnt` | qnt-owner-role | semantic-core |
-| `packages/battle-runtime/battle-runtime-acid-arrow.qnt` | qnt-owner-role | proof-only |
+| `packages/battle-runtime/battle-runtime-acid-arrow.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-actor-combatants.qnt` | qnt-owner-role | proof-only |
 | `packages/battle-runtime/battle-runtime-antimagic-suppression.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-area-trigger-timing.qnt` | qnt-owner-role | semantic-core |
@@ -955,6 +956,7 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `BATTLE.COMMAND.OPTION_AND_NEXT_TURN` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `filter`, `set-operators`, `membership` |  |  |
 | `BATTLE.DAMAGE.ATTACK_BRANCHES` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `membership` |  |  |
 | `BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `membership` |  |  |
+| `BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING` | generation-subset-clean | `variant`, `pure-def`, `int`, `bool`, `if-expression`, `arithmetic`, `pattern-match` |  |  |
 | `BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `membership`, `list`, `fold`, `map`, `exists` |  |  |
 | `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `comparison`, `boolean-connective`, `all-block`, `pattern-match` |  |  |
 | `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `filter`, `exists` |  |  |

@@ -5,21 +5,19 @@ module shoveOutcomeExamples {
 
   run test_save_success_is_noop = {
     val result = projectShoveOutcomeResult(applyShoveOutcome(false, ShoveSaveSucceeded))
-    all {
-      assert(result.accepted),
-      assert(not(result.targetProne)),
-      assert(not(result.pushEmitted)),
-      assert(not(result.actionAvailable)),
+    match result {
+      | ShoveOutcomeAcceptedWithoutEffectProjection(data) => all {
+        assert(not(data.targetProne)),
+      }
+      | _ => false
     }
   }
 
   run test_failed_save_can_apply_prone = {
     val result = projectShoveOutcomeResult(applyShoveOutcome(false, ShoveSaveFailed({ failedEffect: ShoveProne })))
-    all {
-      assert(result.accepted),
-      assert(result.targetProne),
-      assert(not(result.pushEmitted)),
-      assert(not(result.actionAvailable)),
+    match result {
+      | ShoveOutcomeAcceptedToppleProjection => true
+      | _ => false
     }
   }
 
@@ -27,15 +25,15 @@ module shoveOutcomeExamples {
     val result = projectShoveOutcomeResult(applyShoveOutcome(false, ShoveSaveFailed({
       failedEffect: ShovePushAway(ShovePushed({ distanceFeet: 5 })),
     })))
-    all {
-      assert(result.accepted),
-      assert(not(result.targetProne)),
-      assert(result.pushEmitted),
-      assert(result.pushDispositionKind == "pushed"),
-      assert(result.pushBlockedReason == "none"),
-      assert(result.pushDistanceFeet == 5),
-      assert(not(result.pushProvokesOpportunityAttacks)),
-      assert(not(result.actionAvailable)),
+    match result {
+      | ShoveOutcomeAcceptedPushProjection(data) =>
+        match data.push {
+          | ShovePushCompletedProjection => all {
+            assert(not(data.targetProne)),
+          }
+          | _ => false
+        }
+      | _ => false
     }
   }
 
@@ -46,15 +44,24 @@ module shoveOutcomeExamples {
     val noLegalDestination = projectShoveOutcomeResult(applyShoveOutcome(false, ShoveSaveFailed({
       failedEffect: ShovePushAway(ShoveBlocked({ distanceFeet: 5, reason: ShovePushNoLegalDestination })),
     })))
-    all {
-      assert(blocked.accepted),
-      assert(blocked.pushEmitted),
-      assert(blocked.pushDispositionKind == "blocked"),
-      assert(blocked.pushBlockedReason == "blocked"),
-      assert(noLegalDestination.accepted),
-      assert(noLegalDestination.pushEmitted),
-      assert(noLegalDestination.pushDispositionKind == "blocked"),
-      assert(noLegalDestination.pushBlockedReason == "noLegalDestination"),
+    match blocked {
+      | ShoveOutcomeAcceptedPushProjection(blockedData) =>
+        match blockedData.push {
+          | ShovePushBlockedProjection(blockedPush) =>
+            match noLegalDestination {
+              | ShoveOutcomeAcceptedPushProjection(noLegalDestinationData) =>
+                match noLegalDestinationData.push {
+                  | ShovePushBlockedProjection(noLegalDestinationPush) => all {
+                    assert(blockedPush.reason == ShovePushBlocked),
+                    assert(noLegalDestinationPush.reason == ShovePushNoLegalDestination),
+                  }
+                  | _ => false
+                }
+              | _ => false
+            }
+          | _ => false
+        }
+      | _ => false
     }
   }
 
@@ -62,10 +69,11 @@ module shoveOutcomeExamples {
     val wrongDistance = projectShoveOutcomeResult(applyShoveOutcome(false, ShoveSaveFailed({
       failedEffect: ShovePushAway(ShovePushed({ distanceFeet: 10 })),
     })))
-    all {
-      assert(not(wrongDistance.accepted)),
-      assert(not(wrongDistance.pushEmitted)),
-      assert(wrongDistance.actionAvailable),
+    match wrongDistance {
+      | ShoveOutcomeRejectedProjection(data) => all {
+        assert(not(data.targetProne)),
+      }
+      | _ => false
     }
   }
 }

@@ -95,7 +95,7 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 5,
-              "focused-mbt": 49,
+              "focused-mbt": 55,
               "runtime-test": 14
             }
           },
@@ -358,7 +358,7 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 8,
-              "focused-mbt": 49,
+              "focused-mbt": 55,
               "runtime-test": 14
             }
           },
@@ -602,8 +602,8 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 58,
-              "numerator": 58
+              "denominator": 59,
+              "numerator": 59
             },
             "qntCoveredObligations": {
               "denominator": 70,
@@ -624,7 +624,7 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 11,
-              "focused-mbt": 68,
+              "focused-mbt": 74,
               "runtime-test": 22
             }
           },
@@ -831,8 +831,8 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 58,
-              "numerator": 58
+              "denominator": 59,
+              "numerator": 59
             },
             "qntCoveredObligations": {
               "denominator": 70,
@@ -853,7 +853,7 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 11,
-              "focused-mbt": 68,
+              "focused-mbt": 74,
               "runtime-test": 22
             }
           },
@@ -1060,8 +1060,8 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 59,
-              "numerator": 59
+              "denominator": 60,
+              "numerator": 60
             },
             "qntCoveredObligations": {
               "denominator": 73,
@@ -1082,7 +1082,7 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 11,
-              "focused-mbt": 70,
+              "focused-mbt": 76,
               "runtime-test": 25
             }
           },
@@ -1292,8 +1292,8 @@
           "blockingCount": 0,
           "evidence": {
             "generatorReadySemanticCoreObligations": {
-              "denominator": 59,
-              "numerator": 59
+              "denominator": 60,
+              "numerator": 60
             },
             "qntCoveredObligations": {
               "denominator": 73,
@@ -1314,7 +1314,7 @@
             },
             "witnessKinds": {
               "deterministic-qnt-replay": 11,
-              "focused-mbt": 70,
+              "focused-mbt": 76,
               "runtime-test": 25
             }
           },
@@ -1488,10 +1488,10 @@
   ],
   "selectedIdentityEvidenceAudit": {
     "criteria": {
-      "evidenceTag": "selected-identity-mbt",
-      "mcpScenarioJoin": "A selected-identity evidence row is joined to MCP when at least one required MCP flow inferred from its scoped supported profile has scenario evidence.",
-      "qntMbtJoin": "A selected-identity evidence row is joined to QNT/MBT when its ownerPath is also a rules-kernel parity witness for a scoped supported Unit profile or a profile-scoped focused MBT verification owner for battle-admission profiles with QNT owners.",
-      "rowPolicy": "Rows list scoped supported Units whose selected-identity evidence exists but has neither an exact QNT/MBT parity-witness owner join nor an MCP scenario-evidence flow join."
+      "evidenceTag": "selected-identity-replay",
+      "mcpScenarioJoin": "A selected-identity replay evidence row is joined to MCP when at least one required MCP flow inferred from its scoped supported profile has scenario evidence.",
+      "parityWitnessJoin": "A selected-identity replay evidence row is joined to parity evidence when the same Unit has a checked parity witness for a scoped supported Unit profile.",
+      "rowPolicy": "Rows list scoped supported Units whose selected-identity replay evidence exists but has neither a Unit-scoped parity witness join nor an MCP scenario-evidence flow join."
     },
     "scopes": [
       {
@@ -1573,15 +1573,15 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 165,
-            "numerator": 165
+            "denominator": 170,
+            "numerator": 170
           },
           "joinedEvidenceRows": {
-            "denominator": 165,
-            "numerator": 164
+            "denominator": 170,
+            "numerator": 169
           },
           "missingJoinRows": {
-            "denominator": 165,
+            "denominator": 170,
             "numerator": 1
           }
         },
@@ -1591,7 +1591,7 @@
             "collectionId": "srd-5.2.1",
             "evidence": {
               "ownerPath": "packages/battle-runtime/src/stunning-strike-selected-identity.mbt.test.ts",
-              "tag": "selected-identity-mbt",
+              "tag": "selected-identity-replay",
               "taskId": "L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME"
             },
             "kind": "class_feature",
@@ -1601,15 +1601,15 @@
               "requiredFlowIds": [],
               "status": "not-applicable"
             },
-            "profileIds": [
-              "unit-feature.stunning-strike"
-            ],
-            "qntMbtJoin": {
+            "parityWitnessJoin": {
               "joinedRows": [],
               "status": "missing-unit-profile-join",
               "unitProfileJoinRowCount": 0,
               "unitProfileWitnessOwners": []
             },
+            "profileIds": [
+              "unit-feature.stunning-strike"
+            ],
             "sourceRecordPath": "packages/surface/content/monk_stunning_strike.json",
             "unitId": "monk_stunning_strike"
           }
@@ -1619,15 +1619,15 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 166,
-            "numerator": 166
+            "denominator": 171,
+            "numerator": 171
           },
           "joinedEvidenceRows": {
-            "denominator": 166,
-            "numerator": 165
+            "denominator": 171,
+            "numerator": 170
           },
           "missingJoinRows": {
-            "denominator": 166,
+            "denominator": 171,
             "numerator": 1
           }
         },
@@ -1637,7 +1637,7 @@
             "collectionId": "srd-5.2.1",
             "evidence": {
               "ownerPath": "packages/battle-runtime/src/stunning-strike-selected-identity.mbt.test.ts",
-              "tag": "selected-identity-mbt",
+              "tag": "selected-identity-replay",
               "taskId": "L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME"
             },
             "kind": "class_feature",
@@ -1647,15 +1647,15 @@
               "requiredFlowIds": [],
               "status": "not-applicable"
             },
-            "profileIds": [
-              "unit-feature.stunning-strike"
-            ],
-            "qntMbtJoin": {
+            "parityWitnessJoin": {
               "joinedRows": [],
               "status": "missing-unit-profile-join",
               "unitProfileJoinRowCount": 0,
               "unitProfileWitnessOwners": []
             },
+            "profileIds": [
+              "unit-feature.stunning-strike"
+            ],
             "sourceRecordPath": "packages/surface/content/monk_stunning_strike.json",
             "unitId": "monk_stunning_strike"
           }

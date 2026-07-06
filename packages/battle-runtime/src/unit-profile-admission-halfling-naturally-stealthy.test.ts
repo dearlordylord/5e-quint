@@ -1,12 +1,11 @@
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME species_halfling_naturally_stealthy
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME species_halfling_naturally_stealthy
+// UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME species_halfling_naturally_stealthy doReplayHalflingNaturallyStealthyHidePermission
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.hide-action-obscurement-permission
 
 import type { Size, UnitRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
-import type {
-  BattleHidePrerequisite,
-  BattleState,
-} from "./battle-reducer.ts";
+import type { BattleHidePrerequisite, BattleState } from "./battle-reducer.ts";
 import type { BattleUnitRef } from "./battle-init.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import {
@@ -36,6 +35,7 @@ import {
   unitLibrary,
   unitMechanicsVariant,
 } from "./unit-profile-admission-test-support.ts";
+import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.ts";
 
 const obscuringCreatureId = combatantId(
   "naturally-stealthy-obscuring-creature",
@@ -61,7 +61,9 @@ const hideSubject: BattleSubject = {
 
 describe("L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME deterministic profile slice", () => {
   test("Naturally Stealthy admits the Hide action creature-obscurement permission profile", () => {
-    const unit = unitLibrary.requireUnit(speciesHalflingNaturallyStealthyUnitId);
+    const unit = unitLibrary.requireUnit(
+      speciesHalflingNaturallyStealthyUnitId,
+    );
 
     expect(hideActionObscurementPermissionProfileForUnit(unit)).toEqual(
       expectedPermission,
@@ -137,14 +139,15 @@ describe("L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME deterministic profile 
       unitRef: null,
     });
 
-    expect(discoverBattleActs(state).map((act) => act.subject)).not.toContainEqual(
-      hideSubject,
-    );
-    expect(resolveBattleSubject({ state, subject: hideSubject, fills: [] }))
-      .toMatchObject({
-        tag: "invalid",
-        reason: "unsupportedActOption",
-      });
+    expect(
+      discoverBattleActs(state).map((act) => act.subject),
+    ).not.toContainEqual(hideSubject);
+    expect(
+      resolveBattleSubject({ state, subject: hideSubject, fills: [] }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedActOption",
+    });
   });
 
   test("creature-obscured Hide requires the obscuring creature to be at least one size larger", () => {
@@ -157,14 +160,15 @@ describe("L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME deterministic profile 
       unitRef,
     });
 
-    expect(discoverBattleActs(state).map((act) => act.subject)).not.toContainEqual(
-      hideSubject,
-    );
-    expect(resolveBattleSubject({ state, subject: hideSubject, fills: [] }))
-      .toMatchObject({
-        tag: "invalid",
-        reason: "unsupportedActOption",
-      });
+    expect(
+      discoverBattleActs(state).map((act) => act.subject),
+    ).not.toContainEqual(hideSubject);
+    expect(
+      resolveBattleSubject({ state, subject: hideSubject, fills: [] }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "unsupportedActOption",
+    });
   });
 
   test("creature-obscurement prerequisites reject unknown or self-obscuring combatants", () => {
@@ -219,7 +223,9 @@ function syntheticHideObscurementPermissionUnit(): UnitRecord {
     unit.kind !== "species_trait" ||
     unit.mechanics.family !== "hide_action_obscurement_permission"
   ) {
-    throw new Error("Expected Naturally Stealthy Hide permission species trait.");
+    throw new Error(
+      "Expected Naturally Stealthy Hide permission species trait.",
+    );
   }
   return unitMechanicsVariant(unit, {
     id: "synthetic_hide_obscurement_permission_fixture",
@@ -227,7 +233,9 @@ function syntheticHideObscurementPermissionUnit(): UnitRecord {
   });
 }
 
-function supportSelection(unit: UnitRecord): { readonly unitRef: BattleUnitRef } {
+function supportSelection(unit: UnitRecord): {
+  readonly unitRef: BattleUnitRef;
+} {
   const unitRef = battleUnitRefWithSupportProfiles({
     unitRef: { unitId: unit.id },
     unit,
@@ -286,3 +294,59 @@ function hiderSeed(input: {
     characterUnitRefs: input.unitRef === null ? [] : [input.unitRef],
   });
 }
+
+defineSelectedIdentityReplayWitness({
+  describeLabel:
+    "L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME selected identity replay",
+  taskId: "L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME",
+  initialProjection: {
+    unitId: speciesHalflingNaturallyStealthyUnitId,
+    procedure: "initial",
+    hiddenDc: 0,
+  },
+  units: [
+    {
+      unitId: speciesHalflingNaturallyStealthyUnitId,
+      procedures: [
+        {
+          actionName: "doReplayHalflingNaturallyStealthyHidePermission",
+          projectionAfter: {
+            unitId: speciesHalflingNaturallyStealthyUnitId,
+            procedure: "hideActionObscurementPermission",
+            hiddenDc: 18,
+          },
+          discover: () => {
+            const { unitRef } = supportSelection(
+              unitLibrary.requireUnit(speciesHalflingNaturallyStealthyUnitId),
+            );
+            const state = naturallyStealthyBattle({
+              actorSize: "small",
+              obscuringCreatureSize: "medium",
+              unitRef,
+            });
+            const hide = findAct(state, hideSubject);
+            const hidden = requireResolved(
+              resolveBattleSubject({
+                state,
+                subject: hideSubject,
+                fills: [
+                  abilityCheckFill(
+                    findHole(hide.initialHoles, "abilityCheck"),
+                    18,
+                  ),
+                ],
+              }),
+            );
+            return {
+              unitId: speciesHalflingNaturallyStealthyUnitId,
+              procedure: "hideActionObscurementPermission",
+              hiddenDc:
+                hidden.state.combatants.get(fighterId)?.hidden?.discoveryDc ??
+                0,
+            };
+          },
+        },
+      ],
+    },
+  ],
+});

@@ -75,7 +75,7 @@ Creation and sheet owners:
   `packages/character-creation-runtime/src/finalization.ts:3604-3634` projects
   valid Expertise selections as `skill_expertise` proficiency-choice subjects.
 - `packages/character-creation-runtime/src/rogue-expertise-selected-identity.mbt.test.ts:176-190`
-  records selected-identity MBT replay for both level-1 and level-6 Rogue
+  records selected-identity replay evidence for both level-1 and level-6 Rogue
   Expertise.
 - `packages/mcp/src/character-session-rows.ts:53-62` returns durable character
   rows with the finalized `build`, hit points, hit dice, resources, and related

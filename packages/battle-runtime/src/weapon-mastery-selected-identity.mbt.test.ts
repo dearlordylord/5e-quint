@@ -1,8 +1,28 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-mbt weapon-mastery-properties mastery_sap mastery_topple mastery_cleave
-// UNIT-IDENTITY-MBT-REPLAY: weapon-mastery-properties mastery_sap doResolveSapMasteryPropertyHit
-// UNIT-IDENTITY-MBT-REPLAY: weapon-mastery-properties mastery_topple doResolveToppleMasteryPropertyFailedSavingThrow
-// UNIT-IDENTITY-MBT-REPLAY: weapon-mastery-properties mastery_cleave doResolveCleaveMasteryPropertySecondTargetHit
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay weapon-mastery-properties mastery_sap mastery_topple mastery_cleave
+// UNIT-IDENTITY-REPLAY: weapon-mastery-properties mastery_sap doResolveSapMasteryPropertyHit
+// UNIT-IDENTITY-REPLAY: weapon-mastery-properties mastery_topple doResolveToppleMasteryPropertyFailedSavingThrow
+// UNIT-IDENTITY-REPLAY: weapon-mastery-properties mastery_cleave doResolveCleaveMasteryPropertySecondTargetHit
+// RAW trace:
+// - .references/srd-5.2.1/Equipment.md#Mastery Properties defines weapon
+//   mastery properties as weapon-carried properties unlocked by a feature.
+// - .references/srd-5.2.1/Equipment.md#Sap defines the on-hit next attack-roll
+//   Disadvantage rider.
+// - .references/srd-5.2.1/Equipment.md#Topple defines the on-hit Constitution
+//   Saving Throw and Prone condition rider.
+// - .references/srd-5.2.1/Equipment.md#Cleave defines the on-hit optional
+//   once-per-turn second melee attack and weapon-damage rider.
+// - UBIQUITOUS_LANGUAGE.md: Mastery Property, Weapon Mastery, Attack Roll,
+//   Saving Throw, Condition, Rider, and Hit Points.
+import { it } from "vitest";
+
+import {
+  defineDriver,
+  focusedMbtMaxSteps,
+  MBT_TEST_TIMEOUT_MS,
+  mbtSpecPath,
+  reducerRoutedWeaponMasteryPropertyStateCheck,
+  run,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { Either } from "effect";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
@@ -22,6 +42,7 @@ import {
   WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
   WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
   WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
+  battleReducerStartRouteEvent,
   battleCombatantSide,
   battleId,
   characterId,
@@ -34,13 +55,14 @@ import {
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
+  type BattleReducerRouteEvent,
   type BattleResolutionResult,
   type BattleState,
   type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { defineSelectedIdentityWitness } from "./selected-identity-witness.ts";
+import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 
 type WeaponMasteryProjection = {
   readonly primaryTargetHp: number;
@@ -88,8 +110,28 @@ const weaponMasteryPropertyScenarios = {
 } as const;
 type WeaponMasteryPropertyUnitId = keyof typeof weaponMasteryPropertyScenarios;
 
-defineSelectedIdentityWitness({
-  describeLabel: "Weapon Mastery selected identity MBT",
+const weaponMasteryPropertyRouteReplayDriverSchema = {
+  init: {},
+  doRouteSapPropertyActiveEffectRider: {},
+  doRouteTopplePropertySaveGate: {},
+  doRouteTopplePropertyConditionRider: {},
+  doRouteCleavePropertyDecision: {},
+  doRouteCleavePropertySecondTarget: {},
+  doRouteCleavePropertySecondAttack: {},
+  doRouteCleavePropertySecondDamage: {},
+  doRouteTopplePropertyConditionRiderReplay: {},
+  doRouteCleavePropertySecondDamageReplay: {},
+  stepRouteSapPropertyActiveEffectRider: {},
+  stepRouteTopplePropertyConditionRider: {},
+  stepRouteCleavePropertySecondDamage: {},
+} as const;
+
+type WeaponMasteryPropertyRouteReplayProjection = {
+  readonly route: readonly BattleReducerRouteEvent[];
+};
+
+defineSelectedIdentityReplayAndQntReplay({
+  describeLabel: "Weapon Mastery selected identity replay",
   taskId: "weapon-mastery-properties",
   specFile: mbtSpecPath(
     import.meta.dirname,
@@ -121,15 +163,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doResolveSapMasteryPropertyHit",
-          projectionAfter: {
-            primaryTargetHp: 9,
-            secondTargetHp: 13,
-            actionAvailable: false,
-            primaryTargetHasSapEffect: true,
-            primaryTargetProne: false,
-            cleaveUsed: false,
-            lastResult: "resolved",
-          },
           discover: () => resolveSapMasteryPropertyHit(),
         },
       ],
@@ -139,15 +172,6 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doResolveToppleMasteryPropertyFailedSavingThrow",
-          projectionAfter: {
-            primaryTargetHp: 13,
-            secondTargetHp: 13,
-            actionAvailable: true,
-            primaryTargetHasSapEffect: false,
-            primaryTargetProne: true,
-            cleaveUsed: false,
-            lastResult: "needsHoles",
-          },
           discover: () => resolveToppleMasteryPropertyFailedSavingThrow(),
         },
       ],
@@ -157,21 +181,373 @@ defineSelectedIdentityWitness({
       procedures: [
         {
           actionName: "doResolveCleaveMasteryPropertySecondTargetHit",
-          projectionAfter: {
-            primaryTargetHp: 9,
-            secondTargetHp: 9,
-            actionAvailable: false,
-            primaryTargetHasSapEffect: false,
-            primaryTargetProne: false,
-            cleaveUsed: true,
-            lastResult: "resolved",
-          },
           discover: () => resolveCleaveMasteryPropertySecondTargetHit(),
         },
       ],
     },
   ],
 });
+
+it(
+  "compares Weapon Mastery property public reducer routes to copied qRoute",
+  async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-weapon-mastery-selected-identity.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "stepRouteSapPropertyActiveEffectRider",
+      driver: createWeaponMasteryPropertyRouteReplayDriver(),
+      backend: "typescript",
+      nTraces: 1,
+      maxSteps: focusedMbtMaxSteps(1),
+      stateCheck: reducerRoutedWeaponMasteryPropertyStateCheck,
+    });
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-weapon-mastery-selected-identity.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "stepRouteTopplePropertyConditionRider",
+      driver: createWeaponMasteryPropertyRouteReplayDriver(),
+      backend: "typescript",
+      nTraces: 1,
+      maxSteps: focusedMbtMaxSteps(1),
+      stateCheck: reducerRoutedWeaponMasteryPropertyStateCheck,
+    });
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-weapon-mastery-selected-identity.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "stepRouteCleavePropertySecondDamage",
+      driver: createWeaponMasteryPropertyRouteReplayDriver(),
+      backend: "typescript",
+      nTraces: 1,
+      maxSteps: focusedMbtMaxSteps(1),
+      stateCheck: reducerRoutedWeaponMasteryPropertyStateCheck,
+    });
+  },
+  MBT_TEST_TIMEOUT_MS,
+);
+
+function createWeaponMasteryPropertyRouteReplayDriver() {
+  return defineDriver(weaponMasteryPropertyRouteReplayDriverSchema, () => {
+    let route: readonly BattleReducerRouteEvent[] =
+      observeInitialWeaponMasteryPropertyRoute("mastery_sap");
+
+    function reset(): void {
+      route = observeInitialWeaponMasteryPropertyRoute("mastery_sap");
+    }
+
+    function recordSapRoute(): void {
+      route = observeSapMasteryPropertyRoute();
+    }
+
+    function recordToppleSaveGateRoute(): void {
+      route = observeToppleMasteryPropertySaveGateRoute();
+    }
+
+    function recordToppleConditionRoute(): void {
+      route = observeToppleMasteryPropertyConditionRoute();
+    }
+
+    function recordCleaveDecisionRoute(): void {
+      route = observeCleaveMasteryPropertyDecisionRoute();
+    }
+
+    function recordCleaveSecondTargetRoute(): void {
+      route = observeCleaveMasteryPropertySecondTargetRoute();
+    }
+
+    function recordCleaveSecondAttackRoute(): void {
+      route = observeCleaveMasteryPropertySecondAttackRoute();
+    }
+
+    function recordCleaveSecondDamageRoute(): void {
+      route = observeCleaveMasteryPropertySecondDamageRoute();
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doRouteSapPropertyActiveEffectRider: recordSapRoute,
+      doRouteTopplePropertySaveGate: recordToppleSaveGateRoute,
+      doRouteTopplePropertyConditionRider: recordToppleConditionRoute,
+      doRouteCleavePropertyDecision: recordCleaveDecisionRoute,
+      doRouteCleavePropertySecondTarget: recordCleaveSecondTargetRoute,
+      doRouteCleavePropertySecondAttack: recordCleaveSecondAttackRoute,
+      doRouteCleavePropertySecondDamage: recordCleaveSecondDamageRoute,
+      doRouteTopplePropertyConditionRiderReplay: recordToppleConditionRoute,
+      doRouteCleavePropertySecondDamageReplay: recordCleaveSecondDamageRoute,
+      stepRouteSapPropertyActiveEffectRider: recordSapRoute,
+      stepRouteTopplePropertyConditionRider: recordToppleConditionRoute,
+      stepRouteCleavePropertySecondDamage: recordCleaveSecondDamageRoute,
+      getState: (): WeaponMasteryPropertyRouteReplayProjection => ({ route }),
+    };
+  });
+}
+
+function observeSapMasteryPropertyRoute(): readonly BattleReducerRouteEvent[] {
+  const state = weaponMasteryBattle("mastery_sap");
+  const scenario = weaponMasteryPropertyScenarios.mastery_sap;
+  const walk = initialWeaponMasteryRouteWalk(state, scenario.attackName);
+  const attackRoll = requireHole(walk.awaitingAttackRoll, "attackRoll");
+  const attackRollFilled = attackRollFill(attackRoll, {
+    total: 15,
+    naturalD20: 10,
+  });
+  const awaitingDamage = resolveBattleSubject({
+    state,
+    subject: walk.subject,
+    fills: [walk.targetChoice, attackRollFilled],
+  });
+  const damage = requireHole(awaitingDamage, "rolledDice");
+  const resolved = resolveBattleSubject({
+    state,
+    subject: walk.subject,
+    fills: [walk.targetChoice, attackRollFilled, damageRollFill(damage, 1)],
+  });
+  return routeEventsFromWalk(walk.route, awaitingDamage, resolved);
+}
+
+function observeToppleMasteryPropertySaveGateRoute(): readonly BattleReducerRouteEvent[] {
+  const state = weaponMasteryBattle("mastery_topple");
+  const scenario = weaponMasteryPropertyScenarios.mastery_topple;
+  const walk = initialWeaponMasteryRouteWalk(state, scenario.attackName);
+  const attackRoll = requireHole(walk.awaitingAttackRoll, "attackRoll");
+  const awaitingSave = resolveBattleSubject({
+    state,
+    subject: walk.subject,
+    fills: [
+      walk.targetChoice,
+      attackRollFill(attackRoll, { total: 15, naturalD20: 10 }),
+    ],
+  });
+  return routeEventsFromWalk(walk.route, awaitingSave);
+}
+
+function observeToppleMasteryPropertyConditionRoute(): readonly BattleReducerRouteEvent[] {
+  const state = weaponMasteryBattle("mastery_topple");
+  const scenario = weaponMasteryPropertyScenarios.mastery_topple;
+  const walk = initialWeaponMasteryRouteWalk(state, scenario.attackName);
+  const attackRoll = requireHole(walk.awaitingAttackRoll, "attackRoll");
+  const attackRollFilled = attackRollFill(attackRoll, {
+    total: 15,
+    naturalD20: 10,
+  });
+  const awaitingSave = resolveBattleSubject({
+    state,
+    subject: walk.subject,
+    fills: [walk.targetChoice, attackRollFilled],
+  });
+  const savingThrow = requireHole(awaitingSave, "savingThrowOutcome");
+  const awaitingDamage = resolveBattleSubject({
+    state,
+    subject: walk.subject,
+    fills: [
+      walk.targetChoice,
+      attackRollFilled,
+      savingThrowOutcomeFill(savingThrow, primaryTargetId, false),
+    ],
+  });
+  return routeEventsFromWalk(walk.route, awaitingSave, awaitingDamage);
+}
+
+function observeCleaveMasteryPropertyDecisionRoute(): readonly BattleReducerRouteEvent[] {
+  return cleaveRouteWalk().routeAfterDecision;
+}
+
+function observeCleaveMasteryPropertySecondTargetRoute(): readonly BattleReducerRouteEvent[] {
+  return cleaveRouteWalk().routeAfterSecondTarget;
+}
+
+function observeCleaveMasteryPropertySecondAttackRoute(): readonly BattleReducerRouteEvent[] {
+  return cleaveRouteWalk().routeAfterSecondAttack;
+}
+
+function observeCleaveMasteryPropertySecondDamageRoute(): readonly BattleReducerRouteEvent[] {
+  return cleaveRouteWalk().routeAfterSecondDamage;
+}
+
+function cleaveRouteWalk(): {
+  readonly routeAfterDecision: readonly BattleReducerRouteEvent[];
+  readonly routeAfterSecondTarget: readonly BattleReducerRouteEvent[];
+  readonly routeAfterSecondAttack: readonly BattleReducerRouteEvent[];
+  readonly routeAfterSecondDamage: readonly BattleReducerRouteEvent[];
+} {
+  const state = weaponMasteryBattle("mastery_cleave");
+  const scenario = weaponMasteryPropertyScenarios.mastery_cleave;
+  const walk = initialWeaponMasteryRouteWalk(state, scenario.attackName);
+  const primaryAttackRoll = requireHole(walk.awaitingAttackRoll, "attackRoll");
+  const primaryAttackRollFilled = attackRollFill(primaryAttackRoll, {
+    total: 15,
+    naturalD20: 10,
+  });
+  const awaitingPrimaryDamage = resolveBattleSubject({
+    state,
+    subject: walk.subject,
+    fills: [walk.targetChoice, primaryAttackRollFilled],
+  });
+  const primaryDamage = requireHole(awaitingPrimaryDamage, "rolledDice");
+  const awaitingDecision = resolveBattleSubject({
+    state,
+    subject: walk.subject,
+    fills: [
+      walk.targetChoice,
+      primaryAttackRollFilled,
+      damageRollFill(primaryDamage, 1),
+    ],
+  });
+  const routeAfterDecision = routeEventsFromWalk(
+    walk.route,
+    awaitingPrimaryDamage,
+    awaitingDecision,
+  );
+  const decision = requireHole(awaitingDecision, "unitFeatureDecision");
+  const decisionFilled = unitFeatureDecisionFill(decision, "use");
+  const awaitingSecondTarget = resolveBattleSubject({
+    state,
+    subject: walk.subject,
+    fills: [
+      walk.targetChoice,
+      primaryAttackRollFilled,
+      damageRollFill(primaryDamage, 1),
+      decisionFilled,
+    ],
+  });
+  const routeAfterSecondTarget = routeEventsFromWalk(
+    routeAfterDecision,
+    awaitingSecondTarget,
+  );
+  const secondTarget = requireHole(awaitingSecondTarget, "targetChoice");
+  const secondTargetFilled = targetFill({
+    hole: secondTarget,
+    targetId: secondTargetId,
+    attackName: scenario.attackName,
+    spatialFacts: [
+      attackTargetInMeleeReachFact(secondTargetId, scenario.attackName),
+      {
+        kind: "cleaveSecondTargetWithin5FeetOfFirstTarget",
+        attackerId,
+        firstTargetId: primaryTargetId,
+        secondTargetId,
+      },
+    ],
+  });
+  const awaitingSecondAttack = resolveBattleSubject({
+    state,
+    subject: walk.subject,
+    fills: [
+      walk.targetChoice,
+      primaryAttackRollFilled,
+      damageRollFill(primaryDamage, 1),
+      decisionFilled,
+      secondTargetFilled,
+    ],
+  });
+  const routeAfterSecondAttack = routeEventsFromWalk(
+    routeAfterSecondTarget,
+    awaitingSecondAttack,
+  );
+  const secondAttackRoll = requireHole(awaitingSecondAttack, "attackRoll");
+  const secondAttackRollFilled = attackRollFill(secondAttackRoll, {
+    total: 15,
+    naturalD20: 10,
+  });
+  const awaitingSecondDamage = resolveBattleSubject({
+    state,
+    subject: walk.subject,
+    fills: [
+      walk.targetChoice,
+      primaryAttackRollFilled,
+      damageRollFill(primaryDamage, 1),
+      decisionFilled,
+      secondTargetFilled,
+      secondAttackRollFilled,
+    ],
+  });
+  const secondDamage = requireHole(awaitingSecondDamage, "rolledDice");
+  const resolved = resolveBattleSubject({
+    state,
+    subject: walk.subject,
+    fills: [
+      walk.targetChoice,
+      primaryAttackRollFilled,
+      damageRollFill(primaryDamage, 1),
+      decisionFilled,
+      secondTargetFilled,
+      secondAttackRollFilled,
+      damageRollFill(secondDamage, 4),
+    ],
+  });
+  return {
+    routeAfterDecision,
+    routeAfterSecondTarget,
+    routeAfterSecondAttack,
+    routeAfterSecondDamage: routeEventsFromWalk(
+      routeAfterSecondAttack,
+      awaitingSecondDamage,
+      resolved,
+    ),
+  };
+}
+
+function observeInitialWeaponMasteryPropertyRoute(
+  unitId: WeaponMasteryPropertyUnitId,
+): readonly BattleReducerRouteEvent[] {
+  const state = weaponMasteryBattle(unitId);
+  const scenario = weaponMasteryPropertyScenarios[unitId];
+  return initialWeaponMasteryRouteWalk(state, scenario.attackName).route;
+}
+
+function initialWeaponMasteryRouteWalk(
+  state: BattleState,
+  attackName: string,
+): {
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "attack" }
+  >;
+  readonly targetChoice: Extract<BattleFill, { readonly kind: "targetChoice" }>;
+  readonly awaitingAttackRoll: BattleResolutionResult;
+  readonly route: readonly BattleReducerRouteEvent[];
+} {
+  const subject = attackSubject(attackName);
+  const act = attackAct(state, subject);
+  const target = requireHole(act.initialHoles, "targetChoice");
+  const targetChoice = targetFill({
+    hole: target,
+    targetId: primaryTargetId,
+    attackName,
+  });
+  const awaitingAttackRoll = resolveBattleSubject({
+    state,
+    subject,
+    fills: [targetChoice],
+  });
+  return {
+    subject,
+    targetChoice,
+    awaitingAttackRoll,
+    route: [
+      battleReducerStartRouteEvent(),
+      ...(act.routeEvents ?? []),
+      ...(awaitingAttackRoll.routeEvents ?? []),
+    ],
+  };
+}
+
+function routeEventsFromWalk(
+  route: readonly BattleReducerRouteEvent[],
+  ...results: readonly BattleResolutionResult[]
+): readonly BattleReducerRouteEvent[] {
+  return [...route, ...results.flatMap((result) => result.routeEvents ?? [])];
+}
 
 function weaponMasteryWitnessHole(raw: unknown): "witnessProtocolHole" {
   if (raw === "WitnessProtocolHole") return "witnessProtocolHole";
@@ -511,6 +887,16 @@ function discoverAttackHoles(
     { readonly tag: "action"; readonly action: "attack" }
   >,
 ): readonly BattleHole[] {
+  return attackAct(state, subject).initialHoles;
+}
+
+function attackAct(
+  state: BattleState,
+  subject: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "attack" }
+  >,
+): ReturnType<typeof discoverBattleActs>[number] {
   const act = discoverBattleActs(state).find(
     (candidate) =>
       candidate.subject.tag === "action" &&
@@ -521,7 +907,7 @@ function discoverAttackHoles(
   if (act == null) {
     throw new Error(`Expected ${subject.attackName} attack act.`);
   }
-  return act.initialHoles;
+  return act;
 }
 
 function holesAfterFills(

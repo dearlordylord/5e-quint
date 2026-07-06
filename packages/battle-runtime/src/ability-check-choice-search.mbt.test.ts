@@ -55,11 +55,16 @@ import {
   targetFill,
 } from "./battle-runtime-test-support.ts";
 import {
+  battleFillKind,
+  battleHoleFamilyKind,
+  discoverBattleActs,
   endTurn,
   resolveBattleSubject,
+  sameBattleSubject,
   snapshotBattle,
   type BattleActiveEffect,
   type BattleFill,
+  type BattleHole,
   type BattleResolutionResult,
   type BattleState,
   type BattleSubject,
@@ -267,143 +272,33 @@ function resolveRouteWithoutFill(input: {
   };
 }
 
-function searchDiscover(
-  holes: readonly ReducerRouteHole[],
-  owner: ReducerRouteOwnerGroup,
-): ReducerRouteEvent {
-  return discoverRoute({
-    subject: ABILITY_CHECK_SEARCH_ROUTE_SUBJECT,
-    holes,
-    owner,
-  });
-}
-
-function searchResolve(
-  fill: ReducerRouteFill,
-  holes: readonly ReducerRouteHole[],
-  owner: ReducerRouteOwnerGroup,
-): ReducerRouteEvent {
-  return resolveRoute({
-    subject: ABILITY_CHECK_SEARCH_ROUTE_SUBJECT,
-    fill,
-    holes,
-    owner,
-  });
-}
-
-function rollModifierDiscover(
-  holes: readonly ReducerRouteHole[],
-  owner: ReducerRouteOwnerGroup,
-): ReducerRouteEvent {
-  return discoverRoute({
-    subject: ROLL_MODIFIER_ROUTE_SUBJECT,
-    holes,
-    owner,
-  });
-}
-
-function rollModifierResolve(
-  fill: ReducerRouteFill,
-  holes: readonly ReducerRouteHole[],
-  owner: ReducerRouteOwnerGroup,
-): ReducerRouteEvent {
-  return resolveRoute({
-    subject: ROLL_MODIFIER_ROUTE_SUBJECT,
-    fill,
-    holes,
-    owner,
-  });
-}
-
-function rollModifierResolveWithoutFill(
-  owner: ReducerRouteOwnerGroup,
-): ReducerRouteEvent {
+function concentrationRouteFromResolvedRollModifierResult(input: {
+  readonly beforeState: BattleState;
+  readonly result: BattleResolutionResult;
+  readonly casterId: CombatantId;
+}): ReducerRouteEvent {
+  if (input.result.tag !== "resolved") {
+    throw new Error(
+      `Expected resolved roll-modifier result to establish Concentration, got ${input.result.tag}.`,
+    );
+  }
+  const beforeCaster = requireCombatant(input.beforeState, input.casterId);
+  const afterCaster = requireCombatant(input.result.state, input.casterId);
+  if (beforeCaster.concentration !== null) {
+    throw new Error(
+      "Expected roll-modifier caster to start without Concentration.",
+    );
+  }
+  if (afterCaster.concentration === null) {
+    throw new Error(
+      "Expected resolved roll-modifier result to establish Concentration.",
+    );
+  }
   return resolveRouteWithoutFill({
     subject: ROLL_MODIFIER_ROUTE_SUBJECT,
     holes: routeHoles(),
-    owner,
+    owner: "battleConcentration",
   });
-}
-
-function rollModifierOpeningRoute(
-  choiceHole: "abilityChoice" | "skillChoice",
-): readonly ReducerRouteEvent[] {
-  return [
-    startRoute(),
-    rollModifierDiscover(
-      routeHoles("targetChoice", choiceHole),
-      SPELL_INVOCATION_OWNER,
-    ),
-    rollModifierResolve(
-      "targetChoice",
-      routeHoles(choiceHole),
-      "battleTargetSelection",
-    ),
-  ];
-}
-
-function rollModifierChoiceAcceptedRoute(
-  choiceHole: "abilityChoice" | "skillChoice",
-  fill: ReducerRouteFill,
-): readonly ReducerRouteEvent[] {
-  return [
-    ...rollModifierOpeningRoute(choiceHole),
-    rollModifierResolve(fill, routeHoles(), "battleActiveEffect"),
-    rollModifierResolveWithoutFill("battleConcentration"),
-  ];
-}
-
-function rollModifierInvalidChoiceRoute(
-  choiceHole: "abilityChoice" | "skillChoice",
-  fill: ReducerRouteFill,
-): readonly ReducerRouteEvent[] {
-  return [
-    ...rollModifierOpeningRoute(choiceHole),
-    rollModifierResolve(fill, routeHoles(), "battleHoleFrontier"),
-  ];
-}
-
-function searchTargetChoiceRoute(): readonly ReducerRouteEvent[] {
-  return [
-    startRoute(),
-    searchDiscover(routeHoles("targetChoice"), ROUTE_START_OWNER),
-  ];
-}
-
-function searchAbilityCheckRoute(): readonly ReducerRouteEvent[] {
-  return [
-    ...searchTargetChoiceRoute(),
-    searchResolve(
-      "targetChoice",
-      routeHoles("abilityCheck"),
-      "battleTargetSelection",
-    ),
-  ];
-}
-
-function searchInvalidTargetRoute(): readonly ReducerRouteEvent[] {
-  return [
-    ...searchTargetChoiceRoute(),
-    searchResolve("targetChoice", routeHoles(), "battleTargetSelection"),
-  ];
-}
-
-function searchInvalidAbilityFillRoute(): readonly ReducerRouteEvent[] {
-  return [
-    ...searchAbilityCheckRoute(),
-    searchResolve(
-      { kind: "skillChoice", skill: "athletics" },
-      routeHoles(),
-      "battleHoleFrontier",
-    ),
-  ];
-}
-
-function searchResolvedRoute(): readonly ReducerRouteEvent[] {
-  return [
-    ...searchAbilityCheckRoute(),
-    searchResolve("abilityCheck", routeHoles(), "battleAbilityCheck"),
-  ];
 }
 
 function createDriver() {
@@ -502,68 +397,492 @@ function applyRouteScenario(
   scenario: AbilityCheckChoiceSearchReplayScenario,
 ): AbilityCheckChoiceSearchRouteProjection {
   const applicators = {
-    "search-target-choice-open": () =>
-      routeState("search-target-choice-open", searchTargetChoiceRoute()),
-    "search-ability-check-open": () =>
-      routeState("search-ability-check-open", searchAbilityCheckRoute()),
-    "search-invalid-target-rejected": () =>
-      routeState("search-invalid-target-rejected", searchInvalidTargetRoute()),
-    "search-invalid-ability-fill-rejected": () =>
-      routeState(
-        "search-invalid-ability-fill-rejected",
-        searchInvalidAbilityFillRoute(),
-      ),
-    "search-fails": () =>
-      routeState("search-fails", searchResolvedRoute()),
-    "search-succeeds": () =>
-      routeState("search-succeeds", searchResolvedRoute()),
-    "guidance-skill-choice-open": () =>
-      routeState(
-        "guidance-skill-choice-open",
-        rollModifierOpeningRoute("skillChoice"),
-      ),
-    "guidance-invalid-ability-fill-rejected": () =>
-      routeState(
-        "guidance-invalid-ability-fill-rejected",
-        rollModifierInvalidChoiceRoute("skillChoice", {
-          kind: "abilityChoice",
-          ability: "dex",
-        }),
-      ),
-    "guidance-skill-athletics": () =>
-      routeState(
-        "guidance-skill-athletics",
-        rollModifierChoiceAcceptedRoute("skillChoice", {
-          kind: "skillChoice",
-          skill: "athletics",
-        }),
-      ),
-    "enhance-ability-choice-open": () =>
-      routeState(
-        "enhance-ability-choice-open",
-        rollModifierOpeningRoute("abilityChoice"),
-      ),
-    "enhance-ability-invalid-skill-fill-rejected": () =>
-      routeState(
-        "enhance-ability-invalid-skill-fill-rejected",
-        rollModifierInvalidChoiceRoute("abilityChoice", {
-          kind: "skillChoice",
-          skill: "athletics",
-        }),
-      ),
-    "enhance-ability-dex": () =>
-      routeState(
-        "enhance-ability-dex",
-        rollModifierChoiceAcceptedRoute("abilityChoice", {
-          kind: "abilityChoice",
-          ability: "dex",
-        }),
-      ),
+    "search-target-choice-open": observeSearchTargetChoiceOpenRoute,
+    "search-ability-check-open": observeSearchAbilityCheckOpenRoute,
+    "search-invalid-target-rejected": observeSearchInvalidTargetRejectedRoute,
+    "search-invalid-ability-fill-rejected":
+      observeSearchInvalidAbilityFillRejectedRoute,
+    "search-fails": () => observeSearchResolvedRoute("search-fails", 15),
+    "search-succeeds": () => observeSearchResolvedRoute("search-succeeds", 16),
+    "guidance-skill-choice-open": observeGuidanceSkillChoiceOpenRoute,
+    "guidance-invalid-ability-fill-rejected":
+      observeGuidanceInvalidAbilityFillRejectedRoute,
+    "guidance-skill-athletics": observeGuidanceSkillAthleticsRoute,
+    "enhance-ability-choice-open": observeEnhanceAbilityChoiceOpenRoute,
+    "enhance-ability-invalid-skill-fill-rejected":
+      observeEnhanceAbilityInvalidSkillFillRejectedRoute,
+    "enhance-ability-dex": observeEnhanceAbilityDexRoute,
   } satisfies Record<
     AbilityCheckChoiceSearchReplayScenario,
     () => AbilityCheckChoiceSearchRouteProjection
   >;
   return applicators[scenario]();
+}
+
+function observeSearchTargetChoiceOpenRoute(): AbilityCheckChoiceSearchRouteProjection {
+  const state = hiddenFighterOnGoblinTurn();
+  const searchSubject = goblinSearchSubject();
+  const act = findAct(state, searchSubject);
+  return routeState("search-target-choice-open", [
+    startRoute(),
+    discoverFromAct(
+      act.initialHoles,
+      ABILITY_CHECK_SEARCH_ROUTE_SUBJECT,
+      ROUTE_START_OWNER,
+    ),
+  ]);
+}
+
+function observeSearchAbilityCheckOpenRoute(): AbilityCheckChoiceSearchRouteProjection {
+  const state = hiddenFighterOnGoblinTurn();
+  const searchSubject = goblinSearchSubject();
+  const target = requireHole(
+    findAct(state, searchSubject).initialHoles,
+    "targetChoice",
+  );
+  const targetFill = targetFillForSearch(target, fighterId);
+  const result = resolveBattleSubject({
+    state,
+    subject: searchSubject,
+    fills: [targetFill],
+  });
+  return routeState("search-ability-check-open", [
+    ...searchTargetChoiceRouteFromState(state, searchSubject),
+    resolveFromResult(
+      result,
+      ABILITY_CHECK_SEARCH_ROUTE_SUBJECT,
+      targetFill,
+      "battleTargetSelection",
+    ),
+  ]);
+}
+
+function observeSearchInvalidTargetRejectedRoute(): AbilityCheckChoiceSearchRouteProjection {
+  const state = hiddenFighterOnGoblinTurn();
+  const searchSubject = goblinSearchSubject();
+  const target = requireHole(
+    findAct(state, searchSubject).initialHoles,
+    "targetChoice",
+  );
+  const targetFill = targetFillForSearch(target, goblinId);
+  const result = resolveBattleSubject({
+    state,
+    subject: searchSubject,
+    fills: [targetFill],
+  });
+  return routeState("search-invalid-target-rejected", [
+    ...searchTargetChoiceRouteFromState(state, searchSubject),
+    resolveFromResult(
+      result,
+      ABILITY_CHECK_SEARCH_ROUTE_SUBJECT,
+      targetFill,
+      "battleTargetSelection",
+    ),
+  ]);
+}
+
+function observeSearchInvalidAbilityFillRejectedRoute(): AbilityCheckChoiceSearchRouteProjection {
+  const state = hiddenFighterOnGoblinTurn();
+  const searchSubject = goblinSearchSubject();
+  const target = requireHole(
+    findAct(state, searchSubject).initialHoles,
+    "targetChoice",
+  );
+  const targetFill = targetFillForSearch(target, fighterId);
+  const searchCheck = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject: searchSubject,
+      fills: [targetFill],
+    }),
+    "abilityCheck",
+  );
+  const wrongFill: Extract<BattleFill, { readonly kind: "skillChoice" }> = {
+    kind: "skillChoice",
+    holeId: searchCheck.holeId,
+    value: "athletics",
+  };
+  const result = resolveBattleSubject({
+    state,
+    subject: searchSubject,
+    fills: [targetFill, wrongFill],
+  });
+  return routeState("search-invalid-ability-fill-rejected", [
+    ...searchAbilityCheckRouteFromState(state, searchSubject, targetFill),
+    resolveFromResult(
+      result,
+      ABILITY_CHECK_SEARCH_ROUTE_SUBJECT,
+      wrongFill,
+      "battleHoleFrontier",
+    ),
+  ]);
+}
+
+function observeSearchResolvedRoute(
+  scenario: "search-fails" | "search-succeeds",
+  searchTotal: number,
+): AbilityCheckChoiceSearchRouteProjection {
+  const state = hiddenFighterOnGoblinTurn();
+  const searchSubject = goblinSearchSubject();
+  const target = requireHole(
+    findAct(state, searchSubject).initialHoles,
+    "targetChoice",
+  );
+  const targetFill = targetFillForSearch(target, fighterId);
+  const searchCheck = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject: searchSubject,
+      fills: [targetFill],
+    }),
+    "abilityCheck",
+  );
+  const abilityFill = abilityCheckFill(searchCheck, searchTotal);
+  const result = resolveBattleSubject({
+    state,
+    subject: searchSubject,
+    fills: [targetFill, abilityFill],
+  });
+  return routeState(scenario, [
+    ...searchAbilityCheckRouteFromState(state, searchSubject, targetFill),
+    resolveFromResult(
+      result,
+      ABILITY_CHECK_SEARCH_ROUTE_SUBJECT,
+      abilityFill,
+      "battleAbilityCheck",
+    ),
+  ]);
+}
+
+function observeGuidanceSkillChoiceOpenRoute(): AbilityCheckChoiceSearchRouteProjection {
+  const state = guidanceBattle();
+  const act = spellAct({ state, spellId: guidanceUnitId });
+  const target = requireHole(act.initialHoles, "targetChoice");
+  const targetFill = spellTargetFill(
+    target,
+    guidanceUnitId,
+    spellCasterId,
+    spellCasterId,
+  );
+  const result = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [targetFill],
+  });
+  return routeState("guidance-skill-choice-open", [
+    ...rollModifierDiscoveredRouteFromAct(act.initialHoles),
+    resolveFromResult(
+      result,
+      ROLL_MODIFIER_ROUTE_SUBJECT,
+      targetFill,
+      "battleTargetSelection",
+    ),
+  ]);
+}
+
+function observeGuidanceInvalidAbilityFillRejectedRoute(): AbilityCheckChoiceSearchRouteProjection {
+  const state = guidanceBattle();
+  const act = spellAct({ state, spellId: guidanceUnitId });
+  const target = requireHole(act.initialHoles, "targetChoice");
+  const skill = requireHole(act.initialHoles, "skillChoice");
+  const targetFill = spellTargetFill(
+    target,
+    guidanceUnitId,
+    spellCasterId,
+    spellCasterId,
+  );
+  const wrongFill: Extract<BattleFill, { readonly kind: "abilityChoice" }> = {
+    kind: "abilityChoice",
+    holeId: skill.holeId,
+    value: "dex",
+  };
+  const result = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [targetFill, wrongFill],
+  });
+  return routeState("guidance-invalid-ability-fill-rejected", [
+    ...rollModifierOpeningRouteFromState(state, act.subject, targetFill),
+    resolveFromResult(
+      result,
+      ROLL_MODIFIER_ROUTE_SUBJECT,
+      wrongFill,
+      "battleHoleFrontier",
+    ),
+  ]);
+}
+
+function observeGuidanceSkillAthleticsRoute(): AbilityCheckChoiceSearchRouteProjection {
+  const state = guidanceBattle();
+  const act = spellAct({ state, spellId: guidanceUnitId });
+  const target = requireHole(act.initialHoles, "targetChoice");
+  const skill = requireHole(act.initialHoles, "skillChoice");
+  const targetFill = spellTargetFill(
+    target,
+    guidanceUnitId,
+    spellCasterId,
+    spellCasterId,
+  );
+  const choiceFill = skillChoiceFill(skill, "athletics");
+  const result = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [targetFill, choiceFill],
+  });
+  return routeState("guidance-skill-athletics", [
+    ...rollModifierOpeningRouteFromState(state, act.subject, targetFill),
+    resolveFromResult(
+      result,
+      ROLL_MODIFIER_ROUTE_SUBJECT,
+      choiceFill,
+      "battleActiveEffect",
+    ),
+    concentrationRouteFromResolvedRollModifierResult({
+      beforeState: state,
+      result,
+      casterId: spellCasterId,
+    }),
+  ]);
+}
+
+function observeEnhanceAbilityChoiceOpenRoute(): AbilityCheckChoiceSearchRouteProjection {
+  const state = enhanceAbilityBattle();
+  const act = spellAct({ state, spellId: enhanceAbilityUnitId });
+  const target = requireHole(act.initialHoles, "targetChoice");
+  const targetFill = spellTargetFill(
+    target,
+    enhanceAbilityUnitId,
+    spellCasterId,
+    spellTargetId,
+  );
+  const result = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [targetFill],
+  });
+  return routeState("enhance-ability-choice-open", [
+    ...rollModifierDiscoveredRouteFromAct(act.initialHoles),
+    resolveFromResult(
+      result,
+      ROLL_MODIFIER_ROUTE_SUBJECT,
+      targetFill,
+      "battleTargetSelection",
+    ),
+  ]);
+}
+
+function observeEnhanceAbilityInvalidSkillFillRejectedRoute(): AbilityCheckChoiceSearchRouteProjection {
+  const state = enhanceAbilityBattle();
+  const act = spellAct({ state, spellId: enhanceAbilityUnitId });
+  const target = requireHole(act.initialHoles, "targetChoice");
+  const ability = requireHole(act.initialHoles, "abilityChoice");
+  const targetFill = spellTargetFill(
+    target,
+    enhanceAbilityUnitId,
+    spellCasterId,
+    spellTargetId,
+  );
+  const wrongFill: Extract<BattleFill, { readonly kind: "skillChoice" }> = {
+    kind: "skillChoice",
+    holeId: ability.holeId,
+    value: "athletics",
+  };
+  const result = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [targetFill, wrongFill],
+  });
+  return routeState("enhance-ability-invalid-skill-fill-rejected", [
+    ...rollModifierOpeningRouteFromState(state, act.subject, targetFill),
+    resolveFromResult(
+      result,
+      ROLL_MODIFIER_ROUTE_SUBJECT,
+      wrongFill,
+      "battleHoleFrontier",
+    ),
+  ]);
+}
+
+function observeEnhanceAbilityDexRoute(): AbilityCheckChoiceSearchRouteProjection {
+  const state = enhanceAbilityBattle();
+  const act = spellAct({ state, spellId: enhanceAbilityUnitId });
+  const target = requireHole(act.initialHoles, "targetChoice");
+  const ability = requireHole(act.initialHoles, "abilityChoice");
+  const targetFill = spellTargetFill(
+    target,
+    enhanceAbilityUnitId,
+    spellCasterId,
+    spellTargetId,
+  );
+  const choiceFill = abilityChoiceFill(ability, "dex");
+  const result = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [targetFill, choiceFill],
+  });
+  return routeState("enhance-ability-dex", [
+    ...rollModifierOpeningRouteFromState(state, act.subject, targetFill),
+    resolveFromResult(
+      result,
+      ROLL_MODIFIER_ROUTE_SUBJECT,
+      choiceFill,
+      "battleActiveEffect",
+    ),
+    concentrationRouteFromResolvedRollModifierResult({
+      beforeState: state,
+      result,
+      casterId: spellCasterId,
+    }),
+  ]);
+}
+
+function searchTargetChoiceRouteFromState(
+  state: BattleState,
+  searchSubject: BattleSubject,
+): readonly ReducerRouteEvent[] {
+  const act = findAct(state, searchSubject);
+  return [
+    startRoute(),
+    discoverFromAct(
+      act.initialHoles,
+      ABILITY_CHECK_SEARCH_ROUTE_SUBJECT,
+      ROUTE_START_OWNER,
+    ),
+  ];
+}
+
+function searchAbilityCheckRouteFromState(
+  state: BattleState,
+  searchSubject: BattleSubject,
+  targetFill: BattleFill,
+): readonly ReducerRouteEvent[] {
+  const result = resolveBattleSubject({
+    state,
+    subject: searchSubject,
+    fills: [targetFill],
+  });
+  return [
+    ...searchTargetChoiceRouteFromState(state, searchSubject),
+    resolveFromResult(
+      result,
+      ABILITY_CHECK_SEARCH_ROUTE_SUBJECT,
+      targetFill,
+      "battleTargetSelection",
+    ),
+  ];
+}
+
+function rollModifierDiscoveredRouteFromAct(
+  initialHoles: readonly BattleHole[],
+): readonly ReducerRouteEvent[] {
+  return [
+    startRoute(),
+    discoverFromAct(
+      initialHoles,
+      ROLL_MODIFIER_ROUTE_SUBJECT,
+      SPELL_INVOCATION_OWNER,
+    ),
+  ];
+}
+
+function rollModifierOpeningRouteFromState(
+  state: BattleState,
+  subject: BattleSubject,
+  targetFill: BattleFill,
+): readonly ReducerRouteEvent[] {
+  const act = discoverBattleActs(state).find((candidate) =>
+    sameBattleSubject(candidate.subject, subject),
+  );
+  if (act === undefined) {
+    throw new Error("Expected roll-modifier spell act from battle discovery.");
+  }
+  const result = resolveBattleSubject({
+    state,
+    subject,
+    fills: [targetFill],
+  });
+  return [
+    ...rollModifierDiscoveredRouteFromAct(act.initialHoles),
+    resolveFromResult(
+      result,
+      ROLL_MODIFIER_ROUTE_SUBJECT,
+      targetFill,
+      "battleTargetSelection",
+    ),
+  ];
+}
+
+function discoverFromAct(
+  holes: readonly BattleHole[],
+  subject: ReducerRouteSubjectFamily,
+  owner: ReducerRouteOwnerGroup,
+): ReducerRouteEvent {
+  return discoverRoute({
+    subject,
+    holes: routeHolesFromBattleHoles(holes),
+    owner,
+  });
+}
+
+function resolveFromResult(
+  result: BattleResolutionResult,
+  subject: ReducerRouteSubjectFamily,
+  fill: BattleFill,
+  owner: ReducerRouteOwnerGroup,
+): ReducerRouteEvent {
+  return resolveRoute({
+    subject,
+    fill: routeFillFromBattleFill(fill),
+    holes:
+      result.tag === "needsHoles"
+        ? routeHolesFromBattleHoles(result.holes)
+        : routeHoles(),
+    owner,
+  });
+}
+
+function routeHolesFromBattleHoles(
+  holes: readonly BattleHole[],
+): readonly ReducerRouteHole[] {
+  return routeHoles(...holes.map(routeHoleFromBattleHole));
+}
+
+function routeHoleFromBattleHole(hole: BattleHole): ReducerRouteHole {
+  const kind = battleHoleFamilyKind(hole);
+  if (
+    kind === "abilityCheck" ||
+    kind === "abilityChoice" ||
+    kind === "skillChoice" ||
+    kind === "targetChoice"
+  ) {
+    return kind;
+  }
+  throw new Error(`Unexpected Ability Check/Search route hole ${kind}.`);
+}
+
+function routeFillFromBattleFill(fill: BattleFill): ReducerRouteFill {
+  if (fill.kind === "skillChoice") {
+    return { kind: "skillChoice", skill: fill.value };
+  }
+  if (fill.kind === "abilityChoice") {
+    return { kind: "abilityChoice", ability: fill.value };
+  }
+  const kind = battleFillKind(fill);
+  if (kind === "abilityCheck" || kind === "targetChoice") {
+    return kind;
+  }
+  throw new Error(`Unexpected Ability Check/Search route fill ${kind}.`);
+}
+
+function targetFillForSearch(
+  target: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  targetId: CombatantId,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  const fill = targetFill(target, targetId);
+  if (fill.kind !== "targetChoice") {
+    throw new Error(`Expected targetChoice fill, got ${fill.kind}.`);
+  }
+  return fill;
 }
 
 const abilityCheckChoiceSearchStateCheck = stateCheck(

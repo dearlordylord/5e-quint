@@ -6,6 +6,7 @@ import {
   Either,
   abilityScoreAssignment,
   armorClassBuild,
+  characterSheetArmorClassProjection,
   characterSheetArmorClassState,
   currentArmorClass,
   draconicResilienceArmorClassProjectionTestName,
@@ -206,5 +207,37 @@ describe("Character Sheet runtime / armor class", () => {
       category: "heavy",
     });
     expect(currentArmorClass(state)).toBe(16);
+  });
+
+  test("projects Armor Class selected-reference qRoute through the public projection entrypoint", () => {
+    const projection = requireRight(
+      characterSheetArmorClassProjection({
+        build: armorClassBuild({
+          startingClass: "class_barbarian",
+          advancements: ["class_monk"],
+          shield: true,
+        }),
+        unitLibrary,
+        baseChoice: {
+          kind: "class_feature",
+          unitId: "barbarian_unarmored_defense",
+        },
+      }),
+    );
+
+    expect(currentArmorClass(projection.state)).toBe(15);
+    expect(projection.armorClass).toBe(15);
+    expect(projection.qRoute).toEqual([
+      {
+        kind: "retainCharacterSheetSelectedReferences",
+        subject: "selectedReferenceProjection",
+        owner: "selectedReference",
+      },
+      {
+        kind: "projectCharacterSheetFacts",
+        subject: "armorClassProjection",
+        owner: "buildProjection",
+      },
+    ]);
   });
 });

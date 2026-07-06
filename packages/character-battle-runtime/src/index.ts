@@ -8,9 +8,15 @@ import {
   characterBattleResourceMaxUses,
   KNOCKED_OUT_UNCONSCIOUS,
   parseSupportedUnitFeatureProfile,
+  battleCreatureInitFromStatBlock,
+  startBattle,
+  type BattleCreatureInit,
+  type BattleId,
   type BattleCreatureState,
+  type BattleStateInitIssue,
   type BattleState,
   type CharacterZeroHpLifecycleInit,
+  type StatBlockBattleInitInput,
 } from "@dnd/battle-runtime";
 import { characterBuildDruidWildShapeFacts } from "@dnd/character-creation-runtime";
 import {
@@ -64,17 +70,23 @@ import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either, Option } from "effect";
 
 import {
+  CHARACTER_BATTLE_INIT_MAX_HP_EXCEEDS_BUILD_MAX_MESSAGE,
   battleCreatureInitFromCharacterBuild,
   type CharacterBuildCreatureInput,
 } from "./battle-creature-init.ts";
-import {
-  battleCreatureInitIssue,
-  type BattleCreatureInitIssue,
-} from "./battle-character-build-projection.ts";
+import { type BattleCreatureInitIssue } from "./battle-character-build-projection.ts";
 import {
   characterSheetBattleHandoffIssue,
   type CharacterSheetBattleHandoffIssue,
 } from "./battle-handoff-issue.ts";
+import {
+  characterBattleEncounterCompositionRoute,
+  enterBattleRuntimeRoute,
+  projectCharacterSheetToBattleRoute,
+  recordCharacterBattleHandoffFactsRoute,
+  rejectCharacterBattleHandoffRoute,
+  type CharacterBattleRouteEvent,
+} from "./character-battle-route.ts";
 import { settleCompanionFromBattle } from "./companion-handoff.ts";
 
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
@@ -112,6 +124,45 @@ export {
   admitCharacterSheetCompanionToBattle,
   type CharacterSheetCompanionBattleAdmissionInput,
 } from "./companion-handoff.ts";
+export {
+  CHARACTER_BATTLE_ENCOUNTER_COMPOSITION_ROUTE_ACTIONS,
+  CHARACTER_BATTLE_INIT_PROJECTION_ROUTE_ACTIONS,
+  CHARACTER_BATTLE_SETTLEMENT_ROUTE_ACTIONS,
+  CHARACTER_SESSION_SHEET_DERIVED_BATTLE_ACTS_ROUTE_ACTIONS,
+  CHARACTER_BATTLE_ROUTE_COMPOSITION_FACTS,
+  CHARACTER_BATTLE_ROUTE_FILLS,
+  CHARACTER_BATTLE_ROUTE_HANDOFF_FACTS,
+  CHARACTER_BATTLE_ROUTE_HOLES,
+  CHARACTER_BATTLE_ROUTE_OWNERS,
+  CHARACTER_BATTLE_ROUTE_SUBJECTS,
+  characterBattleSettlementRouteStep,
+  characterBattleEncounterCompositionRoute,
+  characterBattleEncounterCompositionRouteStep,
+  characterBattleInitProjectionRouteAfter,
+  characterBattleInitProjectionRouteStep,
+  characterSessionSheetDerivedBattleActsRouteStep,
+  composeBattleEncounterRoute,
+  enterBattleRuntimeRoute,
+  initialCharacterBattleEncounterCompositionRoute,
+  initialCharacterBattleInitProjectionRoute,
+  initialCharacterBattleSettlementRoute,
+  initialCharacterSessionSheetDerivedBattleActsRoute,
+  projectCharacterSheetToBattleRoute,
+  recordCharacterBattleHandoffFactsRoute,
+  rejectCharacterBattleHandoffRoute,
+  settleBattleToCharacterSheetRoute,
+  type CharacterBattleEncounterCompositionRouteAction,
+  type CharacterBattleInitProjectionRouteAction,
+  type CharacterBattleRouteCompositionFact,
+  type CharacterBattleRouteEvent,
+  type CharacterBattleRouteFill,
+  type CharacterBattleRouteHandoffFact,
+  type CharacterBattleRouteHole,
+  type CharacterBattleRouteOwner,
+  type CharacterBattleRouteSubject,
+  type CharacterBattleSettlementRouteAction,
+  type CharacterSessionSheetDerivedBattleActsRouteAction,
+} from "./character-battle-route.ts";
 
 export type CharacterSheetBattleInitInput = Omit<
   CharacterBuildCreatureInput,
@@ -133,14 +184,59 @@ export type CharacterSheetBattleInitInput = Omit<
   readonly statBlockCatalog: StatBlockCatalog;
 };
 
+export type CharacterBattleInitProjection = {
+  readonly init: BattleCreatureInit;
+  readonly routeEvents: readonly CharacterBattleRouteEvent[];
+};
+
+export type CharacterBattleInitProjectionIssue = {
+  readonly issue: BattleCreatureInitIssue;
+  readonly routeEvents: readonly CharacterBattleRouteEvent[];
+};
+
+export type CharacterBattleRuntimeEntry = {
+  readonly state: BattleState;
+  readonly initProjectionRouteEvents: readonly CharacterBattleRouteEvent[];
+  readonly encounterCompositionRouteEvents: readonly CharacterBattleRouteEvent[];
+};
+
+export type CharacterBattleRuntimeEntryIssue = {
+  readonly issue: BattleCreatureInitIssue | BattleStateInitIssue;
+  readonly routeEvents: readonly CharacterBattleRouteEvent[];
+};
+
 export function characterSheetBattleInit(input: CharacterSheetBattleInitInput) {
+  const projection = characterSheetBattleInitWithRoute(input);
+  return Either.isLeft(projection)
+    ? Either.left(projection.left.issue)
+    : Either.right(projection.right.init);
+}
+
+export function characterSheetBattleInitWithRoute(
+  input: CharacterSheetBattleInitInput,
+): Either.Either<
+  CharacterBattleInitProjection,
+  CharacterBattleInitProjectionIssue
+> {
   const { sheet, unitLibrary, statBlockCatalog, ...battleInput } = input;
   const stableRecoveryIssue = unsupportedStableRecoveryBattleBoundary(sheet);
   if (stableRecoveryIssue !== null) {
-    return battleCreatureInitIssue(stableRecoveryIssue);
+    return Either.left({
+      issue: {
+        tag: "battleCreatureInitIssue",
+        message: stableRecoveryIssue,
+      },
+      routeEvents: rejectStableRecoveryBattleInitRoute(),
+    });
   }
   if (hasMixedSpellAndPactSlotState(sheet)) {
-    return battleCreatureInitIssue(mixedSpellAndPactSlotStateMessage);
+    return Either.left({
+      issue: {
+        tag: "battleCreatureInitIssue",
+        message: mixedSpellAndPactSlotStateMessage,
+      },
+      routeEvents: rejectMixedSpellAndPactSlotBattleInitRoute(),
+    });
   }
   const druidWildShapeAvailableForms =
     battleDruidWildShapeAvailableFormsFromSheet({
@@ -148,16 +244,25 @@ export function characterSheetBattleInit(input: CharacterSheetBattleInitInput) {
       statBlockCatalog,
     });
   if (Either.isLeft(druidWildShapeAvailableForms)) {
-    return Either.left(druidWildShapeAvailableForms.left);
+    return Either.left({
+      issue: druidWildShapeAvailableForms.left,
+      routeEvents: rejectCharacterBattleInitProjectionRoute(),
+    });
   }
   const hitPointMaximum = characterSheetHitPointMaximum({
     sheet,
     unitLibrary,
   });
   if (Either.isLeft(hitPointMaximum)) {
-    return battleCreatureInitIssue(hitPointMaximum.left.message);
+    return Either.left({
+      issue: {
+        tag: "battleCreatureInitIssue",
+        message: hitPointMaximum.left.message,
+      },
+      routeEvents: rejectBuildHitPointBattleInitRoute(),
+    });
   }
-  return battleCreatureInitFromCharacterBuild({
+  const init = battleCreatureInitFromCharacterBuild({
     ...battleInput,
     unitLibrary,
     build: sheet.build,
@@ -170,6 +275,203 @@ export function characterSheetBattleInit(input: CharacterSheetBattleInitInput) {
       ? {}
       : { druidWildShapeAvailableForms: druidWildShapeAvailableForms.right }),
   });
+  return Either.isLeft(init)
+    ? Either.left({
+        issue: init.left,
+        routeEvents: rejectCharacterBattleInitProjectionRoute(),
+      })
+    : Either.right({
+        init: init.right,
+        routeEvents: acceptedCharacterSheetBattleInitRoute(sheet),
+      });
+}
+
+export function battleCreatureInitFromCharacterBuildWithRoute(
+  input: CharacterBuildCreatureInput & {
+    readonly unitLibrary: UnitCatalog;
+  },
+): Either.Either<
+  CharacterBattleInitProjection,
+  CharacterBattleInitProjectionIssue
+> {
+  const init = battleCreatureInitFromCharacterBuild(input);
+  return Either.isLeft(init)
+    ? Either.left({
+        issue: init.left,
+        routeEvents: characterBuildInitIssueRoute(init.left),
+      })
+    : Either.right({
+        init: init.right,
+        routeEvents: [
+          projectCharacterSheetToBattleRoute({
+            subject: "sheetToBattleInit",
+            owner: "characterBattleBuildProjection",
+          }),
+          recordCharacterBattleHandoffFactsRoute({
+            subject: "sheetToBattleInit",
+            facts: ["buildHitPointMaximumInput"],
+            owner: "characterBattleBuildProjection",
+          }),
+          enterBattleRuntimeRoute({
+            subject: "sheetToBattleInit",
+            owner: "characterBattleInitProjection",
+          }),
+        ],
+      });
+}
+
+function characterBuildInitIssueRoute(
+  issue: BattleCreatureInitIssue,
+): readonly CharacterBattleRouteEvent[] {
+  return issue.message ===
+    CHARACTER_BATTLE_INIT_MAX_HP_EXCEEDS_BUILD_MAX_MESSAGE
+    ? rejectBuildHitPointBattleInitRoute()
+    : rejectCharacterBattleInitProjectionRoute();
+}
+
+export function startBattleFromCharacterSheetAndStatBlock(input: {
+  readonly battleId: BattleId;
+  readonly character: CharacterSheetBattleInitInput;
+  readonly statBlockBattleInput: StatBlockBattleInitInput;
+}): Either.Either<CharacterBattleRuntimeEntry, CharacterBattleRuntimeEntryIssue> {
+  const characterInit = characterSheetBattleInitWithRoute(input.character);
+  if (Either.isLeft(characterInit)) {
+    return Either.left({
+      issue: characterInit.left.issue,
+      routeEvents: characterInit.left.routeEvents,
+    });
+  }
+  const state = startBattle({
+    battleId: input.battleId,
+    combatants: [
+      characterInit.right.init,
+      battleCreatureInitFromStatBlock(input.statBlockBattleInput),
+    ],
+  });
+  if (Either.isLeft(state)) {
+    return Either.left({
+      issue: state.left,
+      routeEvents: characterInit.right.routeEvents,
+    });
+  }
+  return Either.right({
+    state: state.right,
+    initProjectionRouteEvents: characterInit.right.routeEvents,
+    encounterCompositionRouteEvents: characterBattleEncounterCompositionRouteEvents(
+      {
+        state: state.right,
+        characterCombatantId: characterInit.right.init.combatantId,
+        statBlockCombatantId: input.statBlockBattleInput.combatantId,
+      },
+    ),
+  });
+}
+
+function characterBattleEncounterCompositionRouteEvents(input: {
+  readonly state: BattleState;
+  readonly characterCombatantId: BattleCreatureInit["combatantId"];
+  readonly statBlockCombatantId: StatBlockBattleInitInput["combatantId"];
+}): readonly CharacterBattleRouteEvent[] {
+  const characterCombatant = input.state.combatants.get(
+    input.characterCombatantId,
+  );
+  const statBlockCombatant = input.state.combatants.get(
+    input.statBlockCombatantId,
+  );
+  const currentActorId = input.state.initiative.stillToAct[0]?.creature;
+  if (
+    characterCombatant?.origin.kind !== "character" ||
+    statBlockCombatant === undefined ||
+    statBlockCombatant.origin.kind === "character" ||
+    currentActorId === undefined
+  ) {
+    return [];
+  }
+  return characterBattleEncounterCompositionRoute();
+}
+
+function acceptedCharacterSheetBattleInitRoute(
+  sheet: CharacterSheet,
+): readonly CharacterBattleRouteEvent[] {
+  return hasPurePactSlotState(sheet)
+    ? [
+        projectCharacterSheetToBattleRoute({
+          subject: "handoffResourceProjection",
+          owner: "characterBattleResourceProjection",
+        }),
+        recordCharacterBattleHandoffFactsRoute({
+          subject: "handoffResourceProjection",
+          facts: ["sourceExactPactSlotDelta"],
+          owner: "characterBattleResourceProjection",
+        }),
+        enterBattleRuntimeRoute({
+          subject: "handoffResourceProjection",
+          owner: "characterBattleInitProjection",
+        }),
+      ]
+    : [
+        projectCharacterSheetToBattleRoute({
+          subject: "sheetToBattleInit",
+          owner: "characterBattleSheet",
+        }),
+        projectCharacterSheetToBattleRoute({
+          subject: "sheetToBattleInit",
+          owner: "characterBattleBuildProjection",
+        }),
+        recordCharacterBattleHandoffFactsRoute({
+          subject: "sheetToBattleInit",
+          facts: ["buildHitPointMaximumInput"],
+          owner: "characterBattleBuildProjection",
+        }),
+        enterBattleRuntimeRoute({
+          subject: "sheetToBattleInit",
+          owner: "characterBattleInitProjection",
+        }),
+      ];
+}
+
+function rejectMixedSpellAndPactSlotBattleInitRoute(): readonly CharacterBattleRouteEvent[] {
+  return [
+    rejectCharacterBattleHandoffRoute({
+      subject: "handoffResourceProjection",
+      fill: "resourceDelta",
+      holes: ["spellResourceProjection"],
+      owner: "characterBattleResourceProjection",
+    }),
+  ];
+}
+
+function rejectBuildHitPointBattleInitRoute(): readonly CharacterBattleRouteEvent[] {
+  return [
+    rejectCharacterBattleHandoffRoute({
+      subject: "sheetToBattleInit",
+      fill: "sheetProjection",
+      holes: ["hitPointProjection"],
+      owner: "characterBattleBuildProjection",
+    }),
+  ];
+}
+
+function rejectStableRecoveryBattleInitRoute(): readonly CharacterBattleRouteEvent[] {
+  return [
+    rejectCharacterBattleHandoffRoute({
+      subject: "sheetToBattleInit",
+      fill: "sheetProjection",
+      holes: ["settlementConflict"],
+      owner: "characterBattleInitProjection",
+    }),
+  ];
+}
+
+function rejectCharacterBattleInitProjectionRoute(): readonly CharacterBattleRouteEvent[] {
+  return [
+    rejectCharacterBattleHandoffRoute({
+      subject: "sheetToBattleInit",
+      fill: "sheetProjection",
+      holes: ["settlementConflict"],
+      owner: "characterBattleInitProjection",
+    }),
+  ];
 }
 
 export function settleCharacterSheetFromBattle(input: {
@@ -953,6 +1255,14 @@ function hasMixedSpellAndPactSlotState(sheet: CharacterSheet): boolean {
     characterSheetPactSlots(sheet) !== undefined &&
     spellSlots !== undefined &&
     spellSlots.length > 0
+  );
+}
+
+function hasPurePactSlotState(sheet: CharacterSheet): boolean {
+  const spellSlots = characterSheetSpellSlots(sheet);
+  return (
+    characterSheetPactSlots(sheet) !== undefined &&
+    (spellSlots === undefined || spellSlots.length === 0)
   );
 }
 

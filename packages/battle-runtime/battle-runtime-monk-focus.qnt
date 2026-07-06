@@ -42,7 +42,7 @@ module battleRuntimeMonkFocus {
   pure def spendFighterMonkFocusBonusAction(state: BattleState): BattleState =
     stateWithFighterMovementStep(
       state,
-      battleRuntimeSpendBonusAction(movementProjectionForFighter(state, WalkSpeedKind)),
+      battleRuntimeSpendBonusAction(movementProjectionForFighter(state, WalkSpeedKind)).step,
     )
 
   pure def monkFocusFlurryOfBlowsFighter(

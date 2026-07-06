@@ -372,6 +372,7 @@ function runtimeCommandSubjectKind(
       byCommand("commandDrop", () => "runtimeCompelledAction" as const),
       byCommand("commandApproach", () => "runtimeCompelledAction" as const),
       byCommand("commandFlee", () => "runtimeCompelledAction" as const),
+      byCommand("endConcentration", () => "runtimeEffectCleanup" as const),
     )
     .pipe(
       byCommand(
