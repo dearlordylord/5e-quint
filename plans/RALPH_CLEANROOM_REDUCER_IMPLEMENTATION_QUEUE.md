@@ -25,7 +25,7 @@
     {
       "number": 4,
       "id": "CRPI-BLOCK-003",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-attack-spell-shape-selected-identity"
     },
     {
@@ -946,7 +946,7 @@ Plan Impact:
 
 ### Task 4 - CRPI-BLOCK-003
 
-Status: `ready-for-research`
+Status: `done`
 
 Blocker Type: none
 
