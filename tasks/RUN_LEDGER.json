@@ -5767,6 +5767,123 @@
         ],
         "requiredPlanEdits": "none"
       }
+    },
+    {
+      "taskId": "CRPI-BLOCK-006",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "f07a33f783419b9f8f88eed9d679faadace779ec658d2a990ae56bc963d55387",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "e1909f8681b14e4369abb7d94c080e05eae0e04ff6fa4e70ab85472999b81283"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "b33f4928dc431321ff0facadc572d0e4e1f727f2d99820b24a82cc315567fefd"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "bb7a767d7c9cf6e22832f5d6e924804df5c590507d1928da12fc264db507f7a7"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-006.json",
+          "sha256": "79d7ac2eef6e149fb619246178731ca946f06f38ee60557c5d71802a1d72db7d",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-006.json#driver:packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt#step:doDiscoverAnimalFriendshipBeastTargetAdmission#trace:MBT_TRACES=1 MBT_STEPS=1 action=doDiscoverAnimalFriendshipBeastTargetAdmission qRoute=protection-charm-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-006.json#driver:packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt#step:doPreventProtectionFromEvilAndGoodScopedCharmAndPossession#trace:MBT_TRACES=1 MBT_STEPS=1 action=doPreventProtectionFromEvilAndGoodScopedCharmAndPossession qRoute=protection-charm-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-006.json#driver:packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt#step:doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage#trace:MBT_TRACES=1 MBT_STEPS=1 action=doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage qRoute=protection-charm-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-006.json#driver:packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt#step:doResolveAnimalFriendshipCasterDamageBreak#trace:MBT_TRACES=1 MBT_STEPS=1 action=doResolveAnimalFriendshipCasterDamageBreak qRoute=protection-charm-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-006.json#driver:packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt#step:doResolveAnimalFriendshipFailedSaveCharmed#trace:MBT_TRACES=1 MBT_STEPS=1 action=doResolveAnimalFriendshipFailedSaveCharmed qRoute=protection-charm-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-006.json#driver:packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt#step:doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection#trace:MBT_TRACES=1 MBT_STEPS=1 action=doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection qRoute=protection-charm-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-006.json#driver:packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt#step:doResolveProtectionFromEvilAndGoodRelevantCharmSaveAdvantage#trace:MBT_TRACES=1 MBT_STEPS=1 action=doResolveProtectionFromEvilAndGoodRelevantCharmSaveAdvantage qRoute=protection-charm-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-unblocked-battle-route-20260706T072836Z/integration && git log --oneline -1 HEAD && git merge-base --is-ancestor 7d5a681cb0e7f252c20fbf83ed9c0b06075abf2c HEAD",
+          "status": "pass",
+          "detail": "Base ref ralph/cleanroom-unblocked-battle-route-20260706T072836Z/integration resolved to 7d5a681cb Mark Ralph task 6 done; HEAD resolved to 7d5a681cb Mark Ralph task 6 done; Base SHA is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language check for Animal Friendship, Protection from Evil and Good, Magic Jar possession, Charmed, Possession, Concentration, Incapacitated, and UBIQUITOUS_LANGUAGE.md",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec tsc --noEmit --pretty false",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec vitest run src/battle-subjects.test.ts src/battle-hole-family-kind.test.ts",
+          "status": "pass",
+          "detail": "4 focused tests passed, covering condition-sensitive creature-type-protection condition-attempt subject identity and runtime subject-kind vocabulary."
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Pre-MBT process check found no running vitest or quint_evaluator processes; both grep commands exited 1 with no output."
+        },
+        {
+          "command": "START=$(date +%s); (while true; do sleep 60; echo \"PROGRESS: $(( $(date +%s) - START ))s\"; done) & HEARTBEAT=$!; pnpm --filter @dnd/battle-runtime exec vitest run src/creature-type-protection-and-charm-selected-identity.mbt.test.ts 2>&1; STATUS=$?; kill \"$HEARTBEAT\" 2>/dev/null || true; wait \"$HEARTBEAT\" 2>/dev/null || true; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit $STATUS",
+          "status": "fail",
+          "detail": "Revision round 8 first focused MBT retry failed because the Charmed condition-attempt runtime command was resolved before advancing to the protected target's turn; TOTAL: 7s. The replay was corrected to use protectionFromEvilAndGoodProtectedTargetTurn before rerunning."
+        },
+        {
+          "command": "START=$(date +%s); (while true; do sleep 60; echo \"PROGRESS: $(( $(date +%s) - START ))s\"; done) & REPORTER=$!; pnpm --filter @dnd/battle-runtime exec vitest run src/creature-type-protection-and-charm-selected-identity.mbt.test.ts 2>&1 & MBT_PID=$!; wait \"$MBT_PID\"; STATUS=$?; kill \"$REPORTER\" 2>/dev/null || true; wait \"$REPORTER\" 2>/dev/null || true; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$STATUS\"",
+          "status": "pass",
+          "detail": "Focused creature-type protection/charm MBT passed with 2 tests under the required background/progress observation protocol; revision round 12 rerun passed with TOTAL: 8s."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 verified SRD traceability, public qRoute replay, no duplicate durable state, and no authored-identity production dispatch. Revision round 2 fixed the Animal Friendship failed-save active-effect discovery mismatch and added public scoped Charmed-prevention route evidence before possession prevention. Revision round 3 replaced the route-local creature-type Charmed-prevention predicate with the shared runtime helper and removed the avoidable target-choice cast. Revision round 5 moved scoped Charmed and possession prevention qRoute evidence onto public resolveBattleSubject results. Revision round 6 removed unused duplicate WithRoute helper exports so route projection stays owned by public reducer route events. Revision round 7 corrected engine-depth artifact ownership to list the actual changed production surfaces. Revision round 8 replaced the fabricated Humanoid protection-scope replay with a public creature-type-protection Charmed condition-attempt runtime command using a scoped Fey source. Revision round 9 tightened the possession-attempt command to resolve only for creature-type-protection prevention and narrowed charm-source damage-break routing to removed Charmed spell conditions. Revision round 12 added condition-sensitive subject identity and split condition/possession prevention into runtimeProtectionPrevention, separate from runtimeProtectionSave; no remaining reasonable Task 10 findings."
+        },
+        {
+          "command": "pnpm rules-kernel-coverage:check",
+          "status": "pass",
+          "detail": "Rules kernel coverage passed after regenerating the subject-kind matrix for runtimeProtectionPrevention."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "cleanroom branch coverage passed (738 obligations, 24 sampled inputs)."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "All quality gates passed; app lint emitted 61 warnings and exited 0."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-006",
+            "impact": "unblocked"
+          },
+          {
+            "taskId": "CRPI-BLOCK-007",
+            "impact": "left unchanged"
+          }
+        ],
+        "observations": [
+          "Creature-type protection/charm qRoute is accepted through public battle routeEvents for target admission, active-effect admission, concentration, attack/save roll modes, hit point damage breakage, condition lifecycle, active effects, and possession prevention.",
+          "No new durable BattleState field is needed; existing activeEffects, conditions, concentration, hp, and typed routeEvents are sufficient owner state.",
+          "Possession prevention is observed through the public creature-type-protection possession-attempt runtime command and reducer-route projection, and scoped Charmed prevention is observed through the public creature-type-protection condition-attempt runtime command and protectionConditionAttemptRouteForResolution."
+        ],
+        "requiredPlanEdits": "none"
+      }
     }
   ]
 }

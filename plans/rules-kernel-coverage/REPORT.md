@@ -164,17 +164,17 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Battle Hole Frontier
 
-- Total classified rows: 166
+- Total classified rows: 167
 
 | Subject | Count |
 | --- | ---: |
 | battle-hole-family | 82 |
 | battle-fill-kind | 48 |
-| battle-subject-kind | 36 |
+| battle-subject-kind | 37 |
 
 | Classification | Count |
 | --- | ---: |
-| semantic-frontier | 135 |
+| semantic-frontier | 136 |
 | deterministic-boundary-projection | 0 |
 | table-owned-fact | 31 |
 | unsupported-dead-branch | 0 |
@@ -340,6 +340,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | battle-subject-kind | `runtimeEffectControl` | `runtimeEffectControl` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
 | battle-subject-kind | `runtimeHeldObjectRelease` | `runtimeHeldObjectRelease` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
 | battle-subject-kind | `runtimeProtectionSave` | `runtimeProtectionSave` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `runtimeProtectionPrevention` | `runtimeProtectionPrevention` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
 | battle-subject-kind | `runtimeTransformationMode` | `runtimeTransformationMode` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
 | battle-subject-kind | `runtimeCompelledAction` | `runtimeCompelledAction` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
 | battle-subject-kind | `runtimeAltitudeControl` | `runtimeAltitudeControl` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |

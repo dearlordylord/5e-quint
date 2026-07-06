@@ -432,6 +432,8 @@ export function subjectName(
   | "wardingBondSeparation"
   | "shakeAwakeFromHypnoticPattern"
   | "protectionRelevantEffectSave"
+  | "creatureTypeProtectionConditionAttempt"
+  | "creatureTypeProtectionPossessionAttempt"
   | "creatureFalls" {
   if (subject.tag === "action") {
     return subject.action;

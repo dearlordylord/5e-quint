@@ -135,8 +135,10 @@ import {
 } from "./attack-damage-events.ts";
 import {
   applyProtectionRelevantEffectSaveOutcome,
+  conditionApplicationPreventedByCreatureTypeProtection,
   protectionRelevantEffectFor,
   protectionRelevantEffectSavingThrowOutcomeHole,
+  resolveBattlePossessionAttempt,
   validateProtectionRelevantEffectSavingThrowOutcome,
 } from "./spell-condition-effects-helpers.ts";
 import {
@@ -1486,6 +1488,24 @@ export function resolveBattleSubjectInternal(
     }
     if (
       subject.tag === "runtimeCommand" &&
+      subject.command === "creatureTypeProtectionConditionAttempt"
+    ) {
+      return resolveCreatureTypeProtectionConditionAttemptCommand({
+        ...input,
+        subject,
+      });
+    }
+    if (
+      subject.tag === "runtimeCommand" &&
+      subject.command === "creatureTypeProtectionPossessionAttempt"
+    ) {
+      return resolveCreatureTypeProtectionPossessionAttemptCommand({
+        ...input,
+        subject,
+      });
+    }
+    if (
+      subject.tag === "runtimeCommand" &&
       subject.command === "disperseFogCloud"
     ) {
       return resolveDisperseFogCloudCommand({ ...input, subject });
@@ -2330,6 +2350,100 @@ function resolveProtectionRelevantEffectSaveCommand(
     tag: "resolved",
     state: nextState,
     snapshot: snapshotBattle(nextState),
+  };
+}
+
+function resolveCreatureTypeProtectionConditionAttemptCommand(
+  input: BattleResolutionInputForSubject<
+    Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "creatureTypeProtectionConditionAttempt";
+      }
+    >
+  >,
+): BattleResolutionResult {
+  if (input.fills.length !== 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Creature Type Protection condition attempts do not accept fills.",
+    );
+  }
+  const target = input.state.combatants.get(input.subject.actorId);
+  if (target === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Creature Type Protection condition attempt requires a known target.",
+    );
+  }
+  if (
+    !conditionApplicationPreventedByCreatureTypeProtection(
+      input.state,
+      input.subject.sourceCombatantId,
+      target,
+      input.subject.condition,
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Creature Type Protection condition attempt requires a scoped protected condition.",
+    );
+  }
+  return {
+    tag: "resolved",
+    state: input.state,
+    snapshot: snapshotBattle(input.state),
+  };
+}
+
+function resolveCreatureTypeProtectionPossessionAttemptCommand(
+  input: BattleResolutionInputForSubject<
+    Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "creatureTypeProtectionPossessionAttempt";
+      }
+    >
+  >,
+): BattleResolutionResult {
+  if (input.fills.length !== 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Creature Type Protection possession attempts do not accept fills.",
+    );
+  }
+  const disposition = resolveBattlePossessionAttempt({
+    state: input.state,
+    sourceCombatantId: input.subject.sourceCombatantId,
+    targetId: input.subject.actorId,
+  });
+  if (disposition.tag === "invalid") {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Creature Type Protection possession attempt requires known source and target creature types.",
+    );
+  }
+  if (
+    disposition.tag !== "prevented" ||
+    disposition.prevention !== "creatureTypeProtection"
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Creature Type Protection possession attempt requires scoped possession prevention.",
+    );
+  }
+  return {
+    tag: "resolved",
+    state: input.state,
+    snapshot: snapshotBattle(input.state),
   };
 }
 

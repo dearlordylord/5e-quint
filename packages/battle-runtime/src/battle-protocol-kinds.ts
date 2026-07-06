@@ -360,6 +360,14 @@ function runtimeCommandSubjectKind(
         "protectionRelevantEffectSave",
         () => "runtimeProtectionSave" as const,
       ),
+      byCommand(
+        "creatureTypeProtectionConditionAttempt",
+        () => "runtimeProtectionPrevention" as const,
+      ),
+      byCommand(
+        "creatureTypeProtectionPossessionAttempt",
+        () => "runtimeProtectionPrevention" as const,
+      ),
       byCommand("disperseFogCloud", () => "runtimeEffectCleanup" as const),
       byCommand("wardingBondSeparation", () => "runtimeEffectCleanup" as const),
       byCommand("jumpMovementReplacement", () => "runtimeMovement" as const),

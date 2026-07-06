@@ -86,6 +86,9 @@ function runtimeCommandSubjectKind(discriminatorValue) {
       return "runtimeHeldObjectRelease";
     case "protectionRelevantEffectSave":
       return "runtimeProtectionSave";
+    case "creatureTypeProtectionConditionAttempt":
+    case "creatureTypeProtectionPossessionAttempt":
+      return "runtimeProtectionPrevention";
     case "replaceSelfTransformationMode":
       return "runtimeTransformationMode";
     case "commandGrovel":

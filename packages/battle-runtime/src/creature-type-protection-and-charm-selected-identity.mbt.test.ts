@@ -4,6 +4,7 @@
 // UNIT-IDENTITY-REPLAY: L1H-PROTECTION-EVIL-GOOD protection_from_evil_and_good doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage doPreventProtectionFromEvilAndGoodScopedCharmAndPossession doResolveProtectionFromEvilAndGoodRelevantCharmSaveAdvantage
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
 import { Either } from "effect";
+import { describe, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -29,6 +30,7 @@ import type { SpellRecord, StatBlockRecord } from "@dnd/surface/surface/types";
 import {
   battleCombatantSide,
   battleId,
+  battleReducerStartRouteEvent,
   characterId,
   combatantId,
   discoverBattleActs,
@@ -42,6 +44,7 @@ import {
   type AvailableBattleAct,
   type BattleActiveEffect,
   type BattleCreatureInit,
+  type BattleReducerRouteEvent,
   type BattleCreatureState,
   type BattleFill,
   type BattleHole,
@@ -53,12 +56,25 @@ import {
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import {
+  attackRollFill,
+  damageRollFillWithGroups,
+} from "./unit-profile-admission-creature-fixture-support.ts";
+import {
   applyFailedSaveSpellConditionEffects,
   selectFailedSaveConditionEffect,
 } from "./battle-reducer/spells-active-effects.ts";
 import { applyPreparedSlotSpellDamage } from "./battle-reducer/spells-damage-fills.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
+import {
+  MBT_TEST_TIMEOUT_MS,
+  defineDriver,
+  focusedMbtMaxSteps,
+  mbtSpecPath,
+  mbtTraceCount,
+  reducerRoutedProtectionCharmStateCheck,
+  run,
+  type ReducerRouteEvent,
+} from "./battle-runtime-mbt-driver-kit.ts";
 
 type CreatureTypeProtectionAndCharmSelectedIdentityLastResult =
   | "init"
@@ -167,6 +183,9 @@ type CharacterSpellcastingInit = NonNullable<
 
 const casterId = combatantId(
   "creature-type-protection-and-charm-selected-identity-caster",
+);
+const casterAllyId = combatantId(
+  "creature-type-protection-and-charm-selected-identity-caster-ally",
 );
 const beastTargetId = combatantId(
   "creature-type-protection-and-charm-selected-identity-beast",
@@ -377,6 +396,75 @@ const creatureTypeProtectionAndCharmDiscoveries = {
   () => CreatureTypeProtectionAndCharmSelectedIdentityProjection
 >;
 
+const protectionCharmRouteDriverSchema = {
+  init: {},
+  doDiscoverAnimalFriendshipBeastTargetAdmission: {},
+  doResolveAnimalFriendshipFailedSaveCharmed: {},
+  doResolveAnimalFriendshipCasterDamageBreak: {},
+  doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection: {},
+  doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage: {},
+  doPreventProtectionFromEvilAndGoodScopedCharmAndPossession: {},
+  doResolveProtectionFromEvilAndGoodRelevantCharmSaveAdvantage: {},
+  step: {},
+} as const;
+
+function createPublicProtectionCharmRouteDriver() {
+  return defineDriver(protectionCharmRouteDriverSchema, () => {
+    let route: readonly ReducerRouteEvent[] = initialProtectionCharmRoute();
+    return {
+      init: () => {
+        route = initialProtectionCharmRoute();
+      },
+      doDiscoverAnimalFriendshipBeastTargetAdmission: () => {
+        route = publicAnimalFriendshipTargetAdmissionRoute();
+      },
+      doResolveAnimalFriendshipFailedSaveCharmed: () => {
+        route = publicAnimalFriendshipFailedSaveRoute();
+      },
+      doResolveAnimalFriendshipCasterDamageBreak: () => {
+        route = publicAnimalFriendshipCasterDamageBreakRoute();
+      },
+      doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection: () => {
+        route = publicProtectionFromEvilAndGoodResolvedRoute();
+      },
+      doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage: () => {
+        route = publicProtectionFromEvilAndGoodAttackRollModeRoute();
+      },
+      doPreventProtectionFromEvilAndGoodScopedCharmAndPossession: () => {
+        route = publicProtectionFromEvilAndGoodPreventionRoute();
+      },
+      doResolveProtectionFromEvilAndGoodRelevantCharmSaveAdvantage: () => {
+        route = publicProtectionFromEvilAndGoodRelevantSaveRoute();
+      },
+      step: () => {},
+      getState: () => ({ route }),
+    };
+  });
+}
+
+describe("Creature Type Protection and Charm public reducer qRoute replay", () => {
+  it(
+    "observes copied protection/charm qRoute through public battle runtime entrypoints",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-creature-type-protection-and-charm-selected-identity.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createPublicProtectionCharmRouteDriver(),
+        backend: "typescript",
+        seed: process.env["QUINT_SEED"],
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(1),
+        stateCheck: reducerRoutedProtectionCharmStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+});
+
 defineSelectedIdentityReplayAndQntReplay({
   describeLabel: "Creature Type Protection and Charm selected identity replay",
   taskId: "creature-type-protection-and-charm-selected-identity",
@@ -440,6 +528,314 @@ function singleReplayAction(
     );
   }
   return actions[0];
+}
+
+function initialProtectionCharmRoute(): readonly ReducerRouteEvent[] {
+  return [battleReducerStartRouteEvent()];
+}
+
+function publicAnimalFriendshipTargetAdmissionRoute(): readonly ReducerRouteEvent[] {
+  const state = animalFriendshipBattle();
+  const act = animalFriendshipSpellAct(state);
+  return [
+    ...initialProtectionCharmRoute(),
+    ...routeEventsWithSubject(act, "creatureTypeTargetAdmission"),
+  ];
+}
+
+function publicAnimalFriendshipFailedSaveRoute(): readonly ReducerRouteEvent[] {
+  const walk = resolveAnimalFriendshipFailedSaveWalk(animalFriendshipBattle());
+  return [
+    ...initialProtectionCharmRoute(),
+    ...routeEventsWithSubject(walk.act, "protectionCharmActiveEffect"),
+    ...routeEventsOf(walk.awaitingSave),
+    ...routeEventsOf(walk.resolved),
+  ];
+}
+
+function publicAnimalFriendshipCasterDamageBreakRoute(): readonly ReducerRouteEvent[] {
+  const walk = resolveAnimalFriendshipFailedSaveWalk(animalFriendshipBattle());
+  const allyTurn = requireResolvedState(
+    endTurn({ state: walk.resolved.state, actorId: casterId }),
+    "Expected to advance to the caster ally.",
+  );
+  const attack = statBlockAttackAct(allyTurn, casterAllyId, "Scimitar");
+  const targetHole = requireResultHole(
+    resolveBattleSubject({ state: allyTurn, subject: attack.subject, fills: [] }),
+    "targetChoice",
+  );
+  const targetFill = attackTargetFill(
+    targetHole,
+    casterAllyId,
+    beastTargetId,
+    "Scimitar",
+  );
+  const awaitingAttack = resolveBattleSubject({
+    state: allyTurn,
+    subject: attack.subject,
+    fills: [targetFill],
+  });
+  const attackHole = requireResultHole(awaitingAttack, "attackRoll");
+  const attackFill = attackRollFill(attackHole, {
+    total: 15,
+    naturalD20: 10,
+  });
+  const awaitingDamage = resolveBattleSubject({
+    state: allyTurn,
+    subject: attack.subject,
+    fills: [targetFill, attackFill],
+  });
+  const damageHole = requireResultHole(awaitingDamage, "rolledDice");
+  const resolvedDamage = requireResolvedResult(
+    resolveBattleSubject({
+      state: allyTurn,
+      subject: attack.subject,
+      fills: [
+        targetFill,
+        attackFill,
+        damageRollFillWithGroups(damageHole, [[1]]),
+      ],
+    }),
+    "Expected ally weapon damage to break Animal Friendship.",
+  );
+  return [
+    ...publicAnimalFriendshipFailedSaveRoute(),
+    ...routeEventsOf(resolvedDamage).filter(
+      (event) =>
+        "subject" in event && event.subject === "charmSourceDamageBreak",
+    ),
+  ];
+}
+
+function publicProtectionFromEvilAndGoodResolvedRoute(): readonly ReducerRouteEvent[] {
+  const resolved = resolveProtectionFromEvilAndGoodWalk();
+  return [
+    ...initialProtectionCharmRoute(),
+    ...routeEventsOf(resolved.act),
+    ...routeEventsOf(resolved.resolved),
+  ];
+}
+
+function publicProtectionFromEvilAndGoodAttackRollModeRoute(): readonly ReducerRouteEvent[] {
+  const protectedState = resolveProtectionFromEvilAndGoodWalk().resolved.state;
+  const undeadTurn = protectionFromEvilAndGoodUndeadAttackerTurn(protectedState);
+  const attack = statBlockAttackAct(undeadTurn, undeadAttackerId, "Scimitar");
+  const targetHole = requireResultHole(
+    resolveBattleSubject({ state: undeadTurn, subject: attack.subject, fills: [] }),
+    "targetChoice",
+  );
+  const awaitingAttack = resolveBattleSubject({
+    state: undeadTurn,
+    subject: attack.subject,
+    fills: [
+      attackTargetFill(
+        targetHole,
+        undeadAttackerId,
+        protectedTargetId,
+        "Scimitar",
+      ),
+    ],
+  });
+  return [
+    ...initialProtectionCharmRoute(),
+    ...routeEventsOf(awaitingAttack).filter(
+      (event) =>
+        "subject" in event && event.subject === "protectionCharmActiveEffect",
+    ),
+  ];
+}
+
+function publicProtectionFromEvilAndGoodPreventionRoute(): readonly ReducerRouteEvent[] {
+  const resolved = resolveProtectionFromEvilAndGood();
+  const protectedTargetTurn = protectionFromEvilAndGoodProtectedTargetTurn(
+    resolved.state,
+  );
+  const scopedCharm = requireResolvedResult(
+    resolveBattleSubject({
+      state: protectedTargetTurn,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: protectedTargetId,
+        command: "creatureTypeProtectionConditionAttempt",
+        sourceCombatantId: feySourceId,
+        condition: "charmed",
+      },
+      fills: [],
+    }),
+    "Expected scoped Charmed condition attempt to resolve.",
+  );
+  if (
+    spellConditionPresentOnProtectedTarget(
+      scopedCharm.state,
+      feySourceId,
+      protectionFromEvilAndGoodUnitId,
+      "charmed",
+    )
+  ) {
+    throw new Error("Expected scoped charm to be prevented.");
+  }
+  const scopedPossession = resolveBattleSubject({
+    state: protectedTargetTurn,
+    subject: {
+      tag: "runtimeCommand",
+      actorId: protectedTargetId,
+      command: "creatureTypeProtectionPossessionAttempt",
+      sourceCombatantId: feySourceId,
+    },
+    fills: [],
+  });
+  requireResolvedResult(
+    scopedPossession,
+    "Expected scoped possession attempt to resolve.",
+  );
+  return [
+    ...initialProtectionCharmRoute(),
+    ...routeEventsOf(scopedCharm).filter(
+      (event) =>
+        "subject" in event && event.subject === "protectionCharmActiveEffect",
+    ),
+    ...routeEventsWithOwner(scopedPossession, "battleCreatureState"),
+  ];
+}
+
+function publicProtectionFromEvilAndGoodRelevantSaveRoute(): readonly ReducerRouteEvent[] {
+  const resolved = resolveProtectionFromEvilAndGood();
+  const repeatCharmEffect = protectionRelevantCharmEffect();
+  const targetTurn = protectionFromEvilAndGoodProtectedTargetTurn(
+    resolved.state,
+  );
+  const protectedTarget = requireCombatantState(targetTurn, protectedTargetId);
+  const activeEffectState: BattleState = {
+    ...targetTurn,
+    combatants: new Map(targetTurn.combatants).set(protectedTargetId, {
+      ...protectedTarget,
+      activeEffects: [...protectedTarget.activeEffects, repeatCharmEffect],
+    }),
+  };
+  const subject = protectionRelevantCharmSaveSubject(repeatCharmEffect);
+  const needsSave = resolveBattleSubject({
+    state: activeEffectState,
+    subject,
+    fills: [],
+  });
+  return [...initialProtectionCharmRoute(), ...routeEventsOf(needsSave)];
+}
+
+type AnimalFriendshipFailedSaveWalk = {
+  readonly act: ActionSpellAct;
+  readonly awaitingSave: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>;
+  readonly resolved: Extract<BattleResolutionResult, { readonly tag: "resolved" }>;
+};
+
+function resolveAnimalFriendshipFailedSaveWalk(
+  state: BattleState,
+): AnimalFriendshipFailedSaveWalk {
+  const act = animalFriendshipSpellAct(state);
+  const targetHole = requireHole(act.initialHoles, "spellTargetList");
+  const targetFill = spellTargetListFill(targetHole, [beastTargetId]);
+  const awaitingSave = requireNeedsHolesResult(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    }),
+  );
+  const saveHole = requireHole(awaitingSave.holes, "savingThrowOutcome");
+  const resolved = requireResolvedResult(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        savingThrowOutcomeFill(saveHole, [
+          { targetId: beastTargetId, succeeded: false },
+        ]),
+      ],
+    }),
+    "Expected Animal Friendship to resolve.",
+  );
+  return { act, awaitingSave, resolved };
+}
+
+type ProtectionFromEvilAndGoodWalk = {
+  readonly act: ActionSpellAct;
+  readonly resolved: Extract<BattleResolutionResult, { readonly tag: "resolved" }>;
+};
+
+function resolveProtectionFromEvilAndGoodWalk(): ProtectionFromEvilAndGoodWalk {
+  const state = protectionFromEvilAndGoodBattle();
+  const act = protectionFromEvilAndGoodSpellAct(state);
+  const targetHole = requireHole(act.initialHoles, "targetChoice");
+  const resolved = requireResolvedResult(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        knownWillingSpellTargetChoiceFill(
+          targetHole,
+          protectionFromEvilAndGoodUnitId,
+          casterId,
+          protectedTargetId,
+        ),
+      ],
+    }),
+    "Expected Protection from Evil and Good to resolve.",
+  );
+  return { act, resolved };
+}
+
+function protectionRelevantCharmSaveSubject(
+  repeatCharmEffect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "spellConditionRepeatSave" }
+  >,
+): Extract<
+  BattleSubject,
+  { readonly tag: "runtimeCommand"; readonly command: "protectionRelevantEffectSave" }
+> {
+  return {
+    tag: "runtimeCommand",
+    actorId: protectedTargetId,
+    command: "protectionRelevantEffectSave",
+    sourceCombatantId: feySourceId,
+    sourceSpellId: spellId(repeatCharmEffect.sourceSpellId),
+    relevantEffect: "charmed",
+  };
+}
+
+function routeEventsOf(
+  source: { readonly routeEvents?: readonly BattleReducerRouteEvent[] },
+): readonly ReducerRouteEvent[] {
+  if (source.routeEvents === undefined || source.routeEvents.length === 0) {
+    throw new Error("Expected public protection/charm route events.");
+  }
+  return source.routeEvents;
+}
+
+function routeEventsWithSubject(
+  source: { readonly routeEvents?: readonly BattleReducerRouteEvent[] },
+  subject: Extract<ReducerRouteEvent, { readonly subject: string }>["subject"],
+): readonly ReducerRouteEvent[] {
+  const routeEvents = routeEventsOf(source).filter(
+    (event) => "subject" in event && event.subject === subject,
+  );
+  if (routeEvents.length === 0) {
+    throw new Error(`Expected public route events for subject ${subject}.`);
+  }
+  return routeEvents;
+}
+
+function routeEventsWithOwner(
+  source: { readonly routeEvents?: readonly BattleReducerRouteEvent[] },
+  owner: ReducerRouteEvent["owner"],
+): readonly ReducerRouteEvent[] {
+  const routeEvents = routeEventsOf(source).filter(
+    (event) => "owner" in event && event.owner === owner,
+  );
+  if (routeEvents.length === 0) {
+    throw new Error(`Expected public route events for owner ${owner}.`);
+  }
+  return routeEvents;
 }
 
 function protectionProjection(
@@ -540,8 +936,14 @@ function animalFriendshipBattle(): BattleState {
           featurePreparedSpells: [],
           invocationSpellAccesses: [],
           spellbookRitualSpellAccesses: [],
-          spellSlots: [{ spellLevel: 1, count: 1 }],
+          spellSlots: [{ spellLevel: 1, count: 2 }],
         },
+      }),
+      statBlockCreature({
+        combatantId: casterAllyId,
+        statBlock: statBlockWithCreatureType("humanoid"),
+        initiative: 19,
+        side: partySide,
       }),
       statBlockCreature({
         combatantId: beastTargetId,
@@ -1202,12 +1604,19 @@ function requireResolvedState(
   result: BattleResolutionResult,
   message: string,
 ): BattleState {
+  return requireResolvedResult(result, message).state;
+}
+
+function requireResolvedResult(
+  result: BattleResolutionResult,
+  message: string,
+): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
   if (result.tag !== "resolved") {
     throw new Error(
       result.tag === "invalid" ? `${message} ${result.message}` : message,
     );
   }
-  return result.state;
+  return result;
 }
 
 function requireHole<K extends BattleHole["kind"]>(

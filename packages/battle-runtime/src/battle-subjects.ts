@@ -94,6 +94,8 @@ export const BATTLE_RUNTIME_COMMANDS = [
   "movableZoneRam",
   "releaseSpellCreatedHeldObject",
   "protectionRelevantEffectSave",
+  "creatureTypeProtectionConditionAttempt",
+  "creatureTypeProtectionPossessionAttempt",
   "disperseFogCloud",
   "wardingBondSeparation",
   "jumpMovementReplacement",
@@ -849,6 +851,19 @@ export const BattleSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
+    command: Schema.Literal("creatureTypeProtectionConditionAttempt"),
+    sourceCombatantId: CombatantId,
+    condition: Schema.Literal("charmed", "frightened"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("creatureTypeProtectionPossessionAttempt"),
+    sourceCombatantId: CombatantId,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
     command: Schema.Literal("disperseFogCloud"),
     sourceCombatantId: CombatantId,
     sourceSpellId: SpellId,
@@ -1272,6 +1287,7 @@ function battleSubjectKey(subject: BattleSubject): string {
         "attackName" in command ? command.attackName : null,
         "sourceCombatantId" in command ? command.sourceCombatantId : null,
         "sourceSpellId" in command ? command.sourceSpellId : null,
+        "condition" in command ? command.condition : null,
         "mode" in command ? command.mode : null,
         "naturalWeaponDamageType" in command
           ? command.naturalWeaponDamageType

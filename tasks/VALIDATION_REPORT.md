@@ -5880,3 +5880,80 @@ Verification results:
 - Route connector replay passed for `packages/battle-runtime/battle-runtime-command-ordering.route.mbt.qnt`: `START=$(date +%s); (while true; do sleep 60; echo "PROGRESS: $(( $(date +%s) - START ))s"; done) & REPORTER=$!; pnpm --filter @dnd/battle-runtime exec vitest run src/reducer-route-connectors.mbt.test.ts -t "routes Command"; STATUS=$?; kill "$REPORTER" 2>/dev/null || true; wait "$REPORTER" 2>/dev/null || true; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$STATUS"` passed with 2 tests, 32 skipped; `TOTAL: 8s`.
 - Final JSON validation, branch coverage, diff check, and broad quality results are recorded in `tasks/RUN_LEDGER.json`.
 - Reviewer-loop convergence passed: round 1 verified RAW traceability, ubiquitous-language/domain language, public route-event comparison, no duplicate durable state, and no authored-identity production dispatch. Round 2 verified route subject/owner/fill connascence and found no remaining reasonable Task 6 findings.
+
+## CRPI-BLOCK-006
+
+Status: `pass`
+
+- Task: 10
+- Driver path: `packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt`
+- Route connector path: `packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.route.mbt.qnt`
+- Route class: `catalog-after-substrate`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-006.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `f07a33f783419b9f8f88eed9d679faadace779ec658d2a990ae56bc963d55387`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Behavior implemented:
+
+Task 10 accepts the creature-type protection and charm qRoute through public
+battle runtime route events. The focused harness compares copied connector
+projection to route events from `battleReducerStartRouteEvent`,
+`discoverBattleActs`, `resolveBattleSubject`,
+`protectionConditionAttemptRouteForResolution`, and
+`protectionPossessionAttemptRouteForResolution`. Animal Friendship Beast target
+admission, Charmed application, caster-or-ally damage breakage, Protection from
+Evil and Good active-effect admission, Concentration, scoped attack and saving
+throw roll modes, and charm/possession prevention all stay on existing
+BattleState facts and route projections.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt#step:doDiscoverAnimalFriendshipBeastTargetAdmission` | `tasks/target-replay-evidence/CRPI-BLOCK-006.json#driver:packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt#step:doDiscoverAnimalFriendshipBeastTargetAdmission#trace:MBT_TRACES=1 MBT_STEPS=1 action=doDiscoverAnimalFriendshipBeastTargetAdmission qRoute=protection-charm-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt#step:doPreventProtectionFromEvilAndGoodScopedCharmAndPossession` | `tasks/target-replay-evidence/CRPI-BLOCK-006.json#driver:packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt#step:doPreventProtectionFromEvilAndGoodScopedCharmAndPossession#trace:MBT_TRACES=1 MBT_STEPS=1 action=doPreventProtectionFromEvilAndGoodScopedCharmAndPossession qRoute=protection-charm-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt#step:doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage` | `tasks/target-replay-evidence/CRPI-BLOCK-006.json#driver:packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt#step:doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage#trace:MBT_TRACES=1 MBT_STEPS=1 action=doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage qRoute=protection-charm-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt#step:doResolveAnimalFriendshipCasterDamageBreak` | `tasks/target-replay-evidence/CRPI-BLOCK-006.json#driver:packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt#step:doResolveAnimalFriendshipCasterDamageBreak#trace:MBT_TRACES=1 MBT_STEPS=1 action=doResolveAnimalFriendshipCasterDamageBreak qRoute=protection-charm-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt#step:doResolveAnimalFriendshipFailedSaveCharmed` | `tasks/target-replay-evidence/CRPI-BLOCK-006.json#driver:packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt#step:doResolveAnimalFriendshipFailedSaveCharmed#trace:MBT_TRACES=1 MBT_STEPS=1 action=doResolveAnimalFriendshipFailedSaveCharmed qRoute=protection-charm-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt#step:doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection` | `tasks/target-replay-evidence/CRPI-BLOCK-006.json#driver:packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt#step:doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection#trace:MBT_TRACES=1 MBT_STEPS=1 action=doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection qRoute=protection-charm-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt#step:doResolveProtectionFromEvilAndGoodRelevantCharmSaveAdvantage` | `tasks/target-replay-evidence/CRPI-BLOCK-006.json#driver:packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt#step:doResolveProtectionFromEvilAndGoodRelevantCharmSaveAdvantage#trace:MBT_TRACES=1 MBT_STEPS=1 action=doResolveProtectionFromEvilAndGoodRelevantCharmSaveAdvantage qRoute=protection-charm-public-route` | `_none_` | `covered` |
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-006/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 10.
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Spells/Descriptions-A-D.md#Animal-Friendship` defines Beast target admission, Wisdom save Charmed application, and damage by the caster or an ally ending the spell.
+- SRD 5.2.1 `Spells/Descriptions-M-P.md#Protection-from-Evil-and-Good` defines willing target protection, scoped creature types, attack roll Disadvantage, charm/frightened/possession prevention, and Advantage on new saves against relevant effects.
+- SRD 5.2.1 `Spells/Descriptions-M-P.md#Magic-Jar` and `Rules-Glossary.md#Possession` define possession and Protection from Evil and Good prevention.
+- SRD 5.2.1 `Rules-Glossary.md#Charmed`, `#Concentration`, and `#Incapacitated` define Charmed, concentration ownership/breakage, and no-concentration condition language.
+- `UBIQUITOUS_LANGUAGE.md` defines Charmed, Concentration, Spell Effect, Condition, Hit Points, Attack Roll, Saving Throw, Advantage, and Disadvantage.
+
+Verification results:
+
+- Base check passed: declared base ref
+  `ralph/cleanroom-unblocked-battle-route-20260706T072836Z/integration` resolved to
+  `7d5a681cb Mark Ralph task 6 done`; `HEAD` resolved to
+  `7d5a681cb Mark Ralph task 6 done`; Base SHA
+  `7d5a681cb0e7f252c20fbf83ed9c0b06075abf2c` was an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against the local SRD passages listed above and `UBIQUITOUS_LANGUAGE.md`.
+- `pnpm --filter @dnd/battle-runtime exec tsc --noEmit --pretty false` passed.
+- `pnpm --filter @dnd/battle-runtime exec vitest run src/battle-subjects.test.ts src/battle-hole-family-kind.test.ts` passed with 4 tests, covering condition-sensitive subject identity and the runtime subject-kind vocabulary.
+- `pnpm rules-kernel-coverage:check` passed after regenerating the subject-kind matrix for `runtimeProtectionPrevention`.
+- Focused creature-type protection/charm MBT passed: `START=$(date +%s); (while true; do sleep 60; echo "PROGRESS: $(( $(date +%s) - START ))s"; done) & REPORTER=$!; pnpm --filter @dnd/battle-runtime exec vitest run src/creature-type-protection-and-charm-selected-identity.mbt.test.ts 2>&1 & MBT_PID=$!; wait "$MBT_PID"; STATUS=$?; kill "$REPORTER" 2>/dev/null || true; wait "$REPORTER" 2>/dev/null || true; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$STATUS"` passed with 2 tests; `TOTAL: 8s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- `pnpm quality` passed. The app lint phase emitted 61 warnings and exited 0.
+- Reviewer-loop convergence passed: round 1 verified RAW traceability, ubiquitous-language/domain language, public route-event comparison, no duplicate durable state, and no authored-identity production dispatch. Revision round 2 fixed the Animal Friendship failed-save active-effect discovery mismatch and added public scoped Charmed-prevention route evidence before possession prevention. Revision round 3 replaced the route-local creature-type Charmed-prevention predicate with the shared runtime helper and removed the avoidable target-choice cast. Revision round 5 moved scoped Charmed and possession prevention qRoute evidence onto public `resolveBattleSubject` results. Revision round 6 removed unused duplicate `WithRoute` helper exports so route projection stays owned by public reducer route events. Revision round 7 corrected engine-depth artifact ownership to list the actual changed production surfaces. Revision round 8 replaced the fabricated Humanoid protection-scope replay with a public creature-type-protection Charmed condition-attempt runtime command using a scoped Fey source. Revision round 9 tightened the possession-attempt command to resolve only for creature-type-protection prevention and narrowed charm-source damage-break routing to removed Charmed spell conditions. Revision round 12 added condition-sensitive subject identity and split condition/possession prevention into `runtimeProtectionPrevention`, separate from `runtimeProtectionSave`; no remaining reasonable Task 10 findings.
