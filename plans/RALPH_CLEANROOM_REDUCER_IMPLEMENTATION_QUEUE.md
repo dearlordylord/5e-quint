@@ -325,7 +325,7 @@
     {
       "number": 54,
       "id": "CRPI-BLOCK-026",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-species-passive-trait-selected-identity"
     },
     {
@@ -3832,7 +3832,7 @@ Plan Impact:
 
 ### Task 54 - CRPI-BLOCK-026
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

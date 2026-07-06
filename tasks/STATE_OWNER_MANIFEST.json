@@ -1,47 +1,101 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-041",
+  "taskId": "CRPI-BLOCK-026",
   "durableFields": [
     {
-      "fieldPath": "CharacterBuild.progression",
-      "owner": "character-build",
-      "introducedIn": "packages/character-creation-runtime/src/types.ts",
+      "fieldPath": "BattleCreatureState.size",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing finalized build progression is the retained class-level source fact used to derive class-feature resources."
+      "notes": "Existing creature state owns Size projected from character species/build input at battle start; species identity is not used as a runtime dispatch key."
     },
     {
-      "fieldPath": "CharacterBuild.features",
-      "owner": "character-build",
-      "introducedIn": "packages/character-creation-runtime/src/types.ts",
+      "fieldPath": "BattleCreatureState.origin.speed",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing selected class-feature and Metamagic option refs remain retained build facts; Task 84 adds no duplicate resource or source cache."
+      "notes": "Existing character creature origin owns walking Speed used by movement-resource projection."
     },
     {
-      "fieldPath": "CharacterCreationRouteEvent.subject=buildProjection",
-      "owner": "character-creation-reducer-route-projection",
-      "introducedIn": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts",
+      "fieldPath": "BattleCreatureState.origin.characterUnitRefs",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing selected unit refs carry admitted passive support profiles for damage resistance and creature-space movement permission; selected identity remains an admission/source boundary."
+    },
+    {
+      "fieldPath": "BattleCreatureState.origin.passiveSavingThrowRollModeProfiles",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing parsed support-profile map owns passive Saving Throw roll-mode facts for condition-scoped species traits."
+    },
+    {
+      "fieldPath": "BattleCreatureState.origin.passiveAbilityCheckRollModeProfiles",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing parsed support-profile map owns passive Ability Check roll-mode facts for ending Grappled."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.subject=creatureStatProjection",
+      "owner": "battle-reducer-route-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "runtime-projection"
       },
-      "notes": "Build projection route events are emitted by the public CharacterBuild class-feature projection-with-route entrypoint after it derives facts from retained build facts plus Unit catalog projections."
+      "notes": "Route events are derived from existing BattleCreatureState size and speed facts plus movement-resource ownership; no route cache is stored in BattleState."
     },
     {
-      "fieldPath": "CharacterCreationRouteEvent.facts=buildProjectionInput",
-      "owner": "character-creation-reducer-route-projection",
-      "introducedIn": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts",
+      "fieldPath": "BattleReducerRouteEvent.subject=passiveDamageAdjustment",
+      "owner": "battle-reducer-route-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "runtime-projection"
       },
-      "notes": "CreationBuildProjectionInputFact records the projection input boundary without storing authored identity or duplicate source facts."
+      "notes": "Route events are derived from existing passive damage-resistance support-profile facts and the shared damage adjustment helper."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.subject=passiveSavingThrowRollMode",
+      "owner": "battle-reducer-route-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "runtime-projection"
+      },
+      "notes": "Existing route projection owns passive Saving Throw roll-mode route evidence."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.subject=passiveAbilityCheckRollMode",
+      "owner": "battle-reducer-route-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "runtime-projection"
+      },
+      "notes": "Route events are derived from existing passive Ability Check roll-mode support-profile facts for ending Grappled."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.subject=creatureSpaceMovementPermission",
+      "owner": "battle-reducer-route-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "runtime-projection"
+      },
+      "notes": "Existing public Movement fill route projection owns creature-space traversal permission outcomes."
     }
   ],
   "notes": [
-    "Task 84 introduced no new durable CharacterBuild fields.",
-    "Class-feature resource and source facts remain derived from CharacterBuild retained facts plus the Unit catalog.",
-    "Route evidence observes qRoute returned by the public CharacterBuild class-feature projection-with-route entrypoint; it is not adapter-local expected routes or production dispatch on class-feature authored identity."
+    "Task 54 introduced no new durable BattleState or BattleCreatureState fields.",
+    "Species passive trait route evidence is derived from existing support-profile, creature-state, damage adjustment, roll-mode, movement-resource, and movement-fill facts.",
+    "Production behavior does not branch on species trait ids, names, QNT action names, fixture labels, or connector filenames."
   ]
 }

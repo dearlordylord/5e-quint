@@ -1,60 +1,52 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-041",
+  "taskId": "CRPI-BLOCK-026",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt",
       "quarantinedWitnessNames": [
         "qState",
-        "doProjectMonkFocusAndUncannyMetabolism",
-        "doProjectSorcererFontAndMetamagic"
+        "protocol"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-041.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-026.json"
       ]
     },
     {
-      "path": "packages/character-creation-runtime/character-creation-class-feature-projections.route.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-species-passive-trait-substrates.route.mbt.qnt",
       "quarantinedWitnessNames": [
         "qRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-041.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-026.json"
       ]
     },
     {
-      "path": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "path": "packages/battle-runtime/src/species-passive-trait-selected-identity.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "classFeatureProjectionRouteDriverSchema",
-        "createCompletedReducerRouteDriver",
-        "classFeatureProjectionBuild",
-        "projectMonkFocusAndUncannyMetabolismBuildFactsRoute",
-        "projectSorcererFontAndMetamagicBuildFactsRoute"
+        "SpeciesPassiveTraitSubstrateRouteProjection",
+        "routes passive trait substrates through generic battle owners"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-041.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-026.json"
       ]
     }
   ],
   "productionModulesExtended": [
     {
-      "path": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts",
-      "notes": "Adds the public CharacterBuild class-feature projection-with-route entrypoint. It derives resource/source facts from retained CharacterBuild facts plus the Unit catalog and emits CharacterBuildOwner build-projection route events without storing duplicate projection state."
-    },
-    {
-      "path": "packages/character-creation-runtime/src/index.ts",
-      "notes": "Exports the CharacterBuild class-feature projection-with-route entrypoint and route event types through the package public surface."
+      "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "notes": "Adds public reducer route emission for creatureStatProjection through Stand from Prone, passiveDamageAdjustment through real spell damage resolution, passiveSavingThrowRollMode through end-turn condition saves, and passiveAbilityCheckRollMode through Escape Grapple resolution; no synthetic battle subjects or durable route state are introduced."
     }
   ],
   "expectedNextReuse": [
     {
-      "path": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts",
-      "notes": "Future Character Creation class-feature projection route tasks should use characterBuildClassFeatureFactsProjectionWithRoute when copied connectors project CharacterBuildOwner build facts."
+      "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "notes": "Future catalog-after-substrate passive trait routes should reuse public discoverBattleActs and resolveBattleSubject route events for creature stat, passive damage, passive Saving Throw, passive Ability Check, and creature-space movement projections instead of adapter-local expected route literals."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 84 observes qRoute from the public CharacterBuild class-feature projection-with-route entrypoint. No new production state fields were added."
+    "notes": "Task 54 observes the copied species passive trait substrate qRoute through public discoverBattleActs and resolveBattleSubject route events. No new durable BattleState fields were added."
   }
 }

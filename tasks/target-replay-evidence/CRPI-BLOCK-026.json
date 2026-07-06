@@ -1,0 +1,228 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/species-passive-trait-selected-identity.mbt.test.ts species passive trait copied qRoute versus public reducer replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "acceptance": {
+    "driverPath": "packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt",
+    "connectorPath": "packages/battle-runtime/battle-runtime-species-passive-trait-substrates.route.mbt.qnt",
+    "routeClass": "catalog-after-substrate",
+    "durableOwner": "BattleState owns passive trait substrates through creature state, movement resource, passive damage adjustment, passive Saving Throw roll mode, passive Ability Check roll mode, and creature-space movement permission. Selected species identity remains catalog/admission.",
+    "acceptedProjection": "qRoute"
+  },
+  "status": "pass",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-species-passive-trait-substrates.route.mbt.qnt",
+      "qntFileSha256": "efbc937b9f24ecdd5248fd6fdbd96f5def8b0edaf72abcb8b9239a17419d813c",
+      "routeConnectorSha256": "8b1e1e09325cd3ec3b003a6d03d9ec297d28e7369a1ba21ea246fe6552f274d1",
+      "branchFamily": "step",
+      "branchAction": "doDragonbornDamageResistance",
+      "observedActionTaken": "doDragonbornDamageResistance",
+      "harnessTestPath": "packages/battle-runtime/src/species-passive-trait-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=8 action=doDragonbornDamageResistance qRoute=species-passive-trait-substrate-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "9366266ca02e721689d7c5afb1f8ab6af281db6eaa115a72f65d60ed013a64c1",
+        "observedProjectionSha256": "9366266ca02e721689d7c5afb1f8ab6af281db6eaa115a72f65d60ed013a64c1",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-species-passive-trait-substrates.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "Public reducer replay from startBattle-created BattleState, discoverBattleActs AvailableBattleAct.routeEvents, and resolveBattleSubject BattleResolutionResult.routeEvents. Creature stat projection is observed through Stand from Prone, passive damage adjustment through Ray of Sickness damage, passive Saving Throw roll mode through an end-turn poisoned condition save, passive Ability Check roll mode through Escape Grapple, and movement permission through a Movement fill carrying creatureSpaceTraversal.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleCreatureState.size",
+          "BattleCreatureState.origin.speed",
+          "BattleCreatureState.origin.characterUnitRefs",
+          "BattleCreatureState.origin.passiveSavingThrowRollModeProfiles",
+          "BattleCreatureState.origin.passiveAbilityCheckRollModeProfiles",
+          "BattleReducerRouteEvent.subject=creatureStatProjection",
+          "BattleReducerRouteEvent.subject=passiveDamageAdjustment",
+          "BattleReducerRouteEvent.subject=passiveSavingThrowRollMode",
+          "BattleReducerRouteEvent.subject=passiveAbilityCheckRollMode",
+          "BattleReducerRouteEvent.subject=creatureSpaceMovementPermission",
+          "BattleFill.kind=movement",
+          "BattleFill.value.creatureSpaceTraversal"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-species-passive-trait-substrates.route.mbt.qnt",
+      "qntFileSha256": "efbc937b9f24ecdd5248fd6fdbd96f5def8b0edaf72abcb8b9239a17419d813c",
+      "routeConnectorSha256": "8b1e1e09325cd3ec3b003a6d03d9ec297d28e7369a1ba21ea246fe6552f274d1",
+      "branchFamily": "step",
+      "branchAction": "doDwarvenResilience",
+      "observedActionTaken": "doDwarvenResilience",
+      "harnessTestPath": "packages/battle-runtime/src/species-passive-trait-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=8 action=doDwarvenResilience qRoute=species-passive-trait-substrate-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "9366266ca02e721689d7c5afb1f8ab6af281db6eaa115a72f65d60ed013a64c1",
+        "observedProjectionSha256": "9366266ca02e721689d7c5afb1f8ab6af281db6eaa115a72f65d60ed013a64c1",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-species-passive-trait-substrates.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "Public reducer replay from startBattle-created BattleState, discoverBattleActs AvailableBattleAct.routeEvents, and resolveBattleSubject BattleResolutionResult.routeEvents. Creature stat projection is observed through Stand from Prone, passive damage adjustment through Ray of Sickness damage, passive Saving Throw roll mode through an end-turn poisoned condition save, passive Ability Check roll mode through Escape Grapple, and movement permission through a Movement fill carrying creatureSpaceTraversal.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleCreatureState.size",
+          "BattleCreatureState.origin.speed",
+          "BattleCreatureState.origin.characterUnitRefs",
+          "BattleCreatureState.origin.passiveSavingThrowRollModeProfiles",
+          "BattleCreatureState.origin.passiveAbilityCheckRollModeProfiles",
+          "BattleReducerRouteEvent.subject=creatureStatProjection",
+          "BattleReducerRouteEvent.subject=passiveDamageAdjustment",
+          "BattleReducerRouteEvent.subject=passiveSavingThrowRollMode",
+          "BattleReducerRouteEvent.subject=passiveAbilityCheckRollMode",
+          "BattleReducerRouteEvent.subject=creatureSpaceMovementPermission",
+          "BattleFill.kind=movement",
+          "BattleFill.value.creatureSpaceTraversal"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-species-passive-trait-substrates.route.mbt.qnt",
+      "qntFileSha256": "efbc937b9f24ecdd5248fd6fdbd96f5def8b0edaf72abcb8b9239a17419d813c",
+      "routeConnectorSha256": "8b1e1e09325cd3ec3b003a6d03d9ec297d28e7369a1ba21ea246fe6552f274d1",
+      "branchFamily": "step",
+      "branchAction": "doGoliathPowerfulBuild",
+      "observedActionTaken": "doGoliathPowerfulBuild",
+      "harnessTestPath": "packages/battle-runtime/src/species-passive-trait-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=8 action=doGoliathPowerfulBuild qRoute=species-passive-trait-substrate-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "9366266ca02e721689d7c5afb1f8ab6af281db6eaa115a72f65d60ed013a64c1",
+        "observedProjectionSha256": "9366266ca02e721689d7c5afb1f8ab6af281db6eaa115a72f65d60ed013a64c1",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-species-passive-trait-substrates.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "Public reducer replay from startBattle-created BattleState, discoverBattleActs AvailableBattleAct.routeEvents, and resolveBattleSubject BattleResolutionResult.routeEvents. Creature stat projection is observed through Stand from Prone, passive damage adjustment through Ray of Sickness damage, passive Saving Throw roll mode through an end-turn poisoned condition save, passive Ability Check roll mode through Escape Grapple, and movement permission through a Movement fill carrying creatureSpaceTraversal.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleCreatureState.size",
+          "BattleCreatureState.origin.speed",
+          "BattleCreatureState.origin.characterUnitRefs",
+          "BattleCreatureState.origin.passiveSavingThrowRollModeProfiles",
+          "BattleCreatureState.origin.passiveAbilityCheckRollModeProfiles",
+          "BattleReducerRouteEvent.subject=creatureStatProjection",
+          "BattleReducerRouteEvent.subject=passiveDamageAdjustment",
+          "BattleReducerRouteEvent.subject=passiveSavingThrowRollMode",
+          "BattleReducerRouteEvent.subject=passiveAbilityCheckRollMode",
+          "BattleReducerRouteEvent.subject=creatureSpaceMovementPermission",
+          "BattleFill.kind=movement",
+          "BattleFill.value.creatureSpaceTraversal"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-species-passive-trait-substrates.route.mbt.qnt",
+      "qntFileSha256": "efbc937b9f24ecdd5248fd6fdbd96f5def8b0edaf72abcb8b9239a17419d813c",
+      "routeConnectorSha256": "8b1e1e09325cd3ec3b003a6d03d9ec297d28e7369a1ba21ea246fe6552f274d1",
+      "branchFamily": "step",
+      "branchAction": "doHalflingBrave",
+      "observedActionTaken": "doHalflingBrave",
+      "harnessTestPath": "packages/battle-runtime/src/species-passive-trait-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=8 action=doHalflingBrave qRoute=species-passive-trait-substrate-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "9366266ca02e721689d7c5afb1f8ab6af281db6eaa115a72f65d60ed013a64c1",
+        "observedProjectionSha256": "9366266ca02e721689d7c5afb1f8ab6af281db6eaa115a72f65d60ed013a64c1",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-species-passive-trait-substrates.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "Public reducer replay from startBattle-created BattleState, discoverBattleActs AvailableBattleAct.routeEvents, and resolveBattleSubject BattleResolutionResult.routeEvents. Creature stat projection is observed through Stand from Prone, passive damage adjustment through Ray of Sickness damage, passive Saving Throw roll mode through an end-turn poisoned condition save, passive Ability Check roll mode through Escape Grapple, and movement permission through a Movement fill carrying creatureSpaceTraversal.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleCreatureState.size",
+          "BattleCreatureState.origin.speed",
+          "BattleCreatureState.origin.characterUnitRefs",
+          "BattleCreatureState.origin.passiveSavingThrowRollModeProfiles",
+          "BattleCreatureState.origin.passiveAbilityCheckRollModeProfiles",
+          "BattleReducerRouteEvent.subject=creatureStatProjection",
+          "BattleReducerRouteEvent.subject=passiveDamageAdjustment",
+          "BattleReducerRouteEvent.subject=passiveSavingThrowRollMode",
+          "BattleReducerRouteEvent.subject=passiveAbilityCheckRollMode",
+          "BattleReducerRouteEvent.subject=creatureSpaceMovementPermission",
+          "BattleFill.kind=movement",
+          "BattleFill.value.creatureSpaceTraversal"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}
