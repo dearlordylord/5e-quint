@@ -27,6 +27,7 @@ import {
   characterSheetSpellSlots,
   completeLongRest,
   completeLongRestArcaneRecoveryResetWithRoute,
+  completeLongRestWeaponMasteryReselectionWithRoute,
   completeMagicalCunningRite,
   completeShortRest,
   completeShortRestArcaneRecoveryWithRoute,
@@ -61,6 +62,25 @@ const magicalCunningRoundUpTestName =
   "Magical Cunning rounds a three-slot Pact Magic maximum up";
 const magicalCunningFeatureOwnershipTestName =
   "Magical Cunning requires Warlock level 2 feature ownership";
+
+function unitLibraryWithoutResourcefulHumanTrait() {
+  return {
+    getUnit: (id: Parameters<typeof unitLibrary.getUnit>[0]) =>
+      id === "species_human_resourceful"
+        ? Option.none()
+        : unitLibrary.getUnit(id),
+    requireUnit: (id: Parameters<typeof unitLibrary.requireUnit>[0]) => {
+      if (id === "species_human_resourceful") {
+        throw new Error("Resourceful fixture Unit is intentionally missing.");
+      }
+      return unitLibrary.requireUnit(id);
+    },
+    listUnits: () =>
+      unitLibrary
+        .listUnits()
+        .filter((unit) => unit.id !== "species_human_resourceful"),
+  };
+}
 
 describe("Character Sheet runtime / rests", () => {
   test("rest start gates keep calendar wait separate from rest benefits", () => {
@@ -307,28 +327,65 @@ describe("Character Sheet runtime / rests", () => {
         unitLibrary,
       }),
     );
-    const missingResourcefulUnitLibrary = {
-      getUnit: (id: Parameters<typeof unitLibrary.getUnit>[0]) =>
-        id === "species_human_resourceful"
-          ? Option.none()
-          : unitLibrary.getUnit(id),
-      requireUnit: (id: Parameters<typeof unitLibrary.requireUnit>[0]) => {
-        if (id === "species_human_resourceful") {
-          throw new Error("Resourceful fixture Unit is intentionally missing.");
-        }
-        return unitLibrary.requireUnit(id);
-      },
-      listUnits: () =>
-        unitLibrary
-          .listUnits()
-          .filter((unit) => unit.id !== "species_human_resourceful"),
-    };
+    const missingResourcefulUnitLibrary =
+      unitLibraryWithoutResourcefulHumanTrait();
 
     expect(
       completeLongRest({ sheet, unitLibrary: missingResourcefulUnitLibrary }),
     ).toMatchObject({
       _tag: "Left",
       left: { message: "Unknown Unit id: species_human_resourceful" },
+    });
+  });
+
+  test("Weapon Mastery Long Rest route wrapper leaves unrelated Long Rest failures unrouted", () => {
+    const humanWeaponMasteryBuild: CharacterBuild = {
+      ...weaponMasteryBuild({
+        startingClass: "class_fighter",
+        featureUnitId: "fighter_weapon_mastery",
+        selectedWeaponUnitIds: [
+          "weapon_longsword",
+          "weapon_dagger",
+          "weapon_spear",
+        ],
+      }),
+      species: "species_human",
+      speciesSize: "medium",
+    };
+    const sheet = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId(
+          "character:resourceful-missing-unit-weapon-mastery-route",
+        ),
+        build: humanWeaponMasteryBuild,
+        currentHp: Hp(6),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const missingResourcefulUnitLibrary =
+      unitLibraryWithoutResourcefulHumanTrait();
+
+    const result = completeLongRestWeaponMasteryReselectionWithRoute({
+      sheet,
+      unitLibrary: missingResourcefulUnitLibrary,
+      weaponMasteryReselections: [
+        {
+          featureUnitId: "fighter_weapon_mastery",
+          selectedWeaponUnitIds: [
+            "weapon_longsword",
+            "weapon_dagger",
+            "weapon_shortsword",
+          ],
+        },
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "rejected",
+      route: "none",
+      issue: { message: "Unknown Unit id: species_human_resourceful" },
+      qRoute: [],
     });
   });
 

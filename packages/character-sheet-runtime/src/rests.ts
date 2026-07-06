@@ -89,6 +89,9 @@ import {
   type CharacterSheetShortRestStart,
   type CharacterSheetShortRestStartInput,
   type CharacterSheetWeaponMasteryReselection,
+  type CharacterSheetWeaponMasteryReselectionAcceptedRoute,
+  type CharacterSheetWeaponMasteryReselectionRejectedRoute,
+  type CharacterSheetWeaponMasteryReselectionRouteResult,
 } from "./sheet-types.ts";
 import {
   characterSheetPactSlots,
@@ -409,6 +412,40 @@ export function completeLongRestArcaneRecoveryResetWithRoute(
   };
 }
 
+export function completeLongRestWeaponMasteryReselectionWithRoute(
+  input: CharacterSheetLongRestInput & {
+    readonly weaponMasteryReselections: NonNullable<
+      CharacterSheetLongRestInput["weaponMasteryReselections"]
+    >;
+  },
+): CharacterSheetWeaponMasteryReselectionRouteResult {
+  const sheet = input.completion.startedRest.sheet;
+  const reselectionBuild = characterSheetLongRestBuild(input, sheet.build);
+  if (Either.isLeft(reselectionBuild)) {
+    return {
+      tag: "rejected",
+      route: "weaponMastery",
+      issue: reselectionBuild.left,
+      qRoute: rejectedWeaponMasteryReselectionRoute(),
+    };
+  }
+  const result = completeLongRest(input);
+  if (Either.isRight(result)) {
+    return {
+      tag: "accepted",
+      route: "weaponMastery",
+      sheet: result.right,
+      qRoute: acceptedWeaponMasteryReselectionRoute(),
+    };
+  }
+  return {
+    tag: "rejected",
+    route: "none",
+    issue: result.left,
+    qRoute: [],
+  };
+}
+
 function characterSheetLongRestHitPoints(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
@@ -487,6 +524,35 @@ function completeArcaneRecoverySpellSlotRestRouteEvent(): CharacterSheetRouteEve
     holes: [],
     owner: "spellSlot",
   };
+}
+
+function acceptedWeaponMasteryReselectionRoute(): CharacterSheetWeaponMasteryReselectionAcceptedRoute {
+  return [
+    {
+      kind: "retainCharacterSheetSelectedReferences",
+      subject: "selectedReferenceProjection",
+      owner: "selectedReference",
+    },
+    {
+      kind: "completeCharacterSheetRest",
+      subject: "selectedReferenceProjection",
+      fill: "projectionSelection",
+      holes: [],
+      owner: "selectedReference",
+    },
+  ];
+}
+
+function rejectedWeaponMasteryReselectionRoute(): CharacterSheetWeaponMasteryReselectionRejectedRoute {
+  return [
+    {
+      kind: "resolveCharacterSheetSubject",
+      subject: "selectedReferenceProjection",
+      fill: "projectionSelection",
+      holes: ["projectionChoice"],
+      owner: "selectedReference",
+    },
+  ];
 }
 
 function rejectArcaneRecoveryRouteEvent(

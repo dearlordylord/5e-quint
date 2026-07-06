@@ -29,7 +29,9 @@ import {
   characterSheetHitPointMaximumProjection,
   characterSheetResources,
   characterSheetSpellbookRitualInvocationProjection,
+  characterSheetWeaponMasterySelectedReferenceProjection,
   completeLongRestArcaneRecoveryResetWithRoute,
+  completeLongRestWeaponMasteryReselectionWithRoute,
   completeShortRestArcaneRecoveryWithRoute,
   createFreshCharacterSheet,
   finishLongRest,
@@ -47,6 +49,8 @@ import {
   type CharacterSheetRouteHole,
   type CharacterSheetRouteOwner,
   type CharacterSheetRouteSubject,
+  type CharacterSheetWeaponMasteryReselection,
+  type CharacterSheetWeaponMasterySelectedReferenceProjection,
 } from "./index.ts";
 
 const MBT_TEST_TIMEOUT_MS = 120_000;
@@ -121,6 +125,7 @@ type RouteDriverSchema = Record<string, Record<string, never>>;
 type RouteAppender = (
   route: readonly CharacterSheetRouteEvent[],
 ) => readonly CharacterSheetRouteEvent[];
+type WeaponMasteryRouteWeaponUnitIds = readonly [string, ...string[]];
 type ReadyRouteActionMap<Schema extends RouteDriverSchema> = Partial<
   Record<keyof Schema, RouteAppender>
 >;
@@ -815,15 +820,83 @@ const spellbookRitualRouteActions = {
 } as const satisfies ReadyRouteActionMap<typeof spellbookRitualRouteDriverSchema>;
 
 const weaponMasteryRouteActions = {
-  doSelectPaladinWeaponMastery: retainWeaponMasteryRoute,
-  doReselectPaladinWeaponMasteryOnLongRest: reselectWeaponMasteryOnRestRoute,
-  doSelectRangerWeaponMastery: retainWeaponMasteryRoute,
-  doReselectRangerWeaponMasteryOnLongRest: reselectWeaponMasteryOnRestRoute,
-  doSelectRogueWeaponMastery: retainWeaponMasteryRoute,
-  doReselectRogueWeaponMasteryOnLongRest: reselectWeaponMasteryOnRestRoute,
-  doAcceptOneChangeWeaponMasteryReselection: reselectWeaponMasteryOnRestRoute,
+  doSelectPaladinWeaponMastery: projectPublicWeaponMasterySelectedReferenceRoute({
+    classUnitId: "class_paladin",
+    featureUnitId: "paladin_weapon_mastery",
+    selectedWeaponUnitIds: ["weapon_longsword", "weapon_dagger"],
+    expectedChoiceCount: 2,
+    expectedLongRestChangeCount: 2,
+  }),
+  doReselectPaladinWeaponMasteryOnLongRest:
+    completePublicWeaponMasteryReselectionRoute({
+      classUnitId: "class_paladin",
+      featureUnitId: "paladin_weapon_mastery",
+      selectedWeaponUnitIds: ["weapon_longsword", "weapon_dagger"],
+      reselectedWeaponUnitIds: ["weapon_spear", "weapon_flail"],
+      expectedTag: "accepted",
+    }),
+  doSelectRangerWeaponMastery: projectPublicWeaponMasterySelectedReferenceRoute({
+    classUnitId: "class_ranger",
+    featureUnitId: "ranger_weapon_mastery",
+    selectedWeaponUnitIds: ["weapon_longsword", "weapon_dagger"],
+    expectedChoiceCount: 2,
+    expectedLongRestChangeCount: 2,
+  }),
+  doReselectRangerWeaponMasteryOnLongRest:
+    completePublicWeaponMasteryReselectionRoute({
+      classUnitId: "class_ranger",
+      featureUnitId: "ranger_weapon_mastery",
+      selectedWeaponUnitIds: ["weapon_longsword", "weapon_dagger"],
+      reselectedWeaponUnitIds: ["weapon_spear", "weapon_flail"],
+      expectedTag: "accepted",
+    }),
+  doSelectRogueWeaponMastery: projectPublicWeaponMasterySelectedReferenceRoute({
+    classUnitId: "class_rogue",
+    featureUnitId: "rogue_weapon_mastery",
+    selectedWeaponUnitIds: ["weapon_dagger", "weapon_shortbow"],
+    expectedChoiceCount: 2,
+    expectedLongRestChangeCount: 2,
+  }),
+  doReselectRogueWeaponMasteryOnLongRest:
+    completePublicWeaponMasteryReselectionRoute({
+      classUnitId: "class_rogue",
+      featureUnitId: "rogue_weapon_mastery",
+      selectedWeaponUnitIds: ["weapon_dagger", "weapon_shortbow"],
+      reselectedWeaponUnitIds: ["weapon_spear", "weapon_shortsword"],
+      expectedTag: "accepted",
+    }),
+  doAcceptOneChangeWeaponMasteryReselection:
+    completePublicWeaponMasteryReselectionRoute({
+      classUnitId: "class_fighter",
+      featureUnitId: "fighter_weapon_mastery",
+      selectedWeaponUnitIds: [
+        "weapon_longsword",
+        "weapon_dagger",
+        "weapon_shortbow",
+      ],
+      reselectedWeaponUnitIds: [
+        "weapon_longsword",
+        "weapon_dagger",
+        "weapon_spear",
+      ],
+      expectedTag: "accepted",
+    }),
   doRejectTooManyChangesWeaponMasteryReselection:
-    rejectWeaponMasteryReselectionRoute,
+    completePublicWeaponMasteryReselectionRoute({
+      classUnitId: "class_fighter",
+      featureUnitId: "fighter_weapon_mastery",
+      selectedWeaponUnitIds: [
+        "weapon_longsword",
+        "weapon_dagger",
+        "weapon_shortbow",
+      ],
+      reselectedWeaponUnitIds: [
+        "weapon_spear",
+        "weapon_flail",
+        "weapon_shortsword",
+      ],
+      expectedTag: "rejected",
+    }),
 } as const satisfies ReadyRouteActionMap<typeof weaponMasteryRouteDriverSchema>;
 
 function initialCharacterSheetRoute(): readonly CharacterSheetRouteEvent[] {
@@ -1626,44 +1699,114 @@ function spellbookRitualSheet(input: {
   );
 }
 
-function retainWeaponMasteryRoute(
-  route: readonly CharacterSheetRouteEvent[],
-): readonly CharacterSheetRouteEvent[] {
-  return [
-    ...route,
-    retainCharacterSheetSelectedReferences({
-      subject: "selectedReferenceProjection",
-      owner: "selectedReference",
-    }),
-  ];
+function projectPublicWeaponMasterySelectedReferenceRoute(input: {
+  readonly classUnitId: string;
+  readonly featureUnitId: string;
+  readonly selectedWeaponUnitIds: WeaponMasteryRouteWeaponUnitIds;
+  readonly expectedChoiceCount: number;
+  readonly expectedLongRestChangeCount: number;
+}): RouteAppender {
+  return (route) => {
+    const projection = requireRight(
+      characterSheetWeaponMasterySelectedReferenceProjection({
+        sheet: weaponMasteryRouteSheet(input),
+        unitLibrary,
+        featureUnitId: input.featureUnitId,
+      }),
+    );
+    expectWeaponMasterySelectionProjection(projection, input);
+    return [...route, ...projection.qRoute];
+  };
 }
 
-function reselectWeaponMasteryOnRestRoute(
-  route: readonly CharacterSheetRouteEvent[],
-): readonly CharacterSheetRouteEvent[] {
-  return [
-    ...retainWeaponMasteryRoute(route),
-    completeCharacterSheetRest({
-      subject: "selectedReferenceProjection",
-      fill: "projectionSelection",
-      holes: [],
-      owner: "selectedReference",
-    }),
-  ];
+function completePublicWeaponMasteryReselectionRoute(input: {
+  readonly classUnitId: string;
+  readonly featureUnitId: string;
+  readonly selectedWeaponUnitIds: WeaponMasteryRouteWeaponUnitIds;
+  readonly reselectedWeaponUnitIds: WeaponMasteryRouteWeaponUnitIds;
+  readonly expectedTag: "accepted" | "rejected";
+}): RouteAppender {
+  return (route) => {
+    const sheet = weaponMasteryRouteSheet(input);
+    const rest = requireRight(
+      startLongRest({ sheet, timing: { tag: "noPriorLongRest" } }),
+    );
+    const completion = requireRight(
+      finishLongRest({ rest, restedTicks: rest.requiredRestTicks }),
+    );
+    const reselection = {
+      featureUnitId: input.featureUnitId,
+      selectedWeaponUnitIds: input.reselectedWeaponUnitIds,
+    } satisfies CharacterSheetWeaponMasteryReselection;
+    const projected = completeLongRestWeaponMasteryReselectionWithRoute({
+      completion,
+      unitLibrary,
+      weaponMasteryReselections: [reselection],
+    });
+    expect(projected.tag).toBe(input.expectedTag);
+    if (projected.tag === "accepted") {
+      const projection = requireRight(
+        characterSheetWeaponMasterySelectedReferenceProjection({
+          sheet: projected.sheet,
+          unitLibrary,
+          featureUnitId: input.featureUnitId,
+        }),
+      );
+      expect(projection.selectedWeaponUnitIds).toEqual(
+        input.reselectedWeaponUnitIds,
+      );
+    }
+    return [...route, ...projected.qRoute];
+  };
 }
 
-function rejectWeaponMasteryReselectionRoute(
-  route: readonly CharacterSheetRouteEvent[],
-): readonly CharacterSheetRouteEvent[] {
-  return [
-    ...route,
-    resolveCharacterSheetSubject({
-      subject: "selectedReferenceProjection",
-      fill: "projectionSelection",
-      holes: ["projectionChoice"],
-      owner: "selectedReference",
+function weaponMasteryRouteSheet(input: {
+  readonly classUnitId: string;
+  readonly featureUnitId: string;
+  readonly selectedWeaponUnitIds: WeaponMasteryRouteWeaponUnitIds;
+}): CharacterSheet {
+  return requireRight(
+    createFreshCharacterSheet({
+      characterId: characterSheetId(`character:route-${input.featureUnitId}`),
+      build: {
+        ...baseBuild({ startingClass: input.classUnitId }),
+        features: input.selectedWeaponUnitIds.map((unitId) => ({
+          kind: "selectedClassChoice" as const,
+          selectedFromUnitId: input.featureUnitId,
+          unitId,
+        })),
+      },
+      currentHp: Hp(8),
+      tempHp: Hp(0),
+      hitPointMaximumReduction: Hp(0),
+      conditions: [],
+      unitLibrary,
     }),
-  ];
+  );
+}
+
+function expectWeaponMasterySelectionProjection(
+  projection: CharacterSheetWeaponMasterySelectedReferenceProjection,
+  expected: {
+    readonly classUnitId: string;
+    readonly featureUnitId: string;
+    readonly selectedWeaponUnitIds: WeaponMasteryRouteWeaponUnitIds;
+    readonly expectedChoiceCount: number;
+    readonly expectedLongRestChangeCount: number;
+  },
+): void {
+  expect(projection.classUnitId).toBe(expected.classUnitId);
+  expect(projection.featureUnitId).toBe(expected.featureUnitId);
+  expect(projection.selectedWeaponUnitIds).toEqual(
+    expected.selectedWeaponUnitIds,
+  );
+  expect(projection.choiceCount).toBe(expected.expectedChoiceCount);
+  expect(projection.longRestChangeCount).toBe(
+    expected.expectedLongRestChangeCount,
+  );
+  for (const selectedWeaponUnitId of expected.selectedWeaponUnitIds) {
+    expect(projection.eligibleWeaponUnitIds).toContain(selectedWeaponUnitId);
+  }
 }
 
 function createCharacterSheet(

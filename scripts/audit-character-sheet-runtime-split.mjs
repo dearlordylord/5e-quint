@@ -138,6 +138,11 @@ const EXPECTED_EXPORTS = [
   "CharacterSheetTimePassedInput",
   "CharacterSheetUseCountResourceUnitId",
   "CharacterSheetWeaponMasteryReselection",
+  "CharacterSheetWeaponMasteryReselectionAcceptedRoute",
+  "CharacterSheetWeaponMasteryReselectionRejectedRoute",
+  "CharacterSheetWeaponMasteryReselectionRouteResult",
+  "CharacterSheetWeaponMasterySelectedReferenceProjection",
+  "CharacterSheetWeaponMasterySelectedReferenceProjectionRoute",
   "CharacterSheetZeroHpLifecycle",
   "CharacterSheetZeroHpLifecycleInput",
   "CharacterSpellSlotExpenditure",
@@ -180,9 +185,11 @@ const EXPECTED_EXPORTS = [
   "characterSheetSpellbookRitualAccess",
   "characterSheetSpellbookRitualAccessesForBuild",
   "characterSheetSpellbookRitualInvocationProjection",
+  "characterSheetWeaponMasterySelectedReferenceProjection",
   "characterSheetTempHp",
   "completeLongRest",
   "completeLongRestArcaneRecoveryResetWithRoute",
+  "completeLongRestWeaponMasteryReselectionWithRoute",
   "completeMagicalCunningRite",
   "completeShortRest",
   "completeShortRestArcaneRecoveryWithRoute",
@@ -306,6 +313,41 @@ const EXPECTED_EXPORT_RECONCILIATION_REASONS = [
     name: "CharacterSheetSpellbookRitualInvocationRoute",
     reason:
       "Character Sheet owns the spellbook Ritual selected-reference retention and spell-resource projection route shape; exporting it keeps the route event tuple typed at the projection boundary.",
+  },
+  {
+    name: "characterSheetWeaponMasterySelectedReferenceProjection",
+    reason:
+      "Character Sheet owns Weapon Mastery selected-reference projection from CharacterBuild selected class choices and Surface Weapon Mastery profile facts; exposing the projection-with-route entrypoint lets route replay observe selected-reference qRoute without adapter-local route assembly.",
+  },
+  {
+    name: "completeLongRestWeaponMasteryReselectionWithRoute",
+    reason:
+      "Character Sheet owns Long Rest Weapon Mastery reselection through completeLongRest; exposing the route wrapper lets route replay observe accepted and rejected selected-reference qRoute without duplicating reselection state.",
+  },
+  {
+    name: "CharacterSheetWeaponMasterySelectedReferenceProjection",
+    reason:
+      "Character Sheet owns the typed Weapon Mastery selected-reference projection so choice count, eligible weapons, selected weapon refs, and qRoute evidence remain derived from build and Surface facts without adding durable sheet state.",
+  },
+  {
+    name: "CharacterSheetWeaponMasterySelectedReferenceProjectionRoute",
+    reason:
+      "Character Sheet owns the Weapon Mastery selected-reference retention and build-facts projection route shape; exporting it keeps the route event tuple typed at the projection boundary.",
+  },
+  {
+    name: "CharacterSheetWeaponMasteryReselectionRouteResult",
+    reason:
+      "Character Sheet owns accepted/rejected Long Rest Weapon Mastery reselection route evidence so callers can consume qRoute alongside the typed completion result without storing a parallel reselection ledger.",
+  },
+  {
+    name: "CharacterSheetWeaponMasteryReselectionAcceptedRoute",
+    reason:
+      "Character Sheet owns the accepted Long Rest Weapon Mastery selected-reference route tuple, including retained selected refs and rest completion evidence.",
+  },
+  {
+    name: "CharacterSheetWeaponMasteryReselectionRejectedRoute",
+    reason:
+      "Character Sheet owns the rejected Long Rest Weapon Mastery selected-reference route tuple, including the projection-choice hole for invalid reselections.",
   },
   {
     name: "applyLayOnHandsWithRoute",

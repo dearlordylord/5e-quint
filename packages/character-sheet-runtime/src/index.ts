@@ -68,6 +68,7 @@ export {
 export {
   characterSheetLongRestCalendarGate,
   completeLongRestArcaneRecoveryResetWithRoute,
+  completeLongRestWeaponMasteryReselectionWithRoute,
   completeLongRest,
   completeShortRestArcaneRecoveryWithRoute,
   completeMagicalCunningRite,
@@ -79,6 +80,9 @@ export {
   startLongRest,
   startShortRest,
 } from "./rests.ts";
+export {
+  characterSheetWeaponMasterySelectedReferenceProjection,
+} from "./weapon-mastery.ts";
 export {
   characterBuildHasSpellbookSpell,
   characterSheetSpellInvocation,
@@ -214,6 +218,11 @@ export type {
   CharacterSheetTimePassedInput,
   CharacterSheetUseCountResourceUnitId,
   CharacterSheetWeaponMasteryReselection,
+  CharacterSheetWeaponMasteryReselectionAcceptedRoute,
+  CharacterSheetWeaponMasteryReselectionRejectedRoute,
+  CharacterSheetWeaponMasteryReselectionRouteResult,
+  CharacterSheetWeaponMasterySelectedReferenceProjection,
+  CharacterSheetWeaponMasterySelectedReferenceProjectionRoute,
   CharacterSheetZeroHpLifecycle,
   CharacterSheetZeroHpLifecycleInput,
   CharacterSpellSlotExpenditure,

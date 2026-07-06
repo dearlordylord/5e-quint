@@ -66,6 +66,7 @@ import {
   characterSheetSpellSlotSourceState,
   characterSheetSpellSlots,
   completeLongRestArcaneRecoveryResetWithRoute as completeLongRestArcaneRecoveryResetWithRouteCore,
+  completeLongRestWeaponMasteryReselectionWithRoute as completeLongRestWeaponMasteryReselectionWithRouteCore,
   completeLongRest as completeLongRestCore,
   completeMagicalCunningRite,
   completeShortRestArcaneRecoveryWithRoute as completeShortRestArcaneRecoveryWithRouteCore,
@@ -386,6 +387,35 @@ export function completeLongRestArcaneRecoveryResetWithRoute(
     }),
   );
   return completeLongRestArcaneRecoveryResetWithRouteCore({
+    ...benefits,
+    completion,
+  });
+}
+
+export function completeLongRestWeaponMasteryReselectionWithRoute(
+  input: Omit<CharacterSheetLongRestInput, "completion"> & {
+    readonly sheet: CharacterSheet;
+    readonly weaponMasteryReselections: NonNullable<
+      CharacterSheetLongRestInput["weaponMasteryReselections"]
+    >;
+    readonly restedTicks?: ElapsedTimeTicks;
+    readonly timing?: CharacterSheetLongRestStartTiming;
+  },
+) {
+  const { sheet, restedTicks, timing, ...benefits } = input;
+  const rest = requireRight(
+    startLongRest({
+      sheet,
+      timing: timing ?? { tag: "noPriorLongRest" },
+    }),
+  );
+  const completion = requireRight(
+    finishLongRest({
+      rest,
+      restedTicks: restedTicks ?? rest.requiredRestTicks,
+    }),
+  );
+  return completeLongRestWeaponMasteryReselectionWithRouteCore({
     ...benefits,
     completion,
   });
