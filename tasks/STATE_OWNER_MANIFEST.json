@@ -1,101 +1,47 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-026",
+  "taskId": "CRPI-BLOCK-039",
   "durableFields": [
     {
-      "fieldPath": "BattleCreatureState.size",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "fieldPath": "CharacterBuild",
+      "owner": "character-build",
+      "introducedIn": "packages/character-creation-runtime/src/types.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing creature state owns Size projected from character species/build input at battle start; species identity is not used as a runtime dispatch key."
+      "notes": "Existing finalized CharacterBuild is the source for build-owned combat projection facts. Task 82 does not add lifecycle state to CharacterBuild."
     },
     {
-      "fieldPath": "BattleCreatureState.origin.speed",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "fieldPath": "CharacterSheet.currentHp",
+      "owner": "character-sheet",
+      "introducedIn": "packages/character-sheet-runtime/src/sheet-types.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing character creature origin owns walking Speed used by movement-resource projection."
+      "notes": "Existing Character Sheet current Hit Points are the persistent pre-battle and post-settlement character-owned Hit Point fact."
     },
     {
-      "fieldPath": "BattleCreatureState.origin.characterUnitRefs",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "fieldPath": "BattleState.combatants[*].hp",
+      "owner": "battle-runtime",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/model.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing selected unit refs carry admitted passive support profiles for damage resistance and creature-space movement permission; selected identity remains an admission/source boundary."
+      "notes": "Existing BattleState combatant Hit Points are the battle-owned mutation source during runtime."
     },
     {
-      "fieldPath": "BattleCreatureState.origin.passiveSavingThrowRollModeProfiles",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing parsed support-profile map owns passive Saving Throw roll-mode facts for condition-scoped species traits."
-    },
-    {
-      "fieldPath": "BattleCreatureState.origin.passiveAbilityCheckRollModeProfiles",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing parsed support-profile map owns passive Ability Check roll-mode facts for ending Grappled."
-    },
-    {
-      "fieldPath": "BattleReducerRouteEvent.subject=creatureStatProjection",
-      "owner": "battle-reducer-route-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "fieldPath": "CharacterBattleRouteEvent",
+      "owner": "character-battle-route-projection",
+      "introducedIn": "packages/character-battle-runtime/src/character-battle-route.ts",
       "derivability": {
         "tag": "runtime-projection"
       },
-      "notes": "Route events are derived from existing BattleCreatureState size and speed facts plus movement-resource ownership; no route cache is stored in BattleState."
-    },
-    {
-      "fieldPath": "BattleReducerRouteEvent.subject=passiveDamageAdjustment",
-      "owner": "battle-reducer-route-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "derivability": {
-        "tag": "runtime-projection"
-      },
-      "notes": "Route events are derived from existing passive damage-resistance support-profile facts and the shared damage adjustment helper."
-    },
-    {
-      "fieldPath": "BattleReducerRouteEvent.subject=passiveSavingThrowRollMode",
-      "owner": "battle-reducer-route-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "derivability": {
-        "tag": "runtime-projection"
-      },
-      "notes": "Existing route projection owns passive Saving Throw roll-mode route evidence."
-    },
-    {
-      "fieldPath": "BattleReducerRouteEvent.subject=passiveAbilityCheckRollMode",
-      "owner": "battle-reducer-route-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "derivability": {
-        "tag": "runtime-projection"
-      },
-      "notes": "Route events are derived from existing passive Ability Check roll-mode support-profile facts for ending Grappled."
-    },
-    {
-      "fieldPath": "BattleReducerRouteEvent.subject=creatureSpaceMovementPermission",
-      "owner": "battle-reducer-route-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "derivability": {
-        "tag": "runtime-projection"
-      },
-      "notes": "Existing public Movement fill route projection owns creature-space traversal permission outcomes."
+      "notes": "Route events project existing layer handoff boundaries and owners; they are not stored as a duplicate lifecycle state machine."
     }
   ],
   "notes": [
-    "Task 54 introduced no new durable BattleState or BattleCreatureState fields.",
-    "Species passive trait route evidence is derived from existing support-profile, creature-state, damage adjustment, roll-mode, movement-resource, and movement-fill facts.",
-    "Production behavior does not branch on species trait ids, names, QNT action names, fixture labels, or connector filenames."
+    "Task 82 introduced no new durable CharacterBuild, CharacterSheet, BattleState, or BattleCreatureState fields.",
+    "The lifecycle replay keeps Draft, Build, Sheet, BattleInitProjection, BattleRuntime, and Settlement as separate domain layers.",
+    "CharacterBattleBuildProjectionOwner, CharacterBattleSheetOwner, CharacterBattleInitProjectionOwner, CharacterBattleRuntimeOwner, and CharacterBattleSettlementOwner remain the durable owner vocabulary."
   ]
 }

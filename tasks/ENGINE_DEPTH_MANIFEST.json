@@ -1,52 +1,58 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-026",
+  "taskId": "CRPI-BLOCK-039",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt",
+      "path": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt",
       "quarantinedWitnessNames": [
-        "qState",
-        "protocol"
+        "CharacterLifecycleLayer",
+        "CharacterLifecycleFacts",
+        "qReplayIndex"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-026.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-039.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/battle-runtime-species-passive-trait-substrates.route.mbt.qnt",
+      "path": "packages/character-battle-runtime/character-layer-projection-lifecycle.route.mbt.qnt",
       "quarantinedWitnessNames": [
-        "qRoute"
+        "qRoute",
+        "CharacterLayerLifecycleRouteState"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-026.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-039.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/species-passive-trait-selected-identity.mbt.test.ts",
+      "path": "packages/character-battle-runtime/src/character-layer-projection-lifecycle.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "SpeciesPassiveTraitSubstrateRouteProjection",
-        "routes passive trait substrates through generic battle owners"
+        "CharacterLifecycleProjection",
+        "replays Draft to Build to Sheet to battle runtime to settlement"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-026.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-039.json"
+      ]
+    },
+    {
+      "path": "packages/character-battle-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "quarantinedWitnessNames": [
+        "routes character layer projection boundaries through existing owners"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-039.json"
       ]
     }
   ],
-  "productionModulesExtended": [
-    {
-      "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "notes": "Adds public reducer route emission for creatureStatProjection through Stand from Prone, passiveDamageAdjustment through real spell damage resolution, passiveSavingThrowRollMode through end-turn condition saves, and passiveAbilityCheckRollMode through Escape Grapple resolution; no synthetic battle subjects or durable route state are introduced."
-    }
-  ],
+  "productionModulesExtended": [],
   "expectedNextReuse": [
     {
-      "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "notes": "Future catalog-after-substrate passive trait routes should reuse public discoverBattleActs and resolveBattleSubject route events for creature stat, passive damage, passive Saving Throw, passive Ability Check, and creature-space movement projections instead of adapter-local expected route literals."
+      "path": "packages/character-battle-runtime/src/index.ts",
+      "notes": "Future character lifecycle handoff replays should keep using the existing public Character Battle init, Battle Runtime reducer, and settlement entrypoints rather than adding a monolithic lifecycle owner."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 54 observes the copied species passive trait substrate qRoute through public discoverBattleActs and resolveBattleSubject route events. No new durable BattleState fields were added."
+    "notes": "Task 82 observes copied qRoute for the Draft to Build to Sheet to BattleInitProjection to BattleRuntime to Settlement lifecycle through existing layered owner route events. No new durable CharacterBuild, CharacterSheet, BattleState, or BattleCreatureState fields were added."
   }
 }

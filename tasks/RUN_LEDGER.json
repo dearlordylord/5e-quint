@@ -4,74 +4,70 @@
   "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
   "entries": [
     {
-      "taskId": "CRPI-BLOCK-026",
-      "assignmentId": "reducer-spine-diagnostic-battle",
-      "laneId": "battle",
+      "taskId": "CRPI-BLOCK-039",
+      "assignmentId": "reducer-spine-diagnostic-character-battle",
+      "laneId": "character-battle",
       "selectedDrivers": [
-        "packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt"
+        "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt"
       ],
       "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
       "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
       "artifacts": {
-        "engineDepth": {
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "f5103d6dc9a7f92afb22756a4b00d1ee36e284355ec777fe1ad56cad5ddab687"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-BLOCK-039/README.md",
+          "sha256": "6b4f159fc60ca4b3ed530cb4a9a589d739e63cf34694b49ff77ad2d23d398976"
+        },
+        "engineDepthManifest": {
           "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
-          "sha256": "34e4654913d123191273139084bf8f0ef7e6a87a92c9e1c432ad40d7a91e1ef2"
+          "sha256": "d032c61fc0ef3f6e207fb85d30f0b0d3cb36d419534b89d53aceb5fa96d6318d"
         },
         "stateOwnerManifest": {
           "path": "tasks/STATE_OWNER_MANIFEST.json",
-          "sha256": "5fd18fddc2de60803e9b75adc0085208b9f996d90a9abae3512e40e5bc8bac79"
-        },
-        "validationReport": {
-          "path": "tasks/VALIDATION_REPORT.md",
-          "sha256": "b638a398dd49c0e88308a2e98e15bfbc53480b8749077c751aca208f6a295c79"
-        },
-        "history": {
-          "path": "tasks/history/CRPI-BLOCK-026/README.md",
-          "sha256": "964d36a6babee52c6c848727473948c49abb51f5013908d9e792ada84e2ef0d2"
+          "sha256": "3b36aa35d9204e15f3c88cdfaadc40b201d1d88128fdf87389c46659aa9822c7"
         }
       },
       "targetReplayEvidence": [
         {
-          "path": "tasks/target-replay-evidence/CRPI-BLOCK-026.json",
-          "sha256": "850bad0317c9a9c2e247f6f330c3bccfcb1a37d41cc603acda51511f446b9c82",
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-039.json",
+          "sha256": "cd42684b4d093c2709696ca8b2c5180df9d66649b4ac166cd56af92a097df5d6",
           "evidenceRefs": [
-            "tasks/target-replay-evidence/CRPI-BLOCK-026.json#driver:packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt#step:doDragonbornDamageResistance#trace:MBT_TRACES=1 MBT_STEPS=8 action=doDragonbornDamageResistance qRoute=species-passive-trait-substrate-public-route",
-            "tasks/target-replay-evidence/CRPI-BLOCK-026.json#driver:packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt#step:doDwarvenResilience#trace:MBT_TRACES=1 MBT_STEPS=8 action=doDwarvenResilience qRoute=species-passive-trait-substrate-public-route",
-            "tasks/target-replay-evidence/CRPI-BLOCK-026.json#driver:packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt#step:doGoliathPowerfulBuild#trace:MBT_TRACES=1 MBT_STEPS=8 action=doGoliathPowerfulBuild qRoute=species-passive-trait-substrate-public-route",
-            "tasks/target-replay-evidence/CRPI-BLOCK-026.json#driver:packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt#step:doHalflingBrave#trace:MBT_TRACES=1 MBT_STEPS=8 action=doHalflingBrave qRoute=species-passive-trait-substrate-public-route"
+            "tasks/target-replay-evidence/CRPI-BLOCK-039.json#driver:packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt#step:doFinalizeDraftToBuild#trace:public-route=characterLayerLifecycle action=doFinalizeDraftToBuild qRoute=build-projection-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-039.json#driver:packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt#step:doCreateSheetFromBuild#trace:public-route=characterLayerLifecycle action=doCreateSheetFromBuild qRoute=sheet-projection-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-039.json#driver:packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt#step:doProjectSheetToBattleInit#trace:public-route=characterLayerLifecycle action=doProjectSheetToBattleInit qRoute=battle-init-entry-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-039.json#driver:packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt#step:doResolveSkeletonShortswordAttack#trace:public-route=characterLayerLifecycle action=doResolveSkeletonShortswordAttack qRoute=battle-mutation-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-039.json#driver:packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt#step:doSettleBattleToSheet#trace:public-route=characterLayerLifecycle action=doSettleBattleToSheet qRoute=battle-settlement-route"
           ]
         }
       ],
       "commandResults": [
         {
-          "command": "git log --oneline -1 ralph/cleanroom-owner-battle-attack-20260706T213644Z/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor fb3fcddac57b6b34e16c41d09fe4794066faa104 HEAD",
+          "command": "git log --oneline -1 ralph/cleanroom-owner-character-battle-20260706T213644Z/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor e286bc4662da16487d6caf1008e58ce8eb035505 HEAD",
           "status": "pass",
-          "detail": "Base ref and HEAD both resolved to fb3fcddac Unblock owner-decision Ralph tasks; Base SHA is an ancestor of HEAD."
+          "detail": "Prompt-declared integration ref and HEAD both resolved to e286bc466 Accept Task 79 origin feat battle replay; Base SHA is an ancestor of HEAD."
         },
         {
-          "command": "RAW/ubiquitous-language check for Dragonborn, Dwarf, Goliath, Halfling, Grappling, Resistance, and UBIQUITOUS_LANGUAGE.md",
+          "command": "RAW/ubiquitous-language check for Character Sheet lifecycle, combat entry, attack resolution, Hit Points, Damage Rolls, and Spell Slot handoff vocabulary",
           "status": "pass",
-          "detail": "Checked .references/srd-5.2.1/Character-Origins.md, .references/srd-5.2.1/Rules-Glossary.md, and UBIQUITOUS_LANGUAGE.md before route projection changes."
+          "detail": "Checked .references/srd-5.2.1/Character-Creation.md, .references/srd-5.2.1/Rules-Glossary.md, .references/srd-5.2.1/Playing-the-Game.md, .references/srd-5.2.1/Spells/Gaining-and-Casting.md, UBIQUITOUS_LANGUAGE.md, and plans/cleanroom-guidance/reducer-spine.md before final evidence."
         },
         {
-          "command": "pnpm --filter @dnd/battle-runtime typecheck",
+          "command": "node task-scoped validateTargetReplayEvidence for packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt",
           "status": "pass",
-          "detail": "Battle runtime TypeScript check passed after moving species passive substrate route evidence onto real public Stand from Prone, spell damage, end-turn poisoned save, Escape Grapple, and Movement reducer paths."
+          "detail": "Validated tasks/target-replay-evidence/CRPI-BLOCK-039.json with scripts/cleanroom-branch-coverage-check.cjs#validateTargetReplayEvidence and requireAllObligations=false; 5 obligations covered."
         },
         {
           "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
           "status": "pass",
-          "detail": "Pre-MBT process check found no active Vitest runner or Quint evaluator; the only match was a Ralph monitor command whose text contained the process names."
+          "detail": "Pre-MBT process check found no active vitest runner or quint_evaluator immediately before the focused lifecycle replay. An unrelated earlier vitest process was observed and allowed to finish before starting this task's MBT run."
         },
         {
-          "command": "START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=8 pnpm --filter @dnd/battle-runtime exec vitest run src/species-passive-trait-selected-identity.mbt.test.ts ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "command": "START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=5 pnpm --filter @dnd/character-battle-runtime exec vitest run src/character-layer-projection-lifecycle.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"Character layer projection|character layer projection\" ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
           "status": "pass",
-          "detail": "Focused species passive selected-identity semantic replay and substrate route connector replay passed; 2 tests passed; TOTAL: 9s."
-        },
-        {
-          "command": "node task-scoped validateTargetReplayEvidence for packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt",
-          "status": "pass",
-          "detail": "Validated tasks/target-replay-evidence/CRPI-BLOCK-026.json with scripts/cleanroom-branch-coverage-check.cjs#validateTargetReplayEvidence and requireAllObligations=false; 4 obligations covered."
+          "detail": "Focused Character layer lifecycle semantic replay and copied qRoute route connector replay passed; 2 tests passed and 6 skipped by filter; TOTAL: 13s."
         },
         {
           "command": "pnpm cleanroom-branch-coverage:check",
@@ -80,7 +76,8 @@
         },
         {
           "command": "git diff --check",
-          "status": "pass"
+          "status": "pass",
+          "detail": "Whitespace check passed."
         },
         {
           "command": "pnpm quality",
@@ -90,25 +87,121 @@
         {
           "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
           "status": "pass",
-          "detail": "Round 1 verified public qRoute replay, RAW traceability, no duplicate durable state, no authored-identity production dispatch, and route subject/owner/fill connascence. Round 3 removed the rejected synthetic projection acts and observed qRoute through real public Stand from Prone, Ray of Sickness damage, poisoned end-turn save, Escape Grapple, and Movement reducer paths; no remaining reasonable Task 54 findings."
+          "detail": "No remaining reasonable Task 82 findings after recording the copied qRoute lifecycle replay through existing layered owners, with no duplicate durable state, no monolithic lifecycle owner, and no authored-identity runtime dispatch."
         }
       ],
       "planImpact": {
         "status": "none",
         "affectedTasks": [
           {
-            "taskId": "CRPI-BLOCK-026",
+            "taskId": "CRPI-BLOCK-039",
             "impact": "unblocked"
-          },
-          {
-            "taskId": "CRPI-BLOCK-013",
-            "impact": "left unchanged"
           }
         ],
         "observations": [
-          "Species passive trait qRoute is accepted through public discoverBattleActs and resolveBattleSubject route events for creature stat projection, passive damage adjustment, passive Saving Throw roll mode, passive Ability Check roll mode, and public Movement resolution for creature-space movement permission.",
-          "The species passive route connector covers a broader generic substrate sequence than the selected semantic witness branches; Task 54 evidence records the selected-driver obligations against the public substrate route replay.",
-          "No new durable BattleState fields were needed; route evidence is derived from existing size, speed, support-profile, damage adjustment, roll-mode, movement-resource, and movement-fill facts through public reducer route-event surfaces."
+          "Character layer lifecycle qRoute is accepted through existing CharacterBattleBuildProjectionOwner, CharacterBattleSheetOwner, CharacterBattleInitProjectionOwner, CharacterBattleRuntimeOwner, and CharacterBattleSettlementOwner route events.",
+          "Draft, Build, Sheet, BattleInitProjection, BattleRuntime, and Settlement remain distinct lifecycle layers; no monolithic lifecycle owner or duplicate durable lifecycle state was introduced.",
+          "The battle mutation portion is exercised through public battle-runtime startBattle, discoverBattleActs, and resolveBattleSubject entrypoints; settlement is exercised through public settleCharacterSheetFromBattle."
+        ],
+        "requiredPlanEdits": "none"
+      }
+    },
+    {
+      "taskId": "CRPI-BLOCK-038",
+      "assignmentId": "reducer-spine-diagnostic-character-battle",
+      "laneId": "character-battle",
+      "selectedDrivers": [
+        "packages/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
+      "artifacts": {
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "b62bb0895f47ca801d9694713a5454f72558cb4bf6288f601776542a8d1dd86f"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-BLOCK-038/README.md",
+          "sha256": "4214d915b210c7bd599ba4884e88923c72b11e4cebd5a7258b18725261ab9416"
+        },
+        "engineDepthManifest": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "9cf82820b5b1b0a4bc83b0797e22ec6b72b55034996a64dbabb2643e31454b8a"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "70b06dfaafd8abd1b5221d6e4a9f00edea15e3cb88c0d468c6dc0397ae00bd39"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-038.json",
+          "sha256": "8c4d8bdeda018825186acd9d143b28bee9787eb4d01a2558f12f96791ebfa50c",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-038.json#driver:packages/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt#step:doFinalizeCriminalAlertOriginFeat#trace:public-route=selectedReferenceRetention action=doFinalizeCriminalAlertOriginFeat qRoute=origin-feat-selected-reference-retention-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-038.json#driver:packages/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt#step:doProjectAlertInitiativeHandoff#trace:public-route=selectedReferenceRuntimeEntry action=doProjectAlertInitiativeHandoff qRoute=origin-feat-selected-reference-initiative-handoff-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-owner-character-battle-20260706T213644Z/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor fb3fcddac57b6b34e16c41d09fe4794066faa104 HEAD",
+          "status": "pass",
+          "detail": "Prompt-declared integration ref and HEAD both resolved to fb3fcddac Unblock owner-decision Ralph tasks; Base SHA is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language check for background-granted Origin feat retention, Alert Initiative Proficiency, Initiative, and Character Sheet projection boundaries",
+          "status": "pass",
+          "detail": "Checked .references/srd-5.2.1/Character-Origins.md, .references/srd-5.2.1/Feats.md, .references/srd-5.2.1/Playing-the-Game.md, and UBIQUITOUS_LANGUAGE.md before route projection changes."
+        },
+        {
+          "command": "pnpm --filter @dnd/character-battle-runtime typecheck",
+          "status": "pass",
+          "detail": "Character Battle Runtime TypeScript check passed after moving selected-reference qRoute observation onto public handoff routeEvents."
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Pre-MBT process check found no active vitest runner or quint_evaluator; only the Ralph status-monitor command text matched."
+        },
+        {
+          "command": "START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=2 pnpm --filter @dnd/character-battle-runtime exec vitest run src/origin-feat-selected-identity.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"Origin feat|origin feat\" ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "status": "pass",
+          "detail": "Focused Origin feat selected-identity semantic replay and copied qRoute route connector replay passed through public handoff routeEvents; 5 tests passed, 6 skipped by filter; TOTAL: 6s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "Cleanroom branch coverage passed with 738 obligations and 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass",
+          "detail": "Whitespace check passed."
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "All quality gates passed; app lint emitted the existing 61 warnings and exited 0."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "No remaining reasonable Task 79 findings after moving selected-reference route observation out of the MBT adapter and onto public Character Battle handoff routeEvents, with no duplicate durable state or authored-identity runtime dispatch."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-038",
+            "impact": "unblocked"
+          }
+        ],
+        "observations": [
+          "Origin feat selected-reference qRoute is accepted through public Character Battle selected-reference retention and Initiative handoff routeEvents.",
+          "The selected Origin feat remains an existing CharacterBuild unit ref derived from CharacterBuild.background and Surface background facts; no new durable state field was added.",
+          "Authored Alert/Criminal identity remains at SRD catalog, selection, and test/evidence boundaries; production route projection uses selected-reference handoff shape and owner vocabulary."
         ],
         "requiredPlanEdits": "none"
       }
@@ -6717,67 +6810,74 @@
       }
     },
     {
-      "taskId": "CRPI-BLOCK-038",
-      "assignmentId": "reducer-spine-diagnostic-character-battle",
-      "laneId": "character-battle",
+      "taskId": "CRPI-BLOCK-026",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
       "selectedDrivers": [
-        "packages/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt"
+        "packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt"
       ],
       "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
       "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
       "artifacts": {
-        "validationReport": {
-          "path": "tasks/VALIDATION_REPORT.md",
-          "sha256": "b62bb0895f47ca801d9694713a5454f72558cb4bf6288f601776542a8d1dd86f"
-        },
-        "history": {
-          "path": "tasks/history/CRPI-BLOCK-038/README.md",
-          "sha256": "4214d915b210c7bd599ba4884e88923c72b11e4cebd5a7258b18725261ab9416"
-        },
-        "engineDepthManifest": {
+        "engineDepth": {
           "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
-          "sha256": "9cf82820b5b1b0a4bc83b0797e22ec6b72b55034996a64dbabb2643e31454b8a"
+          "sha256": "34e4654913d123191273139084bf8f0ef7e6a87a92c9e1c432ad40d7a91e1ef2"
         },
         "stateOwnerManifest": {
           "path": "tasks/STATE_OWNER_MANIFEST.json",
-          "sha256": "70b06dfaafd8abd1b5221d6e4a9f00edea15e3cb88c0d468c6dc0397ae00bd39"
+          "sha256": "5fd18fddc2de60803e9b75adc0085208b9f996d90a9abae3512e40e5bc8bac79"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "b638a398dd49c0e88308a2e98e15bfbc53480b8749077c751aca208f6a295c79"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-BLOCK-026/README.md",
+          "sha256": "964d36a6babee52c6c848727473948c49abb51f5013908d9e792ada84e2ef0d2"
         }
       },
       "targetReplayEvidence": [
         {
-          "path": "tasks/target-replay-evidence/CRPI-BLOCK-038.json",
-          "sha256": "8c4d8bdeda018825186acd9d143b28bee9787eb4d01a2558f12f96791ebfa50c",
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-026.json",
+          "sha256": "850bad0317c9a9c2e247f6f330c3bccfcb1a37d41cc603acda51511f446b9c82",
           "evidenceRefs": [
-            "tasks/target-replay-evidence/CRPI-BLOCK-038.json#driver:packages/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt#step:doFinalizeCriminalAlertOriginFeat#trace:public-route=selectedReferenceRetention action=doFinalizeCriminalAlertOriginFeat qRoute=origin-feat-selected-reference-retention-route",
-            "tasks/target-replay-evidence/CRPI-BLOCK-038.json#driver:packages/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt#step:doProjectAlertInitiativeHandoff#trace:public-route=selectedReferenceRuntimeEntry action=doProjectAlertInitiativeHandoff qRoute=origin-feat-selected-reference-initiative-handoff-route"
+            "tasks/target-replay-evidence/CRPI-BLOCK-026.json#driver:packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt#step:doDragonbornDamageResistance#trace:MBT_TRACES=1 MBT_STEPS=8 action=doDragonbornDamageResistance qRoute=species-passive-trait-substrate-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-026.json#driver:packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt#step:doDwarvenResilience#trace:MBT_TRACES=1 MBT_STEPS=8 action=doDwarvenResilience qRoute=species-passive-trait-substrate-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-026.json#driver:packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt#step:doGoliathPowerfulBuild#trace:MBT_TRACES=1 MBT_STEPS=8 action=doGoliathPowerfulBuild qRoute=species-passive-trait-substrate-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-026.json#driver:packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt#step:doHalflingBrave#trace:MBT_TRACES=1 MBT_STEPS=8 action=doHalflingBrave qRoute=species-passive-trait-substrate-public-route"
           ]
         }
       ],
       "commandResults": [
         {
-          "command": "git log --oneline -1 ralph/cleanroom-owner-character-battle-20260706T213644Z/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor fb3fcddac57b6b34e16c41d09fe4794066faa104 HEAD",
+          "command": "git log --oneline -1 ralph/cleanroom-owner-battle-attack-20260706T213644Z/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor fb3fcddac57b6b34e16c41d09fe4794066faa104 HEAD",
           "status": "pass",
-          "detail": "Prompt-declared integration ref and HEAD both resolved to fb3fcddac Unblock owner-decision Ralph tasks; Base SHA is an ancestor of HEAD."
+          "detail": "Base ref and HEAD both resolved to fb3fcddac Unblock owner-decision Ralph tasks; Base SHA is an ancestor of HEAD."
         },
         {
-          "command": "RAW/ubiquitous-language check for background-granted Origin feat retention, Alert Initiative Proficiency, Initiative, and Character Sheet projection boundaries",
+          "command": "RAW/ubiquitous-language check for Dragonborn, Dwarf, Goliath, Halfling, Grappling, Resistance, and UBIQUITOUS_LANGUAGE.md",
           "status": "pass",
-          "detail": "Checked .references/srd-5.2.1/Character-Origins.md, .references/srd-5.2.1/Feats.md, .references/srd-5.2.1/Playing-the-Game.md, and UBIQUITOUS_LANGUAGE.md before route projection changes."
+          "detail": "Checked .references/srd-5.2.1/Character-Origins.md, .references/srd-5.2.1/Rules-Glossary.md, and UBIQUITOUS_LANGUAGE.md before route projection changes."
         },
         {
-          "command": "pnpm --filter @dnd/character-battle-runtime typecheck",
+          "command": "pnpm --filter @dnd/battle-runtime typecheck",
           "status": "pass",
-          "detail": "Character Battle Runtime TypeScript check passed after moving selected-reference qRoute observation onto public handoff routeEvents."
+          "detail": "Battle runtime TypeScript check passed after moving species passive substrate route evidence onto real public Stand from Prone, spell damage, end-turn poisoned save, Escape Grapple, and Movement reducer paths."
         },
         {
           "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
           "status": "pass",
-          "detail": "Pre-MBT process check found no active vitest runner or quint_evaluator; only the Ralph status-monitor command text matched."
+          "detail": "Pre-MBT process check found no active Vitest runner or Quint evaluator; the only match was a Ralph monitor command whose text contained the process names."
         },
         {
-          "command": "START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=2 pnpm --filter @dnd/character-battle-runtime exec vitest run src/origin-feat-selected-identity.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"Origin feat|origin feat\" ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "command": "START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=8 pnpm --filter @dnd/battle-runtime exec vitest run src/species-passive-trait-selected-identity.mbt.test.ts ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
           "status": "pass",
-          "detail": "Focused Origin feat selected-identity semantic replay and copied qRoute route connector replay passed through public handoff routeEvents; 5 tests passed, 6 skipped by filter; TOTAL: 6s."
+          "detail": "Focused species passive selected-identity semantic replay and substrate route connector replay passed; 2 tests passed; TOTAL: 9s."
+        },
+        {
+          "command": "node task-scoped validateTargetReplayEvidence for packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt",
+          "status": "pass",
+          "detail": "Validated tasks/target-replay-evidence/CRPI-BLOCK-026.json with scripts/cleanroom-branch-coverage-check.cjs#validateTargetReplayEvidence and requireAllObligations=false; 4 obligations covered."
         },
         {
           "command": "pnpm cleanroom-branch-coverage:check",
@@ -6786,8 +6886,7 @@
         },
         {
           "command": "git diff --check",
-          "status": "pass",
-          "detail": "Whitespace check passed."
+          "status": "pass"
         },
         {
           "command": "pnpm quality",
@@ -6797,21 +6896,25 @@
         {
           "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
           "status": "pass",
-          "detail": "No remaining reasonable Task 79 findings after moving selected-reference route observation out of the MBT adapter and onto public Character Battle handoff routeEvents, with no duplicate durable state or authored-identity runtime dispatch."
+          "detail": "Round 1 verified public qRoute replay, RAW traceability, no duplicate durable state, no authored-identity production dispatch, and route subject/owner/fill connascence. Round 3 removed the rejected synthetic projection acts and observed qRoute through real public Stand from Prone, Ray of Sickness damage, poisoned end-turn save, Escape Grapple, and Movement reducer paths; no remaining reasonable Task 54 findings."
         }
       ],
       "planImpact": {
         "status": "none",
         "affectedTasks": [
           {
-            "taskId": "CRPI-BLOCK-038",
+            "taskId": "CRPI-BLOCK-026",
             "impact": "unblocked"
+          },
+          {
+            "taskId": "CRPI-BLOCK-013",
+            "impact": "left unchanged"
           }
         ],
         "observations": [
-          "Origin feat selected-reference qRoute is accepted through public Character Battle selected-reference retention and Initiative handoff routeEvents.",
-          "The selected Origin feat remains an existing CharacterBuild unit ref derived from CharacterBuild.background and Surface background facts; no new durable state field was added.",
-          "Authored Alert/Criminal identity remains at SRD catalog, selection, and test/evidence boundaries; production route projection uses selected-reference handoff shape and owner vocabulary."
+          "Species passive trait qRoute is accepted through public discoverBattleActs and resolveBattleSubject route events for creature stat projection, passive damage adjustment, passive Saving Throw roll mode, passive Ability Check roll mode, and public Movement resolution for creature-space movement permission.",
+          "The species passive route connector covers a broader generic substrate sequence than the selected semantic witness branches; Task 54 evidence records the selected-driver obligations against the public substrate route replay.",
+          "No new durable BattleState fields were needed; route evidence is derived from existing size, speed, support-profile, damage adjustment, roll-mode, movement-resource, and movement-fill facts through public reducer route-event surfaces."
         ],
         "requiredPlanEdits": "none"
       }

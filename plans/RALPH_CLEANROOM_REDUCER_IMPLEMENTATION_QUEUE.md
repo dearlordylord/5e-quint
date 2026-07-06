@@ -493,7 +493,7 @@
     {
       "number": 82,
       "id": "CRPI-BLOCK-039",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: character-layer-projection-lifecycle"
     },
     {
@@ -5437,7 +5437,7 @@ Plan Impact:
 
 ### Task 82 - CRPI-BLOCK-039
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

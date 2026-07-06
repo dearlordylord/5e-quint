@@ -1,5 +1,74 @@
 # Validation Report
 
+## CRPI-BLOCK-039
+
+Status: `pass`
+
+- Task: 82
+- Driver path: `packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt`
+- Route connector path: `packages/character-battle-runtime/character-layer-projection-lifecycle.route.mbt.qnt`
+- Route class: `reducer-routed`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-039.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Behavior implemented:
+
+Task 82 accepts Character layer projection lifecycle route replay through the
+existing layered owners. Character creation finalizes a Draft into a
+`CharacterBuild`; Character Sheet creation owns persistent current and maximum
+Hit Points; Character Battle init projects sheet/build facts into a battle
+combatant; Battle Runtime resolves one public Skeleton Shortsword attack through
+`startBattle`, `discoverBattleActs`, and `resolveBattleSubject`; settlement
+writes the accepted battle Hit Point delta back to the Character Sheet. No
+monolithic lifecycle owner or duplicate durable lifecycle state was added.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt#step:doFinalizeDraftToBuild` | `tasks/target-replay-evidence/CRPI-BLOCK-039.json#driver:packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt#step:doFinalizeDraftToBuild#trace:public-route=characterLayerLifecycle action=doFinalizeDraftToBuild qRoute=build-projection-route` | `_none_` | `covered` |
+| `packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt#step:doCreateSheetFromBuild` | `tasks/target-replay-evidence/CRPI-BLOCK-039.json#driver:packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt#step:doCreateSheetFromBuild#trace:public-route=characterLayerLifecycle action=doCreateSheetFromBuild qRoute=sheet-projection-route` | `_none_` | `covered` |
+| `packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt#step:doProjectSheetToBattleInit` | `tasks/target-replay-evidence/CRPI-BLOCK-039.json#driver:packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt#step:doProjectSheetToBattleInit#trace:public-route=characterLayerLifecycle action=doProjectSheetToBattleInit qRoute=battle-init-entry-route` | `_none_` | `covered` |
+| `packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt#step:doResolveSkeletonShortswordAttack` | `tasks/target-replay-evidence/CRPI-BLOCK-039.json#driver:packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt#step:doResolveSkeletonShortswordAttack#trace:public-route=characterLayerLifecycle action=doResolveSkeletonShortswordAttack qRoute=battle-mutation-route` | `_none_` | `covered` |
+| `packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt#step:doSettleBattleToSheet` | `tasks/target-replay-evidence/CRPI-BLOCK-039.json#driver:packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt#step:doSettleBattleToSheet#trace:public-route=characterLayerLifecycle action=doSettleBattleToSheet qRoute=battle-settlement-route` | `_none_` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-039.json`
+- Reproduction trace family: `MBT_TRACES=1 MBT_STEPS=5 action=<branchAction> qRoute=character-layer-projection-lifecycle-route`
+- The copied connector projection source is `packages/character-battle-runtime/character-layer-projection-lifecycle.route.mbt.qnt#qRoute`; the observed projection source is public Character Creation, Character Sheet, Character Battle init/settlement, and Battle Runtime reducer entrypoints exercised by `packages/character-battle-runtime/src/character-layer-projection-lifecycle.mbt.test.ts`, with the copied connector replay exercised by `packages/character-battle-runtime/src/reducer-route-connectors.mbt.test.ts`.
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-039/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Character-Creation.md#Create Your Character` and `Rules-Glossary.md#Character Sheet` identify the Character Sheet as the persistent player-character record.
+- SRD 5.2.1 `Playing-the-Game.md#The Order of Combat`, `#Initiative`, `#Attack Rolls`, `#Hit Points`, and `#Damage Rolls` define the combat entry, attack resolution, and Hit Point mutation facts used by the lifecycle replay.
+- SRD 5.2.1 `Spells/Gaining-and-Casting.md#Spell Slots` was checked for the broader character-battle handoff vocabulary; this specific lifecycle replay does not model new spell-slot behavior.
+- `UBIQUITOUS_LANGUAGE.md` keeps Character Sheet and Stat Block as distinct sources of creature-level combat stats, and keeps Resolve, Apply, Hit Points, and Battle Runtime ownership separate.
+
+Verification results:
+
+- Task-base check passed: base ref `ralph/cleanroom-owner-character-battle-20260706T213644Z/integration` and `HEAD` both resolved to `e286bc466 Accept Task 79 origin feat battle replay`; Base SHA `e286bc4662da16487d6caf1008e58ce8eb035505` is an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against the SRD 5.2.1 and `UBIQUITOUS_LANGUAGE.md` passages listed above.
+- Task-scoped target replay evidence validation passed: direct `scripts/cleanroom-branch-coverage-check.cjs#validateTargetReplayEvidence` call with `requireAllObligations: false` covered 5 obligations in `tasks/target-replay-evidence/CRPI-BLOCK-039.json`.
+- Pre-MBT process check found no active `vitest` runner or `quint_evaluator` before the focused lifecycle replay. An unrelated vitest process was observed earlier and allowed to finish before this task started its MBT run.
+- Focused replay passed: `START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=5 pnpm --filter @dnd/character-battle-runtime exec vitest run src/character-layer-projection-lifecycle.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "Character layer projection|character layer projection" ) 2>&1 & pid=$!; wait "$pid"; status=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"` passed 2 tests with 6 skipped by filter; `TOTAL: 13s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- `pnpm quality` passed end to end; app lint emitted the existing 61 warnings and exited 0.
+- Reviewer-loop convergence passed: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks found no remaining reasonable Task 82 findings after confirming copied `qRoute` evidence through existing layered owners, with no duplicate durable state and no authored-identity runtime dispatch.
+
 ## CRPI-BLOCK-041
 
 Status: `pass`
