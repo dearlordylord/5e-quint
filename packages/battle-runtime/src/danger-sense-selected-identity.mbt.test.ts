@@ -1,5 +1,5 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-replay B4-CLASS-FEATURE-IDENTITY-BATCH-1 barbarian_danger_sense
-// UNIT-IDENTITY-REPLAY: B4-CLASS-FEATURE-IDENTITY-BATCH-1 barbarian_danger_sense doProjectDangerSenseDexterityAdvantage doSuppressDangerSenseWhileIncapacitated
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay CRPI-BLOCK-007 barbarian_danger_sense
+// UNIT-IDENTITY-REPLAY: CRPI-BLOCK-007 barbarian_danger_sense doProjectDangerSenseDexterityAdvantage doSuppressDangerSenseWhileIncapacitated
 import { describe, expect, it } from "vitest";
 
 import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
@@ -13,10 +13,6 @@ import {
   mbtTraceCount,
   quintField,
   quintStateRecord,
-  reducerRouteDiscoverBattleActs,
-  reducerRouteResolveBattleSubject,
-  reducerRouteResolveBattleSubjectWithoutFill,
-  reducerRouteStartBattle,
   run,
   stateCheck,
   type ReducerRouteEvent,
@@ -37,6 +33,7 @@ import {
   startBattle,
   unitLibrary,
 } from "./unit-profile-admission-test-support.ts";
+import { passiveSavingThrowRollModeRouteEvents } from "./index.ts";
 import type { BattleState } from "./unit-profile-admission-test-support.ts";
 
 const BARBARIAN_DANGER_SENSE_UNIT_ID = "barbarian_danger_sense";
@@ -61,7 +58,7 @@ const DANGER_SENSE_SELECTED_IDENTITY_SCENARIO_OUTCOME_BY_TAG = {
 
 defineSelectedIdentityReplayAndQntReplay({
   describeLabel: "Battle Runtime Danger Sense selected identity replay",
-  taskId: "B4-CLASS-FEATURE-IDENTITY-BATCH-1",
+  taskId: "CRPI-BLOCK-007",
   specFile: mbtSpecPath(
     import.meta.dirname,
     "battle-runtime-danger-sense-selected-identity.mbt.qnt",
@@ -229,7 +226,7 @@ function createDangerSenseSubstrateRouteDriver() {
     let route: readonly ReducerRouteEvent[] = [];
 
     function reset(): void {
-      route = [reducerRouteStartBattle("battleSavingThrowRollMode")];
+      route = [{ kind: "startBattle", owner: "battleSavingThrowRollMode" }];
     }
 
     reset();
@@ -237,40 +234,32 @@ function createDangerSenseSubstrateRouteDriver() {
     return {
       init: reset,
       doRouteDangerSenseDexterityAdvantage: () => {
-        route = [
-          ...route,
-          reducerRouteDiscoverBattleActs({
-            subject: "passiveSavingThrowRollMode",
-            holes: [{ kind: "savingThrowOutcome" }],
-            owner: "battleSavingThrowRollMode",
-          }),
-          reducerRouteResolveBattleSubject({
-            subject: "passiveSavingThrowRollMode",
-            fill: "savingThrowOutcome",
-            holes: [],
-            owner: "battleSavingThrowRollMode",
-          }),
-        ];
+        route = requirePassiveSavingThrowRollModeRoute(
+          dangerSenseBattle(),
+          "dex",
+        );
       },
       doRouteDangerSenseIncapacitatedSuppression: () => {
-        route = [
-          ...route,
-          reducerRouteDiscoverBattleActs({
-            subject: "passiveSavingThrowRollMode",
-            holes: [],
-            owner: "battleSavingThrowRollMode",
-          }),
-          reducerRouteResolveBattleSubjectWithoutFill({
-            subject: "passiveSavingThrowRollMode",
-            holes: [],
-            owner: "battleConditionLifecycle",
-          }),
-        ];
+        route = requirePassiveSavingThrowRollModeRoute(
+          incapacitatedDangerSenseBattle(),
+          "dex",
+        );
       },
       step: () => {},
       getState: () => ({ route }),
     };
   });
+}
+
+function requirePassiveSavingThrowRollModeRoute(
+  state: BattleState,
+  ability: "dex",
+): readonly ReducerRouteEvent[] {
+  const route = passiveSavingThrowRollModeRouteEvents({ state, ability });
+  if (route === undefined) {
+    throw new Error("Expected public passive Saving Throw roll-mode route.");
+  }
+  return route;
 }
 
 const dangerSenseSubstrateRouteStateCheck = stateCheck(

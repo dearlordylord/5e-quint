@@ -1,5 +1,72 @@
 # Validation Report
 
+## CRPI-BLOCK-007
+
+Status: `pass`
+
+- Task: 11
+- Driver path: `packages/battle-runtime/battle-runtime-danger-sense-selected-identity.mbt.qnt`
+- Route connector path: `packages/battle-runtime/battle-runtime-danger-sense-substrates.route.mbt.qnt`
+- Route class: `catalog-after-substrate`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-007.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `f07a33f783419b9f8f88eed9d679faadace779ec658d2a990ae56bc963d55387`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Behavior implemented:
+
+Task 11 accepts Danger Sense through the existing passive Saving Throw
+roll-mode substrate. `startBattle` admits the selected Barbarian feature as a
+support-profile fact on `BattleCreatureState.origin.passiveSavingThrowRollModeProfiles`.
+`savingThrowRollModeProjections` projects Dexterity Saving Throw Advantage from
+that profile while the character is not Incapacitated, and suppresses it from
+existing `BattleCreatureState.conditions` when Incapacitated. The public route
+projection `passiveSavingThrowRollModeRouteEvents` exposes the copied
+`passiveSavingThrowRollMode` qRoute through `battleSavingThrowRollMode` and
+`battleConditionLifecycle` owners without storing route-local state.
+
+Generated branch coverage:
+
+| Obligation                                                                                                                                    | Evidence                                                                                                                                                                                                                                                                               | Sampled inputs | Status    |
+| --------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | --------- |
+| `packages/battle-runtime/battle-runtime-danger-sense-selected-identity.mbt.qnt#step:doProjectDangerSenseDexterityAdvantage`                   | `tasks/target-replay-evidence/CRPI-BLOCK-007.json#driver:packages/battle-runtime/battle-runtime-danger-sense-selected-identity.mbt.qnt#step:doProjectDangerSenseDexterityAdvantage#trace:MBT_TRACES=1 MBT_STEPS=2 action=doProjectDangerSenseDexterityAdvantage qRoute=danger-sense-public-passive-saving-throw-roll-mode-route` | `_none_`       | `covered` |
+| `packages/battle-runtime/battle-runtime-danger-sense-selected-identity.mbt.qnt#step:doSuppressDangerSenseWhileIncapacitated`                 | `tasks/target-replay-evidence/CRPI-BLOCK-007.json#driver:packages/battle-runtime/battle-runtime-danger-sense-selected-identity.mbt.qnt#step:doSuppressDangerSenseWhileIncapacitated#trace:MBT_TRACES=1 MBT_STEPS=2 action=doSuppressDangerSenseWhileIncapacitated qRoute=danger-sense-public-passive-saving-throw-roll-mode-route` | `_none_`       | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-007.json`
+- Reproduction trace family: `MBT_TRACES=1 MBT_STEPS=2 action=<branch> qRoute=danger-sense-public-passive-saving-throw-roll-mode-route`
+- The copied connector projection source is `packages/battle-runtime/battle-runtime-danger-sense-substrates.route.mbt.qnt#qRoute`; the observed projection source is public battle runtime route projection in `packages/battle-runtime/src/danger-sense-selected-identity.mbt.test.ts` using `packages/battle-runtime/src/index.ts#startBattle` and `#passiveSavingThrowRollModeRouteEvents`.
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-007/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Classes/Barbarian.md#Level 2: Danger Sense` defines Dexterity Saving Throw Advantage unless the creature has the Incapacitated condition.
+- SRD 5.2.1 `Playing-the-Game.md#D20 Tests` defines saving throws as D20 Tests.
+- SRD 5.2.1 `Playing-the-Game.md#Advantage/Disadvantage` defines Advantage and Disadvantage roll mode behavior.
+- SRD 5.2.1 `Rules-Glossary.md#Incapacitated [Condition]` defines the suppressing condition fact.
+- `UBIQUITOUS_LANGUAGE.md` defines Saving Throw, Advantage/Disadvantage, Condition, and Incapacitated.
+
+Verification results:
+
+- Base check passed: declared base ref `ralph/cleanroom-unblocked-battle-route-sync-20260706T115503Z/integration` and `HEAD` both resolved to `907cd7785 Merge Ralph task 10`; Base SHA `907cd778578f91eaede0d9780fb6df717f0b3c90` is an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against the SRD 5.2.1 and `UBIQUITOUS_LANGUAGE.md` passages listed above.
+- Focused non-MBT runtime test passed: `pnpm --filter @dnd/battle-runtime exec vitest run src/unit-profile-admission-danger-sense.test.ts` passed 6 tests.
+- Focused replay passed after public route projection export fix and formatting rerun: `START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=2 pnpm --filter @dnd/battle-runtime exec vitest run src/danger-sense-selected-identity.mbt.test.ts ) 2>&1 & pid=$!; wait "$pid"; status=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"` passed 2 tests with `TOTAL: 6s`.
+- Task-scoped target replay evidence validation passed: direct `scripts/cleanroom-branch-coverage-check.cjs#validateTargetReplayEvidence` call with `requireAllObligations: false` covered 2 obligations in `tasks/target-replay-evidence/CRPI-BLOCK-007.json`.
+- Unit-profile coverage passed after updating the existing `barbarian_danger_sense` selected-identity evidence row to `CRPI-BLOCK-007` and regenerating the derived unit matrix/report with `node scripts/unit-profile-coverage-check.cjs --write`.
+- Broad `pnpm quality` passed the cleanroom branch coverage gate for 738 obligations and passed the Task 11-relevant unit-profile coverage gate; it then failed in unrelated baseline formatting for untouched `packages/mcp/src/mcp-scenario-evidence.test.ts`. Per task instructions, broad verification stopped there without repo-wide cleanup outside the touched ownership surface.
+- Reviewer-loop convergence passed: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks found no remaining reasonable Task 11 findings after confirming qRoute observation through public battle runtime entrypoints and no duplicate durable state or authored-identity runtime dispatch.
+
 ## CRPI-BLOCK-001
 
 Status: `pass`

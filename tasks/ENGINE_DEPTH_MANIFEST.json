@@ -1,68 +1,65 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-006",
+  "taskId": "CRPI-BLOCK-007",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-danger-sense-selected-identity.mbt.qnt",
       "quarantinedWitnessNames": [
-        "qProtocol",
-        "qState"
+        "qState",
+        "protocol"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-006.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-007.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.route.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-danger-sense-substrates.route.mbt.qnt",
       "quarantinedWitnessNames": [
         "qRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-006.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-007.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/creature-type-protection-and-charm-selected-identity.mbt.test.ts",
+      "path": "packages/battle-runtime/src/danger-sense-selected-identity.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "CreatureTypeProtectionAndCharmSelectedIdentityProjection",
-        "createPublicProtectionCharmRouteDriver"
+        "DangerSenseProjection",
+        "DangerSenseSubstrateRouteProjection",
+        "createDangerSenseSubstrateRouteDriver"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-006.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-007.json"
       ]
     }
   ],
   "productionModulesExtended": [
     {
       "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "notes": "Projects creature-type target admission, protection/charm active-effect, and charm source-damage-break owner routes from existing BattleState subjects, fills, holes, active effects, creature-type facts, and resolution results."
+      "notes": "Adds the passiveSavingThrowRollMode route subject and public route projection from existing BattleState passive Saving Throw support-profile facts and Incapacitated condition state."
     },
     {
-      "path": "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
-      "notes": "Resolves the creature-type-protection condition-attempt and possession-attempt runtime commands through the public battle reducer surface, reusing typed protection predicates without adding durable state."
+      "path": "packages/battle-runtime/src/battle-reducer.ts",
+      "notes": "Re-exports the passive Saving Throw roll-mode route projection with existing battle reducer public route types."
     },
     {
-      "path": "packages/battle-runtime/src/battle-subjects.ts",
-      "notes": "Adds public runtime command subject schemas for creature-type-protection condition-attempt and possession-attempt resolution."
-    },
-    {
-      "path": "packages/battle-runtime/src/battle-protocol-kinds.ts",
-      "notes": "Folds the condition-attempt and possession-attempt runtime commands into the runtimeProtectionPrevention protocol family, separate from protectionRelevantEffectSave."
+      "path": "packages/battle-runtime/src/index.ts",
+      "notes": "Publishes passiveSavingThrowRollModeRouteEvents through the package public entrypoint used by target replay."
     }
   ],
   "expectedNextReuse": [
     {
       "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "notes": "Future protection/charm route tasks should keep deriving qRoute from public routeEvents and typed effect/source facts rather than adding selected spell identity dispatch or a parallel route ledger."
+      "notes": "Future passive Saving Throw roll-mode route tasks should reuse BattleState character support-profile facts and condition state instead of adding selected feature identity dispatch or route-local state."
     },
     {
-      "path": "packages/battle-runtime/src/battle-reducer/spell-condition-effects-helpers.ts",
-      "notes": "Reducer-route possession projection should continue to reuse the typed BattlePossessionAttemptDisposition and creatureTypeProtection active effect scope rather than adding a second route helper."
+      "path": "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
+      "notes": "Runtime Saving Throw roll-mode projection remains the semantic owner for Advantage/Disadvantage computation; route projection mirrors owner evidence without duplicating roll-mode state."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 10 observes the copied protection/charm qRoute through public battle runtime entrypoints. No new durable BattleState fields were added; creature type and selected spell identity remain boundary/support-profile facts feeding typed target admission and active effect scope."
+    "notes": "Task 11 observes the copied Danger Sense substrate qRoute through public battle runtime entrypoints. No new durable BattleState fields were added; selected class feature identity remains a catalog/support-profile admission boundary."
   }
 }

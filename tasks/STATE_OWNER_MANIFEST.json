@@ -1,51 +1,15 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-006",
+  "taskId": "CRPI-BLOCK-007",
   "durableFields": [
     {
-      "fieldPath": "AvailableBattleAct.routeEvents",
-      "owner": "battle-reducer-route-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "derivability": {
-        "tag": "runtime-projection"
-      },
-      "notes": "Public discovery route events project creature-type target admission and creature-type protection active-effect admission from supported spell invocation facts and initial holes."
-    },
-    {
-      "fieldPath": "BattleResolutionResult.routeEvents",
-      "owner": "battle-reducer-route-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "derivability": {
-        "tag": "runtime-projection"
-      },
-      "notes": "Public resolution route events project target selection, saving throw outcome, active-effect, concentration, hit point, condition lifecycle, attack roll, creature-state, and saving throw roll-mode ownership for protection/charm routes."
-    },
-    {
-      "fieldPath": "BattleCreatureState.activeEffects.kind=creatureTypeProtection",
+      "fieldPath": "BattleCreatureState.origin.passiveSavingThrowRollModeProfiles",
       "owner": "battle-state",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing active Spell Effect state owns Protection from Evil and Good scope, protected creature types, prevented conditions, attack roll disadvantage, and relevant-effect save advantage."
-    },
-    {
-      "fieldPath": "BattleCreatureState.activeEffects.kind=spellCondition",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing active Spell Effect state owns Animal Friendship Charmed application and source-damage-break expiration facts."
-    },
-    {
-      "fieldPath": "BattleCreatureState.activeEffects.kind=spellConditionRepeatSave",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing repeated-save active Spell Effect state owns relevant Charmed save roll-mode projection when creature-type protection applies."
+      "notes": "Existing character-origin profile map owns admitted passive Saving Throw roll-mode support facts, including Danger Sense's Dexterity Saving Throw Advantage scope."
     },
     {
       "fieldPath": "BattleCreatureState.conditions",
@@ -54,30 +18,39 @@
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing condition lifecycle state owns Charmed application, Charmed prevention, and charm source-damage-break condition removal."
+      "notes": "Existing condition lifecycle state owns Incapacitated, which suppresses Danger Sense's passive Saving Throw roll-mode projection."
     },
     {
-      "fieldPath": "BattleCreatureState.concentration",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "fieldPath": "BattleReducerRouteEvent.subject=passiveSavingThrowRollMode",
+      "owner": "battle-reducer-route-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
-        "tag": "canonical-source"
+        "tag": "runtime-projection"
       },
-      "notes": "Existing concentration state owns Protection from Evil and Good concentration after a successful cast."
+      "notes": "Route events are derived from existing passive Saving Throw support-profile and condition facts; no route event is stored in BattleState."
     },
     {
-      "fieldPath": "BattleCreatureState.hp",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "fieldPath": "BattleReducerRouteEvent.owner=battleSavingThrowRollMode",
+      "owner": "battle-reducer-route-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
-        "tag": "canonical-source"
+        "tag": "runtime-projection"
       },
-      "notes": "Existing hit point state owns ally damage that breaks Animal Friendship."
+      "notes": "The saving-throw roll-mode route owner projects discovery and successful Dexterity Saving Throw Advantage resolution."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.owner=battleConditionLifecycle",
+      "owner": "battle-reducer-route-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "runtime-projection"
+      },
+      "notes": "The condition-lifecycle route owner projects Incapacitated suppression of the passive Saving Throw roll mode."
     }
   ],
   "notes": [
-    "Task 10 introduced no new durable BattleState or BattleCreatureState fields.",
-    "New route subject families creatureTypeTargetAdmission, protectionCharmActiveEffect, and charmSourceDamageBreak are runtime projections in reducer-route.ts, not stored state.",
-    "Production behavior is admitted by support-profile shape, creature-type facts, active-effect scope, and typed possession disposition; it does not dispatch on spell id, spell name, authored slug, QNT action name, or connector filename."
+    "Task 11 introduced no new durable BattleState or BattleCreatureState fields.",
+    "The new route subject family passiveSavingThrowRollMode is a runtime projection in reducer-route.ts, not stored state.",
+    "Production behavior is admitted by support-profile shape and BattleState-owned condition state; it does not dispatch on class feature name, authored slug, QNT action name, or connector filename."
   ]
 }

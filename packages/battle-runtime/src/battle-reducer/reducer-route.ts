@@ -1,10 +1,13 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 
 import { battleFillKind } from "../battle-protocol-kinds.ts";
+import type { Ability, Condition } from "@dnd/shared/types";
+import { isIncapacitated } from "@dnd/shared-algebras/conditions-algebra";
 import type {
   AttackSpellDamageAddition,
   AvailableBattleAct,
   BattleActiveEffect,
+  BattleCreatureState,
   BattleFill,
   BattleInterruptCheckpoint,
   BattleInterruptProcedureSelection,
@@ -66,6 +69,7 @@ export type BattleReducerRouteSubjectFamily =
   | "metamagicSpellRangeProjection"
   | "metamagicSpellDurationProjection"
   | "metamagicSpellComponentProjection"
+  | "passiveSavingThrowRollMode"
   | "reactionSpell"
   | "rollModifierEffect"
   | "saveGatedSpell"
@@ -217,6 +221,95 @@ export type BattleReducerRouteEvents = readonly [
 
 export function battleReducerStartRouteEvent(): BattleReducerRouteEvent {
   return { kind: "startBattle", owner: "battleActionEconomy" };
+}
+
+export function passiveSavingThrowRollModeRouteEvents(input: {
+  readonly state: BattleState;
+  readonly ability: Ability;
+  readonly condition?: Condition;
+}): BattleReducerRouteEvents | undefined {
+  const disposition = passiveSavingThrowRollModeRouteDisposition(input);
+  if (disposition === null) {
+    return undefined;
+  }
+  const routeStart: BattleReducerRouteEvent = {
+    kind: "startBattle",
+    owner: "battleSavingThrowRollMode",
+  };
+  const holes: readonly BattleReducerRouteHole[] =
+    disposition === "projected" ? ["savingThrowOutcome"] : [];
+  return [
+    routeStart,
+    {
+      kind: "discoverBattleActs",
+      subject: "passiveSavingThrowRollMode",
+      holes,
+      owner: "battleSavingThrowRollMode",
+    },
+    disposition === "projected"
+      ? {
+          kind: "resolveBattleSubject",
+          subject: "passiveSavingThrowRollMode",
+          fill: "savingThrowOutcome",
+          holes: [],
+          owner: "battleSavingThrowRollMode",
+        }
+      : {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "passiveSavingThrowRollMode",
+          holes: [],
+          owner: "battleConditionLifecycle",
+        },
+  ];
+}
+
+type PassiveSavingThrowRollModeRouteDisposition = "projected" | "suppressed";
+
+function passiveSavingThrowRollModeRouteDisposition(input: {
+  readonly state: BattleState;
+  readonly ability: Ability;
+  readonly condition?: Condition;
+}): PassiveSavingThrowRollModeRouteDisposition | null {
+  let suppressed = false;
+  for (const target of input.state.combatants.values()) {
+    const disposition = passiveSavingThrowRollModeDispositionForTarget(
+      target,
+      input.ability,
+      input.condition,
+    );
+    if (disposition === "projected") {
+      return "projected";
+    }
+    suppressed ||= disposition === "suppressed";
+  }
+  return suppressed ? "suppressed" : null;
+}
+
+function passiveSavingThrowRollModeDispositionForTarget(
+  target: BattleCreatureState,
+  ability: Ability,
+  condition: Condition | undefined,
+): PassiveSavingThrowRollModeRouteDisposition | null {
+  if (target.origin.kind !== "character") {
+    return null;
+  }
+  const targetIncapacitated = isIncapacitated(target.conditions);
+  for (const profile of target.origin.passiveSavingThrowRollModeProfiles.values()) {
+    if (profile.savingThrow.scope.kind === "condition") {
+      if (profile.savingThrow.scope.condition === condition) {
+        return "projected";
+      }
+      continue;
+    }
+    if (profile.savingThrow.scope.ability !== ability) {
+      continue;
+    }
+    if (profile.savingThrow.scope.suppressedByCondition !== "incapacitated") {
+      continue;
+    }
+    return targetIncapacitated ? "suppressed" : "projected";
+  }
+  return null;
 }
 
 export function battleReducerRouteEventsForDiscoveredAct(
@@ -2612,13 +2705,17 @@ function protectionCharmRouteForResolution(
   if (isProtectionRelevantEffectSaveSubject(input.subject)) {
     return protectionRelevantEffectSaveRouteForResolution(result);
   }
-  const conditionAttemptRoute =
-    protectionConditionAttemptRouteForResolution(input, result);
+  const conditionAttemptRoute = protectionConditionAttemptRouteForResolution(
+    input,
+    result,
+  );
   if (conditionAttemptRoute !== undefined) {
     return conditionAttemptRoute;
   }
-  const possessionAttemptRoute =
-    protectionPossessionAttemptRouteForResolution(input, result);
+  const possessionAttemptRoute = protectionPossessionAttemptRouteForResolution(
+    input,
+    result,
+  );
   if (possessionAttemptRoute !== undefined) {
     return possessionAttemptRoute;
   }
@@ -2735,9 +2832,7 @@ function creatureTypeProtectionRouteForResolution(
   ];
   if (result.tag === "resolved") {
     if (combatantsActiveEffectsChanged(input.state, result.state)) {
-      route.push(
-        protectionCharmResolveWithoutFill([], "battleActiveEffect"),
-      );
+      route.push(protectionCharmResolveWithoutFill([], "battleActiveEffect"));
     }
     if (
       input.subject.tag === "actionSpell" &&
@@ -2747,9 +2842,7 @@ function creatureTypeProtectionRouteForResolution(
         input.subject.actorId,
       )
     ) {
-      route.push(
-        protectionCharmResolveWithoutFill([], "battleConcentration"),
-      );
+      route.push(protectionCharmResolveWithoutFill([], "battleConcentration"));
     }
   }
   return nonEmptyRouteEvents(route);
@@ -2799,9 +2892,7 @@ function sourceDamageBreakCharmedRouteForResolution(
       );
     }
     if (combatantsActiveEffectsChanged(input.state, result.state)) {
-      route.push(
-        protectionCharmResolveWithoutFill([], "battleActiveEffect"),
-      );
+      route.push(protectionCharmResolveWithoutFill([], "battleActiveEffect"));
     }
   }
   return nonEmptyRouteEvents(route);
@@ -3859,10 +3950,7 @@ function charmSourceDamageBreakRouteForResolution(
 ): readonly BattleReducerRouteEvent[] {
   if (
     result.tag !== "resolved" ||
-    !targetDamagedByCasterOrAllySpellConditionRemoved(
-      input.state,
-      result.state,
-    )
+    !targetDamagedByCasterOrAllySpellConditionRemoved(input.state, result.state)
   ) {
     return [];
   }
