@@ -15,9 +15,9 @@ module characterCreationRuntimeSlice {
   //   selected weapon mastery metadata and Dice Set tool option.
   //
   // This model intentionally covers the Orc Soldier Fighter manifest path
-  // exercised by character-creation-runtime.mbt.qnt. Broader class entries in
-  // TypeScript remain deterministic runtime evidence until class-scoped QNT
-  // paths are added.
+  // exercised by character-creation-runtime.mbt.qnt. Other class and feature
+  // mechanics have their own obligation-shaped QNT coverage; they are not
+  // modeled here as full character-creation draft/fill-batch paths.
   //
   // TODO(CAM follow-up): this parity model currently checks hole/status protocol
   // more deeply than finalized build values. Before widening character creation

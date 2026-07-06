@@ -332,6 +332,8 @@ function normalizeFinalization(raw: unknown): RuntimeMbtState["finalization"] {
 
 function compareState(spec: RuntimeMbtState, impl: RuntimeMbtState): boolean {
   expect(impl).toEqual(spec);
+  // quint-connect expects a boolean comparator; Vitest throws before this return
+  // when the projection differs, preserving the useful assertion diff.
   return true;
 }
 
