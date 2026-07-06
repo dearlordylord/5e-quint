@@ -13,7 +13,7 @@ Status: `pass`
 - Target profile: `typescript-source-worktree`
 - Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
 - Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
-- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Source branch inventory SHA: `f07a33f783419b9f8f88eed9d679faadace779ec658d2a990ae56bc963d55387`
 - Machine-readable run ledger: `tasks/RUN_LEDGER.json`
 
 Allowed inputs used:
@@ -102,7 +102,7 @@ Status: `pass`
 - Target profile: `typescript-source-worktree`
 - Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
 - Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
-- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Source branch inventory SHA: `f07a33f783419b9f8f88eed9d679faadace779ec658d2a990ae56bc963d55387`
 - Machine-readable run ledger: `tasks/RUN_LEDGER.json`
 
 Behavior implemented:
@@ -5806,3 +5806,77 @@ Verification results:
   identity dispatch, and public route-event comparison. Round 2 verified
   connascence locality for route subject/owner/fill mappings and found no
   remaining reasonable Task 4 findings.
+
+## CRPI-BLOCK-004
+
+Status: `pass`
+
+- Task: 6
+- Driver path: `packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt`
+- Route connector path: `packages/battle-runtime/battle-runtime-command-ordering.route.mbt.qnt`
+- Route class: `reducer-routed`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-004.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `f07a33f783419b9f8f88eed9d679faadace779ec658d2a990ae56bc963d55387`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Behavior implemented:
+
+Task 6 accepts the Command option next-turn route through public battle reducer route events. The focused harness compares the copied Command route projection to route events from `battleReducerStartRouteEvent`, `AvailableBattleAct.routeEvents`, `BattleResolutionResult.routeEvents`, and `resolveBattleInterrupt`. Command pending effects, Grovel Prone application, Drop held-object resolution, Halt suppression/cleanup, Approach/Flee movement, Flee partial-movement rejection, and Flee Opportunity Attack continuation stay on existing BattleState owners.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doFailedSaveRecordsPending` | `tasks/target-replay-evidence/CRPI-BLOCK-004.json#driver:packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doFailedSaveRecordsPending#trace:MBT_TRACES=1 MBT_STEPS=15 action=doFailedSaveRecordsPending qRoute=command-option-next-turn-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doFollowGrovel` | `tasks/target-replay-evidence/CRPI-BLOCK-004.json#driver:packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doFollowGrovel#trace:MBT_TRACES=1 MBT_STEPS=15 action=doFollowGrovel qRoute=command-option-next-turn-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doFollowDrop` | `tasks/target-replay-evidence/CRPI-BLOCK-004.json#driver:packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doFollowDrop#trace:MBT_TRACES=1 MBT_STEPS=15 action=doFollowDrop qRoute=command-option-next-turn-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doHaltSuppresses` | `tasks/target-replay-evidence/CRPI-BLOCK-004.json#driver:packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doHaltSuppresses#trace:MBT_TRACES=1 MBT_STEPS=15 action=doHaltSuppresses qRoute=command-option-next-turn-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doHaltEndTurnCleanup` | `tasks/target-replay-evidence/CRPI-BLOCK-004.json#driver:packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doHaltEndTurnCleanup#trace:MBT_TRACES=1 MBT_STEPS=15 action=doHaltEndTurnCleanup qRoute=command-option-next-turn-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doApproachContinues` | `tasks/target-replay-evidence/CRPI-BLOCK-004.json#driver:packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doApproachContinues#trace:MBT_TRACES=1 MBT_STEPS=15 action=doApproachContinues qRoute=command-option-next-turn-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doApproachWithinFiveEndsTurn` | `tasks/target-replay-evidence/CRPI-BLOCK-004.json#driver:packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doApproachWithinFiveEndsTurn#trace:MBT_TRACES=1 MBT_STEPS=15 action=doApproachWithinFiveEndsTurn qRoute=command-option-next-turn-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doApproachMovementRejected` | `tasks/target-replay-evidence/CRPI-BLOCK-004.json#driver:packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doApproachMovementRejected#trace:MBT_TRACES=1 MBT_STEPS=15 action=doApproachMovementRejected qRoute=command-option-next-turn-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doApproachNoMovementCleanup` | `tasks/target-replay-evidence/CRPI-BLOCK-004.json#driver:packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doApproachNoMovementCleanup#trace:MBT_TRACES=1 MBT_STEPS=15 action=doApproachNoMovementCleanup qRoute=command-option-next-turn-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doFleeFullMovementEndsTurn` | `tasks/target-replay-evidence/CRPI-BLOCK-004.json#driver:packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doFleeFullMovementEndsTurn#trace:MBT_TRACES=1 MBT_STEPS=15 action=doFleeFullMovementEndsTurn qRoute=command-option-next-turn-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doFleePartialMovementRejected` | `tasks/target-replay-evidence/CRPI-BLOCK-004.json#driver:packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doFleePartialMovementRejected#trace:MBT_TRACES=1 MBT_STEPS=15 action=doFleePartialMovementRejected qRoute=command-option-next-turn-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doFleeNoMovementCleanup` | `tasks/target-replay-evidence/CRPI-BLOCK-004.json#driver:packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doFleeNoMovementCleanup#trace:MBT_TRACES=1 MBT_STEPS=15 action=doFleeNoMovementCleanup qRoute=command-option-next-turn-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doFleeOpportunityAttackWindow` | `tasks/target-replay-evidence/CRPI-BLOCK-004.json#driver:packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doFleeOpportunityAttackWindow#trace:MBT_TRACES=1 MBT_STEPS=15 action=doFleeOpportunityAttackWindow qRoute=command-option-next-turn-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doFleeOpportunityAttackDeclinedContinuation` | `tasks/target-replay-evidence/CRPI-BLOCK-004.json#driver:packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doFleeOpportunityAttackDeclinedContinuation#trace:MBT_TRACES=1 MBT_STEPS=15 action=doFleeOpportunityAttackDeclinedContinuation qRoute=command-option-next-turn-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doComplete` | `tasks/target-replay-evidence/CRPI-BLOCK-004.json#driver:packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doComplete#trace:MBT_TRACES=1 MBT_STEPS=15 action=doComplete qRoute=command-option-next-turn-public-route` | `_none_` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-004.json`
+- Reproduction trace family: `MBT_TRACES=1 MBT_STEPS=15 action=<branchAction> qRoute=command-option-next-turn-public-route`
+- The copied connector projection source is `packages/battle-runtime/battle-runtime-command-ordering.route.mbt.qnt#qRoute`; the observed projection source is public battle reducer route events collected in `packages/battle-runtime/src/command-option-next-turn.mbt.test.ts`.
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-004/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 6.
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Spells/Descriptions-A-D.md#Command` defines failed-save next-turn Command options.
+- SRD 5.2.1 `Playing-the-Game.md#Movement-and-Position` defines movement spending for Approach and Flee.
+- SRD 5.2.1 `Playing-the-Game.md#Reactions` and `Rules-Glossary.md#Opportunity-Attacks` define Flee Opportunity Attack windows and continuation.
+- `UBIQUITOUS_LANGUAGE.md` defines Spell Invocation, Spell Effect, Movement, Reaction, Condition, and Boundary Crossing terms used by this route.
+
+Verification results:
+
+- Base check passed: declared base ref `ralph/cleanroom-unblocked-battle-route-20260706T072836Z/integration` and `HEAD` both resolved to `abd959e4f Unblock next reducer route tasks`; Base SHA `abd959e4f293914161fa9ca96b9e361f6189b2fa` was an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against the local SRD passages listed above and `UBIQUITOUS_LANGUAGE.md`.
+- `pnpm --filter @dnd/battle-runtime exec tsc --noEmit` passed.
+- Focused Command next-turn MBT passed: `START=$(date +%s); (while true; do sleep 60; echo "PROGRESS: $(( $(date +%s) - START ))s"; done) & REPORTER=$!; pnpm --filter @dnd/battle-runtime exec vitest run src/command-option-next-turn.mbt.test.ts; STATUS=$?; kill "$REPORTER" 2>/dev/null || true; wait "$REPORTER" 2>/dev/null || true; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$STATUS"` passed with 1 test; `TOTAL: 17s`.
+- Route connector replay passed for `packages/battle-runtime/battle-runtime-command-ordering.route.mbt.qnt`: `START=$(date +%s); (while true; do sleep 60; echo "PROGRESS: $(( $(date +%s) - START ))s"; done) & REPORTER=$!; pnpm --filter @dnd/battle-runtime exec vitest run src/reducer-route-connectors.mbt.test.ts -t "routes Command"; STATUS=$?; kill "$REPORTER" 2>/dev/null || true; wait "$REPORTER" 2>/dev/null || true; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$STATUS"` passed with 2 tests, 32 skipped; `TOTAL: 8s`.
+- Final JSON validation, branch coverage, diff check, and broad quality results are recorded in `tasks/RUN_LEDGER.json`.
+- Reviewer-loop convergence passed: round 1 verified RAW traceability, ubiquitous-language/domain language, public route-event comparison, no duplicate durable state, and no authored-identity production dispatch. Round 2 verified route subject/owner/fill connascence and found no remaining reasonable Task 6 findings.

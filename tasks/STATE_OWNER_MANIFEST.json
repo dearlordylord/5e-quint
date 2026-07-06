@@ -1,54 +1,74 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-003",
+  "taskId": "CRPI-BLOCK-004",
   "durableFields": [
     {
-      "fieldPath": "BattleState.currentTurnResources.spellSlotUsesThisTurn",
+      "fieldPath": "BattleCreatureState.activeEffects.kind=commandPending",
       "owner": "battle-state",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": { "tag": "canonical-source" },
-      "notes": "Existing turn-resource field owns the current-turn spell-slot action economy commitment for slotted action spells."
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing active Spell Effect state owns the failed-save pending Command option until the target next-turn consequence resolves or expires."
     },
     {
-      "fieldPath": "CharacterBattleSpellSlotState.expended",
-      "owner": "character-battle-resource-state",
-      "introducedIn": "packages/battle-runtime/src/character-battle-resources.ts",
-      "derivability": { "tag": "canonical-source" },
-      "notes": "Existing character battle spell-slot state owns slotted attack/save spell expenditure."
-    },
-    {
-      "fieldPath": "BattleCreatureState.hp",
+      "fieldPath": "BattleCreatureState.conditions",
       "owner": "battle-state",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": { "tag": "canonical-source" },
-      "notes": "Existing combatant Hit Point field owns spell Attack and save-gated damage."
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing condition lifecycle state owns Grovel Prone application."
     },
     {
-      "fieldPath": "BattleCreatureState.activeEffects",
+      "fieldPath": "BattleCreatureState.movementSpentFeet",
       "owner": "battle-state",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": { "tag": "canonical-source" },
-      "notes": "Existing active Spell Effect state owns Hit Point regain prevention, next Attack Roll Advantage, and Opportunity Attack denial admissions."
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing movement-resource state owns Approach and Flee movement spending."
+    },
+    {
+      "fieldPath": "BattleState.currentTurnResources.commandHalt",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing turn-resource state owns Halt action, Bonus Action, and movement suppression for the target turn."
+    },
+    {
+      "fieldPath": "BattleState.interruptStack",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing interrupt stack owns Flee Opportunity Attack windows and continuation after decline."
     },
     {
       "fieldPath": "AvailableBattleAct.routeEvents",
       "owner": "battle-reducer-route-projection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "derivability": { "tag": "runtime-projection" },
-      "notes": "Public discovery route events project existing subject, hole, target-shape, and action/spell-slot owner facts for qRoute replay."
+      "derivability": {
+        "tag": "runtime-projection"
+      },
+      "notes": "Public discovery route events project Command effect subjects and frontiers from existing act subjects and holes."
     },
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
       "owner": "battle-reducer-route-projection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "derivability": { "tag": "runtime-projection" },
-      "notes": "Public resolution route events project existing fill, hole, Hit Point, Attack Roll, saving throw, and active-effect owner facts for qRoute replay."
+      "derivability": {
+        "tag": "runtime-projection"
+      },
+      "notes": "Public resolution route events project Command effect fill, owner, hole, and interrupt-stack route facts for qRoute replay."
     }
   ],
   "notes": [
-    "Task 4 introduced no top-level BattleState, BattleCreatureState, or character battle resource fields.",
-    "qRoute target replay evidence is derived from public battle reducer routeEvents emitted by packages/battle-runtime/src/battle-reducer/reducer-route.ts and observed in the focused MBT harness.",
-    "The selected spell identities remain fixture/catalog inputs. Production routing uses action spell procedure, fill kind, target-shape facts, spell-slot invocation facts, and typed active-effect deltas.",
-    "Production runtime does not dispatch on QNT branch names, selected spell ids, selected spell names, or route connector names."
+    "Task 6 introduced no new durable BattleState, BattleCreatureState, or character resource fields.",
+    "Command option identity remains a typed fill/procedure fact and commandPending active effect; production routing does not dispatch on spell name, option label as catalog identity, QNT action name, or connector filename.",
+    "Held-object inventory and route geometry remain table/caller boundary fills, not duplicated BattleState."
   ]
 }

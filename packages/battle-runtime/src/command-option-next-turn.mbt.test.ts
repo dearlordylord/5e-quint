@@ -6,16 +6,19 @@ import { describe, expect, it } from "vitest";
 import {
   MBT_TEST_TIMEOUT_MS,
   booleanValue,
+  decodeReducerRoute,
   decodeWitnessProtocolState,
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
   mbtTraceCount,
   numberFromQuintInt,
+  quintField,
   quintVariantMappedValue,
   run,
   stateCheck,
   type MbtWitnessLastResult,
+  type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import {
   commandUnitId,
@@ -43,6 +46,7 @@ import {
   movementFeet,
 } from "./battle-runtime-test-support.ts";
 import {
+  battleReducerStartRouteEvent,
   discoverBattleActs,
   endTurn,
   resolveBattleInterrupt,
@@ -126,6 +130,7 @@ type CommandOptionNextTurnProjection = {
   readonly droppedObjectCount: number;
   readonly reactionWindowOpen: boolean;
   readonly haltSuppressed: boolean;
+  readonly route: readonly ReducerRouteEvent[];
 };
 
 type RuntimeCommandSubject = Extract<
@@ -149,6 +154,7 @@ const initialProjection: CommandOptionNextTurnProjection = {
   droppedObjectCount: 0,
   reactionWindowOpen: false,
   haltSuppressed: false,
+  route: [battleReducerStartRouteEvent()],
 };
 
 const driverSchema = {
@@ -167,6 +173,7 @@ const driverSchema = {
   doFleeNoMovementCleanup: {},
   doFleeOpportunityAttackWindow: {},
   doFleeOpportunityAttackDeclinedContinuation: {},
+  doComplete: {},
   step: {},
 } as const;
 
@@ -212,6 +219,7 @@ function createDriver() {
         replay("flee-opportunity-attack-window"),
       doFleeOpportunityAttackDeclinedContinuation: () =>
         replay("flee-opportunity-attack-declined-continuation"),
+      doComplete: () => {},
       step: replayNext,
       getState: () => projection,
     };
@@ -238,7 +246,7 @@ describe("Command option and next-turn MBT", () => {
         backend: "typescript",
         nTraces: mbtTraceCount(),
         maxSteps: focusedMbtMaxSteps(
-          commandOptionNextTurnReplayScenarios.length,
+          commandOptionNextTurnReplayScenarios.length + 1,
         ),
         stateCheck: commandOptionNextTurnStateCheck,
       });
@@ -248,6 +256,21 @@ describe("Command option and next-turn MBT", () => {
 });
 
 function applyScenario(
+  scenario: CommandOptionNextTurnReplayScenario,
+): CommandOptionNextTurnProjection {
+  const scenarioIndex = commandOptionNextTurnReplayScenarios.indexOf(scenario);
+  if (scenarioIndex < 0) {
+    throw new Error(`Unknown Command option next-turn scenario ${scenario}.`);
+  }
+  return commandOptionNextTurnReplayScenarios
+    .slice(0, scenarioIndex + 1)
+    .reduce<CommandOptionNextTurnProjection>((projection, segmentScenario) => {
+      const segment = applyScenarioSegment(segmentScenario);
+      return { ...segment, route: [...projection.route, ...segment.route] };
+    }, initialProjection);
+}
+
+function applyScenarioSegment(
   scenario: CommandOptionNextTurnReplayScenario,
 ): CommandOptionNextTurnProjection {
   const applicators = {
@@ -280,10 +303,11 @@ function commandCastScenario(
 ): CommandOptionNextTurnProjection {
   const cast = castCommand(option);
   return projectState({
-    state: cast.state,
+    state: cast.result.state,
     scenario,
     targetId: spellTargetId,
-    result: cast,
+    result: cast.result,
+    route: cast.route,
   });
 }
 
@@ -302,6 +326,7 @@ function commandGrovelScenario(): CommandOptionNextTurnProjection {
     scenario: "follow-grovel",
     targetId: spellTargetId,
     result: grovelled,
+    route: routeEventsOf(grovelled, "Command Grovel resolution"),
   });
 }
 
@@ -323,29 +348,36 @@ function commandDropScenario(): CommandOptionNextTurnProjection {
     targetId: spellTargetId,
     result: dropped,
     droppedObjectCount: dropped.droppedObjects?.length ?? 0,
+    route: routeEventsOf(dropped, "Command Drop resolution"),
   });
 }
 
 function commandHaltScenario(): CommandOptionNextTurnProjection {
-  const targetTurn = commandTargetTurn("halt");
+  const targetTurn = commandHaltTargetTurn();
   return projectState({
-    state: targetTurn,
+    state: targetTurn.state,
     scenario: "halt-suppresses",
     targetId: spellTargetId,
-    result: { tag: "resolved" },
+    result: targetTurn.result,
+    route: targetTurn.route,
   });
 }
 
 function commandHaltEndTurnCleanupScenario(): CommandOptionNextTurnProjection {
   const targetTurn = commandTargetTurn("halt");
   const ended = requireResolved(
-    endTurn({ state: targetTurn, actorId: spellTargetId }),
+    resolveBattleSubject({
+      state: targetTurn,
+      subject: endTurnSubjectFor(spellTargetId),
+      fills: [],
+    }),
   );
   return projectState({
     state: ended.state,
     scenario: "halt-end-turn-cleanup",
     targetId: spellTargetId,
     result: ended,
+    route: routeEventsOf(ended, "Command Halt cleanup"),
   });
 }
 
@@ -370,6 +402,10 @@ function commandApproachContinuesScenario(): CommandOptionNextTurnProjection {
     scenario: "approach-continues",
     targetId: spellTargetId,
     result: approached,
+    route: [
+      ...routeEventsOf(command, "Command Approach discovery"),
+      ...routeEventsOf(approached, "Command Approach movement"),
+    ],
   });
 }
 
@@ -394,6 +430,10 @@ function commandApproachWithinFiveScenario(): CommandOptionNextTurnProjection {
     scenario: "approach-within-five-ends-turn",
     targetId: spellTargetId,
     result: approached,
+    route: [
+      ...routeEventsOf(command, "Command Approach discovery"),
+      ...routeEventsOf(approached, "Command Approach movement"),
+    ],
   });
 }
 
@@ -421,6 +461,10 @@ function commandApproachMovementRejectedScenario(): CommandOptionNextTurnProject
     scenario: "approach-movement-rejected",
     targetId: spellTargetId,
     result: rejected,
+    route: [
+      ...routeEventsOf(command, "Command Approach discovery"),
+      ...routeEventsOf(rejected, "Command Approach rejected movement"),
+    ],
   });
 }
 
@@ -439,6 +483,7 @@ function commandApproachNoMovementScenario(): CommandOptionNextTurnProjection {
     scenario: "approach-no-movement-cleanup",
     targetId: spellTargetId,
     result: approached,
+    route: routeEventsOf(approached, "Command Approach no-movement cleanup"),
   });
 }
 
@@ -463,6 +508,10 @@ function commandFleeScenario(): CommandOptionNextTurnProjection {
     scenario: "flee-full-movement-ends-turn",
     targetId: spellTargetId,
     result: fled,
+    route: [
+      ...routeEventsOf(command, "Command Flee discovery"),
+      ...routeEventsOf(fled, "Command Flee movement"),
+    ],
   });
 }
 
@@ -488,6 +537,10 @@ function commandFleePartialRejectedScenario(): CommandOptionNextTurnProjection {
     scenario: "flee-partial-movement-rejected",
     targetId: spellTargetId,
     result: rejected,
+    route: [
+      ...routeEventsOf(command, "Command Flee discovery"),
+      ...routeEventsOf(rejected, "Command Flee rejected movement"),
+    ],
   });
 }
 
@@ -506,6 +559,7 @@ function commandFleeNoMovementScenario(): CommandOptionNextTurnProjection {
     scenario: "flee-no-movement-cleanup",
     targetId: spellTargetId,
     result: fled,
+    route: routeEventsOf(fled, "Command Flee no-movement cleanup"),
   });
 }
 
@@ -516,6 +570,7 @@ function commandFleeOpportunityAttackScenario(): CommandOptionNextTurnProjection
     scenario: "flee-opportunity-attack-window",
     targetId: spellTargetId,
     result: fled,
+    route: fled.route,
   });
 }
 
@@ -536,13 +591,14 @@ function commandFleeOpportunityAttackDeclinedScenario(): CommandOptionNextTurnPr
     scenario: "flee-opportunity-attack-declined-continuation",
     targetId: spellTargetId,
     result: declined,
+    route: routeEventsOf(declined, "Command Flee interrupt decline"),
   });
 }
 
 function commandFleeOpportunityAttackWindow(): Extract<
   BattleResolutionResult,
   { readonly tag: "needsHoles" }
-> {
+> & { readonly route: readonly ReducerRouteEvent[] } {
   const targetTurn = commandTargetTurn("flee");
   const command = requireRuntimeCommand(targetTurn, "commandFlee");
   const movement = requireHole(command.initialHoles, "movement");
@@ -562,7 +618,13 @@ function commandFleeOpportunityAttackWindow(): Extract<
   if (reaction.trigger !== "opportunityAttack" || fled.tag !== "needsHoles") {
     throw new Error("Expected Command Flee to open an opportunity attack.");
   }
-  return fled;
+  return {
+    ...fled,
+    route: [
+      ...routeEventsOf(command, "Command Flee discovery"),
+      ...routeEventsOf(fled, "Command Flee opportunity attack window"),
+    ],
+  };
 }
 
 type CommandOptionFillValue = Extract<
@@ -575,14 +637,38 @@ function commandTargetTurn(
   battleInput: Partial<Parameters<typeof spellBattle>[0]> = {},
 ): BattleState {
   const cast = castCommand(option, battleInput);
-  return requireResolved(endTurn({ state: cast.state, actorId: spellCasterId }))
-    .state;
+  return requireResolved(
+    endTurn({ state: cast.result.state, actorId: spellCasterId }),
+  ).state;
+}
+
+function commandHaltTargetTurn(): {
+  readonly state: BattleState;
+  readonly result: Extract<BattleResolutionResult, { readonly tag: "resolved" }>;
+  readonly route: readonly ReducerRouteEvent[];
+} {
+  const state = commandTargetTurn("halt");
+  const result = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: endTurnSubjectFor(spellTargetId),
+      fills: [],
+    }),
+  );
+  return {
+    state,
+    result,
+    route: routeEventsOf(result, "Command Halt suppression"),
+  };
 }
 
 function castCommand(
   option: CommandOptionFillValue,
   battleInput: Partial<Parameters<typeof spellBattle>[0]> = {},
-): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
+): {
+  readonly result: Extract<BattleResolutionResult, { readonly tag: "resolved" }>;
+  readonly route: readonly ReducerRouteEvent[];
+} {
   const state = spellBattle({
     ...battleInput,
     preparedSpells: [spellRecord(commandUnitId)],
@@ -605,15 +691,13 @@ function castCommand(
     holeId: commandOption.holeId,
     value: option,
   };
-  const savingThrow = requireResultHole(
-    resolveBattleSubject({
-      state,
-      subject: act.subject,
-      fills: [targetSelection, optionSelection],
-    }),
-    "savingThrowOutcome",
-  );
-  return requireResolved(
+  const awaitingSave = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [targetSelection, optionSelection],
+  });
+  const savingThrow = requireResultHole(awaitingSave, "savingThrowOutcome");
+  const resolved = requireResolved(
     resolveBattleSubject({
       state,
       subject: act.subject,
@@ -626,6 +710,14 @@ function castCommand(
       ],
     }),
   );
+  return {
+    result: resolved,
+    route: [
+      ...routeEventsOf(act, "Command spell discovery"),
+      ...routeEventsOf(awaitingSave, "Command option selection"),
+      ...routeEventsOf(resolved, "Command failed save"),
+    ],
+  };
 }
 
 function grappledByCaster(state: BattleState): BattleState {
@@ -658,6 +750,15 @@ function requireRuntimeCommand(
   return act;
 }
 
+function endTurnSubjectFor(
+  actorId: CombatantId,
+): Extract<
+  BattleSubject,
+  { readonly tag: "runtimeCommand"; readonly command: "endTurn" }
+> {
+  return { tag: "runtimeCommand", actorId, command: "endTurn" };
+}
+
 function interruptDecisionFill(
   hole: Extract<BattleHole, { readonly kind: "interruptDecision" }>,
   value: Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"],
@@ -671,6 +772,7 @@ function projectState(input: {
   readonly targetId: CombatantId;
   readonly result: Pick<BattleResolutionResult, "tag">;
   readonly droppedObjectCount?: number;
+  readonly route: readonly ReducerRouteEvent[];
 }): CommandOptionNextTurnProjection {
   const target = requireCombatant(input.state, input.targetId);
   const snapshot = snapshotBattle(input.state);
@@ -693,7 +795,18 @@ function projectState(input: {
     droppedObjectCount: input.droppedObjectCount ?? 0,
     reactionWindowOpen: input.state.interruptStack.length > 0,
     haltSuppressed: input.state.currentTurnResources.commandHalt !== null,
+    route: input.route,
   };
+}
+
+function routeEventsOf(
+  source: { readonly routeEvents?: readonly ReducerRouteEvent[] },
+  label: string,
+): readonly ReducerRouteEvent[] {
+  if (source.routeEvents === undefined) {
+    throw new Error(`Expected public route events for ${label}.`);
+  }
+  return source.routeEvents;
 }
 
 function lastResult(
@@ -781,6 +894,7 @@ function normalizeQuintState(raw: unknown): CommandOptionNextTurnProjection {
       "qReactionWindowOpen",
     ),
     haltSuppressed: booleanValue(state["qHaltSuppressed"], "qHaltSuppressed"),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
   };
 }
 

@@ -37,7 +37,7 @@
     {
       "number": 6,
       "id": "CRPI-BLOCK-004",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Blocked route replay: battle-runtime-command-option-next-turn"
     },
     {
@@ -1073,7 +1073,7 @@ Plan Impact:
 
 ### Task 6 - CRPI-BLOCK-004
 
-Status: `ready-for-research`
+Status: `done`
 
 Blocker Type: none
 
