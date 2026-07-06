@@ -595,7 +595,7 @@
     {
       "number": 99,
       "id": "CRPI-BLOCK-053",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: character-sheet-hit-point-maximum"
     },
     {
@@ -6348,7 +6348,7 @@ Plan Impact:
 
 ### Task 99 - CRPI-BLOCK-053
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
