@@ -2937,7 +2937,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt#step:doResolveSpareTheDyingStable",
-      "qntFileSha256": "3ee6641e2cba8d527a382b3814ba16b2e2bda4e0c0689bf7e4ca5fc787537a53",
+      "qntFileSha256": "4c945525244895cc0abba55b1f85efe51fe54420d41f6e5afeb37e60a1ac3667",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"

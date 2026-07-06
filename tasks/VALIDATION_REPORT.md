@@ -1,5 +1,69 @@
 # Validation Report
 
+## CRPI-BLOCK-014
+
+Status: `pass`
+
+- Task: 20
+- Driver path: `packages/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt`
+- Route connector path: `packages/battle-runtime/battle-runtime-zero-hit-point-stabilization.route.mbt.qnt`
+- Route class: `catalog-after-substrate`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-014.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Behavior implemented:
+
+Task 20 accepts Spare the Dying healing/stabilization selected-identity route
+replay through public battle reducer route events. Selected spell identity
+remains a catalog/support-profile admission input. Runtime route evidence flows
+through the typed `makeStable` procedure, action-economy target-choice
+discovery, and Hit Point/zero-HP lifecycle resolution. Stabilization preserves
+Temporary Hit Points as non-healing state while setting Stable, preserving
+Unconscious, resetting Death Saving Throw counters, and preserving the
+non-dead target state.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt#step:doResolveSpareTheDyingStable` | `tasks/target-replay-evidence/CRPI-BLOCK-014.json#driver:packages/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt#step:doResolveSpareTheDyingStable#trace:MBT_TRACES=1 MBT_STEPS=2 action=doResolveSpareTheDyingStable qRoute=zero-hit-point-stabilization-public-route` | `_none_` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-014.json`
+- Reproduction trace family: `MBT_TRACES=1 MBT_STEPS=2 action=doResolveSpareTheDyingStable qRoute=zero-hit-point-stabilization-public-route`
+- The selected driver projection source is `packages/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt#qRoute`, derived from the copied route connector shape in `packages/battle-runtime/battle-runtime-zero-hit-point-stabilization.route.mbt.qnt#qRoute`; the observed projection source is public battle runtime route events in `packages/battle-runtime/src/healing-stabilization-selected-identity.mbt.test.ts`.
+
+Harness artifacts:
+
+- Immutable history: `tasks/history/CRPI-BLOCK-014/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Spells/Descriptions-S-Z.md#Spare the Dying` defines the authored spell boundary as selecting a 0-Hit-Point non-dead creature that becomes Stable.
+- SRD 5.2.1 `Playing-the-Game.md#Death Saving Throws` and `#Stabilizing a Character` define Stable as a zero-Hit-Point lifecycle state that resets Death Saving Throw counters while leaving the creature Unconscious.
+- SRD 5.2.1 `Playing-the-Game.md#Temporary Hit Points`, `Rules-Glossary.md#Stable`, `Rules-Glossary.md#Unconscious [Condition]`, and `UBIQUITOUS_LANGUAGE.md` keep Temporary Hit Points, true healing, Stable state, Unconscious, and Death Saving Throw state distinct.
+
+Verification results:
+
+- Task-base check passed: base ref `ralph/cleanroom-battle-unblocked-batch-20260706T130150Z/integration` and `HEAD` both resolved to `83b7c1e67 Mark Ralph task 19 done`; Base SHA `83b7c1e677226a6fe1a6c242b6835f543441ff2d` is an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against the SRD 5.2.1 and `UBIQUITOUS_LANGUAGE.md` passages listed above.
+- TypeScript passed: `pnpm --filter @dnd/battle-runtime exec tsc --noEmit --pretty false`.
+- Focused replay passed: `START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=2 pnpm --filter @dnd/battle-runtime exec vitest run src/healing-stabilization-selected-identity.mbt.test.ts ) 2>&1 & pid=$!; wait "$pid"; status=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"` passed 2 tests with `TOTAL: 9s`.
+- Task-scoped target replay evidence validation passed: direct `scripts/cleanroom-branch-coverage-check.cjs#validateTargetReplayEvidence` call with `requireAllObligations: false` covered `packages/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt#step:doResolveSpareTheDyingStable` in `tasks/target-replay-evidence/CRPI-BLOCK-014.json`.
+- Diagnostic target-only `pnpm cleanroom-branch-coverage:check --target-replay-evidence tasks/target-replay-evidence/CRPI-BLOCK-014.json` failed on unrelated broad missing-evidence baseline across the full corpus; the direct task-scoped validator above found no Task 20 evidence issues.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs after the selected QNT source-inventory hash and report row were updated.
+- `pnpm check:mbt-driver-closure` passed after the selected driver imported the reducer-route leaf vocabulary.
+- `pnpm check:reducer-route-connectors` passed after adding the zero-Hit-Point stabilization route subject family to public reducer route emission.
+- `git diff --check` passed after the revision-round evidence-accounting fix.
+- Reviewer-loop convergence passed: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks found no remaining reasonable Task 20 findings after moving qRoute observation onto the selected driver action and recording the evidence artifact in the report/ledger.
+
 ## CRPI-BLOCK-013
 
 Status: `pass`

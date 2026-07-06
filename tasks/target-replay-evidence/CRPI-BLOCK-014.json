@@ -1,0 +1,72 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/healing-stabilization-selected-identity.mbt.test.ts Healing stabilization selected identity selected-driver qRoute versus public reducer replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "acceptance": {
+    "driverPath": "packages/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt",
+    "connectorPath": "packages/battle-runtime/battle-runtime-zero-hit-point-stabilization.route.mbt.qnt",
+    "routeClass": "catalog-after-substrate",
+    "durableOwner": "BattleState owns zero-Hit-Point stabilization through action-economy target-choice discovery and Hit Point/zero-HP lifecycle mutation of Stable, Unconscious, death-save counters, Dead rejection, and non-dead target state. Selected healing or stabilization identity remains catalog/support-profile admission input.",
+    "acceptedProjection": "qRoute"
+  },
+  "status": "pass",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-zero-hit-point-stabilization.route.mbt.qnt",
+      "qntFileSha256": "4c945525244895cc0abba55b1f85efe51fe54420d41f6e5afeb37e60a1ac3667",
+      "routeConnectorSha256": "1a76d9f2f94c0c0c1f3d80413ffc54aae3460c9cd08fdc318d4f2c583e845df0",
+      "branchFamily": "step",
+      "branchAction": "doResolveSpareTheDyingStable",
+      "observedActionTaken": "doResolveSpareTheDyingStable",
+      "harnessTestPath": "packages/battle-runtime/src/healing-stabilization-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=2 action=doResolveSpareTheDyingStable qRoute=zero-hit-point-stabilization-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "8ab8030c08ec00d19c8f0e80e065b2fa3520e969700c811bbd31c07e2631c754",
+        "observedProjectionSha256": "8ab8030c08ec00d19c8f0e80e065b2fa3520e969700c811bbd31c07e2631c754",
+        "expectedProjectionSource": {
+          "tag": "selected-driver-qRoute-derived-from-route-connector",
+          "driverPath": "packages/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt",
+          "connectorPath": "packages/battle-runtime/battle-runtime-zero-hit-point-stabilization.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "Public reducer route events emitted while replaying the selected driver action doResolveSpareTheDyingStable: selected makeStable spell procedure discovery and target-choice resolution for a 0-Hit-Point non-dead target with Temporary Hit Points preserved as non-healing state.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleSubject.actionSpell.invocation.procedure=makeStable",
+          "BattleHole.kind=targetChoice",
+          "BattleFill.kind=targetChoice",
+          "BattleCreatureState.hp=0",
+          "BattleCreatureState.tempHp preserved",
+          "BattleCreatureState.zeroHpLifecycle.stable=true",
+          "BattleCreatureState.conditions includes unconscious",
+          "BattleCreatureState.zeroHpLifecycle.deathSaves reset",
+          "BattleCreatureState.zeroHpLifecycle.dead=false"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}

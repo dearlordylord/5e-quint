@@ -1,8 +1,114 @@
 {
   "schemaVersion": 1,
   "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
-  "sourceBranchInventorySha256": "e8ededa80ac8cdfd875f4725149078879450eefb855b922cd7e1bba86f4edc43",
+  "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
   "entries": [
+    {
+      "taskId": "CRPI-BLOCK-014",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
+      "artifacts": {
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "88372ccba336c45d1c3e368fa1344b18c6db993cf07f4e97cd32cbb4ed262bdb"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-BLOCK-014/README.md",
+          "sha256": "67da1acb76fff3060ef080552bccf5100a6e3b5326f45b3915efba333c71bf52"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-014.json",
+          "sha256": "817aea621c9f20d32fdbc173228f4f606f9750cd82dd884a53de78992d9d7619",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-014.json#driver:packages/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt#step:doResolveSpareTheDyingStable#trace:MBT_TRACES=1 MBT_STEPS=2 action=doResolveSpareTheDyingStable qRoute=zero-hit-point-stabilization-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-battle-unblocked-batch-20260706T130150Z/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor 83b7c1e677226a6fe1a6c242b6835f543441ff2d HEAD",
+          "status": "pass",
+          "detail": "Revision round 3 prompt-declared integration ref and HEAD both resolved to 83b7c1e67 Mark Ralph task 19 done; Base SHA is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language check for Spare the Dying, Death Saving Throws, Stabilizing a Character, Stable, Unconscious, Temporary Hit Points, and Hit Points and Death terminology",
+          "status": "pass",
+          "detail": "Checked .references/srd-5.2.1/Spells/Descriptions-S-Z.md, .references/srd-5.2.1/Playing-the-Game.md, .references/srd-5.2.1/Rules-Glossary.md, and UBIQUITOUS_LANGUAGE.md before route/runtime changes."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec tsc --noEmit --pretty false",
+          "status": "pass",
+          "detail": "Battle runtime TypeScript check passed after moving qRoute replay onto the selected healing/stabilization driver action."
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Pre-MBT process check found no active vitest runner or quint_evaluator process; both grep commands exited 1 with no output."
+        },
+        {
+          "command": "START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=2 pnpm --filter @dnd/battle-runtime exec vitest run src/healing-stabilization-selected-identity.mbt.test.ts ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "status": "pass",
+          "detail": "Focused healing/stabilization selected-identity semantic replay and selected-driver qRoute replay passed; 2 tests passed; TOTAL: 9s."
+        },
+        {
+          "command": "node task-scoped validateTargetReplayEvidence for packages/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt",
+          "status": "pass",
+          "detail": "Validated tasks/target-replay-evidence/CRPI-BLOCK-014.json with scripts/cleanroom-branch-coverage-check.cjs#validateTargetReplayEvidence and requireAllObligations=false; 1 obligation covered."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check --target-replay-evidence tasks/target-replay-evidence/CRPI-BLOCK-014.json",
+          "status": "fail",
+          "detail": "Diagnostic target-only command failed on unrelated broad missing-evidence baseline across the full corpus; the direct task-scoped validator found no Task 20 evidence issues."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "Cleanroom branch coverage passed with 738 obligations and 24 sampled inputs after updating the selected QNT source-inventory hash and report row."
+        },
+        {
+          "command": "pnpm check:mbt-driver-closure",
+          "status": "pass",
+          "detail": "MBT driver closure, witness protocol storage, and scenario outcome storage gates passed after the selected driver imported reducer-route leaf vocabulary."
+        },
+        {
+          "command": "pnpm check:reducer-route-connectors",
+          "status": "pass",
+          "detail": "Reducer-route connector gate passed after exposing zero-Hit-Point stabilization route subject family through public reducer route emission."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass",
+          "detail": "Whitespace check passed after evidence tracking fixes."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Resolved round 3 review findings by making the selected driver action carry the qRoute projection, recording CRPI-BLOCK-014 in the evidence artifact, validation report, and run ledger, and preserving typed procedure-based route evidence without authored-identity runtime dispatch or duplicate durable state."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-014",
+            "impact": "unblocked"
+          }
+        ],
+        "observations": [
+          "Spare the Dying selected-identity qRoute is accepted through public startBattle, discoverBattleActs, and resolveBattleSubject route events emitted for the typed makeStable procedure and targetChoice fill.",
+          "The selected driver action doResolveSpareTheDyingStable now carries qRoute directly, avoiding a mismatch between selected-source branch evidence and connector replay action names.",
+          "Selected spell identity remains a catalog/support-profile admission and SRD fixture boundary; production route events use typed spell procedure, target-choice, Hit Point, Stable, Unconscious, Death Saving Throw, and Temporary Hit Point facts."
+        ],
+        "requiredPlanEdits": "none"
+      }
+    },
     {
       "taskId": "CRPI-BLOCK-013",
       "assignmentId": "reducer-spine-diagnostic-battle",
