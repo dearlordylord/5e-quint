@@ -115,7 +115,7 @@
     {
       "number": 19,
       "id": "CRPI-BLOCK-013",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Blocked route replay: battle-runtime-halfling-nimbleness-selected-identity"
     },
     {
@@ -1845,7 +1845,7 @@ Plan Impact:
 
 ### Task 19 - CRPI-BLOCK-013
 
-Status: `ready-for-research`
+Status: `done`
 
 Blocker Type: none
 
