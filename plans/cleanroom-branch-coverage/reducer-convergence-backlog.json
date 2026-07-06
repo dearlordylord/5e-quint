@@ -75,12 +75,12 @@
         "packages/battle-runtime/battle-runtime-adrenaline-rush.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns Adrenaline Rush battle-time UnitFeatureBonusActionRouteSubject execution: Bonus Action availability, feature-use spend, Dash bonus movement, and Temporary Hit Point replacement. Short/Long Rest restoration remains the character sheet feature-resource owner; Speed and Proficiency Bonus remain source/unit facts supplied to the battle feature.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
       "targetTaskId": "CRPI-BLOCK-001",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-001"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
