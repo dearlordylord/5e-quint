@@ -633,6 +633,30 @@ export type CharacterSheetWeaponMasteryReselection = {
   readonly selectedWeaponUnitIds: ReadonlyNonEmptyArray<UnitRecord["id"]>;
 };
 
+export type CharacterSheetWeaponMasterySelectedReferenceProjectionRoute =
+  readonly [
+    {
+      readonly kind: "retainCharacterSheetSelectedReferences";
+      readonly subject: "selectedReferenceProjection";
+      readonly owner: "selectedReference";
+    },
+    {
+      readonly kind: "projectCharacterSheetFacts";
+      readonly subject: "buildFactsProjection";
+      readonly owner: "buildProjection";
+    },
+  ];
+
+export type CharacterSheetWeaponMasterySelectedReferenceProjection = {
+  readonly featureUnitId: UnitRecord["id"];
+  readonly classUnitId: UnitRecord["id"];
+  readonly selectedWeaponUnitIds: readonly UnitRecord["id"][];
+  readonly choiceCount: number;
+  readonly longRestChangeCount: number;
+  readonly eligibleWeaponUnitIds: readonly UnitRecord["id"][];
+  readonly qRoute: CharacterSheetWeaponMasterySelectedReferenceProjectionRoute;
+};
+
 export type CharacterSheetLongRestStartTiming =
   | { readonly tag: "noPriorLongRest" }
   | {
@@ -684,6 +708,52 @@ export type CharacterSheetLongRestInput = {
   readonly druidCircleLandChoice?: DruidCircleLandChoice;
   readonly statBlockCatalog?: StatBlockCatalog;
 };
+
+export type CharacterSheetWeaponMasteryReselectionAcceptedRoute =
+  readonly [
+    {
+      readonly kind: "retainCharacterSheetSelectedReferences";
+      readonly subject: "selectedReferenceProjection";
+      readonly owner: "selectedReference";
+    },
+    {
+      readonly kind: "completeCharacterSheetRest";
+      readonly subject: "selectedReferenceProjection";
+      readonly fill: "projectionSelection";
+      readonly holes: readonly [];
+      readonly owner: "selectedReference";
+    },
+  ];
+
+export type CharacterSheetWeaponMasteryReselectionRejectedRoute = readonly [
+  {
+    readonly kind: "resolveCharacterSheetSubject";
+    readonly subject: "selectedReferenceProjection";
+    readonly fill: "projectionSelection";
+    readonly holes: readonly ["projectionChoice"];
+    readonly owner: "selectedReference";
+  },
+];
+
+export type CharacterSheetWeaponMasteryReselectionRouteResult =
+  | {
+      readonly tag: "accepted";
+      readonly route: "weaponMastery";
+      readonly sheet: CharacterSheet;
+      readonly qRoute: CharacterSheetWeaponMasteryReselectionAcceptedRoute;
+    }
+  | {
+      readonly tag: "rejected";
+      readonly route: "weaponMastery";
+      readonly issue: CharacterSheetIssue;
+      readonly qRoute: CharacterSheetWeaponMasteryReselectionRejectedRoute;
+    }
+  | {
+      readonly tag: "rejected";
+      readonly route: "none";
+      readonly issue: CharacterSheetIssue;
+      readonly qRoute: readonly [];
+    };
 
 export type CharacterSheetLongRestInterruptionInput = {
   readonly rest: CharacterSheetLongRestStart;

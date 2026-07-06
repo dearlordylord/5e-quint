@@ -619,7 +619,7 @@
     {
       "number": 103,
       "id": "CRPI-BLOCK-055",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: character-sheet-weapon-mastery-containers-selected-identity"
     }
   ]
@@ -635,9 +635,9 @@ This is the executable follow-on Ralph queue produced by `CRP-09-CLOSEOUT-EXPAND
 - Backlog denominator rows: 101.
 - Route classes: reducer-routed 75, catalog-after-substrate 15, replay-refresh-only 1, component-first 10.
 - Generated queue tasks: 103.
-- Runnable tasks: 8.
+- Runnable tasks: 7.
 - Blocked tasks: 46.
-- Queue statuses: done 49, ready-for-research 8, blocked 46.
+- Queue statuses: done 50, ready-for-research 7, blocked 46.
 
 The final queue has more tasks than the provisional nine-task bootstrap because the provisional plan was a bootstrap program, not the implementation denominator. The 101 backlog rows expand to 103 Ralph tasks because the character-creation full vertical row intentionally splits into three fill-batch tasks, while the remaining multi-row batches retain their existing one-row-per-owner task shape. Pending `owner-todo` rows are not hidden prose: each is a blocked owner-decision task with a concrete unblock criterion.
 
@@ -755,7 +755,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRP06-SRO-02` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRP06-SRO-03` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-054` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-055` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-055` | `done` | none | target replay evidence and owner implementation |
 
 ## Task Details
 
@@ -6600,7 +6600,7 @@ Plan Impact:
 
 ### Task 103 - CRPI-BLOCK-055
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

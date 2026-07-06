@@ -1,36 +1,39 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-054",
+  "taskId": "CRPI-BLOCK-055",
   "durableFields": [
     {
       "owner": "CharacterSheetBuildProjectionOwner",
       "fields": [
-        "CharacterBuild.spellcasting.sources[].spellbook",
-        "CharacterBuild.spellcasting.sources[].preparedSpells",
         "CharacterBuild.progression",
-        "UnitRecord.kind=spell",
-        "SpellRecord.mechanics.level",
-        "SpellRecord top-level Ritual tag",
-        "UnitRecord.mechanics.family=spellbook_ritual_access"
+        "CharacterBuild.features[kind=selectedClassChoice].selectedFromUnitId",
+        "CharacterBuild.features[kind=selectedClassChoice].unitId",
+        "UnitRecord.mechanics.family=weapon_mastery_choice",
+        "WeaponMasteryChoiceProfile.choiceCount",
+        "WeaponMasteryChoiceProfile.longRestChangeCount",
+        "WeaponMasteryChoiceProfile.eligibleWeapons"
       ],
-      "notes": "Owns build and Surface facts used to derive spellbook Ritual access. Task 102 threads these existing facts through the public projection entrypoint instead of adding a parallel ritual spell list or selected-access cache."
+      "notes": "Owns build and Surface facts used to derive Weapon Mastery selected-reference projection, eligibility, choice count, and Long Rest change count. Task 103 threads these existing facts through public projection entrypoints instead of adding a parallel selected-weapon or eligibility cache."
     },
     {
       "owner": "CharacterSheetSelectedReferenceOwner",
       "fields": [
-        "CharacterSheetSpellbookRitualInvocationProjection.tag",
-        "CharacterSheetSpellbookRitualInvocationProjection.qRoute",
+        "CharacterSheetWeaponMasterySelectedReferenceProjection.qRoute",
+        "CharacterSheetWeaponMasteryReselectionRouteResult.qRoute",
+        "CharacterSheetWeaponMasteryReselectionRouteResult.route",
         "CharacterSheetRouteEvent kind=retainCharacterSheetSelectedReferences subject=selectedReferenceProjection owner=selectedReference",
-        "CharacterSheetRouteEvent kind=resolveCharacterSheetSubject subject=spellResource fill=projectionSelection owner=selectedReference",
+        "CharacterSheetRouteEvent kind=completeCharacterSheetRest subject=selectedReferenceProjection fill=projectionSelection owner=selectedReference",
+        "CharacterSheetRouteEvent kind=resolveCharacterSheetSubject subject=selectedReferenceProjection fill=projectionSelection owner=selectedReference",
         "CharacterSheetRouteEvent holes=projectionChoice"
       ],
-      "notes": "Owns retained spellbook Ritual selected-reference evidence and the no-slot spell-resource projection route. Accepted invocation data is derived from existing build/catalog facts; rejected branches expose a projection-choice hole without storing rejection state."
+      "notes": "Owns retained selected weapon reference evidence and Long Rest reselection route outcomes. Accepted reselection updates existing CharacterBuild selected-class-choice refs through completeLongRest; Weapon Mastery reselection failures expose a projection-choice hole without storing rejection state; unrelated completeLongRest failures return route=none with empty qRoute."
     }
   ],
   "notes": [
-    "Task 102 introduced no new durable CharacterSheet state fields.",
-    "qRoute target replay evidence is derived from public characterSheetSpellbookRitualInvocationProjection and the copied route connector.",
-    "Wizard Ritual Adept access remains source-shaped: spellbook membership, ritual Spell Definition facts, and class-granted spellbook Ritual Access are read at projection time.",
+    "Task 103 introduced no new durable CharacterSheet state fields.",
+    "qRoute target replay evidence is derived from public characterSheetWeaponMasterySelectedReferenceProjection and completeLongRestWeaponMasteryReselectionWithRoute entrypoints plus the copied route connector.",
+    "completeLongRestWeaponMasteryReselectionWithRoute emits selected-reference rejection qRoute only for failures proven by the Weapon Mastery reselection precheck; unrelated Long Rest failures are unrouted.",
+    "Weapon Mastery property behavior is intentionally outside this selected-reference replay.",
     "Production runtime does not dispatch on QNT branch names, witness labels, connector filenames, or authored names."
   ]
 }

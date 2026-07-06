@@ -1,48 +1,56 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-054",
+  "taskId": "CRPI-BLOCK-055",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.route.mbt.qnt",
+      "path": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.route.mbt.qnt",
       "quarantinedWitnessNames": [
         "qRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-054.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-055.json"
       ]
     },
     {
       "path": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "spellbookRitualRouteActions",
-        "spellbookRitualRoute",
+        "weaponMasteryRouteActions",
+        "projectPublicWeaponMasterySelectedReferenceRoute",
+        "completePublicWeaponMasteryReselectionRoute",
         "normalizeCharacterSheetRouteQuintState",
         "routeStateCheck"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-054.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-055.json"
       ]
     },
     {
-      "path": "packages/character-sheet-runtime/src/spellbook-ritual-selected-identity.mbt.test.ts",
+      "path": "packages/character-sheet-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "createSpellbookRitualSelectedIdentityDriver",
-        "spellbookRitualSelectedIdentityStateCheck"
+        "createWeaponMasteryContainerSelectedIdentityDriver",
+        "weaponMasteryContainerSelectedIdentityStateCheck"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-054.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-055.json"
       ]
     }
   ],
   "productionModulesExtended": [
     {
-      "path": "packages/character-sheet-runtime/src/spell-invocation.ts",
+      "path": "packages/character-sheet-runtime/src/weapon-mastery.ts",
       "owners": [
         "CharacterSheetSelectedReferenceOwner",
         "CharacterSheetBuildProjectionOwner"
       ],
-      "notes": "Task 102 adds the public characterSheetSpellbookRitualInvocationProjection entrypoint. It derives accepted and rejected spellbook Ritual invocation projections from existing CharacterBuild spellbook Spell Access, Surface Spell Definition ritual facts, and the spellbook Ritual Access feature, then returns copied qRoute evidence. No ritual-casting ledger or duplicate spellbook state is added."
+      "notes": "Task 103 adds the public characterSheetWeaponMasterySelectedReferenceProjection entrypoint. It derives selected weapon refs from existing CharacterBuild selected class choices and derives choice count, Long Rest change count, and eligibility from Surface Weapon Mastery profile facts. No durable Weapon Mastery sheet state or mastery-property behavior is added."
+    },
+    {
+      "path": "packages/character-sheet-runtime/src/rests.ts",
+      "owners": [
+        "CharacterSheetSelectedReferenceOwner"
+      ],
+      "notes": "Task 103 adds completeLongRestWeaponMasteryReselectionWithRoute, a public route wrapper around completeLongRest for accepted and rejected Weapon Mastery Long Rest reselection qRoute evidence. Unrelated completeLongRest failures return route=none with empty qRoute."
     },
     {
       "path": "packages/character-sheet-runtime/src/sheet-types.ts",
@@ -50,7 +58,7 @@
         "CharacterSheetSelectedReferenceOwner",
         "CharacterSheetBuildProjectionOwner"
       ],
-      "notes": "Task 102 adds CharacterSheetSpellbookRitualInvocationProjection and CharacterSheetSpellbookRitualInvocationRoute types. The projection records accepted no-slot invocation or rejected projection-choice route evidence without adding durable CharacterSheet fields."
+      "notes": "Task 103 adds typed Weapon Mastery selected-reference projection and Long Rest reselection route result shapes. These types describe derived projections and route evidence only; no CharacterSheet fields are introduced."
     },
     {
       "path": "packages/character-sheet-runtime/src/index.ts",
@@ -58,7 +66,7 @@
         "CharacterSheetSelectedReferenceOwner",
         "CharacterSheetBuildProjectionOwner"
       ],
-      "notes": "Exports the public spellbook Ritual invocation projection entrypoint and route projection types."
+      "notes": "Exports the public Weapon Mastery selected-reference projection, Long Rest reselection route wrapper, and typed route projection/result types."
     },
     {
       "path": "scripts/audit-character-sheet-runtime-split.mjs",
@@ -66,17 +74,21 @@
         "CharacterSheetSelectedReferenceOwner",
         "CharacterSheetBuildProjectionOwner"
       ],
-      "notes": "Records split-audit ownership for the new public spellbook Ritual projection export surface so quality checks keep the owner boundary explicit."
+      "notes": "Records split-audit ownership for the new public Weapon Mastery projection and reselection route export surface so quality checks keep the owner boundary explicit."
     }
   ],
   "expectedNextReuse": [
     {
-      "path": "packages/character-sheet-runtime/src/spell-invocation.ts",
-      "notes": "Future Character Sheet spellbook Ritual route tasks should reuse characterSheetSpellbookRitualInvocationProjection instead of adapter-local qRoute assembly."
+      "path": "packages/character-sheet-runtime/src/weapon-mastery.ts",
+      "notes": "Future Character Sheet Weapon Mastery selected-reference route tasks should reuse characterSheetWeaponMasterySelectedReferenceProjection instead of adapter-local qRoute assembly."
+    },
+    {
+      "path": "packages/character-sheet-runtime/src/rests.ts",
+      "notes": "Future Long Rest Weapon Mastery reselection route evidence should reuse completeLongRestWeaponMasteryReselectionWithRoute so acceptance/rejection remains tied to completeLongRest and unrelated rest failures remain unrouted."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 102 observes copied qRoute for spellbook Ritual selected identity through a public Character Sheet spellbook Ritual invocation projection entrypoint. Spellbook access remains build-derived and ritual invocation remains a no-slot projection, not stored sheet state."
+    "notes": "Task 103 observes copied qRoute for Weapon Mastery selected identity through public Character Sheet selected-reference projection and Long Rest reselection route entrypoints. Selected weapon refs remain build-selected references, while eligibility and counts remain Surface-derived projections."
   }
 }

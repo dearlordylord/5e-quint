@@ -4,6 +4,115 @@
   "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
   "entries": [
     {
+      "taskId": "CRPI-BLOCK-055",
+      "assignmentId": "reducer-spine-diagnostic-character-sheet",
+      "laneId": "sheet",
+      "selectedDrivers": [
+        "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "ad8d5998b94cbb05c2310b2fa59686f1485d856fbbf2061649b0ecafdfa74c50"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "10f2798d7d13471f83ac702501e8ea72e86826d6fe83dd5b932abacc6d6154ae"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "2863e525d174666d26f458ea76dcc5febfbc782aecb8c82b65226f7581c2abb3"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-055.json",
+          "sha256": "bad9e3a63452a11055f05004cc78b9f12753dc23d7a9c7190f7992b1a314441f",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-055.json#driver:packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt#step:doSelectPaladinWeaponMastery#trace:public-route=characterSheetWeaponMasterySelectedReferenceProjection action=doSelectPaladinWeaponMastery qRoute=weapon-mastery-selected-identity-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-055.json#driver:packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt#step:doReselectPaladinWeaponMasteryOnLongRest#trace:public-route=completeLongRestWeaponMasteryReselectionWithRoute action=doReselectPaladinWeaponMasteryOnLongRest qRoute=weapon-mastery-selected-identity-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-055.json#driver:packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt#step:doSelectRangerWeaponMastery#trace:public-route=characterSheetWeaponMasterySelectedReferenceProjection action=doSelectRangerWeaponMastery qRoute=weapon-mastery-selected-identity-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-055.json#driver:packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt#step:doReselectRangerWeaponMasteryOnLongRest#trace:public-route=completeLongRestWeaponMasteryReselectionWithRoute action=doReselectRangerWeaponMasteryOnLongRest qRoute=weapon-mastery-selected-identity-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-055.json#driver:packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt#step:doSelectRogueWeaponMastery#trace:public-route=characterSheetWeaponMasterySelectedReferenceProjection action=doSelectRogueWeaponMastery qRoute=weapon-mastery-selected-identity-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-055.json#driver:packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt#step:doReselectRogueWeaponMasteryOnLongRest#trace:public-route=completeLongRestWeaponMasteryReselectionWithRoute action=doReselectRogueWeaponMasteryOnLongRest qRoute=weapon-mastery-selected-identity-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-055.json#driver:packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt#step:doAcceptOneChangeWeaponMasteryReselection#trace:public-route=completeLongRestWeaponMasteryReselectionWithRoute action=doAcceptOneChangeWeaponMasteryReselection qRoute=weapon-mastery-selected-identity-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-055.json#driver:packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt#step:doRejectTooManyChangesWeaponMasteryReselection#trace:public-route=completeLongRestWeaponMasteryReselectionWithRoute action=doRejectTooManyChangesWeaponMasteryReselection qRoute=weapon-mastery-selected-identity-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "pnpm --filter @dnd/character-sheet-runtime typecheck",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm --filter @dnd/character-sheet-runtime exec vitest run src/rests.test.ts -t \"Weapon Mastery Long Rest route wrapper leaves unrelated Long Rest failures unrouted|rejects Weapon Mastery Long Rest reselection\"",
+          "status": "pass",
+          "detail": "Revision round 2 regression passed; 2 tests passed, 20 skipped."
+        },
+        {
+          "command": "pnpm check:character-sheet-runtime-split",
+          "status": "pass",
+          "detail": "Expected export surface updated for Weapon Mastery selected-reference projection and Long Rest reselection route result types."
+        },
+        {
+          "command": "START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/character-sheet-runtime exec vitest run src/weapon-mastery-containers-selected-identity.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"Weapon Mastery container|routes Weapon Mastery\" ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "status": "fail",
+          "detail": "Initial focused replay exposed a real route mismatch: public selected-reference projection emitted BuildProjectionOwner qRoute evidence while the copied connector selection route retained selected refs only."
+        },
+        {
+          "command": "START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/character-sheet-runtime exec vitest run src/weapon-mastery-containers-selected-identity.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"Weapon Mastery container|routes Weapon Mastery\" ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "status": "pass",
+          "detail": "2 files passed; 6 tests passed, 9 skipped; TOTAL: 15s"
+        },
+        {
+          "command": "START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/character-sheet-runtime exec vitest run src/weapon-mastery-containers-selected-identity.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"Weapon Mastery container|routes Weapon Mastery\" ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "status": "pass",
+          "detail": "Revision round 2 focused replay passed after no-route wrapper narrowing; 2 files passed, 6 tests passed, 9 skipped; TOTAL: 14s"
+        },
+        {
+          "command": "node JSON parse check for CRPI-BLOCK-055 artifacts",
+          "status": "pass",
+          "detail": "Evidence, run ledger, engine depth manifest, and state owner manifest parsed."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs"
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "All quality gates passed; app lint emitted 61 warnings and exited 0."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 moved qRoute observation to public Weapon Mastery projection/rest entrypoints and found the connector owner split mismatch. Round 2 verified selected-reference retention, BuildProjectionOwner eligibility/count projection, Long Rest acceptance/rejection routes, unrelated completeLongRest failures returning route=none with empty qRoute, no duplicate durable state, and no authored-identity runtime dispatch."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-055",
+            "impact": "unblocked"
+          }
+        ],
+        "observations": [
+          "Weapon Mastery selected-reference selection needs both selected-reference retention and build-facts projection qRoute evidence; Long Rest reselection acceptance/rejection is observed through completeLongRestWeaponMasteryReselectionWithRoute while unrelated completeLongRest failures remain unrouted.",
+          "No future task should add durable CharacterSheet Weapon Mastery selection or eligibility state; selected refs remain CharacterBuild selected-class-choice facts and eligibility/count remain Surface-derived projections."
+        ],
+        "requiredPlanEdits": "none"
+      }
+    },
+    {
       "taskId": "CRPI-BLOCK-053",
       "assignmentId": "reducer-spine-diagnostic-character-sheet",
       "laneId": "sheet",
