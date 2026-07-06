@@ -632,11 +632,6 @@ function appendAcceptedCreatureSpaceMovementRoute(
 ): readonly ReducerRouteEvent[] {
   return [
     ...route,
-    reducerRouteDiscoverBattleActs({
-      subject: "creatureSpaceMovementPermission",
-      holes: [{ kind: "movement" }],
-      owner: "battleCreatureSpaceMovement",
-    }),
     reducerRouteResolveBattleSubject({
       subject: "creatureSpaceMovementPermission",
       fill: "movement",
@@ -656,11 +651,6 @@ function appendRejectedCreatureSpaceMovementRoute(
 ): readonly ReducerRouteEvent[] {
   return [
     ...route,
-    reducerRouteDiscoverBattleActs({
-      subject: "creatureSpaceMovementPermission",
-      holes: [{ kind: "movement" }],
-      owner: "battleCreatureSpaceMovement",
-    }),
     reducerRouteResolveBattleSubject({
       subject: "creatureSpaceMovementPermission",
       fill: "movement",

@@ -1,5 +1,88 @@
 # Validation Report
 
+## CRPI-BLOCK-013
+
+Status: `pass`
+
+- Task: 19
+- Driver path: `packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt`
+- Route connector path: `packages/battle-runtime/battle-runtime-species-passive-trait-substrates.route.mbt.qnt`
+- Route class: `catalog-after-substrate`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-013.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `e8ededa80ac8cdfd875f4725149078879450eefb855b922cd7e1bba86f4edc43`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Behavior implemented:
+
+Task 19 accepts Halfling Nimbleness selected-identity route replay through
+public battle reducer route events. Selected species identity remains a
+catalog/admission/fixture input, while public movement-fill resolution exposes
+the creature-space movement permission route subject only when the Movement
+fill carries `creatureSpaceTraversal`. Generic public `move` discovery and
+ordinary movement fills do not emit creature-space permission route evidence.
+Movement fills with `creatureSpaceTraversal` that open an Opportunity Attack
+interrupt window or fail for non-creature-space movement reasons also do not
+emit creature-space permission route evidence.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt#step:doMoveThroughLargerCreatureSpace` | `tasks/target-replay-evidence/CRPI-BLOCK-013.json#driver:packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt#step:doMoveThroughLargerCreatureSpace#trace:MBT_TRACES=1 MBT_STEPS=8 action=doMoveThroughLargerCreatureSpace qRoute=halfling-nimbleness-creature-space-movement-accepted-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt#step:doRejectOccupiedStop` | `tasks/target-replay-evidence/CRPI-BLOCK-013.json#driver:packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt#step:doRejectOccupiedStop#trace:MBT_TRACES=1 MBT_STEPS=8 action=doRejectOccupiedStop qRoute=halfling-nimbleness-creature-space-movement-rejected-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt#step:doRejectMissingProfile` | `tasks/target-replay-evidence/CRPI-BLOCK-013.json#driver:packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt#step:doRejectMissingProfile#trace:MBT_TRACES=1 MBT_STEPS=8 action=doRejectMissingProfile qRoute=halfling-nimbleness-creature-space-movement-rejected-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt#step:doRejectSameSizeTraversal` | `tasks/target-replay-evidence/CRPI-BLOCK-013.json#driver:packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt#step:doRejectSameSizeTraversal#trace:MBT_TRACES=1 MBT_STEPS=8 action=doRejectSameSizeTraversal qRoute=halfling-nimbleness-creature-space-movement-rejected-route` | `_none_` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-013.json`
+- Reproduction trace family: `MBT_TRACES=1 MBT_STEPS=8 action=<branchAction> qRoute=<public-route>`
+- The copied connector projection source is `packages/battle-runtime/battle-runtime-species-passive-trait-substrates.route.mbt.qnt#qRoute`; the observed projection source is public battle runtime movement-fill resolution route events in `packages/battle-runtime/src/halfling-nimbleness-selected-identity.mbt.test.ts` and the focused connector replay in `packages/battle-runtime/src/species-passive-trait-selected-identity.mbt.test.ts`.
+
+Harness artifacts:
+
+- Immutable history: `tasks/history/CRPI-BLOCK-013/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Character-Origins.md#Halfling` defines Halfling Size, Speed, and Halfling Nimbleness: movement through a larger creature's space without stopping there.
+- SRD 5.2.1 `Rules-Glossary.md#Creature`, `#Size`, and `#Speed` define creature identity, creature space/size categories, and Speed as the distance a creature can cover when it moves on its turn.
+- `UBIQUITOUS_LANGUAGE.md` defines Movement, Speed, Size, Creature, and Character Sheet projection boundaries.
+
+Verification results:
+
+- Task-base check passed: revision round 2 review-time base ref `master` resolved to `fe3b327cd Merge Ralph task 18`; `HEAD` resolved to `1bee0094e Task 18 find familiar selected route replay`; Base SHA `1bee0094edb2f792e557d9fe279b98eee836014f` is an ancestor of `HEAD`. The prompt-declared integration ref was also rechecked in round 2 and resolved to `1bee0094e Task 18 find familiar selected route replay`.
+- Revision round 3 task-base check passed: prompt-declared integration ref and `HEAD` both resolved to `1bee0094e Task 18 find familiar selected route replay`; Base SHA `1bee0094edb2f792e557d9fe279b98eee836014f` is an ancestor of `HEAD`.
+- Revision round 4 task-base check passed: prompt-declared integration ref and `HEAD` both resolved to `1bee0094e Task 18 find familiar selected route replay`; Base SHA `1bee0094edb2f792e557d9fe279b98eee836014f` is an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against the SRD 5.2.1 and `UBIQUITOUS_LANGUAGE.md` passages listed above.
+- Focused deterministic public route assertion passed: `pnpm --filter @dnd/battle-runtime exec vitest run src/halfling-nimbleness-selected-identity.mbt.test.ts -t "observes selected Halfling Nimbleness qRoute"` passed 1 test, with 1 skipped by filter.
+- Revision round 3 focused deterministic public route assertion passed with the ordinary-movement negative assertion: `pnpm --filter @dnd/battle-runtime exec vitest run src/halfling-nimbleness-selected-identity.mbt.test.ts -t "observes selected Halfling Nimbleness qRoute"` passed 1 test, with 1 skipped by filter.
+- Revision round 4 focused deterministic public route assertion passed with negative assertions for ordinary Movement, Opportunity Attack interrupt windows, movement-budget failures, and Opportunity Attack threat validation failures: `pnpm --filter @dnd/battle-runtime exec vitest run src/halfling-nimbleness-selected-identity.mbt.test.ts -t "observes selected Halfling Nimbleness qRoute"` passed 1 test, with 1 skipped by filter.
+- Focused replay passed: `START=$(date +%s); ( while true; do sleep 60; echo "PROGRESS: $(( $(date +%s) - START ))s"; done ) & reporter=$!; ( MBT_TRACES=1 MBT_STEPS=8 pnpm --filter @dnd/battle-runtime exec vitest run src/halfling-nimbleness-selected-identity.mbt.test.ts src/species-passive-trait-selected-identity.mbt.test.ts ) 2>&1 & pid=$!; wait "$pid"; status=$?; kill "$reporter" 2>/dev/null || true; wait "$reporter" 2>/dev/null || true; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"` passed 4 tests with `TOTAL: 9s`.
+- Revision round 3 focused replay passed after narrowing creature-space route evidence to Movement fills with `creatureSpaceTraversal`: `START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=8 pnpm --filter @dnd/battle-runtime exec vitest run src/halfling-nimbleness-selected-identity.mbt.test.ts src/species-passive-trait-selected-identity.mbt.test.ts ) 2>&1 & pid=$!; wait "$pid"; status=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"` passed 4 tests with `TOTAL: 9s`.
+- Revision round 4 focused replay passed after narrowing creature-space route evidence to actual permission outcomes: `START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=8 pnpm --filter @dnd/battle-runtime exec vitest run src/halfling-nimbleness-selected-identity.mbt.test.ts src/species-passive-trait-selected-identity.mbt.test.ts ) 2>&1 & pid=$!; wait "$pid"; status=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"` passed 4 tests with `TOTAL: 9s`.
+- TypeScript passed: `pnpm --filter @dnd/battle-runtime exec tsc --noEmit --pretty false`.
+- Revision round 3 TypeScript passed: `pnpm --filter @dnd/battle-runtime exec tsc --noEmit --pretty false`.
+- Revision round 4 TypeScript passed: `pnpm --filter @dnd/battle-runtime exec tsc --noEmit --pretty false`.
+- Task-scoped target replay evidence validation passed: direct `scripts/cleanroom-branch-coverage-check.cjs#validateTargetReplayEvidence` call with `requireAllObligations: false` covered 4 obligations in `tasks/target-replay-evidence/CRPI-BLOCK-013.json`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- Revision round 3 `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs after the route connector and evidence hashes were narrowed to movement fills with `creatureSpaceTraversal`.
+- Revision round 4 `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs after target replay evidence was regenerated for permission-outcome-only route evidence.
+- `git diff --check` passed.
+- Revision round 3 `git diff --check` passed.
+- Revision round 4 `git diff --check` passed.
+- `pnpm quality` passed end to end; app lint reported 61 warnings and exited 0.
+- Revision round 3 `pnpm quality` passed end to end; app lint reported the existing 61 warnings and exited 0.
+- Revision round 4 `pnpm quality` passed end to end; app lint reported the existing 61 warnings and exited 0.
+- Reviewer-loop convergence passed: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks found no remaining reasonable Task 19 findings after confirming `qRoute` observation through public battle runtime entrypoints and no duplicate durable state or authored-identity runtime dispatch.
+- Revision round 3 reviewer-loop check fixed over-broad route evidence: generic public `move` discovery and ordinary Movement fills no longer emit `creatureSpaceMovementPermission`; only Movement fills with `creatureSpaceTraversal` produce the creature-space permission qRoute.
+- Revision round 4 reviewer-loop check fixed remaining over-broad route evidence: `needsHoles` interrupt windows and non-permission `invalidFill` movement failures no longer emit `creatureSpaceMovementPermission`; permission invalid routes are limited to messages produced by the creature-space traversal validator.
+
 ## CRPI-BLOCK-012
 
 Status: `pass`

@@ -7987,6 +7987,43 @@ type AreaMovementCostFactResult =
       readonly extraCostFeet: MovementFeet;
     };
 
+const CREATURE_SPACE_TRAVERSAL_WRONG_KIND_MESSAGE =
+  "Creature-space traversal movement fact has the wrong kind.";
+const CREATURE_SPACE_TRAVERSAL_EMPTY_SPACES_MESSAGE =
+  "Creature-space traversal movement fact requires an occupied creature space.";
+const CREATURE_SPACE_TRAVERSAL_UNKNOWN_MOVER_MESSAGE =
+  "Creature-space traversal requires a known mover.";
+const CREATURE_SPACE_TRAVERSAL_MISSING_PROFILE_MESSAGE =
+  "Creature-space traversal requires a selected occupied-creature-space movement permission profile.";
+const CREATURE_SPACE_TRAVERSAL_SELF_OCCUPANT_MESSAGE =
+  "Creature-space traversal cannot name the mover as the occupied creature.";
+const CREATURE_SPACE_TRAVERSAL_REPEATED_OCCUPANT_MESSAGE =
+  "Creature-space traversal movement fact repeats an occupied creature.";
+const CREATURE_SPACE_TRAVERSAL_UNKNOWN_OCCUPANT_MESSAGE =
+  "Creature-space traversal references an unknown occupied creature.";
+const CREATURE_SPACE_TRAVERSAL_SAME_SIZE_MESSAGE =
+  "Creature-space traversal requires each occupied creature to be larger than the mover.";
+const CREATURE_SPACE_TRAVERSAL_OCCUPIED_STOP_MESSAGE =
+  "Creature-space traversal cannot end in an occupied creature space.";
+
+const CREATURE_SPACE_TRAVERSAL_VALIDATION_MESSAGES = new Set<string>([
+  CREATURE_SPACE_TRAVERSAL_WRONG_KIND_MESSAGE,
+  CREATURE_SPACE_TRAVERSAL_EMPTY_SPACES_MESSAGE,
+  CREATURE_SPACE_TRAVERSAL_UNKNOWN_MOVER_MESSAGE,
+  CREATURE_SPACE_TRAVERSAL_MISSING_PROFILE_MESSAGE,
+  CREATURE_SPACE_TRAVERSAL_SELF_OCCUPANT_MESSAGE,
+  CREATURE_SPACE_TRAVERSAL_REPEATED_OCCUPANT_MESSAGE,
+  CREATURE_SPACE_TRAVERSAL_UNKNOWN_OCCUPANT_MESSAGE,
+  CREATURE_SPACE_TRAVERSAL_SAME_SIZE_MESSAGE,
+  CREATURE_SPACE_TRAVERSAL_OCCUPIED_STOP_MESSAGE,
+]);
+
+export function isCreatureSpaceTraversalMovementFactValidationMessage(
+  message: string,
+): boolean {
+  return CREATURE_SPACE_TRAVERSAL_VALIDATION_MESSAGES.has(message);
+}
+
 function validateCreatureSpaceTraversalMovementFact(
   state: BattleState,
   moverId: CombatantId,
@@ -7996,30 +8033,30 @@ function validateCreatureSpaceTraversalMovementFact(
     return null;
   }
   if (fact.kind !== "occupiedCreatureSpaceTraversal") {
-    return "Creature-space traversal movement fact has the wrong kind.";
+    return CREATURE_SPACE_TRAVERSAL_WRONG_KIND_MESSAGE;
   }
   if (fact.occupiedSpaces.length === 0) {
-    return "Creature-space traversal movement fact requires an occupied creature space.";
+    return CREATURE_SPACE_TRAVERSAL_EMPTY_SPACES_MESSAGE;
   }
   const mover = state.combatants.get(moverId);
   if (mover === undefined) {
-    return "Creature-space traversal requires a known mover.";
+    return CREATURE_SPACE_TRAVERSAL_UNKNOWN_MOVER_MESSAGE;
   }
   if (creatureSpaceMovementPermissionProfileForCombatant(mover) === null) {
-    return "Creature-space traversal requires a selected occupied-creature-space movement permission profile.";
+    return CREATURE_SPACE_TRAVERSAL_MISSING_PROFILE_MESSAGE;
   }
   const seenOccupants = new Set<CombatantId>();
   for (const occupiedSpace of fact.occupiedSpaces) {
     if (occupiedSpace.occupantId === moverId) {
-      return "Creature-space traversal cannot name the mover as the occupied creature.";
+      return CREATURE_SPACE_TRAVERSAL_SELF_OCCUPANT_MESSAGE;
     }
     if (seenOccupants.has(occupiedSpace.occupantId)) {
-      return "Creature-space traversal movement fact repeats an occupied creature.";
+      return CREATURE_SPACE_TRAVERSAL_REPEATED_OCCUPANT_MESSAGE;
     }
     seenOccupants.add(occupiedSpace.occupantId);
     const occupant = state.combatants.get(occupiedSpace.occupantId);
     if (occupant === undefined) {
-      return "Creature-space traversal references an unknown occupied creature.";
+      return CREATURE_SPACE_TRAVERSAL_UNKNOWN_OCCUPANT_MESSAGE;
     }
     if (
       !creatureSizeIsLargerThanSelf(
@@ -8027,7 +8064,7 @@ function validateCreatureSpaceTraversalMovementFact(
         combatantEffectiveSize(occupant),
       )
     ) {
-      return "Creature-space traversal requires each occupied creature to be larger than the mover.";
+      return CREATURE_SPACE_TRAVERSAL_SAME_SIZE_MESSAGE;
     }
   }
   if (
@@ -8037,10 +8074,10 @@ function validateCreatureSpaceTraversalMovementFact(
         occupiedSpace.positionId === fact.destination.positionId,
     )
   ) {
-    return "Creature-space traversal cannot end in an occupied creature space.";
+    return CREATURE_SPACE_TRAVERSAL_OCCUPIED_STOP_MESSAGE;
   }
   if (fact.destination.kind === "occupiedCreatureSpace") {
-    return "Creature-space traversal cannot end in an occupied creature space.";
+    return CREATURE_SPACE_TRAVERSAL_OCCUPIED_STOP_MESSAGE;
   }
   return null;
 }

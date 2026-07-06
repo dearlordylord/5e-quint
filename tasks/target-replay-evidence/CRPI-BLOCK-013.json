@@ -1,0 +1,221 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/halfling-nimbleness-selected-identity.mbt.test.ts and species-passive-trait-selected-identity.mbt.test.ts Halfling Nimbleness selected identity copied qRoute versus public reducer replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "e8ededa80ac8cdfd875f4725149078879450eefb855b922cd7e1bba86f4edc43",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "acceptance": {
+    "driverPath": "packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt",
+    "connectorPath": "packages/battle-runtime/battle-runtime-species-passive-trait-substrates.route.mbt.qnt",
+    "routeClass": "catalog-after-substrate",
+    "durableOwner": "BattleState owns Halfling Nimbleness as passive creature-space movement permission plus creature Size/Speed projection through passive trait support profiles, creature-state, movement-resource, creature-space movement, and roll/damage substrate route surfaces. Selected species identity remains catalog, selection, admission, and SRD fixture input.",
+    "acceptedProjection": "qRoute"
+  },
+  "status": "pass",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-species-passive-trait-substrates.route.mbt.qnt",
+      "qntFileSha256": "7f393d8d83b9dffc68d81844afa8faa6c8b9a98cf6b1f0b2a1998adece99ccdc",
+      "routeConnectorSha256": "8b1e1e09325cd3ec3b003a6d03d9ec297d28e7369a1ba21ea246fe6552f274d1",
+      "branchFamily": "step",
+      "branchAction": "doMoveThroughLargerCreatureSpace",
+      "observedActionTaken": "doMoveThroughLargerCreatureSpace",
+      "harnessTestPath": "packages/battle-runtime/src/halfling-nimbleness-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=8 action=doMoveThroughLargerCreatureSpace qRoute=halfling-nimbleness-creature-space-movement-accepted-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "4288f84ee24f2c5fe2b0a84942cb46358cb48331bd18c6cdc2db794eb552fe4d",
+        "observedProjectionSha256": "4288f84ee24f2c5fe2b0a84942cb46358cb48331bd18c6cdc2db794eb552fe4d",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-species-passive-trait-substrates.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "Public reducer route events emitted by movement-fill resolution when the Movement fill carries selected Halfling Nimbleness creature-space traversal through a larger creature's occupied space. The target harness also checks that ordinary movement, Opportunity Attack interrupt windows, movement-budget failures, and Opportunity Attack threat validation failures do not emit creature-space permission route evidence.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents absence for creature-space movement permission",
+          "BattleResolutionResult.routeEvents",
+          "BattleSubject.tag=runtimeCommand",
+          "BattleSubject.command=move",
+          "BattleHole.kind=movement",
+          "BattleFill.kind=movement",
+          "BattleFill.value.creatureSpaceTraversal",
+          "negative: ordinary Movement fill has no creature-space permission route",
+          "negative: Opportunity Attack interruptDecision has no creature-space permission route",
+          "negative: non-permission movement invalid results have no creature-space permission route",
+          "BattleCreatureState.movementSpentFeet"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-species-passive-trait-substrates.route.mbt.qnt",
+      "qntFileSha256": "7f393d8d83b9dffc68d81844afa8faa6c8b9a98cf6b1f0b2a1998adece99ccdc",
+      "routeConnectorSha256": "8b1e1e09325cd3ec3b003a6d03d9ec297d28e7369a1ba21ea246fe6552f274d1",
+      "branchFamily": "step",
+      "branchAction": "doRejectOccupiedStop",
+      "observedActionTaken": "doRejectOccupiedStop",
+      "harnessTestPath": "packages/battle-runtime/src/halfling-nimbleness-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=8 action=doRejectOccupiedStop qRoute=halfling-nimbleness-creature-space-movement-rejected-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "d87fc5d83f3f377ea46793efe6c5f3eff7d52b30cf9f97b0b13fc154178db6cb",
+        "observedProjectionSha256": "d87fc5d83f3f377ea46793efe6c5f3eff7d52b30cf9f97b0b13fc154178db6cb",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-species-passive-trait-substrates.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "Public reducer route events emitted by rejected movement-fill resolution when the Movement fill carries Halfling Nimbleness traversal that tries to stop in an occupied creature space. The target harness also checks that unrelated movement failures with creature-space traversal do not emit creature-space permission route evidence.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents absence for creature-space movement permission",
+          "BattleResolutionResult.routeEvents",
+          "BattleSubject.tag=runtimeCommand",
+          "BattleSubject.command=move",
+          "BattleHole.kind=movement",
+          "BattleFill.value.creatureSpaceTraversal",
+          "negative: Opportunity Attack interruptDecision has no creature-space permission route",
+          "negative: non-permission movement invalid results have no creature-space permission route",
+          "BattleResolutionResult.tag=invalid",
+          "BattleResolutionResult.message=occupied-stop"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-species-passive-trait-substrates.route.mbt.qnt",
+      "qntFileSha256": "7f393d8d83b9dffc68d81844afa8faa6c8b9a98cf6b1f0b2a1998adece99ccdc",
+      "routeConnectorSha256": "8b1e1e09325cd3ec3b003a6d03d9ec297d28e7369a1ba21ea246fe6552f274d1",
+      "branchFamily": "step",
+      "branchAction": "doRejectMissingProfile",
+      "observedActionTaken": "doRejectMissingProfile",
+      "harnessTestPath": "packages/battle-runtime/src/halfling-nimbleness-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=8 action=doRejectMissingProfile qRoute=halfling-nimbleness-creature-space-movement-rejected-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "d87fc5d83f3f377ea46793efe6c5f3eff7d52b30cf9f97b0b13fc154178db6cb",
+        "observedProjectionSha256": "d87fc5d83f3f377ea46793efe6c5f3eff7d52b30cf9f97b0b13fc154178db6cb",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-species-passive-trait-substrates.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "Public reducer route events emitted by rejected movement-fill resolution when the Movement fill carries creature-space traversal but no selected creature-space movement permission support profile is present. The target harness also checks that unrelated movement failures with creature-space traversal do not emit creature-space permission route evidence.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents absence for creature-space movement permission",
+          "BattleResolutionResult.routeEvents",
+          "BattleSubject.tag=runtimeCommand",
+          "BattleSubject.command=move",
+          "BattleHole.kind=movement",
+          "BattleFill.value.creatureSpaceTraversal",
+          "negative: Opportunity Attack interruptDecision has no creature-space permission route",
+          "negative: non-permission movement invalid results have no creature-space permission route",
+          "BattleResolutionResult.tag=invalid",
+          "BattleResolutionResult.message=missing-profile"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-species-passive-trait-substrates.route.mbt.qnt",
+      "qntFileSha256": "7f393d8d83b9dffc68d81844afa8faa6c8b9a98cf6b1f0b2a1998adece99ccdc",
+      "routeConnectorSha256": "8b1e1e09325cd3ec3b003a6d03d9ec297d28e7369a1ba21ea246fe6552f274d1",
+      "branchFamily": "step",
+      "branchAction": "doRejectSameSizeTraversal",
+      "observedActionTaken": "doRejectSameSizeTraversal",
+      "harnessTestPath": "packages/battle-runtime/src/halfling-nimbleness-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=8 action=doRejectSameSizeTraversal qRoute=halfling-nimbleness-creature-space-movement-rejected-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "d87fc5d83f3f377ea46793efe6c5f3eff7d52b30cf9f97b0b13fc154178db6cb",
+        "observedProjectionSha256": "d87fc5d83f3f377ea46793efe6c5f3eff7d52b30cf9f97b0b13fc154178db6cb",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-species-passive-trait-substrates.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "Public reducer route events emitted by rejected movement-fill resolution when the Movement fill carries creature-space traversal but the occupied creature is not larger than the mover. The target harness also checks that unrelated movement failures with creature-space traversal do not emit creature-space permission route evidence.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents absence for creature-space movement permission",
+          "BattleResolutionResult.routeEvents",
+          "BattleSubject.tag=runtimeCommand",
+          "BattleSubject.command=move",
+          "BattleHole.kind=movement",
+          "BattleFill.value.creatureSpaceTraversal",
+          "negative: Opportunity Attack interruptDecision has no creature-space permission route",
+          "negative: non-permission movement invalid results have no creature-space permission route",
+          "BattleResolutionResult.tag=invalid",
+          "BattleResolutionResult.message=same-size"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}
