@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "CRPI-BLOCK-001",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-adrenaline-rush"
     },
     {
@@ -816,7 +816,7 @@ Plan Impact:
 
 ### Task 2 - CRPI-BLOCK-001
 
-Status: `ready-for-research`
+Status: `done`
 
 Owner Decision Applied:
 
