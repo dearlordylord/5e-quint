@@ -1,8 +1,122 @@
 {
   "schemaVersion": 1,
   "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
-  "sourceBranchInventorySha256": "f07a33f783419b9f8f88eed9d679faadace779ec658d2a990ae56bc963d55387",
+  "sourceBranchInventorySha256": "e8ededa80ac8cdfd875f4725149078879450eefb855b922cd7e1bba86f4edc43",
   "entries": [
+    {
+      "taskId": "CRPI-BLOCK-009",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "e8ededa80ac8cdfd875f4725149078879450eefb855b922cd7e1bba86f4edc43",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "5ec00680bcbc0529388a5b7350252c906169a81c8d4eed86f40e7fc30dcbb0e7"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "f846ee743f822741e2b395e6855501bcb88d46d20f3352ab94b5883fba7f071a"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "af5bbd7b4b4195a56039b5fbb4c8960c13d7515e68e8bcde6d5a895e32f99018"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-009.json",
+          "sha256": "60506476ff24a4ff246dce240783657200e3a7fd5e35d6c02f196b5247765c5c",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-009.json#driver:packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt#step:doAssumeRidingHorse#trace:MBT_TRACES=1 MBT_STEPS=6 action=doAssumeRidingHorse qRoute=druid-wild-shape-active-form-lifecycle-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-009.json#driver:packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt#step:doBeginNextTurn#trace:MBT_TRACES=1 MBT_STEPS=6 action=doBeginNextTurn qRoute=druid-wild-shape-active-form-lifecycle-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-009.json#driver:packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt#step:doReuseAsCat#trace:MBT_TRACES=1 MBT_STEPS=6 action=doReuseAsCat qRoute=druid-wild-shape-active-form-lifecycle-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-009.json#driver:packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt#step:doDismissForm#trace:MBT_TRACES=1 MBT_STEPS=6 action=doDismissForm qRoute=druid-wild-shape-active-form-lifecycle-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-009.json#driver:packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt#step:doIncapacitatedReversion#trace:MBT_TRACES=1 MBT_STEPS=6 action=doIncapacitatedReversion qRoute=druid-wild-shape-active-form-lifecycle-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-009.json#driver:packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt#step:doDeathReversion#trace:MBT_TRACES=1 MBT_STEPS=6 action=doDeathReversion qRoute=druid-wild-shape-active-form-lifecycle-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-009.json#driver:packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt#step:doStutter#trace:MBT_TRACES=1 MBT_STEPS=6 action=doStutter qRoute=druid-wild-shape-active-form-lifecycle-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-battle-unblocked-batch-20260706T130150Z/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor b8b67a2718bd659c71cf08df5e2a0f069b4a0c5f HEAD",
+          "status": "pass",
+          "detail": "Base ref and HEAD both resolved to b8b67a271 Mark Ralph task 13 done; Base SHA is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language check for Druid Wild Shape, Shape-Shifting, Speed, Movement, Temporary Hit Points, Creature, Stat Block, Character Sheet, and Action Lifecycle",
+          "status": "pass",
+          "detail": "Checked .references/srd-5.2.1/Classes/Druid.md, .references/srd-5.2.1/Rules-Glossary.md, and UBIQUITOUS_LANGUAGE.md before route/runtime changes."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec tsc --noEmit --pretty false",
+          "status": "pass",
+          "detail": "Battle runtime TypeScript check passed after active-form lifecycle route vocabulary and public route replay updates; revision round 2 rerun passed after terminal public-action replay fixes; revision round 3 rerun passed after composing terminal active-form events with spell route families; revision round 4 rerun passed after replacing local discovered-act casts with type guards."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec vitest run src/druid-wild-shape-form-lifecycle.mbt.test.ts -t \"reverts from supported ending conditions\"",
+          "status": "pass",
+          "detail": "Focused deterministic runtime replay passed; Incapacitated reversion is driven by public Hypnotic Pattern resolution, death reversion is driven by public Fire Bolt target, attack-roll, and damage-roll resolution, and revision round 3 asserts the terminal spell resolution emits both the underlying save/spell route subject and activeFormLifecycle. The focused QNT witness terminal projections were updated to the same public entrypoint outcomes."
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Revision round 2 pre-MBT process check found no running vitest or quint_evaluator processes; both grep commands exited 1 with no output."
+        },
+        {
+          "command": "START=$(date +%s); ( while true; do sleep 60; echo \"PROGRESS: $(( $(date +%s) - START ))s\"; done ) & reporter=$!; ( MBT_TRACES=1 MBT_STEPS=6 pnpm --filter @dnd/battle-runtime test:mbt:druid-wild-shape-form-lifecycle ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; kill \"$reporter\" 2>/dev/null || true; wait \"$reporter\" 2>/dev/null || true; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "status": "pass",
+          "detail": "Focused Wild Shape form lifecycle semantic, route, and selected-identity QNT parity passed; revision round 3 rerun passed after route-event composition and QNT terminal projection alignment; 6 tests passed; TOTAL: 12s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check --target-replay-evidence tasks/target-replay-evidence/CRPI-BLOCK-009.json",
+          "status": "fail",
+          "detail": "Diagnostic targeted-evidence check failed on unrelated missing-evidence baseline across the full corpus; after fixing the terminal observedProjectionSource reducerPublicApiPath metadata, the reported missing-evidence slice did not include CRPI-BLOCK-009."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass",
+          "detail": "Whitespace check passed."
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "Full repository quality gate passed, including authored-identity dispatch, route connector gates, cleanroom branch coverage, lint, circular checks, and typecheck; revision round 4 rerun passed after test-harness type guard cleanup."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 verified Wild Shape route ownership against SRD Druid Wild Shape, Shape-Shifting, Speed, and ubiquitous-language terms. Round 2 confirmed active-form route events flow from public BattleState discovery/resolution for assumption, reuse, dismissal, turn reset, Incapacitated reversion, and death reversion without duplicate durable state or authored form identity dispatch. Revision round 2 replaced the rejected snapshot-synthesized terminal evidence with public Hypnotic Pattern and Fire Bolt reducer entrypoints. Revision round 3 preserved route-event completeness by composing terminal active-form lifecycle events with saveGatedSpell and spellAttackProcedure route evidence, and aligned the focused QNT terminal projections with those public entrypoint outcomes. Revision round 4 eliminated the reviewed test-harness casts by making the discovered-act subject tag checks executable type guards."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-009",
+            "impact": "unblocked"
+          },
+          {
+            "taskId": "CRPI-BLOCK-010",
+            "impact": "left unchanged"
+          },
+          {
+            "taskId": "CRPI-BLOCK-011",
+            "impact": "left unchanged"
+          }
+        ],
+        "observations": [
+          "Druid Wild Shape active-form lifecycle route replay is supported by BattleState-owned Druid Wild Shape subjects, equipment-disposition fills, feature-resource use, Temporary Hit Points, active effects, creature/stat projection, movement projection, and public turn-boundary action reset.",
+          "Selected Beast form identity remains a known-form roster, catalog/admission, and caller-selection boundary; production route events use active-form lifecycle subject shape and typed equipment-disposition fills rather than authored form identity dispatch.",
+          "The focused Incapacitated/death route branches are now accepted through public spell entrypoints: Hypnotic Pattern applies Incapacitated through a saving-throw fill and preserves saveGatedSpell route evidence, and Fire Bolt drives target, attack-roll, and damage-roll fills into the Hit Point and zero-HP lifecycle while preserving spellAttackProcedure route evidence."
+        ],
+        "requiredPlanEdits": "none"
+      }
+    },
     {
       "taskId": "CRPI-BLOCK-007",
       "assignmentId": "reducer-spine-diagnostic-battle",
@@ -11,7 +125,7 @@
         "packages/battle-runtime/battle-runtime-danger-sense-selected-identity.mbt.qnt"
       ],
       "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
-      "sourceBranchInventorySha256": "f07a33f783419b9f8f88eed9d679faadace779ec658d2a990ae56bc963d55387",
+      "sourceBranchInventorySha256": "e8ededa80ac8cdfd875f4725149078879450eefb855b922cd7e1bba86f4edc43",
       "artifacts": {
         "engineDepth": {
           "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
@@ -3261,9 +3375,7 @@
       "assignmentId": "reducer-spine-diagnostic-battle",
       "laneId": "rules-core",
       "status": "accepted",
-      "selectedDrivers": [
-        "packages/battle-runtime/rule-core-features.mbt.qnt"
-      ],
+      "selectedDrivers": ["packages/battle-runtime/rule-core-features.mbt.qnt"],
       "observedExistingSplitDrivers": [
         "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
         "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
@@ -4099,9 +4211,7 @@
       "taskId": "CRPI-READY-030",
       "assignmentId": "reducer-spine-diagnostic-battle",
       "laneId": "battle",
-      "selectedDrivers": [
-        "packages/battle-runtime/rule-core-movement.mbt.qnt"
-      ],
+      "selectedDrivers": ["packages/battle-runtime/rule-core-movement.mbt.qnt"],
       "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
       "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
       "artifacts": {
@@ -5737,7 +5847,7 @@
         "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt"
       ],
       "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
-      "sourceBranchInventorySha256": "f07a33f783419b9f8f88eed9d679faadace779ec658d2a990ae56bc963d55387",
+      "sourceBranchInventorySha256": "e8ededa80ac8cdfd875f4725149078879450eefb855b922cd7e1bba86f4edc43",
       "artifacts": {
         "engineDepth": {
           "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
@@ -5866,7 +5976,7 @@
         "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt"
       ],
       "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
-      "sourceBranchInventorySha256": "f07a33f783419b9f8f88eed9d679faadace779ec658d2a990ae56bc963d55387",
+      "sourceBranchInventorySha256": "e8ededa80ac8cdfd875f4725149078879450eefb855b922cd7e1bba86f4edc43",
       "artifacts": {
         "engineDepth": {
           "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
@@ -5983,7 +6093,7 @@
         "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt"
       ],
       "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
-      "sourceBranchInventorySha256": "f07a33f783419b9f8f88eed9d679faadace779ec658d2a990ae56bc963d55387",
+      "sourceBranchInventorySha256": "e8ededa80ac8cdfd875f4725149078879450eefb855b922cd7e1bba86f4edc43",
       "artifacts": {
         "engineDepth": {
           "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
