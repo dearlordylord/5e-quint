@@ -53,6 +53,7 @@ export {
 export {
   characterSheetCurrentHp,
   characterSheetHitPointMaximum,
+  characterSheetHitPointMaximumProjection,
   characterSheetHitPoints,
   characterSheetHitPointsCurrentHp,
   characterSheetNormalHitPointMaximum,
@@ -130,6 +131,8 @@ export type {
   CharacterSheetFontOfMagicSpellSlotSource,
   CharacterSheetHitDieSpend,
   CharacterSheetHitDieState,
+  CharacterSheetHitPointMaximumProjection,
+  CharacterSheetHitPointMaximumProjectionRoute,
   CharacterSheetHitPoints,
   CharacterSheetHitPointsInput,
   CharacterSheetHeroicInspiration,

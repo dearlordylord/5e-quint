@@ -56,6 +56,8 @@ const EXPECTED_EXPORTS = [
   "CharacterSheetFontOfMagicSpellSlotSource",
   "CharacterSheetHitDieSpend",
   "CharacterSheetHitDieState",
+  "CharacterSheetHitPointMaximumProjection",
+  "CharacterSheetHitPointMaximumProjectionRoute",
   "CharacterSheetHitPoints",
   "CharacterSheetHitPointsInput",
   "CharacterSheetHeroicInspiration",
@@ -155,6 +157,7 @@ const EXPECTED_EXPORTS = [
   "characterSheetDruidWildShapeKnownForms",
   "characterSheetHitDice",
   "characterSheetHitPointMaximum",
+  "characterSheetHitPointMaximumProjection",
   "characterSheetHitPoints",
   "characterSheetHitPointsCurrentHp",
   "characterSheetNormalHitPointMaximum",
@@ -215,6 +218,21 @@ const EXPECTED_EXPORT_RECONCILIATION_REASONS = [
     name: "characterSheetNormalHitPointMaximum",
     reason:
       "Character Sheet owns HP maximum projections from build facts and mutable maximum-reduction state; exposing the normal maximum keeps callers from storing derived capacity beside the sheet source facts.",
+  },
+  {
+    name: "characterSheetHitPointMaximumProjection",
+    reason:
+      "Character Sheet owns effective Hit Point Maximum projection from build-derived normal maximum and sheet-owned maximum reduction; exposing the projection-with-route entrypoint lets route replay observe qRoute without adapter-local route assembly.",
+  },
+  {
+    name: "CharacterSheetHitPointMaximumProjection",
+    reason:
+      "Character Sheet owns the typed Hit Point Maximum projection result so normal maximum, effective maximum, maximum reduction, and qRoute evidence remain one public projection outcome without adding durable duplicate state.",
+  },
+  {
+    name: "CharacterSheetHitPointMaximumProjectionRoute",
+    reason:
+      "Character Sheet owns the Hit Point projection and build arithmetic-input fact-recording route shape; exporting it keeps the route event tuple typed at the projection boundary.",
   },
   {
     name: "replaceOrdinarySpellSlotExpenditure",

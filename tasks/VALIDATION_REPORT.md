@@ -1,5 +1,100 @@
 # Validation Report
 
+## CRPI-BLOCK-053
+
+Status: `pass`
+
+- Task: 99
+- Driver path: `packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt`
+- Route connector path: `packages/character-sheet-runtime/character-sheet-hit-point-maximum.route.mbt.qnt`
+- Route class: `reducer-routed`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-053.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt`
+- `packages/character-sheet-runtime/character-sheet-hit-point-maximum.route.mbt.qnt`
+- `packages/character-sheet-runtime/src/hit-point-maximum.mbt.test.ts`
+- `packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts`
+- `packages/character-sheet-runtime/src/hit-points.ts`
+- `packages/character-sheet-runtime/src/sheet-types.ts`
+- `packages/character-sheet-runtime/src/index.ts`
+- `scripts/audit-character-sheet-runtime-split.mjs`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-convergence-backlog.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Character-Creation.md`
+- `.references/srd-5.2.1/Playing-the-Game.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `.references/srd-5.2.1/Classes/Sorcerer.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+Hit Point Maximum route replay is accepted through the public Character Sheet
+projection entrypoint. `characterSheetHitPointMaximumProjection` derives normal
+Hit Point Maximum from existing `CharacterBuild` progression, Constitution, and
+typed feature facts; applies the existing `CharacterSheet.hitPointMaximumReduction`
+field for effective maximum; and returns the copied Hit Point projection plus
+build arithmetic-input `qRoute` events. No parallel normal-maximum,
+effective-maximum, or maximum-reduction ledger was introduced.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt#step:doProjectFighterLevelOne` | `tasks/target-replay-evidence/CRPI-BLOCK-053.json#driver:packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt#step:doProjectFighterLevelOne#trace:public-route=characterSheetHitPointMaximumProjection action=doProjectFighterLevelOne qRoute=hit-point-maximum-public-route` | `_none_` | `covered` |
+| `packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt#step:doProjectFighterLevelTwo` | `tasks/target-replay-evidence/CRPI-BLOCK-053.json#driver:packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt#step:doProjectFighterLevelTwo#trace:public-route=characterSheetHitPointMaximumProjection action=doProjectFighterLevelTwo qRoute=hit-point-maximum-public-route` | `_none_` | `covered` |
+| `packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt#step:doProjectWizardFighterMulticlass` | `tasks/target-replay-evidence/CRPI-BLOCK-053.json#driver:packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt#step:doProjectWizardFighterMulticlass#trace:public-route=characterSheetHitPointMaximumProjection action=doProjectWizardFighterMulticlass qRoute=hit-point-maximum-public-route` | `_none_` | `covered` |
+| `packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt#step:doProjectMinimumHigherLevelGain` | `tasks/target-replay-evidence/CRPI-BLOCK-053.json#driver:packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt#step:doProjectMinimumHigherLevelGain#trace:public-route=characterSheetHitPointMaximumProjection action=doProjectMinimumHigherLevelGain qRoute=hit-point-maximum-public-route` | `_none_` | `covered` |
+| `packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt#step:doProjectSorcererDraconicResilience` | `tasks/target-replay-evidence/CRPI-BLOCK-053.json#driver:packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt#step:doProjectSorcererDraconicResilience#trace:public-route=characterSheetHitPointMaximumProjection action=doProjectSorcererDraconicResilience qRoute=hit-point-maximum-public-route` | `_none_` | `covered` |
+| `packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt#step:doProjectReducedEffectiveMaximum` | `tasks/target-replay-evidence/CRPI-BLOCK-053.json#driver:packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt#step:doProjectReducedEffectiveMaximum#trace:public-route=characterSheetHitPointMaximumProjection action=doProjectReducedEffectiveMaximum qRoute=hit-point-maximum-public-route` | `_none_` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-053.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id pattern: `public-route=characterSheetHitPointMaximumProjection action=<branchAction> qRoute=hit-point-maximum-public-route`
+- The copied connector projection source is `packages/character-sheet-runtime/character-sheet-hit-point-maximum.route.mbt.qnt#qRoute`; the observed projection source is the public Character Sheet projection entrypoint `packages/character-sheet-runtime/src/hit-points.ts#characterSheetHitPointMaximumProjection`.
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-053/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 99.
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Character-Creation.md#Fill In Numbers` defines class and Constitution determining level 1 Hit Point maximum and recording Hit Points and Hit Point Dice on the Character Sheet.
+- SRD 5.2.1 `Character-Creation.md#Gaining a Level` defines adding a Hit Die, Constitution modifier, and minimum 1 higher-level gain; it also defines Constitution modifier changes updating Hit Point maximum for each level.
+- SRD 5.2.1 `Character-Creation.md#Hit Points and Hit Point Dice` defines multiclass Hit Points using after-level-1 class rules for later classes.
+- SRD 5.2.1 `Playing-the-Game.md#Damage and Healing` defines current Hit Points bounded by Hit Point maximum and death when Hit Point maximum reaches 0 after maximum-reducing effects.
+- SRD 5.2.1 `Rules-Glossary.md#Long Rest` defines reduced Hit Point maximum returning to normal on Long Rest, matching maximum reduction as sheet Hit Point state rather than normal maximum arithmetic.
+- SRD 5.2.1 `Classes/Sorcerer.md#Level 3: Draconic Resilience` defines the Draconic Sorcery Hit Point maximum increase.
+- `UBIQUITOUS_LANGUAGE.md` defines Hit Points, Hit Point Maximum, Temporary Hit Points, and Hit Die vocabulary used by this owner.
+
+Verification results:
+
+- Base check passed: declared base ref `ralph/cleanroom-character-sheet-route-lane-20260705T2045Z/integration` resolved to `2898b5e18 Merge Ralph task 98`; `HEAD` resolved to `6af572627 Mark Ralph task 98 done`; Base SHA `6af5726278a0d9813b8ac9483425382b774fb31b` is an ancestor of `HEAD`, so the task worktree remains based on the declared Base SHA even though the integration ref has advanced.
+- RAW/ubiquitous-language review passed against SRD 5.2.1 Character Creation, Damage and Healing, Long Rest, Draconic Resilience, and `UBIQUITOUS_LANGUAGE.md`.
+- Focused typecheck passed: `pnpm --filter @dnd/character-sheet-runtime typecheck`.
+- Focused replay passed: `START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=6 pnpm --filter @dnd/character-sheet-runtime exec vitest run src/hit-point-maximum.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "Hit Point maximum|routes Hit Point Maximum" ) 2>&1 & pid=$!; wait "$pid"; status=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"` passed with 2 tests and 9 skipped in `TOTAL: 5s`.
+- Final broad verification and JSON validation are recorded in `tasks/RUN_LEDGER.json`.
+- Reviewer-loop convergence passed: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks found no remaining reasonable Task 99 findings after moving observed Hit Point Maximum `qRoute` events into the public `characterSheetHitPointMaximumProjection` entrypoint and recording split-audit export ownership.
+
 ## CRPI-BLOCK-052
 
 Status: `pass`
