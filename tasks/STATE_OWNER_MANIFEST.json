@@ -1,56 +1,47 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-005",
+  "taskId": "CRPI-BLOCK-038",
   "durableFields": [
     {
-      "fieldPath": "BattleCreatureState.conditions",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "fieldPath": "CharacterBuild.background",
+      "owner": "character-build",
+      "introducedIn": "packages/character-creation-runtime/src/types.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing condition lifecycle state owns Blinded, Restrained, Incapacitated, Prone, and Unconscious outcomes for save-gated and repeat-save condition spells."
+      "notes": "Existing CharacterBuild background identity is the source for deriving the background-granted Origin feat through Surface background creation facts."
     },
     {
-      "fieldPath": "BattleCreatureState.activeEffects",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing active effects own spell condition duration, Sleep pending repeat-save and Unconscious effects, and repeat-save cleanup state."
-    },
-    {
-      "fieldPath": "BattleCreatureState.concentration",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing Concentration state owns concentrating caster cleanup when a repeat-save condition spell ends."
-    },
-    {
-      "fieldPath": "BattleReducerRouteEvent.subject=repeatSaveConditionEffect",
-      "owner": "battle-reducer-route-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "fieldPath": "characterBuildUnitRefs(build, unitLibrary)",
+      "owner": "character-build-projection",
+      "introducedIn": "packages/character-creation-runtime/src/finalization.ts",
       "derivability": {
         "tag": "runtime-projection"
       },
-      "notes": "Route events are derived from owner-local End Turn repeat-save hole ids and condition/active-effect/Concentration state deltas; no route event or pending-hole cache is stored in BattleState."
+      "notes": "Existing build projection derives background Origin feat unit refs from CharacterBuild.background plus Surface background facts; Task 79 does not copy the selected feat into a new Character Battle state field."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=saveGatedSpell",
-      "owner": "battle-reducer-route-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "fieldPath": "CharacterBattleRouteEvent.subject=handoffSelectedReference",
+      "owner": "character-battle-route-projection",
+      "introducedIn": "packages/character-battle-runtime/src/index.ts",
       "derivability": {
         "tag": "runtime-projection"
       },
-      "notes": "Existing save-gated spell route projection owns action-economy discovery and Saving Throw outcome fill order for Color Spray and Entangle selected-identity branches."
+      "notes": "Route events are emitted by the public character-battle init handoff route after deriving selected-reference facts from CharacterBuild.background, Surface background facts, and existing CharacterBuild unit refs. They are not stored in CharacterBuild, CharacterSheet, BattleState, or BattleCreatureState."
+    },
+    {
+      "fieldPath": "CharacterBattleRouteEvent.owner=characterBattleBuildProjection|characterBattleInitProjection|characterBattleRuntime",
+      "owner": "character-battle-route-projection",
+      "introducedIn": "packages/character-battle-runtime/src/index.ts",
+      "derivability": {
+        "tag": "runtime-projection"
+      },
+      "notes": "The owner sequence records selected-reference retention, Initiative handoff projection, and runtime entry without dispatching on authored Origin feat identity."
     }
   ],
   "notes": [
-    "Task 9 introduced no new durable BattleState or BattleCreatureState fields.",
-    "The new repeatSaveConditionEffect route projection is derived from existing owner hole-id projections and state deltas, not selected spell id, authored name, QNT action name, connector filename, or a duplicate route-local state cache.",
-    "Condition-choice catalog identity remains a support-profile admission/input boundary and is not stored as production reducer dispatch state."
+    "Task 79 introduced no new durable CharacterBuild, CharacterSheet, BattleState, or BattleCreatureState fields.",
+    "Origin feat authored identity remains at Surface catalog, character selection, and test/evidence boundaries.",
+    "Production Character Battle public handoff route uses CharacterBuild.background, Surface background facts, existing CharacterBuild unit refs, and Initiative support profiles rather than a duplicate selected-feat cache."
   ]
 }

@@ -1,75 +1,64 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-005",
+  "taskId": "CRPI-BLOCK-038",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
+      "path": "packages/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt",
       "quarantinedWitnessNames": [
-        "qState",
-        "protocol"
+        "qState"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-005.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-038.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
+      "path": "packages/character-battle-runtime/character-battle-origin-feat-selected-identity.route.mbt.qnt",
       "quarantinedWitnessNames": [
         "qRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-005.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-038.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt",
+      "path": "packages/character-battle-runtime/src/origin-feat-selected-identity.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "qRoute"
+        "OriginFeatSelectedIdentityProjection",
+        "observes selected Origin feat qRoute through public handoff entrypoints"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-005.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-038.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/battle-runtime-condition-riders.route.mbt.qnt",
+      "path": "packages/character-battle-runtime/src/reducer-route-connectors.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "qRoute",
-        "qFacts"
+        "routes Origin feat selected-reference handoff without authored dispatch"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-005.json"
-      ]
-    },
-    {
-      "path": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
-      "quarantinedWitnessNames": [
-        "ConditionSavingThrowSelectedIdentityProjection",
-        "observes selected condition-saving-throw qRoute through public reducer events"
-      ],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-005.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-038.json"
       ]
     }
   ],
   "productionModulesExtended": [
     {
-      "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "notes": "Adds generic repeatSaveConditionEffect public route projection for end-of-turn spell condition repeat-save discovery and cleanup from existing BattleState condition, active-effect, and Concentration deltas; route ownership is localized to matching repeat-save hole ids so mixed end-turn frontiers still compose with death save and turn-boundary route owners."
+      "path": "packages/character-battle-runtime/src/index.ts",
+      "notes": "Extends the public characterSheetBattleInitWithRoute/startBattleFromCharacterSheetAndStatBlock handoff route so accepted battle init routeEvents include selected-reference retention and runtime-entry events when the finalized CharacterBuild retains the background Origin feat in existing unit refs."
     },
     {
-      "path": "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
-      "notes": "Exports owner-local end-turn repeat-save Saving Throw hole-id projections used by reducer-route.ts to identify Sleep and condition-spell repeat-save fills without duplicating pending-hole state."
+      "path": "packages/character-battle-runtime/src/origin-feat-selected-reference-projection.ts",
+      "notes": "Adds the source-fact projection used by the public handoff route to verify retained background Origin feat unit refs from CharacterBuild and UnitCatalog. It does not construct qRoute events or branch on authored Unit identity."
     }
   ],
   "expectedNextReuse": [
     {
-      "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "notes": "Future repeat-save condition spell selected-identity routes should reuse repeatSaveConditionEffect route events derived from public End Turn resolution and owner hole-id projections instead of selected spell identity dispatch."
+      "path": "packages/character-battle-runtime/src/index.ts",
+      "notes": "Future character-battle selected-reference handoff replays should observe public character battle routeEvents from characterSheetBattleInitWithRoute/startBattleFromCharacterSheetAndStatBlock instead of calling helper-level projections from adapters."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 9 observes copied qRoute substrates for in-scope condition-saving-throw selected-identity branches through public battle reducer route events. No new durable BattleState fields were added."
+      "notes": "Task 79 observes copied qRoute for Origin feat selected-reference retention and Initiative runtime entry through public Character Battle handoff routeEvents. No new durable CharacterBuild, CharacterSheet, BattleState, or BattleCreatureState fields were added."
   }
 }

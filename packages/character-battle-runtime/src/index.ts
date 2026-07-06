@@ -75,6 +75,7 @@ import {
   type CharacterBuildCreatureInput,
 } from "./battle-creature-init.ts";
 import { type BattleCreatureInitIssue } from "./battle-character-build-projection.ts";
+import { characterBattleOriginFeatSelectedReferenceProjection } from "./origin-feat-selected-reference-projection.ts";
 import {
   characterSheetBattleHandoffIssue,
   type CharacterSheetBattleHandoffIssue,
@@ -163,6 +164,9 @@ export {
   type CharacterBattleSettlementRouteAction,
   type CharacterSessionSheetDerivedBattleActsRouteAction,
 } from "./character-battle-route.ts";
+export {
+  type CharacterBattleOriginFeatSelectedReferenceProjection,
+} from "./origin-feat-selected-reference-projection.ts";
 
 export type CharacterSheetBattleInitInput = Omit<
   CharacterBuildCreatureInput,
@@ -282,7 +286,10 @@ export function characterSheetBattleInitWithRoute(
       })
     : Either.right({
         init: init.right,
-        routeEvents: acceptedCharacterSheetBattleInitRoute(sheet),
+        routeEvents: acceptedCharacterSheetBattleInitRoute({
+          sheet,
+          unitLibrary,
+        }),
       });
 }
 
@@ -390,10 +397,11 @@ function characterBattleEncounterCompositionRouteEvents(input: {
   return characterBattleEncounterCompositionRoute();
 }
 
-function acceptedCharacterSheetBattleInitRoute(
-  sheet: CharacterSheet,
-): readonly CharacterBattleRouteEvent[] {
-  return hasPurePactSlotState(sheet)
+function acceptedCharacterSheetBattleInitRoute(input: {
+  readonly sheet: CharacterSheet;
+  readonly unitLibrary: UnitCatalog;
+}): readonly CharacterBattleRouteEvent[] {
+  const baseRoute = hasPurePactSlotState(input.sheet)
     ? [
         projectCharacterSheetToBattleRoute({
           subject: "handoffResourceProjection",
@@ -428,6 +436,41 @@ function acceptedCharacterSheetBattleInitRoute(
           owner: "characterBattleInitProjection",
         }),
       ];
+  return [
+    ...baseRoute,
+    ...selectedReferenceBattleInitRouteEvents(input),
+  ];
+}
+
+function selectedReferenceBattleInitRouteEvents(input: {
+  readonly sheet: CharacterSheet;
+  readonly unitLibrary: UnitCatalog;
+}): readonly CharacterBattleRouteEvent[] {
+  const selectedReference = characterBattleOriginFeatSelectedReferenceProjection({
+    build: input.sheet.build,
+    unitLibrary: input.unitLibrary,
+  });
+  if (Either.isLeft(selectedReference)) return [];
+
+  return [
+    projectCharacterSheetToBattleRoute({
+      subject: "handoffSelectedReference",
+      owner: "characterBattleBuildProjection",
+    }),
+    recordCharacterBattleHandoffFactsRoute({
+      subject: "handoffSelectedReference",
+      facts: ["selectedReferenceRetention"],
+      owner: "characterBattleBuildProjection",
+    }),
+    projectCharacterSheetToBattleRoute({
+      subject: "handoffSelectedReference",
+      owner: "characterBattleInitProjection",
+    }),
+    enterBattleRuntimeRoute({
+      subject: "handoffSelectedReference",
+      owner: "characterBattleRuntime",
+    }),
+  ];
 }
 
 function rejectMixedSpellAndPactSlotBattleInitRoute(): readonly CharacterBattleRouteEvent[] {
