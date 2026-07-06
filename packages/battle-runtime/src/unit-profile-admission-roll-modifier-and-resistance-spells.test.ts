@@ -22,6 +22,7 @@ import {
   guidanceUnitId,
   passWithoutTraceUnitId,
   poisonSprayUnitId,
+  protectionFromEnergyUnitId,
   protectionFromPoisonUnitId,
   rayOfFrostUnitId,
   resistanceUnitId,
@@ -43,6 +44,7 @@ import {
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   abilityChoiceFill,
+  damageTypeChoiceFill,
   requireSpellDamageReductionHole,
   savingThrowOutcomeFill,
   skillChoiceFill,
@@ -83,11 +85,10 @@ import {
   passivePerceptionModifierDelta,
   requiredAbilityCheckRollMode,
 } from "./battle-reducer/hole-helpers.ts";
-import { BattleHoleSchema, type BattleFill, type BattleHole } from "./index.ts";
+import { BattleHoleSchema } from "./index.ts";
 import { Either, Schema } from "effect";
 import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.ts";
 
-const protectionFromEnergyUnitId = "protection_from_energy";
 const protectionFromEnergyDurationTicks = elapsedTimeTicks(600);
 
 function authoredProtectionFromEnergySpell(): SpellRecord {
@@ -150,13 +151,6 @@ function withProtectionFromEnergyResistance(
       ],
     }),
   };
-}
-
-function damageTypeChoiceFill(
-  hole: Extract<BattleHole, { readonly kind: "damageTypeChoice" }>,
-  value: Extract<BattleFill, { readonly kind: "damageTypeChoice" }>["value"],
-): Extract<BattleFill, { readonly kind: "damageTypeChoice" }> {
-  return { kind: "damageTypeChoice", holeId: hole.holeId, value };
 }
 
 describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {

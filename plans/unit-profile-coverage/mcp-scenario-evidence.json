@@ -8,45 +8,81 @@
   "requiredFlows": [
     {
       "flowId": "mcp-workflow-discovery",
-      "scopeIds": ["level-1", "level-1-2", "level-1-3", "level-1-4"],
+      "scopeIds": [
+        "level-1",
+        "level-1-2",
+        "level-1-3",
+        "level-1-4",
+        "level-1-5",
+        "level-1-6"
+      ],
       "followUpTaskIdsByScope": {
         "level-1": "C3-MCP-LEVEL12-SCENARIO-GATE",
         "level-1-2": "C3-MCP-LEVEL12-SCENARIO-GATE",
         "level-1-3": "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED",
-        "level-1-4": "L14G-04-MCP-LEVEL14-SCENARIO-GATE"
+        "level-1-4": "L14G-04-MCP-LEVEL14-SCENARIO-GATE",
+        "level-1-5": "L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE",
+        "level-1-6": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE"
       },
       "description": "The MCP server exposes discoverable tool contracts, workflow guidance, catalogs, and structured result paths before a caller commits to a character or battle workflow."
     },
     {
       "flowId": "character-creation",
-      "scopeIds": ["level-1", "level-1-2", "level-1-3", "level-1-4"],
+      "scopeIds": [
+        "level-1",
+        "level-1-2",
+        "level-1-3",
+        "level-1-4",
+        "level-1-5",
+        "level-1-6"
+      ],
       "followUpTaskIdsByScope": {
         "level-1": "C9-CHARACTER-CREATION-MCP-EVIDENCE",
         "level-1-2": "C9-CHARACTER-CREATION-MCP-EVIDENCE",
         "level-1-3": "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED",
-        "level-1-4": "L14G-04-MCP-LEVEL14-SCENARIO-GATE"
+        "level-1-4": "L14G-04-MCP-LEVEL14-SCENARIO-GATE",
+        "level-1-5": "L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE",
+        "level-1-6": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE"
       },
       "description": "The MCP surface admits an SRD character creation workflow through create, discover, fill, and finalize tools without relying on support-profile status as scenario evidence."
     },
     {
       "flowId": "character-sheet",
-      "scopeIds": ["level-1", "level-1-2", "level-1-3", "level-1-4"],
+      "scopeIds": [
+        "level-1",
+        "level-1-2",
+        "level-1-3",
+        "level-1-4",
+        "level-1-5",
+        "level-1-6"
+      ],
       "followUpTaskIdsByScope": {
         "level-1": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
         "level-1-2": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
         "level-1-3": "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED",
-        "level-1-4": "L14G-04-MCP-LEVEL14-SCENARIO-GATE"
+        "level-1-4": "L14G-04-MCP-LEVEL14-SCENARIO-GATE",
+        "level-1-5": "L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE",
+        "level-1-6": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE"
       },
       "description": "The MCP surface exposes durable character sheet state and battle handoff results through list and session snapshot tools."
     },
     {
       "flowId": "battle",
-      "scopeIds": ["level-1", "level-1-2", "level-1-3", "level-1-4"],
+      "scopeIds": [
+        "level-1",
+        "level-1-2",
+        "level-1-3",
+        "level-1-4",
+        "level-1-5",
+        "level-1-6"
+      ],
       "followUpTaskIdsByScope": {
         "level-1": "C11-BATTLE-MCP-EVIDENCE",
         "level-1-2": "C11-BATTLE-MCP-EVIDENCE",
         "level-1-3": "L13UG-A05-MCP-LEVEL13-SCENARIO-IF-NEEDED",
-        "level-1-4": "L14G-04-MCP-LEVEL14-SCENARIO-GATE"
+        "level-1-4": "L14G-04-MCP-LEVEL14-SCENARIO-GATE",
+        "level-1-5": "L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE",
+        "level-1-6": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE"
       },
       "description": "The MCP surface admits an SRD battle flow through start, read, discover acts, fill battle holes, resolve acts, end turns, and end battle tools."
     }
@@ -74,6 +110,16 @@
     },
     {
       "kind": "mcp-scenario",
+      "flowId": "mcp-workflow-discovery",
+      "scopeIds": ["level-1-5"],
+      "scenarioId": "create-level-five-wizard-fireball-and-battle-handoff",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE",
+      "summary": "The protocol acceptance scenario reads the MCP workflow guide and catalog units before selecting the returned level-5 Wizard progression, spellbook, prepared-spell, equipment, loadout, and battle result paths."
+    },
+    {
+      "kind": "mcp-scenario",
       "flowId": "character-creation",
       "scopeIds": ["level-1-3"],
       "scenarioId": "create-level-three-wizard-and-cast-scorching-ray",
@@ -91,6 +137,16 @@
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
       "taskId": "L14G-04-MCP-LEVEL14-SCENARIO-GATE",
       "summary": "The protocol acceptance scenario creates and finalizes a supported level-4 Elf Soldier Wizard while selecting the SRD Evoker subclass, the returned Ability Score Improvement feat choice, the returned Intelligence +2 ASI option, Wizard spell choices, equipment, and loadout holes."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-creation",
+      "scopeIds": ["level-1-5"],
+      "scenarioId": "create-level-five-wizard-fireball-and-battle-handoff",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE",
+      "summary": "The protocol acceptance scenario creates and finalizes a supported level-5 Elf Soldier Wizard while selecting Fireball only through returned spellbook and prepared-spell option ids plus returned Wizard creation holes."
     },
     {
       "kind": "mcp-scenario",
@@ -145,6 +201,16 @@
     {
       "kind": "mcp-scenario",
       "flowId": "character-sheet",
+      "scopeIds": ["level-1-5"],
+      "scenarioId": "create-level-five-wizard-fireball-and-battle-handoff",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE",
+      "summary": "The protocol acceptance scenario reads list_characters after finalization and verifies the durable level-5 Wizard Character Sheet exposes Fireball Spell Access, 32 Hit Points, and unexpended level-1, level-2, and level-3 Spell Slots."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-sheet",
       "scopeIds": ["level-1", "level-1-2"],
       "scenarioId": "create-baseline-character",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
@@ -191,6 +257,56 @@
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
       "taskId": "L14G-04-MCP-LEVEL14-SCENARIO-GATE",
       "summary": "The protocol acceptance scenario starts battle from the finalized level-4 Wizard and an SRD Sphinx of Wonder Stat Block, verifies the returned battle state carries four level-1 Spell Slots and three level-2 Spell Slots, and discovers the Scorching Ray battle act."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "battle",
+      "scopeIds": ["level-1-5"],
+      "scenarioId": "create-level-five-wizard-fireball-and-battle-handoff",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE",
+      "summary": "The protocol acceptance scenario starts battle from the finalized level-5 Wizard and an SRD Sphinx of Wonder Stat Block, discovers the Fireball battle act, fills returned saving throw and rolled-dice holes, and verifies one level-3 Spell Slot is expended."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "mcp-workflow-discovery",
+      "scopeIds": ["level-1-6"],
+      "scenarioId": "create-level-six-rogue-expertise-and-steady-aim-battle-handoff",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-level-six-sheet-scenario.test.ts",
+      "taskId": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE",
+      "summary": "The level-6 Rogue scenario reads the workflow guide result paths and catalog units before following returned Rogue 6 creation holes, durable Character Sheet state, and battle act subjects."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-creation",
+      "scopeIds": ["level-1-6"],
+      "scenarioId": "create-level-six-rogue-expertise-and-steady-aim-battle-handoff",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-level-six-sheet-scenario.test.ts",
+      "taskId": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE",
+      "summary": "The level-6 Rogue scenario creates and finalizes an Orc Soldier Rogue 6 by selecting only returned progression, class, background, Ability Score Improvement, equipment, loadout, and Expertise option ids."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-sheet",
+      "scopeIds": ["level-1-6"],
+      "scenarioId": "create-level-six-rogue-expertise-and-steady-aim-battle-handoff",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-level-six-sheet-scenario.test.ts",
+      "taskId": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE",
+      "summary": "The level-6 Rogue scenario reads list_characters after finalization and verifies the durable Rogue 6 Character Sheet exposes Hit Points, owned skill proficiencies, and the four selected Expertise proficiencies."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "battle",
+      "scopeIds": ["level-1-6"],
+      "scenarioId": "create-level-six-rogue-expertise-and-steady-aim-battle-handoff",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-protocol.test.ts",
+      "taskId": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE",
+      "summary": "The level-6 Rogue scenario starts battle from the finalized Rogue 6 Character Sheet, discovers the Steady Aim unit-feature act, resolves the no-hole subject, and verifies the returned battle state spends the Bonus Action and zeros movement for that combatant."
     },
     {
       "kind": "mcp-scenario",
@@ -281,6 +397,30 @@
       "auditTaskId": "L14G-04-MCP-LEVEL14-SCENARIO-GATE",
       "result": "reuse-existing-evidence",
       "reason": "Task 1 added the executable create-level-four-wizard-asi-and-battle-handoff MCP acceptance scenario. Together with the reusable workflow-discovery checks inside that scenario, level-1-4 now has scenario evidence for level-4 Wizard advancement, Ability Score Improvement selection, Character Sheet durability, and battle handoff.",
+      "reusedFlowIds": [
+        "mcp-workflow-discovery",
+        "character-creation",
+        "character-sheet",
+        "battle"
+      ]
+    },
+    {
+      "scopeId": "level-1-5",
+      "auditTaskId": "L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE",
+      "result": "reuse-existing-evidence",
+      "reason": "Task 8 registered the executable create-level-five-wizard-fireball-and-battle-handoff MCP acceptance scenario. It covers workflow discovery, level-5 Wizard creation with Fireball through returned holes, durable Character Sheet state with level-3 Spell Slots, and battle handoff through returned Fireball battle holes.",
+      "reusedFlowIds": [
+        "mcp-workflow-discovery",
+        "character-creation",
+        "character-sheet",
+        "battle"
+      ]
+    },
+    {
+      "scopeId": "level-1-6",
+      "auditTaskId": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE",
+      "result": "reuse-existing-evidence",
+      "reason": "Task 35 registered the executable create-level-six-rogue-expertise-and-steady-aim-battle-handoff MCP acceptance scenario. It covers workflow discovery, Rogue 6 character creation through returned holes, durable Character Sheet Expertise projection, and Steady Aim battle handoff through returned battle act subjects.",
       "reusedFlowIds": [
         "mcp-workflow-discovery",
         "character-creation",

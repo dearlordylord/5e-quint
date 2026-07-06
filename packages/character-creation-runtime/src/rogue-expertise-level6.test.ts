@@ -28,6 +28,7 @@ import {
 import { parseCharacterProgressionShape } from "./character-progression-algebra.ts";
 import {
   CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
+  PHASE1_SPECIES_ORC_UNIT_ID,
   progressionOptionId,
 } from "./phase1-manifest.ts";
 import { supportedHoleOptionIds } from "./support-gates.ts";
@@ -173,10 +174,12 @@ function supportedFillForHole(
       ? [progressionOption]
       : "path" in hole.source && hole.source.path === "draft.background"
         ? [creationChoiceOptionId("background_soldier")]
-        : hole.source.tag === "unitChoice"
-          ? (soldierBackgroundFixtureOptionIds(hole.source) ??
-            hole.options.map((option) => option.optionId))
-          : hole.options.map((option) => option.optionId);
+        : "path" in hole.source && hole.source.path === "draft.species"
+          ? [creationChoiceOptionId(PHASE1_SPECIES_ORC_UNIT_ID)]
+          : hole.source.tag === "unitChoice"
+            ? (soldierBackgroundFixtureOptionIds(hole.source) ??
+              hole.options.map((option) => option.optionId))
+            : hole.options.map((option) => option.optionId);
   const selectedOptionIds = preferredOptionIds
     .filter((optionId) => holeOptionIdSet.has(optionId))
     .filter((optionId) => supportedOptionIdSet.has(optionId))

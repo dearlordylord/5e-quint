@@ -25,10 +25,14 @@ const {
   buildLevel12FullSupport,
   buildLevel13FullSupport,
   buildLevel14FullSupport,
+  buildLevel15FullSupport,
+  buildLevel16FullSupport,
   renderLevel1FullSupport,
   renderLevel12FullSupport,
   renderLevel13FullSupport,
   renderLevel14FullSupport,
+  renderLevel15FullSupport,
+  renderLevel16FullSupport,
 } = require("./level1-full-support-report.cjs");
 const {
   buildSrdUnitInventory,
@@ -243,6 +247,12 @@ function main() {
   const level14FullSupport = buildLevel14FullSupport(matrix, srdUnitInventory, {
     root,
   });
+  const level15FullSupport = buildLevel15FullSupport(matrix, srdUnitInventory, {
+    root,
+  });
+  const level16FullSupport = buildLevel16FullSupport(matrix, srdUnitInventory, {
+    root,
+  });
   const levelOneSevenMiningAudit =
     buildLevelOneSevenMiningAudit(srdUnitInventory);
   const ultraGoldenGate = buildUltraGoldenGate({
@@ -250,6 +260,8 @@ function main() {
     level12FullSupport,
     level13FullSupport,
     level14FullSupport,
+    level15FullSupport,
+    level16FullSupport,
     mcpScenarioEvidence,
     rulesKernelMatrix: rulesKernelCoverage.matrix,
     selectedIdentityReplayEvidenceTag,
@@ -387,6 +399,26 @@ function main() {
     { root, write },
     paths.level14FullSupportReport,
     renderLevel14FullSupport(level14FullSupport),
+  );
+  writeOrCompare(
+    { root, write },
+    paths.level15FullSupport,
+    `${JSON.stringify(level15FullSupport, null, 2)}\n`,
+  );
+  writeOrCompare(
+    { root, write },
+    paths.level15FullSupportReport,
+    renderLevel15FullSupport(level15FullSupport),
+  );
+  writeOrCompare(
+    { root, write },
+    paths.level16FullSupport,
+    `${JSON.stringify(level16FullSupport, null, 2)}\n`,
+  );
+  writeOrCompare(
+    { root, write },
+    paths.level16FullSupportReport,
+    renderLevel16FullSupport(level16FullSupport),
   );
   writeOrCompare(
     { root, write },

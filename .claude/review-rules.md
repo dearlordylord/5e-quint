@@ -18,6 +18,21 @@ Every function, type, constant, and export must have a current call site or cons
 - Tests must exercise runtime behavior, projection behavior, parity behavior, or boundary decoding.
 - Do not update `qa_generated.qnt` during normal development review.
 
+## Scenario Plausibility
+
+Any example or executable scenario that represents normal runtime behavior must
+use domain-plausible choices and values, not merely legal ones.
+
+A legal-but-perverse scenario is allowed only when the artifact is explicitly
+testing that edge case, and the name or nearby comment says so.
+
+When refactoring or converting an existing scenario, preserving old literals is
+not enough. Re-check whether the scenario still teaches the intended rule.
+
+Example: a normal reroll scenario should reroll a low die into a higher result.
+Rerolling a maximum die into a worse result is valid only for an edge-case test
+that explicitly checks "must use the new roll even when worse."
+
 ## SRD And Modeling Parity
 
 For rules behavior, verify that every modeled rule traces to SRD 5.2.1 text in `.references/srd-5.2.1/` or to an explicit entry in `ASSUMPTIONS.md`.

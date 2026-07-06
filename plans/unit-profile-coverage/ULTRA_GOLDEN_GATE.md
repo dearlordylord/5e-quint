@@ -35,6 +35,8 @@ The metric distinguishes reducer parity witnesses from MCP scenario evidence by 
 | level-1-2 | pass | 4/4 | 49 |
 | level-1-3 | pass | 4/4 | 70 |
 | level-1-4 | pass | 4/4 | 70 |
+| level-1-5 | pass | 4/4 | 73 |
+| level-1-6 | pass | 4/4 | 73 |
 
 ## Layer Results
 
@@ -56,6 +58,14 @@ The metric distinguishes reducer parity witnesses from MCP scenario evidence by 
 | level-1-4 | qnt-generator-readiness | pass | _none_ |
 | level-1-4 | mbt-parity-evidence | pass | _none_ |
 | level-1-4 | mcp-scenario-evidence | pass | _none_ |
+| level-1-5 | support-completeness | pass | _none_ |
+| level-1-5 | qnt-generator-readiness | pass | _none_ |
+| level-1-5 | mbt-parity-evidence | pass | _none_ |
+| level-1-5 | mcp-scenario-evidence | pass | _none_ |
+| level-1-6 | support-completeness | pass | _none_ |
+| level-1-6 | qnt-generator-readiness | pass | _none_ |
+| level-1-6 | mbt-parity-evidence | pass | _none_ |
+| level-1-6 | mcp-scenario-evidence | pass | _none_ |
 
 ## MCP Scenario Evidence
 
@@ -79,6 +89,14 @@ MCP scenario evidence is an explicit required layer. Its manifest records requir
 | level-1-4 | character-creation | pass | `mcp-scenario` | `create-level-four-wizard-asi-and-battle-handoff` | _none_ |
 | level-1-4 | character-sheet | pass | `mcp-scenario` | `create-level-four-wizard-asi-and-battle-handoff` | _none_ |
 | level-1-4 | battle | pass | `mcp-scenario` | `create-level-four-wizard-asi-and-battle-handoff` | _none_ |
+| level-1-5 | mcp-workflow-discovery | pass | `mcp-scenario` | `create-level-five-wizard-fireball-and-battle-handoff` | _none_ |
+| level-1-5 | character-creation | pass | `mcp-scenario` | `create-level-five-wizard-fireball-and-battle-handoff` | _none_ |
+| level-1-5 | character-sheet | pass | `mcp-scenario` | `create-level-five-wizard-fireball-and-battle-handoff` | _none_ |
+| level-1-5 | battle | pass | `mcp-scenario` | `create-level-five-wizard-fireball-and-battle-handoff` | _none_ |
+| level-1-6 | mcp-workflow-discovery | pass | `mcp-scenario` | `create-level-six-rogue-expertise-and-steady-aim-battle-handoff` | _none_ |
+| level-1-6 | character-creation | pass | `mcp-scenario` | `create-level-six-rogue-expertise-and-steady-aim-battle-handoff` | _none_ |
+| level-1-6 | character-sheet | pass | `mcp-scenario` | `create-level-six-rogue-expertise-and-steady-aim-battle-handoff` | _none_ |
+| level-1-6 | battle | pass | `mcp-scenario` | `create-level-six-rogue-expertise-and-steady-aim-battle-handoff` | _none_ |
 
 ## MCP Level-Scope Audit Decisions
 
@@ -90,6 +108,8 @@ Scope audit decisions are checker-owned conclusions from the MCP scenario eviden
 | level-1-2 | _none_ | _none_ | _none_ | _none_ | _none_ |
 | level-1-3 | reuse-existing-evidence | `mcp-workflow-discovery`, `character-creation`, `character-sheet`, `battle` | _none_ | _none_ | _none_ |
 | level-1-4 | reuse-existing-evidence | `mcp-workflow-discovery`, `character-creation`, `character-sheet`, `battle` | _none_ | _none_ | _none_ |
+| level-1-5 | reuse-existing-evidence | `mcp-workflow-discovery`, `character-creation`, `character-sheet`, `battle` | _none_ | _none_ | _none_ |
+| level-1-6 | reuse-existing-evidence | `mcp-workflow-discovery`, `character-creation`, `character-sheet`, `battle` | _none_ | _none_ | _none_ |
 
 ## Selected Identity Evidence Join Audit
 
@@ -101,7 +121,10 @@ Selected-identity replay is Unit identity wiring evidence. This audit keeps it s
 | level-1-2 | 99 | 99/99 | 0 |
 | level-1-3 | 147 | 147/147 | 0 |
 | level-1-4 | 148 | 148/148 | 0 |
+| level-1-5 | 170 | 169/170 | 1 |
+| level-1-6 | 171 | 170/171 | 1 |
 
 | Scope | Unit | Kind | Evidence task | Evidence owner | Parity witness join | Parity witness owners for Unit | MCP join | Required MCP flows | Missing MCP flows | Profiles |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ |
+| level-1-5 | `monk_stunning_strike` | class_feature | `L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME` | `packages/battle-runtime/src/stunning-strike-selected-identity.mbt.test.ts` | missing-unit-profile-join | _none_ | not-applicable | _none_ | _none_ | `unit-feature.stunning-strike` |
+| level-1-6 | `monk_stunning_strike` | class_feature | `L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME` | `packages/battle-runtime/src/stunning-strike-selected-identity.mbt.test.ts` | missing-unit-profile-join | _none_ | not-applicable | _none_ | _none_ | `unit-feature.stunning-strike` |

@@ -55,8 +55,8 @@
     "rowsByFinalDisposition": {
       "catalog-authored-review-required": 49,
       "catalog-installed-owner-evidence-present": 502,
-      "catalog-only/dead-for-now": 211,
-      "level-5-7-follow-up-required": 22,
+      "catalog-only/dead-for-now": 222,
+      "level-5-7-follow-up-required": 11,
       "missing-authored-record": 32,
       "non-runtime": 84
     },
@@ -88,10 +88,10 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 142,
+      "not-recorded": 131,
       "profile-subset-supported": 59,
       "supported-profile": 309,
-      "unsupported-profile": 390
+      "unsupported-profile": 401
     }
   },
   "rows": [
@@ -1212,7 +1212,7 @@
         "sourceInventoryRowId": "srd521:classes/barbarian:level-6:class-feature-grant:barbarian_mindless_rage",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "The existing Barbarian Rage owner supports activation, use-count spend, duration/extension, Bludgeoning/Piercing/Slashing Resistance, Rage Damage, Concentration break/prevention, and spellcasting restriction, but it does not admit subclass-gated Charmed/Frightened condition immunity or remove existing Charmed/Frightened active effects on entering Rage. Keep this not-installed row closed until a promoted owner consumes typed Surface facts for the selected Berserker feature, derives immunity from the active Rage occurrence, and performs condition cleanup without duplicating Rage state, condition state, subclass selection state, or authored-identity dispatch.",
       "rowId": "srd521:classes/barbarian:level-6:class-feature-grant:barbarian_mindless_rage",
       "rowKind": "class-feature-grant",
       "source": {
@@ -1228,15 +1228,20 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future battle-runtime active Rage condition-immunity and enter-rage cleanup owner plus subclass feature admission owner",
+          "reason": "The existing Barbarian Rage owner supports activation, use-count spend, duration/extension, Bludgeoning/Piercing/Slashing Resistance, Rage Damage, Concentration break/prevention, and spellcasting restriction, but it does not admit subclass-gated Charmed/Frightened condition immunity or remove existing Charmed/Frightened active effects on entering Rage. Keep this not-installed row closed until a promoted owner consumes typed Surface facts for the selected Berserker feature, derives immunity from the active Rage occurrence, and performs condition cleanup without duplicating Rage state, condition state, subclass selection state, or authored-identity dispatch.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "barbarian_mindless_rage"
         },
-        "finalDisposition": "level-5-7-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -2482,7 +2487,7 @@
         "sourceInventoryRowId": "srd521:classes/bard:level-6:class-feature-grant:bard_magical_discoveries",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "SRD Magical Discoveries grants two chosen always-prepared spells from the Cleric, Druid, or Wizard spell lists, limited to cantrips or spells for which the Bard has Spell Slots, and allows replacing one chosen spell whenever the character gains a Bard level. A future owner must consume typed Surface facts for the selected College of Lore feature, derive eligible cross-list options from canonical spell-list and Bard Spell Slot facts, retain selected Spell Access as source-scoped character facts, and perform Bard-level replacement without adding a duplicate prepared-spell list, duplicating Spell Slot state, or dispatching on Bard, College of Lore, Magical Discoveries, or selected spell authored identity. Individual Spell Definition invocation behavior remains owned by spell invocation profiles.",
       "rowId": "srd521:classes/bard:level-6:class-feature-grant:bard_magical_discoveries",
       "rowKind": "class-feature-grant",
       "source": {
@@ -2498,15 +2503,20 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "future-owner-before-SDK character-creation and character-sheet Magical Discoveries spell-access selection owner plus selected Spell Definition invocation profiles",
+          "reason": "SRD Magical Discoveries grants two chosen always-prepared spells from the Cleric, Druid, or Wizard spell lists, limited to cantrips or spells for which the Bard has Spell Slots, and allows replacing one chosen spell whenever the character gains a Bard level. A future owner must consume typed Surface facts for the selected College of Lore feature, derive eligible cross-list options from canonical spell-list and Bard Spell Slot facts, retain selected Spell Access as source-scoped character facts, and perform Bard-level replacement without adding a duplicate prepared-spell list, duplicating Spell Slot state, or dispatching on Bard, College of Lore, Magical Discoveries, or selected spell authored identity. Individual Spell Definition invocation behavior remains owned by spell invocation profiles.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "bard_magical_discoveries"
         },
-        "finalDisposition": "level-5-7-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -7393,7 +7403,7 @@
         "sourceInventoryRowId": "srd521:classes/cleric:level-6:class-feature-grant:cleric_blessed_healer",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "SRD Blessed Healer triggers immediately after the Cleric casts a spell with a Spell Slot that restores Hit Points to one or more creatures other than the caster, then restores Hit Points to the caster equal to 2 plus that Spell Slot level. Existing spell.hit-point-restoration profiles own Spell Slot spend, target healing facts, and Hit Point restoration for Cure Wounds, Healing Word, Mass Cure Wounds, and Mass Healing Word, and the Disciple of Life spell-slot healing modifier owner adds 2 plus Spell Slot level to each healed target. They do not admit a selected-feature, post-cast self-heal once per qualifying spell cast. A future owner must consume typed Surface facts for the selected Life Domain feature, the existing Spell Slot invocation level, and the resolved healed-target set with at least one non-caster target, then apply caster Hit Point restoration through the shared healing transition without duplicating Spell Slot state, prepared Spell Access, healing target state, caster Hit Point state, subclass selection state, or dispatching on Cleric, Life Domain, Blessed Healer, or healing spell authored identity.",
       "rowId": "srd521:classes/cleric:level-6:class-feature-grant:cleric_blessed_healer",
       "rowKind": "class-feature-grant",
       "source": {
@@ -7409,15 +7419,20 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future-owner-before-SDK battle-runtime spell healing rider owner plus selected Life Domain feature admission owner and existing spell Hit Point restoration profiles",
+          "reason": "SRD Blessed Healer triggers immediately after the Cleric casts a spell with a Spell Slot that restores Hit Points to one or more creatures other than the caster, then restores Hit Points to the caster equal to 2 plus that Spell Slot level. Existing spell.hit-point-restoration profiles own Spell Slot spend, target healing facts, and Hit Point restoration for Cure Wounds, Healing Word, Mass Cure Wounds, and Mass Healing Word, and the Disciple of Life spell-slot healing modifier owner adds 2 plus Spell Slot level to each healed target. They do not admit a selected-feature, post-cast self-heal once per qualifying spell cast. A future owner must consume typed Surface facts for the selected Life Domain feature, the existing Spell Slot invocation level, and the resolved healed-target set with at least one non-caster target, then apply caster Hit Point restoration through the shared healing transition without duplicating Spell Slot state, prepared Spell Access, healing target state, caster Hit Point state, subclass selection state, or dispatching on Cleric, Life Domain, Blessed Healer, or healing spell authored identity.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "cleric_blessed_healer"
         },
-        "finalDisposition": "level-5-7-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -11727,7 +11742,7 @@
         "sourceInventoryRowId": "srd521:classes/druid:level-6:class-feature-grant:druid_natural_recovery",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "SRD Natural Recovery grants a once-per-Long-Rest no-slot cast of a prepared level 1+ spell from Circle Spells, and separately lets the Druid recover expended Spell Slots when finishing a Short Rest with a combined slot-level budget of half Druid level rounded up and no recovered slot at level 6 or higher. Existing character-sheet.short-rest-spell-slot-recovery and character-sheet.class-feature-long-rest-use-state owners cover shared Spell Slot refund and Long Rest use-state patterns, while character-sheet.druid-circle-land-spell-access owns selected-land prepared Spell Access. They do not admit a selected level-6 Circle of the Land feature that combines the no-slot Circle Spell cast resource, Druid-level recovery budget, Short Rest trigger, and Long Rest reset. A future owner must consume typed Surface facts for the selected Natural Recovery feature, existing Circle Spells prepared access, existing Druid class level, and existing Spell Slot expenditure state, then update the canonical Character Sheet Spell Slot owner and rest-feature use state without adding duplicate Spell Slot state, prepared Spell Access, subclass selection state, or dispatching on Druid, Circle of the Land, Natural Recovery, or spell authored identity.",
       "rowId": "srd521:classes/druid:level-6:class-feature-grant:druid_natural_recovery",
       "rowKind": "class-feature-grant",
       "source": {
@@ -11743,15 +11758,20 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "future-owner-before-SDK character-sheet-runtime Natural Recovery rest feature owner plus existing Spell Slot and Circle Spells owners",
+          "reason": "SRD Natural Recovery grants a once-per-Long-Rest no-slot cast of a prepared level 1+ spell from Circle Spells, and separately lets the Druid recover expended Spell Slots when finishing a Short Rest with a combined slot-level budget of half Druid level rounded up and no recovered slot at level 6 or higher. Existing character-sheet.short-rest-spell-slot-recovery and character-sheet.class-feature-long-rest-use-state owners cover shared Spell Slot refund and Long Rest use-state patterns, while character-sheet.druid-circle-land-spell-access owns selected-land prepared Spell Access. They do not admit a selected level-6 Circle of the Land feature that combines the no-slot Circle Spell cast resource, Druid-level recovery budget, Short Rest trigger, and Long Rest reset. A future owner must consume typed Surface facts for the selected Natural Recovery feature, existing Circle Spells prepared access, existing Druid class level, and existing Spell Slot expenditure state, then update the canonical Character Sheet Spell Slot owner and rest-feature use state without adding duplicate Spell Slot state, prepared Spell Access, subclass selection state, or dispatching on Druid, Circle of the Land, Natural Recovery, or spell authored identity.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "druid_natural_recovery"
         },
-        "finalDisposition": "level-5-7-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -16643,7 +16663,7 @@
         "sourceInventoryRowId": "srd521:classes/fighter:level-6:class-feature-grant:fighter_ability_score_improvement",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "The SRD level-4 Fighter Ability Score Improvement rule text says the feature is gained again at Fighter level 6, and the Fighter level-6 table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this second ASI without installing an incomplete Fighter 6 progression while Tactical Shift remains missing or duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
       "rowId": "srd521:classes/fighter:level-6:class-feature-grant:fighter_ability_score_improvement",
       "rowKind": "class-feature-grant",
       "source": {
@@ -16659,15 +16679,20 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "selection-grant-container",
+          "owner": "future character-creation repeated ASI grant-occurrence owner plus selected feat Unit profiles",
+          "reason": "The SRD level-4 Fighter Ability Score Improvement rule text says the feature is gained again at Fighter level 6, and the Fighter level-6 table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this second ASI without installing an incomplete Fighter 6 progression while Tactical Shift remains missing or duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "fighter_ability_score_improvement_l6"
         },
-        "finalDisposition": "level-5-7-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -18002,7 +18027,7 @@
         "sourceInventoryRowId": "srd521:classes/monk:level-6:class-feature-grant:monk_empowered_strikes",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "SRD Empowered Strikes applies whenever the Monk deals damage with an Unarmed Strike, allowing a choice between Force damage and the strike's normal damage type. Existing Martial Arts support owns Unarmed Strike damage die replacement, Dexterity attack and damage projection, Grapple/Shove DC projection, and Bonus Action Unarmed Strike discovery, while existing spell and weapon-imbue damage-type-choice holes are scoped to their own host profiles. A future owner must consume typed Surface facts for the selected Empowered Strikes feature and the existing Unarmed Strike damage profile, then offer and validate the Force-or-normal damage type choice at attack damage resolution without adding duplicate Unarmed Strike state, Martial Arts state, class progression state, or authored-identity dispatch.",
       "rowId": "srd521:classes/monk:level-6:class-feature-grant:monk_empowered_strikes",
       "rowKind": "class-feature-grant",
       "source": {
@@ -18018,15 +18043,20 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future-owner-before-SDK battle-runtime Unarmed Strike damage-type-choice owner plus selected Monk class-feature admission owner",
+          "reason": "SRD Empowered Strikes applies whenever the Monk deals damage with an Unarmed Strike, allowing a choice between Force damage and the strike's normal damage type. Existing Martial Arts support owns Unarmed Strike damage die replacement, Dexterity attack and damage projection, Grapple/Shove DC projection, and Bonus Action Unarmed Strike discovery, while existing spell and weapon-imbue damage-type-choice holes are scoped to their own host profiles. A future owner must consume typed Surface facts for the selected Empowered Strikes feature and the existing Unarmed Strike damage profile, then offer and validate the Force-or-normal damage type choice at attack damage resolution without adding duplicate Unarmed Strike state, Martial Arts state, class progression state, or authored-identity dispatch.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "monk_empowered_strikes"
         },
-        "finalDisposition": "level-5-7-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -18042,7 +18072,7 @@
         "sourceInventoryRowId": "srd521:classes/monk:level-6:class-feature-grant:monk_wholeness_of_body",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "SRD Wholeness of Body lets the selected Monk use a Bonus Action to roll the Martial Arts die and regain Hit Points equal to the roll plus Wisdom modifier, with a minimum of 1 Hit Point regained, a Wisdom-modifier use count with a minimum of one use, and Long Rest recovery. Existing Martial Arts support owns the die-size projection, existing character facts own Wisdom ability scores, and existing Hit Point recovery owners apply positive healing. The current battle self-bonus-action-healing profile is admitted for Second Wind's class-level formula and partial Short Rest/full Long Rest reset, while the current Character Sheet use-count owner is limited to typed resource profiles such as Wild Shape and Monk's Focus rather than arbitrary feature ids. A future owner must consume typed Surface facts for the selected Wholeness of Body feature, derive the Martial Arts die, Wisdom modifier, Long Rest use state, and Bonus Action spend from existing owners, then apply self Hit Point healing without duplicating Hit Point state, Martial Arts progression, Wisdom ability state, use-count expenditure state, subclass selection state, action-economy state, or dispatching on Monk, Warrior of the Open Hand, or Wholeness of Body authored identity.",
       "rowId": "srd521:classes/monk:level-6:class-feature-grant:monk_wholeness_of_body",
       "rowKind": "class-feature-grant",
       "source": {
@@ -18058,15 +18088,20 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "future-owner-before-SDK character-sheet-runtime and battle-runtime Wholeness of Body feature-resource self-healing owner plus selected Warrior of the Open Hand feature admission owner",
+          "reason": "SRD Wholeness of Body lets the selected Monk use a Bonus Action to roll the Martial Arts die and regain Hit Points equal to the roll plus Wisdom modifier, with a minimum of 1 Hit Point regained, a Wisdom-modifier use count with a minimum of one use, and Long Rest recovery. Existing Martial Arts support owns the die-size projection, existing character facts own Wisdom ability scores, and existing Hit Point recovery owners apply positive healing. The current battle self-bonus-action-healing profile is admitted for Second Wind's class-level formula and partial Short Rest/full Long Rest reset, while the current Character Sheet use-count owner is limited to typed resource profiles such as Wild Shape and Monk's Focus rather than arbitrary feature ids. A future owner must consume typed Surface facts for the selected Wholeness of Body feature, derive the Martial Arts die, Wisdom modifier, Long Rest use state, and Bonus Action spend from existing owners, then apply self Hit Point healing without duplicating Hit Point state, Martial Arts progression, Wisdom ability state, use-count expenditure state, subclass selection state, action-economy state, or dispatching on Monk, Warrior of the Open Hand, or Wholeness of Body authored identity.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "monk_wholeness_of_body"
         },
-        "finalDisposition": "level-5-7-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -19367,7 +19402,7 @@
         "sourceInventoryRowId": "srd521:classes/paladin:level-6:class-feature-grant:paladin_aura_of_protection",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "SRD Aura of Protection creates a 10-foot Emanation from the Paladin, inactive while the Paladin has the Incapacitated condition, and grants the Paladin and allies in the aura a Saving Throw bonus equal to the Paladin's Charisma modifier with a minimum of +1, while overlapping Paladin auras require the affected creature to choose one. Existing character facts own Paladin level and Charisma ability state, existing condition state owns Incapacitated, existing save procedure owners resolve Saving Throws, and spell aura support consumes caller/table-supplied area membership for spell-specific occurrences. The current promoted owners do not admit a selected passive class-feature aura with ally membership, source Charisma bonus projection, inactive gating, or overlapping-aura choice. A future owner must consume typed Surface facts for the selected Aura of Protection feature, existing character and condition state, explicit aura membership/choice witnesses, and the shared Saving Throw roll modifier boundary without duplicating Character Sheet ability state, condition state, table position state, Saving Throw result state, aura membership state, or dispatching on Paladin or Aura of Protection authored identity.",
       "rowId": "srd521:classes/paladin:level-6:class-feature-grant:paladin_aura_of_protection",
       "rowKind": "class-feature-grant",
       "source": {
@@ -19383,15 +19418,20 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "future-owner-before-SDK battle-runtime passive class-feature aura and Saving Throw modifier owner plus table/spatial aura-membership witness owner",
+          "reason": "SRD Aura of Protection creates a 10-foot Emanation from the Paladin, inactive while the Paladin has the Incapacitated condition, and grants the Paladin and allies in the aura a Saving Throw bonus equal to the Paladin's Charisma modifier with a minimum of +1, while overlapping Paladin auras require the affected creature to choose one. Existing character facts own Paladin level and Charisma ability state, existing condition state owns Incapacitated, existing save procedure owners resolve Saving Throws, and spell aura support consumes caller/table-supplied area membership for spell-specific occurrences. The current promoted owners do not admit a selected passive class-feature aura with ally membership, source Charisma bonus projection, inactive gating, or overlapping-aura choice. A future owner must consume typed Surface facts for the selected Aura of Protection feature, existing character and condition state, explicit aura membership/choice witnesses, and the shared Saving Throw roll modifier boundary without duplicating Character Sheet ability state, condition state, table position state, Saving Throw result state, aura membership state, or dispatching on Paladin or Aura of Protection authored identity.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "paladin_aura_of_protection"
         },
-        "finalDisposition": "level-5-7-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -25586,7 +25626,7 @@
         "sourceInventoryRowId": "srd521:classes/sorcerer:level-6:class-feature-grant:sorcerer_elemental_affinity",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "SRD Elemental Affinity chooses one of Acid, Cold, Fire, Lightning, or Poison, grants Resistance to that chosen damage type, and lets the Sorcerer add Charisma modifier to one damage roll of a spell that deals that damage type. The local SRD 5.2.1 text does not spend Sorcery Points for this feature. Existing passive damage Resistance support is scoped to fixed or species Draconic Ancestry facts, and existing spell damage owners do not admit a selected class-feature damage-type filter, one-roll-per-spell accounting, or a shared build-time damage-type binding across Resistance and the spell damage rider. A future owner must consume typed Surface facts for the selected Elemental Affinity feature, retain the single chosen damage type as a character-owned source fact, project target-side Resistance through the shared damage adjustment boundary, and project the optional Charisma modifier through the spell damage-roll owner without duplicating Spell Slot state, spell damage dice or totals, character ability state, damage adjustment state, Sorcery Point state, subclass selection state, or dispatching on Sorcerer, Draconic Sorcery, Elemental Affinity, or selected spell authored identity.",
       "rowId": "srd521:classes/sorcerer:level-6:class-feature-grant:sorcerer_elemental_affinity",
       "rowKind": "class-feature-grant",
       "source": {
@@ -25602,15 +25642,20 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "future-owner-before-SDK character-sheet-runtime selected Elemental Affinity damage-type owner plus battle-runtime passive Resistance and spell damage-roll modifier owners",
+          "reason": "SRD Elemental Affinity chooses one of Acid, Cold, Fire, Lightning, or Poison, grants Resistance to that chosen damage type, and lets the Sorcerer add Charisma modifier to one damage roll of a spell that deals that damage type. The local SRD 5.2.1 text does not spend Sorcery Points for this feature. Existing passive damage Resistance support is scoped to fixed or species Draconic Ancestry facts, and existing spell damage owners do not admit a selected class-feature damage-type filter, one-roll-per-spell accounting, or a shared build-time damage-type binding across Resistance and the spell damage rider. A future owner must consume typed Surface facts for the selected Elemental Affinity feature, retain the single chosen damage type as a character-owned source fact, project target-side Resistance through the shared damage adjustment boundary, and project the optional Charisma modifier through the spell damage-roll owner without duplicating Spell Slot state, spell damage dice or totals, character ability state, damage adjustment state, Sorcery Point state, subclass selection state, or dispatching on Sorcerer, Draconic Sorcery, Elemental Affinity, or selected spell authored identity.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "sorcerer_elemental_affinity"
         },
-        "finalDisposition": "level-5-7-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -31048,7 +31093,7 @@
         "sourceInventoryRowId": "srd521:classes/warlock:level-6:class-feature-grant:warlock_dark_ones_own_luck",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "SRD Dark One's Own Luck lets the Warlock add 1d10 to the Warlock's own Ability Check or Saving Throw after seeing the roll but before any effects occur, with uses equal to Charisma modifier minimum one, no more than one use per roll, and Long Rest recovery. Existing Fighter Tactical Mind support is limited to failed Ability Checks that spend Second Wind and may refund the spend, Bardic Inspiration support is a granted held die spent after an already failed D20 Test, spell roll-modifier support is active Spell Effect state, and reaction roll-reduction support spends a Reaction. None admits this selected-feature, reactionless Ability Check and Saving Throw modifier window or its own rest resource. A future owner must consume typed Surface facts for the selected Dark One's Own Luck feature, existing Charisma ability state, existing Ability Check and Saving Throw roll/result boundaries, and canonical Long Rest resource state, then apply exactly one optional 1d10 modifier per eligible roll without duplicating D20 roll state, Ability Check state, Saving Throw state, character ability state, rest use-count state, subclass selection state, or dispatching on Warlock, Fiend Patron, or Dark One's Own Luck authored identity.",
       "rowId": "srd521:classes/warlock:level-6:class-feature-grant:warlock_dark_ones_own_luck",
       "rowKind": "class-feature-grant",
       "source": {
@@ -31064,15 +31109,20 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "character-fact-and-runtime-detached-split",
+          "owner": "future-owner-before-SDK character-sheet-runtime Dark One's Own Luck Long Rest resource owner plus battle-runtime and Character Sheet reactionless Ability Check and Saving Throw d10 modifier owners",
+          "reason": "SRD Dark One's Own Luck lets the Warlock add 1d10 to the Warlock's own Ability Check or Saving Throw after seeing the roll but before any effects occur, with uses equal to Charisma modifier minimum one, no more than one use per roll, and Long Rest recovery. Existing Fighter Tactical Mind support is limited to failed Ability Checks that spend Second Wind and may refund the spend, Bardic Inspiration support is a granted held die spent after an already failed D20 Test, spell roll-modifier support is active Spell Effect state, and reaction roll-reduction support spends a Reaction. None admits this selected-feature, reactionless Ability Check and Saving Throw modifier window or its own rest resource. A future owner must consume typed Surface facts for the selected Dark One's Own Luck feature, existing Charisma ability state, existing Ability Check and Saving Throw roll/result boundaries, and canonical Long Rest resource state, then apply exactly one optional 1d10 modifier per eligible roll without duplicating D20 roll state, Ability Check state, Saving Throw state, character ability state, rest use-count state, subclass selection state, or dispatching on Warlock, Fiend Patron, or Dark One's Own Luck authored identity.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "warlock_dark_ones_own_luck"
         },
-        "finalDisposition": "level-5-7-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -34243,7 +34293,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:level-6:class-feature-grant:wizard_sculpt_spells",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this level 5-7 class/subclass feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "SRD Sculpt Spells lets the caster choose up to 1 plus the spell's level creatures the caster can see among the other creatures affected by an Evocation spell the caster casts. The chosen creatures automatically succeed on their Saving Throws against that spell and take no damage if they would normally take half damage on a successful save. Existing spell invocation owners can represent spell School of Magic, effective spell level for a casting, affected-creature or area witnesses, Saving Throw outcomes, half-damage success branches, and damage application, but they do not admit a selected class-feature pre-save exemption choice over visible affected creatures. A future owner must consume typed Surface facts for the selected Sculpt Spells feature, the existing Spell Definition school fact, the spell invocation's effective spell level for that casting, the existing spell affected-creature or area membership witnesses, caster sight witnesses, and the shared Saving Throw/save-damage boundary without duplicating spell identity, effective spell level, area membership, line-of-sight, target selection, Saving Throw result, damage state, subclass selection state, or dispatching on Wizard, Evoker, Sculpt Spells, or selected spell authored identity.",
       "rowId": "srd521:classes/wizard:level-6:class-feature-grant:wizard_sculpt_spells",
       "rowKind": "class-feature-grant",
       "source": {
@@ -34259,15 +34309,20 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "future-owner-before-SDK battle-runtime selected area spell save-damage exemption owner plus table/sight affected-creature witness owner",
+          "reason": "SRD Sculpt Spells lets the caster choose up to 1 plus the spell's level creatures the caster can see among the other creatures affected by an Evocation spell the caster casts. The chosen creatures automatically succeed on their Saving Throws against that spell and take no damage if they would normally take half damage on a successful save. Existing spell invocation owners can represent spell School of Magic, effective spell level for a casting, affected-creature or area witnesses, Saving Throw outcomes, half-damage success branches, and damage application, but they do not admit a selected class-feature pre-save exemption choice over visible affected creatures. A future owner must consume typed Surface facts for the selected Sculpt Spells feature, the existing Spell Definition school fact, the spell invocation's effective spell level for that casting, the existing spell affected-creature or area membership witnesses, caster sight witnesses, and the shared Saving Throw/save-damage boundary without duplicating spell identity, effective spell level, area membership, line-of-sight, target selection, Saving Throw result, damage state, subclass selection state, or dispatching on Wizard, Evoker, Sculpt Spells, or selected spell authored identity.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "wizard_sculpt_spells"
         },
-        "finalDisposition": "level-5-7-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
