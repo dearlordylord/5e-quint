@@ -109,12 +109,12 @@
         "packages/battle-runtime/battle-runtime-opportunity-attack-denial.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns selected spell-shape execution through generic spell-attack, save-gated spell, spell-slot/action-economy, Hit Point, active Spell Effect, turn-boundary, Attack Roll mode, movement-resource, and interrupt-stack reducer surfaces. Catalog spell selection remains a composition/support-profile boundary that supplies typed procedure facts such as target shape, damage type/dice, slot requirement, save-success damage policy, attack-hit or failed-save projections, duration, scope, and carrier; production runtime must not persist or dispatch on selected spell id, name, fixture label, or branch action.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
       "targetTaskId": "CRPI-BLOCK-003",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-003"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-chained-attack-sequence.mbt.qnt",
