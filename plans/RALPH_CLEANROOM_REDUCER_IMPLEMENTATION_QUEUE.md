@@ -103,7 +103,7 @@
     {
       "number": 17,
       "id": "CRPI-BLOCK-011",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Blocked route replay: battle-runtime-find-familiar-companion-lifecycle"
     },
     {
@@ -1729,7 +1729,7 @@ Plan Impact:
 
 ### Task 17 - CRPI-BLOCK-011
 
-Status: `ready-for-research`
+Status: `done`
 
 Blocker Type: none
 
