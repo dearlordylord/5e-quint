@@ -726,6 +726,32 @@ export type CharacterSheetLayOnHandsResult = {
   readonly target: CharacterSheet;
 };
 
+export type CharacterSheetLayOnHandsRoute = readonly [
+  {
+    readonly kind: "resolveCharacterSheetSubject";
+    readonly subject: "featureResource";
+    readonly fill: "resourceSpend";
+    readonly holes: readonly [];
+    readonly owner: "featureResource";
+  },
+  {
+    readonly kind: "projectCharacterSheetFacts";
+    readonly subject: "hitPoint";
+    readonly owner: "hitPoint";
+  },
+  {
+    readonly kind: "recordCharacterSheetFacts";
+    readonly subject: "featureResource";
+    readonly facts: readonly ["featureResourceSpend"];
+    readonly owner: "featureResource";
+  },
+];
+
+export type CharacterSheetLayOnHandsRouteResult =
+  CharacterSheetLayOnHandsResult & {
+    readonly qRoute: CharacterSheetLayOnHandsRoute;
+  };
+
 export type CharacterSheetSpellRestBenefitRecipientEligibility = {
   readonly remainedWithinRangeForEntireCasting: true;
 };

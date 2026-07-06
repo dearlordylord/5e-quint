@@ -61,6 +61,8 @@ import {
   type CharacterSheetHitDieState,
   type CharacterSheetIssue,
   type CharacterSheetLayOnHandsInput,
+  type CharacterSheetLayOnHandsRoute,
+  type CharacterSheetLayOnHandsRouteResult,
   type CharacterSheetLayOnHandsResult,
   type CharacterSheetPactSlotState,
   type CharacterSheetRouteOwner,
@@ -95,6 +97,27 @@ type CharacterSheetArcaneRecoveryRouteOwner = Extract<
   CharacterSheetRouteOwner,
   "featureResource" | "pactSlot" | "spellSlot"
 >;
+
+const LAY_ON_HANDS_ROUTE = [
+  {
+    kind: "resolveCharacterSheetSubject",
+    subject: "featureResource",
+    fill: "resourceSpend",
+    holes: [],
+    owner: "featureResource",
+  },
+  {
+    kind: "projectCharacterSheetFacts",
+    subject: "hitPoint",
+    owner: "hitPoint",
+  },
+  {
+    kind: "recordCharacterSheetFacts",
+    subject: "featureResource",
+    facts: ["featureResourceSpend"],
+    owner: "featureResource",
+  },
+] as const satisfies CharacterSheetLayOnHandsRoute;
 
 export type CharacterSheetShortRestArcaneRecoveryBenefitsResult =
   | {
@@ -178,6 +201,22 @@ export function applyLayOnHands(
           target: targetAfterHealing.right,
         },
   );
+}
+
+export function applyLayOnHandsWithRoute(
+  input: CharacterSheetLayOnHandsInput,
+): Either.Either<CharacterSheetLayOnHandsRouteResult, CharacterSheetIssue> {
+  const result = applyLayOnHands(input);
+  return Either.isLeft(result)
+    ? Either.left(result.left)
+    : Either.right({
+        ...result.right,
+        qRoute: layOnHandsRoute(),
+      });
+}
+
+function layOnHandsRoute(): CharacterSheetLayOnHandsRoute {
+  return LAY_ON_HANDS_ROUTE;
 }
 
 export function applyCharacterSheetSpellRestBenefit(

@@ -21,10 +21,12 @@ import {
   CHARACTER_SHEET_SHORT_REST_TICKS,
   CHARACTER_SHEET_NO_OTHER_PROFICIENCY_BONUS,
   CHARACTER_SHEET_OTHER_PROFICIENCY_BONUS_APPLIES,
+  applyLayOnHandsWithRoute,
   characterSheetId,
   characterSheetAbilityCheckProficiencyBonusProjection,
   characterSheetArmorClassProjection,
   characterSheetClassFeatureSelectedReferenceProjection,
+  characterSheetResources,
   completeLongRestArcaneRecoveryResetWithRoute,
   completeShortRestArcaneRecoveryWithRoute,
   createFreshCharacterSheet,
@@ -1000,21 +1002,61 @@ function druidCircleLandBuild(): CharacterBuild {
 function spendHealingResourceRoute(
   route: readonly CharacterSheetRouteEvent[],
 ): readonly CharacterSheetRouteEvent[] {
-  return [
-    ...route,
-    resolveCharacterSheetSubject({
-      subject: "featureResource",
-      fill: "resourceSpend",
-      holes: [],
-      owner: "featureResource",
+  const sheets = layOnHandsRouteSheets();
+  const projected = requireRight(
+    applyLayOnHandsWithRoute({
+      source: sheets.source,
+      target: sheets.target,
+      unitLibrary,
+      restoreHp: Hp(2),
+      removePoisoned: true,
     }),
-    projectCharacterSheetFacts({ subject: "hitPoint", owner: "hitPoint" }),
-    recordCharacterSheetFacts({
-      subject: "featureResource",
-      facts: ["featureResourceSpend"],
-      owner: "featureResource",
-    }),
-  ];
+  );
+  expect(currentHp(projected.source)).toBe(12);
+  expect(currentHp(projected.target)).toBe(5);
+  expect(projected.target.conditions).not.toContain("poisoned");
+  const pool = requireRight(
+    characterSheetResources(projected.source, unitLibrary),
+  ).find((resource) => resource.tag === "layOnHandsHealingPool");
+  expect(pool).toMatchObject({ count: 10, expended: 7 });
+  return [...route, ...projected.qRoute];
+}
+
+function layOnHandsRouteSheets(): {
+  readonly source: CharacterSheet;
+  readonly target: CharacterSheet;
+} {
+  return {
+    source: requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:route-lay-on-hands-source"),
+        build: baseBuild({
+          startingClass: "class_paladin",
+          advancements: ["class_paladin"],
+        }),
+        currentHp: Hp(12),
+        tempHp: Hp(0),
+        hitPointMaximumReduction: Hp(0),
+        conditions: [],
+        unitLibrary,
+      }),
+    ),
+    target: requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:route-lay-on-hands-target"),
+        build: baseBuild({ startingClass: "class_fighter" }),
+        currentHp: Hp(3),
+        tempHp: Hp(0),
+        hitPointMaximumReduction: Hp(0),
+        conditions: ["poisoned"],
+        unitLibrary,
+      }),
+    ),
+  };
+}
+
+function currentHp(sheet: CharacterSheet): number {
+  return sheet.hitPoints.tag === "positive" ? sheet.hitPoints.currentHp : 0;
 }
 
 function recoverSecondLevelSpellSlotRoute(

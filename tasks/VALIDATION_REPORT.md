@@ -1,5 +1,92 @@
 # Validation Report
 
+## CRPI-BLOCK-052
+
+Status: `pass`
+
+- Task: 98
+- Driver path: `packages/character-sheet-runtime/character-sheet-healing-resource-selected-identity.mbt.qnt`
+- Route connector path: `packages/character-sheet-runtime/character-sheet-healing-resource-selected-identity.route.mbt.qnt`
+- Route class: `reducer-routed`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-052.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/character-sheet-runtime/character-sheet-healing-resource-selected-identity.mbt.qnt`
+- `packages/character-sheet-runtime/character-sheet-healing-resource-selected-identity.route.mbt.qnt`
+- `packages/character-sheet-runtime/src/healing-resource-selected-identity.mbt.test.ts`
+- `packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts`
+- `packages/character-sheet-runtime/src/healing-rest-benefit.ts`
+- `packages/character-sheet-runtime/src/sheet-types.ts`
+- `packages/character-sheet-runtime/src/index.ts`
+- `scripts/audit-character-sheet-runtime-split.mjs`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-convergence-backlog.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Classes/Paladin.md`
+- `.references/srd-5.2.1/Playing-the-Game.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+Lay On Hands healing-resource selected-identity route replay is accepted through
+the public Character Sheet reducer route entrypoint. `applyLayOnHandsWithRoute`
+delegates to the existing `applyLayOnHands` path, which spends the Lay On Hands
+pool from `CharacterSheet.resourceExpenditures`, restores target Hit Points
+through the Hit Point owner, and removes Poisoned from the existing
+`CharacterSheet.conditions` list. The route result then returns the copied
+feature-resource spend, Hit Point projection, and feature-resource spend fact
+`qRoute` events. No parallel healing-resource, Hit Point, or condition-removal
+ledger was introduced.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/character-sheet-runtime/character-sheet-healing-resource-selected-identity.mbt.qnt#step:doLayOnHandsRestoreHpAndRemovePoisoned` | `tasks/target-replay-evidence/CRPI-BLOCK-052.json#driver:packages/character-sheet-runtime/character-sheet-healing-resource-selected-identity.mbt.qnt#step:doLayOnHandsRestoreHpAndRemovePoisoned#trace:public-route=applyLayOnHandsWithRoute action=doLayOnHandsRestoreHpAndRemovePoisoned qRoute=healing-resource-selected-identity-public-route` | `_none_` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-052.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace id pattern: `public-route=applyLayOnHandsWithRoute action=doLayOnHandsRestoreHpAndRemovePoisoned qRoute=healing-resource-selected-identity-public-route`
+- The copied connector projection source is `packages/character-sheet-runtime/character-sheet-healing-resource-selected-identity.route.mbt.qnt#qRoute`; the observed projection source is the public Character Sheet reducer route entrypoint `packages/character-sheet-runtime/src/healing-rest-benefit.ts#applyLayOnHandsWithRoute`.
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-052/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 98.
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Classes/Paladin.md#Level 1: Lay On Hands` defines the healing pool, pool spend to restore Hit Points, and 5-point spend to remove Poisoned without also restoring those points as Hit Points.
+- SRD 5.2.1 `Playing-the-Game.md#Damage and Healing` defines restored Hit Points increasing current Hit Points without exceeding the Hit Point maximum.
+- SRD 5.2.1 `Rules-Glossary.md#Poisoned [Condition]` defines Poisoned as a condition.
+- `UBIQUITOUS_LANGUAGE.md` defines Pool, Spend, Hit Points, and Condition vocabulary used by this owner.
+
+Verification results:
+
+- Base check passed: declared base ref `ralph/cleanroom-character-sheet-route-lane-20260705T2045Z/integration` resolved to `25bc6f1b0 Mark Ralph task 97 done`; `HEAD` resolved to `25bc6f1b0 Mark Ralph task 97 done`; Base SHA `25bc6f1b0f3c0edfb18521c0e64d88ad24d421ff` is an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against SRD 5.2.1 Paladin Lay On Hands, Damage and Healing, Poisoned, and `UBIQUITOUS_LANGUAGE.md`.
+- Focused typecheck passed: `pnpm --filter @dnd/character-sheet-runtime exec tsc --noEmit`.
+- Focused replay command and final broad verification are recorded in `tasks/RUN_LEDGER.json`.
+- Reviewer-loop convergence passed: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks found no remaining reasonable Task 98 findings after moving observed Lay On Hands `qRoute` events into the public `applyLayOnHandsWithRoute` entrypoint and recording split-audit export ownership.
+
 ## CRPI-BLOCK-051
 
 Status: `pass`

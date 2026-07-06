@@ -589,7 +589,7 @@
     {
       "number": 98,
       "id": "CRPI-BLOCK-052",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: character-sheet-healing-resource-selected-identity"
     },
     {
@@ -6288,7 +6288,7 @@ Plan Impact:
 
 ### Task 98 - CRPI-BLOCK-052
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

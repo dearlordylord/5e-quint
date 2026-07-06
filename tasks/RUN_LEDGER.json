@@ -4,6 +4,79 @@
   "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
   "entries": [
     {
+      "taskId": "CRPI-BLOCK-052",
+      "assignmentId": "reducer-spine-diagnostic-character-sheet",
+      "laneId": "sheet",
+      "selectedDrivers": [
+        "packages/character-sheet-runtime/character-sheet-healing-resource-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "95935254161fab98b6b2c1609738b0f570d6488ea2c07468b2ee1c5dc286a607"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "39ed6104ead8d724871cdf873b713ea1ed5505188c3b16154dbdbfd1775af401"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "857ac2fbea3cb55e1a0de887aa577fa3c941be9c52cd44caaa7d58c7c4f837a4"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-052.json",
+          "sha256": "1a9ad472503f20e69578fe60cb8dca7fc5cc634add08f49be0b48e3cb4015715",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-052.json#driver:packages/character-sheet-runtime/character-sheet-healing-resource-selected-identity.mbt.qnt#step:doLayOnHandsRestoreHpAndRemovePoisoned#trace:public-route=applyLayOnHandsWithRoute action=doLayOnHandsRestoreHpAndRemovePoisoned qRoute=healing-resource-selected-identity-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "pnpm --filter @dnd/character-sheet-runtime exec tsc --noEmit",
+          "status": "pass"
+        },
+        {
+          "command": "START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/character-sheet-runtime exec vitest run src/healing-resource-selected-identity.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"healing resource selected identity|routes healing resource\" ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "status": "pass",
+          "detail": "2 files passed; 3 tests passed, 9 skipped; TOTAL: 3s"
+        },
+        {
+          "command": "node JSON parse check for CRPI-BLOCK-052 artifacts",
+          "status": "pass",
+          "detail": "Evidence, run ledger, engine depth manifest, and state owner manifest parsed."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs"
+        },
+        {
+          "command": "pnpm check:character-sheet-runtime-split",
+          "status": "pass",
+          "detail": "Expected export surface updated for applyLayOnHandsWithRoute and Lay On Hands route result types."
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "All quality gates passed; app lint emitted 61 warnings and exited 0."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "No remaining reasonable Task 98 findings after moving Lay On Hands qRoute observation to public applyLayOnHandsWithRoute and recording split-audit export ownership."
+        }
+      ]
+    },
+    {
       "taskId": "CRPI-BLOCK-051",
       "assignmentId": "reducer-spine-diagnostic-character-sheet",
       "laneId": "sheet",
