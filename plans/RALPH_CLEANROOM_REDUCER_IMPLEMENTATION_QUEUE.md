@@ -13,8 +13,8 @@
     {
       "number": 2,
       "id": "CRPI-BLOCK-001",
-      "status": "blocked",
-      "title": "Blocked route replay: battle-runtime-adrenaline-rush"
+      "status": "ready-for-research",
+      "title": "Implement route replay: battle-runtime-adrenaline-rush"
     },
     {
       "number": 3,
@@ -635,9 +635,9 @@ This is the executable follow-on Ralph queue produced by `CRP-09-CLOSEOUT-EXPAND
 - Backlog denominator rows: 101.
 - Route classes: reducer-routed 75, catalog-after-substrate 15, replay-refresh-only 1, component-first 10.
 - Generated queue tasks: 103.
-- Runnable tasks: 7.
-- Blocked tasks: 46.
-- Queue statuses: done 50, ready-for-research 7, blocked 46.
+- Runnable tasks: 1.
+- Blocked tasks: 44.
+- Queue statuses: done 58, ready-for-research 1, blocked 44.
 
 The final queue has more tasks than the provisional nine-task bootstrap because the provisional plan was a bootstrap program, not the implementation denominator. The 101 backlog rows expand to 103 Ralph tasks because the character-creation full vertical row intentionally splits into three fill-batch tasks, while the remaining multi-row batches retain their existing one-row-per-owner task shape. Pending `owner-todo` rows are not hidden prose: each is a blocked owner-decision task with a concrete unblock criterion.
 
