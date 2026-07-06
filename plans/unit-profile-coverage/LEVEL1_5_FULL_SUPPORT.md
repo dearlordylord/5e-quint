@@ -19,9 +19,9 @@ Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
 | Selected identity readiness | 191/191 (100%) |
 | Diagnostic product readiness | 770/770 (100%) |
 | SRD authored product readiness | 115/115 (100%) |
-| Rules-kernel profile join | 109/109 (100%) |
-| Rules-kernel covered profile join | 109/109 (100%) |
-| Supported Unit rules-kernel chain | 156/156 (100%) |
+| Rules-kernel profile join | 116/116 (100%) |
+| Rules-kernel covered profile join | 116/116 (100%) |
+| Supported Unit rules-kernel chain | 163/163 (100%) |
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 

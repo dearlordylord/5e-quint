@@ -1,7 +1,7 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner SHEET.SPELL_REST_BENEFIT.APPLICATION
 // UNIT-PROFILE-COVERAGE: qnt-owner character-sheet.spell-rest-benefit-application
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof character-sheet.spell-rest-benefit-application
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt character-sheet.spell-rest-benefit-application
 
 module characterSheetSpellRestBenefitApplicationMbt {
   import spellRestBenefitApplication.* from "../shared-algebras/proofs/rule-core/spell-rest-benefit-application"

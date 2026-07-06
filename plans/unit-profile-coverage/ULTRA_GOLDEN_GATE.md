@@ -121,10 +121,9 @@ Selected-identity replay is Unit identity wiring evidence. This audit keeps it s
 | level-1-2 | 99 | 99/99 | 0 |
 | level-1-3 | 147 | 147/147 | 0 |
 | level-1-4 | 148 | 148/148 | 0 |
-| level-1-5 | 170 | 169/170 | 1 |
-| level-1-6 | 171 | 170/171 | 1 |
+| level-1-5 | 170 | 170/170 | 0 |
+| level-1-6 | 171 | 171/171 | 0 |
 
 | Scope | Unit | Kind | Evidence task | Evidence owner | Parity witness join | Parity witness owners for Unit | MCP join | Required MCP flows | Missing MCP flows | Profiles |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| level-1-5 | `monk_stunning_strike` | class_feature | `L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME` | `packages/battle-runtime/src/stunning-strike-selected-identity.mbt.test.ts` | missing-unit-profile-join | _none_ | not-applicable | _none_ | _none_ | `unit-feature.stunning-strike` |
-| level-1-6 | `monk_stunning_strike` | class_feature | `L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME` | `packages/battle-runtime/src/stunning-strike-selected-identity.mbt.test.ts` | missing-unit-profile-join | _none_ | not-applicable | _none_ | _none_ | `unit-feature.stunning-strike` |
+| _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ |

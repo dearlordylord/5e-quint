@@ -1,10 +1,11 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.spell-slot-healing-modifier
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.spell-slot-healing-modifier
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.spell-slot-healing-modifier
 
 module battleRuntimeDiscipleOfLifeMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+  import unitFeatureDiscipleOfLifeCore.* from "../shared-algebras/proofs/rule-core/unit-feature-disciple-of-life-core"
 
   type WitnessHole = | DiscipleOfLife
 
@@ -26,6 +27,14 @@ module battleRuntimeDiscipleOfLifeMbt {
   pure def qSpellSlotsRemaining: int = qState.qSpellSlotsRemaining
   pure def qScenarioOutcome: DiscipleOfLifeScenarioOutcome = qState.qScenarioOutcome
 
+  pure val witnessedSlotLevel: int = 3
+  pure val witnessedDiscipleBonus: int =
+    discipleOfLifeAdditionalHitPoints({
+      spellCastWithSpellSlot: true,
+      spellRestoresHitPoints: true,
+      healedOnCastTurn: true,
+      spellSlotLevel: witnessedSlotLevel,
+    })
 
   action recordProjection(
     targetHp: int,
@@ -49,7 +58,7 @@ module battleRuntimeDiscipleOfLifeMbt {
 
   action doSlotHealingModifier = all {
     qScenarioOutcome == Init,
-    recordProjection(9, 1, 0, SlotHealingModifier,
+    recordProjection(4 + witnessedDiscipleBonus, 1, 0, SlotHealingModifier,
     witnessResolved(DiscipleOfLife),
   ),
   }

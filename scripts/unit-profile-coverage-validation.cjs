@@ -363,9 +363,10 @@ function validateCollections(collections, inventory) {
   return issues;
 }
 
-function validateProfiles(profiles) {
+function validateProfiles(profiles, root) {
   const issues = [];
   const seen = new Set();
+  const qntOwnerRolesByPath = readQntOwnerRolesByPath(root);
   for (const profile of profiles) {
     issues.push(
       ...forbiddenRulesKernelJoinFieldIssues(
@@ -388,6 +389,20 @@ function validateProfiles(profiles) {
     if (!Array.isArray(profile.verificationOwners)) {
       issues.push(`${profile.id} must declare verificationOwners.`);
     }
+    for (const owner of profile.verificationOwners ?? []) {
+      if (owner.kind !== "qnt-proof") continue;
+      if (owner.ownerPath.endsWith(".mbt.qnt")) {
+        issues.push(
+          `${profile.id} qnt-proof verification owner ${owner.ownerPath} is an MBT driver; use focused-mbt for MBT witnesses and a non-MBT proof owner for qnt-proof.`,
+        );
+      }
+      const ownerRole = qntOwnerRolesByPath.get(owner.ownerPath);
+      if (ownerRole === "mbt-fixture") {
+        issues.push(
+          `${profile.id} qnt-proof verification owner ${owner.ownerPath} is classified as mbt-fixture in qnt-owner-roles.jsonl.`,
+        );
+      }
+    }
     if (
       executableProfileKinds.has(profile.profileKind) &&
       profile.profileKind !== "stat-block-control"
@@ -400,6 +415,21 @@ function validateProfiles(profiles) {
     }
   }
   return issues;
+}
+
+function readQntOwnerRolesByPath(root) {
+  if (typeof root !== "string" || root.length === 0) return new Map();
+  const ownerRolesPath = path.join(
+    root,
+    "plans/rules-kernel-coverage/qnt-owner-roles.jsonl",
+  );
+  if (!fs.existsSync(ownerRolesPath)) return new Map();
+  const rows = fs
+    .readFileSync(ownerRolesPath, "utf8")
+    .split(/\n/)
+    .filter((line) => line.trim().length > 0)
+    .map((line) => JSON.parse(line));
+  return new Map(rows.map((row) => [row.ownerPath, row.role]));
 }
 
 function unitClaimCollectionId(unit) {
@@ -796,6 +826,7 @@ function validateOwnerClaims(
   scannedClaims,
   scannedUnitEvidence,
   unitEvidenceRows,
+  qntOwnerRolesByPath = new Map(),
 ) {
   const issues = [];
   const profileIds = new Set(profiles.map((profile) => profile.id));
@@ -1065,6 +1096,19 @@ function validateOwnerClaims(
         `${claim.ownerPath}:${claim.line} has unknown Unit profile claim kind ${claim.claimKind}.`,
       );
     }
+    if (claim.claimKind === "verification-owner:qnt-proof") {
+      if (claim.ownerPath.endsWith(".mbt.qnt")) {
+        issues.push(
+          `${claim.ownerPath}:${claim.line} claims qnt-proof verification ownership from an MBT driver; use verification-owner:focused-mbt for MBT witnesses.`,
+        );
+      }
+      const ownerRole = qntOwnerRolesByPath.get(claim.ownerPath);
+      if (ownerRole === "mbt-fixture") {
+        issues.push(
+          `${claim.ownerPath}:${claim.line} claims qnt-proof verification ownership but qnt-owner-roles.jsonl classifies it as mbt-fixture.`,
+        );
+      }
+    }
     for (const profileId of claim.profileIds) {
       if (!profileIds.has(profileId)) {
         issues.push(
@@ -1270,10 +1314,11 @@ function validateCoverageInputs(
   options = {},
 ) {
   const additionalClaimableUnits = srdInventoryClaimableUnits(srdUnitInventory);
+  const qntOwnerRolesByPath = readQntOwnerRolesByPath(root);
   const issues = [
     ...rulesKernelProfileKindClassificationIssues(),
     ...validateCollections(collections.collections, inventory),
-    ...validateProfiles(profiles),
+    ...validateProfiles(profiles, root),
     ...validateUnitClaims(
       unitClaims,
       inventory,
@@ -1291,6 +1336,7 @@ function validateCoverageInputs(
       scannedClaims.profileClaims,
       scannedClaims,
       unitEvidence,
+      qntOwnerRolesByPath,
     ),
   ];
   if (options.selectedIdentityHardGate === true) {

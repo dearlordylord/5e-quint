@@ -1578,42 +1578,15 @@
           },
           "joinedEvidenceRows": {
             "denominator": 170,
-            "numerator": 169
+            "numerator": 170
           },
           "missingJoinRows": {
             "denominator": 170,
-            "numerator": 1
+            "numerator": 0
           }
         },
-        "rowCount": 1,
-        "rows": [
-          {
-            "collectionId": "srd-5.2.1",
-            "evidence": {
-              "ownerPath": "packages/battle-runtime/src/stunning-strike-selected-identity.mbt.test.ts",
-              "tag": "selected-identity-replay",
-              "taskId": "L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME"
-            },
-            "kind": "class_feature",
-            "mcpScenarioJoin": {
-              "coveredFlowIds": [],
-              "missingFlowIds": [],
-              "requiredFlowIds": [],
-              "status": "not-applicable"
-            },
-            "parityWitnessJoin": {
-              "joinedRows": [],
-              "status": "missing-unit-profile-join",
-              "unitProfileJoinRowCount": 0,
-              "unitProfileWitnessOwners": []
-            },
-            "profileIds": [
-              "unit-feature.stunning-strike"
-            ],
-            "sourceRecordPath": "packages/surface/content/monk_stunning_strike.json",
-            "unitId": "monk_stunning_strike"
-          }
-        ],
+        "rowCount": 0,
+        "rows": [],
         "scopeId": "level-1-5"
       },
       {
@@ -1624,42 +1597,15 @@
           },
           "joinedEvidenceRows": {
             "denominator": 171,
-            "numerator": 170
+            "numerator": 171
           },
           "missingJoinRows": {
             "denominator": 171,
-            "numerator": 1
+            "numerator": 0
           }
         },
-        "rowCount": 1,
-        "rows": [
-          {
-            "collectionId": "srd-5.2.1",
-            "evidence": {
-              "ownerPath": "packages/battle-runtime/src/stunning-strike-selected-identity.mbt.test.ts",
-              "tag": "selected-identity-replay",
-              "taskId": "L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME"
-            },
-            "kind": "class_feature",
-            "mcpScenarioJoin": {
-              "coveredFlowIds": [],
-              "missingFlowIds": [],
-              "requiredFlowIds": [],
-              "status": "not-applicable"
-            },
-            "parityWitnessJoin": {
-              "joinedRows": [],
-              "status": "missing-unit-profile-join",
-              "unitProfileJoinRowCount": 0,
-              "unitProfileWitnessOwners": []
-            },
-            "profileIds": [
-              "unit-feature.stunning-strike"
-            ],
-            "sourceRecordPath": "packages/surface/content/monk_stunning_strike.json",
-            "unitId": "monk_stunning_strike"
-          }
-        ],
+        "rowCount": 0,
+        "rows": [],
         "scopeId": "level-1-6"
       }
     ]

@@ -165,3 +165,12 @@
 {"profileId":"spell.invocation-glyph-explosive-rune-release","obligationIds":["BATTLE.SPELL.GLYPH_EXPLOSIVE_RUNE_RELEASE"]}
 {"profileId":"spell.invocation-glyph-stored-spell-release","obligationIds":["BATTLE.SPELL.GLYPH_STORED_SPELL_RELEASE"]}
 {"profileId":"spell.invocation-glyph-stored-concentration-full-duration","obligationIds":["BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION"]}
+{"profileId":"unit-feature.attack-action-area-save-damage-replacement","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
+{"profileId":"unit-feature.cunning-strike","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
+{"profileId":"unit-feature.grappler","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
+{"profileId":"unit-feature.hunters-prey","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
+{"profileId":"unit-feature.magic-action-area-save-damage-healing","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
+{"profileId":"unit-feature.magic-action-healing-pool","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
+{"profileId":"unit-feature.open-hand-technique","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
+{"profileId":"unit-feature.potent-cantrip","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
+{"profileId":"unit-feature.stunning-strike","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}

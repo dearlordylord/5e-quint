@@ -1,10 +1,11 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.enemy-zero-hit-point-temporary-hit-points
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.enemy-zero-hit-point-temporary-hit-points
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.enemy-zero-hit-point-temporary-hit-points
 
 module battleRuntimeDarkOnesBlessingMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+  import unitFeatureDarkOnesBlessingCore.* from "../shared-algebras/proofs/rule-core/unit-feature-dark-ones-blessing-core"
 
   type WitnessHole = | DarkOnesBlessing
 
@@ -24,6 +25,10 @@ module battleRuntimeDarkOnesBlessingMbt {
   pure def qTargetHp: int = qState.qTargetHp
   pure def qScenarioOutcome: DarkOnesBlessingScenarioOutcome = qState.qScenarioOutcome
 
+  pure val witnessedCharismaModifier: int = 3
+  pure val witnessedWarlockLevel: int = 3
+  pure val witnessedTemporaryHitPoints: int =
+    darkOnesBlessingTemporaryHitPoints(witnessedCharismaModifier, witnessedWarlockLevel)
 
   action recordProjection(
     warlockTempHp: int,
@@ -45,21 +50,21 @@ module battleRuntimeDarkOnesBlessingMbt {
 
   action doSelfKill = all {
     qScenarioOutcome == Init,
-    recordProjection(6, 0, SelfKill,
+    recordProjection(witnessedTemporaryHitPoints, 0, SelfKill,
     witnessResolved(DarkOnesBlessing),
   ),
   }
 
   action doNearbyOtherKill = all {
     qScenarioOutcome == Init,
-    recordProjection(6, 0, NearbyOtherKill,
+    recordProjection(witnessedTemporaryHitPoints, 0, NearbyOtherKill,
     witnessResolved(DarkOnesBlessing),
   ),
   }
 
   action doSameSideOtherKill = all {
     qScenarioOutcome == Init,
-    recordProjection(6, 0, SameSideOtherKill,
+    recordProjection(witnessedTemporaryHitPoints, 0, SameSideOtherKill,
     witnessResolved(DarkOnesBlessing),
   ),
   }

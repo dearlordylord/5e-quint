@@ -72,38 +72,38 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 130,
-      "numerator": 130,
+      "denominator": 139,
+      "numerator": 139,
       "percent": "100%"
     },
     "qntProofCoverage": {
-      "denominator": 130,
-      "numerator": 126,
-      "percent": "96.9%"
+      "denominator": 139,
+      "numerator": 135,
+      "percent": "97.1%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 168,
-      "numerator": 167,
+      "denominator": 177,
+      "numerator": 176,
       "percent": "99.4%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 168,
-      "numerator": 167,
+      "denominator": 177,
+      "numerator": 176,
       "percent": "99.4%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 177,
-      "numerator": 177,
+      "denominator": 186,
+      "numerator": 186,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 130,
-      "numerator": 130,
+      "denominator": 139,
+      "numerator": 139,
       "percent": "100%"
     },
     "runtimeParityCoverage": {
-      "denominator": 130,
-      "numerator": 130,
+      "denominator": 139,
+      "numerator": 139,
       "percent": "100%"
     },
     "selectedIdentityReplayCoverage": {
@@ -1043,9 +1043,9 @@
     },
     {
       "id": "unit-feature.attack-action-area-save-damage-replacement",
-      "profileKind": "battle-admission",
+      "profileKind": "battle-procedure",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-breath-weapon-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -1060,6 +1060,10 @@
       ],
       "title": "Unit feature admits and executes an Attack-action attack replacement with area Saving Throw damage",
       "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-breath-weapon-core-examples.qnt"
+        },
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
@@ -4354,8 +4358,7 @@
       "id": "character-sheet.spell-rest-benefit-application",
       "profileKind": "character-sheet",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/spell-rest-benefit-application.qnt",
-        "packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt"
+        "packages/shared-algebras/proofs/rule-core/spell-rest-benefit-application.qnt"
       ],
       "runtimeOwners": [
         "packages/character-sheet-runtime/src/healing-rest-benefit.ts"
@@ -4368,7 +4371,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt"
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-rest-benefit-application-examples.qnt"
         },
         {
           "kind": "runtime-test",
@@ -4841,7 +4844,7 @@
       "id": "unit-feature.spell-slot-healing-modifier",
       "profileKind": "passive",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-disciple-of-life-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -4857,7 +4860,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt"
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-disciple-of-life-core-examples.qnt"
         },
         {
           "kind": "runtime-test",
@@ -4871,9 +4874,9 @@
     },
     {
       "id": "unit-feature.magic-action-healing-pool",
-      "profileKind": "battle-admission",
+      "profileKind": "battle-procedure",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-preserve-life-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -4890,7 +4893,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt"
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-preserve-life-core-examples.qnt"
         },
         {
           "kind": "runtime-test",
@@ -4904,9 +4907,9 @@
     },
     {
       "id": "unit-feature.magic-action-area-save-damage-healing",
-      "profileKind": "battle-admission",
+      "profileKind": "battle-procedure",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-druid-lands-aid.mbt.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-lands-aid-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -4923,7 +4926,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-druid-lands-aid.mbt.qnt"
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-lands-aid-core-examples.qnt"
         },
         {
           "kind": "runtime-test",
@@ -4939,7 +4942,7 @@
       "id": "unit-feature.enemy-zero-hit-point-temporary-hit-points",
       "profileKind": "persistent-effect",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-dark-ones-blessing-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -4956,7 +4959,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt"
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-dark-ones-blessing-core-examples.qnt"
         },
         {
           "kind": "runtime-test",
@@ -4970,7 +4973,7 @@
     },
     {
       "id": "unit-feature.bonus-action-delegated-standard-actions",
-      "profileKind": "battle-admission",
+      "profileKind": "battle-support-admission",
       "qntOwners": [],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts"
@@ -4985,10 +4988,9 @@
     },
     {
       "id": "unit-feature.remarkable-athlete",
-      "profileKind": "passive",
+      "profileKind": "battle-procedure",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-remarkable-athlete-roll-modes.qnt",
-        "packages/battle-runtime/battle-runtime-remarkable-athlete-critical-movement.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-remarkable-athlete-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -5014,11 +5016,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-remarkable-athlete-roll-modes.qnt"
-        },
-        {
-          "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-remarkable-athlete-critical-movement.qnt"
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-remarkable-athlete-core-examples.qnt"
         },
         {
           "kind": "runtime-test",
@@ -5032,10 +5030,9 @@
     },
     {
       "id": "unit-feature.open-hand-technique",
-      "profileKind": "battle-admission",
+      "profileKind": "battle-procedure",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-open-hand-technique.qnt",
-        "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-open-hand-technique-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -5052,7 +5049,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-open-hand-technique-tests.qnt"
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-open-hand-technique-core-examples.qnt"
         },
         {
           "kind": "runtime-test",
@@ -5066,8 +5063,10 @@
     },
     {
       "id": "unit-feature.stunning-strike",
-      "profileKind": "battle-admission",
-      "qntOwners": [],
+      "profileKind": "battle-procedure",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/unit-feature-stunning-strike-core.qnt"
+      ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
         "packages/battle-runtime/src/battle-reducer/monk-focus.ts",
@@ -5082,6 +5081,10 @@
       ],
       "title": "Unit feature admits Stunning Strike attack-hit Focus rider facts",
       "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-stunning-strike-core-examples.qnt"
+        },
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-stunning-strike.test.ts"
@@ -5134,10 +5137,9 @@
     },
     {
       "id": "unit-feature.hunters-prey",
-      "profileKind": "battle-admission",
+      "profileKind": "battle-procedure",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-hunters-prey.qnt",
-        "packages/battle-runtime/battle-runtime-hunters-prey.mbt.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-hunters-prey-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -5158,7 +5160,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-hunters-prey-tests.qnt"
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-hunters-prey-core-examples.qnt"
         },
         {
           "kind": "runtime-test",
@@ -5310,7 +5312,7 @@
       "id": "unit-feature.rogue-steady-aim",
       "profileKind": "bonus-action",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-rogue-steady-aim-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -5325,7 +5327,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt"
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rogue-steady-aim-core-examples.qnt"
         },
         {
           "kind": "runtime-test",
@@ -5339,9 +5341,9 @@
     },
     {
       "id": "unit-feature.potent-cantrip",
-      "profileKind": "battle-admission",
+      "profileKind": "battle-procedure",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-potent-cantrip.mbt.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-potent-cantrip-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -5358,7 +5360,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-potent-cantrip.mbt.qnt"
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-potent-cantrip-core-examples.qnt"
         },
         {
           "kind": "runtime-test",
@@ -5491,9 +5493,9 @@
     },
     {
       "id": "unit-feature.grappler",
-      "profileKind": "battle-admission",
+      "profileKind": "battle-procedure",
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-grappler-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -5510,7 +5512,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple-inductive.qnt"
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-grappler-core-examples.qnt"
         },
         {
           "kind": "runtime-test",
@@ -5555,9 +5557,9 @@
     },
     {
       "id": "unit-feature.cunning-strike",
-      "profileKind": "battle-admission",
+      "profileKind": "battle-procedure",
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-cunning-strike.qnt"
+        "packages/shared-algebras/proofs/rule-core/unit-feature-cunning-strike-core.qnt"
       ],
       "runtimeOwners": [
         "packages/battle-runtime/src/unit-feature-support.ts",
@@ -5577,7 +5579,7 @@
       "verificationOwners": [
         {
           "kind": "qnt-proof",
-          "ownerPath": "packages/battle-runtime/battle-runtime-cunning-strike-tests.qnt"
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-cunning-strike-core-examples.qnt"
         },
         {
           "kind": "runtime-test",
@@ -5788,18 +5790,19 @@
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 168,
-        "numerator": 167,
+        "denominator": 177,
+        "numerator": 176,
         "percent": "99.4%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 168,
-        "numerator": 167,
+        "denominator": 177,
+        "numerator": 176,
         "percent": "99.4%"
       }
     },
     "profileKinds": [
       "action",
+      "battle-procedure",
       "bonus-action",
       "character-creation",
       "character-sheet",
@@ -6237,6 +6240,22 @@
         "profileKind": "persistent-effect",
         "qntOwners": [
           "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
+        "profileId": "unit-feature.attack-action-area-save-damage-replacement",
+        "profileKind": "battle-procedure",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-breath-weapon-core.qnt"
         ]
       },
       {
@@ -8215,7 +8234,6 @@
         "profileId": "character-sheet.spell-rest-benefit-application",
         "profileKind": "character-sheet",
         "qntOwners": [
-          "packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt",
           "packages/shared-algebras/proofs/rule-core/spell-rest-benefit-application.qnt"
         ]
       },
@@ -8431,7 +8449,39 @@
         "profileId": "unit-feature.spell-slot-healing-modifier",
         "profileKind": "passive",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt"
+          "packages/shared-algebras/proofs/rule-core/unit-feature-disciple-of-life-core.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
+        "profileId": "unit-feature.magic-action-healing-pool",
+        "profileKind": "battle-procedure",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-preserve-life-core.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
+        "profileId": "unit-feature.magic-action-area-save-damage-healing",
+        "profileKind": "battle-procedure",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-lands-aid-core.qnt"
         ]
       },
       {
@@ -8447,7 +8497,7 @@
         "profileId": "unit-feature.enemy-zero-hit-point-temporary-hit-points",
         "profileKind": "persistent-effect",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt"
+          "packages/shared-algebras/proofs/rule-core/unit-feature-dark-ones-blessing-core.qnt"
         ]
       },
       {
@@ -8461,10 +8511,41 @@
           }
         ],
         "profileId": "unit-feature.remarkable-athlete",
-        "profileKind": "passive",
+        "profileKind": "battle-procedure",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-remarkable-athlete-critical-movement.qnt",
-          "packages/battle-runtime/battle-runtime-remarkable-athlete-roll-modes.qnt"
+          "packages/shared-algebras/proofs/rule-core/unit-feature-remarkable-athlete-core.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
+        "profileId": "unit-feature.open-hand-technique",
+        "profileKind": "battle-procedure",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-open-hand-technique-core.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
+        "profileId": "unit-feature.stunning-strike",
+        "profileKind": "battle-procedure",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-stunning-strike-core.qnt"
         ]
       },
       {
@@ -8493,10 +8574,42 @@
             "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
           }
         ],
+        "profileId": "unit-feature.hunters-prey",
+        "profileKind": "battle-procedure",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-hunters-prey-core.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
         "profileId": "unit-feature.rogue-steady-aim",
         "profileKind": "bonus-action",
         "qntOwners": [
-          "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt"
+          "packages/shared-algebras/proofs/rule-core/unit-feature-rogue-steady-aim-core.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
+        "profileId": "unit-feature.potent-cantrip",
+        "profileKind": "battle-procedure",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-potent-cantrip-core.qnt"
         ]
       },
       {
@@ -8563,10 +8676,42 @@
             "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
           }
         ],
+        "profileId": "unit-feature.grappler",
+        "profileKind": "battle-procedure",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-grappler-core.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
         "profileId": "unit-feature.hide-action-obscurement-permission",
         "profileKind": "passive",
         "qntOwners": [
           "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+          }
+        ],
+        "profileId": "unit-feature.cunning-strike",
+        "profileKind": "battle-procedure",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/unit-feature-cunning-strike-core.qnt"
         ]
       },
       {
@@ -8680,8 +8825,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 177,
-          "numerator": 177,
+          "denominator": 186,
+          "numerator": 186,
           "percent": "100%"
         }
       },
@@ -9480,7 +9625,7 @@
               "profileId": "unit-feature.spell-slot-healing-modifier",
               "profileKind": "passive",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt"
+                "packages/shared-algebras/proofs/rule-core/unit-feature-disciple-of-life-core.qnt"
               ]
             }
           ],
@@ -9525,6 +9670,28 @@
             }
           ],
           "unitId": "cleric_life_domain_spells"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.magic-action-healing-pool",
+              "profileKind": "battle-procedure",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-preserve-life-core.qnt"
+              ]
+            }
+          ],
+          "unitId": "cleric_preserve_life"
         },
         {
           "joinStatus": "covered",
@@ -9877,6 +10044,28 @@
               "joinStatus": "covered",
               "obligations": [
                 {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.magic-action-area-save-damage-healing",
+              "profileKind": "battle-procedure",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-lands-aid-core.qnt"
+              ]
+            }
+          ],
+          "unitId": "druid_lands_aid"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
                   "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
                   "runtime": "character-creation",
                   "status": "covered",
@@ -10146,6 +10335,28 @@
                   "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
                 }
               ],
+              "profileId": "unit-feature.grappler",
+              "profileKind": "battle-procedure",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-grappler-core.qnt"
+              ]
+            }
+          ],
+          "unitId": "feat_grappler"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
               "profileId": "unit-feature.attack-damage-die-floor",
               "profileKind": "persistent-effect",
               "qntOwners": [
@@ -10342,10 +10553,9 @@
                 }
               ],
               "profileId": "unit-feature.remarkable-athlete",
-              "profileKind": "passive",
+              "profileKind": "battle-procedure",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-remarkable-athlete-critical-movement.qnt",
-                "packages/battle-runtime/battle-runtime-remarkable-athlete-roll-modes.qnt"
+                "packages/shared-algebras/proofs/rule-core/unit-feature-remarkable-athlete-core.qnt"
               ]
             }
           ],
@@ -11560,6 +11770,28 @@
                   "runtime": "battle",
                   "status": "covered",
                   "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.open-hand-technique",
+              "profileKind": "battle-procedure",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-open-hand-technique-core.qnt"
+              ]
+            }
+          ],
+          "unitId": "monk_open_hand_technique"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
                 },
                 {
                   "obligationId": "BATTLE.REACTION.OFFER_DECLINE_RESUME",
@@ -11578,6 +11810,28 @@
             }
           ],
           "unitId": "monk_slow_fall"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.stunning-strike",
+              "profileKind": "battle-procedure",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-stunning-strike-core.qnt"
+              ]
+            }
+          ],
+          "unitId": "monk_stunning_strike"
         },
         {
           "joinStatus": "covered",
@@ -12199,6 +12453,28 @@
                   "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
                 }
               ],
+              "profileId": "unit-feature.hunters-prey",
+              "profileKind": "battle-procedure",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-hunters-prey-core.qnt"
+              ]
+            }
+          ],
+          "unitId": "ranger_hunters_prey"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
               "profileId": "unit-feature.passive-speed-kind-grants",
               "profileKind": "passive",
               "qntOwners": [
@@ -12447,6 +12723,28 @@
                   "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
                 }
               ],
+              "profileId": "unit-feature.cunning-strike",
+              "profileKind": "battle-procedure",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-cunning-strike-core.qnt"
+              ]
+            }
+          ],
+          "unitId": "rogue_cunning_strike"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
               "profileId": "unit-feature.save-damage-replacement",
               "profileKind": "passive",
               "qntOwners": [
@@ -12515,7 +12813,7 @@
               "profileId": "unit-feature.rogue-steady-aim",
               "profileKind": "bonus-action",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt"
+                "packages/shared-algebras/proofs/rule-core/unit-feature-rogue-steady-aim-core.qnt"
               ]
             }
           ],
@@ -13086,6 +13384,28 @@
               "joinStatus": "covered",
               "obligations": [
                 {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.attack-action-area-save-damage-replacement",
+              "profileKind": "battle-procedure",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-breath-weapon-core.qnt"
+              ]
+            }
+          ],
+          "unitId": "species_dragonborn_breath_weapon"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
                   "obligationId": "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
                   "runtime": "battle",
                   "status": "covered",
@@ -13357,7 +13677,7 @@
               "profileId": "unit-feature.enemy-zero-hit-point-temporary-hit-points",
               "profileKind": "persistent-effect",
               "qntOwners": [
-                "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt"
+                "packages/shared-algebras/proofs/rule-core/unit-feature-dark-ones-blessing-core.qnt"
               ]
             }
           ],
@@ -13498,6 +13818,28 @@
             }
           ],
           "unitId": "wizard_arcane_recovery"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.potent-cantrip",
+              "profileKind": "battle-procedure",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-potent-cantrip-core.qnt"
+              ]
+            }
+          ],
+          "unitId": "wizard_potent_cantrip"
         },
         {
           "joinStatus": "covered",
@@ -15930,7 +16272,7 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Deterministic Character Sheet projection witness records Prayer of Healing Spell Slot spend, Short Rest benefit application, slot-scaled healing, and Long Rest recipient lockout as the profile-specific rules-kernel obligation owner.",
+      "note": "Shared spell-rest benefit rule-core proof examples cover recipient eligibility, slot-scaled healing dice, Short Rest benefit application, Long Rest lockout storage, and pre-spend rejection; focused MBT/runtime tests remain reducer parity witnesses.",
       "profileIds": [
         "character-sheet.spell-rest-benefit-application"
       ],
@@ -16334,7 +16676,7 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Focused Steady Aim MBT witness models Bonus Action availability, prior-movement rejection, Bonus Action spend, next-attack Advantage, Speed 0, attack consumption, duplicate-use rejection, and end-turn cleanup.",
+      "note": "Shared Steady Aim rule-core proof examples cover Bonus Action availability, prior-movement rejection, next-attack Advantage, Speed 0, and end-turn cleanup facts; focused MBT/runtime tests remain reducer parity witnesses.",
       "profileIds": [
         "unit-feature.rogue-steady-aim"
       ],
@@ -16414,7 +16756,7 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Focused Open Hand Technique QNT proof and literal MBT witness model Addle Opportunity Attack denial, failed-save-only Push and Topple outcomes, Push distances up to the feature's 15-foot maximum, successful-save no-op behavior for Push and Topple, and rejection of missing selected profile, non-Flurry hit windows, and stale targets.",
+      "note": "Focused Open Hand Technique QNT proof and shared rule-core proof model Addle Opportunity Attack denial, failed-save-only Push and Topple outcomes, Push distances up to the feature's 15-foot maximum, successful-save no-op behavior for Push and Topple, and rejection of missing selected profile, non-Flurry hit windows, and stale targets.",
       "profileIds": [
         "unit-feature.open-hand-technique"
       ],
@@ -16454,7 +16796,7 @@
     },
     {
       "claimKind": "qnt-proof",
-      "note": "Focused Land's Aid literal MBT witness models Magic Action and Wild Shape resource spend, caller-supplied Sphere membership, Constitution save outcomes, failed-save Necrotic damage, successful-save half damage, one-target healing, Druid-level 2d6/3d6/4d6 scaling projections, and missing-resource, missing-area, duplicate-save-fill, invalid-healing-target, and malformed-roll rejection.",
+      "note": "Focused Land's Aid shared rule-core proof models Magic Action and Wild Shape resource spend, caller-supplied Sphere membership, Constitution save outcomes, failed-save Necrotic damage, successful-save half damage, one-target healing, Druid-level 2d6/3d6/4d6 scaling projections, and missing-resource, missing-area, duplicate-save-fill, invalid-healing-target, and malformed-roll rejection.",
       "profileIds": [
         "unit-feature.magic-action-area-save-damage-healing"
       ],
@@ -17423,6 +17765,22 @@
         "spell.invocation-glyph-stored-concentration-full-duration"
       ],
       "taskId": "L3-FOLLOWUP-GLYPH-STORED-SELF-TRANSFORMATION-CONCENTRATION"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Shared rule-core proof examples cover the reusable rule-owned facts for unit-feature.attack-action-area-save-damage-replacement; focused MBT/runtime tests remain reducer parity witnesses.",
+      "profileIds": [
+        "unit-feature.attack-action-area-save-damage-replacement"
+      ],
+      "taskId": "L3MSPEC-03-DRAGONBORN-BREATH-WEAPON-RUNTIME"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Shared rule-core proof examples cover the reusable rule-owned facts for unit-feature.stunning-strike; focused MBT/runtime tests remain reducer parity witnesses.",
+      "profileIds": [
+        "unit-feature.stunning-strike"
+      ],
+      "taskId": "L5-A12-MONK-STUNNING-STRIKE-BATTLE-RUNTIME"
     }
   ],
   "unitGroupDenominatorAudit": {
@@ -18816,10 +19174,9 @@
       "profiles": [
         {
           "id": "unit-feature.remarkable-athlete",
-          "profileKind": "passive",
+          "profileKind": "battle-procedure",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-remarkable-athlete-roll-modes.qnt",
-            "packages/battle-runtime/battle-runtime-remarkable-athlete-critical-movement.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-remarkable-athlete-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -18845,11 +19202,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-remarkable-athlete-roll-modes.qnt"
-            },
-            {
-              "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-remarkable-athlete-critical-movement.qnt"
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-remarkable-athlete-core-examples.qnt"
             },
             {
               "kind": "runtime-test",
@@ -19984,7 +20337,7 @@
           "id": "unit-feature.spell-slot-healing-modifier",
           "profileKind": "passive",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-disciple-of-life-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -20000,7 +20353,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt"
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-disciple-of-life-core-examples.qnt"
             },
             {
               "kind": "runtime-test",
@@ -20170,9 +20523,9 @@
       "profiles": [
         {
           "id": "unit-feature.magic-action-healing-pool",
-          "profileKind": "battle-admission",
+          "profileKind": "battle-procedure",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-preserve-life-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -20189,7 +20542,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-preserve-life.mbt.qnt"
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-preserve-life-core-examples.qnt"
             },
             {
               "kind": "runtime-test",
@@ -20354,9 +20707,9 @@
       "profiles": [
         {
           "id": "unit-feature.magic-action-area-save-damage-healing",
-          "profileKind": "battle-admission",
+          "profileKind": "battle-procedure",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-druid-lands-aid.mbt.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-lands-aid-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -20373,7 +20726,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-druid-lands-aid.mbt.qnt"
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-lands-aid-core-examples.qnt"
             },
             {
               "kind": "runtime-test",
@@ -21530,8 +21883,10 @@
       "profiles": [
         {
           "id": "unit-feature.stunning-strike",
-          "profileKind": "battle-admission",
-          "qntOwners": [],
+          "profileKind": "battle-procedure",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-stunning-strike-core.qnt"
+          ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
             "packages/battle-runtime/src/battle-reducer/monk-focus.ts",
@@ -21546,6 +21901,10 @@
           ],
           "title": "Unit feature admits Stunning Strike attack-hit Focus rider facts",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-stunning-strike-core-examples.qnt"
+            },
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/battle-runtime-stunning-strike.test.ts"
@@ -21604,10 +21963,9 @@
       "profiles": [
         {
           "id": "unit-feature.open-hand-technique",
-          "profileKind": "battle-admission",
+          "profileKind": "battle-procedure",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-open-hand-technique.qnt",
-            "packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-open-hand-technique-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -21624,7 +21982,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-open-hand-technique-tests.qnt"
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-open-hand-technique-core-examples.qnt"
             },
             {
               "kind": "runtime-test",
@@ -22288,7 +22646,7 @@
       "profiles": [
         {
           "id": "unit-feature.bonus-action-delegated-standard-actions",
-          "profileKind": "battle-admission",
+          "profileKind": "battle-support-admission",
           "qntOwners": [],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts"
@@ -22427,7 +22785,7 @@
           "id": "unit-feature.rogue-steady-aim",
           "profileKind": "bonus-action",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-rogue-steady-aim-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -22442,7 +22800,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt"
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rogue-steady-aim-core-examples.qnt"
             },
             {
               "kind": "runtime-test",
@@ -22563,9 +22921,9 @@
       "profiles": [
         {
           "id": "unit-feature.cunning-strike",
-          "profileKind": "battle-admission",
+          "profileKind": "battle-procedure",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-cunning-strike.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-cunning-strike-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -22585,7 +22943,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-cunning-strike-tests.qnt"
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-cunning-strike-core-examples.qnt"
             },
             {
               "kind": "runtime-test",
@@ -23873,7 +24231,7 @@
           "id": "unit-feature.enemy-zero-hit-point-temporary-hit-points",
           "profileKind": "persistent-effect",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-dark-ones-blessing-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -23890,7 +24248,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt"
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-dark-ones-blessing-core-examples.qnt"
             },
             {
               "kind": "runtime-test",
@@ -24419,9 +24777,9 @@
       "profiles": [
         {
           "id": "unit-feature.potent-cantrip",
-          "profileKind": "battle-admission",
+          "profileKind": "battle-procedure",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-potent-cantrip.mbt.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-potent-cantrip-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -24438,7 +24796,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-potent-cantrip.mbt.qnt"
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-potent-cantrip-core-examples.qnt"
             },
             {
               "kind": "runtime-test",
@@ -24796,9 +25154,9 @@
         },
         {
           "id": "unit-feature.grappler",
-          "profileKind": "battle-admission",
+          "profileKind": "battle-procedure",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-grappler-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -24815,7 +25173,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/shared-algebras/proofs/rule-core/movement-spatial-grapple-inductive.qnt"
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-grappler-core-examples.qnt"
             },
             {
               "kind": "runtime-test",
@@ -25955,10 +26313,9 @@
       "profiles": [
         {
           "id": "unit-feature.hunters-prey",
-          "profileKind": "battle-admission",
+          "profileKind": "battle-procedure",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-hunters-prey.qnt",
-            "packages/battle-runtime/battle-runtime-hunters-prey.mbt.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-hunters-prey-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -25979,7 +26336,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/battle-runtime/battle-runtime-hunters-prey-tests.qnt"
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-hunters-prey-core-examples.qnt"
             },
             {
               "kind": "runtime-test",
@@ -26649,9 +27006,9 @@
       "profiles": [
         {
           "id": "unit-feature.attack-action-area-save-damage-replacement",
-          "profileKind": "battle-admission",
+          "profileKind": "battle-procedure",
           "qntOwners": [
-            "packages/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt"
+            "packages/shared-algebras/proofs/rule-core/unit-feature-breath-weapon-core.qnt"
           ],
           "runtimeOwners": [
             "packages/battle-runtime/src/unit-feature-support.ts",
@@ -26666,6 +27023,10 @@
           ],
           "title": "Unit feature admits and executes an Attack-action attack replacement with area Saving Throw damage",
           "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-breath-weapon-core-examples.qnt"
+            },
             {
               "kind": "runtime-test",
               "ownerPath": "packages/battle-runtime/src/unit-profile-admission-martial-action-features.test.ts"
@@ -33452,8 +33813,7 @@
           "id": "character-sheet.spell-rest-benefit-application",
           "profileKind": "character-sheet",
           "qntOwners": [
-            "packages/shared-algebras/proofs/rule-core/spell-rest-benefit-application.qnt",
-            "packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt"
+            "packages/shared-algebras/proofs/rule-core/spell-rest-benefit-application.qnt"
           ],
           "runtimeOwners": [
             "packages/character-sheet-runtime/src/healing-rest-benefit.ts"
@@ -33466,7 +33826,7 @@
           "verificationOwners": [
             {
               "kind": "qnt-proof",
-              "ownerPath": "packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt"
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-rest-benefit-application-examples.qnt"
             },
             {
               "kind": "runtime-test",

@@ -6,6 +6,8 @@
 // small witness protocol module.
 module battleRuntimeGrapplerSelectedIdentityMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+  import creatureSizeOrder.* from "../shared-algebras/proofs/rule-core/creature-size-order"
+  import unitFeatureGrapplerCore.* from "../shared-algebras/proofs/rule-core/unit-feature-grappler-core"
 
   type WitnessHole = | WitnessProtocolHole
 
@@ -42,14 +44,26 @@ module battleRuntimeGrapplerSelectedIdentityMbt {
   action init = recordProjection(false, "none", false, false, Init)
 
   action doFastWrestlerExemptsSameSizeDragCost = all {
-    recordProjection(true, "none", false, true, FastWrestler),
+    recordProjection(
+      grapplerFastWrestlerAvoidsExtraMovement(MediumSize, MediumSize),
+      "none",
+      false,
+      true,
+      FastWrestler,
+    ),
   }
 
   action doAttackAdvantageAgainstGrappledTarget = all {
+    grapplerAttackAdvantageApplies(true),
     recordProjection(false, "advantage", false, true, AttackAdvantage),
   }
 
   action doPunchAndGrabFailedSaveGrapple = all {
+    grapplerPunchAndGrabAvailable({
+      hitWithUnarmedStrike: true,
+      partOfAttackActionOnTurn: true,
+      usedThisTurn: false,
+    }),
     recordProjection(false, "none", true, true, PunchAndGrab),
   }
 

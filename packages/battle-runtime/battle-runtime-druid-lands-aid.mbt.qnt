@@ -1,12 +1,13 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.magic-action-area-save-damage-healing
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.magic-action-area-save-damage-healing
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.magic-action-area-save-damage-healing
 
 // Self-contained literal projection witness for Druid Land's Aid. The paired
 // TypeScript selected-identity driver executes production battle entrypoints.
 module battleRuntimeDruidLandsAidMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+  import unitFeatureLandsAidCore.* from "../shared-algebras/proofs/rule-core/unit-feature-lands-aid-core"
 
   type WitnessHole = | WitnessProtocolHole
 
@@ -75,16 +76,19 @@ module battleRuntimeDruidLandsAidMbt {
   // Druid-level fixture and die-count projection, not a sampled fill value.
   action doResolveAreaSaveDamageHealing = all {
     scenarioOutcome == Init,
+    landsAidDice(3) == 2,
     recordProjection(12, 16, 12, 1, 0, Resolved),
   }
 
   action doResolveAreaSaveDamageHealingLevel10 = all {
     scenarioOutcome == Init,
+    landsAidDice(10) == 3,
     recordProjection(8, 14, 17, 1, 0, Resolved),
   }
 
   action doResolveAreaSaveDamageHealingLevel14 = all {
     scenarioOutcome == Init,
+    landsAidDice(14) == 4,
     recordProjection(4, 12, 20, 1, 0, Resolved),
   }
 

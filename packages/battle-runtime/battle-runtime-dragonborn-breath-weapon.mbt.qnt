@@ -7,6 +7,7 @@
 // entrypoints with the selected Draconic Ancestry source fact.
 module battleRuntimeDragonbornBreathWeaponMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+  import unitFeatureBreathWeaponCore.* from "../shared-algebras/proofs/rule-core/unit-feature-breath-weapon-core"
 
   type WitnessHole = | DragonbornBreathWeapon
 
@@ -58,20 +59,33 @@ module battleRuntimeDragonbornBreathWeaponMbt {
     },
   }
 
-  action init = recordProjection(20, 20, 3, 1, Init,
+  pure val witnessedFailedSaveDamage: int = 10
+  pure val witnessedProficiencyBonus: int = 3
+
+  action init = recordProjection(20, 20, breathWeaponUsesPerLongRest(witnessedProficiencyBonus), 1, Init,
     witnessInit(DragonbornBreathWeapon),
   )
 
   action doResolveBreathWeapon = all {
     qScenarioOutcome == Init,
-    recordProjection(10, 15, 2, 0, Resolved,
+    recordProjection(
+      20 - witnessedFailedSaveDamage,
+      20 - breathWeaponSuccessfulSaveDamage(witnessedFailedSaveDamage),
+      breathWeaponUsesPerLongRest(witnessedProficiencyBonus) - 1,
+      0,
+      Resolved,
     witnessResolved(DragonbornBreathWeapon),
   ),
   }
 
   action doOpenExtraAttackSlot = all {
     qScenarioOutcome == Init,
-    recordProjection(10, 20, 2, 1, OpenedExtraAttack,
+    recordProjection(
+      20 - witnessedFailedSaveDamage,
+      20,
+      breathWeaponUsesPerLongRest(witnessedProficiencyBonus) - 1,
+      1,
+      OpenedExtraAttack,
     witnessResolved(DragonbornBreathWeapon),
   ),
   }

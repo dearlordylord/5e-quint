@@ -1,10 +1,11 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.magic-action-healing-pool
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.magic-action-healing-pool
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.magic-action-healing-pool
 
 module battleRuntimePreserveLifeMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+  import unitFeaturePreserveLifeCore.* from "../shared-algebras/proofs/rule-core/unit-feature-preserve-life-core"
 
   type WitnessHole = | WitnessProtocolHole
 
@@ -29,6 +30,8 @@ module battleRuntimePreserveLifeMbt {
   pure def qChannelDivinityUsesRemaining: int = qState.qChannelDivinityUsesRemaining
   pure def qActionResourcesRemaining: int = qState.qActionResourcesRemaining
   pure def scenarioOutcome: PreserveLifeScenarioOutcome = qState.qScenarioOutcome
+  pure val witnessedClericLevel: int = 3
+  pure val witnessedPreserveLifePool: int = preserveLifeHealingPool(witnessedClericLevel)
 
   pure def selectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
@@ -60,6 +63,7 @@ module battleRuntimePreserveLifeMbt {
 
   action doDistributeHealing = all {
     scenarioOutcome == Init,
+    witnessedPreserveLifePool == 15,
     recordProjection(20, 10, 10, 1, 0, Distributed),
   }
 
@@ -75,6 +79,7 @@ module battleRuntimePreserveLifeMbt {
 
   action doRejectOverPool = all {
     scenarioOutcome == Init,
+    witnessedPreserveLifePool == 15,
     recordProjection(20, 0, 0, 2, 1, RejectOverPool),
   }
 

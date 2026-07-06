@@ -859,7 +859,10 @@ function requireAuditProfileIds(unit) {
 
 function profileScopedParityWitnessJoinRows(unit) {
   return (unit.profiles ?? []).flatMap((profile) => {
-    if (profile.profileKind !== "battle-admission") return [];
+    if (
+      profile.profileKind !== "battle-admission" &&
+      profile.profileKind !== "battle-procedure"
+    ) return [];
     const qntOwners = profile.qntOwners ?? [];
     const parityWitnesses = (profile.verificationOwners ?? [])
       .filter((owner) => owner.kind === "focused-mbt")

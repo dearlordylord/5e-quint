@@ -2,6 +2,7 @@
 
 module battleRuntimeRemarkableAthleteSelectedIdentityMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+  import unitFeatureRemarkableAthleteCore.* from "../shared-algebras/proofs/rule-core/unit-feature-remarkable-athlete-core"
 
   type WitnessHole = | WitnessProtocolHole
 
@@ -36,6 +37,11 @@ module battleRuntimeRemarkableAthleteSelectedIdentityMbt {
   pure def qCriticalMovementProvokesOpportunityAttacks: bool = qState.qCriticalMovementProvokesOpportunityAttacks
   pure def qCriticalMovementAccepted: bool = qState.qCriticalMovementAccepted
   pure def scenarioOutcome: RemarkableAthleteSelectedIdentityScenarioOutcome = qState.qScenarioOutcome
+  pure def remarkableAthleteRollModeText(mode: RemarkableAthleteRollMode): str =
+    match mode {
+      | RemarkableAthleteNormalRoll => "normal"
+      | RemarkableAthleteAdvantageRoll => "advantage"
+    }
 
   pure def selectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
@@ -81,7 +87,13 @@ module battleRuntimeRemarkableAthleteSelectedIdentityMbt {
   action doProjectRemarkableAthleteRollModes = all {
     scenarioOutcome == Init,
     recordProjection(
-      "advantage", "advantage", "normal", "normal", "normal", "normal",
+      remarkableAthleteRollModeText(remarkableAthleteInitiativeRollMode(true)),
+      remarkableAthleteRollModeText(remarkableAthleteAbilityCheckRollMode(
+        true,
+        RemarkableAthleteStrength,
+        RemarkableAthleteAthletics,
+      )),
+      "normal", "normal", "normal", "normal",
       false, 0, false, false,
       Projected,
     ),
@@ -91,7 +103,10 @@ module battleRuntimeRemarkableAthleteSelectedIdentityMbt {
     scenarioOutcome == Init,
     recordProjection(
       "normal", "normal", "normal", "normal", "normal", "normal",
-      true, 15, false, true,
+      true,
+      remarkableAthleteCriticalMovementFeet(true, true, 30),
+      remarkableAthleteCriticalMovementProvokesOpportunityAttacks,
+      true,
       CriticalMovement,
     ),
   }

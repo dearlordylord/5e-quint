@@ -1,10 +1,11 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.open-hand-technique
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.open-hand-technique
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.open-hand-technique
 
 module battleRuntimeOpenHandTechniqueMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+  import unitFeatureOpenHandTechniqueCore.* from "../shared-algebras/proofs/rule-core/unit-feature-open-hand-technique-core"
 
   type WitnessHole = | WitnessProtocolHole
 
@@ -68,6 +69,7 @@ module battleRuntimeOpenHandTechniqueMbt {
 
   action doDenyOpportunityAttacks = all {
     scenarioOutcome == Init,
+    openHandTechniqueAvailable(true, true),
     recordProjection(true, false, 0, DenyOpportunityAttacks),
   }
 
@@ -78,6 +80,7 @@ module battleRuntimeOpenHandTechniqueMbt {
 
   action doPushAwaySaveFailed = all {
     scenarioOutcome == Init,
+    openHandPushDistanceValid(10),
     recordProjection(false, false, 10, PushAwaySaveFailed),
   }
 
@@ -98,6 +101,7 @@ module battleRuntimeOpenHandTechniqueMbt {
 
   action doRejectPushTooFar = all {
     scenarioOutcome == Init,
+    not(openHandPushDistanceValid(20)),
     recordProjection(false, false, 0, RejectPushTooFar),
   }
 

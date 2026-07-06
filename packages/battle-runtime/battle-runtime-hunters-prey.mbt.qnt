@@ -5,6 +5,7 @@
 
 module battleRuntimeHuntersPreyMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+  import unitFeatureHuntersPreyCore.* from "../shared-algebras/proofs/rule-core/unit-feature-hunters-prey-core"
 
   type WitnessHole = | WitnessProtocolHole
 
@@ -58,6 +59,12 @@ module battleRuntimeHuntersPreyMbt {
 
   action doColossusSlayer = all {
     scenarioOutcome == Init,
+    colossusSlayerApplies({
+      selectedChoice: ColossusSlayerChoice,
+      hitWithWeapon: true,
+      targetMissingHitPoints: true,
+      usedThisTurn: false,
+    }),
     recordProjection(1, 10, true, false, ColossusSlayer),
   }
 
@@ -68,6 +75,15 @@ module battleRuntimeHuntersPreyMbt {
 
   action doHordeBreaker = all {
     scenarioOutcome == Init,
+    hordeBreakerAttackAvailable({
+      selectedChoice: HordeBreakerChoice,
+      madeWeaponAttack: true,
+      usedThisTurn: false,
+      secondTargetDifferent: true,
+      secondTargetWithinFiveFeetOfOriginal: true,
+      secondTargetWithinWeaponRange: true,
+      secondTargetNotAttackedThisTurn: true,
+    }),
     recordProjection(7, 6, false, true, HordeBreaker),
   }
 

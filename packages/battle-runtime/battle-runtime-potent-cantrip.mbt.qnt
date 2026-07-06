@@ -1,10 +1,11 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.potent-cantrip
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.potent-cantrip
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.potent-cantrip
 
 module battleRuntimePotentCantripMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+  import unitFeaturePotentCantripCore.* from "../shared-algebras/proofs/rule-core/unit-feature-potent-cantrip-core"
 
   type WitnessHole = | WitnessProtocolHole
 
@@ -29,6 +30,13 @@ module battleRuntimePotentCantripMbt {
   pure def qLightEmitterCount: int = qState.qLightEmitterCount
   pure def qObjectDamageCount: int = qState.qObjectDamageCount
   pure def scenarioOutcome: PotentCantripScenarioOutcome = qState.qScenarioOutcome
+  pure val witnessedCantripDamage: int =
+    potentCantripDamage({
+      targetIsCreature: true,
+      isCantrip: true,
+      trigger: MissedCantripAttackRoll,
+      normalDamage: 5,
+    })
 
   pure def selectedIdentityProtocolForProjection(
     holes: Set[WitnessHole],
@@ -60,7 +68,7 @@ module battleRuntimePotentCantripMbt {
 
   action doAttackMissHalfDamage = all {
     scenarioOutcome == Init,
-    recordProjection(11, 0, 0, 0, 0, AttackMissHalfDamage),
+    recordProjection(13 - witnessedCantripDamage, 0, 0, 0, 0, AttackMissHalfDamage),
   }
 
   action doAttackMissNoAdditionalEffect = all {
@@ -75,7 +83,7 @@ module battleRuntimePotentCantripMbt {
 
   action doSaveSuccessHalfDamage = all {
     scenarioOutcome == Init,
-    recordProjection(11, 0, 0, 0, 0, SaveSuccessHalfDamage),
+    recordProjection(13 - witnessedCantripDamage, 0, 0, 0, 0, SaveSuccessHalfDamage),
   }
 
   action doSaveSuccessNoAdditionalEffect = all {

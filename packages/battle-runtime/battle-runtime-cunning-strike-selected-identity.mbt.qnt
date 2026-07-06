@@ -2,6 +2,7 @@
 
 module battleRuntimeCunningStrikeSelectedIdentityMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+  import unitFeatureCunningStrikeCore.* from "../shared-algebras/proofs/rule-core/unit-feature-cunning-strike-core"
 
   type WitnessHole = | WitnessProtocolHole
 
@@ -78,6 +79,7 @@ module battleRuntimeCunningStrikeSelectedIdentityMbt {
 
   action doResolveCunningStrikeTripFailedSave = all {
     scenarioOutcome == Init,
+    cunningStrikeFailedSaveCondition(CunningStrikeTrip) == CunningStrikeProneCondition,
     recordProjection(
       22,
       true,
@@ -92,6 +94,7 @@ module battleRuntimeCunningStrikeSelectedIdentityMbt {
 
   action doResolveCunningStrikePoisonFailedSave = all {
     scenarioOutcome == Init,
+    cunningStrikeFailedSaveCondition(CunningStrikePoison) == CunningStrikePoisonedCondition,
     recordProjection(
       22,
       false,
@@ -106,6 +109,7 @@ module battleRuntimeCunningStrikeSelectedIdentityMbt {
 
   action doResolveCunningStrikeWithdrawMove = all {
     scenarioOutcome == Init,
+    not(cunningStrikeWithdrawProvokesOpportunityAttacks),
     recordProjection(
       22,
       false,

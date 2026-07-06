@@ -1,7 +1,7 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.rogue-steady-aim
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.rogue-steady-aim
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.rogue-steady-aim
 
 // Self-contained literal projection witness: asserts the SRD outcome of Rogue
 // Steady Aim directly instead of importing battle-runtime reducers. This keeps

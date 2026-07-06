@@ -2898,18 +2898,18 @@
       }
     },
     "rulesKernelCoveredProfileJoin": {
-      "denominator": 103,
-      "numerator": 103,
+      "denominator": 108,
+      "numerator": 108,
       "percent": "100%"
     },
     "rulesKernelProfileJoin": {
-      "denominator": 103,
-      "numerator": 103,
+      "denominator": 108,
+      "numerator": 108,
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 140,
-      "numerator": 140,
+      "denominator": 145,
+      "numerator": 145,
       "percent": "100%"
     },
     "strictRuntimeProfileSupport": {
@@ -6205,8 +6205,8 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 140,
-        "numerator": 140,
+        "denominator": 145,
+        "numerator": 145,
         "percent": "100%"
       }
     },
@@ -6938,7 +6938,7 @@
             "profileId": "unit-feature.spell-slot-healing-modifier",
             "profileKind": "passive",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt"
+              "packages/shared-algebras/proofs/rule-core/unit-feature-disciple-of-life-core.qnt"
             ]
           }
         ],
@@ -6983,6 +6983,28 @@
           }
         ],
         "unitId": "cleric_life_domain_spells"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
+            "profileId": "unit-feature.magic-action-healing-pool",
+            "profileKind": "battle-procedure",
+            "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/unit-feature-preserve-life-core.qnt"
+            ]
+          }
+        ],
+        "unitId": "cleric_preserve_life"
       },
       {
         "joinStatus": "covered",
@@ -7285,6 +7307,28 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
+            "profileId": "unit-feature.magic-action-area-save-damage-healing",
+            "profileKind": "battle-procedure",
+            "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/unit-feature-lands-aid-core.qnt"
+            ]
+          }
+        ],
+        "unitId": "druid_lands_aid"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
                 "obligationId": "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
                 "runtime": "character-creation",
                 "status": "covered",
@@ -7578,10 +7622,9 @@
               }
             ],
             "profileId": "unit-feature.remarkable-athlete",
-            "profileKind": "passive",
+            "profileKind": "battle-procedure",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-remarkable-athlete-critical-movement.qnt",
-              "packages/battle-runtime/battle-runtime-remarkable-athlete-roll-modes.qnt"
+              "packages/shared-algebras/proofs/rule-core/unit-feature-remarkable-athlete-core.qnt"
             ]
           }
         ],
@@ -8545,6 +8588,28 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
+            "profileId": "unit-feature.open-hand-technique",
+            "profileKind": "battle-procedure",
+            "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/unit-feature-open-hand-technique-core.qnt"
+            ]
+          }
+        ],
+        "unitId": "monk_open_hand_technique"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
                 "obligationId": "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
                 "runtime": "character-sheet",
                 "status": "covered",
@@ -9017,6 +9082,28 @@
             "joinStatus": "covered",
             "obligations": [
               {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
+            "profileId": "unit-feature.hunters-prey",
+            "profileKind": "battle-procedure",
+            "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/unit-feature-hunters-prey-core.qnt"
+            ]
+          }
+        ],
+        "unitId": "ranger_hunters_prey"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
                 "obligationId": "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
                 "runtime": "character-creation",
                 "status": "covered",
@@ -9295,7 +9382,7 @@
             "profileId": "unit-feature.rogue-steady-aim",
             "profileKind": "bonus-action",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt"
+              "packages/shared-algebras/proofs/rule-core/unit-feature-rogue-steady-aim-core.qnt"
             ]
           }
         ],
@@ -10018,7 +10105,7 @@
             "profileId": "unit-feature.enemy-zero-hit-point-temporary-hit-points",
             "profileKind": "persistent-effect",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt"
+              "packages/shared-algebras/proofs/rule-core/unit-feature-dark-ones-blessing-core.qnt"
             ]
           }
         ],
@@ -10139,6 +10226,28 @@
           }
         ],
         "unitId": "wizard_arcane_recovery"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
+            "profileId": "unit-feature.potent-cantrip",
+            "profileKind": "battle-procedure",
+            "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/unit-feature-potent-cantrip-core.qnt"
+            ]
+          }
+        ],
+        "unitId": "wizard_potent_cantrip"
       },
       {
         "joinStatus": "covered",

@@ -325,7 +325,20 @@
         "packages/shared-algebras/proofs/rule-core/action-turn-procedures.qnt",
         "packages/shared-algebras/proofs/rule-core/attack-action-additional-attacks.qnt",
         "packages/battle-runtime/battle-runtime-slow-fall.qnt",
-        "packages/battle-runtime/battle-runtime-cunning-strike.qnt"
+        "packages/battle-runtime/battle-runtime-cunning-strike.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-breath-weapon-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-cunning-strike-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-dark-ones-blessing-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-disciple-of-life-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-grappler-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-hunters-prey-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-lands-aid-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-preserve-life-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-open-hand-technique-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-potent-cantrip-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-remarkable-athlete-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-rogue-steady-aim-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-stunning-strike-core.qnt"
       ],
       "runtime": "battle",
       "runtimeOwners": [
@@ -7737,6 +7750,60 @@
         "BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION"
       ],
       "profileId": "spell.invocation-glyph-stored-concentration-full-duration"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.attack-action-area-save-damage-replacement"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.cunning-strike"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.grappler"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.hunters-prey"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.magic-action-area-save-damage-healing"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.magic-action-healing-pool"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.open-hand-technique"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.potent-cantrip"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.stunning-strike"
     }
   ],
   "qntOwnerRoles": [
@@ -7875,14 +7942,6 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt",
-      "profileScopes": [
-        {
-          "obligationIds": [
-            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
-          ],
-          "profileId": "unit-feature.enemy-zero-hit-point-temporary-hit-points"
-        }
-      ],
       "role": "mbt-fixture"
     },
     {
@@ -7891,14 +7950,6 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt",
-      "profileScopes": [
-        {
-          "obligationIds": [
-            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
-          ],
-          "profileId": "unit-feature.spell-slot-healing-modifier"
-        }
-      ],
       "role": "mbt-fixture"
     },
     {
@@ -7983,12 +8034,12 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt is a bounded replay or run-test owner for covered parity evidence; treat it as fixture-bound unless later split.",
+      "evidence": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt is a bounded replay or run-test owner for covered parity evidence; treat it as fixture-bound unless later split. It is classified as proof-only because profile coverage uses it as qnt-proof verification evidence.",
       "obligationIds": [
         "BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-ground-command-tests.qnt",
-      "role": "mbt-fixture"
+      "role": "proof-only"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-cunning-strike.qnt is the focused Cunning Strike literal projection proof for Sneak Attack die-cost timing, level-5 option effect shapes, effective-size Trip gating, Poison repeat-save lifecycle facts, and Withdraw no-Opportunity-Attack movement.",
@@ -8004,14 +8055,6 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt",
-      "profileScopes": [
-        {
-          "obligationIds": [
-            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
-          ],
-          "profileId": "unit-feature.rogue-steady-aim"
-        }
-      ],
       "role": "mbt-fixture"
     },
     {
@@ -8280,14 +8323,6 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-remarkable-athlete-critical-movement.qnt",
-      "profileScopes": [
-        {
-          "obligationIds": [
-            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
-          ],
-          "profileId": "unit-feature.remarkable-athlete"
-        }
-      ],
       "role": "proof-only"
     },
     {
@@ -8296,14 +8331,6 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-remarkable-athlete-roll-modes.qnt",
-      "profileScopes": [
-        {
-          "obligationIds": [
-            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
-          ],
-          "profileId": "unit-feature.remarkable-athlete"
-        }
-      ],
       "role": "proof-only"
     },
     {
@@ -8422,12 +8449,12 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt is a bounded replay or run-test owner for covered parity evidence; treat it as fixture-bound unless later split.",
+      "evidence": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt is a bounded replay or run-test owner for covered parity evidence; treat it as fixture-bound unless later split. It is classified as proof-only because profile coverage uses it as qnt-proof verification evidence.",
       "obligationIds": [
         "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-spell-facts-tests.qnt",
-      "role": "mbt-fixture"
+      "role": "proof-only"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-spell-invocation.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
@@ -9420,10 +9447,10 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-direct-condition-removal-tests.qnt is assessed generator-readiness proofOnly evidence for direct condition removal replay coverage.",
+      "evidence": "packages/battle-runtime/battle-runtime-direct-condition-removal-tests.qnt is assessed generator-readiness proofOnly evidence for direct condition removal replay coverage. It is classified as proof-only because profile coverage uses it as qnt-proof verification evidence.",
       "obligationIds": [],
       "ownerPath": "packages/battle-runtime/battle-runtime-direct-condition-removal-tests.qnt",
-      "role": "mbt-fixture"
+      "role": "proof-only"
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-gust-of-wind-tests.qnt is assessed generator-readiness proofOnly evidence for Gust of Wind replay coverage.",
@@ -9438,28 +9465,28 @@
       "role": "mbt-fixture"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt is assessed generator-readiness proofOnly evidence for Metamagic replay coverage.",
+      "evidence": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt is assessed generator-readiness proofOnly evidence for Metamagic replay coverage. It is classified as proof-only because profile coverage uses it as qnt-proof verification evidence.",
       "obligationIds": [],
       "ownerPath": "packages/battle-runtime/battle-runtime-metamagic-tests.qnt",
-      "role": "mbt-fixture"
+      "role": "proof-only"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-monk-focus-tests.qnt is assessed generator-readiness proofOnly evidence for Monk's Focus replay coverage.",
+      "evidence": "packages/battle-runtime/battle-runtime-monk-focus-tests.qnt is assessed generator-readiness proofOnly evidence for Monk's Focus replay coverage. It is classified as proof-only because profile coverage uses it as qnt-proof verification evidence.",
       "obligationIds": [],
       "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus-tests.qnt",
-      "role": "mbt-fixture"
+      "role": "proof-only"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-protection-from-poison-tests.qnt is assessed generator-readiness proofOnly evidence for Protection from Poison replay coverage.",
+      "evidence": "packages/battle-runtime/battle-runtime-protection-from-poison-tests.qnt is assessed generator-readiness proofOnly evidence for Protection from Poison replay coverage. It is classified as proof-only because profile coverage uses it as qnt-proof verification evidence.",
       "obligationIds": [],
       "ownerPath": "packages/battle-runtime/battle-runtime-protection-from-poison-tests.qnt",
-      "role": "mbt-fixture"
+      "role": "proof-only"
     },
     {
-      "evidence": "packages/battle-runtime/battle-runtime-self-transformation-tests.qnt is assessed generator-readiness proofOnly evidence for self-transformation replay coverage.",
+      "evidence": "packages/battle-runtime/battle-runtime-self-transformation-tests.qnt is assessed generator-readiness proofOnly evidence for self-transformation replay coverage. It is classified as proof-only because profile coverage uses it as qnt-proof verification evidence.",
       "obligationIds": [],
       "ownerPath": "packages/battle-runtime/battle-runtime-self-transformation-tests.qnt",
-      "role": "mbt-fixture"
+      "role": "proof-only"
     },
     {
       "evidence": "packages/battle-runtime/creature-attack.mbt.qnt is assessed generator-readiness proofOnly evidence for minimal attack MBT replay coverage.",
@@ -10074,6 +10101,298 @@
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-exact-damage-details.route.mbt.qnt",
       "role": "mbt-fixture"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-breath-weapon-core.qnt carries shared rule-core facts for unit-feature.attack-action-area-save-damage-replacement without importing authored Unit catalog rows or battle-runtime reducers.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-breath-weapon-core.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.attack-action-area-save-damage-replacement"
+        }
+      ],
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-breath-weapon-core-examples.qnt is proof/example evidence for the shared rule-core facts of unit-feature.attack-action-area-save-damage-replacement.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-breath-weapon-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-cunning-strike-core.qnt carries shared rule-core facts for unit-feature.cunning-strike without importing authored Unit catalog rows or battle-runtime reducers.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-cunning-strike-core.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.cunning-strike"
+        }
+      ],
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-cunning-strike-core-examples.qnt is proof/example evidence for the shared rule-core facts of unit-feature.cunning-strike.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-cunning-strike-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-dark-ones-blessing-core.qnt carries shared rule-core facts for unit-feature.enemy-zero-hit-point-temporary-hit-points without importing authored Unit catalog rows or battle-runtime reducers.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-dark-ones-blessing-core.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.enemy-zero-hit-point-temporary-hit-points"
+        }
+      ],
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-dark-ones-blessing-core-examples.qnt is proof/example evidence for the shared rule-core facts of unit-feature.enemy-zero-hit-point-temporary-hit-points.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-dark-ones-blessing-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-grappler-core.qnt carries shared rule-core facts for unit-feature.grappler without importing authored Unit catalog rows or battle-runtime reducers.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-grappler-core.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.grappler"
+        }
+      ],
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-grappler-core-examples.qnt is proof/example evidence for the shared rule-core facts of unit-feature.grappler.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-grappler-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-hunters-prey-core.qnt carries shared rule-core facts for unit-feature.hunters-prey without importing authored Unit catalog rows or battle-runtime reducers.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-hunters-prey-core.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.hunters-prey"
+        }
+      ],
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-hunters-prey-core-examples.qnt is proof/example evidence for the shared rule-core facts of unit-feature.hunters-prey.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-hunters-prey-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-lands-aid-core.qnt carries shared rule-core facts for unit-feature.magic-action-area-save-damage-healing without importing authored Unit catalog rows or battle-runtime reducers.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-lands-aid-core.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.magic-action-area-save-damage-healing"
+        }
+      ],
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-lands-aid-core-examples.qnt is proof/example evidence for the shared rule-core facts of unit-feature.magic-action-area-save-damage-healing.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-lands-aid-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-preserve-life-core.qnt carries shared rule-core facts for unit-feature.magic-action-healing-pool without importing authored Unit catalog rows or battle-runtime reducers.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-preserve-life-core.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.magic-action-healing-pool"
+        }
+      ],
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-preserve-life-core-examples.qnt is proof/example evidence for the shared rule-core facts of unit-feature.magic-action-healing-pool.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-preserve-life-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-open-hand-technique-core.qnt carries shared rule-core facts for unit-feature.open-hand-technique without importing authored Unit catalog rows or battle-runtime reducers.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-open-hand-technique-core.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.open-hand-technique"
+        }
+      ],
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-open-hand-technique-core-examples.qnt is proof/example evidence for the shared rule-core facts of unit-feature.open-hand-technique.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-open-hand-technique-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-potent-cantrip-core.qnt carries shared rule-core facts for unit-feature.potent-cantrip without importing authored Unit catalog rows or battle-runtime reducers.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-potent-cantrip-core.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.potent-cantrip"
+        }
+      ],
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-potent-cantrip-core-examples.qnt is proof/example evidence for the shared rule-core facts of unit-feature.potent-cantrip.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-potent-cantrip-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-remarkable-athlete-core.qnt carries shared rule-core facts for unit-feature.remarkable-athlete without importing authored Unit catalog rows or battle-runtime reducers.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-remarkable-athlete-core.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.remarkable-athlete"
+        }
+      ],
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-remarkable-athlete-core-examples.qnt is proof/example evidence for the shared rule-core facts of unit-feature.remarkable-athlete.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-remarkable-athlete-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-disciple-of-life-core.qnt carries shared rule-core facts for unit-feature.spell-slot-healing-modifier without importing authored Unit catalog rows or battle-runtime reducers.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-disciple-of-life-core.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.spell-slot-healing-modifier"
+        }
+      ],
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-disciple-of-life-core-examples.qnt is proof/example evidence for the shared rule-core facts of unit-feature.spell-slot-healing-modifier.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-disciple-of-life-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-stunning-strike-core.qnt carries shared rule-core facts for unit-feature.stunning-strike without importing authored Unit catalog rows or battle-runtime reducers.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-stunning-strike-core.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.stunning-strike"
+        }
+      ],
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-stunning-strike-core-examples.qnt is proof/example evidence for the shared rule-core facts of unit-feature.stunning-strike.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-stunning-strike-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-rogue-steady-aim-core.qnt carries shared rule-core facts for unit-feature.rogue-steady-aim without importing authored Unit catalog rows or battle-runtime reducers.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rogue-steady-aim-core.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.rogue-steady-aim"
+        }
+      ],
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/unit-feature-rogue-steady-aim-core-examples.qnt is proof/example evidence for the shared rule-core facts of unit-feature.rogue-steady-aim.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rogue-steady-aim-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "evidence": "packages/shared-algebras/proofs/rule-core/spell-rest-benefit-application-examples.qnt is proof/example evidence for shared spell-rest benefit application facts.",
+      "obligationIds": [],
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-rest-benefit-application-examples.qnt",
+      "role": "proof-only"
     }
   ],
   "qntRegistry": [
@@ -11021,6 +11340,11 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-rest-benefit-application-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-rest-benefit-application.qnt",
       "role": "semantic-core"
     },
@@ -11116,6 +11440,26 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-breath-weapon-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-breath-weapon-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-cunning-strike-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-cunning-strike-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core-examples.qnt",
       "role": "proof-only"
     },
@@ -11126,12 +11470,62 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-dark-ones-blessing-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-dark-ones-blessing-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-disciple-of-life-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-disciple-of-life-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-grappler-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-grappler-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core-examples.qnt",
       "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-hunters-prey-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-hunters-prey-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-lands-aid-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-lands-aid-core.qnt",
       "role": "semantic-core"
     },
     {
@@ -11166,6 +11560,16 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-open-hand-technique-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-open-hand-technique-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core-examples.qnt",
       "role": "proof-only"
     },
@@ -11182,6 +11586,26 @@
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-potent-cantrip-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-potent-cantrip-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-preserve-life-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-preserve-life-core.qnt",
       "role": "semantic-core"
     },
     {
@@ -11221,12 +11645,42 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-remarkable-athlete-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-remarkable-athlete-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rogue-steady-aim-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rogue-steady-aim-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core-examples.qnt",
       "role": "proof-only"
     },
     {
       "classification": "qnt-owner-role",
       "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-stunning-strike-core-examples.qnt",
+      "role": "proof-only"
+    },
+    {
+      "classification": "qnt-owner-role",
+      "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-stunning-strike-core.qnt",
       "role": "semantic-core"
     },
     {
@@ -11277,6 +11731,18 @@
             "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
           ],
           "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.attack-action-area-save-damage-replacement",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-breath-weapon-core.qnt",
           "role": "semantic-core"
         }
       ]
@@ -11423,6 +11889,18 @@
       ]
     },
     {
+      "profileId": "unit-feature.cunning-strike",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-cunning-strike-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
       "profileId": "unit-feature.d20-test-natural-one-reroll",
       "qntOwners": [
         {
@@ -11441,8 +11919,8 @@
           "obligationIds": [
             "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
           ],
-          "ownerPath": "packages/battle-runtime/battle-runtime-dark-ones-blessing.mbt.qnt",
-          "role": "mbt-fixture"
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-dark-ones-blessing-core.qnt",
+          "role": "semantic-core"
         }
       ]
     },
@@ -11471,6 +11949,18 @@
       ]
     },
     {
+      "profileId": "unit-feature.grappler",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-grappler-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
       "profileId": "unit-feature.hide-action-obscurement-permission",
       "qntOwners": [
         {
@@ -11478,6 +11968,18 @@
             "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
           ],
           "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.hunters-prey",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-hunters-prey-core.qnt",
           "role": "semantic-core"
         }
       ]
@@ -11507,6 +12009,30 @@
       ]
     },
     {
+      "profileId": "unit-feature.magic-action-area-save-damage-healing",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-lands-aid-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.magic-action-healing-pool",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-preserve-life-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
       "profileId": "unit-feature.martial-arts-attack-projection",
       "qntOwners": [
         {
@@ -11526,6 +12052,18 @@
             "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
           ],
           "ownerPath": "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.open-hand-technique",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-open-hand-technique-core.qnt",
           "role": "semantic-core"
         }
       ]
@@ -11615,6 +12153,18 @@
       ]
     },
     {
+      "profileId": "unit-feature.potent-cantrip",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-potent-cantrip-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
       "profileId": "unit-feature.reaction-roll-or-damage-reduction",
       "qntOwners": [
         {
@@ -11647,15 +12197,8 @@
           "obligationIds": [
             "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
           ],
-          "ownerPath": "packages/battle-runtime/battle-runtime-remarkable-athlete-roll-modes.qnt",
-          "role": "proof-only"
-        },
-        {
-          "obligationIds": [
-            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
-          ],
-          "ownerPath": "packages/battle-runtime/battle-runtime-remarkable-athlete-critical-movement.qnt",
-          "role": "proof-only"
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-remarkable-athlete-core.qnt",
+          "role": "semantic-core"
         }
       ]
     },
@@ -11666,8 +12209,8 @@
           "obligationIds": [
             "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
           ],
-          "ownerPath": "packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt",
-          "role": "mbt-fixture"
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-rogue-steady-aim-core.qnt",
+          "role": "semantic-core"
         }
       ]
     },
@@ -11702,8 +12245,20 @@
           "obligationIds": [
             "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
           ],
-          "ownerPath": "packages/battle-runtime/battle-runtime-disciple-of-life.mbt.qnt",
-          "role": "mbt-fixture"
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-disciple-of-life-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.stunning-strike",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-stunning-strike-core.qnt",
+          "role": "semantic-core"
         }
       ]
     },
@@ -12033,7 +12588,20 @@
         "packages/battle-runtime/battle-runtime-monk-focus-tests.qnt",
         "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
         "packages/battle-runtime/battle-runtime-turn-order.qnt",
-        "packages/battle-runtime/battle-runtime-slow-fall.qnt"
+        "packages/battle-runtime/battle-runtime-slow-fall.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-breath-weapon-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-cunning-strike-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-dark-ones-blessing-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-disciple-of-life-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-grappler-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-hunters-prey-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-lands-aid-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-preserve-life-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-open-hand-technique-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-potent-cantrip-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-remarkable-athlete-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-rogue-steady-aim-core-examples.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-stunning-strike-core-examples.qnt"
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
@@ -12051,7 +12619,20 @@
         "packages/battle-runtime/battle-runtime-movement.qnt",
         "packages/battle-runtime/battle-runtime-monk-focus.qnt",
         "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
-        "packages/battle-runtime/battle-runtime-timed-effects.qnt"
+        "packages/battle-runtime/battle-runtime-timed-effects.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-breath-weapon-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-cunning-strike-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-dark-ones-blessing-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-disciple-of-life-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-grappler-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-hunters-prey-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-lands-aid-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-preserve-life-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-open-hand-technique-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-potent-cantrip-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-remarkable-athlete-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-rogue-steady-aim-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-stunning-strike-core.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -14276,7 +14857,8 @@
       ],
       "obligationId": "SHEET.SPELL_REST_BENEFIT.APPLICATION",
       "proofOnly": [
-        "packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt"
+        "packages/character-sheet-runtime/character-sheet-spell-rest-benefit-application.mbt.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-rest-benefit-application-examples.qnt"
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/spell-rest-benefit-application.qnt"

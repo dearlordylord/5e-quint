@@ -2,6 +2,7 @@
 
 module battleRuntimeStunningStrikeMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"
+  import unitFeatureStunningStrikeCore.* from "../shared-algebras/proofs/rule-core/unit-feature-stunning-strike-core"
 
   type WitnessHole = | WitnessProtocolHole
 
@@ -57,12 +58,28 @@ module battleRuntimeStunningStrikeMbt {
 
   action doFailedSave = all {
     scenarioOutcome == Init,
-    recordProjection(true, false, false, 1, true, FailedSave),
+    stunningStrikeAttemptAvailable(StunningStrikeUnarmedStrikeHit, false, 2),
+    recordProjection(
+      stunningStrikeAppliesStunned(StunningStrikeFailedSave),
+      false,
+      false,
+      2 - stunningStrikeFocusCost,
+      true,
+      FailedSave,
+    ),
   }
 
   action doSuccessfulSave = all {
     scenarioOutcome == Init,
-    recordProjection(false, true, true, 1, true, SuccessfulSave),
+    stunningStrikeAttemptAvailable(StunningStrikeUnarmedStrikeHit, false, 2),
+    recordProjection(
+      false,
+      stunningStrikeHalvesSpeed(StunningStrikeSuccessfulSave),
+      stunningStrikeNextAttackAdvantage(StunningStrikeSuccessfulSave),
+      2 - stunningStrikeFocusCost,
+      true,
+      SuccessfulSave,
+    ),
   }
 
   action doDecline = all {
