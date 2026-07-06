@@ -1,94 +1,51 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-055",
+  "taskId": "CRPI-BLOCK-047",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.route.mbt.qnt",
+      "path": "packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.route.mbt.qnt",
       "quarantinedWitnessNames": [
         "qRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-055.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-047.json"
       ]
     },
     {
-      "path": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "path": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "weaponMasteryRouteActions",
-        "projectPublicWeaponMasterySelectedReferenceRoute",
-        "completePublicWeaponMasteryReselectionRoute",
-        "normalizeCharacterSheetRouteQuintState",
+        "weaponMasteryRouteDriverSchema",
+        "createCompletedReducerRouteDriver",
+        "completedReducerSurfaceRoute",
+        "retainSelectedReferenceRoute",
+        "normalizeCharacterCreationRouteQuintState",
         "routeStateCheck"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-055.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-047.json"
       ]
     },
     {
-      "path": "packages/character-sheet-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
+      "path": "packages/character-creation-runtime/src/weapon-mastery-containers-selected-identity.mbt.test.ts",
       "quarantinedWitnessNames": [
         "createWeaponMasteryContainerSelectedIdentityDriver",
         "weaponMasteryContainerSelectedIdentityStateCheck"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-055.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-047.json"
       ]
     }
   ],
-  "productionModulesExtended": [
-    {
-      "path": "packages/character-sheet-runtime/src/weapon-mastery.ts",
-      "owners": [
-        "CharacterSheetSelectedReferenceOwner",
-        "CharacterSheetBuildProjectionOwner"
-      ],
-      "notes": "Task 103 adds the public characterSheetWeaponMasterySelectedReferenceProjection entrypoint. It derives selected weapon refs from existing CharacterBuild selected class choices and derives choice count, Long Rest change count, and eligibility from Surface Weapon Mastery profile facts. No durable Weapon Mastery sheet state or mastery-property behavior is added."
-    },
-    {
-      "path": "packages/character-sheet-runtime/src/rests.ts",
-      "owners": [
-        "CharacterSheetSelectedReferenceOwner"
-      ],
-      "notes": "Task 103 adds completeLongRestWeaponMasteryReselectionWithRoute, a public route wrapper around completeLongRest for accepted and rejected Weapon Mastery Long Rest reselection qRoute evidence. Unrelated completeLongRest failures return route=none with empty qRoute."
-    },
-    {
-      "path": "packages/character-sheet-runtime/src/sheet-types.ts",
-      "owners": [
-        "CharacterSheetSelectedReferenceOwner",
-        "CharacterSheetBuildProjectionOwner"
-      ],
-      "notes": "Task 103 adds typed Weapon Mastery selected-reference projection and Long Rest reselection route result shapes. These types describe derived projections and route evidence only; no CharacterSheet fields are introduced."
-    },
-    {
-      "path": "packages/character-sheet-runtime/src/index.ts",
-      "owners": [
-        "CharacterSheetSelectedReferenceOwner",
-        "CharacterSheetBuildProjectionOwner"
-      ],
-      "notes": "Exports the public Weapon Mastery selected-reference projection, Long Rest reselection route wrapper, and typed route projection/result types."
-    },
-    {
-      "path": "scripts/audit-character-sheet-runtime-split.mjs",
-      "owners": [
-        "CharacterSheetSelectedReferenceOwner",
-        "CharacterSheetBuildProjectionOwner"
-      ],
-      "notes": "Records split-audit ownership for the new public Weapon Mastery projection and reselection route export surface so quality checks keep the owner boundary explicit."
-    }
-  ],
+  "productionModulesExtended": [],
   "expectedNextReuse": [
     {
-      "path": "packages/character-sheet-runtime/src/weapon-mastery.ts",
-      "notes": "Future Character Sheet Weapon Mastery selected-reference route tasks should reuse characterSheetWeaponMasterySelectedReferenceProjection instead of adapter-local qRoute assembly."
-    },
-    {
-      "path": "packages/character-sheet-runtime/src/rests.ts",
-      "notes": "Future Long Rest Weapon Mastery reselection route evidence should reuse completeLongRestWeaponMasteryReselectionWithRoute so acceptance/rejection remains tied to completeLongRest and unrelated rest failures remain unrouted."
+      "path": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "notes": "Future Character Creation selected-reference finalization routes should reuse completedReducerSurfaceRoute plus selected-reference route helpers instead of adapter-local qRoute assembly."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 103 observes copied qRoute for Weapon Mastery selected identity through public Character Sheet selected-reference projection and Long Rest reselection route entrypoints. Selected weapon refs remain build-selected references, while eligibility and counts remain Surface-derived projections."
+    "notes": "Task 93 observes copied qRoute for Character Creation Weapon Mastery selected weapon reference retention through public Character Creation reducer harness entrypoints. Selected weapon refs remain finalized CharacterBuild selected-class-choice facts; no production module or durable state field was added."
   }
 }
