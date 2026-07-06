@@ -97,7 +97,7 @@
     {
       "number": 16,
       "id": "CRPI-BLOCK-010",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Blocked route replay: battle-runtime-feature-selected-identity"
     },
     {
@@ -668,7 +668,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRPI-BLOCK-008` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-009` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-READY-004` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-010` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-010` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-011` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-012` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-013` | `ready-for-research` | none | target replay evidence and owner implementation |
@@ -1671,7 +1671,7 @@ Plan Impact:
 
 ### Task 16 - CRPI-BLOCK-010
 
-Status: `ready-for-research`
+Status: `done`
 
 Blocker Type: none
 

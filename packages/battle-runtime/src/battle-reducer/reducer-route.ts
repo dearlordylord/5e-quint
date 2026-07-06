@@ -46,6 +46,12 @@ import {
 } from "./turn-end-movement.ts";
 import { activeDruidWildShapeEffect } from "./druid-wild-shape.ts";
 import {
+  activeOngoingFeatureOccurrencesForCombatant,
+  isCharacterBattleCreatureState,
+  ongoingFeatureProfileForSourceKey,
+  ongoingFeatureSourceKeyForUnit,
+} from "./creature-state.ts";
+import {
   currentActorId,
   zeroHpLifecycleIsTerminal,
 } from "./creature-state-leaves.ts";
@@ -93,6 +99,9 @@ export type BattleReducerRouteSubjectFamily =
   | "zeroHitPointSpellEffectTeardown"
   | "afterHitDamageRider"
   | "attackActionAreaSaveDamageReplacement"
+  | "unitFeatureBonusAction"
+  | "activeFeatureSpellSaveDc"
+  | "activeFeatureSpellAttackRollMode"
   | "slotSpell"
   | "spellAttackProcedure"
   | "weaponAttack"
@@ -238,6 +247,29 @@ export function battleReducerStartRouteEvent(): BattleReducerRouteEvent {
   return { kind: "startBattle", owner: "battleActionEconomy" };
 }
 
+export function activeFeatureSpellSaveDcRouteEvents(input: {
+  readonly state: BattleState;
+  readonly casterId: CombatantId;
+}): BattleReducerRouteEvents | undefined {
+  if (!hasActiveFeatureSpellSaveDcModifier(input.state, input.casterId)) {
+    return undefined;
+  }
+  return [
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "activeFeatureSpellSaveDc",
+      holes: [],
+      owner: "battleActiveEffect",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "activeFeatureSpellSaveDc",
+      holes: [],
+      owner: "battleSpellSlotAndActionEconomy",
+    },
+  ];
+}
+
 export function passiveSavingThrowRollModeRouteEvents(input: {
   readonly state: BattleState;
   readonly ability: Ability;
@@ -331,6 +363,16 @@ export function battleReducerRouteEventsForDiscoveredAct(
   state: BattleState,
   act: AvailableBattleAct,
 ): BattleReducerRouteEvents | undefined {
+  if (isUnitFeatureBonusActionRouteSubject(state, act.subject)) {
+    return [
+      {
+        kind: "discoverBattleActs",
+        subject: "unitFeatureBonusAction",
+        holes: [],
+        owner: "battleFeatureResource",
+      },
+    ];
+  }
   if (isTwinnedEffectiveSpellLevelDiscoveryAct(act)) {
     return [
       {
@@ -528,15 +570,29 @@ export function battleReducerRouteEventsForDiscoveredAct(
     owner: actionOwner,
   };
   if (act.subject.invocation.procedure === "spellAttackSequence") {
-    return [actionEconomyEvent];
+    return nonEmptyRouteEvents([
+      actionEconomyEvent,
+      ...activeFeatureSpellAttackRollModeDiscoveryRouteEvents(
+        state,
+        act.subject,
+        act.initialHoles,
+      ),
+    ]);
   }
   const hasObjectTargetBoundary = act.initialHoles.some(
     (hole) => hole.kind === "objectTargetChoice",
   );
   if (!hasObjectTargetBoundary) {
-    return [actionEconomyEvent];
+    return nonEmptyRouteEvents([
+      actionEconomyEvent,
+      ...activeFeatureSpellAttackRollModeDiscoveryRouteEvents(
+        state,
+        act.subject,
+        act.initialHoles,
+      ),
+    ]);
   }
-  return [
+  return nonEmptyRouteEvents([
     actionEconomyEvent,
     {
       kind: "discoverBattleActs",
@@ -546,7 +602,12 @@ export function battleReducerRouteEventsForDiscoveredAct(
       ),
       owner: "battleObjectTargetBoundary",
     },
-  ];
+    ...activeFeatureSpellAttackRollModeDiscoveryRouteEvents(
+      state,
+      act.subject,
+      act.initialHoles,
+    ),
+  ]);
 }
 
 export function battleReducerRouteForResolution(
@@ -690,6 +751,14 @@ export function battleReducerRouteForResolution(
       activeFormLifecycleTerminalRoute,
     );
   }
+  const activeFeatureBonusActionRoute =
+    activeFeatureBonusActionRouteForResolution(input, result);
+  if (activeFeatureBonusActionRoute !== undefined) {
+    return composeWithActiveFormLifecycleTerminalRoute(
+      activeFeatureBonusActionRoute,
+      activeFormLifecycleTerminalRoute,
+    );
+  }
   const interruptResumeDiscoveryRoute =
     interruptStackResumeDiscoveryRouteForResolution(input, result);
   const afterHitDamageRiderDiscoveryRoutes =
@@ -776,6 +845,7 @@ function spellAttackProcedureRouteForResolution(
   return [
     eventForOwner(firstOwner),
     ...remainingOwners.map(eventForOwner),
+    ...activeFeatureSpellAttackRollModeResolutionRouteEvents(input, result),
     ...spellAttackHitActiveEffectAdmissionRouteForResolution(input, result),
     ...zeroHitPointSpellEffectTeardownRouteForResolution(input, fill, result),
   ];
@@ -826,6 +896,168 @@ export function battleReducerRouteForInterrupt(
     ];
   }
   return [eventForOwner("battleInterruptStack")];
+}
+
+function isUnitFeatureBonusActionRouteSubject(
+  state: BattleState,
+  subject: BattleResolutionInput["subject"] | AvailableBattleAct["subject"],
+): boolean {
+  if (subject.tag !== "unitFeature") {
+    return false;
+  }
+  const actor = state.combatants.get(subject.actorId);
+  if (!isCharacterBattleCreatureState(actor)) {
+    return false;
+  }
+  const profile = actor.origin.ongoingFeatureProfiles.get(
+    ongoingFeatureSourceKeyForUnit(subject.unitId),
+  );
+  return profile?.activationTrigger === "bonusAction";
+}
+
+function activeFeatureBonusActionRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  if (
+    result.tag !== "resolved" ||
+    input.fills.length !== 0 ||
+    !isUnitFeatureBonusActionRouteSubject(input.state, input.subject)
+  ) {
+    return undefined;
+  }
+  return [
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "unitFeatureBonusAction",
+      holes: [],
+      owner: "battleActionEconomy",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "unitFeatureBonusAction",
+      holes: [],
+      owner: "battleFeatureResource",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "unitFeatureBonusAction",
+      holes: [],
+      owner: "battleActiveEffect",
+    },
+  ];
+}
+
+function hasActiveFeatureSpellSaveDcModifier(
+  state: BattleState,
+  casterId: CombatantId,
+): boolean {
+  return activeFeatureSpellModifierExists(
+    state,
+    casterId,
+    (modifier) => modifier.saveDcBonus !== 0,
+  );
+}
+
+function hasActiveFeatureSpellAttackRollModeModifier(
+  state: BattleState,
+  casterId: CombatantId,
+): boolean {
+  return activeFeatureSpellModifierExists(
+    state,
+    casterId,
+    (modifier) => modifier.attackRollMode !== undefined,
+  );
+}
+
+function activeFeatureSpellModifierExists(
+  state: BattleState,
+  casterId: CombatantId,
+  predicate: (
+    modifier: ReturnType<typeof activeFeatureSpellModifiers>[number],
+  ) => boolean,
+): boolean {
+  const caster = state.combatants.get(casterId);
+  return activeFeatureSpellModifiers(caster).some(predicate);
+}
+
+function activeFeatureSpellModifiers(caster: BattleCreatureState | undefined) {
+  if (!isCharacterBattleCreatureState(caster)) {
+    return [];
+  }
+  return [...activeOngoingFeatureOccurrencesForCombatant(caster)].flatMap(
+    ([key]) =>
+      ongoingFeatureProfileForSourceKey(caster, key)?.spellModifiers ?? [],
+  );
+}
+
+function activeFeatureSpellAttackRollModeDiscoveryRouteEvents(
+  state: BattleState,
+  subject: Extract<
+    BattleResolutionInput["subject"],
+    { readonly tag: "actionSpell" }
+  >,
+  initialHoles: readonly BattleHole[],
+): readonly BattleReducerRouteEvent[] {
+  if (!hasActiveFeatureSpellAttackRollModeModifier(state, subject.actorId)) {
+    return [];
+  }
+  const holes = battleReducerRouteHoles(initialHoles);
+  if (!holes.includes("targetChoice")) {
+    return [];
+  }
+  return [
+    {
+      kind: "discoverBattleActs",
+      subject: "activeFeatureSpellAttackRollMode",
+      holes: ["targetChoice"],
+      owner: "battleSpellSlotAndActionEconomy",
+    },
+  ];
+}
+
+function activeFeatureSpellAttackRollModeResolutionRouteEvents(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): readonly BattleReducerRouteEvent[] {
+  if (
+    input.subject.tag !== "actionSpell" ||
+    !hasActiveFeatureSpellAttackRollModeModifier(
+      input.state,
+      input.subject.actorId,
+    )
+  ) {
+    return [];
+  }
+  const fill = input.fills.at(-1);
+  if (fill?.kind !== "targetChoice" || result.tag !== "needsHoles") {
+    return [];
+  }
+  const holes = battleReducerRouteHoles(result.holes);
+  if (!holes.includes("attackRoll")) {
+    return [];
+  }
+  return [
+    {
+      kind: "resolveBattleSubject",
+      subject: "activeFeatureSpellAttackRollMode",
+      fill: "targetChoice",
+      holes: ["attackRoll"],
+      owner: "battleTargetSelection",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "activeFeatureSpellAttackRollMode",
+      holes: ["attackRoll"],
+      owner: "battleActiveEffect",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "activeFeatureSpellAttackRollMode",
+      holes: ["attackRoll"],
+      owner: "battleSpellAttackProcedure",
+    },
+  ];
 }
 
 function attackActionAreaSaveDamageReplacementRouteForDiscoveredAct(

@@ -1,7 +1,7 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1D2-SORCERER-INNATE-SORCERY sorcerer_innate_sorcery
 // UNIT-IDENTITY-REPLAY: L1D2-SORCERER-INNATE-SORCERY sorcerer_innate_sorcery doActivateInnateSorcery doProjectInnateSorcerySpellBenefits doExcludeInnateSorceryNonSorcererSpellBenefits
 import { Either } from "effect";
-import { expect } from "vitest";
+import { expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
@@ -20,6 +20,8 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
   battleCombatantSide,
   battleId,
+  activeFeatureSpellSaveDcRouteEvents,
+  battleReducerStartRouteEvent,
   cantripSpellInvocationRef,
   characterId,
   combatantId,
@@ -33,6 +35,7 @@ import {
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
+  type BattleReducerRouteEvent,
   type BattleResolutionResult,
   type BattleState,
   type BattleSubject,
@@ -94,6 +97,18 @@ if (unitCatalogResult.tag !== "ok") {
   throw new Error("Innate Sorcery selected identity Unit catalog must build.");
 }
 const unitLibrary = unitCatalogResult.catalog;
+
+it("observes selected feature qRoute through public reducer events", () => {
+  expect(observeInnateSorceryActivationRoute("sorcerer")).toEqual(
+    activeFeatureActivationRoute(),
+  );
+  expect(observeInnateSorcerySpellAttackRoute("sorcerer")).toEqual(
+    activeFeatureSpellAttackRollModeRoute(),
+  );
+  expect(observeInnateSorcerySpellAttackRoute("wizard")).toEqual(
+    activeFeatureSpellAttackRollModeRoute(),
+  );
+});
 
 defineSelectedIdentityReplayAndQntReplay({
   describeLabel: "Innate Sorcery selected identity replay",
@@ -210,6 +225,64 @@ function resolveInnateSorcery(state: BattleState): ResolvedBattleResult {
   return requireResolved(
     resolveBattleSubject({ state, subject: act.subject, fills: [] }),
   );
+}
+
+function observeInnateSorceryActivationRoute(
+  sourceClassName: "sorcerer" | "wizard",
+): readonly BattleReducerRouteEvent[] {
+  const resolved = resolveInnateSorceryWithRoute(
+    innateSorceryBattle(sourceClassName),
+  );
+  return resolved.route;
+}
+
+function observeInnateSorcerySpellAttackRoute(
+  sourceClassName: "sorcerer" | "wizard",
+): readonly BattleReducerRouteEvent[] {
+  const activated = resolveInnateSorceryWithRoute(
+    innateSorceryBattle(sourceClassName),
+  );
+  const spellAct = rayOfFrostActionSpellAct(activated.state);
+  const targetResult = resolveBattleSubject({
+    state: activated.state,
+    subject: spellAct.subject,
+    fills: [],
+  });
+  const target = requireHole(targetResult, "targetChoice");
+  const attackRollResult = resolveBattleSubject({
+    state: activated.state,
+    subject: spellAct.subject,
+    fills: [spellTargetFill(target)],
+  });
+  requireHole(attackRollResult, "attackRoll");
+  return [
+    ...activated.route,
+    ...requireActiveFeatureSpellSaveDcRoute(activated.state),
+    ...routeEventsOf(spellAct, "Ray of Frost action Spell act").filter(
+      isActiveFeatureSpellAttackRollModeRouteEvent,
+    ),
+    ...routeEventsOf(attackRollResult, "Ray of Frost target resolution").filter(
+      isActiveFeatureSpellAttackRollModeRouteEvent,
+    ),
+  ];
+}
+
+function resolveInnateSorceryWithRoute(state: BattleState): {
+  readonly state: BattleState;
+  readonly route: readonly BattleReducerRouteEvent[];
+} {
+  const act = innateSorceryAct(state);
+  const resolved = requireResolved(
+    resolveBattleSubject({ state, subject: act.subject, fills: [] }),
+  );
+  return {
+    state: resolved.state,
+    route: [
+      battleReducerStartRouteEvent(),
+      ...routeEventsOf(act, "Innate Sorcery Unit Feature act"),
+      ...routeEventsOf(resolved, "Innate Sorcery activation resolution"),
+    ],
+  };
 }
 
 function spellAttackRollModeForRayOfFrost(
@@ -395,6 +468,26 @@ function innateSorceryAct(state: BattleState): UnitFeatureAct {
   return act;
 }
 
+function rayOfFrostActionSpellAct(state: BattleState): AvailableBattleAct & {
+  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+    } =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.actorId === sorcererId &&
+      candidate.subject.invocation.spellId === rayOfFrostUnitId &&
+      candidate.subject.invocation.procedure === "spellAttackDamage",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Ray of Frost action Spell act.");
+  }
+  return act;
+}
+
 function spellTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
 ): Extract<BattleFill, { readonly kind: "targetChoice" }> {
@@ -483,6 +576,116 @@ function requireHole<TKind extends BattleHole["kind"]>(
     throw new Error(`Expected ${kind} hole.`);
   }
   return hole;
+}
+
+function routeEventsOf(
+  source: { readonly routeEvents?: readonly BattleReducerRouteEvent[] },
+  label: string,
+): readonly BattleReducerRouteEvent[] {
+  if (source.routeEvents === undefined) {
+    throw new Error(`Expected ${label} route events.`);
+  }
+  return source.routeEvents;
+}
+
+function requireActiveFeatureSpellSaveDcRoute(
+  state: BattleState,
+): readonly BattleReducerRouteEvent[] {
+  const route = activeFeatureSpellSaveDcRouteEvents({
+    state,
+    casterId: sorcererId,
+  });
+  if (route === undefined) {
+    throw new Error("Expected active feature Spell Save DC route events.");
+  }
+  return route;
+}
+
+function isActiveFeatureSpellAttackRollModeRouteEvent(
+  event: BattleReducerRouteEvent,
+): boolean {
+  return (
+    "subject" in event && event.subject === "activeFeatureSpellAttackRollMode"
+  );
+}
+
+function activeFeatureActivationRoute(): readonly BattleReducerRouteEvent[] {
+  return [
+    battleReducerStartRouteEvent(),
+    {
+      kind: "discoverBattleActs",
+      subject: "unitFeatureBonusAction",
+      holes: [],
+      owner: "battleFeatureResource",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "unitFeatureBonusAction",
+      holes: [],
+      owner: "battleActionEconomy",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "unitFeatureBonusAction",
+      holes: [],
+      owner: "battleFeatureResource",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "unitFeatureBonusAction",
+      holes: [],
+      owner: "battleActiveEffect",
+    },
+  ];
+}
+
+function activeFeatureSpellSaveDcRoute(): readonly BattleReducerRouteEvent[] {
+  return [
+    ...activeFeatureActivationRoute(),
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "activeFeatureSpellSaveDc",
+      holes: [],
+      owner: "battleActiveEffect",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "activeFeatureSpellSaveDc",
+      holes: [],
+      owner: "battleSpellSlotAndActionEconomy",
+    },
+  ];
+}
+
+function activeFeatureSpellAttackRollModeRoute(): readonly BattleReducerRouteEvent[] {
+  return [
+    ...activeFeatureSpellSaveDcRoute(),
+    {
+      kind: "discoverBattleActs",
+      subject: "activeFeatureSpellAttackRollMode",
+      holes: ["targetChoice"],
+      owner: "battleSpellSlotAndActionEconomy",
+    },
+    {
+      kind: "resolveBattleSubject",
+      subject: "activeFeatureSpellAttackRollMode",
+      fill: "targetChoice",
+      holes: ["attackRoll"],
+      owner: "battleTargetSelection",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "activeFeatureSpellAttackRollMode",
+      holes: ["attackRoll"],
+      owner: "battleActiveEffect",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "activeFeatureSpellAttackRollMode",
+      holes: ["attackRoll"],
+      owner: "battleSpellAttackProcedure",
+    },
+  ];
 }
 
 function resetSelectedUnitRuntimeBoundaryIds(): void {

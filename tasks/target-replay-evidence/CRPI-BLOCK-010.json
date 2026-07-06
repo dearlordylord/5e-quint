@@ -1,0 +1,156 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/feature-selected-identity.mbt.test.ts Innate Sorcery copied qRoute versus public reducer replay"
+  },
+  "cleanroomManifestSourceCommitSha": "277fb920fb24bc0a7f42e1a95543cf7905ea8184",
+  "sourceBranchInventorySha256": "e8ededa80ac8cdfd875f4725149078879450eefb855b922cd7e1bba86f4edc43",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-feature-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-feature-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "c9cf412c78a5ba1453a3a6f4928ca8f0f2e5f2eeb2d6f5a426a200370e4a1516",
+      "routeConnectorSha256": "905e9ef15b5f7400ae288188d49f4a0eaa29ff4b6ccdd0114e72e210f1630a2e",
+      "branchFamily": "step",
+      "branchAction": "doActivateInnateSorcery",
+      "observedActionTaken": "doActivateInnateSorcery",
+      "harnessTestPath": "packages/battle-runtime/src/feature-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=1 action=doActivateInnateSorcery qRoute=active-feature-activation-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "628b4e442073ec0865a32812cc99b6653b3032c209e830233166dc08529c1a42",
+        "observedProjectionSha256": "628b4e442073ec0865a32812cc99b6653b3032c209e830233166dc08529c1a42",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-feature-selected-identity.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "Public reducer route events from BattleState-owned Unit Feature Bonus Action discovery and activation through action-economy, feature-resource, and active-effect owners.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleSubject.tag=unitFeature",
+          "BattleState.currentTurnResources.currentHasBonusAction",
+          "BattleCreatureState.origin.resources[].usesRemaining",
+          "BattleCreatureState.activeOngoingFeatureOccurrences"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-feature-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-feature-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "c9cf412c78a5ba1453a3a6f4928ca8f0f2e5f2eeb2d6f5a426a200370e4a1516",
+      "routeConnectorSha256": "905e9ef15b5f7400ae288188d49f4a0eaa29ff4b6ccdd0114e72e210f1630a2e",
+      "branchFamily": "step",
+      "branchAction": "doProjectInnateSorcerySpellBenefits",
+      "observedActionTaken": "doProjectInnateSorcerySpellBenefits",
+      "harnessTestPath": "packages/battle-runtime/src/feature-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=1 action=doProjectInnateSorcerySpellBenefits qRoute=active-feature-spell-attack-roll-mode-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "738b65007c07bd4f258673f0fd3738331ada2be50b7d453c88aeb035984ea277",
+        "observedProjectionSha256": "738b65007c07bd4f258673f0fd3738331ada2be50b7d453c88aeb035984ea277",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-feature-selected-identity.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "packages/battle-runtime/src/index.ts#activeFeatureSpellSaveDcRouteEvents"
+          ],
+          "routeEventSource": "Public reducer route events from Unit Feature activation and action-spell target resolution, plus activeFeatureSpellSaveDcRouteEvents for the public Spell Save DC projection.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleSubject.actionSpell.invocation.spellId",
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleHole.kind=targetChoice",
+          "BattleHole.kind=attackRoll",
+          "BattleCreatureState.activeOngoingFeatureOccurrences",
+          "BattleCreatureState.origin.spellcasting.sourceClassName"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-feature-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-feature-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "c9cf412c78a5ba1453a3a6f4928ca8f0f2e5f2eeb2d6f5a426a200370e4a1516",
+      "routeConnectorSha256": "905e9ef15b5f7400ae288188d49f4a0eaa29ff4b6ccdd0114e72e210f1630a2e",
+      "branchFamily": "step",
+      "branchAction": "doExcludeInnateSorceryNonSorcererSpellBenefits",
+      "observedActionTaken": "doExcludeInnateSorceryNonSorcererSpellBenefits",
+      "harnessTestPath": "packages/battle-runtime/src/feature-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=1 action=doExcludeInnateSorceryNonSorcererSpellBenefits qRoute=active-feature-spell-attack-roll-mode-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "738b65007c07bd4f258673f0fd3738331ada2be50b7d453c88aeb035984ea277",
+        "observedProjectionSha256": "738b65007c07bd4f258673f0fd3738331ada2be50b7d453c88aeb035984ea277",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-feature-selected-identity.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "packages/battle-runtime/src/index.ts#activeFeatureSpellSaveDcRouteEvents"
+          ],
+          "routeEventSource": "Public reducer route events from Unit Feature activation and non-source action-spell target resolution, plus activeFeatureSpellSaveDcRouteEvents for the public Spell Save DC projection.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleSubject.actionSpell.invocation.spellId",
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleHole.kind=targetChoice",
+          "BattleHole.kind=attackRoll",
+          "BattleCreatureState.activeOngoingFeatureOccurrences",
+          "BattleCreatureState.origin.spellcasting.sourceClassName"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}
