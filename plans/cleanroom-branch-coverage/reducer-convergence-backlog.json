@@ -139,12 +139,12 @@
         "packages/battle-runtime/battle-runtime-command-ordering.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns Command next-turn option execution through command-effect reducer surfaces: spell-slot/action-economy discovery, hole-frontier ordering for command option, target-list, saving-throw, held-object, movement, and reaction frontiers, target selection, saving throw outcome, movement resource, condition lifecycle, creature state, object inventory, reaction discovery, turn-boundary cleanup, and active-effect cleanup. The selected Command option remains a typed fill/procedure fact, not catalog identity dispatch.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
       "targetTaskId": "CRPI-BLOCK-004",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-004"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-command-ordering.mbt.qnt",
@@ -264,12 +264,12 @@
         "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns creature-type target admission, charm application/breakage, protection active-effect admission, scoped attack/save roll modes, charm/possession prevention, Concentration, Hit Point, condition lifecycle, active effect, and creature-state reducer surfaces. Creature type and selected spell identity remain catalog/support-profile boundary facts that feed typed target admission and effect scope, not production reducer dispatch.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
       "targetTaskId": "CRPI-BLOCK-006",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-006"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-danger-sense-selected-identity.mbt.qnt",
@@ -279,12 +279,12 @@
         "packages/battle-runtime/battle-runtime-danger-sense-substrates.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns Danger Sense as a passive Saving Throw roll-mode substrate: saving-throw roll mode discovery/resolution provides Dexterity save Advantage, while condition lifecycle suppresses the passive mode when the character is Incapacitated. Class feature selection remains a support/profile admission boundary, not reducer dispatch on authored identity.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU03-CONDITION-AND-ROLL-MODIFIER-FEATURE-SUBSTRATES",
       "targetTaskId": "CRPI-BLOCK-007",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-007"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt",
