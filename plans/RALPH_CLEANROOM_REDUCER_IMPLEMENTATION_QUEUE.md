@@ -505,7 +505,7 @@
     {
       "number": 84,
       "id": "CRPI-BLOCK-041",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: character-creation-class-feature-projections"
     },
     {
@@ -5547,7 +5547,7 @@ Plan Impact:
 
 ### Task 84 - CRPI-BLOCK-041
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

@@ -1,47 +1,47 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-038",
+  "taskId": "CRPI-BLOCK-041",
   "durableFields": [
     {
-      "fieldPath": "CharacterBuild.background",
+      "fieldPath": "CharacterBuild.progression",
       "owner": "character-build",
       "introducedIn": "packages/character-creation-runtime/src/types.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing CharacterBuild background identity is the source for deriving the background-granted Origin feat through Surface background creation facts."
+      "notes": "Existing finalized build progression is the retained class-level source fact used to derive class-feature resources."
     },
     {
-      "fieldPath": "characterBuildUnitRefs(build, unitLibrary)",
-      "owner": "character-build-projection",
-      "introducedIn": "packages/character-creation-runtime/src/finalization.ts",
+      "fieldPath": "CharacterBuild.features",
+      "owner": "character-build",
+      "introducedIn": "packages/character-creation-runtime/src/types.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing selected class-feature and Metamagic option refs remain retained build facts; Task 84 adds no duplicate resource or source cache."
+    },
+    {
+      "fieldPath": "CharacterCreationRouteEvent.subject=buildProjection",
+      "owner": "character-creation-reducer-route-projection",
+      "introducedIn": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts",
       "derivability": {
         "tag": "runtime-projection"
       },
-      "notes": "Existing build projection derives background Origin feat unit refs from CharacterBuild.background plus Surface background facts; Task 79 does not copy the selected feat into a new Character Battle state field."
+      "notes": "Build projection route events are emitted by the public CharacterBuild class-feature projection-with-route entrypoint after it derives facts from retained build facts plus Unit catalog projections."
     },
     {
-      "fieldPath": "CharacterBattleRouteEvent.subject=handoffSelectedReference",
-      "owner": "character-battle-route-projection",
-      "introducedIn": "packages/character-battle-runtime/src/index.ts",
+      "fieldPath": "CharacterCreationRouteEvent.facts=buildProjectionInput",
+      "owner": "character-creation-reducer-route-projection",
+      "introducedIn": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts",
       "derivability": {
         "tag": "runtime-projection"
       },
-      "notes": "Route events are emitted by the public character-battle init handoff route after deriving selected-reference facts from CharacterBuild.background, Surface background facts, and existing CharacterBuild unit refs. They are not stored in CharacterBuild, CharacterSheet, BattleState, or BattleCreatureState."
-    },
-    {
-      "fieldPath": "CharacterBattleRouteEvent.owner=characterBattleBuildProjection|characterBattleInitProjection|characterBattleRuntime",
-      "owner": "character-battle-route-projection",
-      "introducedIn": "packages/character-battle-runtime/src/index.ts",
-      "derivability": {
-        "tag": "runtime-projection"
-      },
-      "notes": "The owner sequence records selected-reference retention, Initiative handoff projection, and runtime entry without dispatching on authored Origin feat identity."
+      "notes": "CreationBuildProjectionInputFact records the projection input boundary without storing authored identity or duplicate source facts."
     }
   ],
   "notes": [
-    "Task 79 introduced no new durable CharacterBuild, CharacterSheet, BattleState, or BattleCreatureState fields.",
-    "Origin feat authored identity remains at Surface catalog, character selection, and test/evidence boundaries.",
-    "Production Character Battle public handoff route uses CharacterBuild.background, Surface background facts, existing CharacterBuild unit refs, and Initiative support profiles rather than a duplicate selected-feat cache."
+    "Task 84 introduced no new durable CharacterBuild fields.",
+    "Class-feature resource and source facts remain derived from CharacterBuild retained facts plus the Unit catalog.",
+    "Route evidence observes qRoute returned by the public CharacterBuild class-feature projection-with-route entrypoint; it is not adapter-local expected routes or production dispatch on class-feature authored identity."
   ]
 }

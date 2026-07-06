@@ -203,6 +203,16 @@ export {
   characterBuildUnitRefs,
 } from "./finalization.ts";
 export {
+  characterBuildClassFeatureFactsProjectionWithRoute,
+  type CharacterBuildClassFeatureFactsProjection,
+  type CharacterBuildClassFeatureFactsProjectionIssue,
+  type CharacterBuildClassFeatureFactsProjectionRoute,
+  type CharacterBuildProjectionRouteFact,
+  type CharacterBuildProjectionRouteOwner,
+  type CharacterBuildProjectionRouteSubject,
+  type CharacterCreationBuildProjectionRouteEvent,
+} from "./character-build-class-feature-projection-route.ts";
+export {
   characterBuildGnomishLineageTraitProjection,
   type CharacterBuildGnomishLineageOption,
   type CharacterBuildGnomishLineageTraitProjection,

@@ -6705,6 +6705,116 @@
         ],
         "requiredPlanEdits": "none"
       }
+    },
+    {
+      "taskId": "CRPI-BLOCK-041",
+      "assignmentId": "reducer-spine-diagnostic-creation",
+      "laneId": "creation",
+      "selectedDrivers": [
+        "packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "cfb28e8d38dbfec500aa6334be1f4873eab6789ed2507d09cd2a36e178fe8d46"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "688186c9c228063eb6c418d8b104d5e4df0303f2594a5a1bae556350c8a84190"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "01d0e8eeec6d2e4b69f737caaa24b6b454760a03458946b44226bc67bcca9c03"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-BLOCK-041/README.md",
+          "sha256": "1c2539ba4c0e63b60be06fd52beb9e6eef503d0b2abbcf40dfd45a33789a4217"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-041.json",
+          "sha256": "dcbe44b6e8028cdebf9be8fe6d6b37265e24c5d47ee4341ce4a9a40eb48a4ca4",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-041.json#driver:packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt#step:doProjectMonkFocusAndUncannyMetabolism#trace:public-route=createCompletedReducerRouteDriver action=doProjectMonkFocusAndUncannyMetabolism qRoute=class-feature-build-projection-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-041.json#driver:packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt#step:doProjectSorcererFontAndMetamagic#trace:public-route=createCompletedReducerRouteDriver action=doProjectSorcererFontAndMetamagic qRoute=class-feature-build-projection-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-owner-character-creation-20260706T213644Z/integration && git log --oneline -1 HEAD && git merge-base --is-ancestor fb3fcddac57b6b34e16c41d09fe4794066faa104 HEAD",
+          "status": "pass",
+          "detail": "Declared base ref and HEAD both resolved to fb3fcddac Unblock owner-decision Ralph tasks; Base SHA is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language check for Character Creation Record Class Features, Monk Focus, Uncanny Metabolism, Font of Magic, Metamagic, package vocabulary, and Character Building terms",
+          "status": "pass",
+          "detail": "Checked .references/srd-5.2.1/Character-Creation.md, .references/srd-5.2.1/Classes/Monk.md, .references/srd-5.2.1/Classes/Sorcerer.md, packages/character-creation-runtime/VOCABULARY.md, and UBIQUITOUS_LANGUAGE.md before recording Task 84 replay evidence."
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Pre-MBT grep commands matched only a Ralph monitor shell whose command text contained vitest and quint_evaluator; process-name checks found no actual vitest or quint_evaluator process."
+        },
+        {
+          "command": "pnpm --filter @dnd/character-creation-runtime exec tsc --noEmit",
+          "status": "pass",
+          "detail": "Character Creation runtime TypeScript check passed after adding fact-observing route handlers."
+        },
+        {
+          "command": "START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=2 pnpm --filter @dnd/character-creation-runtime exec vitest run src/class-feature-projections.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"replays class-feature resource and source fact projections|routes class-feature build projections\" ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "status": "pass",
+          "detail": "Focused Character Creation semantic projection replay and reducer-route qRoute replay passed with 2 tests and 9 skipped; TOTAL: 4s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check --target-replay-evidence tasks/target-replay-evidence/CRPI-BLOCK-041.json",
+          "status": "fail",
+          "detail": "Diagnostic target-evidence command failed on unrelated broad missing-evidence baseline across the full corpus; the task-scoped validator found no Task 84 evidence issues."
+        },
+        {
+          "command": "node task-scoped validateTargetReplayEvidence for packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt",
+          "status": "pass",
+          "detail": "Validated tasks/target-replay-evidence/CRPI-BLOCK-041.json with scripts/cleanroom-branch-coverage-check.cjs#validateTargetReplayEvidence and requireAllObligations=false; 2 obligations covered."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "Cleanroom branch coverage passed with 738 obligations and 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass",
+          "detail": "Whitespace check passed."
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "Quality passed end to end; app lint reported 61 warnings and exited 0."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 3 addressed reviewer feedback by moving qRoute emission to the public characterBuildClassFeatureFactsProjectionWithRoute entrypoint and marking evidence/history artifacts intent-to-add. RAW traceability, no duplicate durable CharacterBuild resource/source state, no authored-identity production dispatch, and adapter witness quarantine were rechecked with no remaining reasonable Task 84 findings."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-041",
+            "impact": "unblocked"
+          }
+        ],
+        "observations": [
+          "Character Creation class-feature build projection qRoute is accepted through the public characterBuildClassFeatureFactsProjectionWithRoute entrypoint, which derives facts from CharacterBuild plus Unit catalog and emits CharacterBuildOwner route events.",
+          "CharacterBuildOwner remains the durable owner for projected build facts; source facts remain retained CharacterBuild facts plus Unit catalog projection.",
+          "The broad target-evidence command still reports unrelated missing replay evidence when pointed at a single task file, so Task 84 used direct task-scoped validation plus the normal source inventory gate."
+        ],
+        "requiredPlanEdits": "none"
+      }
     }
   ]
 }
