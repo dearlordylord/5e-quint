@@ -869,6 +869,27 @@ export type CharacterSheetHitPointsInput = {
   readonly zeroHpLifecycle?: CharacterSheetZeroHpLifecycleInput;
 };
 
+export type CharacterSheetHitPointMaximumProjectionRoute = readonly [
+  {
+    readonly kind: "projectCharacterSheetFacts";
+    readonly subject: "hitPoint";
+    readonly owner: "hitPoint";
+  },
+  {
+    readonly kind: "recordCharacterSheetFacts";
+    readonly subject: "hitPoint";
+    readonly facts: readonly ["hitPointMaximumArithmeticInput"];
+    readonly owner: "buildProjection";
+  },
+];
+
+export type CharacterSheetHitPointMaximumProjection = {
+  readonly normalHitPointMaximum: HpType;
+  readonly effectiveHitPointMaximum: HpType;
+  readonly hitPointMaximumReduction: HpType;
+  readonly qRoute: CharacterSheetHitPointMaximumProjectionRoute;
+};
+
 export type CharacterSheetIssue = {
   readonly tag: "characterSheetIssue";
   readonly message: string;

@@ -25,6 +25,7 @@ import {
   isNonNegativeInteger,
   type CharacterSheet,
   type CharacterSheetElapsedTimeResult,
+  type CharacterSheetHitPointMaximumProjection,
   type CharacterSheetHitPointRecoveryOverflow,
   type CharacterSheetHitPoints,
   type CharacterSheetHitPointsInput,
@@ -35,6 +36,20 @@ import {
   type CharacterSheetZeroHpLifecycle,
   type CharacterSheetZeroHpLifecycleInput,
 } from "./sheet-types.ts";
+
+const CHARACTER_SHEET_HIT_POINT_MAXIMUM_PROJECTION_ROUTE = [
+  {
+    kind: "projectCharacterSheetFacts",
+    subject: "hitPoint",
+    owner: "hitPoint",
+  },
+  {
+    kind: "recordCharacterSheetFacts",
+    subject: "hitPoint",
+    facts: ["hitPointMaximumArithmeticInput"],
+    owner: "buildProjection",
+  },
+] as const satisfies CharacterSheetHitPointMaximumProjection["qRoute"];
 
 export function characterSheetHitPoints(
   input: CharacterSheetHitPointsInput,
@@ -103,14 +118,35 @@ export function characterSheetHitPointMaximum(input: {
   readonly sheet: Pick<CharacterSheet, "build" | "hitPointMaximumReduction">;
   readonly unitLibrary: UnitCatalog;
 }): Either.Either<HpType, CharacterSheetIssue> {
-  const normalMaximum = characterSheetBuildNormalHitPointMaximum({
+  return Either.map(
+    characterSheetHitPointMaximumProjection(input),
+    (projection) => projection.effectiveHitPointMaximum,
+  );
+}
+
+export function characterSheetHitPointMaximumProjection(input: {
+  readonly sheet: Pick<CharacterSheet, "build" | "hitPointMaximumReduction">;
+  readonly unitLibrary: UnitCatalog;
+}): Either.Either<CharacterSheetHitPointMaximumProjection, CharacterSheetIssue> {
+  const normalHitPointMaximum = characterSheetBuildNormalHitPointMaximum({
     build: input.sheet.build,
     unitLibrary: input.unitLibrary,
   });
-  if (Either.isLeft(normalMaximum)) return Either.left(normalMaximum.left);
-  return characterSheetEffectiveHitPointMaximum({
-    normalMaximum: normalMaximum.right,
+  if (Either.isLeft(normalHitPointMaximum)) {
+    return Either.left(normalHitPointMaximum.left);
+  }
+  const effectiveHitPointMaximum = characterSheetEffectiveHitPointMaximum({
+    normalMaximum: normalHitPointMaximum.right,
     hitPointMaximumReduction: input.sheet.hitPointMaximumReduction,
+  });
+  if (Either.isLeft(effectiveHitPointMaximum)) {
+    return Either.left(effectiveHitPointMaximum.left);
+  }
+  return Either.right({
+    normalHitPointMaximum: normalHitPointMaximum.right,
+    effectiveHitPointMaximum: effectiveHitPointMaximum.right,
+    hitPointMaximumReduction: input.sheet.hitPointMaximumReduction,
+    qRoute: CHARACTER_SHEET_HIT_POINT_MAXIMUM_PROJECTION_ROUTE,
   });
 }
 

@@ -26,6 +26,7 @@ import {
   characterSheetAbilityCheckProficiencyBonusProjection,
   characterSheetArmorClassProjection,
   characterSheetClassFeatureSelectedReferenceProjection,
+  characterSheetHitPointMaximumProjection,
   characterSheetResources,
   completeLongRestArcaneRecoveryResetWithRoute,
   completeShortRestArcaneRecoveryWithRoute,
@@ -465,17 +466,91 @@ const abilityCheckRouteActions = indexedActionEntries(
   ],
 );
 
-const hitPointMaximumRouteActions = indexedActions(
+const hitPointMaximumRouteActions = indexedActionEntries(
   hitPointMaximumRouteDriverSchema,
   [
-    "doProjectFighterLevelOne",
-    "doProjectFighterLevelTwo",
-    "doProjectWizardFighterMulticlass",
-    "doProjectMinimumHigherLevelGain",
-    "doProjectSorcererDraconicResilience",
-    "doProjectReducedEffectiveMaximum",
+    [
+      "doProjectFighterLevelOne",
+      projectHitPointMaximumRoute({
+        build: baseBuild({
+          startingClass: "class_fighter",
+          constitutionScore: 13,
+        }),
+        expectedNormalMaximum: 11,
+        expectedEffectiveMaximum: 11,
+      }),
+    ],
+    [
+      "doProjectFighterLevelTwo",
+      projectHitPointMaximumRoute({
+        build: baseBuild({
+          startingClass: "class_fighter",
+          advancements: ["class_fighter"],
+          constitutionScore: 13,
+        }),
+        expectedNormalMaximum: 18,
+        expectedEffectiveMaximum: 18,
+      }),
+    ],
+    [
+      "doProjectWizardFighterMulticlass",
+      projectHitPointMaximumRoute({
+        build: baseBuild({
+          startingClass: "class_wizard",
+          advancements: ["class_fighter"],
+          constitutionScore: 13,
+        }),
+        expectedNormalMaximum: 14,
+        expectedEffectiveMaximum: 14,
+      }),
+    ],
+    [
+      "doProjectMinimumHigherLevelGain",
+      projectHitPointMaximumRoute({
+        build: baseBuild({
+          startingClass: "class_wizard",
+          advancements: ["class_wizard"],
+          constitutionScore: 2,
+        }),
+        expectedNormalMaximum: 3,
+        expectedEffectiveMaximum: 3,
+      }),
+    ],
+    [
+      "doProjectSorcererDraconicResilience",
+      projectHitPointMaximumRoute({
+        build: {
+          ...baseBuild({
+            startingClass: "class_sorcerer",
+            advancements: ["class_sorcerer", "class_sorcerer"],
+            constitutionScore: 13,
+          }),
+          features: [
+            {
+              kind: "selectedClassChoice",
+              selectedFromUnitId: "class_sorcerer",
+              unitId: "subclass_sorcerer_draconic_sorcery",
+            },
+          ],
+        },
+        expectedNormalMaximum: 20,
+        expectedEffectiveMaximum: 20,
+      }),
+    ],
+    [
+      "doProjectReducedEffectiveMaximum",
+      projectHitPointMaximumRoute({
+        build: baseBuild({
+          startingClass: "class_fighter",
+          advancements: ["class_fighter"],
+          constitutionScore: 13,
+        }),
+        hitPointMaximumReduction: 3,
+        expectedNormalMaximum: 18,
+        expectedEffectiveMaximum: 15,
+      }),
+    ],
   ],
-  projectHitPointMaximumRoute,
 );
 
 const armorClassRouteActions = {
@@ -745,21 +820,38 @@ function projectPublicAbilityCheckRoute(input: {
   };
 }
 
-function projectHitPointMaximumRoute(
-  route: readonly CharacterSheetRouteEvent[],
-): readonly CharacterSheetRouteEvent[] {
-  return [
-    ...route,
-    projectCharacterSheetFacts({
-      subject: "hitPoint",
-      owner: "hitPoint",
-    }),
-    recordCharacterSheetFacts({
-      subject: "hitPoint",
-      facts: ["hitPointMaximumArithmeticInput"],
-      owner: "buildProjection",
-    }),
-  ];
+function projectHitPointMaximumRoute(input: {
+  readonly build: CharacterBuild;
+  readonly hitPointMaximumReduction?: number;
+  readonly expectedNormalMaximum: number;
+  readonly expectedEffectiveMaximum: number;
+}): RouteAppender {
+  return (route) => {
+    const hitPointMaximumReduction = input.hitPointMaximumReduction ?? 0;
+    const sheet = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:route-hit-point-maximum"),
+        build: input.build,
+        tempHp: Hp(0),
+        hitPointMaximumReduction: Hp(hitPointMaximumReduction),
+        conditions: [],
+        unitLibrary,
+      }),
+    );
+    const projection = requireRight(
+      characterSheetHitPointMaximumProjection({ sheet, unitLibrary }),
+    );
+    expect(Number(projection.normalHitPointMaximum)).toBe(
+      input.expectedNormalMaximum,
+    );
+    expect(Number(projection.effectiveHitPointMaximum)).toBe(
+      input.expectedEffectiveMaximum,
+    );
+    expect(Number(projection.hitPointMaximumReduction)).toBe(
+      hitPointMaximumReduction,
+    );
+    return [...route, ...projection.qRoute];
+  };
 }
 
 function bardAbilityCheckBuild(input: {
@@ -781,6 +873,7 @@ function bardAbilityCheckBuild(input: {
 function baseBuild(input: {
   readonly startingClass: string;
   readonly advancements?: readonly string[];
+  readonly constitutionScore?: number;
 }): CharacterBuild {
   return {
     progression: {
@@ -799,7 +892,7 @@ function baseBuild(input: {
       abilityScoreAssignment({
         str: 13,
         dex: 14,
-        con: 13,
+        con: input.constitutionScore ?? 13,
         int: 8,
         wis: 16,
         cha: 10,
@@ -1567,17 +1660,6 @@ function recordCharacterSheetFacts(input: {
     facts: uniqueSorted(input.facts),
     owner: input.owner,
   };
-}
-
-function indexedActions<const Schema extends RouteDriverSchema>(
-  schema: Schema,
-  actionNames: readonly (keyof Schema)[],
-  append: RouteAppender,
-): IndexedRouteActionMap<Schema> {
-  return indexedActionEntries(
-    schema,
-    actionNames.map((actionName) => [actionName, append] as const),
-  );
 }
 
 function indexedActionEntries<const Schema extends RouteDriverSchema>(

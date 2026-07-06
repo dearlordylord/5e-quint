@@ -1,83 +1,83 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-052",
+  "taskId": "CRPI-BLOCK-053",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/character-sheet-runtime/character-sheet-healing-resource-selected-identity.route.mbt.qnt",
+      "path": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.route.mbt.qnt",
       "quarantinedWitnessNames": [
         "qRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-052.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-053.json"
       ]
     },
     {
       "path": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "healingResourceRouteActions",
-        "spendHealingResourceRoute",
+        "hitPointMaximumRouteActions",
+        "projectHitPointMaximumRoute",
         "normalizeCharacterSheetRouteQuintState",
         "routeStateCheck"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-052.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-053.json"
       ]
     },
     {
-      "path": "packages/character-sheet-runtime/src/healing-resource-selected-identity.mbt.test.ts",
+      "path": "packages/character-sheet-runtime/src/hit-point-maximum.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "createHealingResourceSelectedIdentityDriver",
-        "projectHealingResourceSelectedIdentityState",
-        "healingResourceSelectedIdentityStateCheck"
+        "createHitPointMaximumDriver",
+        "projectHitPointMaximum",
+        "hitPointMaximumStateCheck"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-052.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-053.json"
       ]
     }
   ],
   "productionModulesExtended": [
     {
-      "path": "packages/character-sheet-runtime/src/healing-rest-benefit.ts",
+      "path": "packages/character-sheet-runtime/src/hit-points.ts",
       "owners": [
-        "CharacterSheetFeatureResourceOwner",
-        "CharacterSheetHitPointOwner"
+        "CharacterSheetHitPointOwner",
+        "CharacterSheetBuildProjectionOwner"
       ],
-      "notes": "Task 98 adds the public applyLayOnHandsWithRoute entrypoint. It delegates to the existing applyLayOnHands reducer path for Lay On Hands pool spend, Hit Point restoration, and Poisoned removal, then exposes the copied feature-resource spend plus Hit Point projection qRoute. No durable CharacterSheet state field is added."
+      "notes": "Task 99 adds the public characterSheetHitPointMaximumProjection entrypoint. It derives normal Hit Point Maximum from CharacterBuild facts, applies existing CharacterSheet.hitPointMaximumReduction for effective maximum, and returns the copied hit-point projection plus build arithmetic-input qRoute. No durable CharacterSheet state field is added."
     },
     {
       "path": "packages/character-sheet-runtime/src/sheet-types.ts",
       "owners": [
-        "CharacterSheetFeatureResourceOwner",
-        "CharacterSheetHitPointOwner"
+        "CharacterSheetHitPointOwner",
+        "CharacterSheetBuildProjectionOwner"
       ],
-      "notes": "Task 98 adds the typed CharacterSheetLayOnHandsRoute and CharacterSheetLayOnHandsRouteResult surfaces. The types record route projection evidence returned with the existing Lay On Hands result, not duplicated sheet state."
+      "notes": "Task 99 adds CharacterSheetHitPointMaximumProjection and CharacterSheetHitPointMaximumProjectionRoute types. The projection records public route evidence and derived maximum values, not duplicated sheet state."
     },
     {
       "path": "packages/character-sheet-runtime/src/index.ts",
       "owners": [
-        "CharacterSheetFeatureResourceOwner",
-        "CharacterSheetHitPointOwner"
+        "CharacterSheetHitPointOwner",
+        "CharacterSheetBuildProjectionOwner"
       ],
-      "notes": "Exports the public Lay On Hands route result entrypoint and route result types."
+      "notes": "Exports the public Hit Point Maximum projection entrypoint and projection route types."
     },
     {
       "path": "scripts/audit-character-sheet-runtime-split.mjs",
       "owners": [
-        "CharacterSheetFeatureResourceOwner",
-        "CharacterSheetHitPointOwner"
+        "CharacterSheetHitPointOwner",
+        "CharacterSheetBuildProjectionOwner"
       ],
-      "notes": "Records split-audit ownership for the new public Lay On Hands route export surface so quality checks keep the owner boundary explicit."
+      "notes": "Records split-audit ownership for the new public Hit Point Maximum projection export surface so quality checks keep the owner boundary explicit."
     }
   ],
   "expectedNextReuse": [
     {
-      "path": "packages/character-sheet-runtime/src/healing-rest-benefit.ts",
-      "notes": "Future Character Sheet healing-resource routes should reuse applyLayOnHandsWithRoute instead of adapter-local route event assembly."
+      "path": "packages/character-sheet-runtime/src/hit-points.ts",
+      "notes": "Future Character Sheet Hit Point Maximum route tasks should reuse characterSheetHitPointMaximumProjection instead of adapter-local route event assembly."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 98 observes copied qRoute for Lay On Hands healing-resource selected identity through public Character Sheet reducer route entrypoints. Feature-resource spend, Hit Point restoration, and Poisoned removal remain in existing sheet owners."
+    "notes": "Task 99 observes copied qRoute for Hit Point Maximum projection through a public Character Sheet projection entrypoint. Normal maximum remains build-derived; maximum reduction remains canonical sheet Hit Point state."
   }
 }

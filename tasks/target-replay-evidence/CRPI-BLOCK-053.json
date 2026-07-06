@@ -1,0 +1,482 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts Hit Point Maximum copied qRoute versus public projection replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "acceptance": {
+    "driverPath": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt",
+    "connectorPath": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.route.mbt.qnt",
+    "routeClass": "reducer-routed",
+    "durableOwner": "CharacterSheetHitPointOwner owns effective and reduced Hit Point Maximum projection boundaries; CharacterSheetBuildProjectionOwner owns normal maximum arithmetic inputs from build facts. Normal Hit Point Maximum remains derived, while maximum reduction is sheet Hit Point state.",
+    "acceptedProjection": "qRoute"
+  },
+  "status": "pass",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.route.mbt.qnt",
+      "qntFileSha256": "31e707aaa6c05cf90b58786cb5366a189ea6d4b457b068b7b820f73a05653cb2",
+      "routeConnectorSha256": "5c989357f8921b7df842fa8c7e6121830e56061191a7aeef31b75c8b2b8666f9",
+      "branchFamily": "step",
+      "branchAction": "doProjectFighterLevelOne",
+      "observedActionTaken": "doProjectFighterLevelOne",
+      "harnessTestPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=characterSheetHitPointMaximumProjection action=doProjectFighterLevelOne qRoute=hit-point-maximum-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doProjectFighterLevelOne",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#createIndexedRouteDriver",
+        "routeSubject": "SheetHitPointRouteSubject",
+        "owners": [
+          "CharacterSheetHitPointOwner",
+          "CharacterSheetBuildProjectionOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "ef7658b4aa21f0255d94910bc5768486713b536efe2fee8789e3874d0bfa04e2",
+        "observedProjectionSha256": "ef7658b4aa21f0255d94910bc5768486713b536efe2fee8789e3874d0bfa04e2",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "SheetHitPointRouteSubject"
+          ],
+          "routeFacts": [
+            "SheetHitPointMaximumArithmeticInputFact"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_sheet",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "project_hit_point_maximum",
+            "packages/character-sheet-runtime/src/hit-points.ts#characterSheetHitPointMaximumProjection",
+            "packages/character-sheet-runtime/src/hit-points.ts#characterSheetBuildNormalHitPointMaximum",
+            "packages/character-sheet-runtime/src/hit-points.ts#characterSheetEffectiveHitPointMaximum",
+            "read_public_qRoute",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterSheetRouteQuintState"
+          ],
+          "routeEventSource": "Character Sheet qRoute event returned by public characterSheetHitPointMaximumProjection after deriving normal Hit Point Maximum from CharacterBuild facts and applying sheet-owned Hit Point maximum reduction.",
+          "reducerPublicApiPath": "packages/character-sheet-runtime/src/hit-points.ts#characterSheetHitPointMaximumProjection"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.progression",
+          "CharacterBuild.abilityScores.con",
+          "CharacterBuild.features",
+          "CharacterSheet.hitPointMaximumReduction",
+          "CharacterSheetHitPointMaximumProjection.normalHitPointMaximum",
+          "CharacterSheetHitPointMaximumProjection.effectiveHitPointMaximum",
+          "CharacterSheetHitPointMaximumProjection.hitPointMaximumReduction",
+          "CharacterSheetRouteEvent.kind=projectCharacterSheetFacts",
+          "CharacterSheetRouteEvent.subject=hitPoint",
+          "CharacterSheetRouteEvent.owner=hitPoint",
+          "CharacterSheetRouteEvent.kind=recordCharacterSheetFacts",
+          "CharacterSheetRouteEvent.facts=hitPointMaximumArithmeticInput",
+          "CharacterSheetRouteEvent.owner=buildProjection"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Fighter level 1 projects normal and effective Hit Point Maximum through the public hit-point projection route."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.route.mbt.qnt",
+      "qntFileSha256": "31e707aaa6c05cf90b58786cb5366a189ea6d4b457b068b7b820f73a05653cb2",
+      "routeConnectorSha256": "5c989357f8921b7df842fa8c7e6121830e56061191a7aeef31b75c8b2b8666f9",
+      "branchFamily": "step",
+      "branchAction": "doProjectFighterLevelTwo",
+      "observedActionTaken": "doProjectFighterLevelTwo",
+      "harnessTestPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=characterSheetHitPointMaximumProjection action=doProjectFighterLevelTwo qRoute=hit-point-maximum-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doProjectFighterLevelTwo",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#createIndexedRouteDriver",
+        "routeSubject": "SheetHitPointRouteSubject",
+        "owners": [
+          "CharacterSheetHitPointOwner",
+          "CharacterSheetBuildProjectionOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "8758b89c29849821c0c4dd4629b9f3942520e22f56ab8132191c789ca23a2c22",
+        "observedProjectionSha256": "8758b89c29849821c0c4dd4629b9f3942520e22f56ab8132191c789ca23a2c22",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "SheetHitPointRouteSubject"
+          ],
+          "routeFacts": [
+            "SheetHitPointMaximumArithmeticInputFact"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_sheet",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "project_hit_point_maximum",
+            "packages/character-sheet-runtime/src/hit-points.ts#characterSheetHitPointMaximumProjection",
+            "packages/character-sheet-runtime/src/hit-points.ts#characterSheetBuildNormalHitPointMaximum",
+            "packages/character-sheet-runtime/src/hit-points.ts#characterSheetEffectiveHitPointMaximum",
+            "read_public_qRoute",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterSheetRouteQuintState"
+          ],
+          "routeEventSource": "Character Sheet qRoute event returned by public characterSheetHitPointMaximumProjection after deriving normal Hit Point Maximum from CharacterBuild facts and applying sheet-owned Hit Point maximum reduction.",
+          "reducerPublicApiPath": "packages/character-sheet-runtime/src/hit-points.ts#characterSheetHitPointMaximumProjection"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.progression",
+          "CharacterBuild.abilityScores.con",
+          "CharacterBuild.features",
+          "CharacterSheet.hitPointMaximumReduction",
+          "CharacterSheetHitPointMaximumProjection.normalHitPointMaximum",
+          "CharacterSheetHitPointMaximumProjection.effectiveHitPointMaximum",
+          "CharacterSheetHitPointMaximumProjection.hitPointMaximumReduction",
+          "CharacterSheetRouteEvent.kind=projectCharacterSheetFacts",
+          "CharacterSheetRouteEvent.subject=hitPoint",
+          "CharacterSheetRouteEvent.owner=hitPoint",
+          "CharacterSheetRouteEvent.kind=recordCharacterSheetFacts",
+          "CharacterSheetRouteEvent.facts=hitPointMaximumArithmeticInput",
+          "CharacterSheetRouteEvent.owner=buildProjection"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Fighter level 2 adds fixed higher-level Hit Points through build arithmetic and the public projection route."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.route.mbt.qnt",
+      "qntFileSha256": "31e707aaa6c05cf90b58786cb5366a189ea6d4b457b068b7b820f73a05653cb2",
+      "routeConnectorSha256": "5c989357f8921b7df842fa8c7e6121830e56061191a7aeef31b75c8b2b8666f9",
+      "branchFamily": "step",
+      "branchAction": "doProjectWizardFighterMulticlass",
+      "observedActionTaken": "doProjectWizardFighterMulticlass",
+      "harnessTestPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=characterSheetHitPointMaximumProjection action=doProjectWizardFighterMulticlass qRoute=hit-point-maximum-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doProjectWizardFighterMulticlass",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#createIndexedRouteDriver",
+        "routeSubject": "SheetHitPointRouteSubject",
+        "owners": [
+          "CharacterSheetHitPointOwner",
+          "CharacterSheetBuildProjectionOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "efe92d5f1a10ec52461018cbdcbb2dc4a8dd4ae0e269f5d34bdf619214b6b307",
+        "observedProjectionSha256": "efe92d5f1a10ec52461018cbdcbb2dc4a8dd4ae0e269f5d34bdf619214b6b307",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "SheetHitPointRouteSubject"
+          ],
+          "routeFacts": [
+            "SheetHitPointMaximumArithmeticInputFact"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_sheet",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "project_hit_point_maximum",
+            "packages/character-sheet-runtime/src/hit-points.ts#characterSheetHitPointMaximumProjection",
+            "packages/character-sheet-runtime/src/hit-points.ts#characterSheetBuildNormalHitPointMaximum",
+            "packages/character-sheet-runtime/src/hit-points.ts#characterSheetEffectiveHitPointMaximum",
+            "read_public_qRoute",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterSheetRouteQuintState"
+          ],
+          "routeEventSource": "Character Sheet qRoute event returned by public characterSheetHitPointMaximumProjection after deriving normal Hit Point Maximum from CharacterBuild facts and applying sheet-owned Hit Point maximum reduction.",
+          "reducerPublicApiPath": "packages/character-sheet-runtime/src/hit-points.ts#characterSheetHitPointMaximumProjection"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.progression",
+          "CharacterBuild.abilityScores.con",
+          "CharacterBuild.features",
+          "CharacterSheet.hitPointMaximumReduction",
+          "CharacterSheetHitPointMaximumProjection.normalHitPointMaximum",
+          "CharacterSheetHitPointMaximumProjection.effectiveHitPointMaximum",
+          "CharacterSheetHitPointMaximumProjection.hitPointMaximumReduction",
+          "CharacterSheetRouteEvent.kind=projectCharacterSheetFacts",
+          "CharacterSheetRouteEvent.subject=hitPoint",
+          "CharacterSheetRouteEvent.owner=hitPoint",
+          "CharacterSheetRouteEvent.kind=recordCharacterSheetFacts",
+          "CharacterSheetRouteEvent.facts=hitPointMaximumArithmeticInput",
+          "CharacterSheetRouteEvent.owner=buildProjection"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Wizard/Fighter multiclass Hit Point Maximum derives from starting class and higher-level class facts through the public projection route."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.route.mbt.qnt",
+      "qntFileSha256": "31e707aaa6c05cf90b58786cb5366a189ea6d4b457b068b7b820f73a05653cb2",
+      "routeConnectorSha256": "5c989357f8921b7df842fa8c7e6121830e56061191a7aeef31b75c8b2b8666f9",
+      "branchFamily": "step",
+      "branchAction": "doProjectMinimumHigherLevelGain",
+      "observedActionTaken": "doProjectMinimumHigherLevelGain",
+      "harnessTestPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=characterSheetHitPointMaximumProjection action=doProjectMinimumHigherLevelGain qRoute=hit-point-maximum-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doProjectMinimumHigherLevelGain",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#createIndexedRouteDriver",
+        "routeSubject": "SheetHitPointRouteSubject",
+        "owners": [
+          "CharacterSheetHitPointOwner",
+          "CharacterSheetBuildProjectionOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "eae048098b210982e64dd4fb66ae4f992d2395e2a44765618a5ae1e275040b84",
+        "observedProjectionSha256": "eae048098b210982e64dd4fb66ae4f992d2395e2a44765618a5ae1e275040b84",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "SheetHitPointRouteSubject"
+          ],
+          "routeFacts": [
+            "SheetHitPointMaximumArithmeticInputFact"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_sheet",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "project_hit_point_maximum",
+            "packages/character-sheet-runtime/src/hit-points.ts#characterSheetHitPointMaximumProjection",
+            "packages/character-sheet-runtime/src/hit-points.ts#characterSheetBuildNormalHitPointMaximum",
+            "packages/character-sheet-runtime/src/hit-points.ts#characterSheetEffectiveHitPointMaximum",
+            "read_public_qRoute",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterSheetRouteQuintState"
+          ],
+          "routeEventSource": "Character Sheet qRoute event returned by public characterSheetHitPointMaximumProjection after deriving normal Hit Point Maximum from CharacterBuild facts and applying sheet-owned Hit Point maximum reduction.",
+          "reducerPublicApiPath": "packages/character-sheet-runtime/src/hit-points.ts#characterSheetHitPointMaximumProjection"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.progression",
+          "CharacterBuild.abilityScores.con",
+          "CharacterBuild.features",
+          "CharacterSheet.hitPointMaximumReduction",
+          "CharacterSheetHitPointMaximumProjection.normalHitPointMaximum",
+          "CharacterSheetHitPointMaximumProjection.effectiveHitPointMaximum",
+          "CharacterSheetHitPointMaximumProjection.hitPointMaximumReduction",
+          "CharacterSheetRouteEvent.kind=projectCharacterSheetFacts",
+          "CharacterSheetRouteEvent.subject=hitPoint",
+          "CharacterSheetRouteEvent.owner=hitPoint",
+          "CharacterSheetRouteEvent.kind=recordCharacterSheetFacts",
+          "CharacterSheetRouteEvent.facts=hitPointMaximumArithmeticInput",
+          "CharacterSheetRouteEvent.owner=buildProjection"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Higher-level gain remains at the SRD minimum of 1 Hit Point through build arithmetic and the public projection route."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.route.mbt.qnt",
+      "qntFileSha256": "31e707aaa6c05cf90b58786cb5366a189ea6d4b457b068b7b820f73a05653cb2",
+      "routeConnectorSha256": "5c989357f8921b7df842fa8c7e6121830e56061191a7aeef31b75c8b2b8666f9",
+      "branchFamily": "step",
+      "branchAction": "doProjectSorcererDraconicResilience",
+      "observedActionTaken": "doProjectSorcererDraconicResilience",
+      "harnessTestPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=characterSheetHitPointMaximumProjection action=doProjectSorcererDraconicResilience qRoute=hit-point-maximum-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doProjectSorcererDraconicResilience",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#createIndexedRouteDriver",
+        "routeSubject": "SheetHitPointRouteSubject",
+        "owners": [
+          "CharacterSheetHitPointOwner",
+          "CharacterSheetBuildProjectionOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "8484d6a868e729a11ba57c82c4e3bbbbd8679bef0c654e62fcc458d777ce0b34",
+        "observedProjectionSha256": "8484d6a868e729a11ba57c82c4e3bbbbd8679bef0c654e62fcc458d777ce0b34",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "SheetHitPointRouteSubject"
+          ],
+          "routeFacts": [
+            "SheetHitPointMaximumArithmeticInputFact"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_sheet",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "project_hit_point_maximum",
+            "packages/character-sheet-runtime/src/hit-points.ts#characterSheetHitPointMaximumProjection",
+            "packages/character-sheet-runtime/src/hit-points.ts#characterSheetBuildNormalHitPointMaximum",
+            "packages/character-sheet-runtime/src/hit-points.ts#characterSheetEffectiveHitPointMaximum",
+            "read_public_qRoute",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterSheetRouteQuintState"
+          ],
+          "routeEventSource": "Character Sheet qRoute event returned by public characterSheetHitPointMaximumProjection after deriving normal Hit Point Maximum from CharacterBuild facts and applying sheet-owned Hit Point maximum reduction.",
+          "reducerPublicApiPath": "packages/character-sheet-runtime/src/hit-points.ts#characterSheetHitPointMaximumProjection"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.progression",
+          "CharacterBuild.abilityScores.con",
+          "CharacterBuild.features",
+          "CharacterSheet.hitPointMaximumReduction",
+          "CharacterSheetHitPointMaximumProjection.normalHitPointMaximum",
+          "CharacterSheetHitPointMaximumProjection.effectiveHitPointMaximum",
+          "CharacterSheetHitPointMaximumProjection.hitPointMaximumReduction",
+          "CharacterSheetRouteEvent.kind=projectCharacterSheetFacts",
+          "CharacterSheetRouteEvent.subject=hitPoint",
+          "CharacterSheetRouteEvent.owner=hitPoint",
+          "CharacterSheetRouteEvent.kind=recordCharacterSheetFacts",
+          "CharacterSheetRouteEvent.facts=hitPointMaximumArithmeticInput",
+          "CharacterSheetRouteEvent.owner=buildProjection"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Sorcerer Draconic Resilience contributes typed build-derived maximum bonus through the public projection route."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt",
+      "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.route.mbt.qnt",
+      "qntFileSha256": "31e707aaa6c05cf90b58786cb5366a189ea6d4b457b068b7b820f73a05653cb2",
+      "routeConnectorSha256": "5c989357f8921b7df842fa8c7e6121830e56061191a7aeef31b75c8b2b8666f9",
+      "branchFamily": "step",
+      "branchAction": "doProjectReducedEffectiveMaximum",
+      "observedActionTaken": "doProjectReducedEffectiveMaximum",
+      "harnessTestPath": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=characterSheetHitPointMaximumProjection action=doProjectReducedEffectiveMaximum qRoute=hit-point-maximum-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doProjectReducedEffectiveMaximum",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#createIndexedRouteDriver",
+        "routeSubject": "SheetHitPointRouteSubject",
+        "owners": [
+          "CharacterSheetHitPointOwner",
+          "CharacterSheetBuildProjectionOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "bf8820ee38b3136133299a71fdae008f19f94bf08f3883ddb71abffbe4e533be",
+        "observedProjectionSha256": "bf8820ee38b3136133299a71fdae008f19f94bf08f3883ddb71abffbe4e533be",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "SheetHitPointRouteSubject"
+          ],
+          "routeFacts": [
+            "SheetHitPointMaximumArithmeticInputFact"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_sheet",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#initialCharacterSheetRoute",
+            "project_hit_point_maximum",
+            "packages/character-sheet-runtime/src/hit-points.ts#characterSheetHitPointMaximumProjection",
+            "packages/character-sheet-runtime/src/hit-points.ts#characterSheetBuildNormalHitPointMaximum",
+            "packages/character-sheet-runtime/src/hit-points.ts#characterSheetEffectiveHitPointMaximum",
+            "read_public_qRoute",
+            "packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterSheetRouteQuintState"
+          ],
+          "routeEventSource": "Character Sheet qRoute event returned by public characterSheetHitPointMaximumProjection after deriving normal Hit Point Maximum from CharacterBuild facts and applying sheet-owned Hit Point maximum reduction.",
+          "reducerPublicApiPath": "packages/character-sheet-runtime/src/hit-points.ts#characterSheetHitPointMaximumProjection"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.progression",
+          "CharacterBuild.abilityScores.con",
+          "CharacterBuild.features",
+          "CharacterSheet.hitPointMaximumReduction",
+          "CharacterSheetHitPointMaximumProjection.normalHitPointMaximum",
+          "CharacterSheetHitPointMaximumProjection.effectiveHitPointMaximum",
+          "CharacterSheetHitPointMaximumProjection.hitPointMaximumReduction",
+          "CharacterSheetRouteEvent.kind=projectCharacterSheetFacts",
+          "CharacterSheetRouteEvent.subject=hitPoint",
+          "CharacterSheetRouteEvent.owner=hitPoint",
+          "CharacterSheetRouteEvent.kind=recordCharacterSheetFacts",
+          "CharacterSheetRouteEvent.facts=hitPointMaximumArithmeticInput",
+          "CharacterSheetRouteEvent.owner=buildProjection"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Sheet-owned maximum reduction lowers effective Hit Point Maximum while normal maximum remains derived from build facts."
+      }
+    }
+  ]
+}

@@ -4,6 +4,89 @@
   "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
   "entries": [
     {
+      "taskId": "CRPI-BLOCK-053",
+      "assignmentId": "reducer-spine-diagnostic-character-sheet",
+      "laneId": "sheet",
+      "selectedDrivers": [
+        "packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "e25c3514cf364066d6c8b9299696ebc07bdc8f1df676517066751ecd2c355118"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "c28b672f073cc5cc9363c1380a94133c5142e9c8a1a278f1d0f412457e4743fc"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "de64db6ae1d46e490870a4c55b4be8141ca0848f56d2dcc1f38734252211ce8f"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-053.json",
+          "sha256": "86c3284b3b031a5ab5d637850c85794fb02efbccb0f22a4c16014a39993c46d6",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-053.json#driver:packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt#step:doProjectFighterLevelOne#trace:public-route=characterSheetHitPointMaximumProjection action=doProjectFighterLevelOne qRoute=hit-point-maximum-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-053.json#driver:packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt#step:doProjectFighterLevelTwo#trace:public-route=characterSheetHitPointMaximumProjection action=doProjectFighterLevelTwo qRoute=hit-point-maximum-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-053.json#driver:packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt#step:doProjectWizardFighterMulticlass#trace:public-route=characterSheetHitPointMaximumProjection action=doProjectWizardFighterMulticlass qRoute=hit-point-maximum-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-053.json#driver:packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt#step:doProjectMinimumHigherLevelGain#trace:public-route=characterSheetHitPointMaximumProjection action=doProjectMinimumHigherLevelGain qRoute=hit-point-maximum-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-053.json#driver:packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt#step:doProjectSorcererDraconicResilience#trace:public-route=characterSheetHitPointMaximumProjection action=doProjectSorcererDraconicResilience qRoute=hit-point-maximum-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-053.json#driver:packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt#step:doProjectReducedEffectiveMaximum#trace:public-route=characterSheetHitPointMaximumProjection action=doProjectReducedEffectiveMaximum qRoute=hit-point-maximum-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "pnpm --filter @dnd/character-sheet-runtime typecheck",
+          "status": "pass"
+        },
+        {
+          "command": "START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=6 pnpm --filter @dnd/character-sheet-runtime exec vitest run src/hit-point-maximum.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"Hit Point maximum|routes Hit Point Maximum\" ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "status": "pass",
+          "detail": "2 files passed; 2 tests passed, 9 skipped; TOTAL: 5s"
+        },
+        {
+          "command": "node JSON parse check for CRPI-BLOCK-053 artifacts",
+          "status": "pass",
+          "detail": "Evidence, run ledger, engine depth manifest, and state owner manifest parsed."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check -- --target-replay-evidence tasks/target-replay-evidence/CRPI-BLOCK-053.json",
+          "status": "fail",
+          "detail": "Diagnostic target-only invocation required passing evidence for unrelated source obligations; Task 99 evidence itself was not contradicted. The repo-approved cleanroom-branch-coverage gate without target-only argument passed."
+        },
+        {
+          "command": "pnpm check:character-sheet-runtime-split",
+          "status": "pass",
+          "detail": "Expected export surface updated for characterSheetHitPointMaximumProjection and Hit Point Maximum projection route types."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "738 obligations, 24 sampled inputs"
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "All quality gates passed; app lint emitted 61 warnings and exited 0."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "No remaining reasonable Task 99 findings after moving Hit Point Maximum qRoute observation to public characterSheetHitPointMaximumProjection and recording split-audit export ownership."
+        }
+      ]
+    },
+    {
       "taskId": "CRPI-BLOCK-052",
       "assignmentId": "reducer-spine-diagnostic-character-sheet",
       "laneId": "sheet",

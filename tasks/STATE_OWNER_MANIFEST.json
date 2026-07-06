@@ -1,36 +1,33 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-052",
+  "taskId": "CRPI-BLOCK-053",
   "durableFields": [
     {
-      "owner": "CharacterSheetFeatureResourceOwner",
+      "owner": "CharacterSheetBuildProjectionOwner",
       "fields": [
-        "CharacterSheet.resourceExpenditures tag=layOnHandsHealingPool",
-        "CharacterSheetResourceState tag=layOnHandsHealingPool",
-        "CharacterSheetLayOnHandsRouteResult.qRoute"
+        "CharacterBuild.progression",
+        "CharacterBuild.abilityScores.con",
+        "CharacterBuild.features",
+        "CharacterSheetHitPointMaximumProjection.normalHitPointMaximum",
+        "CharacterSheetRouteEvent facts=hitPointMaximumArithmeticInput"
       ],
-      "notes": "Owns Lay On Hands healing-pool spend at the Character Sheet feature-resource boundary. Task 98 does not add a route-local healing-resource ledger; qRoute is returned by the public reducer route result after the existing resourceExpenditures update."
+      "notes": "Owns normal Hit Point Maximum arithmetic inputs from build facts. Task 99 exposes the derived normal maximum through a projection result and qRoute fact-recording event; it does not store normal maximum on CharacterSheet."
     },
     {
       "owner": "CharacterSheetHitPointOwner",
       "fields": [
-        "CharacterSheet.hitPoints",
-        "target CharacterSheet.hitPoints.currentHp"
+        "CharacterSheet.hitPointMaximumReduction",
+        "CharacterSheetHitPointMaximumProjection.effectiveHitPointMaximum",
+        "CharacterSheetHitPointMaximumProjection.hitPointMaximumReduction",
+        "CharacterSheetRouteEvent subject=hitPoint owner=hitPoint"
       ],
-      "notes": "Owns Hit Point restoration from Lay On Hands. Task 98 reads the canonical target hitPoints state after applyLayOnHandsWithRoute instead of storing a separate HP projection."
-    },
-    {
-      "owner": "CharacterSheetConditionListOwner",
-      "fields": [
-        "CharacterSheet.conditions"
-      ],
-      "notes": "Owns Poisoned removal because the route vocabulary has no separate sheet condition owner. Task 98 checks the existing condition list after the public Lay On Hands reducer path removes Poisoned."
+      "notes": "Owns sheet Hit Point maximum reduction and effective maximum projection. Task 99 reads the canonical hitPointMaximumReduction field and returns derived effective maximum in the public projection result instead of adding a parallel reduction or effective-maximum field."
     }
   ],
   "notes": [
-    "Task 98 introduced no new durable CharacterSheet state fields.",
-    "qRoute target replay evidence is derived from public applyLayOnHandsWithRoute and the copied route connector.",
-    "Lay On Hands behavior derives from typed Surface mechanics and existing CharacterSheet build/resource state; production runtime does not dispatch on QNT branch names, witness labels, connector filenames, or authored catalog identity.",
-    "Poisoned removal remains existing CharacterSheet.conditions state, not a parallel condition-removal ledger."
+    "Task 99 introduced no new durable CharacterSheet state fields.",
+    "qRoute target replay evidence is derived from public characterSheetHitPointMaximumProjection and the copied route connector.",
+    "Normal Hit Point Maximum remains derived from CharacterBuild class, level, Constitution, and typed feature facts; effective maximum applies sheet-owned maximum reduction.",
+    "Production runtime does not dispatch on QNT branch names, witness labels, connector filenames, or authored identity."
   ]
 }
