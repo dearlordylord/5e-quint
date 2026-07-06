@@ -255,6 +255,7 @@ export {
   battleMagicalDarknessNonmagicalLightIllumination,
   battleMagicalDarknessSightObscurement,
   battleCreatureCanBreatheUnderwater,
+  activeFeatureSpellSaveDcRouteEvents,
   battleReducerStartRouteEvent,
   passiveSavingThrowRollModeRouteEvents,
   battleLightEmitterProjection,
