@@ -121,7 +121,7 @@
     {
       "number": 20,
       "id": "CRPI-BLOCK-014",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Blocked route replay: battle-runtime-healing-stabilization-selected-identity"
     },
     {
@@ -672,7 +672,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRPI-BLOCK-011` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-012` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-013` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-014` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-014` | `done` | none | target replay evidence and owner implementation |
 | `CRP07-DSR-03` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-READY-005` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-015` | `blocked` | blocked by task body | blocker resolution before implementation |
@@ -1903,7 +1903,7 @@ Plan Impact:
 
 ### Task 20 - CRPI-BLOCK-014
 
-Status: `ready-for-research`
+Status: `done`
 
 Blocker Type: none
 

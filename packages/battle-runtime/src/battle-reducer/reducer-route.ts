@@ -111,7 +111,8 @@ export type BattleReducerRouteSubjectFamily =
   | "slotSpell"
   | "spellAttackProcedure"
   | "weaponAttack"
-  | "weaponMasteryProperty";
+  | "weaponMasteryProperty"
+  | "zeroHitPointStabilization";
 
 export type BattleReducerRouteOwnerGroup =
   | "battleActionEconomy"
@@ -533,6 +534,16 @@ export function battleReducerRouteEventsForDiscoveredAct(
       },
     ];
   }
+  if (isZeroHitPointStabilizationSubject(act.subject)) {
+    return [
+      {
+        kind: "discoverBattleActs",
+        subject: "zeroHitPointStabilization",
+        holes: battleReducerRouteHoles(act.initialHoles),
+        owner: "battleActionEconomy",
+      },
+    ];
+  }
   if (isSlotSpellDiscoverySubject(act.subject)) {
     return [
       {
@@ -750,6 +761,14 @@ export function battleReducerRouteForResolution(
       activeFormLifecycleTerminalRoute,
     );
   }
+  const zeroHitPointStabilizationRoute =
+    zeroHitPointStabilizationRouteForResolution(input, result);
+  if (zeroHitPointStabilizationRoute !== undefined) {
+    return composeWithActiveFormLifecycleTerminalRoute(
+      [zeroHitPointStabilizationRoute],
+      activeFormLifecycleTerminalRoute,
+    );
+  }
   const slotSpellRoute = slotSpellRouteForResolution(input, result);
   if (slotSpellRoute !== undefined) {
     return composeWithActiveFormLifecycleTerminalRoute(
@@ -870,6 +889,38 @@ function creatureSpaceMovementPermissionRouteForResolution(
     });
   }
   return nonEmptyRouteEvents(route);
+}
+
+function isZeroHitPointStabilizationSubject(
+  subject: BattleResolutionInput["subject"] | AvailableBattleAct["subject"],
+): boolean {
+  return (
+    subject.tag === "actionSpell" &&
+    subject.invocation.procedure === "makeStable"
+  );
+}
+
+function zeroHitPointStabilizationRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvent | undefined {
+  if (
+    !isZeroHitPointStabilizationSubject(input.subject) ||
+    result.tag !== "resolved"
+  ) {
+    return undefined;
+  }
+  const fill = input.fills.at(-1);
+  if (fill === undefined || battleFillKind(fill) !== "targetChoice") {
+    return undefined;
+  }
+  return {
+    kind: "resolveBattleSubject",
+    subject: "zeroHitPointStabilization",
+    fill: "targetChoice",
+    holes: [],
+    owner: "battleHitPointAndZeroHpLifecycle",
+  };
 }
 
 function spellAttackProcedureRouteForResolution(
