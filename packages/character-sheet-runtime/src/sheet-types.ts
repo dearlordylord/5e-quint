@@ -1249,6 +1249,56 @@ export type CharacterSheetSpellbookRitualInvocation = {
   readonly requiresReadingSpellbook: true;
 };
 
+type CharacterSheetSpellbookRitualInvocationRetainRouteEvent = {
+  readonly kind: "retainCharacterSheetSelectedReferences";
+  readonly subject: "selectedReferenceProjection";
+  readonly owner: "selectedReference";
+};
+
+type CharacterSheetSpellbookRitualInvocationResolveRouteEvent<
+  Holes extends readonly [] | readonly ["projectionChoice"],
+> = {
+  readonly kind: "resolveCharacterSheetSubject";
+  readonly subject: "spellResource";
+  readonly fill: "projectionSelection";
+  readonly holes: Holes;
+  readonly owner: "selectedReference";
+};
+
+export type CharacterSheetSpellbookRitualAcceptedInvocationRoute = readonly [
+  CharacterSheetSpellbookRitualInvocationRetainRouteEvent,
+  {
+    readonly kind: "resolveCharacterSheetSubject";
+    readonly subject: "spellResource";
+    readonly fill: "projectionSelection";
+    readonly holes: readonly [];
+    readonly owner: "selectedReference";
+  },
+];
+
+export type CharacterSheetSpellbookRitualRejectedInvocationRoute = readonly [
+  CharacterSheetSpellbookRitualInvocationRetainRouteEvent,
+  CharacterSheetSpellbookRitualInvocationResolveRouteEvent<
+    readonly ["projectionChoice"]
+  >,
+];
+
+export type CharacterSheetSpellbookRitualInvocationRoute =
+  | CharacterSheetSpellbookRitualAcceptedInvocationRoute
+  | CharacterSheetSpellbookRitualRejectedInvocationRoute;
+
+export type CharacterSheetSpellbookRitualInvocationProjection =
+  | {
+      readonly tag: "accepted";
+      readonly invocation: CharacterSheetSpellbookRitualInvocation;
+      readonly qRoute: CharacterSheetSpellbookRitualAcceptedInvocationRoute;
+    }
+  | {
+      readonly tag: "rejected";
+      readonly issue: CharacterSheetIssue;
+      readonly qRoute: CharacterSheetSpellbookRitualRejectedInvocationRoute;
+    };
+
 export type CharacterSheetBookOfShadowsRitualInvocation = {
   readonly tag: "bookOfShadowsRitual";
   readonly spellId: UnitRecord["id"];

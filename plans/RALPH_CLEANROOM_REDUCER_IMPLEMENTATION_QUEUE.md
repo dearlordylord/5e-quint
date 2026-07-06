@@ -613,7 +613,7 @@
     {
       "number": 102,
       "id": "CRPI-BLOCK-054",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: character-sheet-spellbook-ritual-selected-identity"
     },
     {
@@ -6540,7 +6540,7 @@ Plan Impact:
 
 ### Task 102 - CRPI-BLOCK-054
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

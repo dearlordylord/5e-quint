@@ -5254,3 +5254,90 @@ Verification results:
 - `git diff --check` passed.
 - `flock /tmp/dnd-mbt-qnt.lock pnpm quality` passed end to end. App lint reported 61 warnings only and exited 0; circular checks passed; turbo typecheck passed 9 packages from cache.
 - Reviewer-loop convergence passed: rounds 1-2 verified RAW traceability, ubiquitous-language/domain terms, component-first architecture, adapter quarantine, no duplicate durable Spell procedure state, no authored-identity dispatch, command/report consistency, and no remaining reasonable Task 75 findings.
+
+## CRPI-BLOCK-054
+
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf`
+- Driver: `packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt`
+- Route connector: `packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.route.mbt.qnt`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Allowed inputs used:
+
+- `packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt`
+- `packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.route.mbt.qnt`
+- `packages/character-sheet-runtime/src/spellbook-ritual-selected-identity.mbt.test.ts`
+- `packages/character-sheet-runtime/src/reducer-route-connectors.mbt.test.ts`
+- `packages/character-sheet-runtime/src/spell-invocation.ts`
+- `packages/character-sheet-runtime/src/sheet-types.ts`
+- `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`
+- `.references/srd-5.2.1/Classes/Wizard.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Behavior implemented:
+
+Task 102 accepts the Character Sheet spellbook Ritual selected-identity route
+through the public `characterSheetSpellbookRitualInvocationProjection`
+entrypoint. The projection derives accepted no-slot ritual invocation or
+rejected projection-choice evidence from existing CharacterBuild spellbook Spell
+Access, prepared spell facts, Surface Spell Definition ritual facts, and the
+spellbook Ritual Access feature. No separate ritual spell list, access cache, or
+ritual-casting ledger was introduced.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt#step:doInvokeSpellbookRitual` | `tasks/target-replay-evidence/CRPI-BLOCK-054.json#driver:packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt#step:doInvokeSpellbookRitual#trace:public-route=characterSheetSpellbookRitualInvocationProjection action=doInvokeSpellbookRitual qRoute=spellbook-ritual-selected-identity-public-route` | `_none_` | `covered` |
+| `packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt#step:doRejectMissingRitualAccessFeature` | `tasks/target-replay-evidence/CRPI-BLOCK-054.json#driver:packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt#step:doRejectMissingRitualAccessFeature#trace:public-route=characterSheetSpellbookRitualInvocationProjection action=doRejectMissingRitualAccessFeature qRoute=spellbook-ritual-selected-identity-public-route` | `_none_` | `covered` |
+| `packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt#step:doRejectNonLeveledRitualSpellbookSpell` | `tasks/target-replay-evidence/CRPI-BLOCK-054.json#driver:packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt#step:doRejectNonLeveledRitualSpellbookSpell#trace:public-route=characterSheetSpellbookRitualInvocationProjection action=doRejectNonLeveledRitualSpellbookSpell qRoute=spellbook-ritual-selected-identity-public-route` | `_none_` | `covered` |
+| `packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt#step:doRejectNonRitualSpellbookSpell` | `tasks/target-replay-evidence/CRPI-BLOCK-054.json#driver:packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt#step:doRejectNonRitualSpellbookSpell#trace:public-route=characterSheetSpellbookRitualInvocationProjection action=doRejectNonRitualSpellbookSpell qRoute=spellbook-ritual-selected-identity-public-route` | `_none_` | `covered` |
+| `packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt#step:doRejectPreparedOnlyRitual` | `tasks/target-replay-evidence/CRPI-BLOCK-054.json#driver:packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt#step:doRejectPreparedOnlyRitual#trace:public-route=characterSheetSpellbookRitualInvocationProjection action=doRejectPreparedOnlyRitual qRoute=spellbook-ritual-selected-identity-public-route` | `_none_` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-054.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Reproduction trace family: `public-route=characterSheetSpellbookRitualInvocationProjection qRoute=spellbook-ritual-selected-identity-public-route`
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-054/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 102.
+
+Verification results:
+
+- Base check passed: declared base ref
+  `ralph/cleanroom-character-sheet-route-lane-20260705T2045Z/integration`
+  resolved to `60208a5d4 Mark Ralph task 99 done`, `HEAD` resolved to
+  `60208a5d4 Mark Ralph task 99 done`, and Base SHA
+  `60208a5d4381977ad3e9bcfee63d0591bdade4c5` was an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against SRD 5.2.1
+  `Spells/Gaining-and-Casting.md` Casting without Slots and Longer Casting
+  Times, `Classes/Wizard.md` Level 1 Ritual Adept, and
+  `UBIQUITOUS_LANGUAGE.md` Ritual and Spell Access terms.
+- `pnpm --filter @dnd/character-sheet-runtime typecheck` passed.
+- `pnpm --filter @dnd/character-sheet-runtime exec vitest run src/spell-invocation.test.ts` passed with 5 tests.
+- MBT process precheck used the required grep commands. They matched only a
+  Ralph monitor shell whose command text contained `vitest` and
+  `quint_evaluator`; a process-name check found no actual vitest or
+  quint_evaluator process.
+- `START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/character-sheet-runtime exec vitest run src/spellbook-ritual-selected-identity.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "spellbook ritual|routes spellbook Ritual" ) 2>&1 & pid=$!; wait "$pid"; status=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"` passed with 5 tests and 9 skipped route tests; final timed run `TOTAL: 9s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- `pnpm quality` passed end to end; app lint reported 61 warnings and exited 0.
+- Reviewer-loop convergence passed: round 1 verified public projection routing,
+  RAW traceability, ubiquitous-language/domain language, no duplicate durable
+  ritual state, no authored-name dispatch, and adapter quarantine. Round 2
+  verified the route comparison comes from public
+  `characterSheetSpellbookRitualInvocationProjection`, rejected branches route
+  through `projectionChoice`, accepted branches preserve no-slot invocation
+  facts, and no remaining reasonable Task 102 findings were found.

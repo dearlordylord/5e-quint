@@ -28,6 +28,7 @@ import {
   characterSheetClassFeatureSelectedReferenceProjection,
   characterSheetHitPointMaximumProjection,
   characterSheetResources,
+  characterSheetSpellbookRitualInvocationProjection,
   completeLongRestArcaneRecoveryResetWithRoute,
   completeShortRestArcaneRecoveryWithRoute,
   createFreshCharacterSheet,
@@ -769,12 +770,48 @@ const spellResourceRouteActions = {
 } as const satisfies ReadyRouteActionMap<typeof spellResourceRouteDriverSchema>;
 
 const spellbookRitualRouteActions = {
-  doInvokeSpellbookRitual: spellbookRitualRoute([]),
-  doRejectPreparedOnlyRitual: spellbookRitualRoute(["projectionChoice"]),
-  doRejectNonRitualSpellbookSpell: spellbookRitualRoute(["projectionChoice"]),
-  doRejectMissingRitualAccessFeature: spellbookRitualRoute(["projectionChoice"]),
-  doRejectNonLeveledRitualSpellbookSpell:
-    spellbookRitualRoute(["projectionChoice"]),
+  doInvokeSpellbookRitual: spellbookRitualRoute({
+    sheet: spellbookRitualSheet({
+      characterIdText: "character:wizard-ritual-route",
+      spellbook: ["detect_magic"],
+    }),
+    spellId: "detect_magic",
+    expectedTag: "accepted",
+  }),
+  doRejectPreparedOnlyRitual: spellbookRitualRoute({
+    sheet: spellbookRitualSheet({
+      characterIdText: "character:wizard-prepared-only-ritual-route",
+      spellbook: [],
+      preparedSpells: ["detect_magic"],
+    }),
+    spellId: "detect_magic",
+    expectedTag: "rejected",
+  }),
+  doRejectNonRitualSpellbookSpell: spellbookRitualRoute({
+    sheet: spellbookRitualSheet({
+      characterIdText: "character:wizard-non-ritual-route",
+      spellbook: ["magic_missile"],
+    }),
+    spellId: "magic_missile",
+    expectedTag: "rejected",
+  }),
+  doRejectMissingRitualAccessFeature: spellbookRitualRoute({
+    sheet: spellbookRitualSheet({
+      characterIdText: "character:missing-ritual-feature-route",
+      startingClass: "class_fighter",
+      spellbook: ["detect_magic"],
+    }),
+    spellId: "detect_magic",
+    expectedTag: "rejected",
+  }),
+  doRejectNonLeveledRitualSpellbookSpell: spellbookRitualRoute({
+    sheet: spellbookRitualSheet({
+      characterIdText: "character:non-leveled-ritual-route",
+      spellbook: ["light"],
+    }),
+    spellId: "light",
+    expectedTag: "rejected",
+  }),
 } as const satisfies ReadyRouteActionMap<typeof spellbookRitualRouteDriverSchema>;
 
 const weaponMasteryRouteActions = {
@@ -1533,22 +1570,60 @@ function rejectPactSlotRecoveryRoute(
   ];
 }
 
-function spellbookRitualRoute(
-  holes: readonly CharacterSheetRouteHole[],
-): RouteAppender {
-  return (route) => [
-    ...route,
-    retainCharacterSheetSelectedReferences({
-      subject: "selectedReferenceProjection",
-      owner: "selectedReference",
+function spellbookRitualRoute(input: {
+  readonly sheet: CharacterSheet;
+  readonly spellId: string;
+  readonly expectedTag: "accepted" | "rejected";
+}): RouteAppender {
+  return (route) => {
+    const projection = characterSheetSpellbookRitualInvocationProjection({
+      sheet: input.sheet,
+      unitLibrary,
+      spellId: input.spellId,
+      invocation: { kind: "ritual" },
+    });
+    expect(projection.tag).toBe(input.expectedTag);
+    return [...route, ...projection.qRoute];
+  };
+}
+
+function spellbookRitualSheet(input: {
+  readonly characterIdText: string;
+  readonly spellbook: readonly string[];
+  readonly preparedSpells?: readonly string[];
+  readonly startingClass?: string;
+}): CharacterSheet {
+  return requireRight(
+    createFreshCharacterSheet({
+      characterId: characterSheetId(input.characterIdText),
+      build: {
+        ...baseBuild({ startingClass: input.startingClass ?? "class_wizard" }),
+        spellcasting: {
+          sources: [
+            {
+              sourceUnitId: "class_wizard",
+              spellcastingAbility: "int",
+              cantrips: [],
+              spellbook: input.spellbook,
+              preparedSpells: input.preparedSpells ?? [],
+              spellcastingFocuses: ["spellbook"],
+            },
+          ],
+          slotPools: {
+            spellcasting: {
+              kind: "spellcasting",
+              slots: [{ spellLevel: 1, count: 2 }],
+            },
+          },
+        },
+      },
+      currentHp: Hp(7),
+      tempHp: Hp(0),
+      hitPointMaximumReduction: Hp(0),
+      conditions: [],
+      unitLibrary,
     }),
-    resolveCharacterSheetSubject({
-      subject: "spellResource",
-      fill: "projectionSelection",
-      holes,
-      owner: "selectedReference",
-    }),
-  ];
+  );
 }
 
 function retainWeaponMasteryRoute(

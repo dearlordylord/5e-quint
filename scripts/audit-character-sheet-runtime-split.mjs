@@ -131,6 +131,8 @@ const EXPECTED_EXPORTS = [
   "CharacterSheetSpellbookRitualAccess",
   "CharacterSheetSpellbookRitualAccessInput",
   "CharacterSheetSpellbookRitualInvocation",
+  "CharacterSheetSpellbookRitualInvocationProjection",
+  "CharacterSheetSpellbookRitualInvocationRoute",
   "CharacterSheetSpentHitDiePool",
   "CharacterSheetStableRecovery",
   "CharacterSheetTimePassedInput",
@@ -177,6 +179,7 @@ const EXPECTED_EXPORTS = [
   "characterSheetSpellSlots",
   "characterSheetSpellbookRitualAccess",
   "characterSheetSpellbookRitualAccessesForBuild",
+  "characterSheetSpellbookRitualInvocationProjection",
   "characterSheetTempHp",
   "completeLongRest",
   "completeLongRestArcaneRecoveryResetWithRoute",
@@ -288,6 +291,21 @@ const EXPECTED_EXPORT_RECONCILIATION_REASONS = [
     name: "CharacterSheetArcaneRecoveryRestRouteResult",
     reason:
       "Character Sheet owns the typed result returned by Arcane Recovery rest-with-route entrypoints so accepted and rejected route projections remain explicit rather than adapter-local.",
+  },
+  {
+    name: "characterSheetSpellbookRitualInvocationProjection",
+    reason:
+      "Character Sheet owns spellbook Ritual invocation projection from build spellbook Spell Access and Surface ritual facts; exposing the projection-with-route entrypoint lets route replay observe selected-reference qRoute without adapter-local route assembly.",
+  },
+  {
+    name: "CharacterSheetSpellbookRitualInvocationProjection",
+    reason:
+      "Character Sheet owns the typed spellbook Ritual invocation projection result so accepted no-slot invocation and rejected projection-choice route evidence remain one public outcome without adding durable ritual-casting state.",
+  },
+  {
+    name: "CharacterSheetSpellbookRitualInvocationRoute",
+    reason:
+      "Character Sheet owns the spellbook Ritual selected-reference retention and spell-resource projection route shape; exporting it keeps the route event tuple typed at the projection boundary.",
   },
   {
     name: "applyLayOnHandsWithRoute",

@@ -1,33 +1,36 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-053",
+  "taskId": "CRPI-BLOCK-054",
   "durableFields": [
     {
       "owner": "CharacterSheetBuildProjectionOwner",
       "fields": [
+        "CharacterBuild.spellcasting.sources[].spellbook",
+        "CharacterBuild.spellcasting.sources[].preparedSpells",
         "CharacterBuild.progression",
-        "CharacterBuild.abilityScores.con",
-        "CharacterBuild.features",
-        "CharacterSheetHitPointMaximumProjection.normalHitPointMaximum",
-        "CharacterSheetRouteEvent facts=hitPointMaximumArithmeticInput"
+        "UnitRecord.kind=spell",
+        "SpellRecord.mechanics.level",
+        "SpellRecord top-level Ritual tag",
+        "UnitRecord.mechanics.family=spellbook_ritual_access"
       ],
-      "notes": "Owns normal Hit Point Maximum arithmetic inputs from build facts. Task 99 exposes the derived normal maximum through a projection result and qRoute fact-recording event; it does not store normal maximum on CharacterSheet."
+      "notes": "Owns build and Surface facts used to derive spellbook Ritual access. Task 102 threads these existing facts through the public projection entrypoint instead of adding a parallel ritual spell list or selected-access cache."
     },
     {
-      "owner": "CharacterSheetHitPointOwner",
+      "owner": "CharacterSheetSelectedReferenceOwner",
       "fields": [
-        "CharacterSheet.hitPointMaximumReduction",
-        "CharacterSheetHitPointMaximumProjection.effectiveHitPointMaximum",
-        "CharacterSheetHitPointMaximumProjection.hitPointMaximumReduction",
-        "CharacterSheetRouteEvent subject=hitPoint owner=hitPoint"
+        "CharacterSheetSpellbookRitualInvocationProjection.tag",
+        "CharacterSheetSpellbookRitualInvocationProjection.qRoute",
+        "CharacterSheetRouteEvent kind=retainCharacterSheetSelectedReferences subject=selectedReferenceProjection owner=selectedReference",
+        "CharacterSheetRouteEvent kind=resolveCharacterSheetSubject subject=spellResource fill=projectionSelection owner=selectedReference",
+        "CharacterSheetRouteEvent holes=projectionChoice"
       ],
-      "notes": "Owns sheet Hit Point maximum reduction and effective maximum projection. Task 99 reads the canonical hitPointMaximumReduction field and returns derived effective maximum in the public projection result instead of adding a parallel reduction or effective-maximum field."
+      "notes": "Owns retained spellbook Ritual selected-reference evidence and the no-slot spell-resource projection route. Accepted invocation data is derived from existing build/catalog facts; rejected branches expose a projection-choice hole without storing rejection state."
     }
   ],
   "notes": [
-    "Task 99 introduced no new durable CharacterSheet state fields.",
-    "qRoute target replay evidence is derived from public characterSheetHitPointMaximumProjection and the copied route connector.",
-    "Normal Hit Point Maximum remains derived from CharacterBuild class, level, Constitution, and typed feature facts; effective maximum applies sheet-owned maximum reduction.",
-    "Production runtime does not dispatch on QNT branch names, witness labels, connector filenames, or authored identity."
+    "Task 102 introduced no new durable CharacterSheet state fields.",
+    "qRoute target replay evidence is derived from public characterSheetSpellbookRitualInvocationProjection and the copied route connector.",
+    "Wizard Ritual Adept access remains source-shaped: spellbook membership, ritual Spell Definition facts, and class-granted spellbook Ritual Access are read at projection time.",
+    "Production runtime does not dispatch on QNT branch names, witness labels, connector filenames, or authored names."
   ]
 }

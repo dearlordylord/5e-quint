@@ -5071,6 +5071,97 @@
         ],
         "requiredPlanEdits": "none"
       }
+    },
+    {
+      "taskId": "CRPI-BLOCK-054",
+      "assignmentId": "reducer-spine-diagnostic-character-sheet",
+      "laneId": "sheet",
+      "selectedDrivers": [
+        "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "26ef37bdbe79d9f36bd28447ffa2fa997091aec144ab057fba984093b2557df6"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "fe97af060230a0d47a76c235feacda7eb2ff7d2966a751906ea4ef80006654e8"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "2e58b5f7f82539207ef3033436a8fd3fa3c994526878e7b3ad91f7e6b2ac4ac9"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-054.json",
+          "sha256": "2927257b7dbd9eb503c0a7e91a589d7809e6f266fa4494030c815c14d59a4bba",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-054.json#driver:packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt#step:doInvokeSpellbookRitual#trace:public-route=characterSheetSpellbookRitualInvocationProjection action=doInvokeSpellbookRitual qRoute=spellbook-ritual-selected-identity-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-054.json#driver:packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt#step:doRejectMissingRitualAccessFeature#trace:public-route=characterSheetSpellbookRitualInvocationProjection action=doRejectMissingRitualAccessFeature qRoute=spellbook-ritual-selected-identity-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-054.json#driver:packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt#step:doRejectNonLeveledRitualSpellbookSpell#trace:public-route=characterSheetSpellbookRitualInvocationProjection action=doRejectNonLeveledRitualSpellbookSpell qRoute=spellbook-ritual-selected-identity-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-054.json#driver:packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt#step:doRejectNonRitualSpellbookSpell#trace:public-route=characterSheetSpellbookRitualInvocationProjection action=doRejectNonRitualSpellbookSpell qRoute=spellbook-ritual-selected-identity-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-054.json#driver:packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt#step:doRejectPreparedOnlyRitual#trace:public-route=characterSheetSpellbookRitualInvocationProjection action=doRejectPreparedOnlyRitual qRoute=spellbook-ritual-selected-identity-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "pnpm --filter @dnd/character-sheet-runtime typecheck",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm --filter @dnd/character-sheet-runtime exec vitest run src/spell-invocation.test.ts",
+          "status": "pass",
+          "detail": "5 tests passed."
+        },
+        {
+          "command": "START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/character-sheet-runtime exec vitest run src/spellbook-ritual-selected-identity.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"spellbook ritual|routes spellbook Ritual\" ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "status": "pass",
+          "detail": "5 tests passed and 9 unrelated route tests skipped; TOTAL: 9s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "Passed with 738 obligations and 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "Passed end to end; app lint emitted 61 warnings and exited 0."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 verified public spellbook Ritual invocation projection routing, RAW traceability, no duplicate durable ritual state, no authored-name dispatch, and adapter quarantine. Round 2 verified accepted and rejected qRoute shapes and found no remaining reasonable Task 102 findings."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-054",
+            "disposition": "unblocked"
+          },
+          {
+            "taskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
+            "disposition": "left unchanged"
+          }
+        ],
+        "observations": [
+          "Spellbook Ritual selected-identity qRoute is accepted through public characterSheetSpellbookRitualInvocationProjection.",
+          "The projection reuses existing CharacterBuild spellbook/prepared spell facts and Surface ritual/spellbook Ritual Access facts; no duplicate ritual ledger or spellbook state is needed.",
+          "Rejected spellbook Ritual access branches share the selected-reference projection-choice route, while the accepted branch uses the no-hole selected-reference spell-resource projection route."
+        ],
+        "requiredPlanEdits": "none"
+      }
     }
   ]
 }

@@ -84,6 +84,7 @@ export {
   characterSheetSpellInvocation,
   characterSheetSpellbookRitualAccess,
   characterSheetSpellbookRitualAccessesForBuild,
+  characterSheetSpellbookRitualInvocationProjection,
 } from "./spell-invocation.ts";
 export {
   characterSheetPactSlots,
@@ -206,6 +207,8 @@ export type {
   CharacterSheetSpellbookRitualAccess,
   CharacterSheetSpellbookRitualAccessInput,
   CharacterSheetSpellbookRitualInvocation,
+  CharacterSheetSpellbookRitualInvocationProjection,
+  CharacterSheetSpellbookRitualInvocationRoute,
   CharacterSheetSpentHitDiePool,
   CharacterSheetStableRecovery,
   CharacterSheetTimePassedInput,
