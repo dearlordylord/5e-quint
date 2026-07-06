@@ -4,6 +4,109 @@
   "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
   "entries": [
     {
+      "taskId": "CRPI-BLOCK-039",
+      "assignmentId": "reducer-spine-diagnostic-character-battle",
+      "laneId": "character-battle",
+      "selectedDrivers": [
+        "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
+      "artifacts": {
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "f5103d6dc9a7f92afb22756a4b00d1ee36e284355ec777fe1ad56cad5ddab687"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-BLOCK-039/README.md",
+          "sha256": "6b4f159fc60ca4b3ed530cb4a9a589d739e63cf34694b49ff77ad2d23d398976"
+        },
+        "engineDepthManifest": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "d032c61fc0ef3f6e207fb85d30f0b0d3cb36d419534b89d53aceb5fa96d6318d"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "3b36aa35d9204e15f3c88cdfaadc40b201d1d88128fdf87389c46659aa9822c7"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-039.json",
+          "sha256": "cd42684b4d093c2709696ca8b2c5180df9d66649b4ac166cd56af92a097df5d6",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-039.json#driver:packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt#step:doFinalizeDraftToBuild#trace:public-route=characterLayerLifecycle action=doFinalizeDraftToBuild qRoute=build-projection-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-039.json#driver:packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt#step:doCreateSheetFromBuild#trace:public-route=characterLayerLifecycle action=doCreateSheetFromBuild qRoute=sheet-projection-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-039.json#driver:packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt#step:doProjectSheetToBattleInit#trace:public-route=characterLayerLifecycle action=doProjectSheetToBattleInit qRoute=battle-init-entry-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-039.json#driver:packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt#step:doResolveSkeletonShortswordAttack#trace:public-route=characterLayerLifecycle action=doResolveSkeletonShortswordAttack qRoute=battle-mutation-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-039.json#driver:packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt#step:doSettleBattleToSheet#trace:public-route=characterLayerLifecycle action=doSettleBattleToSheet qRoute=battle-settlement-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-owner-character-battle-20260706T213644Z/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor e286bc4662da16487d6caf1008e58ce8eb035505 HEAD",
+          "status": "pass",
+          "detail": "Prompt-declared integration ref and HEAD both resolved to e286bc466 Accept Task 79 origin feat battle replay; Base SHA is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language check for Character Sheet lifecycle, combat entry, attack resolution, Hit Points, Damage Rolls, and Spell Slot handoff vocabulary",
+          "status": "pass",
+          "detail": "Checked .references/srd-5.2.1/Character-Creation.md, .references/srd-5.2.1/Rules-Glossary.md, .references/srd-5.2.1/Playing-the-Game.md, .references/srd-5.2.1/Spells/Gaining-and-Casting.md, UBIQUITOUS_LANGUAGE.md, and plans/cleanroom-guidance/reducer-spine.md before final evidence."
+        },
+        {
+          "command": "node task-scoped validateTargetReplayEvidence for packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt",
+          "status": "pass",
+          "detail": "Validated tasks/target-replay-evidence/CRPI-BLOCK-039.json with scripts/cleanroom-branch-coverage-check.cjs#validateTargetReplayEvidence and requireAllObligations=false; 5 obligations covered."
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Pre-MBT process check found no active vitest runner or quint_evaluator immediately before the focused lifecycle replay. An unrelated earlier vitest process was observed and allowed to finish before starting this task's MBT run."
+        },
+        {
+          "command": "START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=5 pnpm --filter @dnd/character-battle-runtime exec vitest run src/character-layer-projection-lifecycle.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"Character layer projection|character layer projection\" ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "status": "pass",
+          "detail": "Focused Character layer lifecycle semantic replay and copied qRoute route connector replay passed; 2 tests passed and 6 skipped by filter; TOTAL: 13s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "Cleanroom branch coverage passed with 738 obligations and 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass",
+          "detail": "Whitespace check passed."
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "All quality gates passed; app lint emitted the existing 61 warnings and exited 0."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "No remaining reasonable Task 82 findings after recording the copied qRoute lifecycle replay through existing layered owners, with no duplicate durable state, no monolithic lifecycle owner, and no authored-identity runtime dispatch."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-039",
+            "impact": "unblocked"
+          }
+        ],
+        "observations": [
+          "Character layer lifecycle qRoute is accepted through existing CharacterBattleBuildProjectionOwner, CharacterBattleSheetOwner, CharacterBattleInitProjectionOwner, CharacterBattleRuntimeOwner, and CharacterBattleSettlementOwner route events.",
+          "Draft, Build, Sheet, BattleInitProjection, BattleRuntime, and Settlement remain distinct lifecycle layers; no monolithic lifecycle owner or duplicate durable lifecycle state was introduced.",
+          "The battle mutation portion is exercised through public battle-runtime startBattle, discoverBattleActs, and resolveBattleSubject entrypoints; settlement is exercised through public settleCharacterSheetFromBattle."
+        ],
+        "requiredPlanEdits": "none"
+      }
+    },
+    {
       "taskId": "CRPI-BLOCK-038",
       "assignmentId": "reducer-spine-diagnostic-character-battle",
       "laneId": "character-battle",

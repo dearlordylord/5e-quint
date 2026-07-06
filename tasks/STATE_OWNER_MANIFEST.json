@@ -1,47 +1,47 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-038",
+  "taskId": "CRPI-BLOCK-039",
   "durableFields": [
     {
-      "fieldPath": "CharacterBuild.background",
+      "fieldPath": "CharacterBuild",
       "owner": "character-build",
       "introducedIn": "packages/character-creation-runtime/src/types.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing CharacterBuild background identity is the source for deriving the background-granted Origin feat through Surface background creation facts."
+      "notes": "Existing finalized CharacterBuild is the source for build-owned combat projection facts. Task 82 does not add lifecycle state to CharacterBuild."
     },
     {
-      "fieldPath": "characterBuildUnitRefs(build, unitLibrary)",
-      "owner": "character-build-projection",
-      "introducedIn": "packages/character-creation-runtime/src/finalization.ts",
+      "fieldPath": "CharacterSheet.currentHp",
+      "owner": "character-sheet",
+      "introducedIn": "packages/character-sheet-runtime/src/sheet-types.ts",
       "derivability": {
-        "tag": "runtime-projection"
+        "tag": "canonical-source"
       },
-      "notes": "Existing build projection derives background Origin feat unit refs from CharacterBuild.background plus Surface background facts; Task 79 does not copy the selected feat into a new Character Battle state field."
+      "notes": "Existing Character Sheet current Hit Points are the persistent pre-battle and post-settlement character-owned Hit Point fact."
     },
     {
-      "fieldPath": "CharacterBattleRouteEvent.subject=handoffSelectedReference",
+      "fieldPath": "BattleState.combatants[*].hp",
+      "owner": "battle-runtime",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/model.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing BattleState combatant Hit Points are the battle-owned mutation source during runtime."
+    },
+    {
+      "fieldPath": "CharacterBattleRouteEvent",
       "owner": "character-battle-route-projection",
-      "introducedIn": "packages/character-battle-runtime/src/index.ts",
+      "introducedIn": "packages/character-battle-runtime/src/character-battle-route.ts",
       "derivability": {
         "tag": "runtime-projection"
       },
-      "notes": "Route events are emitted by the public character-battle init handoff route after deriving selected-reference facts from CharacterBuild.background, Surface background facts, and existing CharacterBuild unit refs. They are not stored in CharacterBuild, CharacterSheet, BattleState, or BattleCreatureState."
-    },
-    {
-      "fieldPath": "CharacterBattleRouteEvent.owner=characterBattleBuildProjection|characterBattleInitProjection|characterBattleRuntime",
-      "owner": "character-battle-route-projection",
-      "introducedIn": "packages/character-battle-runtime/src/index.ts",
-      "derivability": {
-        "tag": "runtime-projection"
-      },
-      "notes": "The owner sequence records selected-reference retention, Initiative handoff projection, and runtime entry without dispatching on authored Origin feat identity."
+      "notes": "Route events project existing layer handoff boundaries and owners; they are not stored as a duplicate lifecycle state machine."
     }
   ],
   "notes": [
-    "Task 79 introduced no new durable CharacterBuild, CharacterSheet, BattleState, or BattleCreatureState fields.",
-    "Origin feat authored identity remains at Surface catalog, character selection, and test/evidence boundaries.",
-    "Production Character Battle public handoff route uses CharacterBuild.background, Surface background facts, existing CharacterBuild unit refs, and Initiative support profiles rather than a duplicate selected-feat cache."
+    "Task 82 introduced no new durable CharacterBuild, CharacterSheet, BattleState, or BattleCreatureState fields.",
+    "The lifecycle replay keeps Draft, Build, Sheet, BattleInitProjection, BattleRuntime, and Settlement as separate domain layers.",
+    "CharacterBattleBuildProjectionOwner, CharacterBattleSheetOwner, CharacterBattleInitProjectionOwner, CharacterBattleRuntimeOwner, and CharacterBattleSettlementOwner remain the durable owner vocabulary."
   ]
 }

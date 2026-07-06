@@ -1,64 +1,58 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-038",
+  "taskId": "CRPI-BLOCK-039",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt",
+      "path": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt",
       "quarantinedWitnessNames": [
-        "qState"
+        "CharacterLifecycleLayer",
+        "CharacterLifecycleFacts",
+        "qReplayIndex"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-038.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-039.json"
       ]
     },
     {
-      "path": "packages/character-battle-runtime/character-battle-origin-feat-selected-identity.route.mbt.qnt",
+      "path": "packages/character-battle-runtime/character-layer-projection-lifecycle.route.mbt.qnt",
       "quarantinedWitnessNames": [
-        "qRoute"
+        "qRoute",
+        "CharacterLayerLifecycleRouteState"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-038.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-039.json"
       ]
     },
     {
-      "path": "packages/character-battle-runtime/src/origin-feat-selected-identity.mbt.test.ts",
+      "path": "packages/character-battle-runtime/src/character-layer-projection-lifecycle.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "OriginFeatSelectedIdentityProjection",
-        "observes selected Origin feat qRoute through public handoff entrypoints"
+        "CharacterLifecycleProjection",
+        "replays Draft to Build to Sheet to battle runtime to settlement"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-038.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-039.json"
       ]
     },
     {
       "path": "packages/character-battle-runtime/src/reducer-route-connectors.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "routes Origin feat selected-reference handoff without authored dispatch"
+        "routes character layer projection boundaries through existing owners"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-038.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-039.json"
       ]
     }
   ],
-  "productionModulesExtended": [
-    {
-      "path": "packages/character-battle-runtime/src/index.ts",
-      "notes": "Extends the public characterSheetBattleInitWithRoute/startBattleFromCharacterSheetAndStatBlock handoff route so accepted battle init routeEvents include selected-reference retention and runtime-entry events when the finalized CharacterBuild retains the background Origin feat in existing unit refs."
-    },
-    {
-      "path": "packages/character-battle-runtime/src/origin-feat-selected-reference-projection.ts",
-      "notes": "Adds the source-fact projection used by the public handoff route to verify retained background Origin feat unit refs from CharacterBuild and UnitCatalog. It does not construct qRoute events or branch on authored Unit identity."
-    }
-  ],
+  "productionModulesExtended": [],
   "expectedNextReuse": [
     {
       "path": "packages/character-battle-runtime/src/index.ts",
-      "notes": "Future character-battle selected-reference handoff replays should observe public character battle routeEvents from characterSheetBattleInitWithRoute/startBattleFromCharacterSheetAndStatBlock instead of calling helper-level projections from adapters."
+      "notes": "Future character lifecycle handoff replays should keep using the existing public Character Battle init, Battle Runtime reducer, and settlement entrypoints rather than adding a monolithic lifecycle owner."
     }
   ],
   "completion": {
     "tag": "accepted",
-      "notes": "Task 79 observes copied qRoute for Origin feat selected-reference retention and Initiative runtime entry through public Character Battle handoff routeEvents. No new durable CharacterBuild, CharacterSheet, BattleState, or BattleCreatureState fields were added."
+    "notes": "Task 82 observes copied qRoute for the Draft to Build to Sheet to BattleInitProjection to BattleRuntime to Settlement lifecycle through existing layered owner route events. No new durable CharacterBuild, CharacterSheet, BattleState, or BattleCreatureState fields were added."
   }
 }

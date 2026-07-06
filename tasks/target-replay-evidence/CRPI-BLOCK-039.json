@@ -1,0 +1,355 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/character-battle-runtime character layer projection lifecycle qRoute versus public lifecycle reducer entrypoints"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "acceptance": {
+    "driverPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt",
+    "connectorPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.route.mbt.qnt",
+    "routeClass": "reducer-routed",
+    "durableOwner": "Existing layered owners: CharacterBattleBuildProjectionOwner, CharacterBattleSheetOwner, CharacterBattleInitProjectionOwner, CharacterBattleRuntimeOwner, and CharacterBattleSettlementOwner. The lifecycle replay does not introduce a monolithic lifecycle owner.",
+    "acceptedProjection": "qRoute"
+  },
+  "status": "pass",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt",
+      "routeConnectorPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.route.mbt.qnt",
+      "qntFileSha256": "a2db8e8512717dff0f0a3c5aa97e72328adb8820a2449249ddae447f5957f905",
+      "routeConnectorSha256": "5acab0246859d5085fadb2f5000faa47ba1230f7a06090dcc4ac41b1fa72baf3",
+      "branchFamily": "step",
+      "branchAction": "doFinalizeDraftToBuild",
+      "observedActionTaken": "doFinalizeDraftToBuild",
+      "harnessTestPath": "packages/character-battle-runtime/src/character-layer-projection-lifecycle.mbt.test.ts",
+      "traceId": "public-route=characterLayerLifecycle action=doFinalizeDraftToBuild qRoute=build-projection-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doFinalizeDraftToBuild",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-battle-runtime/src/reducer-route-connectors.mbt.test.ts#createIndexedRouteDriver",
+        "routeSubject": "SheetToBattleInitRouteSubject",
+        "owners": [
+          "CharacterBattleBuildProjectionOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "151bfc11001e261ead1a889f87703ec8d1e48327d93c6e0ef882fcbf3508ac3b",
+        "observedProjectionSha256": "151bfc11001e261ead1a889f87703ec8d1e48327d93c6e0ef882fcbf3508ac3b",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "SheetToBattleInitRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_draft",
+            "packages/character-creation-runtime/src/index.ts#createCharacterDraft",
+            "fill_character_creation_holes",
+            "packages/character-creation-runtime/src/index.ts#fillCreationHoles",
+            "finalize_character_draft",
+            "packages/character-creation-runtime/src/index.ts#finalizeCharacterDraft",
+            "project_build_hit_point_maximum_input",
+            "packages/character-battle-runtime/src/index.ts#battleCreatureInitFromCharacterBuildWithRoute",
+            "packages/character-creation-runtime/src/index.ts#createCharacterDraft -> fillCreationHoles -> finalizeCharacterDraft -> packages/character-battle-runtime/src/index.ts#battleCreatureInitFromCharacterBuildWithRoute"
+          ],
+          "routeEventSource": "The copied qRoute build-projection prefix is observed from the public battleCreatureInitFromCharacterBuildWithRoute handoff route after the finalized CharacterBuild supplies the existing build Hit Point maximum input fact.",
+          "reducerPublicApiPath": "packages/character-creation-runtime/src/index.ts#createCharacterDraft -> fillCreationHoles -> finalizeCharacterDraft -> packages/character-battle-runtime/src/index.ts#battleCreatureInitFromCharacterBuildWithRoute"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild finalized by finalizeCharacterDraft",
+          "CharacterBattleRouteEvent.kind=projectCharacterSheetToBattle",
+          "CharacterBattleRouteEvent.kind=recordCharacterBattleHandoffFacts",
+          "CharacterBattleRouteEvent.subject=sheetToBattleInit",
+          "CharacterBattleRouteEvent.owner=characterBattleBuildProjection",
+          "CharacterBattleRouteEvent.facts=buildHitPointMaximumInput"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Finalized build projection exposes the build Hit Point maximum handoff route through CharacterBattleBuildProjectionOwner without storing duplicate lifecycle state."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt",
+      "routeConnectorPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.route.mbt.qnt",
+      "qntFileSha256": "a2db8e8512717dff0f0a3c5aa97e72328adb8820a2449249ddae447f5957f905",
+      "routeConnectorSha256": "5acab0246859d5085fadb2f5000faa47ba1230f7a06090dcc4ac41b1fa72baf3",
+      "branchFamily": "step",
+      "branchAction": "doCreateSheetFromBuild",
+      "observedActionTaken": "doCreateSheetFromBuild",
+      "harnessTestPath": "packages/character-battle-runtime/src/character-layer-projection-lifecycle.mbt.test.ts",
+      "traceId": "public-route=characterLayerLifecycle action=doCreateSheetFromBuild qRoute=sheet-projection-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doCreateSheetFromBuild",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-battle-runtime/src/reducer-route-connectors.mbt.test.ts#createIndexedRouteDriver",
+        "routeSubject": "SheetToBattleInitRouteSubject",
+        "owners": [
+          "CharacterBattleBuildProjectionOwner",
+          "CharacterBattleSheetOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "056655224941a2ff37566a4cea4c5694e2f9f6768b03f9f7a3ab85ec0a92b02e",
+        "observedProjectionSha256": "056655224941a2ff37566a4cea4c5694e2f9f6768b03f9f7a3ab85ec0a92b02e",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "SheetToBattleInitRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_sheet",
+            "packages/character-sheet-runtime/src/index.ts#createFreshCharacterSheet",
+            "project_character_sheet_hit_points",
+            "packages/character-sheet-runtime/src/index.ts#characterSheetCurrentHp",
+            "project_character_sheet_hit_point_maximum",
+            "packages/character-sheet-runtime/src/index.ts#characterSheetHitPointMaximum",
+            "enter_public_character_battle_init_route",
+            "packages/character-battle-runtime/src/index.ts#characterSheetBattleInitWithRoute",
+            "packages/character-sheet-runtime/src/index.ts#createFreshCharacterSheet -> characterSheetCurrentHp -> characterSheetHitPointMaximum -> packages/character-battle-runtime/src/index.ts#characterSheetBattleInitWithRoute"
+          ],
+          "routeEventSource": "The copied qRoute sheet-projection event is observed from the public characterSheetBattleInitWithRoute route after createFreshCharacterSheet owns the persistent sheet Hit Point state.",
+          "reducerPublicApiPath": "packages/character-sheet-runtime/src/index.ts#createFreshCharacterSheet -> characterSheetCurrentHp -> characterSheetHitPointMaximum -> packages/character-battle-runtime/src/index.ts#characterSheetBattleInitWithRoute"
+        },
+        "checkedTargetStateFields": [
+          "CharacterSheet.currentHp=12",
+          "CharacterSheet hitPointMaximum=12",
+          "CharacterBattleRouteEvent.kind=projectCharacterSheetToBattle",
+          "CharacterBattleRouteEvent.subject=sheetToBattleInit",
+          "CharacterBattleRouteEvent.owner=characterBattleSheet"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Fresh Character Sheet creation owns persistent Hit Points and exposes the sheet-to-battle projection route through CharacterBattleSheetOwner."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt",
+      "routeConnectorPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.route.mbt.qnt",
+      "qntFileSha256": "a2db8e8512717dff0f0a3c5aa97e72328adb8820a2449249ddae447f5957f905",
+      "routeConnectorSha256": "5acab0246859d5085fadb2f5000faa47ba1230f7a06090dcc4ac41b1fa72baf3",
+      "branchFamily": "step",
+      "branchAction": "doProjectSheetToBattleInit",
+      "observedActionTaken": "doProjectSheetToBattleInit",
+      "harnessTestPath": "packages/character-battle-runtime/src/character-layer-projection-lifecycle.mbt.test.ts",
+      "traceId": "public-route=characterLayerLifecycle action=doProjectSheetToBattleInit qRoute=battle-init-entry-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doProjectSheetToBattleInit",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-battle-runtime/src/reducer-route-connectors.mbt.test.ts#createIndexedRouteDriver",
+        "routeSubject": "SheetToBattleInitRouteSubject",
+        "owners": [
+          "CharacterBattleBuildProjectionOwner",
+          "CharacterBattleSheetOwner",
+          "CharacterBattleInitProjectionOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "4b901cba1e6e18bb80e92cbc0c029e4835a30e5cca7c1e5ab60c8a35c6919a87",
+        "observedProjectionSha256": "4b901cba1e6e18bb80e92cbc0c029e4835a30e5cca7c1e5ab60c8a35c6919a87",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "SheetToBattleInitRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "enter_public_character_battle_init_route",
+            "packages/character-battle-runtime/src/index.ts#characterSheetBattleInitWithRoute",
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "packages/character-battle-runtime/src/index.ts#characterSheetBattleInitWithRoute -> packages/battle-runtime/src/index.ts#startBattle"
+          ],
+          "routeEventSource": "The copied qRoute battle-init entry event is observed from public characterSheetBattleInitWithRoute and startBattle entry after CharacterBattleInitProjectionOwner converts sheet/build facts into a battle creature init.",
+          "reducerPublicApiPath": "packages/character-battle-runtime/src/index.ts#characterSheetBattleInitWithRoute -> packages/battle-runtime/src/index.ts#startBattle"
+        },
+        "checkedTargetStateFields": [
+          "BattleCreatureInit.origin.kind=character",
+          "BattleState.combatants contains the character combatant",
+          "CharacterBattleRouteEvent.kind=enterBattleRuntime",
+          "CharacterBattleRouteEvent.subject=sheetToBattleInit",
+          "CharacterBattleRouteEvent.owner=characterBattleInitProjection"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Sheet/build facts enter BattleState through CharacterBattleInitProjectionOwner and the public startBattle boundary."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt",
+      "routeConnectorPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.route.mbt.qnt",
+      "qntFileSha256": "a2db8e8512717dff0f0a3c5aa97e72328adb8820a2449249ddae447f5957f905",
+      "routeConnectorSha256": "5acab0246859d5085fadb2f5000faa47ba1230f7a06090dcc4ac41b1fa72baf3",
+      "branchFamily": "step",
+      "branchAction": "doResolveSkeletonShortswordAttack",
+      "observedActionTaken": "doResolveSkeletonShortswordAttack",
+      "harnessTestPath": "packages/character-battle-runtime/src/character-layer-projection-lifecycle.mbt.test.ts",
+      "traceId": "public-route=characterLayerLifecycle action=doResolveSkeletonShortswordAttack qRoute=battle-mutation-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doResolveSkeletonShortswordAttack",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-battle-runtime/src/reducer-route-connectors.mbt.test.ts#createIndexedRouteDriver",
+        "routeSubject": "HandoffBattleMutationRouteSubject",
+        "owners": [
+          "CharacterBattleBuildProjectionOwner",
+          "CharacterBattleSheetOwner",
+          "CharacterBattleInitProjectionOwner",
+          "CharacterBattleRuntimeOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "c3adc213d62d08ceb5ece25737fd73db185dc09bf5cc39aefc739e139dcd5854",
+        "observedProjectionSha256": "c3adc213d62d08ceb5ece25737fd73db185dc09bf5cc39aefc739e139dcd5854",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "HandoffBattleMutationRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#startBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "packages/battle-runtime/src/index.ts#startBattle -> discoverBattleActs -> resolveBattleSubject"
+          ],
+          "routeEventSource": "The copied qRoute battle-mutation event is observed after the public battle reducer startBattle, discoverBattleActs, and resolveBattleSubject path mutates the character combatant Hit Points from 12 to 8.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#startBattle -> discoverBattleActs -> resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleState.combatants[character].hp=8",
+          "BattleResolutionResult.tag=resolved",
+          "BattleHole.kind=targetChoice",
+          "BattleHole.kind=attackRoll",
+          "BattleHole.kind=rolledDice",
+          "CharacterBattleRouteEvent.kind=enterBattleRuntime",
+          "CharacterBattleRouteEvent.subject=handoffBattleMutation",
+          "CharacterBattleRouteEvent.owner=characterBattleRuntime"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "The public battle reducer mutation path changes BattleState Hit Points under CharacterBattleRuntimeOwner and matches the copied handoffBattleMutation qRoute event."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt",
+      "routeConnectorPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.route.mbt.qnt",
+      "qntFileSha256": "a2db8e8512717dff0f0a3c5aa97e72328adb8820a2449249ddae447f5957f905",
+      "routeConnectorSha256": "5acab0246859d5085fadb2f5000faa47ba1230f7a06090dcc4ac41b1fa72baf3",
+      "branchFamily": "step",
+      "branchAction": "doSettleBattleToSheet",
+      "observedActionTaken": "doSettleBattleToSheet",
+      "harnessTestPath": "packages/character-battle-runtime/src/character-layer-projection-lifecycle.mbt.test.ts",
+      "traceId": "public-route=characterLayerLifecycle action=doSettleBattleToSheet qRoute=battle-settlement-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doSettleBattleToSheet",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-battle-runtime/src/reducer-route-connectors.mbt.test.ts#createIndexedRouteDriver",
+        "routeSubject": "BattleToSheetSettlementRouteSubject",
+        "owners": [
+          "CharacterBattleBuildProjectionOwner",
+          "CharacterBattleSheetOwner",
+          "CharacterBattleInitProjectionOwner",
+          "CharacterBattleRuntimeOwner",
+          "CharacterBattleSettlementOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "71d0ef1e2e3cb201c43b50fe242999f28bc998ae73e268eb92dd536480e931da",
+        "observedProjectionSha256": "71d0ef1e2e3cb201c43b50fe242999f28bc998ae73e268eb92dd536480e931da",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "BattleToSheetSettlementRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "settle_battle_to_character_sheet",
+            "packages/character-battle-runtime/src/index.ts#settleCharacterSheetFromBattle",
+            "read_character_sheet_current_hp",
+            "packages/character-sheet-runtime/src/index.ts#characterSheetCurrentHp",
+            "packages/character-battle-runtime/src/index.ts#settleCharacterSheetFromBattle -> packages/character-sheet-runtime/src/index.ts#characterSheetCurrentHp"
+          ],
+          "routeEventSource": "The copied qRoute settlement event is observed after public settleCharacterSheetFromBattle persists the battle-owned 8 HP delta back to Character Sheet current HP through CharacterBattleSettlementOwner.",
+          "reducerPublicApiPath": "packages/character-battle-runtime/src/index.ts#settleCharacterSheetFromBattle -> packages/character-sheet-runtime/src/index.ts#characterSheetCurrentHp"
+        },
+        "checkedTargetStateFields": [
+          "CharacterSheet.currentHp=8 after settlement",
+          "CharacterSheet.build unchanged",
+          "CharacterBattleRouteEvent.kind=settleBattleToCharacterSheet",
+          "CharacterBattleRouteEvent.subject=battleToSheetSettlement",
+          "CharacterBattleRouteEvent.fill=battleDelta",
+          "CharacterBattleRouteEvent.owner=characterBattleSettlement"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Battle-owned Hit Point delta settlement writes back to Character Sheet current HP through CharacterBattleSettlementOwner without duplicating sheet or battle state."
+      }
+    }
+  ]
+}
