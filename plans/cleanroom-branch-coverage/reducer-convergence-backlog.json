@@ -90,12 +90,12 @@
         "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns after-hit damage-rider route execution as split reducer surfaces: interrupt-stack decisions; spell-slot/action-economy and feature free-cast spends; Hit Point damage; save-gated condition lifecycle; Concentration start/break/cleanup; timed active Spell Effect damage/save cleanup; escape Ability Check and condition/concentration cleanup; and illumination active-effect admission/cleanup. Source spell/profile facts, selected spell identity, slotless permission, and table/caller target or roll inputs remain source or boundary facts, not a whole-battle rider accumulator.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT",
       "targetTaskId": "CRPI-BLOCK-002",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-002"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt",
