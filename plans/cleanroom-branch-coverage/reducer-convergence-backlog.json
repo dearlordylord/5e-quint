@@ -580,12 +580,12 @@
         "packages/battle-runtime/battle-runtime-marked-damage-immunity-active-effects.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns after-hit riders, scalar buffs, weapon-hosted/held-weapon active effects, marked damage riders, condition-immunity Temporary Hit Points, Concentration/active-effect cleanup; selected spell identity remains catalog/support-profile admission input. Risk: keep split route owners, no monolithic \"level 1 buff spell\" owner.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
       "targetTaskId": "CRPI-BLOCK-015",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-015"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
@@ -600,12 +600,12 @@
         "packages/battle-runtime/battle-runtime-condition-riders.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns spell invocation/action economy, target selection, Attack Roll, Saving Throw, mixed target outcomes, condition riders, object-target boundary, and Hit Point effects; exact spell identity remains catalog/support-profile admission input. Risk: count only branches with generic route facts; exact damage details separate.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
       "targetTaskId": "CRPI-BLOCK-016",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-016"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt",
@@ -621,12 +621,12 @@
         "packages/battle-runtime/battle-runtime-movement-presentation.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns spatial effects, object/light riders, movement presentation, reaction fall mitigation, save gates, light/sight/obscurement/hazard projections; table geometry/presentation remains boundary evidence. Risk: do not accept wholesale outside route inventory categories.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
       "targetTaskId": "CRPI-BLOCK-017",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-017"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt",
@@ -639,12 +639,12 @@
         "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns concentration-backed area hazards through active-effect, Concentration, area/spatial, Saving Throw, movement, light, Hit Points, and exact-damage route owners. Scope selected concentration hazard branches named by inventory.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS",
       "targetTaskId": "CRPI-BLOCK-018",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-018"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt",
@@ -656,12 +656,12 @@
         "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns concentration-backed control hazards through active-effect, Concentration, area/spatial, Saving Throw/condition lifecycle, obscurement, movement, Hit Points, and cleanup owners. Scope Spike Growth/Web hazard evidence.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS",
       "targetTaskId": "CRPI-BLOCK-019",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-019"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-mage-armor-selected-identity.mbt.qnt",
@@ -671,12 +671,12 @@
         "packages/battle-runtime/battle-runtime-spell-base-armor-class-effect.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns target admission, active Spell Effect, Armor Class projection, duration/turn-boundary cleanup, and spell-slot/action economy; selected spell identity remains admission input. Do not duplicate AC state beside active-effect projection.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
       "targetTaskId": "CRPI-BLOCK-020",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-020"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt",
@@ -758,12 +758,12 @@
         "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns movement-resource, special-speed projection, forced movement, active effects, creature-state speed facts, interrupt-stack/reaction movement, and turn-boundary cleanup. Keep Speed source fact vs Movement budget distinction.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU05-FEATURE-MOVEMENT-AND-FORM-SUBSTRATES",
       "targetTaskId": "CRPI-BLOCK-021",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-021"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt",
@@ -803,12 +803,12 @@
         "packages/battle-runtime/battle-runtime-reaction-interrupt-payload-taxonomy.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns reaction availability, interrupt-stack payload/continuation, reaction spell-slot/action economy, and payload effects; trigger facts and reaction choice remain boundary fills. No selected reaction spell identity dispatch.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "FCSF-05-REACTION-INTERRUPT-PAYLOAD-TAXONOMY",
       "targetTaskId": "CRPI-BLOCK-022",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-022"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt",
@@ -848,12 +848,12 @@
         "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns roll-modifier active effects, Concentration, damage-reduction/damage-adjustment, scalar buff active effects, and relevant target/damage-type choice frontiers. Choice frontiers are fills.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU03-CONDITION-AND-ROLL-MODIFIER-FEATURE-SUBSTRATES",
       "targetTaskId": "CRPI-BLOCK-024",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-024"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt",
@@ -863,12 +863,12 @@
         "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns warded-target interdiction through spell-slot/action economy, target selection, active effect, Saving Throw outcome, attack/action/area gates, Hit Points, and early ward end. Area exclusion/replacement target choice explicit route/boundary facts.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
       "targetTaskId": "CRPI-BLOCK-025",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-025"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt",
@@ -1040,8 +1040,8 @@
       "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES",
       "targetTaskId": "CRPI-READY-010",
-      "status": "ready",
-      "blockerId": null
+      "status": "blocked",
+      "blockerId": "source-qnt-corpus-blocker"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt",
@@ -1055,8 +1055,8 @@
       "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
       "targetTaskId": "CRPI-READY-011",
-      "status": "ready",
-      "blockerId": null
+      "status": "blocked",
+      "blockerId": "source-qnt-corpus-blocker"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-distant-selected-identity.mbt.qnt",
@@ -1231,12 +1231,12 @@
         "packages/battle-runtime/battle-runtime-species-passive-trait-substrates.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns passive trait substrates through creature state, movement resource, damage adjustment, Saving Throw roll mode, Ability Check roll mode, and creature-space movement permission. Species identity stays catalog/admission.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU02-SPECIES-PASSIVE-TRAIT-SUBSTRATES",
       "targetTaskId": "CRPI-BLOCK-026",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-026"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt",
@@ -1246,12 +1246,12 @@
         "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns spell attack action economy, target selection, Attack Roll, hole frontier, and Hit Point damage. Generic spell attack ordering only.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
       "targetTaskId": "CRPI-BLOCK-027",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-027"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt",
@@ -1261,12 +1261,12 @@
         "packages/battle-runtime/battle-runtime-starry-wisp-object.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns object-target spell attack route via object-target boundary, Attack Roll, active effect, Hit Point/damage frontier, and stale hole-frontier rejection. Object facts remain table/boundary.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR20-BATTLE-COMPANION-OBJECT-BOUNDARY-ROUTES",
       "targetTaskId": "CRPI-BLOCK-028",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-028"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt",
@@ -1321,12 +1321,12 @@
         "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns roll-modifier active Spell Effect and Concentration route; one-minute effect count remains boundary evidence, not reducer ledger. No Thaumaturgy-specific counter.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
       "targetTaskId": "CRPI-BLOCK-032",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-032"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt",
@@ -1351,12 +1351,12 @@
         "packages/battle-runtime/battle-runtime-weapon-attack-ordering.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns weapon attack action economy, target selection, Attack Roll, hole frontier, and Hit Point damage. Weapon/source identity feeds typed attack facts only.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
       "targetTaskId": "CRPI-BLOCK-033",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-033"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt",
@@ -1366,12 +1366,12 @@
         "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns weapon action, battle action, stat-block action routing, action economy, Attack Roll, Hit Point damage, and stat-block action dispatch. Keep stat-block control reuse separate from route replay evidence.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
       "targetTaskId": "CRPI-BLOCK-034",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-034"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
@@ -1387,12 +1387,12 @@
         "packages/battle-runtime/battle-runtime-weapon-enhancement-cleanup.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns spell-hosted weapon attacks, held-weapon active effects, weapon damage riders, weapon enhancement item-target boundary, Hit Point/Attack Roll, and active-effect cleanup. No selected item/spell/attack identity as behavior key.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR17-WEAPON-HOSTED-RIDER-ROUTES",
       "targetTaskId": "CRPI-BLOCK-035",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-035"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt",
@@ -1432,12 +1432,12 @@
         "packages/battle-runtime/creature-attack.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns minimal creature attack hit/damage through Attack Roll and Hit Point owners. Narrow pilot only.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
       "targetTaskId": "CRPI-BLOCK-036",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-036"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
@@ -1769,12 +1769,12 @@
         "packages/character-battle-runtime/character-battle-origin-feat-selected-identity.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "CharacterBattleBuildProjectionOwner owns selected-reference retention; CharacterBattleInitProjectionOwner / CharacterBattleRuntimeOwner own Initiative handoff/runtime entry. Keep authored origin feat identity at catalog/selection/test boundary.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES",
       "targetTaskId": "CRPI-BLOCK-038",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-038"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt",
@@ -1952,12 +1952,12 @@
         "packages/character-battle-runtime/character-layer-projection-lifecycle.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "Existing layered owners: CharacterBattleBuildProjectionOwner, CharacterBattleSheetOwner, CharacterBattleInitProjectionOwner, CharacterBattleRuntimeOwner, CharacterBattleSettlementOwner. Do not invent monolithic lifecycle owner.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES",
       "targetTaskId": "CRPI-BLOCK-039",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-039"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
@@ -1967,12 +1967,12 @@
         "packages/character-battle-runtime/character-sheet-feature-resources.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "CharacterBattleSheetOwner owns sheet point/use state; CharacterBattleResourceProjectionOwner owns executable boundary deltas/holes for feature and spell resources; CharacterBattleRuntimeOwner owns battle-time metamagic/spell action state. Preserve source-exact ordinary/created/Pact distinctions.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES",
       "targetTaskId": "CRPI-BLOCK-040",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-040"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt",
@@ -1982,12 +1982,12 @@
         "packages/character-creation-runtime/character-creation-class-feature-projections.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "CharacterBuildOwner owns build fact projection; source facts remain retained build facts plus Unit catalog, not duplicate resource/source state.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
       "targetTaskId": "CRPI-BLOCK-041",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-041"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
@@ -1997,12 +1997,12 @@
         "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "CreationSelectedReferenceOwner owns retained selected Unit refs; CharacterBuildOwner owns projected finalized build facts.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
       "targetTaskId": "CRPI-BLOCK-042",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-042"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt",
@@ -2012,12 +2012,12 @@
         "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "CreationSelectedReferenceOwner owns selected Divine/Primal Order option refs; CharacterBuildOwner owns build projection.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
       "targetTaskId": "CRPI-BLOCK-043",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-043"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
@@ -2027,12 +2027,12 @@
         "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "CreationSelectedReferenceOwner owns initial Fighting Style feat ref; CharacterBuildOwner owns Fighter level-gain replacement operation/projection.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
       "targetTaskId": "CRPI-BLOCK-044",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-044"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.mbt.qnt",
@@ -2042,12 +2042,12 @@
         "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "CreationSelectedReferenceOwner owns level-1 owned skill Expertise selection; final proficiency-level projection derives from build/proficiency facts, not duplicate skill state. Scoped: do not include level-six additional owned skill Expertise branch (inventory outside denominator).",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
       "targetTaskId": "CRPI-BLOCK-045",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-045"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
@@ -2256,12 +2256,12 @@
         "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "CreationSelectedReferenceOwner owns invocation choices; CharacterBuildOwner owns retained/Pact Magic projection; CreationSupportProfileAdmissionOwner owns duplicate/prerequisite rejection. Track level-5 prerequisite branch scope explicitly.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
       "targetTaskId": "CRPI-BLOCK-046",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-046"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt",
