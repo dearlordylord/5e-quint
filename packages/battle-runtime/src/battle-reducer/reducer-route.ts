@@ -86,6 +86,7 @@ export type BattleReducerRouteSubjectFamily =
   | "turnBoundaryEffectLifecycle"
   | "zeroHitPointSpellEffectTeardown"
   | "afterHitDamageRider"
+  | "attackActionAreaSaveDamageReplacement"
   | "slotSpell"
   | "spellAttackProcedure"
   | "weaponAttack"
@@ -93,9 +94,11 @@ export type BattleReducerRouteSubjectFamily =
 
 export type BattleReducerRouteOwnerGroup =
   | "battleActionEconomy"
+  | "battleAttackActionProcedure"
   | "battleSpellSlotAndActionEconomy"
   | "battleHoleFrontier"
   | "battleTargetSelection"
+  | "battleAreaShape"
   | "battleObjectTargetBoundary"
   | "battleAttackRoll"
   | "battleSpellAttackProcedure"
@@ -360,6 +363,11 @@ export function battleReducerRouteEventsForDiscoveredAct(
   const sleepRepeatSaveRoute = sleepRepeatSaveRouteForDiscoveredAct(act);
   if (sleepRepeatSaveRoute !== undefined) {
     return [sleepRepeatSaveRoute];
+  }
+  const attackActionAreaSaveDamageReplacementRoute =
+    attackActionAreaSaveDamageReplacementRouteForDiscoveredAct(state, act);
+  if (attackActionAreaSaveDamageReplacementRoute !== undefined) {
+    return [attackActionAreaSaveDamageReplacementRoute];
   }
   if (isWeaponAttackSubject(act.subject)) {
     return [
@@ -627,6 +635,11 @@ export function battleReducerRouteForResolution(
   if (saveGatedRoute !== undefined) {
     return saveGatedRoute;
   }
+  const attackActionAreaSaveDamageReplacementRoute =
+    attackActionAreaSaveDamageReplacementRouteForResolution(input, result);
+  if (attackActionAreaSaveDamageReplacementRoute !== undefined) {
+    return attackActionAreaSaveDamageReplacementRoute;
+  }
   const interruptResumeDiscoveryRoute =
     interruptStackResumeDiscoveryRouteForResolution(input, result);
   const afterHitDamageRiderDiscoveryRoutes =
@@ -743,6 +756,177 @@ export function battleReducerRouteForInterrupt(
     ];
   }
   return [eventForOwner("battleInterruptStack")];
+}
+
+function attackActionAreaSaveDamageReplacementRouteForDiscoveredAct(
+  state: BattleState,
+  act: AvailableBattleAct,
+): BattleReducerRouteEvent | undefined {
+  if (!isAttackActionAreaSaveDamageReplacementSubject(state, act.subject)) {
+    return undefined;
+  }
+  return {
+    kind: "discoverBattleActs",
+    subject: "attackActionAreaSaveDamageReplacement",
+    holes: battleReducerRouteHoles(act.initialHoles),
+    owner: "battleFeatureResource",
+  };
+}
+
+function attackActionAreaSaveDamageReplacementRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  if (
+    !isAttackActionAreaSaveDamageReplacementSubject(input.state, input.subject)
+  ) {
+    return undefined;
+  }
+
+  const fill = input.fills.at(-1);
+  if (fill === undefined) {
+    if (result.tag !== "invalid") {
+      return undefined;
+    }
+    return [
+      attackActionAreaSaveDamageReplacementResolveWithoutFillRoute(
+        [],
+        "battleFeatureResource",
+      ),
+    ];
+  }
+
+  const routeFill = battleReducerRouteFill(fill);
+  if (routeFill === "savingThrowOutcome") {
+    if (result.tag === "invalid") {
+      return [
+        attackActionAreaSaveDamageReplacementResolveRoute(
+          "savingThrowOutcome",
+          ["savingThrowOutcome"],
+          "battleAreaShape",
+        ),
+      ];
+    }
+
+    const holes =
+      result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
+    return [
+      attackActionAreaSaveDamageReplacementResolveRoute(
+        "savingThrowOutcome",
+        holes,
+        "battleAreaShape",
+      ),
+      attackActionAreaSaveDamageReplacementResolveWithoutFillRoute(
+        holes,
+        "battleSavingThrowOutcome",
+      ),
+      attackActionAreaSaveDamageReplacementResolveWithoutFillRoute(
+        holes,
+        "battleDamageType",
+      ),
+    ];
+  }
+
+  if (routeFill !== "rolledDice") {
+    return undefined;
+  }
+  if (result.tag === "invalid") {
+    return [
+      attackActionAreaSaveDamageReplacementResolveRoute(
+        "rolledDice",
+        ["rolledDice"],
+        "battleDamageRoll",
+      ),
+    ];
+  }
+  if (result.tag !== "resolved") {
+    return undefined;
+  }
+
+  const tail =
+    result.state.currentTurnResources.actionResources.some(
+      (resource) =>
+        resource.source === "classFeatureExtraAttack" &&
+        resource.sourceOwnerId === input.subject.actorId,
+    )
+      ? [
+          {
+            kind: "discoverBattleActs" as const,
+            subject: "weaponAttack" as const,
+            holes: ["targetChoice"] as const,
+            owner: "battleAttackActionProcedure" as const,
+          },
+        ]
+      : [
+          attackActionAreaSaveDamageReplacementResolveWithoutFillRoute(
+            [],
+            "battleAttackActionProcedure",
+          ),
+        ];
+  return [
+    attackActionAreaSaveDamageReplacementResolveRoute(
+      "rolledDice",
+      [],
+      "battleDamageRoll",
+    ),
+    attackActionAreaSaveDamageReplacementResolveWithoutFillRoute(
+      [],
+      "battleHitPoint",
+    ),
+    attackActionAreaSaveDamageReplacementResolveWithoutFillRoute(
+      [],
+      "battleFeatureResource",
+    ),
+    ...tail,
+  ];
+}
+
+function attackActionAreaSaveDamageReplacementResolveRoute(
+  fill: BattleReducerRouteFillKind,
+  holes: readonly BattleReducerRouteHole[],
+  owner: BattleReducerRouteOwnerGroup,
+): BattleReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubject",
+    subject: "attackActionAreaSaveDamageReplacement",
+    fill,
+    holes,
+    owner,
+  };
+}
+
+function attackActionAreaSaveDamageReplacementResolveWithoutFillRoute(
+  holes: readonly BattleReducerRouteHole[],
+  owner: BattleReducerRouteOwnerGroup,
+): BattleReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubjectWithoutFill",
+    subject: "attackActionAreaSaveDamageReplacement",
+    holes,
+    owner,
+  };
+}
+
+function isAttackActionAreaSaveDamageReplacementSubject(
+  state: BattleState,
+  subject: BattleResolutionInput["subject"] | AvailableBattleAct["subject"],
+): boolean {
+  if (subject.tag !== "unitFeature") {
+    return false;
+  }
+  const actor = state.combatants.get(subject.actorId);
+  if (actor?.origin.kind !== "character") {
+    return false;
+  }
+  return actor.origin.characterUnitRefs.some(
+    (unitRef) =>
+      unitRef.unitId === subject.unitId &&
+      unitRef.supportProfiles.some(
+        (profile) =>
+          typeof profile === "object" &&
+          profile.kind === "attackActionAreaSaveDamageReplacement",
+      ),
+  );
 }
 
 function afterHitDamageRiderDiscoveryRoutesForResolution(

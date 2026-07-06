@@ -12,10 +12,14 @@ import * as Either from "effect/Either";
 import type {
   BattleFill,
   BattleHole,
+  BattleReducerRouteEvent,
+  BattleReducerRouteHole,
+  BattleReducerRouteOwnerGroup,
   BattleResolutionResult,
   BattleState,
   CombatantId,
 } from "./index.ts";
+import { battleReducerStartRouteEvent } from "./index.ts";
 import {
   characterCreature,
   requireHole,
@@ -182,6 +186,173 @@ defineSelectedIdentityReplayAndQntReplay({
 });
 
 describe("Dragonborn Breath Weapon runtime", () => {
+  test("observes copied qRoute through public reducer entrypoints", () => {
+    const resolved = resolvedBreathWeaponPublicRoute(breathWeaponBattle(), {
+      outcomes: [
+        { targetId: spellTargetId, succeeded: false },
+        { targetId: secondTargetId, succeeded: true },
+      ],
+      areaTargetIds: [spellTargetId, secondTargetId],
+      damageRolls: [6, 4],
+    });
+    expect(resolved).toEqual([
+      battleReducerStartRouteEvent(),
+      attackActionAreaSaveDamageReplacementDiscoverRoute([
+        "savingThrowOutcome",
+      ]),
+      attackActionAreaSaveDamageReplacementResolveRoute(
+        "savingThrowOutcome",
+        ["rolledDice"],
+        "battleAreaShape",
+      ),
+      attackActionAreaSaveDamageReplacementResolveWithoutFillRoute(
+        ["rolledDice"],
+        "battleSavingThrowOutcome",
+      ),
+      attackActionAreaSaveDamageReplacementResolveWithoutFillRoute(
+        ["rolledDice"],
+        "battleDamageType",
+      ),
+      attackActionAreaSaveDamageReplacementResolveRoute(
+        "rolledDice",
+        [],
+        "battleDamageRoll",
+      ),
+      attackActionAreaSaveDamageReplacementResolveWithoutFillRoute(
+        [],
+        "battleHitPoint",
+      ),
+      attackActionAreaSaveDamageReplacementResolveWithoutFillRoute(
+        [],
+        "battleFeatureResource",
+      ),
+      attackActionAreaSaveDamageReplacementResolveWithoutFillRoute(
+        [],
+        "battleAttackActionProcedure",
+      ),
+    ]);
+
+    const openedExtraAttack = resolvedBreathWeaponPublicRoute(
+      breathWeaponBattle({ extraAttack: true }),
+      {
+        outcomes: [{ targetId: spellTargetId, succeeded: false }],
+        areaTargetIds: [spellTargetId],
+        damageRolls: [5, 5],
+      },
+    );
+    expect(openedExtraAttack).toEqual([
+      battleReducerStartRouteEvent(),
+      attackActionAreaSaveDamageReplacementDiscoverRoute([
+        "savingThrowOutcome",
+      ]),
+      attackActionAreaSaveDamageReplacementResolveRoute(
+        "savingThrowOutcome",
+        ["rolledDice"],
+        "battleAreaShape",
+      ),
+      attackActionAreaSaveDamageReplacementResolveWithoutFillRoute(
+        ["rolledDice"],
+        "battleSavingThrowOutcome",
+      ),
+      attackActionAreaSaveDamageReplacementResolveWithoutFillRoute(
+        ["rolledDice"],
+        "battleDamageType",
+      ),
+      attackActionAreaSaveDamageReplacementResolveRoute(
+        "rolledDice",
+        [],
+        "battleDamageRoll",
+      ),
+      attackActionAreaSaveDamageReplacementResolveWithoutFillRoute(
+        [],
+        "battleHitPoint",
+      ),
+      attackActionAreaSaveDamageReplacementResolveWithoutFillRoute(
+        [],
+        "battleFeatureResource",
+      ),
+      {
+        kind: "discoverBattleActs",
+        subject: "weaponAttack",
+        holes: ["targetChoice"],
+        owner: "battleAttackActionProcedure",
+      },
+    ]);
+
+    const missingResource = resolveBattleSubject({
+      state: breathWeaponBattle({ usesRemaining: 0 }),
+      subject: breathWeaponSubject(),
+      fills: [],
+    });
+    recordInvalidResult(missingResource);
+    expect([
+      battleReducerStartRouteEvent(),
+      ...(missingResource.routeEvents ?? []),
+    ]).toEqual([
+      battleReducerStartRouteEvent(),
+      attackActionAreaSaveDamageReplacementResolveWithoutFillRoute(
+        [],
+        "battleFeatureResource",
+      ),
+    ]);
+
+    const mismatchedAreaState = breathWeaponBattle();
+    const mismatchedAreaAct = breathWeaponAct(mismatchedAreaState);
+    const mismatchedArea = resolveBreathWeaponSave(mismatchedAreaState, {
+      outcomes: [{ targetId: spellTargetId, succeeded: false }],
+      areaTargetIds: [spellTargetId, secondTargetId],
+    });
+    recordInvalidResult(mismatchedArea);
+    expect([
+      battleReducerStartRouteEvent(),
+      ...(mismatchedAreaAct.routeEvents ?? []),
+      ...(mismatchedArea.routeEvents ?? []),
+    ]).toEqual([
+      battleReducerStartRouteEvent(),
+      attackActionAreaSaveDamageReplacementDiscoverRoute([
+        "savingThrowOutcome",
+      ]),
+      attackActionAreaSaveDamageReplacementResolveRoute(
+        "savingThrowOutcome",
+        ["savingThrowOutcome"],
+        "battleAreaShape",
+      ),
+    ]);
+
+    const invalidDamageRoll = invalidDamageRollPublicRoute(
+      breathWeaponBattle(),
+      {
+        outcomes: [{ targetId: spellTargetId, succeeded: false }],
+        areaTargetIds: [spellTargetId],
+        damageRolls: [11, 4],
+      },
+    );
+    expect(invalidDamageRoll).toEqual([
+      battleReducerStartRouteEvent(),
+      attackActionAreaSaveDamageReplacementDiscoverRoute([
+        "savingThrowOutcome",
+      ]),
+      attackActionAreaSaveDamageReplacementResolveRoute(
+        "savingThrowOutcome",
+        ["rolledDice"],
+        "battleAreaShape",
+      ),
+      attackActionAreaSaveDamageReplacementResolveWithoutFillRoute(
+        ["rolledDice"],
+        "battleSavingThrowOutcome",
+      ),
+      attackActionAreaSaveDamageReplacementResolveWithoutFillRoute(
+        ["rolledDice"],
+        "battleDamageType",
+      ),
+      attackActionAreaSaveDamageReplacementResolveRoute(
+        "rolledDice",
+        ["rolledDice"],
+        "battleDamageRoll",
+      ),
+    ]);
+  });
+
   test("discovers Breath Weapon from selected Draconic Ancestry source facts", () => {
     const state = breathWeaponBattle();
     const act = breathWeaponAct(state);
@@ -419,6 +590,125 @@ function resolveBreathWeapon(
       rolledDiceFill(damage, input.damageRolls),
     ],
   });
+}
+
+function resolvedBreathWeaponPublicRoute(
+  state: BattleState,
+  input: {
+    readonly outcomes: readonly {
+      readonly targetId: CombatantId;
+      readonly succeeded: boolean;
+    }[];
+    readonly areaTargetIds: readonly CombatantId[];
+    readonly damageRolls: readonly number[];
+  },
+): readonly BattleReducerRouteEvent[] {
+  const act = breathWeaponAct(state);
+  const save = requireHole(act.initialHoles, "savingThrowOutcome");
+  const savingThrowFill = breathWeaponSavingThrowFill(
+    save,
+    input.outcomes,
+    input.areaTargetIds,
+  );
+  const pendingDamage = resolveBattleSubject({
+    state,
+    subject: breathWeaponSubject(),
+    fills: [savingThrowFill],
+  });
+  if (pendingDamage.tag !== "needsHoles") {
+    throw new Error(`Expected Breath Weapon damage roll: ${pendingDamage.tag}`);
+  }
+  const damage = requireHole(pendingDamage.holes, "rolledDice");
+  const resolved = resolveBattleSubject({
+    state,
+    subject: breathWeaponSubject(),
+    fills: [savingThrowFill, rolledDiceFill(damage, input.damageRolls)],
+  });
+  recordResolvedState(resolved);
+  return [
+    battleReducerStartRouteEvent(),
+    ...(act.routeEvents ?? []),
+    ...(pendingDamage.routeEvents ?? []),
+    ...(resolved.routeEvents ?? []),
+  ];
+}
+
+function invalidDamageRollPublicRoute(
+  state: BattleState,
+  input: {
+    readonly outcomes: readonly {
+      readonly targetId: CombatantId;
+      readonly succeeded: boolean;
+    }[];
+    readonly areaTargetIds: readonly CombatantId[];
+    readonly damageRolls: readonly number[];
+  },
+): readonly BattleReducerRouteEvent[] {
+  const act = breathWeaponAct(state);
+  const save = requireHole(act.initialHoles, "savingThrowOutcome");
+  const savingThrowFill = breathWeaponSavingThrowFill(
+    save,
+    input.outcomes,
+    input.areaTargetIds,
+  );
+  const pendingDamage = resolveBattleSubject({
+    state,
+    subject: breathWeaponSubject(),
+    fills: [savingThrowFill],
+  });
+  if (pendingDamage.tag !== "needsHoles") {
+    throw new Error(`Expected Breath Weapon damage roll: ${pendingDamage.tag}`);
+  }
+  const damage = requireHole(pendingDamage.holes, "rolledDice");
+  const invalid = resolveBattleSubject({
+    state,
+    subject: breathWeaponSubject(),
+    fills: [savingThrowFill, rolledDiceFill(damage, input.damageRolls)],
+  });
+  recordInvalidResult(invalid);
+  return [
+    battleReducerStartRouteEvent(),
+    ...(act.routeEvents ?? []),
+    ...(pendingDamage.routeEvents ?? []),
+    ...(invalid.routeEvents ?? []),
+  ];
+}
+
+function attackActionAreaSaveDamageReplacementDiscoverRoute(
+  holes: readonly BattleReducerRouteHole[],
+): BattleReducerRouteEvent {
+  return {
+    kind: "discoverBattleActs",
+    subject: "attackActionAreaSaveDamageReplacement",
+    holes,
+    owner: "battleFeatureResource",
+  };
+}
+
+function attackActionAreaSaveDamageReplacementResolveRoute(
+  fill: "savingThrowOutcome" | "rolledDice",
+  holes: readonly BattleReducerRouteHole[],
+  owner: BattleReducerRouteOwnerGroup,
+): BattleReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubject",
+    subject: "attackActionAreaSaveDamageReplacement",
+    fill,
+    holes,
+    owner,
+  };
+}
+
+function attackActionAreaSaveDamageReplacementResolveWithoutFillRoute(
+  holes: readonly BattleReducerRouteHole[],
+  owner: BattleReducerRouteOwnerGroup,
+): BattleReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubjectWithoutFill",
+    subject: "attackActionAreaSaveDamageReplacement",
+    holes,
+    owner,
+  };
 }
 
 function resolveBreathWeaponSave(
