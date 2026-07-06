@@ -14,8 +14,6 @@
 // - UBIQUITOUS_LANGUAGE.md: Temporary Hit Points, Creature, Stat Block,
 //   Character Sheet, and Action Lifecycle.
 import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra";
-import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
-import { Hp } from "@dnd/shared/types";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import { describe, expect, it } from "vitest";
 
@@ -34,10 +32,6 @@ import {
   quintRecordField,
   quintStateRecord,
   quintVariantTag,
-  reducerRouteDiscoverBattleActs,
-  reducerRouteResolveBattleSubject,
-  reducerRouteResolveBattleSubjectWithoutFill,
-  reducerRouteStartBattle,
   run,
   stateCheck,
   type ReducerRouteEvent,
@@ -45,6 +39,7 @@ import {
 import {
   activeDruidWildShapeEffect,
   activeDruidWildShapeForm,
+  battleReducerStartRouteEvent,
   combatantD20AbilityModifier,
   combatantD20ProficiencyBonus,
   combatantHasActiveDruidWildShape,
@@ -53,7 +48,7 @@ import {
   snapshotBattle,
   type BattleCreatureState,
   type BattleFill,
-  type BattleResolutionResult,
+  type BattleHole,
   type BattleState,
   type BattleSubject,
   type CharacterBattleCreatureState,
@@ -63,11 +58,16 @@ import {
   characterSeed,
   combatantId,
   heavyArmorClassState,
+  attackRollFill,
+  damageRollFillWithGroups,
+  oppositionSide,
+  requireNeedsHoles,
   requireResolved,
+  savingThrowOutcomeFill,
   spellRecord,
   startBattleRight,
   statBlockCatalog,
-  statBlockCreatureInit,
+  targetFill,
   unitLibrary,
   wizardSpellcasting,
 } from "./battle-runtime-test-support.ts";
@@ -122,8 +122,16 @@ type DruidWildShapeFormLifecycleRuntimeState = {
   readonly battle: BattleState;
   readonly lastResult: LastResult;
 };
+type AvailableBattleAct = ReturnType<typeof discoverBattleActs>[number];
+type DruidWildShapeAvailableAct = Omit<AvailableBattleAct, "subject"> & {
+  readonly subject: Extract<BattleSubject, { readonly tag: "druidWildShape" }>;
+};
+type ActionSpellAvailableAct = Omit<AvailableBattleAct, "subject"> & {
+  readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
+};
 
 const druidId = combatantId("wild-shape-form-lifecycle-mbt-druid");
+const opponentId = combatantId("wild-shape-form-lifecycle-mbt-opponent");
 const ratId = "stat_block_rat";
 const ridingHorseId = "stat_block_riding_horse";
 const lizardId = "stat_block_lizard";
@@ -224,8 +232,10 @@ describe("Druid Wild Shape form lifecycle MBT parity", () => {
   it("reverts from supported ending conditions", () => {
     const active = assumeRidingHorse(initialRuntimeState());
     const dismissed = dismissForm(beginNextTurn(active));
-    const incapacitated = applyIncapacitatedReversion(active);
-    const dead = applyDeathReversion(active);
+    const incapacitatedReplay = resolveIncapacitatedReversionWithRoute(active);
+    const deathReplay = resolveDeathReversionWithRoute(active);
+    const incapacitated = incapacitatedReplay.state;
+    const dead = deathReplay.state;
 
     expect(druidWildShapeFormProjection(dismissed)).toMatchObject({
       activeForm: "trueForm",
@@ -240,6 +250,9 @@ describe("Druid Wild Shape form lifecycle MBT parity", () => {
     });
     expect(druidWildShapeFormProjection(incapacitated)).toMatchObject({
       activeForm: "trueForm",
+      bonusActionAvailable: true,
+      tempHp: 2,
+      speedFeet: 0,
       spellAvailable: false,
       activeFormEffectCount: 0,
       mergedEquipmentCount: 0,
@@ -248,29 +261,42 @@ describe("Druid Wild Shape form lifecycle MBT parity", () => {
     });
     expect(druidWildShapeFormProjection(dead)).toMatchObject({
       activeForm: "trueForm",
+      bonusActionAvailable: true,
+      tempHp: 0,
+      speedFeet: 0,
       spellAvailable: false,
       activeFormEffectCount: 0,
       mergedEquipmentCount: 0,
       druidAlive: false,
       lastResult: "dead",
     });
+    expect(routeSubjects(incapacitatedReplay.terminalRouteEvents)).toEqual(
+      expect.arrayContaining(["saveGatedSpell", "activeFormLifecycle"]),
+    );
+    expect(routeSubjects(deathReplay.terminalRouteEvents)).toEqual(
+      expect.arrayContaining(["spellAttackProcedure", "activeFormLifecycle"]),
+    );
   });
 
-  it("matches the focused form lifecycle against bounded random MBT traces", async () => {
-    await run({
-      spec: mbtSpecPath(
-        import.meta.dirname,
-        "battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createDruidWildShapeFormLifecycleDriver(),
-      backend: "typescript",
-      nTraces: mbtTraceCount(),
-      maxSteps: focusedMbtMaxSteps(5),
-      stateCheck: druidWildShapeFormStateCheck,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "matches the focused form lifecycle against bounded random MBT traces",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createDruidWildShapeFormLifecycleDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(5),
+        stateCheck: druidWildShapeFormStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 type DruidWildShapeFormLifecycleRouteProjection = {
@@ -290,21 +316,25 @@ const druidWildShapeFormLifecycleRouteDriverSchema = {
 } as const;
 
 describe("Druid Wild Shape form lifecycle route MBT", () => {
-  it("routes active form lifecycle through durable battle owners", async () => {
-    await run({
-      spec: mbtSpecPath(
-        import.meta.dirname,
-        "battle-runtime-druid-wild-shape-form-lifecycle.route.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createDruidWildShapeFormLifecycleRouteDriver(),
-      backend: "typescript",
-      nTraces: mbtTraceCount(),
-      maxSteps: focusedMbtMaxSteps(6),
-      stateCheck: druidWildShapeFormLifecycleRouteStateCheck,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "routes active form lifecycle through durable battle owners",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-druid-wild-shape-form-lifecycle.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createDruidWildShapeFormLifecycleRouteDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(6),
+        stateCheck: druidWildShapeFormLifecycleRouteStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function createDruidWildShapeFormLifecycleRouteDriver() {
@@ -312,10 +342,12 @@ function createDruidWildShapeFormLifecycleRouteDriver() {
     typeof druidWildShapeFormLifecycleRouteDriverSchema,
     DruidWildShapeFormLifecycleRouteProjection
   >(druidWildShapeFormLifecycleRouteDriverSchema, () => {
+    let state = initialRuntimeState();
     let route: readonly ReducerRouteEvent[] = [];
 
     function reset(): void {
-      route = [reducerRouteStartBattle("battleActionEconomy")];
+      state = initialRuntimeState();
+      route = [battleReducerStartRouteEvent()];
     }
 
     reset();
@@ -323,140 +355,66 @@ function createDruidWildShapeFormLifecycleRouteDriver() {
     return {
       init: reset,
       doAssumeForm: () => {
-        route = appendAssumeOrReuseFormRoute(route);
-      },
-      doBeginNextTurn: () => {
+        const replay = resolveWildShapeSubjectWithRoute(
+          state,
+          ridingHorseId,
+          "assumedRidingHorse",
+        );
+        state = replay.state;
         route = [
           ...route,
-          reducerRouteDiscoverBattleActs({
-            subject: "activeFormLifecycle",
-            holes: [],
-            owner: "battleTurnBoundary",
-          }),
-          reducerRouteResolveBattleSubjectWithoutFill({
-            subject: "activeFormLifecycle",
-            holes: [],
-            owner: "battleTurnBoundary",
-          }),
-          reducerRouteResolveBattleSubjectWithoutFill({
-            subject: "activeFormLifecycle",
-            holes: [],
-            owner: "battleActionEconomy",
-          }),
+          ...activeFormLifecycleRouteEvents(replay.routeEvents),
+        ];
+      },
+      doBeginNextTurn: () => {
+        const replay = beginNextTurnWithRoute(state);
+        state = replay.state;
+        route = [
+          ...route,
+          ...activeFormLifecycleRouteEvents(replay.routeEvents),
         ];
       },
       doReuseForm: () => {
-        route = appendAssumeOrReuseFormRoute(route);
+        const replay = resolveWildShapeSubjectWithRoute(
+          state,
+          catId,
+          "reusedCat",
+        );
+        state = replay.state;
+        route = [
+          ...route,
+          ...activeFormLifecycleRouteEvents(replay.routeEvents),
+        ];
       },
       doDismissForm: () => {
-        route = appendDismissalRoute(route);
+        const replay = dismissFormWithRoute(state);
+        state = replay.state;
+        route = [
+          ...route,
+          ...activeFormLifecycleRouteEvents(replay.routeEvents),
+        ];
       },
       doIncapacitatedReversion: () => {
-        route = appendIncapacitatedReversionRoute(route);
+        const replay = resolveIncapacitatedReversionWithRoute(state);
+        state = replay.state;
+        route = [
+          ...route,
+          ...activeFormLifecycleRouteEvents(replay.routeEvents),
+        ];
       },
       doDeathReversion: () => {
-        route = appendDeathReversionRoute(route);
+        const replay = resolveDeathReversionWithRoute(state);
+        state = replay.state;
+        route = [
+          ...route,
+          ...activeFormLifecycleRouteEvents(replay.routeEvents),
+        ];
       },
       doStutter: () => {},
       step: () => {},
       getState: () => ({ route }),
     };
   });
-}
-
-function appendAssumeOrReuseFormRoute(
-  route: readonly ReducerRouteEvent[],
-): readonly ReducerRouteEvent[] {
-  return [
-    ...route,
-    reducerRouteDiscoverBattleActs({
-      subject: "activeFormLifecycle",
-      holes: [{ kind: "wildShapeEquipmentDisposition" }],
-      owner: "battleActionEconomy",
-    }),
-    reducerRouteResolveBattleSubject({
-      subject: "activeFormLifecycle",
-      fill: "wildShapeEquipmentDisposition",
-      holes: [],
-      owner: "battleActionEconomy",
-    }),
-    ...activeFormLifecycleOwners(
-      "battleFeatureResource",
-      "battleTemporaryHitPoint",
-      "battleActiveEffect",
-      "battleCreatureState",
-      "battleMovementResource",
-    ),
-  ];
-}
-
-function appendDismissalRoute(
-  route: readonly ReducerRouteEvent[],
-): readonly ReducerRouteEvent[] {
-  return [
-    ...route,
-    reducerRouteDiscoverBattleActs({
-      subject: "activeFormLifecycle",
-      holes: [],
-      owner: "battleActionEconomy",
-    }),
-    ...activeFormLifecycleOwners(
-      "battleActionEconomy",
-      "battleActiveEffect",
-      "battleCreatureState",
-      "battleMovementResource",
-    ),
-  ];
-}
-
-function appendIncapacitatedReversionRoute(
-  route: readonly ReducerRouteEvent[],
-): readonly ReducerRouteEvent[] {
-  return [
-    ...route,
-    reducerRouteDiscoverBattleActs({
-      subject: "activeFormLifecycle",
-      holes: [],
-      owner: "battleConditionLifecycle",
-    }),
-    ...activeFormLifecycleOwners(
-      "battleConditionLifecycle",
-      "battleActiveEffect",
-      "battleCreatureState",
-      "battleMovementResource",
-    ),
-  ];
-}
-
-function appendDeathReversionRoute(
-  route: readonly ReducerRouteEvent[],
-): readonly ReducerRouteEvent[] {
-  return [
-    ...route,
-    reducerRouteDiscoverBattleActs({
-      subject: "activeFormLifecycle",
-      holes: [],
-      owner: "battleHitPointAndZeroHpLifecycle",
-    }),
-    ...activeFormLifecycleOwners(
-      "battleHitPointAndZeroHpLifecycle",
-      "battleActiveEffect",
-      "battleCreatureState",
-      "battleMovementResource",
-    ),
-  ];
-}
-
-function activeFormLifecycleOwners(
-  ...owners: readonly ReducerRouteEvent["owner"][]
-): readonly ReducerRouteEvent[] {
-  return owners.map((owner) =>
-    reducerRouteResolveBattleSubjectWithoutFill({
-      subject: "activeFormLifecycle",
-      holes: [],
-      owner,
-    }),
-  );
 }
 
 const druidWildShapeFormLifecycleRouteStateCheck = stateCheck(
@@ -492,7 +450,9 @@ defineSelectedIdentityReplayAndQntReplay({
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",
   quintFieldNames: { lastResult: "qScenarioOutcome" },
-  quintVariantFieldTags: { lastResult: DRUID_WILD_SHAPE_FORM_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG },
+  quintVariantFieldTags: {
+    lastResult: DRUID_WILD_SHAPE_FORM_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG,
+  },
   projectionSchema: {
     activeForm: "str",
     bonusActionAvailable: "bool",
@@ -515,13 +475,15 @@ defineSelectedIdentityReplayAndQntReplay({
       unitId: "druid_wild_shape",
       procedures: [
         {
-          actionName: "doAssumeRidingHorse",          discover: () =>
+          actionName: "doAssumeRidingHorse",
+          discover: () =>
             druidWildShapeFormProjection(
               assumeRidingHorse(initialRuntimeState()),
             ),
         },
         {
-          actionName: "doReuseAsCat",          discover: () =>
+          actionName: "doReuseAsCat",
+          discover: () =>
             druidWildShapeFormProjection(
               reuseAsCat(
                 beginNextTurn(assumeRidingHorse(initialRuntimeState())),
@@ -529,7 +491,8 @@ defineSelectedIdentityReplayAndQntReplay({
             ),
         },
         {
-          actionName: "doBeginNextTurn",          project: (projection) =>
+          actionName: "doBeginNextTurn",
+          project: (projection) =>
             projection.bonusActionAvailable
               ? projection
               : {
@@ -540,7 +503,8 @@ defineSelectedIdentityReplayAndQntReplay({
           discover: () => undefined,
         },
         {
-          actionName: "doDismissForm",          discover: () =>
+          actionName: "doDismissForm",
+          discover: () =>
             druidWildShapeFormProjection(
               dismissForm(
                 beginNextTurn(assumeRidingHorse(initialRuntimeState())),
@@ -548,7 +512,8 @@ defineSelectedIdentityReplayAndQntReplay({
             ),
         },
         {
-          actionName: "doIncapacitatedReversion",          discover: () =>
+          actionName: "doIncapacitatedReversion",
+          discover: () =>
             druidWildShapeFormProjection(
               applyIncapacitatedReversion(
                 assumeRidingHorse(initialRuntimeState()),
@@ -556,13 +521,15 @@ defineSelectedIdentityReplayAndQntReplay({
             ),
         },
         {
-          actionName: "doDeathReversion",          discover: () =>
+          actionName: "doDeathReversion",
+          discover: () =>
             druidWildShapeFormProjection(
               applyDeathReversion(assumeRidingHorse(initialRuntimeState())),
             ),
         },
         {
-          actionName: "doStutter",          preservesProjection: true,
+          actionName: "doStutter",
+          preservesProjection: true,
           discover: () => undefined,
         },
       ],
@@ -601,6 +568,8 @@ function initialRuntimeState(): DruidWildShapeFormLifecycleRuntimeState {
           displayName: "Druid",
           initiative: 20,
           classLevels: [{ className: "druid", level: 2 }],
+          currentHp: 1,
+          maxHp: 1,
           resources: [{ unit: unitLibrary.requireUnit("druid_wild_shape") }],
           druidWildShapeAvailableForms: druidWildShapeAvailableForms(),
           armorClass: heavyArmorClassState(),
@@ -623,7 +592,20 @@ function initialRuntimeState(): DruidWildShapeFormLifecycleRuntimeState {
             sourceClassName: "druid",
           },
         }),
-        statBlockCreatureInit({ initiative: 10 }),
+        characterSeed({
+          combatantId: opponentId,
+          displayName: "Control Caster",
+          initiative: 10,
+          side: oppositionSide,
+          spellcasting: {
+            ...wizardSpellcasting({
+              cantrips: [spellRecord("fire_bolt")],
+              preparedSpells: [spellRecord("hypnotic_pattern")],
+              spellSlots: [{ spellLevel: 3, count: 1 }],
+            }),
+            sourceClassName: "wizard",
+          },
+        }),
       ],
     }),
     lastResult: "init",
@@ -645,11 +627,8 @@ function reuseAsCat(
 function dismissForm(
   state: DruidWildShapeFormLifecycleRuntimeState,
 ): DruidWildShapeFormLifecycleRuntimeState {
-  const subject = wildShapeSubject(state.battle, { action: "dismiss" });
-  return {
-    battle: requireResolved(resolveDruidWildShape(state.battle, subject)).state,
-    lastResult: "dismissed",
-  };
+  const replay = dismissFormWithRoute(state);
+  return replay.state;
 }
 
 function beginNextTurn(
@@ -670,50 +649,13 @@ function beginNextTurn(
 function applyIncapacitatedReversion(
   state: DruidWildShapeFormLifecycleRuntimeState,
 ): DruidWildShapeFormLifecycleRuntimeState {
-  const activeDruid = requireCharacter(state.battle, druidId);
-  const incapacitatedDruid: BattleCreatureState = {
-    ...activeDruid,
-    conditions: applyCondition(activeDruid.conditions, "incapacitated"),
-    positiveHpUnconscious: null,
-  };
-  return {
-    battle: {
-      ...state.battle,
-      combatants: new Map(state.battle.combatants).set(
-        druidId,
-        incapacitatedDruid,
-      ),
-    },
-    lastResult: "incapacitated",
-  };
+  return resolveIncapacitatedReversionWithRoute(state).state;
 }
 
 function applyDeathReversion(
   state: DruidWildShapeFormLifecycleRuntimeState,
 ): DruidWildShapeFormLifecycleRuntimeState {
-  const activeDruid = requireCharacter(state.battle, druidId);
-  const deadDruid: CharacterBattleCreatureState = {
-    ...activeDruid,
-    hp: Hp(0),
-    positiveHpUnconscious: null,
-    zeroHpLifecycle:
-      activeDruid.zeroHpLifecycle.policy === "usesDeathSavingThrows"
-        ? {
-            ...activeDruid.zeroHpLifecycle,
-            deathSaves: {
-              ...activeDruid.zeroHpLifecycle.deathSaves,
-              dead: true,
-            },
-          }
-        : activeDruid.zeroHpLifecycle,
-  };
-  return {
-    battle: {
-      ...state.battle,
-      combatants: new Map(state.battle.combatants).set(druidId, deadDruid),
-    },
-    lastResult: "dead",
-  };
+  return resolveDeathReversionWithRoute(state).state;
 }
 
 function resolveWildShapeSubject(
@@ -721,26 +663,39 @@ function resolveWildShapeSubject(
   formStatBlockId: string,
   lastResult: Extract<LastResult, "assumedRidingHorse" | "reusedCat">,
 ): DruidWildShapeFormLifecycleRuntimeState {
-  const subject = wildShapeSubject(state.battle, {
+  const replay = resolveWildShapeSubjectWithRoute(
+    state,
+    formStatBlockId,
+    lastResult,
+  );
+  return { battle: replay.state.battle, lastResult: replay.state.lastResult };
+}
+
+function resolveWildShapeSubjectWithRoute(
+  state: DruidWildShapeFormLifecycleRuntimeState,
+  formStatBlockId: string,
+  lastResult: Extract<LastResult, "assumedRidingHorse" | "reusedCat">,
+): {
+  readonly state: DruidWildShapeFormLifecycleRuntimeState;
+  readonly routeEvents: readonly ReducerRouteEvent[];
+} {
+  const act = wildShapeAct(state.battle, {
     action: "assumeForm",
     formStatBlockId,
   });
-  return {
-    battle: requireResolved(resolveDruidWildShape(state.battle, subject)).state,
-    lastResult,
-  };
-}
-
-function resolveDruidWildShape(
-  state: BattleState,
-  subject: Extract<BattleSubject, { readonly tag: "druidWildShape" }>,
-): BattleResolutionResult {
-  const initial = resolveBattleSubject({ state, subject, fills: [] });
-  if (initial.tag !== "needsHoles") return initial;
+  const initial = requireNeedsHoles(
+    resolveBattleSubject({
+      state: state.battle,
+      subject: act.subject,
+      fills: [],
+    }),
+  );
   const equipmentDispositionHole = initial.holes.find(
     (hole) => hole.kind === "wildShapeEquipmentDisposition",
   );
-  if (equipmentDispositionHole === undefined) return initial;
+  if (equipmentDispositionHole === undefined) {
+    throw new Error("Expected Druid Wild Shape equipment disposition hole.");
+  }
   const allMergedFill: BattleFill = {
     kind: "wildShapeEquipmentDisposition",
     holeId: equipmentDispositionHole.holeId,
@@ -752,7 +707,332 @@ function resolveDruidWildShape(
       })),
     },
   };
-  return resolveBattleSubject({ state, subject, fills: [allMergedFill] });
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: state.battle,
+      subject: act.subject,
+      fills: [allMergedFill],
+    }),
+  );
+  return {
+    state: { battle: resolved.state, lastResult },
+    routeEvents: [...(act.routeEvents ?? []), ...(resolved.routeEvents ?? [])],
+  };
+}
+
+function dismissFormWithRoute(state: DruidWildShapeFormLifecycleRuntimeState): {
+  readonly state: DruidWildShapeFormLifecycleRuntimeState;
+  readonly routeEvents: readonly ReducerRouteEvent[];
+} {
+  const act = wildShapeAct(state.battle, { action: "dismiss" });
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: state.battle,
+      subject: act.subject,
+      fills: [],
+    }),
+  );
+  return {
+    state: { battle: resolved.state, lastResult: "dismissed" },
+    routeEvents: [...(act.routeEvents ?? []), ...(resolved.routeEvents ?? [])],
+  };
+}
+
+function resolveIncapacitatedReversionWithRoute(
+  state: DruidWildShapeFormLifecycleRuntimeState,
+): {
+  readonly state: DruidWildShapeFormLifecycleRuntimeState;
+  readonly routeEvents: readonly ReducerRouteEvent[];
+  readonly terminalRouteEvents: readonly ReducerRouteEvent[];
+} {
+  const opponentTurn = endDruidTurnWithRoute(state);
+  const act = actionSpellAct(opponentTurn.state.battle, "hypnotic_pattern", {
+    tag: "spellSlot",
+    slotLevel: 3,
+    procedure: "hypnoticPattern",
+  });
+  const savingThrow = requireBattleHole(act.initialHoles, "savingThrowOutcome");
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: opponentTurn.state.battle,
+      subject: act.subject,
+      fills: [hypnoticPatternSavingThrowOutcomeFill(savingThrow)],
+    }),
+  );
+  return {
+    state: { battle: resolved.state, lastResult: "incapacitated" },
+    terminalRouteEvents: resolved.routeEvents ?? [],
+    routeEvents: [
+      ...opponentTurn.routeEvents,
+      ...(act.routeEvents ?? []),
+      ...(resolved.routeEvents ?? []),
+    ],
+  };
+}
+
+function resolveDeathReversionWithRoute(
+  state: DruidWildShapeFormLifecycleRuntimeState,
+): {
+  readonly state: DruidWildShapeFormLifecycleRuntimeState;
+  readonly routeEvents: readonly ReducerRouteEvent[];
+  readonly terminalRouteEvents: readonly ReducerRouteEvent[];
+} {
+  const opponentTurn = endDruidTurnWithRoute(state);
+  const act = actionSpellAct(opponentTurn.state.battle, "fire_bolt", {
+    tag: "cantrip",
+    procedure: "spellAttackDamage",
+  });
+  const target = requireBattleHole(act.initialHoles, "targetChoice");
+  const targetChoice = targetFill(target, druidId, [
+    {
+      kind: "spellTarget",
+      casterId: opponentId,
+      targetId: druidId,
+      spellId: "fire_bolt",
+    },
+  ]);
+  const needsAttack = requireNeedsHoles(
+    resolveBattleSubject({
+      state: opponentTurn.state.battle,
+      subject: act.subject,
+      fills: [targetChoice],
+    }),
+  );
+  const attack = requireBattleHole(needsAttack.holes, "attackRoll");
+  const attackRoll = attackRollFill(attack, {
+    total: 20,
+    naturalD20: 15,
+  });
+  const needsDamage = requireNeedsHoles(
+    resolveBattleSubject({
+      state: opponentTurn.state.battle,
+      subject: act.subject,
+      fills: [targetChoice, attackRoll],
+    }),
+  );
+  const damage = requireBattleHole(needsDamage.holes, "rolledDice");
+  const result = resolveBattleSubject({
+    state: opponentTurn.state.battle,
+    subject: act.subject,
+    fills: [targetChoice, attackRoll, damageRollFillWithGroups(damage, [[10]])],
+  });
+  if (result.tag !== "resolved") {
+    throw new Error(
+      result.tag === "invalid"
+        ? result.message
+        : `Expected Fire Bolt death reversion to resolve, got ${result.tag}.`,
+    );
+  }
+  const resolved = result;
+  return {
+    state: { battle: resolved.state, lastResult: "dead" },
+    terminalRouteEvents: resolved.routeEvents ?? [],
+    routeEvents: [
+      ...opponentTurn.routeEvents,
+      ...(act.routeEvents ?? []),
+      ...(needsAttack.routeEvents ?? []),
+      ...(needsDamage.routeEvents ?? []),
+      ...(resolved.routeEvents ?? []),
+    ],
+  };
+}
+
+function endDruidTurnWithRoute(
+  state: DruidWildShapeFormLifecycleRuntimeState,
+): {
+  readonly state: DruidWildShapeFormLifecycleRuntimeState;
+  readonly routeEvents: readonly ReducerRouteEvent[];
+} {
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: state.battle,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: druidId,
+        command: "endTurn",
+      },
+      fills: [],
+    }),
+  );
+  return {
+    state: { battle: resolved.state, lastResult: state.lastResult },
+    routeEvents: resolved.routeEvents ?? [],
+  };
+}
+
+function activeFormLifecycleRouteEvents(
+  events: readonly ReducerRouteEvent[],
+): readonly ReducerRouteEvent[] {
+  return events.filter(
+    (event) => "subject" in event && event.subject === "activeFormLifecycle",
+  );
+}
+
+function routeSubjects(
+  events: readonly ReducerRouteEvent[],
+): readonly string[] {
+  return events.flatMap((event) => ("subject" in event ? [event.subject] : []));
+}
+
+function isActionSpellAvailableAct(
+  act: AvailableBattleAct,
+): act is ActionSpellAvailableAct {
+  return act.subject.tag === "actionSpell";
+}
+
+function actionSpellAct(
+  state: BattleState,
+  spellUnitId: string,
+  invocation:
+    | {
+        readonly tag: "cantrip";
+        readonly procedure: Extract<
+          Extract<BattleSubject, { readonly tag: "actionSpell" }>["invocation"],
+          { readonly tag: "cantrip" }
+        >["procedure"];
+      }
+    | {
+        readonly tag: "spellSlot";
+        readonly slotLevel: number;
+        readonly procedure: Extract<
+          Extract<BattleSubject, { readonly tag: "actionSpell" }>["invocation"],
+          { readonly tag: "spellSlot" }
+        >["procedure"];
+      },
+): ActionSpellAvailableAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is ActionSpellAvailableAct => {
+      if (!isActionSpellAvailableAct(candidate)) {
+        return false;
+      }
+      return (
+        candidate.subject.actorId === opponentId &&
+        candidate.subject.invocation.tag === invocation.tag &&
+        candidate.subject.invocation.spellId === spellUnitId &&
+        candidate.subject.invocation.procedure === invocation.procedure &&
+        (invocation.tag === "cantrip" ||
+          (candidate.subject.invocation.tag === "spellSlot" &&
+            Number(candidate.subject.invocation.slotLevel) ===
+              invocation.slotLevel))
+      );
+    },
+  );
+  if (act?.subject.tag !== "actionSpell") {
+    throw new Error(`Expected ${spellUnitId} action spell act.`);
+  }
+  return act;
+}
+
+function hypnoticPatternSavingThrowOutcomeFill(
+  hole: BattleHole,
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  const baseFill = savingThrowOutcomeFill(hole, [
+    { targetId: druidId, succeeded: false, withoutRoll: true },
+  ]);
+  if (hole.kind !== "savingThrowOutcome") {
+    throw new Error("Expected Hypnotic Pattern saving throw outcome hole.");
+  }
+  return {
+    ...baseFill,
+    value: {
+      area: {
+        kind: "hypnoticPatternArea",
+        originAnchorId: opponentId,
+        affectedTargetIds: [druidId],
+        cubeSideFeet: 30,
+        affectedCreatureWitnesses: [
+          {
+            targetId: druidId,
+            inCube: true,
+            canSeePattern: true,
+          },
+        ],
+      },
+      outcomes: baseFill.value.outcomes,
+    },
+  };
+}
+
+function requireBattleHole(
+  holes: readonly BattleHole[],
+  kind: BattleHole["kind"],
+): BattleHole {
+  const hole = holes.find((candidate) => candidate.kind === kind);
+  if (hole === undefined) {
+    throw new Error(`Expected ${kind} hole.`);
+  }
+  return hole;
+}
+
+function beginNextTurnWithRoute(
+  state: DruidWildShapeFormLifecycleRuntimeState,
+): {
+  readonly state: DruidWildShapeFormLifecycleRuntimeState;
+  readonly routeEvents: readonly ReducerRouteEvent[];
+} {
+  const opponentTurn = requireResolved(
+    resolveBattleSubject({
+      state: state.battle,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: druidId,
+        command: "endTurn",
+      },
+      fills: [],
+    }),
+  );
+  const druidTurn = requireResolved(
+    resolveBattleSubject({
+      state: opponentTurn.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: opponentId,
+        command: "endTurn",
+      },
+      fills: [],
+    }),
+  );
+  return {
+    state: { battle: druidTurn.state, lastResult: "nextTurn" },
+    routeEvents: [
+      ...(opponentTurn.routeEvents ?? []),
+      ...(druidTurn.routeEvents ?? []),
+    ],
+  };
+}
+
+function isDruidWildShapeAvailableAct(
+  act: AvailableBattleAct,
+): act is DruidWildShapeAvailableAct {
+  return act.subject.tag === "druidWildShape";
+}
+
+function wildShapeAct(
+  state: BattleState,
+  input:
+    | {
+        readonly action: "assumeForm";
+        readonly formStatBlockId: string;
+      }
+    | { readonly action: "dismiss" },
+): DruidWildShapeAvailableAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is DruidWildShapeAvailableAct => {
+      if (!isDruidWildShapeAvailableAct(candidate)) {
+        return false;
+      }
+      return (
+        candidate.subject.action === input.action &&
+        (input.action === "dismiss" ||
+          (candidate.subject.action === "assumeForm" &&
+            candidate.subject.formStatBlockId === input.formStatBlockId))
+      );
+    },
+  );
+  if (act?.subject.tag !== "druidWildShape") {
+    throw new Error("Expected Druid Wild Shape act.");
+  }
+  return act;
 }
 
 function druidWildShapeFormProjection(
@@ -821,29 +1101,6 @@ function druidWildShapeAvailableForms(): readonly StatBlockRecord[] {
     statBlockCatalog.requireStatBlock(lizardId),
     statBlockCatalog.requireStatBlock(catId),
   ];
-}
-
-function wildShapeSubject(
-  state: BattleState,
-  input:
-    | {
-        readonly action: "assumeForm";
-        readonly formStatBlockId: string;
-      }
-    | { readonly action: "dismiss" },
-): Extract<BattleSubject, { readonly tag: "druidWildShape" }> {
-  const subject = discoverBattleActs(state).find(
-    (act) =>
-      act.subject.tag === "druidWildShape" &&
-      act.subject.action === input.action &&
-      (input.action === "dismiss" ||
-        (act.subject.action === "assumeForm" &&
-          act.subject.formStatBlockId === input.formStatBlockId)),
-  )?.subject;
-  if (subject?.tag !== "druidWildShape") {
-    throw new Error("Expected Druid Wild Shape act.");
-  }
-  return subject;
 }
 
 function requireCharacter(
@@ -972,8 +1229,7 @@ function literalField<const T extends readonly string[]>(
 
 function wildShapeLastResult(raw: unknown): LastResult {
   const tag = quintVariantTag(raw, "qScenarioOutcome");
-  const value =
-    DRUID_WILD_SHAPE_FORM_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG[tag];
+  const value = DRUID_WILD_SHAPE_FORM_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG[tag];
   if (value !== undefined) {
     return value;
   }

@@ -2348,7 +2348,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt#step:doAssumeRidingHorse",
-      "qntFileSha256": "886b4062e44b2f1e3c978d3658c5e9b037ac2d5f90f4bf66a25a99d3a7e3cadc",
+      "qntFileSha256": "8dc70831d99f8f22a2b9c0df64ea38f370e74dd13131fff84e4ae69952cafbc9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -2367,7 +2367,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt#step:doBeginNextTurn",
-      "qntFileSha256": "886b4062e44b2f1e3c978d3658c5e9b037ac2d5f90f4bf66a25a99d3a7e3cadc",
+      "qntFileSha256": "8dc70831d99f8f22a2b9c0df64ea38f370e74dd13131fff84e4ae69952cafbc9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -2386,7 +2386,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt#step:doDeathReversion",
-      "qntFileSha256": "886b4062e44b2f1e3c978d3658c5e9b037ac2d5f90f4bf66a25a99d3a7e3cadc",
+      "qntFileSha256": "8dc70831d99f8f22a2b9c0df64ea38f370e74dd13131fff84e4ae69952cafbc9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -2405,7 +2405,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt#step:doDismissForm",
-      "qntFileSha256": "886b4062e44b2f1e3c978d3658c5e9b037ac2d5f90f4bf66a25a99d3a7e3cadc",
+      "qntFileSha256": "8dc70831d99f8f22a2b9c0df64ea38f370e74dd13131fff84e4ae69952cafbc9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -2424,7 +2424,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt#step:doIncapacitatedReversion",
-      "qntFileSha256": "886b4062e44b2f1e3c978d3658c5e9b037ac2d5f90f4bf66a25a99d3a7e3cadc",
+      "qntFileSha256": "8dc70831d99f8f22a2b9c0df64ea38f370e74dd13131fff84e4ae69952cafbc9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -2443,7 +2443,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt#step:doReuseAsCat",
-      "qntFileSha256": "886b4062e44b2f1e3c978d3658c5e9b037ac2d5f90f4bf66a25a99d3a7e3cadc",
+      "qntFileSha256": "8dc70831d99f8f22a2b9c0df64ea38f370e74dd13131fff84e4ae69952cafbc9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -2462,7 +2462,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt#step:doStutter",
-      "qntFileSha256": "886b4062e44b2f1e3c978d3658c5e9b037ac2d5f90f4bf66a25a99d3a7e3cadc",
+      "qntFileSha256": "8dc70831d99f8f22a2b9c0df64ea38f370e74dd13131fff84e4ae69952cafbc9",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
