@@ -249,12 +249,12 @@
         "packages/battle-runtime/battle-runtime-condition-riders.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns selected condition-saving-throw and repeat-save condition spell execution through save-gated spell, repeat-save condition effect, condition-rider, target-selection, saving-throw outcome, action-economy, active-effect, Concentration, condition-lifecycle, and Hit Point/zero-HP reducer surfaces. Selected spell identity remains a catalog/support-profile admission input, not production reducer dispatch.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
       "targetTaskId": "CRPI-BLOCK-005",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-005"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt",
@@ -368,12 +368,12 @@
         "packages/battle-runtime/battle-runtime-attack-action-area-save-damage-replacement.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns Breath Weapon as an Attack-action area save damage replacement through Attack-action procedure, feature-resource use, area-shape/target selection, Saving Throw outcome, damage type, damage roll, Hit Point, and Extra Attack continuation reducer surfaces. Species trait identity remains a catalog/admission boundary that supplies typed area, damage, save, and resource facts.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU07-DRAGONBORN-BREATH-WEAPON-SUBSTRATE",
       "targetTaskId": "CRPI-BLOCK-008",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-008"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt",
@@ -383,12 +383,12 @@
         "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns Wild Shape active-form lifecycle through action-economy, feature-resource use, Temporary Hit Points, active-effect, creature-state/stat projection, movement-resource, condition-lifecycle, Hit Point/zero-HP lifecycle, and turn-boundary reducer surfaces. Selected Beast form identity remains a catalog, known-form roster, admission, caller-selection, and SRD fixture boundary.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU05-FEATURE-MOVEMENT-AND-FORM-SUBSTRATES",
       "targetTaskId": "CRPI-BLOCK-009",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-009"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt",
@@ -413,12 +413,12 @@
         "packages/battle-runtime/battle-runtime-feature-selected-identity.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns active feature spell benefits through Unit Feature bonus-action activation, feature-resource use, active-effect state, spell-slot/action-economy, target-selection, Spell Save DC projection, and spell-attack roll-mode reducer surfaces. Selected feature identity remains support/profile admission input, not production reducer dispatch.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU09-INNATE-SPELL-BENEFIT-FEATURE-SUBSTRATE",
       "targetTaskId": "CRPI-BLOCK-010",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-010"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.mbt.qnt",
@@ -428,12 +428,12 @@
         "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns familiar companion lifecycle, shared senses, touch spell delivery, and familiar Reaction attacks through battle companion, action-economy, spell-slot/action-economy, active-effect, stat-block action, target-selection, attack-roll, and Hit Point reducer surfaces. Companion form/spell identity remains catalog/admission/caller-selection input.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR20-BATTLE-COMPANION-OBJECT-BOUNDARY-ROUTES",
       "targetTaskId": "CRPI-BLOCK-011",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-011"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt",
@@ -443,12 +443,12 @@
         "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns selected Find Familiar behavior through companion lifecycle, replacement, dismissal/reappearance, shared senses, touch delivery, action-economy, spell-slot/action-economy, active-effect, target-selection, Reaction, attack-roll, and Hit Point reducer surfaces. Selected spell and familiar form identity remain catalog, selection, admission, and SRD fixture boundaries.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
       "targetTaskId": "CRPI-BLOCK-012",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-012"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt",
@@ -458,12 +458,12 @@
         "packages/battle-runtime/battle-runtime-species-passive-trait-substrates.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns Halfling Nimbleness as passive creature-space movement permission plus creature Size/Speed projection through passive trait support profiles, creature-state, movement-resource, creature-space movement, and roll/damage substrate route surfaces. Selected species identity remains catalog, selection, admission, and SRD fixture input.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU02-SPECIES-PASSIVE-TRAIT-SUBSTRATES",
       "targetTaskId": "CRPI-BLOCK-013",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-013"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt",
@@ -473,12 +473,12 @@
         "packages/battle-runtime/battle-runtime-zero-hit-point-stabilization.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.",
-      "ownerClassification": "owner-todo",
+      "durableOwner": "BattleState owns zero-Hit-Point stabilization through action-economy target-choice discovery and Hit Point/zero-HP lifecycle mutation of Stable, Unconscious, death-save counters, Dead rejection, and non-dead target state. Selected healing or stabilization identity remains catalog/support-profile admission input.",
+      "ownerClassification": "durable-owner",
       "sourceTaskId": "L15-RR07-FU04-ZERO-HP-STABILIZATION-SUBSTRATE",
       "targetTaskId": "CRPI-BLOCK-014",
-      "status": "blocked",
-      "blockerId": "owner-decision-required-014"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt",

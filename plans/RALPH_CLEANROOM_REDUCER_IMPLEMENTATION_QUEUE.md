@@ -661,18 +661,18 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRPI-BLOCK-004` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-READY-003` | `done` | none | target replay evidence and owner implementation |
 | `CRP07-DSR-05` | `done` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-005` | `blocked` | blocked by task body | blocker resolution before implementation |
+| `CRPI-BLOCK-005` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-006` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-007` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRP07-DSR-04` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-008` | `blocked` | blocked by task body | blocker resolution before implementation |
-| `CRPI-BLOCK-009` | `blocked` | blocked by task body | blocker resolution before implementation |
+| `CRPI-BLOCK-008` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-009` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-READY-004` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-010` | `blocked` | blocked by task body | blocker resolution before implementation |
-| `CRPI-BLOCK-011` | `blocked` | blocked by task body | blocker resolution before implementation |
-| `CRPI-BLOCK-012` | `blocked` | blocked by task body | blocker resolution before implementation |
-| `CRPI-BLOCK-013` | `blocked` | blocked by task body | blocker resolution before implementation |
-| `CRPI-BLOCK-014` | `blocked` | blocked by task body | blocker resolution before implementation |
+| `CRPI-BLOCK-010` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-011` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-012` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-013` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-014` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRP07-DSR-03` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-READY-005` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-015` | `blocked` | blocked by task body | blocker resolution before implementation |
@@ -1251,11 +1251,11 @@ Plan Impact:
 
 ### Task 9 - CRPI-BLOCK-005
 
-Status: `blocked`
+Status: `ready-for-research`
 
-Blocker Type: owner-decision
+Blocker Type: none
 
-Blocker Detail: Backlog row `packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt` still records `ownerClassification: owner-todo`; a decider must name the durable owner from QNT route connector, reducer guidance, RAW/domain language, or an explicit source blocker before implementation starts.
+Blocker Resolution: BattleState owns selected condition-saving-throw and repeat-save condition spell execution through save-gated spell, repeat-save condition effect, condition-rider, target-selection, saving-throw outcome, action-economy, active-effect, Concentration, condition-lifecycle, and Hit Point/zero-HP reducer surfaces. Selected spell identity remains a catalog/support-profile admission input, not production reducer dispatch.
 
 Goal:
 
@@ -1274,27 +1274,30 @@ Starting Points:
 - `UBIQUITOUS_LANGUAGE.md`
 - `.references/srd-5.2.1/`
 
-Output After Unblock:
+Output:
 
-- Updated backlog row and queue entry replacing the blocker with a concrete durable owner or source dependency output.
-- Target production/harness changes and accepted replay evidence only after the blocker is resolved.
+- Target production and quarantined harness changes for the unblocked owner surfaces named below.
 
-Acceptance After Unblock:
+Acceptance:
 
 - Driver Path: `packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt`
 - Route Class: `catalog-after-substrate`
 - Connector Path(s): `packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt`, `packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt`, `packages/battle-runtime/battle-runtime-condition-riders.route.mbt.qnt`
-- Current Owner Field: owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.
+- Durable Owner: BattleState owns selected condition-saving-throw and repeat-save condition spell execution through save-gated spell, repeat-save condition effect, condition-rider, target-selection, saving-throw outcome, action-economy, active-effect, Concentration, condition-lifecycle, and Hit Point/zero-HP reducer surfaces. Selected spell identity remains a catalog/support-profile admission input, not production reducer dispatch.
 - Required Accepted Projection: `qRoute`
 - Target replay evidence requirement: after unblock, evidence must be generated by public target entrypoints and record observed projection source, reducer/public API path, source manifest SHA, and source branch inventory SHA.
 
+Target Owner Notes:
+
+- Route connectors `packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt`, `packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt`, and `packages/battle-runtime/battle-runtime-condition-riders.route.mbt.qnt` expose SaveGatedSpellRouteSubject, RepeatSaveConditionEffectRouteSubject, and ConditionRiderRouteSubject evidence through generic spell, Saving Throw, condition lifecycle, active-effect, Concentration, and Hit Point owners.
+- RAW/domain evidence covers Color Spray, Blindness/Deafness, Entangle, Sleep, Hold Person, Hideous Laughter, condition glossary entries, Concentration, Saving Throw, Condition, Spell Effect, and Turn Structure; none require selected spell identity dispatch.
+
 Forbidden Shortcuts:
 
-- Do not implement while the durable owner is `owner-todo` or while a source connector dependency is unresolved.
 - Do not use catalog identity, fixture labels, QNT action names, or historical target reports as a substitute for owner/source evidence.
 - Do not add workaround adapters or duplicate state to bypass the blocker.
 
-Verification After Unblock:
+Verification:
 
 - Run `pnpm cleanroom-branch-coverage:check` after updating the source queue/backlog.
 - Run target replay for `packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt` and the connector or dependency output that resolves this blocker.
@@ -1304,7 +1307,7 @@ Verification After Unblock:
 
 Plan Impact:
 
-`update-required` when the blocker is resolved; update this queue task, the backlog row, and any dependent implementation tasks in the same planning change.
+`applied`: owner-decision blocker resolved from reducer route inventory derivability facts, QNT route connector owner evidence, RAW/domain language, and reducer-route owner vocabulary. This task is now runnable and still must produce its own copied `qRoute` versus public target replay evidence.
 
 ### Task 10 - CRPI-BLOCK-006
 
@@ -1497,11 +1500,11 @@ Plan Impact:
 
 ### Task 13 - CRPI-BLOCK-008
 
-Status: `blocked`
+Status: `ready-for-research`
 
-Blocker Type: owner-decision
+Blocker Type: none
 
-Blocker Detail: Backlog row `packages/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt` still records `ownerClassification: owner-todo`; a decider must name the durable owner from QNT route connector, reducer guidance, RAW/domain language, or an explicit source blocker before implementation starts.
+Blocker Resolution: BattleState owns Breath Weapon as an Attack-action area save damage replacement through Attack-action procedure, feature-resource use, area-shape/target selection, Saving Throw outcome, damage type, damage roll, Hit Point, and Extra Attack continuation reducer surfaces. Species trait identity remains a catalog/admission boundary that supplies typed area, damage, save, and resource facts.
 
 Goal:
 
@@ -1518,27 +1521,30 @@ Starting Points:
 - `UBIQUITOUS_LANGUAGE.md`
 - `.references/srd-5.2.1/`
 
-Output After Unblock:
+Output:
 
-- Updated backlog row and queue entry replacing the blocker with a concrete durable owner or source dependency output.
-- Target production/harness changes and accepted replay evidence only after the blocker is resolved.
+- Target production and quarantined harness changes for the unblocked owner surfaces named below.
 
-Acceptance After Unblock:
+Acceptance:
 
 - Driver Path: `packages/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt`
 - Route Class: `reducer-routed`
 - Connector Path(s): `packages/battle-runtime/battle-runtime-attack-action-area-save-damage-replacement.route.mbt.qnt`
-- Current Owner Field: owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.
+- Durable Owner: BattleState owns Breath Weapon as an Attack-action area save damage replacement through Attack-action procedure, feature-resource use, area-shape/target selection, Saving Throw outcome, damage type, damage roll, Hit Point, and Extra Attack continuation reducer surfaces. Species trait identity remains a catalog/admission boundary that supplies typed area, damage, save, and resource facts.
 - Required Accepted Projection: `qRoute`
 - Target replay evidence requirement: after unblock, evidence must be generated by public target entrypoints and record observed projection source, reducer/public API path, source manifest SHA, and source branch inventory SHA.
 
+Target Owner Notes:
+
+- Route connector `packages/battle-runtime/battle-runtime-attack-action-area-save-damage-replacement.route.mbt.qnt` exposes AttackActionAreaSaveDamageReplacementRouteSubject evidence through feature-resource, area-shape, Saving Throw outcome, damage-type, damage-roll, Hit Point, and Attack-action procedure owners.
+- Extra Attack continuation routes through the generic Attack-action procedure by discovering a WeaponAttackRouteSubject, not by retaining species or trait identity.
+
 Forbidden Shortcuts:
 
-- Do not implement while the durable owner is `owner-todo` or while a source connector dependency is unresolved.
 - Do not use catalog identity, fixture labels, QNT action names, or historical target reports as a substitute for owner/source evidence.
 - Do not add workaround adapters or duplicate state to bypass the blocker.
 
-Verification After Unblock:
+Verification:
 
 - Run `pnpm cleanroom-branch-coverage:check` after updating the source queue/backlog.
 - Run target replay for `packages/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt` and the connector or dependency output that resolves this blocker.
@@ -1548,15 +1554,15 @@ Verification After Unblock:
 
 Plan Impact:
 
-`update-required` when the blocker is resolved; update this queue task, the backlog row, and any dependent implementation tasks in the same planning change.
+`applied`: owner-decision blocker resolved from reducer route inventory derivability facts, QNT route connector owner evidence, RAW/domain language, and reducer-route owner vocabulary. This task is now runnable and still must produce its own copied `qRoute` versus public target replay evidence.
 
 ### Task 14 - CRPI-BLOCK-009
 
-Status: `blocked`
+Status: `ready-for-research`
 
-Blocker Type: owner-decision
+Blocker Type: none
 
-Blocker Detail: Backlog row `packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt` still records `ownerClassification: owner-todo`; a decider must name the durable owner from QNT route connector, reducer guidance, RAW/domain language, or an explicit source blocker before implementation starts.
+Blocker Resolution: BattleState owns Wild Shape active-form lifecycle through action-economy, feature-resource use, Temporary Hit Points, active-effect, creature-state/stat projection, movement-resource, condition-lifecycle, Hit Point/zero-HP lifecycle, and turn-boundary reducer surfaces. Selected Beast form identity remains a catalog, known-form roster, admission, caller-selection, and SRD fixture boundary.
 
 Goal:
 
@@ -1573,27 +1579,30 @@ Starting Points:
 - `UBIQUITOUS_LANGUAGE.md`
 - `.references/srd-5.2.1/`
 
-Output After Unblock:
+Output:
 
-- Updated backlog row and queue entry replacing the blocker with a concrete durable owner or source dependency output.
-- Target production/harness changes and accepted replay evidence only after the blocker is resolved.
+- Target production and quarantined harness changes for the unblocked owner surfaces named below.
 
-Acceptance After Unblock:
+Acceptance:
 
 - Driver Path: `packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt`
 - Route Class: `catalog-after-substrate`
 - Connector Path(s): `packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.route.mbt.qnt`
-- Current Owner Field: owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.
+- Durable Owner: BattleState owns Wild Shape active-form lifecycle through action-economy, feature-resource use, Temporary Hit Points, active-effect, creature-state/stat projection, movement-resource, condition-lifecycle, Hit Point/zero-HP lifecycle, and turn-boundary reducer surfaces. Selected Beast form identity remains a catalog, known-form roster, admission, caller-selection, and SRD fixture boundary.
 - Required Accepted Projection: `qRoute`
 - Target replay evidence requirement: after unblock, evidence must be generated by public target entrypoints and record observed projection source, reducer/public API path, source manifest SHA, and source branch inventory SHA.
 
+Target Owner Notes:
+
+- Route connector `packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.route.mbt.qnt` records ActiveFormLifecycleRouteSubject evidence for form assumption, reuse, turn-boundary action reset, dismissal, Incapacitated reversion, death reversion, and terminal no-op stutter.
+- RAW/domain evidence covers Wild Shape, shape-shifting, Speed, Movement, creature stat projection, Temporary Hit Points, active-effect ownership, and Incapacitated/death lifecycle boundaries.
+
 Forbidden Shortcuts:
 
-- Do not implement while the durable owner is `owner-todo` or while a source connector dependency is unresolved.
 - Do not use catalog identity, fixture labels, QNT action names, or historical target reports as a substitute for owner/source evidence.
 - Do not add workaround adapters or duplicate state to bypass the blocker.
 
-Verification After Unblock:
+Verification:
 
 - Run `pnpm cleanroom-branch-coverage:check` after updating the source queue/backlog.
 - Run target replay for `packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt` and the connector or dependency output that resolves this blocker.
@@ -1603,7 +1612,7 @@ Verification After Unblock:
 
 Plan Impact:
 
-`update-required` when the blocker is resolved; update this queue task, the backlog row, and any dependent implementation tasks in the same planning change.
+`applied`: owner-decision blocker resolved from reducer route inventory derivability facts, QNT route connector owner evidence, RAW/domain language, and reducer-route owner vocabulary. This task is now runnable and still must produce its own copied `qRoute` versus public target replay evidence.
 
 ### Task 15 - CRPI-READY-004
 
@@ -1662,11 +1671,11 @@ Plan Impact:
 
 ### Task 16 - CRPI-BLOCK-010
 
-Status: `blocked`
+Status: `ready-for-research`
 
-Blocker Type: owner-decision
+Blocker Type: none
 
-Blocker Detail: Backlog row `packages/battle-runtime/battle-runtime-feature-selected-identity.mbt.qnt` still records `ownerClassification: owner-todo`; a decider must name the durable owner from QNT route connector, reducer guidance, RAW/domain language, or an explicit source blocker before implementation starts.
+Blocker Resolution: BattleState owns active feature spell benefits through Unit Feature bonus-action activation, feature-resource use, active-effect state, spell-slot/action-economy, target-selection, Spell Save DC projection, and spell-attack roll-mode reducer surfaces. Selected feature identity remains support/profile admission input, not production reducer dispatch.
 
 Goal:
 
@@ -1683,27 +1692,30 @@ Starting Points:
 - `UBIQUITOUS_LANGUAGE.md`
 - `.references/srd-5.2.1/`
 
-Output After Unblock:
+Output:
 
-- Updated backlog row and queue entry replacing the blocker with a concrete durable owner or source dependency output.
-- Target production/harness changes and accepted replay evidence only after the blocker is resolved.
+- Target production and quarantined harness changes for the unblocked owner surfaces named below.
 
-Acceptance After Unblock:
+Acceptance:
 
 - Driver Path: `packages/battle-runtime/battle-runtime-feature-selected-identity.mbt.qnt`
 - Route Class: `reducer-routed`
 - Connector Path(s): `packages/battle-runtime/battle-runtime-feature-selected-identity.route.mbt.qnt`
-- Current Owner Field: owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.
+- Durable Owner: BattleState owns active feature spell benefits through Unit Feature bonus-action activation, feature-resource use, active-effect state, spell-slot/action-economy, target-selection, Spell Save DC projection, and spell-attack roll-mode reducer surfaces. Selected feature identity remains support/profile admission input, not production reducer dispatch.
 - Required Accepted Projection: `qRoute`
 - Target replay evidence requirement: after unblock, evidence must be generated by public target entrypoints and record observed projection source, reducer/public API path, source manifest SHA, and source branch inventory SHA.
 
+Target Owner Notes:
+
+- Route connector `packages/battle-runtime/battle-runtime-feature-selected-identity.route.mbt.qnt` exposes qRoute for UnitFeatureBonusActionRouteSubject, ActiveFeatureSpellSaveDcRouteSubject, and ActiveFeatureSpellAttackRollModeRouteSubject through action-economy, feature-resource, active-effect, spell-slot/action-economy, target-selection, and spell-attack procedure owners.
+- RAW/domain evidence covers Innate Sorcery, Spell Save DC, spell attack rolls, Bonus Action, Spell Invocation, Spell Effect, Attack Roll, Advantage, and active feature lifecycle terms.
+
 Forbidden Shortcuts:
 
-- Do not implement while the durable owner is `owner-todo` or while a source connector dependency is unresolved.
 - Do not use catalog identity, fixture labels, QNT action names, or historical target reports as a substitute for owner/source evidence.
 - Do not add workaround adapters or duplicate state to bypass the blocker.
 
-Verification After Unblock:
+Verification:
 
 - Run `pnpm cleanroom-branch-coverage:check` after updating the source queue/backlog.
 - Run target replay for `packages/battle-runtime/battle-runtime-feature-selected-identity.mbt.qnt` and the connector or dependency output that resolves this blocker.
@@ -1713,15 +1725,15 @@ Verification After Unblock:
 
 Plan Impact:
 
-`update-required` when the blocker is resolved; update this queue task, the backlog row, and any dependent implementation tasks in the same planning change.
+`applied`: owner-decision blocker resolved from reducer route inventory derivability facts, QNT route connector owner evidence, RAW/domain language, and reducer-route owner vocabulary. This task is now runnable and still must produce its own copied `qRoute` versus public target replay evidence.
 
 ### Task 17 - CRPI-BLOCK-011
 
-Status: `blocked`
+Status: `ready-for-research`
 
-Blocker Type: owner-decision
+Blocker Type: none
 
-Blocker Detail: Backlog row `packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.mbt.qnt` still records `ownerClassification: owner-todo`; a decider must name the durable owner from QNT route connector, reducer guidance, RAW/domain language, or an explicit source blocker before implementation starts.
+Blocker Resolution: BattleState owns familiar companion lifecycle, shared senses, touch spell delivery, and familiar Reaction attacks through battle companion, action-economy, spell-slot/action-economy, active-effect, stat-block action, target-selection, attack-roll, and Hit Point reducer surfaces. Companion form/spell identity remains catalog/admission/caller-selection input.
 
 Goal:
 
@@ -1738,27 +1750,30 @@ Starting Points:
 - `UBIQUITOUS_LANGUAGE.md`
 - `.references/srd-5.2.1/`
 
-Output After Unblock:
+Output:
 
-- Updated backlog row and queue entry replacing the blocker with a concrete durable owner or source dependency output.
-- Target production/harness changes and accepted replay evidence only after the blocker is resolved.
+- Target production and quarantined harness changes for the unblocked owner surfaces named below.
 
-Acceptance After Unblock:
+Acceptance:
 
 - Driver Path: `packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.mbt.qnt`
 - Route Class: `reducer-routed`
 - Connector Path(s): `packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt`
-- Current Owner Field: owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.
+- Durable Owner: BattleState owns familiar companion lifecycle, shared senses, touch spell delivery, and familiar Reaction attacks through battle companion, action-economy, spell-slot/action-economy, active-effect, stat-block action, target-selection, attack-roll, and Hit Point reducer surfaces. Companion form/spell identity remains catalog/admission/caller-selection input.
 - Required Accepted Projection: `qRoute`
 - Target replay evidence requirement: after unblock, evidence must be generated by public target entrypoints and record observed projection source, reducer/public API path, source manifest SHA, and source branch inventory SHA.
 
+Target Owner Notes:
+
+- Route connector `packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt` records CompanionLifecycleRouteSubject, CompanionSharedSensesRouteSubject, CompanionTouchDeliveryRouteSubject, and CompanionReactionAttackRouteSubject evidence through battle companion, action-economy, spell-slot/action-economy, active-effect, stat-block action, target-selection, attack-roll, and Hit Point owners.
+- `packages/battle-runtime/src/companion-state.ts` stores BattleCompanions as BattleState-owned companion state rather than an adapter-local companion ledger.
+
 Forbidden Shortcuts:
 
-- Do not implement while the durable owner is `owner-todo` or while a source connector dependency is unresolved.
 - Do not use catalog identity, fixture labels, QNT action names, or historical target reports as a substitute for owner/source evidence.
 - Do not add workaround adapters or duplicate state to bypass the blocker.
 
-Verification After Unblock:
+Verification:
 
 - Run `pnpm cleanroom-branch-coverage:check` after updating the source queue/backlog.
 - Run target replay for `packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.mbt.qnt` and the connector or dependency output that resolves this blocker.
@@ -1768,15 +1783,15 @@ Verification After Unblock:
 
 Plan Impact:
 
-`update-required` when the blocker is resolved; update this queue task, the backlog row, and any dependent implementation tasks in the same planning change.
+`applied`: owner-decision blocker resolved from reducer route inventory derivability facts, QNT route connector owner evidence, RAW/domain language, and reducer-route owner vocabulary. This task is now runnable and still must produce its own copied `qRoute` versus public target replay evidence.
 
 ### Task 18 - CRPI-BLOCK-012
 
-Status: `blocked`
+Status: `ready-for-research`
 
-Blocker Type: owner-decision
+Blocker Type: none
 
-Blocker Detail: Backlog row `packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt` still records `ownerClassification: owner-todo`; a decider must name the durable owner from QNT route connector, reducer guidance, RAW/domain language, or an explicit source blocker before implementation starts.
+Blocker Resolution: BattleState owns selected Find Familiar behavior through companion lifecycle, replacement, dismissal/reappearance, shared senses, touch delivery, action-economy, spell-slot/action-economy, active-effect, target-selection, Reaction, attack-roll, and Hit Point reducer surfaces. Selected spell and familiar form identity remain catalog, selection, admission, and SRD fixture boundaries.
 
 Goal:
 
@@ -1793,27 +1808,30 @@ Starting Points:
 - `UBIQUITOUS_LANGUAGE.md`
 - `.references/srd-5.2.1/`
 
-Output After Unblock:
+Output:
 
-- Updated backlog row and queue entry replacing the blocker with a concrete durable owner or source dependency output.
-- Target production/harness changes and accepted replay evidence only after the blocker is resolved.
+- Target production and quarantined harness changes for the unblocked owner surfaces named below.
 
-Acceptance After Unblock:
+Acceptance:
 
 - Driver Path: `packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt`
 - Route Class: `catalog-after-substrate`
 - Connector Path(s): `packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt`
-- Current Owner Field: owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.
+- Durable Owner: BattleState owns selected Find Familiar behavior through companion lifecycle, replacement, dismissal/reappearance, shared senses, touch delivery, action-economy, spell-slot/action-economy, active-effect, target-selection, Reaction, attack-roll, and Hit Point reducer surfaces. Selected spell and familiar form identity remain catalog, selection, admission, and SRD fixture boundaries.
 - Required Accepted Projection: `qRoute`
 - Target replay evidence requirement: after unblock, evidence must be generated by public target entrypoints and record observed projection source, reducer/public API path, source manifest SHA, and source branch inventory SHA.
 
+Target Owner Notes:
+
+- Route connector `packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt` records companion lifecycle, shared-senses, touch-delivery, and familiar Reaction attack route evidence for selected companion creation, replacement, dismissal/reappearance, and touch-delivery branches.
+- RAW/domain evidence covers Find Familiar creation, one-familiar-at-a-time replacement, dismissal/reappearance, shared senses, touch spell delivery, Reaction use, companion control, and Hit Points.
+
 Forbidden Shortcuts:
 
-- Do not implement while the durable owner is `owner-todo` or while a source connector dependency is unresolved.
 - Do not use catalog identity, fixture labels, QNT action names, or historical target reports as a substitute for owner/source evidence.
 - Do not add workaround adapters or duplicate state to bypass the blocker.
 
-Verification After Unblock:
+Verification:
 
 - Run `pnpm cleanroom-branch-coverage:check` after updating the source queue/backlog.
 - Run target replay for `packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt` and the connector or dependency output that resolves this blocker.
@@ -1823,15 +1841,15 @@ Verification After Unblock:
 
 Plan Impact:
 
-`update-required` when the blocker is resolved; update this queue task, the backlog row, and any dependent implementation tasks in the same planning change.
+`applied`: owner-decision blocker resolved from reducer route inventory derivability facts, QNT route connector owner evidence, RAW/domain language, and reducer-route owner vocabulary. This task is now runnable and still must produce its own copied `qRoute` versus public target replay evidence.
 
 ### Task 19 - CRPI-BLOCK-013
 
-Status: `blocked`
+Status: `ready-for-research`
 
-Blocker Type: owner-decision
+Blocker Type: none
 
-Blocker Detail: Backlog row `packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt` still records `ownerClassification: owner-todo`; a decider must name the durable owner from QNT route connector, reducer guidance, RAW/domain language, or an explicit source blocker before implementation starts.
+Blocker Resolution: BattleState owns Halfling Nimbleness as passive creature-space movement permission plus creature Size/Speed projection through passive trait support profiles, creature-state, movement-resource, creature-space movement, and roll/damage substrate route surfaces. Selected species identity remains catalog, selection, admission, and SRD fixture input.
 
 Goal:
 
@@ -1848,27 +1866,30 @@ Starting Points:
 - `UBIQUITOUS_LANGUAGE.md`
 - `.references/srd-5.2.1/`
 
-Output After Unblock:
+Output:
 
-- Updated backlog row and queue entry replacing the blocker with a concrete durable owner or source dependency output.
-- Target production/harness changes and accepted replay evidence only after the blocker is resolved.
+- Target production and quarantined harness changes for the unblocked owner surfaces named below.
 
-Acceptance After Unblock:
+Acceptance:
 
 - Driver Path: `packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt`
 - Route Class: `catalog-after-substrate`
 - Connector Path(s): `packages/battle-runtime/battle-runtime-species-passive-trait-substrates.route.mbt.qnt`
-- Current Owner Field: owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.
+- Durable Owner: BattleState owns Halfling Nimbleness as passive creature-space movement permission plus creature Size/Speed projection through passive trait support profiles, creature-state, movement-resource, creature-space movement, and roll/damage substrate route surfaces. Selected species identity remains catalog, selection, admission, and SRD fixture input.
 - Required Accepted Projection: `qRoute`
 - Target replay evidence requirement: after unblock, evidence must be generated by public target entrypoints and record observed projection source, reducer/public API path, source manifest SHA, and source branch inventory SHA.
 
+Target Owner Notes:
+
+- Route connector `packages/battle-runtime/battle-runtime-species-passive-trait-substrates.route.mbt.qnt` records CreatureSpaceMovementPermissionRouteSubject and CreatureStatProjectionRouteSubject evidence alongside shared passive damage and roll-mode substrate subjects.
+- RAW/domain evidence covers Halfling Nimbleness, movement through a larger creature space, Size, Speed, Movement, Creature, and Character Sheet projection boundaries.
+
 Forbidden Shortcuts:
 
-- Do not implement while the durable owner is `owner-todo` or while a source connector dependency is unresolved.
 - Do not use catalog identity, fixture labels, QNT action names, or historical target reports as a substitute for owner/source evidence.
 - Do not add workaround adapters or duplicate state to bypass the blocker.
 
-Verification After Unblock:
+Verification:
 
 - Run `pnpm cleanroom-branch-coverage:check` after updating the source queue/backlog.
 - Run target replay for `packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt` and the connector or dependency output that resolves this blocker.
@@ -1878,15 +1899,15 @@ Verification After Unblock:
 
 Plan Impact:
 
-`update-required` when the blocker is resolved; update this queue task, the backlog row, and any dependent implementation tasks in the same planning change.
+`applied`: owner-decision blocker resolved from reducer route inventory derivability facts, QNT route connector owner evidence, RAW/domain language, and reducer-route owner vocabulary. This task is now runnable and still must produce its own copied `qRoute` versus public target replay evidence.
 
 ### Task 20 - CRPI-BLOCK-014
 
-Status: `blocked`
+Status: `ready-for-research`
 
-Blocker Type: owner-decision
+Blocker Type: none
 
-Blocker Detail: Backlog row `packages/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt` still records `ownerClassification: owner-todo`; a decider must name the durable owner from QNT route connector, reducer guidance, RAW/domain language, or an explicit source blocker before implementation starts.
+Blocker Resolution: BattleState owns zero-Hit-Point stabilization through action-economy target-choice discovery and Hit Point/zero-HP lifecycle mutation of Stable, Unconscious, death-save counters, Dead rejection, and non-dead target state. Selected healing or stabilization identity remains catalog/support-profile admission input.
 
 Goal:
 
@@ -1903,27 +1924,30 @@ Starting Points:
 - `UBIQUITOUS_LANGUAGE.md`
 - `.references/srd-5.2.1/`
 
-Output After Unblock:
+Output:
 
-- Updated backlog row and queue entry replacing the blocker with a concrete durable owner or source dependency output.
-- Target production/harness changes and accepted replay evidence only after the blocker is resolved.
+- Target production and quarantined harness changes for the unblocked owner surfaces named below.
 
-Acceptance After Unblock:
+Acceptance:
 
 - Driver Path: `packages/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt`
 - Route Class: `catalog-after-substrate`
 - Connector Path(s): `packages/battle-runtime/battle-runtime-zero-hit-point-stabilization.route.mbt.qnt`
-- Current Owner Field: owner-todo: isolate durable owner from QNT route connector, reducer guidance, or ubiquitous language before assigning target implementation.
+- Durable Owner: BattleState owns zero-Hit-Point stabilization through action-economy target-choice discovery and Hit Point/zero-HP lifecycle mutation of Stable, Unconscious, death-save counters, Dead rejection, and non-dead target state. Selected healing or stabilization identity remains catalog/support-profile admission input.
 - Required Accepted Projection: `qRoute`
 - Target replay evidence requirement: after unblock, evidence must be generated by public target entrypoints and record observed projection source, reducer/public API path, source manifest SHA, and source branch inventory SHA.
 
+Target Owner Notes:
+
+- Route connector `packages/battle-runtime/battle-runtime-zero-hit-point-stabilization.route.mbt.qnt` records ZeroHitPointStabilizationRouteSubject evidence through BattleActionEconomyOwner and BattleHitPointAndZeroHpLifecycleOwner.
+- RAW/domain evidence covers Spare the Dying, Death Saving Throws, Stabilizing a Character, Stable state, Unconscious, Death Saving Throw counters, and the distinction between Temporary Hit Points, true healing, and stabilization.
+
 Forbidden Shortcuts:
 
-- Do not implement while the durable owner is `owner-todo` or while a source connector dependency is unresolved.
 - Do not use catalog identity, fixture labels, QNT action names, or historical target reports as a substitute for owner/source evidence.
 - Do not add workaround adapters or duplicate state to bypass the blocker.
 
-Verification After Unblock:
+Verification:
 
 - Run `pnpm cleanroom-branch-coverage:check` after updating the source queue/backlog.
 - Run target replay for `packages/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt` and the connector or dependency output that resolves this blocker.
@@ -1933,7 +1957,7 @@ Verification After Unblock:
 
 Plan Impact:
 
-`update-required` when the blocker is resolved; update this queue task, the backlog row, and any dependent implementation tasks in the same planning change.
+`applied`: owner-decision blocker resolved from reducer route inventory derivability facts, QNT route connector owner evidence, RAW/domain language, and reducer-route owner vocabulary. This task is now runnable and still must produce its own copied `qRoute` versus public target replay evidence.
 
 ### Task 21 - CRP07-DSR-03
 
