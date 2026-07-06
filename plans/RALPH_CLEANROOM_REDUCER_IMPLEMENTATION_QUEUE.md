@@ -79,7 +79,7 @@
     {
       "number": 13,
       "id": "CRPI-BLOCK-008",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Blocked route replay: battle-runtime-dragonborn-breath-weapon"
     },
     {
@@ -1500,7 +1500,7 @@ Plan Impact:
 
 ### Task 13 - CRPI-BLOCK-008
 
-Status: `ready-for-research`
+Status: `done`
 
 Blocker Type: none
 
