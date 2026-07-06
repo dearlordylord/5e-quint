@@ -1,5 +1,68 @@
 # Validation Report
 
+## CRPI-BLOCK-005
+
+Status: `pass`
+
+- Task: 9
+- Driver path: `packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt`
+- Route connector paths: `packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt`, `packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt`, `packages/battle-runtime/battle-runtime-condition-riders.route.mbt.qnt`
+- Route class: `catalog-after-substrate`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-005.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `f07a33f783419b9f8f88eed9d679faadace779ec658d2a990ae56bc963d55387`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Behavior implemented:
+
+Task 9 accepts condition-saving-throw selected-identity route replay through public battle reducer route events. Color Spray and Entangle reuse the existing save-gated spell route subject for action-economy discovery and Saving Throw outcome fills. Hideous Laughter and Sleep repeat-save branches now expose repeat-save condition-effect discovery and cleanup through public End Turn / resolveBattleSubject route events derived from existing condition, active-effect, and Concentration state deltas. Repeat-save route ownership is localized to the matching owner hole ids, so mixed end-turn frontiers and batched fills compose with death save and other turn-boundary route owners instead of preempting them. Selected spell identity remains a catalog/support-profile admission input, not production reducer dispatch.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt#step:doResolveColorSprayFailedSavingThrow` | `tasks/target-replay-evidence/CRPI-BLOCK-005.json#driver:packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt#step:doResolveColorSprayFailedSavingThrow#trace:MBT_TRACES=1 MBT_STEPS=1 action=doResolveColorSprayFailedSavingThrow qRoute=save-gated-condition-area-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt#step:doResolveEntangleFailedSavingThrow` | `tasks/target-replay-evidence/CRPI-BLOCK-005.json#driver:packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt#step:doResolveEntangleFailedSavingThrow#trace:MBT_TRACES=1 MBT_STEPS=1 action=doResolveEntangleFailedSavingThrow qRoute=save-gated-condition-area-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt#step:doResolveHideousLaughterRepeatSavingThrowSuccess` | `tasks/target-replay-evidence/CRPI-BLOCK-005.json#driver:packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt#step:doResolveHideousLaughterRepeatSavingThrowSuccess#trace:MBT_TRACES=1 MBT_STEPS=1 action=doResolveHideousLaughterRepeatSavingThrowSuccess qRoute=repeat-save-condition-effect-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt#step:doResolveSleepRepeatSavingThrowFailure` | `tasks/target-replay-evidence/CRPI-BLOCK-005.json#driver:packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt#step:doResolveSleepRepeatSavingThrowFailure#trace:MBT_TRACES=1 MBT_STEPS=1 action=doResolveSleepRepeatSavingThrowFailure qRoute=sleep-repeat-save-public-route` | `_none_` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-005.json`
+- Reproduction trace family: `MBT_TRACES=1 MBT_STEPS=1 action=<branchAction> qRoute=<public-route>`
+- Copied connector projection sources are the three route connectors listed above; observed projection source is public battle reducer route events collected in `packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts`.
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-005/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Spells/Descriptions-A-D.md#Color Spray` defines failed-save Blinded until the caster's next turn ends.
+- SRD 5.2.1 `Spells/Descriptions-E-L.md#Entangle` defines failed-save Restrained, Concentration, and escape/cleanup language.
+- SRD 5.2.1 `Spells/Descriptions-E-L.md#Hideous Laughter` defines failed-save Prone and Incapacitated plus end-turn repeat-save success cleanup.
+- SRD 5.2.1 `Spells/Descriptions-S-Z.md#Sleep` defines failed-save Incapacitated, pending repeat save, failed repeat-save Unconscious, and spell-end cleanup.
+- SRD 5.2.1 `Spells/Gaining-and-Casting.md#Saving Throws`, `Rules-Glossary.md#Concentration`, and condition glossary entries define Saving Throw, Concentration, and condition facts.
+- `UBIQUITOUS_LANGUAGE.md` defines Condition, Concentration, Saving Throw, Spell Effect, and Turn Structure.
+
+Verification results:
+
+- Task-base check passed: base ref `ralph/cleanroom-battle-unblocked-batch-20260706T130150Z/integration` and `HEAD` both resolved to `e88835363 Sync Ralph task index for unblocked tasks`; Base SHA `e88835363431fab57ec4db04f40d38d81319e83c` is an ancestor of `HEAD`.
+- Focused public route assertion passed: `pnpm --filter @dnd/battle-runtime exec vitest run src/condition-saving-throw-selected-identity.mbt.test.ts -t "observes selected condition-saving-throw qRoute"`, including mixed Sleep repeat-save plus death-save end-turn discovery and batched fill route composition.
+- TypeScript passed: `pnpm --filter @dnd/battle-runtime exec tsc --noEmit --pretty false`.
+- Focused MBT passed: `START=$(date +%s); (while true; do sleep 60; echo "PROGRESS: $(( $(date +%s) - START ))s"; done) & REPORTER=$!; pnpm --filter @dnd/battle-runtime exec vitest run src/condition-saving-throw-selected-identity.mbt.test.ts 2>&1 & MBT_PID=$!; wait "$MBT_PID"; STATUS=$?; kill "$REPORTER" 2>/dev/null || true; wait "$REPORTER" 2>/dev/null || true; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$STATUS"` passed 2 tests; `TOTAL: 6s`.
+- Task-scoped target replay evidence validation passed: direct `scripts/cleanroom-branch-coverage-check.cjs#validateTargetReplayEvidence` call with `requireAllObligations: false` covered the 4 Task 9 condition-saving-throw obligations in `tasks/target-replay-evidence/CRPI-BLOCK-005.json`.
+- Diagnostic target-only `pnpm cleanroom-branch-coverage:check --target-replay-evidence tasks/target-replay-evidence/CRPI-BLOCK-005.json` failed on unrelated broad missing-evidence baseline across the full corpus; the direct task-scoped validator above found no Task 9 evidence issues.
+- `git diff --check` passed.
+- `pnpm quality` passed all gates; app lint emitted 61 warnings and exited 0.
+- Reviewer-loop convergence passed: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks found no remaining reasonable Task 9 findings after confirming qRoute observation through public battle runtime entrypoints, owner-local repeat-save hole/fill attribution in mixed end-turn frontiers, and no duplicate durable state or authored-identity runtime dispatch.
+
 ## CRPI-BLOCK-007
 
 Status: `pass`

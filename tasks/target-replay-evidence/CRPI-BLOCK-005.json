@@ -1,0 +1,230 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts condition-saving-throw selected identity copied qRoute versus public reducer replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "f07a33f783419b9f8f88eed9d679faadace779ec658d2a990ae56bc963d55387",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
+      "qntFileSha256": "eaffed9f09ee7c80f7e15bc5caffdca80cc9d2062a5a8fa82493bd97cc43fad7",
+      "routeConnectorSha256": "53158acbee365d467cab341ed75609aab7fc2d3092f8d5904a717298e21b25e3",
+      "branchFamily": "step",
+      "branchAction": "doResolveColorSprayFailedSavingThrow",
+      "observedActionTaken": "doResolveColorSprayFailedSavingThrow",
+      "harnessTestPath": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=1 action=doResolveColorSprayFailedSavingThrow qRoute=save-gated-condition-area-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "154f20cc2aabff3e169cade96439919ce8649ad9c505e5487076f42a619ff740",
+        "observedProjectionSha256": "154f20cc2aabff3e169cade96439919ce8649ad9c505e5487076f42a619ff740",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "end_turn",
+            "packages/battle-runtime/src/index.ts#endTurn"
+          ],
+          "routeEventSource": "Public reducer route events from battleReducerStartRouteEvent, AvailableBattleAct.routeEvents, and BattleResolutionResult.routeEvents during Color Spray failed-save Blinded condition resolution.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleSubject.actionSpell.invocation.procedure=saveGatedCondition",
+          "BattleReducerRouteEvent.subject=saveGatedSpell",
+          "BattleReducerRouteEvent.owner=battleSpellSlotAndActionEconomy",
+          "BattleReducerRouteEvent.owner=battleHoleFrontier",
+          "BattleCreatureState.conditions includes blinded",
+          "CharacterBattleSpellcastingState.spellSlots"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
+      "qntFileSha256": "eaffed9f09ee7c80f7e15bc5caffdca80cc9d2062a5a8fa82493bd97cc43fad7",
+      "routeConnectorSha256": "53158acbee365d467cab341ed75609aab7fc2d3092f8d5904a717298e21b25e3",
+      "branchFamily": "step",
+      "branchAction": "doResolveEntangleFailedSavingThrow",
+      "observedActionTaken": "doResolveEntangleFailedSavingThrow",
+      "harnessTestPath": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=1 action=doResolveEntangleFailedSavingThrow qRoute=save-gated-condition-area-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "154f20cc2aabff3e169cade96439919ce8649ad9c505e5487076f42a619ff740",
+        "observedProjectionSha256": "154f20cc2aabff3e169cade96439919ce8649ad9c505e5487076f42a619ff740",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "end_turn",
+            "packages/battle-runtime/src/index.ts#endTurn"
+          ],
+          "routeEventSource": "Public reducer route events from battleReducerStartRouteEvent, AvailableBattleAct.routeEvents, and BattleResolutionResult.routeEvents during Entangle failed-save Restrained condition and Concentration resolution.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleSubject.actionSpell.invocation.procedure=saveGatedCondition",
+          "BattleReducerRouteEvent.subject=saveGatedSpell",
+          "BattleReducerRouteEvent.owner=battleSpellSlotAndActionEconomy",
+          "BattleReducerRouteEvent.owner=battleHoleFrontier",
+          "BattleCreatureState.conditions includes restrained",
+          "BattleCreatureState.movement.speedFeet",
+          "BattleCreatureState.concentration"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-condition-riders.route.mbt.qnt",
+      "qntFileSha256": "eaffed9f09ee7c80f7e15bc5caffdca80cc9d2062a5a8fa82493bd97cc43fad7",
+      "routeConnectorSha256": "805a7841559c6d0cbd5c1592c19da43f593493e4c68d70f51609e1a4d3167cbb",
+      "branchFamily": "step",
+      "branchAction": "doResolveHideousLaughterRepeatSavingThrowSuccess",
+      "observedActionTaken": "doResolveHideousLaughterRepeatSavingThrowSuccess",
+      "harnessTestPath": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=1 action=doResolveHideousLaughterRepeatSavingThrowSuccess qRoute=repeat-save-condition-effect-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "77d6037e7165709bc1ae0906e8fb7e01df29648f42a6d012f2f3eba38ccffc8e",
+        "observedProjectionSha256": "77d6037e7165709bc1ae0906e8fb7e01df29648f42a6d012f2f3eba38ccffc8e",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-condition-riders.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "end_turn",
+            "packages/battle-runtime/src/index.ts#endTurn"
+          ],
+          "routeEventSource": "Public reducer route events from battleReducerStartRouteEvent and BattleResolutionResult.routeEvents during Hideous Laughter end-of-target-turn repeat-save success cleanup.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=repeatSaveConditionEffect",
+          "BattleReducerRouteEvent.owner=battleTurnBoundary",
+          "BattleReducerRouteEvent.owner=battleConditionLifecycle",
+          "BattleReducerRouteEvent.owner=battleActiveEffect",
+          "BattleReducerRouteEvent.owner=battleConcentration",
+          "BattleCreatureState.conditions excludes incapacitated",
+          "BattleCreatureState.conditions excludes prone",
+          "BattleCreatureState.activeEffects",
+          "BattleCreatureState.concentration"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt",
+      "qntFileSha256": "eaffed9f09ee7c80f7e15bc5caffdca80cc9d2062a5a8fa82493bd97cc43fad7",
+      "routeConnectorSha256": "c124d6c23ba30449dcceb346d88f57a321ccf9c953db6af627285b60861d95d2",
+      "branchFamily": "step",
+      "branchAction": "doResolveSleepRepeatSavingThrowFailure",
+      "observedActionTaken": "doResolveSleepRepeatSavingThrowFailure",
+      "harnessTestPath": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=1 action=doResolveSleepRepeatSavingThrowFailure qRoute=sleep-repeat-save-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "cd4dfa1102d9c9930bba262037008fc1d49f1fd0e28e637af1f86cf28f297a14",
+        "observedProjectionSha256": "cd4dfa1102d9c9930bba262037008fc1d49f1fd0e28e637af1f86cf28f297a14",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "connectorPath": "packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt",
+          "projection": "qRoute"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "end_turn",
+            "packages/battle-runtime/src/index.ts#endTurn"
+          ],
+          "routeEventSource": "Public reducer route events from battleReducerStartRouteEvent, AvailableBattleAct.routeEvents, BattleResolutionResult.routeEvents, and End Turn repeat-save resolution during Sleep failed repeat-save escalation to Unconscious.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=repeatSaveConditionEffect",
+          "BattleReducerRouteEvent.owner=battleSpellSlotAndActionEconomy",
+          "BattleReducerRouteEvent.owner=battleTurnBoundary",
+          "BattleReducerRouteEvent.owner=battleConditionLifecycle",
+          "BattleReducerRouteEvent.owner=battleActiveEffect",
+          "BattleReducerRouteEvent.owner=battleConcentration",
+          "BattleCreatureState.conditions includes unconscious",
+          "BattleCreatureState.conditions includes prone",
+          "BattleCreatureState.activeEffects.kind=sleepUnconscious"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ]
+}

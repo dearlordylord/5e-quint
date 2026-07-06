@@ -70,6 +70,7 @@ import {
   DieRollResult,
   MovementFeet,
   movementFeet,
+  type Ability,
   type Round as RoundType,
 } from "@dnd/shared/types";
 
@@ -1093,6 +1094,65 @@ function sleepRepeatSavingThrowOutcomeFor(
   hole: BattleSleepRepeatSavingThrowOutcomeHole,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
   return fills.find((fill) => fill.holeId === hole.holeId);
+}
+
+function endTurnSavingThrowFlatBonuses(
+  state: BattleState,
+  actorId: CombatantId,
+  ability: Ability,
+): readonly BattleSavingThrowFlatBonusProjection[] {
+  const actor = state.combatants.get(actorId);
+  return actor === undefined
+    ? []
+    : savingThrowFlatBonusProjections(state, ability).filter(
+        (projection) => projection.targetId === actorId,
+      );
+}
+
+export function sleepRepeatSaveSavingThrowHoleIds(
+  state: BattleState,
+  actorId: CombatantId,
+): ReadonlySet<BattleHoleId> {
+  const actor = state.combatants.get(actorId);
+  return new Set([
+    ...sleepPendingRepeatSaveEffects(
+      actor,
+      actorId,
+      state.initiative.round,
+    ).map((effect) =>
+      sleepRepeatSavingThrowOutcomeHole(
+        actorId,
+        effect,
+        endTurnSavingThrowFlatBonuses(state, actorId, effect.save.ability),
+      ),
+    ),
+  ].map((hole) => hole.holeId));
+}
+
+export function conditionSpellEndTurnRepeatSaveHoleIds(
+  state: BattleState,
+  actorId: CombatantId,
+): ReadonlySet<BattleHoleId> {
+  const actor = state.combatants.get(actorId);
+  return new Set([
+    ...hideousLaughterEffects(actor).map((effect) =>
+      hideousLaughterRepeatSavingThrowOutcomeHole(
+        actorId,
+        effect,
+        "endTurn",
+        undefined,
+        endTurnSavingThrowFlatBonuses(state, actorId, effect.save.ability),
+      ),
+    ),
+    ...spellConditionEndTurnSaveEffects(actor).map((effect) =>
+      spellConditionEndTurnSavingThrowOutcomeHole(
+        actorId,
+        effect,
+        state,
+        endTurnSavingThrowFlatBonuses(state, actorId, effect.save.ability),
+      ),
+    ),
+  ].map((hole) => hole.holeId));
 }
 
 function spellConditionEndTurnSaveEffects(

@@ -8,9 +8,11 @@
 // UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle sleep doResolveSleepRepeatSavingThrowFailure
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE
 import { Either } from "effect";
+import { expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
+  DieRollResult,
   Hp,
   abilityModifier,
   attackBonus,
@@ -29,6 +31,7 @@ import hypnoticPatternInput from "../../surface/content/hypnotic_pattern.json";
 import {
   battleCombatantSide,
   battleId,
+  battleReducerStartRouteEvent,
   characterId,
   combatantId,
   discoverBattleActs,
@@ -41,6 +44,7 @@ import {
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
+  type BattleReducerRouteEvent,
   type BattleResolutionResult,
   type BattleState,
   type BattleSubject,
@@ -108,6 +112,48 @@ if (unitCatalogResult.tag !== "ok") {
 }
 const unitLibrary = unitCatalogResult.catalog;
 const hypnoticPatternSpell = decodeHypnoticPatternSpellRecord();
+
+it("observes selected condition-saving-throw qRoute through public reducer events", () => {
+  expect(resolveBlindnessDeafnessFailedSavingThrowRoute("blinded")).toEqual(
+    saveGatedConditionTargetListChoiceRoute(),
+  );
+  expect(resolveBlindnessDeafnessFailedSavingThrowRoute("deafened")).toEqual(
+    saveGatedConditionTargetListChoiceRoute(),
+  );
+  expect(
+    resolveAreaSavingThrowSpellRoute(
+      conditionSpellBattle(srdSpellRecord("color_spray"), "wizard"),
+      "color_spray",
+    ),
+  ).toEqual(saveGatedConditionAreaRoute());
+  expect(
+    resolveAreaSavingThrowSpellRoute(
+      conditionSpellBattle(srdSpellRecord("entangle"), "druid"),
+      "entangle",
+    ),
+  ).toEqual(saveGatedConditionAreaRoute());
+  expect(resolveHoldPersonFailedSavingThrowRoute()).toEqual(
+    saveGatedConditionTargetListRoute(),
+  );
+  expect(resolveHoldPersonRepeatSavingThrowSuccessRoute()).toEqual(
+    repeatSaveSuccessCleanupRoute({
+      initialRoute: saveGatedConditionTargetListRoute(),
+    }),
+  );
+  expect(resolveHideousLaughterRepeatSavingThrowSuccessRoute()).toEqual(
+    repeatSaveSuccessCleanupRoute({
+      initialRoute: [battleReducerStartRouteEvent()],
+    }),
+  );
+  expect(resolveSleepRepeatSavingThrowFailureRoute()).toEqual(
+    repeatSaveFailureUnconsciousRoute({
+      initialRoute: sleepInitialSaveFailureRoute(),
+    }),
+  );
+  expect(resolveSleepRepeatSaveAndDeathSaveMixedFrontierRoute()).toEqual(
+    sleepRepeatSaveAndDeathSaveMixedFrontierRoute(),
+  );
+});
 
 defineSelectedIdentityReplayAndQntReplay({
   describeLabel: "Condition Saving Throw selected identity replay",
@@ -455,6 +501,533 @@ function resolveSleepRepeatSavingThrowFailure(): BattleResolutionResult {
   });
 }
 
+function resolveAreaSavingThrowSpellRoute(
+  state: BattleState,
+  spellId: Extract<
+    ConditionSavingThrowSpellUnitId,
+    "color_spray" | "entangle" | "hypnotic_pattern"
+  >,
+  slotLevel = 1,
+): readonly BattleReducerRouteEvent[] {
+  const act = spellAct({ state, spellId, slotLevel });
+  const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+  const resolved = requireResolvedResult(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        savingThrowOutcomeFill(savingThrow, [{ targetId, succeeded: false }]),
+      ],
+    }),
+  );
+  return [
+    battleReducerStartRouteEvent(),
+    ...routeEventsOf(act),
+    ...routeEventsOf(resolved),
+  ];
+}
+
+function resolveBlindnessDeafnessFailedSavingThrowRoute(
+  selectedCondition: "blinded" | "deafened",
+): readonly BattleReducerRouteEvent[] {
+  const state = conditionSpellBattle(
+    srdSpellRecord("blindness_deafness"),
+    "wizard",
+  );
+  const act = spellAct({
+    state,
+    spellId: "blindness_deafness",
+    slotLevel: 2,
+  });
+  const target = requireHole(act.initialHoles, "spellTargetList");
+  const conditionChoice = requireHole(act.initialHoles, "conditionChoice");
+  const targetFill = spellTargetListFill(target, "blindness_deafness", [
+    targetId,
+  ]);
+  const conditionChoiceFill = spellConditionChoiceFill(
+    conditionChoice,
+    selectedCondition,
+  );
+  const awaitingConditionChoice = requireNeedsHolesResult(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    }),
+  );
+  const awaitingSave = requireNeedsHolesResult(
+    resolveBattleSubject({
+      state: awaitingConditionChoice.state,
+      subject: act.subject,
+      fills: [targetFill, conditionChoiceFill],
+    }),
+  );
+  const initialSave = requireHole(awaitingSave.holes, "savingThrowOutcome");
+  const resolved = requireResolvedResult(
+    resolveBattleSubject({
+      state: awaitingSave.state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        conditionChoiceFill,
+        savingThrowOutcomeFill(initialSave, [{ targetId, succeeded: false }]),
+      ],
+    }),
+  );
+  return [
+    battleReducerStartRouteEvent(),
+    ...routeEventsOf(act),
+    ...routeEventsOf(awaitingConditionChoice),
+    ...optionalRouteEventsOf(awaitingSave),
+    ...routeEventsOf(resolved),
+  ];
+}
+
+function resolveHoldPersonFailedSavingThrowRoute(): readonly BattleReducerRouteEvent[] {
+  const state = conditionSpellBattle(srdSpellRecord("hold_person"), "wizard");
+  const act = spellAct({ state, spellId: "hold_person", slotLevel: 2 });
+  const target = requireHole(act.initialHoles, "spellTargetList");
+  const targetFill = spellTargetListFill(target, "hold_person", [targetId]);
+  const awaitingSave = requireNeedsHolesResult(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    }),
+  );
+  const initialSave = requireHole(awaitingSave.holes, "savingThrowOutcome");
+  const resolved = requireResolvedResult(
+    resolveBattleSubject({
+      state: awaitingSave.state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        savingThrowOutcomeFill(initialSave, [{ targetId, succeeded: false }]),
+      ],
+    }),
+  );
+  return [
+    battleReducerStartRouteEvent(),
+    ...routeEventsOf(act),
+    ...routeEventsOf(awaitingSave),
+    ...routeEventsOf(resolved),
+  ];
+}
+
+function resolveHoldPersonRepeatSavingThrowSuccessRoute(): readonly BattleReducerRouteEvent[] {
+  const cast = requireResolvedResult(resolveHoldPersonFailedSavingThrow());
+  const targetTurn = requireResolvedResult(
+    endTurn({ state: cast.state, actorId: casterId }),
+  );
+  const subject = endTurnSubjectFor(targetId);
+  const repeat = requireNeedsHolesResult(
+    resolveBattleSubject({
+      state: targetTurn.state,
+      subject,
+      fills: [],
+    }),
+  );
+  const repeatSave = requireHole(repeat.holes, "savingThrowOutcome");
+  const resolved = requireResolvedResult(
+    resolveBattleSubject({
+      state: repeat.state,
+      subject,
+      fills: [
+        savingThrowOutcomeFill(repeatSave, [{ targetId, succeeded: true }]),
+      ],
+    }),
+  );
+  return [
+    ...resolveHoldPersonFailedSavingThrowRoute(),
+    ...optionalRouteEventsOf(targetTurn),
+    ...routeEventsOf(repeat),
+    ...routeEventsOf(resolved),
+  ];
+}
+
+function resolveHideousLaughterRepeatSavingThrowSuccessRoute(): readonly BattleReducerRouteEvent[] {
+  const state = conditionSpellBattle(
+    srdSpellRecord("hideous_laughter"),
+    "wizard",
+  );
+  const act = spellAct({
+    state,
+    spellId: "hideous_laughter",
+    slotLevel: 1,
+  });
+  const target = requireHole(act.initialHoles, "spellTargetList");
+  const targetFill = spellTargetListFill(target, "hideous_laughter", [
+    targetId,
+  ]);
+  const awaitingSave = requireNeedsHolesResult(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill],
+    }),
+  );
+  const initialSave = requireHole(awaitingSave.holes, "savingThrowOutcome");
+  const cast = requireResolvedResult(
+    resolveBattleSubject({
+      state: awaitingSave.state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        savingThrowOutcomeFill(initialSave, [{ targetId, succeeded: false }]),
+      ],
+    }),
+  );
+  const targetTurn = requireResolvedResult(
+    endTurn({ state: cast.state, actorId: casterId }),
+  );
+  const subject = endTurnSubjectFor(targetId);
+  const repeat = requireNeedsHolesResult(
+    resolveBattleSubject({
+      state: targetTurn.state,
+      subject,
+      fills: [],
+    }),
+  );
+  const repeatSave = requireHole(repeat.holes, "savingThrowOutcome");
+  const resolved = requireResolvedResult(
+    resolveBattleSubject({
+      state: repeat.state,
+      subject,
+      fills: [
+        savingThrowOutcomeFill(repeatSave, [{ targetId, succeeded: true }]),
+      ],
+    }),
+  );
+  return [
+    battleReducerStartRouteEvent(),
+    ...optionalRouteEventsOf(act),
+    ...optionalRouteEventsOf(awaitingSave),
+    ...optionalRouteEventsOf(cast),
+    ...optionalRouteEventsOf(targetTurn),
+    ...routeEventsOf(repeat),
+    ...routeEventsOf(resolved),
+  ];
+}
+
+function resolveSleepRepeatSavingThrowFailureRoute(): readonly BattleReducerRouteEvent[] {
+  const state = conditionSpellBattle(srdSpellRecord("sleep"), "wizard");
+  const act = spellAct({ state, spellId: "sleep", slotLevel: 1 });
+  const initialSave = requireHole(act.initialHoles, "savingThrowOutcome");
+  const cast = requireResolvedResult(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        savingThrowOutcomeFill(initialSave, [{ targetId, succeeded: false }]),
+      ],
+    }),
+  );
+  const targetTurn = requireResolvedResult(
+    endTurn({ state: cast.state, actorId: casterId }),
+  );
+  const subject = endTurnSubjectFor(targetId);
+  const repeat = requireNeedsHolesResult(
+    resolveBattleSubject({
+      state: targetTurn.state,
+      subject,
+      fills: [],
+    }),
+  );
+  const repeatSave = requireHole(repeat.holes, "savingThrowOutcome");
+  const resolved = requireResolvedResult(
+    resolveBattleSubject({
+      state: repeat.state,
+      subject,
+      fills: [
+        savingThrowOutcomeFill(repeatSave, [{ targetId, succeeded: false }]),
+      ],
+    }),
+  );
+  return [
+    battleReducerStartRouteEvent(),
+    ...routeEventsOf(act),
+    ...routeEventsOf(cast),
+    ...optionalRouteEventsOf(targetTurn),
+    ...routeEventsOf(repeat),
+    ...routeEventsOf(resolved),
+  ];
+}
+
+function resolveSleepRepeatSaveAndDeathSaveMixedFrontierRoute(): readonly BattleReducerRouteEvent[] {
+  const state = conditionSpellBattle(srdSpellRecord("sleep"), "wizard");
+  const act = spellAct({ state, spellId: "sleep", slotLevel: 1 });
+  const initialSave = requireHole(act.initialHoles, "savingThrowOutcome");
+  const cast = requireResolvedResult(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        savingThrowOutcomeFill(initialSave, [{ targetId, succeeded: false }]),
+      ],
+    }),
+  );
+  const targetTurn = requireResolvedResult(
+    endTurn({ state: cast.state, actorId: casterId }),
+  );
+  const mixedFrontierState = withCombatantHp(
+    targetTurn.state,
+    casterId,
+    Hp(0),
+  );
+  const subject = endTurnSubjectFor(targetId);
+  const repeat = requireNeedsHolesResult(
+    resolveBattleSubject({
+      state: mixedFrontierState,
+      subject,
+      fills: [],
+    }),
+  );
+  const repeatSave = requireHole(repeat.holes, "savingThrowOutcome");
+  const deathSave = requireHole(repeat.holes, "deathSavingThrow");
+  const resolved = requireResolvedResult(
+    resolveBattleSubject({
+      state: repeat.state,
+      subject,
+      fills: [
+        savingThrowOutcomeFill(repeatSave, [{ targetId, succeeded: false }]),
+        deathSavingThrowFill(deathSave, 10),
+      ],
+    }),
+  );
+  return [
+    battleReducerStartRouteEvent(),
+    ...routeEventsOf(act),
+    ...routeEventsOf(cast),
+    ...optionalRouteEventsOf(targetTurn),
+    ...routeEventsOf(repeat),
+    ...routeEventsOf(resolved),
+  ];
+}
+
+function saveGatedConditionAreaRoute(): readonly BattleReducerRouteEvent[] {
+  return [
+    battleReducerStartRouteEvent(),
+    routeDiscoverBattleActs({
+      subject: "saveGatedSpell",
+      holes: ["savingThrowOutcome"],
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    routeResolveSubject({
+      subject: "saveGatedSpell",
+      fill: "savingThrowOutcome",
+      holes: [],
+      owner: "battleHoleFrontier",
+    }),
+  ];
+}
+
+function saveGatedConditionTargetListRoute(): readonly BattleReducerRouteEvent[] {
+  return [
+    battleReducerStartRouteEvent(),
+    routeDiscoverBattleActs({
+      subject: "saveGatedSpell",
+      holes: ["spellTargetList"],
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    routeResolveSubject({
+      subject: "saveGatedSpell",
+      fill: "spellTargetList",
+      holes: ["savingThrowOutcome"],
+      owner: "battleHoleFrontier",
+    }),
+    routeResolveSubject({
+      subject: "saveGatedSpell",
+      fill: "savingThrowOutcome",
+      holes: [],
+      owner: "battleHoleFrontier",
+    }),
+  ];
+}
+
+function saveGatedConditionTargetListChoiceRoute(): readonly BattleReducerRouteEvent[] {
+  return [
+    battleReducerStartRouteEvent(),
+    routeDiscoverBattleActs({
+      subject: "saveGatedSpell",
+      holes: ["spellTargetList"],
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    routeResolveSubject({
+      subject: "saveGatedSpell",
+      fill: "spellTargetList",
+      holes: [],
+      owner: "battleHoleFrontier",
+    }),
+    routeResolveSubject({
+      subject: "saveGatedSpell",
+      fill: "savingThrowOutcome",
+      holes: [],
+      owner: "battleHoleFrontier",
+    }),
+  ];
+}
+
+function sleepInitialSaveFailureRoute(): readonly BattleReducerRouteEvent[] {
+  return [
+    battleReducerStartRouteEvent(),
+    routeDiscoverBattleActs({
+      subject: "repeatSaveConditionEffect",
+      holes: ["savingThrowOutcome"],
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    routeResolveSubject({
+      subject: "repeatSaveConditionEffect",
+      fill: "savingThrowOutcome",
+      holes: [],
+      owner: "battleConditionLifecycle",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: "repeatSaveConditionEffect",
+      owner: "battleActiveEffect",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: "repeatSaveConditionEffect",
+      owner: "battleConcentration",
+    }),
+  ];
+}
+
+function repeatSaveSuccessCleanupRoute(input: {
+  readonly initialRoute: readonly BattleReducerRouteEvent[];
+}): readonly BattleReducerRouteEvent[] {
+  return [
+    ...input.initialRoute,
+    routeDiscoverBattleActs({
+      subject: "repeatSaveConditionEffect",
+      holes: ["savingThrowOutcome"],
+      owner: "battleTurnBoundary",
+    }),
+    routeResolveSubject({
+      subject: "repeatSaveConditionEffect",
+      fill: "savingThrowOutcome",
+      holes: [],
+      owner: "battleConditionLifecycle",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: "repeatSaveConditionEffect",
+      owner: "battleActiveEffect",
+    }),
+    routeResolveSubjectWithoutFill({
+      subject: "repeatSaveConditionEffect",
+      owner: "battleConcentration",
+    }),
+  ];
+}
+
+function repeatSaveFailureUnconsciousRoute(input: {
+  readonly initialRoute: readonly BattleReducerRouteEvent[];
+}): readonly BattleReducerRouteEvent[] {
+  return [
+    ...input.initialRoute,
+    routeResolveSubjectWithoutFill({
+      subject: "repeatSaveConditionEffect",
+      owner: "battleTurnBoundary",
+    }),
+    routeDiscoverBattleActs({
+      subject: "repeatSaveConditionEffect",
+      holes: ["savingThrowOutcome"],
+      owner: "battleTurnBoundary",
+    }),
+    routeResolveSubject({
+      subject: "repeatSaveConditionEffect",
+      fill: "savingThrowOutcome",
+      holes: [],
+      owner: "battleConditionLifecycle",
+    }),
+  ];
+}
+
+function sleepRepeatSaveAndDeathSaveMixedFrontierRoute(): readonly BattleReducerRouteEvent[] {
+  return [
+    ...sleepInitialSaveFailureRoute(),
+    routeResolveSubjectWithoutFill({
+      subject: "repeatSaveConditionEffect",
+      owner: "battleTurnBoundary",
+    }),
+    routeDiscoverBattleActs({
+      subject: "repeatSaveConditionEffect",
+      holes: ["savingThrowOutcome"],
+      owner: "battleTurnBoundary",
+    }),
+    routeDiscoverBattleActs({
+      subject: "deathSavingThrow",
+      holes: ["deathSavingThrow"],
+      owner: "battleHitPointAndZeroHpLifecycle",
+    }),
+    routeResolveSubject({
+      subject: "repeatSaveConditionEffect",
+      fill: "savingThrowOutcome",
+      holes: [],
+      owner: "battleConditionLifecycle",
+    }),
+    routeResolveSubject({
+      subject: "deathSavingThrow",
+      fill: "deathSavingThrow",
+      holes: [],
+      owner: "battleHitPointAndZeroHpLifecycle",
+    }),
+  ];
+}
+
+function routeDiscoverBattleActs(
+  input: Omit<
+    Extract<BattleReducerRouteEvent, { readonly kind: "discoverBattleActs" }>,
+    "kind"
+  >,
+): BattleReducerRouteEvent {
+  return { kind: "discoverBattleActs", ...input };
+}
+
+function routeResolveSubject(
+  input: Omit<
+    Extract<BattleReducerRouteEvent, { readonly kind: "resolveBattleSubject" }>,
+    "kind"
+  >,
+): BattleReducerRouteEvent {
+  return { kind: "resolveBattleSubject", ...input };
+}
+
+function routeResolveSubjectWithoutFill(
+  input: Omit<
+    Extract<
+      BattleReducerRouteEvent,
+      { readonly kind: "resolveBattleSubjectWithoutFill" }
+    >,
+    "kind" | "holes"
+  >,
+): BattleReducerRouteEvent {
+  return { kind: "resolveBattleSubjectWithoutFill", holes: [], ...input };
+}
+
+function routeEventsOf(
+  source: { readonly routeEvents?: readonly BattleReducerRouteEvent[] },
+): readonly BattleReducerRouteEvent[] {
+  if (source.routeEvents === undefined) {
+    throw new Error("Expected public reducer route events.");
+  }
+  return source.routeEvents;
+}
+
+function optionalRouteEventsOf(
+  source: { readonly routeEvents?: readonly BattleReducerRouteEvent[] },
+): readonly BattleReducerRouteEvent[] {
+  return source.routeEvents ?? [];
+}
+
+function requireResolvedResult(
+  result: BattleResolutionResult,
+): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
+  if (result.tag !== "resolved") {
+    throw new Error(`Expected resolved result, got ${result.tag}.`);
+  }
+  return result;
+}
+
 function expectedProjection(
   overrides: Partial<ConditionSavingThrowSelectedIdentityProjection> = {},
 ): ConditionSavingThrowSelectedIdentityProjection {
@@ -662,7 +1235,46 @@ function savingThrowOutcomeFill(
               },
               outcomes,
             }
-          : { outcomes },
+        : { outcomes },
+  };
+}
+
+function deathSavingThrowFill(
+  hole: Extract<BattleHole, { readonly kind: "deathSavingThrow" }>,
+  roll: number,
+): Extract<BattleFill, { readonly kind: "deathSavingThrow" }> {
+  return {
+    kind: "deathSavingThrow",
+    holeId: hole.holeId,
+    value: DieRollResult(roll),
+  };
+}
+
+function withCombatantHp(
+  state: BattleState,
+  selectedCombatantId: CombatantId,
+  hp: Hp,
+): BattleState {
+  const combatant = state.combatants.get(selectedCombatantId);
+  if (combatant === undefined) {
+    throw new Error(`Expected combatant ${selectedCombatantId}.`);
+  }
+  const updatedCombatant: BattleState["combatants"] extends ReadonlyMap<
+    CombatantId,
+    infer TCombatant
+  >
+    ? TCombatant
+    : never = {
+    ...combatant,
+    hp,
+    positiveHpUnconscious: null,
+  };
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(
+      selectedCombatantId,
+      updatedCombatant,
+    ),
   };
 }
 

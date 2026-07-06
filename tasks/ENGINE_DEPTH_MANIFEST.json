@@ -1,65 +1,75 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-007",
+  "taskId": "CRPI-BLOCK-005",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/battle-runtime/battle-runtime-danger-sense-selected-identity.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
       "quarantinedWitnessNames": [
         "qState",
         "protocol"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-007.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-005.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/battle-runtime-danger-sense-substrates.route.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
       "quarantinedWitnessNames": [
         "qRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-007.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-005.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/danger-sense-selected-identity.mbt.test.ts",
+      "path": "packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt",
       "quarantinedWitnessNames": [
-        "DangerSenseProjection",
-        "DangerSenseSubstrateRouteProjection",
-        "createDangerSenseSubstrateRouteDriver"
+        "qRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-007.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-005.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/battle-runtime-condition-riders.route.mbt.qnt",
+      "quarantinedWitnessNames": [
+        "qRoute",
+        "qFacts"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-005.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/src/condition-saving-throw-selected-identity.mbt.test.ts",
+      "quarantinedWitnessNames": [
+        "ConditionSavingThrowSelectedIdentityProjection",
+        "observes selected condition-saving-throw qRoute through public reducer events"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-005.json"
       ]
     }
   ],
   "productionModulesExtended": [
     {
       "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "notes": "Adds the passiveSavingThrowRollMode route subject and public route projection from existing BattleState passive Saving Throw support-profile facts and Incapacitated condition state."
+      "notes": "Adds generic repeatSaveConditionEffect public route projection for end-of-turn spell condition repeat-save discovery and cleanup from existing BattleState condition, active-effect, and Concentration deltas; route ownership is localized to matching repeat-save hole ids so mixed end-turn frontiers still compose with death save and turn-boundary route owners."
     },
     {
-      "path": "packages/battle-runtime/src/battle-reducer.ts",
-      "notes": "Re-exports the passive Saving Throw roll-mode route projection with existing battle reducer public route types."
-    },
-    {
-      "path": "packages/battle-runtime/src/index.ts",
-      "notes": "Publishes passiveSavingThrowRollModeRouteEvents through the package public entrypoint used by target replay."
+      "path": "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+      "notes": "Exports owner-local end-turn repeat-save Saving Throw hole-id projections used by reducer-route.ts to identify Sleep and condition-spell repeat-save fills without duplicating pending-hole state."
     }
   ],
   "expectedNextReuse": [
     {
       "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "notes": "Future passive Saving Throw roll-mode route tasks should reuse BattleState character support-profile facts and condition state instead of adding selected feature identity dispatch or route-local state."
-    },
-    {
-      "path": "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",
-      "notes": "Runtime Saving Throw roll-mode projection remains the semantic owner for Advantage/Disadvantage computation; route projection mirrors owner evidence without duplicating roll-mode state."
+      "notes": "Future repeat-save condition spell selected-identity routes should reuse repeatSaveConditionEffect route events derived from public End Turn resolution and owner hole-id projections instead of selected spell identity dispatch."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 11 observes the copied Danger Sense substrate qRoute through public battle runtime entrypoints. No new durable BattleState fields were added; selected class feature identity remains a catalog/support-profile admission boundary."
+    "notes": "Task 9 observes copied qRoute substrates for in-scope condition-saving-throw selected-identity branches through public battle reducer route events. No new durable BattleState fields were added."
   }
 }

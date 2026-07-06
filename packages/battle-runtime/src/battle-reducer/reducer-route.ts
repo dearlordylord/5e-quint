@@ -39,7 +39,11 @@ import {
 } from "./spell-condition-effects-helpers.ts";
 import { supportedSpellInvocationMatchesRef } from "./spells-invocation-ref.ts";
 import { supportedSpellActs } from "./spells-profiles.ts";
-import { spellTurnStartSavingThrowOutcomeHoleId } from "./turn-end-movement.ts";
+import {
+  conditionSpellEndTurnRepeatSaveHoleIds,
+  sleepRepeatSaveSavingThrowHoleIds,
+  spellTurnStartSavingThrowOutcomeHoleId,
+} from "./turn-end-movement.ts";
 
 type AfterHitDamageRiderChoice = Extract<
   BattleInterruptCheckpoint["choices"][number],
@@ -556,7 +560,7 @@ export function battleReducerRouteForResolution(
     return rollModifierConcentrationRoute;
   }
   const sleepRepeatSaveRoute = sleepRepeatSaveRouteForResolution(input, result);
-  if (sleepRepeatSaveRoute !== undefined) {
+  if (sleepRepeatSaveRoute !== undefined && !isEndTurnSubject(input.subject)) {
     return sleepRepeatSaveRoute;
   }
   const afterHitEscapeRoute = afterHitDamageRiderEscapeRouteForResolution(
@@ -566,22 +570,27 @@ export function battleReducerRouteForResolution(
   if (afterHitEscapeRoute !== undefined) {
     return afterHitEscapeRoute;
   }
+  const repeatSaveConditionEffectRoute =
+    repeatSaveConditionEffectRouteForResolution(input, result);
   const deathSavingThrowRoute = deathSavingThrowRouteForResolution(
     input,
     result,
   );
-  if (deathSavingThrowRoute !== undefined) {
-    return deathSavingThrowRoute;
-  }
   const turnBoundaryEffectLifecycleRoute =
     turnBoundaryEffectLifecycleRouteForResolution(input, result);
   const afterHitTurnBoundaryRoute =
     afterHitDamageRiderTurnBoundaryRouteForResolution(input, result);
   if (
+    sleepRepeatSaveRoute !== undefined ||
+    repeatSaveConditionEffectRoute !== undefined ||
+    deathSavingThrowRoute !== undefined ||
     turnBoundaryEffectLifecycleRoute !== undefined ||
     afterHitTurnBoundaryRoute !== undefined
   ) {
     return nonEmptyRouteEvents([
+      ...(sleepRepeatSaveRoute ?? []),
+      ...(repeatSaveConditionEffectRoute ?? []),
+      ...(deathSavingThrowRoute ?? []),
       ...(turnBoundaryEffectLifecycleRoute ?? []),
       ...(afterHitTurnBoundaryRoute ?? []),
     ]);
@@ -1953,8 +1962,6 @@ function deathSavingThrowRouteForResolution(
     if (result.tag === "invalid" && result.reason !== "wrongActor") {
       return undefined;
     }
-    const turnBoundaryDiscovery =
-      turnBoundaryEffectLifecycleDiscoveryRouteForResolution(input, result);
     return nonEmptyRouteEvents([
       {
         kind: "resolveBattleSubject",
@@ -1966,7 +1973,6 @@ function deathSavingThrowRouteForResolution(
             : [],
         owner: "battleHitPointAndZeroHpLifecycle",
       },
-      ...(turnBoundaryDiscovery === undefined ? [] : [turnBoundaryDiscovery]),
     ]);
   }
 
@@ -1977,8 +1983,6 @@ function deathSavingThrowRouteForResolution(
     return undefined;
   }
 
-  const turnBoundaryDiscovery =
-    turnBoundaryEffectLifecycleDiscoveryRouteForResolution(input, result);
   return nonEmptyRouteEvents([
     {
       kind: "discoverBattleActs",
@@ -1986,7 +1990,6 @@ function deathSavingThrowRouteForResolution(
       holes: deathSavingThrowRouteHoles(result.holes),
       owner: "battleHitPointAndZeroHpLifecycle",
     },
-    ...(turnBoundaryDiscovery === undefined ? [] : [turnBoundaryDiscovery]),
   ]);
 }
 
@@ -3253,6 +3256,102 @@ function sleepRepeatSaveRouteForResolution(
   });
 }
 
+function repeatSaveConditionEffectRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  if (!isEndTurnSubject(input.subject)) {
+    return undefined;
+  }
+  if (input.fills.length === 0) {
+    if (result.tag !== "needsHoles") {
+      return undefined;
+    }
+    const holes = repeatSaveConditionEffectRouteHoles(result.holes);
+    if (holes.length === 0) {
+      return undefined;
+    }
+    return [
+      {
+        kind: "discoverBattleActs",
+        subject: "repeatSaveConditionEffect",
+        holes,
+        owner: "battleTurnBoundary",
+      },
+    ];
+  }
+  if (
+    result.tag !== "resolved" ||
+    !fillsIncludeRepeatSaveConditionEffect(input)
+  ) {
+    return undefined;
+  }
+  return nonEmptyRouteEvents([
+    ...(combatantConditionsChanged(input.state, result.state)
+      ? [
+          {
+            kind: "resolveBattleSubject" as const,
+            subject: "repeatSaveConditionEffect" as const,
+            fill: "savingThrowOutcome" as const,
+            holes: [],
+            owner: "battleConditionLifecycle" as const,
+          },
+        ]
+      : []),
+    ...(combatantsActiveEffectsChanged(input.state, result.state)
+      ? [
+          {
+            kind: "resolveBattleSubjectWithoutFill" as const,
+            subject: "repeatSaveConditionEffect" as const,
+            holes: [],
+            owner: "battleActiveEffect" as const,
+          },
+        ]
+      : []),
+    ...(combatantsConcentrationChanged(input.state, result.state)
+      ? [
+          {
+            kind: "resolveBattleSubjectWithoutFill" as const,
+            subject: "repeatSaveConditionEffect" as const,
+            holes: [],
+            owner: "battleConcentration" as const,
+          },
+        ]
+      : []),
+  ]);
+}
+
+function fillsIncludeRepeatSaveConditionEffect(
+  input: BattleResolutionInput,
+): boolean {
+  if (!isEndTurnSubject(input.subject)) {
+    return false;
+  }
+  const repeatSaveHoleIds = conditionSpellEndTurnRepeatSaveHoleIds(
+    input.state,
+    input.subject.actorId,
+  );
+  return input.fills.some(
+    (fill) =>
+      fill.kind === "savingThrowOutcome" && repeatSaveHoleIds.has(fill.holeId),
+  );
+}
+
+function repeatSaveConditionEffectRouteHoles(
+  holes: readonly BattleHole[],
+): readonly BattleReducerRouteHole[] {
+  return battleReducerRouteHoles(
+    holes.filter(isRepeatSaveConditionEffectHole),
+  );
+}
+
+function isRepeatSaveConditionEffectHole(hole: BattleHole): boolean {
+  return (
+    "spellConditionEndTurnSave" in hole ||
+    "hideousLaughterRepeatSave" in hole
+  );
+}
+
 function sleepRepeatSaveConcentrationBreakRoute(
   input: BattleResolutionInput,
   result: BattleResolutionResult,
@@ -3279,25 +3378,20 @@ function sleepRepeatSaveTurnBoundaryRoute(
   if (!isEndTurnSubject(input.subject)) {
     return undefined;
   }
-  const fill = sleepRepeatSaveSavingThrowFill(input.fills);
+  const fill = sleepRepeatSaveEndTurnSavingThrowFill(input);
   if (fill === undefined) {
     if (result.tag === "needsHoles") {
       const holes = sleepRepeatSaveRouteHoles(result.holes);
-      const turnBoundaryDiscovery =
-        turnBoundaryEffectLifecycleDiscoveryRouteForResolution(input, result);
       return holes.length === 0
         ? undefined
-        : nonEmptyRouteEvents([
+        : [
             {
               kind: "discoverBattleActs",
               subject: "repeatSaveConditionEffect",
               holes,
               owner: "battleTurnBoundary",
             },
-            ...(turnBoundaryDiscovery === undefined
-              ? []
-              : [turnBoundaryDiscovery]),
-          ]);
+          ];
     }
     if (
       result.tag === "resolved" &&
@@ -3320,6 +3414,24 @@ function sleepRepeatSaveTurnBoundaryRoute(
     includeActiveEffectTransition: false,
     sourceCombatantId: fill.value.outcomes[0]?.targetId,
   });
+}
+
+function sleepRepeatSaveEndTurnSavingThrowFill(
+  input: BattleResolutionInput,
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
+  if (!isEndTurnSubject(input.subject)) {
+    return undefined;
+  }
+  const holeIds = sleepRepeatSaveSavingThrowHoleIds(
+    input.state,
+    input.subject.actorId,
+  );
+  return input.fills.find(
+    (
+      fill,
+    ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+      fill.kind === "savingThrowOutcome" && holeIds.has(fill.holeId),
+  );
 }
 
 function sleepRepeatSaveResolvedRoutes(input: {
