@@ -40,15 +40,12 @@ import {
   quintRecordField,
   quintStateRecord,
   quintVariantTag,
-  reducerRouteDiscoverBattleActs,
-  reducerRouteResolveBattleSubject,
-  reducerRouteResolveBattleSubjectWithoutFill,
-  reducerRouteStartBattle,
   run,
   stateCheck,
   type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import {
+  battleReducerStartRouteEvent,
   battleId,
   castFindFamiliar,
   combatantId,
@@ -192,31 +189,27 @@ type FindFamiliarCompanionRouteState = {
   readonly route: readonly ReducerRouteEvent[];
 };
 
-const findFamiliarCompanionRouteStart = reducerRouteStartBattle(
-  "battleActionEconomy",
-);
-
 function createFindFamiliarCompanionRouteDriver() {
   return defineDriver(findFamiliarCompanionRouteDriverSchema, () => {
-    let route: readonly ReducerRouteEvent[] = [findFamiliarCompanionRouteStart];
+    let route: readonly ReducerRouteEvent[] = [battleReducerStartRouteEvent()];
     return {
       init: () => {
-        route = [findFamiliarCompanionRouteStart];
+        route = [battleReducerStartRouteEvent()];
       },
       doRouteFamiliarCreation: () => {
-        route = routeFamiliarLifecycle();
+        route = observeFamiliarCreationRoute();
       },
       doRouteFamiliarReplacement: () => {
-        route = routeFamiliarLifecycle();
+        route = observeFamiliarReplacementRoute();
       },
       doRouteSharedSenses: () => {
-        route = routeSharedSenses();
+        route = observeSharedSensesRoute();
       },
       doRouteTouchDelivery: () => {
-        route = routeTouchDelivery();
+        route = observeTouchDeliveryRoute();
       },
       doRoutePactFamiliarAttack: () => {
-        route = routePactFamiliarAttack();
+        route = observePactFamiliarAttackRoute();
       },
       step: () => {},
       getState: (): FindFamiliarCompanionRouteState => ({ route }),
@@ -299,140 +292,169 @@ describe("Find Familiar companion lifecycle MBT parity", () => {
     });
   });
 
-  it("matches the focused companion lifecycle against bounded random MBT traces", async () => {
-    await run({
-      spec: mbtSpecPath(
-        import.meta.dirname,
-        "battle-runtime-find-familiar-companion-lifecycle.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createFindFamiliarCompanionLifecycleDriver(),
-      backend: "typescript",
-      nTraces: mbtTraceCount(),
-      maxSteps: focusedMbtMaxSteps(5),
-      stateCheck: findFamiliarCompanionStateCheck,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "matches the focused companion lifecycle against bounded random MBT traces",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-find-familiar-companion-lifecycle.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createFindFamiliarCompanionLifecycleDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(5),
+        stateCheck: findFamiliarCompanionStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 
-  it("routes companion lifecycle and familiar actions through battle owners", async () => {
-    await run({
-      spec: mbtSpecPath(
-        import.meta.dirname,
-        "battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createFindFamiliarCompanionRouteDriver(),
-      backend: "typescript",
-      nTraces: mbtTraceCount(),
-      maxSteps: focusedMbtMaxSteps(1),
-      stateCheck: findFamiliarCompanionRouteStateCheck,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "routes companion lifecycle and familiar actions through battle owners",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createFindFamiliarCompanionRouteDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(1),
+        stateCheck: findFamiliarCompanionRouteStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
-function routeFamiliarLifecycle(): readonly ReducerRouteEvent[] {
+function observeFamiliarCreationRoute(): readonly ReducerRouteEvent[] {
+  const created = castNormalFamiliarResult(initialRuntimeState(), "cat");
   return [
-    findFamiliarCompanionRouteStart,
-    reducerRouteDiscoverBattleActs({
-      subject: "companionLifecycle",
-      holes: [],
-      owner: "battleCompanion",
-    }),
-    reducerRouteResolveBattleSubjectWithoutFill({
-      subject: "companionLifecycle",
-      holes: [],
-      owner: "battleCompanion",
-    }),
+    battleReducerStartRouteEvent(),
+    ...routeEventsOf(created, "Find Familiar creation"),
   ];
 }
 
-function routeSharedSenses(): readonly ReducerRouteEvent[] {
+function observeFamiliarReplacementRoute(): readonly ReducerRouteEvent[] {
+  const created = createCatFamiliar(initialRuntimeState());
+  const replaced = castNormalFamiliarResult(created, "rat");
   return [
-    findFamiliarCompanionRouteStart,
-    reducerRouteDiscoverBattleActs({
-      subject: "companionSharedSenses",
-      holes: [],
-      owner: "battleCompanion",
-    }),
-    reducerRouteResolveBattleSubjectWithoutFill({
-      subject: "companionSharedSenses",
-      holes: [],
-      owner: "battleActionEconomy",
-    }),
-    reducerRouteResolveBattleSubjectWithoutFill({
-      subject: "companionSharedSenses",
-      holes: [],
-      owner: "battleActiveEffect",
-    }),
+    battleReducerStartRouteEvent(),
+    ...routeEventsOf(replaced, "Find Familiar replacement"),
   ];
 }
 
-function routeTouchDelivery(): readonly ReducerRouteEvent[] {
+function observeSharedSensesRoute(): readonly ReducerRouteEvent[] {
+  const state = createCatFamiliar(initialRuntimeState()).battle;
+  const act = sharedSensesAct(state);
+  const resolved = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [
+      findFamiliarConnectionFill(
+        requireHole(act.initialHoles, "findFamiliarConnection"),
+      ),
+    ],
+  });
   return [
-    findFamiliarCompanionRouteStart,
-    reducerRouteDiscoverBattleActs({
-      subject: "companionTouchDelivery",
-      holes: [{ kind: "targetChoice" }],
-      owner: "battleSpellSlotAndActionEconomy",
-    }),
-    reducerRouteResolveBattleSubject({
-      subject: "companionTouchDelivery",
-      fill: "targetChoice",
-      holes: [{ kind: "rolledDice" }],
-      owner: "battleCompanion",
-    }),
-    reducerRouteResolveBattleSubject({
-      subject: "companionTouchDelivery",
-      fill: "rolledDice",
-      holes: [],
-      owner: "battleSpellSlotAndActionEconomy",
-    }),
-    reducerRouteResolveBattleSubjectWithoutFill({
-      subject: "companionTouchDelivery",
-      holes: [],
-      owner: "battleActionEconomy",
-    }),
+    battleReducerStartRouteEvent(),
+    ...routeEventsOf(act, "Share Familiar Senses discovery"),
+    ...routeEventsOf(resolved, "Share Familiar Senses resolution"),
   ];
 }
 
-function routePactFamiliarAttack(): readonly ReducerRouteEvent[] {
+function observeTouchDeliveryRoute(): readonly ReducerRouteEvent[] {
+  const state = createCatFamiliar(initialRuntimeState()).battle;
+  const act = touchDeliveryAct(state);
+  const connectionFill = findFamiliarConnectionFill(
+    requireHole(act.initialHoles, "findFamiliarConnection"),
+  );
+  const targetFill = touchSpellTargetFill(
+    requireHole(act.initialHoles, "targetChoice"),
+  );
+  const awaitingHealingRoll = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [connectionFill, targetFill],
+  });
+  if (awaitingHealingRoll.tag !== "needsHoles") {
+    throw new Error("Expected Find Familiar Touch delivery healing roll hole.");
+  }
+  const resolved = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [
+      connectionFill,
+      targetFill,
+      healingRollFill(requireHole(awaitingHealingRoll.holes, "rolledDice")),
+    ],
+  });
   return [
-    findFamiliarCompanionRouteStart,
-    reducerRouteDiscoverBattleActs({
-      subject: "companionReactionAttack",
-      holes: [{ kind: "targetChoice" }],
-      owner: "battleCompanion",
-    }),
-    reducerRouteResolveBattleSubjectWithoutFill({
-      subject: "companionReactionAttack",
-      holes: [{ kind: "targetChoice" }],
-      owner: "battleStatBlockAction",
-    }),
-    reducerRouteResolveBattleSubject({
-      subject: "companionReactionAttack",
-      fill: "targetChoice",
-      holes: [{ kind: "attackRoll" }],
-      owner: "battleTargetSelection",
-    }),
-    reducerRouteResolveBattleSubject({
-      subject: "companionReactionAttack",
-      fill: "attackRoll",
-      holes: [{ kind: "rolledDice" }],
-      owner: "battleAttackRoll",
-    }),
-    reducerRouteResolveBattleSubject({
-      subject: "companionReactionAttack",
-      fill: "rolledDice",
-      holes: [],
-      owner: "battleHitPoint",
-    }),
-    reducerRouteResolveBattleSubjectWithoutFill({
-      subject: "companionReactionAttack",
-      holes: [],
-      owner: "battleActionEconomy",
-    }),
+    battleReducerStartRouteEvent(),
+    ...routeEventsOf(act, "Find Familiar Touch delivery discovery"),
+    ...routeEventsOf(
+      awaitingHealingRoll,
+      "Find Familiar Touch delivery target",
+    ),
+    ...routeEventsOf(resolved, "Find Familiar Touch delivery resolution"),
+  ];
+}
+
+function observePactFamiliarAttackRoute(): readonly ReducerRouteEvent[] {
+  const state = createCatFamiliar(initialRuntimeState()).battle;
+  const act = pactFamiliarAttackAct(state);
+  const awaitingTarget = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [],
+  });
+  if (awaitingTarget.tag !== "needsHoles") {
+    throw new Error("Expected Pact familiar attack target hole.");
+  }
+  const target = familiarAttackTargetFill(
+    requireHole(awaitingTarget.holes, "targetChoice"),
+  );
+  const awaitingAttackRoll = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [target],
+  });
+  if (awaitingAttackRoll.tag !== "needsHoles") {
+    throw new Error("Expected Pact familiar attack roll hole.");
+  }
+  const attackRoll = attackRollFill(
+    requireHole(awaitingAttackRoll.holes, "attackRoll"),
+  );
+  const awaitingDamage = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [target, attackRoll],
+  });
+  if (awaitingDamage.tag !== "needsHoles") {
+    throw new Error("Expected Pact familiar damage roll hole.");
+  }
+  const resolved = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [
+      target,
+      attackRoll,
+      fixedDamageRollFill(requireHole(awaitingDamage.holes, "rolledDice")),
+    ],
+  });
+  return [
+    battleReducerStartRouteEvent(),
+    ...routeEventsOf(act, "Pact familiar attack discovery"),
+    ...routeEventsOf(awaitingTarget, "Pact familiar attack stat-block action"),
+    ...routeEventsOf(awaitingAttackRoll, "Pact familiar attack target"),
+    ...routeEventsOf(awaitingDamage, "Pact familiar attack roll"),
+    ...routeEventsOf(resolved, "Pact familiar attack damage"),
   ];
 }
 
@@ -497,7 +519,15 @@ function castNormalFamiliar(
   formId: Extract<FamiliarForm, "cat" | "rat">,
   lastResult: Extract<LastResult, "createdCat" | "replacedRat">,
 ): FindFamiliarCompanionRuntimeState {
-  const result = castFindFamiliar({
+  const result = castNormalFamiliarResult(state, formId);
+  return { battle: requireResolved(result), lastResult };
+}
+
+function castNormalFamiliarResult(
+  state: FindFamiliarCompanionRuntimeState,
+  formId: Extract<FamiliarForm, "cat" | "rat">,
+): BattleResolutionResult {
+  return castFindFamiliar({
     state: state.battle,
     casterId,
     catalog: statBlockCatalog,
@@ -508,7 +538,6 @@ function castNormalFamiliar(
     initiative: initiativeScore(18),
     placement: { kind: "unoccupiedSpaceWithinSpellRange" },
   });
-  return { battle: requireResolved(result), lastResult };
 }
 
 function shareSenses(
@@ -653,6 +682,80 @@ function actionSpellAct(
   return act;
 }
 
+function sharedSensesAct(state: BattleState): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "findFamiliarSharedSenses" }
+  >;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        BattleSubject,
+        { readonly tag: "findFamiliarSharedSenses" }
+      >;
+    } => candidate.subject.tag === "findFamiliarSharedSenses",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Share Familiar Senses act.");
+  }
+  return act;
+}
+
+function touchDeliveryAct(state: BattleState): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "findFamiliarTouchSpell" }
+  >;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        BattleSubject,
+        { readonly tag: "findFamiliarTouchSpell" }
+      >;
+    } =>
+      candidate.subject.tag === "findFamiliarTouchSpell" &&
+      candidate.subject.invocation.spellId === "cure_wounds",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Find Familiar Touch delivery act.");
+  }
+  return act;
+}
+
+function pactFamiliarAttackAct(state: BattleState): AvailableBattleAct & {
+  readonly subject: PactOfTheChainFamiliarAttackSubject;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: PactOfTheChainFamiliarAttackSubject;
+    } =>
+      candidate.subject.tag === "pactOfTheChainFamiliarAttack" &&
+      candidate.subject.attackName === "Scratch",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Pact familiar Scratch attack act.");
+  }
+  return act;
+}
+
+function routeEventsOf(
+  source: { readonly routeEvents?: readonly ReducerRouteEvent[] },
+  label: string,
+): readonly ReducerRouteEvent[] {
+  if (source.routeEvents === undefined || source.routeEvents.length === 0) {
+    throw new Error(`Expected public reducer route events for ${label}.`);
+  }
+  return source.routeEvents;
+}
+
 function requireFindFamiliarEligibility(
   eligibility: FindFamiliarFormEligibility | null,
 ): FindFamiliarFormEligibility {
@@ -678,6 +781,16 @@ function touchSpellTargetFill(
         spellId: "cure_wounds",
       },
     ],
+  };
+}
+
+function findFamiliarConnectionFill(
+  hole: Extract<BattleHole, { readonly kind: "findFamiliarConnection" }>,
+): Extract<BattleFill, { readonly kind: "findFamiliarConnection" }> {
+  return {
+    kind: "findFamiliarConnection",
+    holeId: hole.holeId,
+    value: { withinRange: true },
   };
 }
 
@@ -824,7 +937,9 @@ function normalizeFindFamiliarCompanionQuintState(
     decodeHole: findFamiliarCompanionUnexpectedHole,
   });
   if (protocol.holes.length !== 0) {
-    throw new Error("Expected Find Familiar companion witness holes to be empty.");
+    throw new Error(
+      "Expected Find Familiar companion witness holes to be empty.",
+    );
   }
   const scenarioResult = findFamiliarCompanionLastResult(
     state["qScenarioOutcome"],
@@ -885,8 +1000,7 @@ function findFamiliarCompanionUnexpectedHole(raw: unknown): never {
 
 function findFamiliarCompanionLastResult(raw: unknown): LastResult {
   const tag = quintVariantTag(raw, "qScenarioOutcome");
-  const value =
-    FIND_FAMILIAR_COMPANION_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG[tag];
+  const value = FIND_FAMILIAR_COMPANION_LIFECYCLE_SCENARIO_OUTCOME_BY_TAG[tag];
   if (value !== undefined) {
     return value;
   }

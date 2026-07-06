@@ -28,6 +28,10 @@ import {
 import { currentActorId } from "./battle-reducer/creature-state-leaves.ts";
 import { snapshotBattle } from "./battle-reducer/dispatcher.ts";
 import {
+  findFamiliarCompanionLifecycleRouteEvents,
+  type BattleReducerRouteEvents,
+} from "./battle-reducer/reducer-route.ts";
+import {
   addBattleCombatant,
   createInitialInitiativeForCombatants,
   removeBattleCombatants,
@@ -281,7 +285,11 @@ export function castFindFamiliar(
   });
   return nextState.tag === "invalid"
     ? nextState
-    : resolvedFindFamiliarResult(nextState.state, []);
+    : resolvedFindFamiliarResult(
+        nextState.state,
+        [],
+        findFamiliarCompanionLifecycleRouteEvents(),
+      );
 }
 
 export function castWildCompanion(
@@ -1410,12 +1418,14 @@ function droppedObjectsForFamiliarDisappearance(input: {
 function resolvedFindFamiliarResult(
   state: BattleState,
   droppedObjects: readonly BattleDroppedObjectOutcome[],
+  routeEvents?: BattleReducerRouteEvents,
 ): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
   return {
     tag: "resolved",
     state,
     snapshot: snapshotBattle(state),
     ...(droppedObjects.length === 0 ? {} : { droppedObjects }),
+    ...(routeEvents === undefined ? {} : { routeEvents }),
   };
 }
 
