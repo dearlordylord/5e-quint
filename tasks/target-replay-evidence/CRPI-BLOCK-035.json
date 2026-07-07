@@ -1,0 +1,1400 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts copied weapon-hosted qRoute versus public reducer replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "acceptance": {
+    "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+    "connectorPaths": [
+      "packages/battle-runtime/battle-runtime-spell-hosted-weapon-attack.route.mbt.qnt",
+      "packages/battle-runtime/battle-runtime-held-weapon-active-effect.route.mbt.qnt",
+      "packages/battle-runtime/battle-runtime-weapon-damage-rider.route.mbt.qnt",
+      "packages/battle-runtime/battle-runtime-weapon-enhancement-item-target.route.mbt.qnt",
+      "packages/battle-runtime/battle-runtime-held-weapon-release-cleanup.route.mbt.qnt",
+      "packages/battle-runtime/battle-runtime-weapon-damage-rider-cleanup.route.mbt.qnt",
+      "packages/battle-runtime/battle-runtime-weapon-enhancement-cleanup.route.mbt.qnt"
+    ],
+    "routeClass": "reducer-routed",
+    "durableOwner": "BattleState owns spell-hosted weapon attacks, held-weapon active effects, weapon damage riders, weapon enhancement item-target boundary, Hit Point/Attack Roll, and active-effect cleanup. No selected item/spell/attack identity as behavior key.",
+    "acceptedProjection": "qRoute"
+  },
+  "status": "pass",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-spell-hosted-weapon-attack.route.mbt.qnt",
+      "qntFileSha256": "0777a28b30cfa2dbc39b4d36e415c25109c2e0d5a316364c0589d1d219bc157a",
+      "routeConnectorSha256": "9e47db2103cbc739837a2e0ab4633e8d62a7ee6de581dbf95a03aff0901be08f",
+      "branchFamily": "step",
+      "branchAction": "doDiscoverTrueStrike",
+      "observedActionTaken": "doDiscoverTrueStrike",
+      "harnessTestPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+      "traceId": "reducer-route=WeaponHostedAttackAndRiders action=doDiscoverTrueStrike connectorAction=doRouteSpellHostedDamageTypeChoice qRoute=weapon-hosted-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRouteSpellHostedDamageTypeChoice",
+        "qntStateField": "qRoute",
+        "routeConnectorPath": "packages/battle-runtime/battle-runtime-spell-hosted-weapon-attack.route.mbt.qnt",
+        "routeSubject": "spellHostedWeaponAttack",
+        "targetDriverFactory": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts#createWeaponHostedRouteDriver",
+        "targetRouteObservation": "Driver reads qRoute from public battleReducerStartRouteEvent plus BattleResolutionResult.routeEvents emitted by public resolveBattleSubject/endTurn calls; it does not reconstruct route events from adapter-local subject/owner literals."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "47a249f4cdf91bb57d012852c22a3d67bd58b3a8acb8115f1698900757c9717b",
+        "observedProjectionSha256": "47a249f4cdf91bb57d012852c22a3d67bd58b3a8acb8115f1698900757c9717b",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-spell-hosted-weapon-attack.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doRouteSpellHostedDamageTypeChoice",
+          "qntStateField": "qRoute",
+          "routeSubject": "spellHostedWeaponAttack"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "turn_advancement",
+            "packages/battle-runtime/src/index.ts#endTurn",
+            "project_qRoute"
+          ],
+          "routeEventSource": "Public reducer route events from battleReducerStartRouteEvent and BattleResolutionResult.routeEvents during weapon-hosted spell, weapon attack, damage-rider, item-target, and cleanup replay.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "BattleReducerRouteEvent.subject=spellHostedWeaponAttack",
+          "BattleReducerRouteEvent.tag=discoverBattleActs|resolveBattleSubject",
+          "BattleReducerRouteEvent.owners=battleActionEconomy|battleTargetSelection|battleAttackRoll|battleHitPoint|battleActiveEffect|battleItemTargetBoundary",
+          "BattleReducerRouteEvent.holes=damageTypeChoice|targetChoice|attackRoll|rolledDice|empty",
+          "BattleReducerRouteEvent.fill=damageTypeChoice|targetChoice|attackRoll|rolledDice|magicWeaponTargetItem|empty",
+          "BattleResolutionResult.routeEvents",
+          "BattleCreatureState.activeEffects",
+          "BattleCreatureState.hitPoints",
+          "BattleSubject.actionSpell.invocation.procedure"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "True Strike spell-hosted weapon attack discovery exposes damage-type and target-choice routing through action economy."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-spell-hosted-weapon-attack.route.mbt.qnt",
+      "qntFileSha256": "0777a28b30cfa2dbc39b4d36e415c25109c2e0d5a316364c0589d1d219bc157a",
+      "routeConnectorSha256": "9e47db2103cbc739837a2e0ab4633e8d62a7ee6de581dbf95a03aff0901be08f",
+      "branchFamily": "step",
+      "branchAction": "doFillTrueStrikeRadiantTarget",
+      "observedActionTaken": "doFillTrueStrikeRadiantTarget",
+      "harnessTestPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+      "traceId": "reducer-route=WeaponHostedAttackAndRiders action=doFillTrueStrikeRadiantTarget connectorAction=doRouteSpellHostedTargetChoice qRoute=weapon-hosted-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRouteSpellHostedTargetChoice",
+        "qntStateField": "qRoute",
+        "routeConnectorPath": "packages/battle-runtime/battle-runtime-spell-hosted-weapon-attack.route.mbt.qnt",
+        "routeSubject": "spellHostedWeaponAttack",
+        "targetDriverFactory": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts#createWeaponHostedRouteDriver",
+        "targetRouteObservation": "Driver reads qRoute from public battleReducerStartRouteEvent plus BattleResolutionResult.routeEvents emitted by public resolveBattleSubject/endTurn calls; it does not reconstruct route events from adapter-local subject/owner literals."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "246fcdf8dd17373ee2fde4397bf966e5e5207860d01f261c935cf6ec482d9c05",
+        "observedProjectionSha256": "246fcdf8dd17373ee2fde4397bf966e5e5207860d01f261c935cf6ec482d9c05",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-spell-hosted-weapon-attack.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doRouteSpellHostedTargetChoice",
+          "qntStateField": "qRoute",
+          "routeSubject": "spellHostedWeaponAttack"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "turn_advancement",
+            "packages/battle-runtime/src/index.ts#endTurn",
+            "project_qRoute"
+          ],
+          "routeEventSource": "Public reducer route events from battleReducerStartRouteEvent and BattleResolutionResult.routeEvents during weapon-hosted spell, weapon attack, damage-rider, item-target, and cleanup replay.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "BattleReducerRouteEvent.subject=spellHostedWeaponAttack",
+          "BattleReducerRouteEvent.tag=discoverBattleActs|resolveBattleSubject",
+          "BattleReducerRouteEvent.owners=battleActionEconomy|battleTargetSelection|battleAttackRoll|battleHitPoint|battleActiveEffect|battleItemTargetBoundary",
+          "BattleReducerRouteEvent.holes=damageTypeChoice|targetChoice|attackRoll|rolledDice|empty",
+          "BattleReducerRouteEvent.fill=damageTypeChoice|targetChoice|attackRoll|rolledDice|magicWeaponTargetItem|empty",
+          "BattleResolutionResult.routeEvents",
+          "BattleCreatureState.activeEffects",
+          "BattleCreatureState.hitPoints",
+          "BattleSubject.actionSpell.invocation.procedure"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "True Strike damage-type fill advances to target-choice routing through target selection."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-spell-hosted-weapon-attack.route.mbt.qnt",
+      "qntFileSha256": "0777a28b30cfa2dbc39b4d36e415c25109c2e0d5a316364c0589d1d219bc157a",
+      "routeConnectorSha256": "9e47db2103cbc739837a2e0ab4633e8d62a7ee6de581dbf95a03aff0901be08f",
+      "branchFamily": "step",
+      "branchAction": "doFillTrueStrikeHit",
+      "observedActionTaken": "doFillTrueStrikeHit",
+      "harnessTestPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+      "traceId": "reducer-route=WeaponHostedAttackAndRiders action=doFillTrueStrikeHit connectorAction=doRouteSpellHostedAttackRoll qRoute=weapon-hosted-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRouteSpellHostedAttackRoll",
+        "qntStateField": "qRoute",
+        "routeConnectorPath": "packages/battle-runtime/battle-runtime-spell-hosted-weapon-attack.route.mbt.qnt",
+        "routeSubject": "spellHostedWeaponAttack",
+        "targetDriverFactory": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts#createWeaponHostedRouteDriver",
+        "targetRouteObservation": "Driver reads qRoute from public battleReducerStartRouteEvent plus BattleResolutionResult.routeEvents emitted by public resolveBattleSubject/endTurn calls; it does not reconstruct route events from adapter-local subject/owner literals."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "25ca8e09921619a2ec8901963704e08f61333b186882116ac2af6539fe444326",
+        "observedProjectionSha256": "25ca8e09921619a2ec8901963704e08f61333b186882116ac2af6539fe444326",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-spell-hosted-weapon-attack.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doRouteSpellHostedAttackRoll",
+          "qntStateField": "qRoute",
+          "routeSubject": "spellHostedWeaponAttack"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "turn_advancement",
+            "packages/battle-runtime/src/index.ts#endTurn",
+            "project_qRoute"
+          ],
+          "routeEventSource": "Public reducer route events from battleReducerStartRouteEvent and BattleResolutionResult.routeEvents during weapon-hosted spell, weapon attack, damage-rider, item-target, and cleanup replay.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "BattleReducerRouteEvent.subject=spellHostedWeaponAttack",
+          "BattleReducerRouteEvent.tag=discoverBattleActs|resolveBattleSubject",
+          "BattleReducerRouteEvent.owners=battleActionEconomy|battleTargetSelection|battleAttackRoll|battleHitPoint|battleActiveEffect|battleItemTargetBoundary",
+          "BattleReducerRouteEvent.holes=damageTypeChoice|targetChoice|attackRoll|rolledDice|empty",
+          "BattleReducerRouteEvent.fill=damageTypeChoice|targetChoice|attackRoll|rolledDice|magicWeaponTargetItem|empty",
+          "BattleResolutionResult.routeEvents",
+          "BattleCreatureState.activeEffects",
+          "BattleCreatureState.hitPoints",
+          "BattleSubject.actionSpell.invocation.procedure"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "True Strike target fill advances to Attack Roll routing through the attack-roll owner."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-spell-hosted-weapon-attack.route.mbt.qnt",
+      "qntFileSha256": "0777a28b30cfa2dbc39b4d36e415c25109c2e0d5a316364c0589d1d219bc157a",
+      "routeConnectorSha256": "9e47db2103cbc739837a2e0ab4633e8d62a7ee6de581dbf95a03aff0901be08f",
+      "branchFamily": "step",
+      "branchAction": "doFillTrueStrikeDamage",
+      "observedActionTaken": "doFillTrueStrikeDamage",
+      "harnessTestPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+      "traceId": "reducer-route=WeaponHostedAttackAndRiders action=doFillTrueStrikeDamage connectorAction=doRouteSpellHostedDamage qRoute=weapon-hosted-public-route",
+      "sampledInputs": [
+        {
+          "pickName": "riderDiePip",
+          "value": null
+        },
+        {
+          "pickName": "weaponDiePip",
+          "value": null
+        }
+      ],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRouteSpellHostedDamage",
+        "qntStateField": "qRoute",
+        "routeConnectorPath": "packages/battle-runtime/battle-runtime-spell-hosted-weapon-attack.route.mbt.qnt",
+        "routeSubject": "spellHostedWeaponAttack",
+        "targetDriverFactory": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts#createWeaponHostedRouteDriver",
+        "targetRouteObservation": "Driver reads qRoute from public battleReducerStartRouteEvent plus BattleResolutionResult.routeEvents emitted by public resolveBattleSubject/endTurn calls; it does not reconstruct route events from adapter-local subject/owner literals."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "0d33af28ff6a4852248d6ac417fb35612e5e394f33365ab7c28b74ec7f2b9807",
+        "observedProjectionSha256": "0d33af28ff6a4852248d6ac417fb35612e5e394f33365ab7c28b74ec7f2b9807",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-spell-hosted-weapon-attack.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doRouteSpellHostedDamage",
+          "qntStateField": "qRoute",
+          "routeSubject": "spellHostedWeaponAttack"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "turn_advancement",
+            "packages/battle-runtime/src/index.ts#endTurn",
+            "project_qRoute"
+          ],
+          "routeEventSource": "Public reducer route events from battleReducerStartRouteEvent and BattleResolutionResult.routeEvents during weapon-hosted spell, weapon attack, damage-rider, item-target, and cleanup replay.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "BattleReducerRouteEvent.subject=spellHostedWeaponAttack",
+          "BattleReducerRouteEvent.tag=discoverBattleActs|resolveBattleSubject",
+          "BattleReducerRouteEvent.owners=battleActionEconomy|battleTargetSelection|battleAttackRoll|battleHitPoint|battleActiveEffect|battleItemTargetBoundary",
+          "BattleReducerRouteEvent.holes=damageTypeChoice|targetChoice|attackRoll|rolledDice|empty",
+          "BattleReducerRouteEvent.fill=damageTypeChoice|targetChoice|attackRoll|rolledDice|magicWeaponTargetItem|empty",
+          "BattleResolutionResult.routeEvents",
+          "BattleCreatureState.activeEffects",
+          "BattleCreatureState.hitPoints",
+          "BattleSubject.actionSpell.invocation.procedure"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "True Strike hit damage fill resolves through Hit Point routing."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-held-weapon-active-effect.route.mbt.qnt",
+      "qntFileSha256": "0777a28b30cfa2dbc39b4d36e415c25109c2e0d5a316364c0589d1d219bc157a",
+      "routeConnectorSha256": "f25c3cde1257bac450c79462c7ccb9ee291cc5bf1007f18ad5f867701657a997",
+      "branchFamily": "step",
+      "branchAction": "doCastShillelagh",
+      "observedActionTaken": "doCastShillelagh",
+      "harnessTestPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+      "traceId": "reducer-route=WeaponHostedAttackAndRiders action=doCastShillelagh connectorAction=doRouteHeldWeaponActiveEffect qRoute=weapon-hosted-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRouteHeldWeaponActiveEffect",
+        "qntStateField": "qRoute",
+        "routeConnectorPath": "packages/battle-runtime/battle-runtime-held-weapon-active-effect.route.mbt.qnt",
+        "routeSubject": "heldWeaponActiveEffect",
+        "targetDriverFactory": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts#createWeaponHostedRouteDriver",
+        "targetRouteObservation": "Driver reads qRoute from public battleReducerStartRouteEvent plus BattleResolutionResult.routeEvents emitted by public resolveBattleSubject/endTurn calls; it does not reconstruct route events from adapter-local subject/owner literals."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "eaa17d780ce5fc1937b4892be72b635d828af28a57b74e2cbb330e2615386271",
+        "observedProjectionSha256": "eaa17d780ce5fc1937b4892be72b635d828af28a57b74e2cbb330e2615386271",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-held-weapon-active-effect.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doRouteHeldWeaponActiveEffect",
+          "qntStateField": "qRoute",
+          "routeSubject": "heldWeaponActiveEffect"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "turn_advancement",
+            "packages/battle-runtime/src/index.ts#endTurn",
+            "project_qRoute"
+          ],
+          "routeEventSource": "Public reducer route events from battleReducerStartRouteEvent and BattleResolutionResult.routeEvents during weapon-hosted spell, weapon attack, damage-rider, item-target, and cleanup replay.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "BattleReducerRouteEvent.subject=heldWeaponActiveEffect",
+          "BattleReducerRouteEvent.tag=discoverBattleActs|resolveBattleSubject",
+          "BattleReducerRouteEvent.owners=battleActionEconomy|battleTargetSelection|battleAttackRoll|battleHitPoint|battleActiveEffect|battleItemTargetBoundary",
+          "BattleReducerRouteEvent.holes=damageTypeChoice|targetChoice|attackRoll|rolledDice|empty",
+          "BattleReducerRouteEvent.fill=damageTypeChoice|targetChoice|attackRoll|rolledDice|magicWeaponTargetItem|empty",
+          "BattleResolutionResult.routeEvents",
+          "BattleCreatureState.activeEffects",
+          "BattleCreatureState.hitPoints",
+          "BattleSubject.actionSpell.invocation.procedure"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Shillelagh active Spell Effect routes through action economy and active-effect ownership."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-held-weapon-active-effect.route.mbt.qnt",
+      "qntFileSha256": "0777a28b30cfa2dbc39b4d36e415c25109c2e0d5a316364c0589d1d219bc157a",
+      "routeConnectorSha256": "f25c3cde1257bac450c79462c7ccb9ee291cc5bf1007f18ad5f867701657a997",
+      "branchFamily": "step",
+      "branchAction": "doDiscoverShillelaghAttack",
+      "observedActionTaken": "doDiscoverShillelaghAttack",
+      "harnessTestPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+      "traceId": "reducer-route=WeaponHostedAttackAndRiders action=doDiscoverShillelaghAttack connectorAction=doRouteHeldWeaponActiveEffect qRoute=weapon-hosted-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRouteHeldWeaponActiveEffect",
+        "qntStateField": "qRoute",
+        "routeConnectorPath": "packages/battle-runtime/battle-runtime-held-weapon-active-effect.route.mbt.qnt",
+        "routeSubject": "heldWeaponActiveEffect",
+        "targetDriverFactory": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts#createWeaponHostedRouteDriver",
+        "targetRouteObservation": "Driver reads qRoute from public battleReducerStartRouteEvent plus BattleResolutionResult.routeEvents emitted by public resolveBattleSubject/endTurn calls; it does not reconstruct route events from adapter-local subject/owner literals."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "1040527c190f65f17b5fbdd57ee126394ee3febb86f3c5ddb123cc7f95adc3af",
+        "observedProjectionSha256": "1040527c190f65f17b5fbdd57ee126394ee3febb86f3c5ddb123cc7f95adc3af",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-held-weapon-active-effect.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doRouteHeldWeaponActiveEffect",
+          "qntStateField": "qRoute",
+          "routeSubject": "heldWeaponActiveEffect"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "turn_advancement",
+            "packages/battle-runtime/src/index.ts#endTurn",
+            "project_qRoute"
+          ],
+          "routeEventSource": "Public reducer route events from battleReducerStartRouteEvent and BattleResolutionResult.routeEvents during weapon-hosted spell, weapon attack, damage-rider, item-target, and cleanup replay.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "BattleReducerRouteEvent.subject=heldWeaponActiveEffect",
+          "BattleReducerRouteEvent.tag=discoverBattleActs|resolveBattleSubject",
+          "BattleReducerRouteEvent.owners=battleActionEconomy|battleTargetSelection|battleAttackRoll|battleHitPoint|battleActiveEffect|battleItemTargetBoundary",
+          "BattleReducerRouteEvent.holes=damageTypeChoice|targetChoice|attackRoll|rolledDice|empty",
+          "BattleReducerRouteEvent.fill=damageTypeChoice|targetChoice|attackRoll|rolledDice|magicWeaponTargetItem|empty",
+          "BattleResolutionResult.routeEvents",
+          "BattleCreatureState.activeEffects",
+          "BattleCreatureState.hitPoints",
+          "BattleSubject.actionSpell.invocation.procedure"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Shillelagh held-weapon attack discovery routes from the existing active effect without authored weapon identity dispatch."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-held-weapon-active-effect.route.mbt.qnt",
+      "qntFileSha256": "0777a28b30cfa2dbc39b4d36e415c25109c2e0d5a316364c0589d1d219bc157a",
+      "routeConnectorSha256": "f25c3cde1257bac450c79462c7ccb9ee291cc5bf1007f18ad5f867701657a997",
+      "branchFamily": "step",
+      "branchAction": "doFillShillelaghTarget",
+      "observedActionTaken": "doFillShillelaghTarget",
+      "harnessTestPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+      "traceId": "reducer-route=WeaponHostedAttackAndRiders action=doFillShillelaghTarget connectorAction=doRouteHeldWeaponAttackRoll qRoute=weapon-hosted-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRouteHeldWeaponAttackRoll",
+        "qntStateField": "qRoute",
+        "routeConnectorPath": "packages/battle-runtime/battle-runtime-held-weapon-active-effect.route.mbt.qnt",
+        "routeSubject": "heldWeaponActiveEffect",
+        "targetDriverFactory": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts#createWeaponHostedRouteDriver",
+        "targetRouteObservation": "Driver reads qRoute from public battleReducerStartRouteEvent plus BattleResolutionResult.routeEvents emitted by public resolveBattleSubject/endTurn calls; it does not reconstruct route events from adapter-local subject/owner literals."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "32e30173862596701c9d6c9e3e77c4dd0e12855fe1284f0a448fc10a2f6856f6",
+        "observedProjectionSha256": "32e30173862596701c9d6c9e3e77c4dd0e12855fe1284f0a448fc10a2f6856f6",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-held-weapon-active-effect.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doRouteHeldWeaponAttackRoll",
+          "qntStateField": "qRoute",
+          "routeSubject": "heldWeaponActiveEffect"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "turn_advancement",
+            "packages/battle-runtime/src/index.ts#endTurn",
+            "project_qRoute"
+          ],
+          "routeEventSource": "Public reducer route events from battleReducerStartRouteEvent and BattleResolutionResult.routeEvents during weapon-hosted spell, weapon attack, damage-rider, item-target, and cleanup replay.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "BattleReducerRouteEvent.subject=heldWeaponActiveEffect",
+          "BattleReducerRouteEvent.tag=discoverBattleActs|resolveBattleSubject",
+          "BattleReducerRouteEvent.owners=battleActionEconomy|battleTargetSelection|battleAttackRoll|battleHitPoint|battleActiveEffect|battleItemTargetBoundary",
+          "BattleReducerRouteEvent.holes=damageTypeChoice|targetChoice|attackRoll|rolledDice|empty",
+          "BattleReducerRouteEvent.fill=damageTypeChoice|targetChoice|attackRoll|rolledDice|magicWeaponTargetItem|empty",
+          "BattleResolutionResult.routeEvents",
+          "BattleCreatureState.activeEffects",
+          "BattleCreatureState.hitPoints",
+          "BattleSubject.actionSpell.invocation.procedure"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Shillelagh target fill advances to Attack Roll routing through active-effect ownership."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-held-weapon-active-effect.route.mbt.qnt",
+      "qntFileSha256": "0777a28b30cfa2dbc39b4d36e415c25109c2e0d5a316364c0589d1d219bc157a",
+      "routeConnectorSha256": "f25c3cde1257bac450c79462c7ccb9ee291cc5bf1007f18ad5f867701657a997",
+      "branchFamily": "step",
+      "branchAction": "doFillShillelaghHit",
+      "observedActionTaken": "doFillShillelaghHit",
+      "harnessTestPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+      "traceId": "reducer-route=WeaponHostedAttackAndRiders action=doFillShillelaghHit connectorAction=doRouteHeldWeaponAttackRoll qRoute=weapon-hosted-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRouteHeldWeaponAttackRoll",
+        "qntStateField": "qRoute",
+        "routeConnectorPath": "packages/battle-runtime/battle-runtime-held-weapon-active-effect.route.mbt.qnt",
+        "routeSubject": "heldWeaponActiveEffect",
+        "targetDriverFactory": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts#createWeaponHostedRouteDriver",
+        "targetRouteObservation": "Driver reads qRoute from public battleReducerStartRouteEvent plus BattleResolutionResult.routeEvents emitted by public resolveBattleSubject/endTurn calls; it does not reconstruct route events from adapter-local subject/owner literals."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "9924ebc0d6249dcef4146bdae091c46985141e547aa21e7031b13018d85259b2",
+        "observedProjectionSha256": "9924ebc0d6249dcef4146bdae091c46985141e547aa21e7031b13018d85259b2",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-held-weapon-active-effect.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doRouteHeldWeaponAttackRoll",
+          "qntStateField": "qRoute",
+          "routeSubject": "heldWeaponActiveEffect"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "turn_advancement",
+            "packages/battle-runtime/src/index.ts#endTurn",
+            "project_qRoute"
+          ],
+          "routeEventSource": "Public reducer route events from battleReducerStartRouteEvent and BattleResolutionResult.routeEvents during weapon-hosted spell, weapon attack, damage-rider, item-target, and cleanup replay.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "BattleReducerRouteEvent.subject=heldWeaponActiveEffect",
+          "BattleReducerRouteEvent.tag=discoverBattleActs|resolveBattleSubject",
+          "BattleReducerRouteEvent.owners=battleActionEconomy|battleTargetSelection|battleAttackRoll|battleHitPoint|battleActiveEffect|battleItemTargetBoundary",
+          "BattleReducerRouteEvent.holes=damageTypeChoice|targetChoice|attackRoll|rolledDice|empty",
+          "BattleReducerRouteEvent.fill=damageTypeChoice|targetChoice|attackRoll|rolledDice|magicWeaponTargetItem|empty",
+          "BattleResolutionResult.routeEvents",
+          "BattleCreatureState.activeEffects",
+          "BattleCreatureState.hitPoints",
+          "BattleSubject.actionSpell.invocation.procedure"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Shillelagh Attack Roll fill advances to damage dice routing."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-held-weapon-active-effect.route.mbt.qnt",
+      "qntFileSha256": "0777a28b30cfa2dbc39b4d36e415c25109c2e0d5a316364c0589d1d219bc157a",
+      "routeConnectorSha256": "f25c3cde1257bac450c79462c7ccb9ee291cc5bf1007f18ad5f867701657a997",
+      "branchFamily": "step",
+      "branchAction": "doFillShillelaghDamage",
+      "observedActionTaken": "doFillShillelaghDamage",
+      "harnessTestPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+      "traceId": "reducer-route=WeaponHostedAttackAndRiders action=doFillShillelaghDamage connectorAction=doRouteHeldWeaponDamage qRoute=weapon-hosted-public-route",
+      "sampledInputs": [
+        {
+          "pickName": "damageDiePip",
+          "value": null
+        }
+      ],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRouteHeldWeaponDamage",
+        "qntStateField": "qRoute",
+        "routeConnectorPath": "packages/battle-runtime/battle-runtime-held-weapon-active-effect.route.mbt.qnt",
+        "routeSubject": "heldWeaponActiveEffect",
+        "targetDriverFactory": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts#createWeaponHostedRouteDriver",
+        "targetRouteObservation": "Driver reads qRoute from public battleReducerStartRouteEvent plus BattleResolutionResult.routeEvents emitted by public resolveBattleSubject/endTurn calls; it does not reconstruct route events from adapter-local subject/owner literals."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "daeda28d9084a15605a0e840d39c3587988f404c4d069952a10354c8004abd0c",
+        "observedProjectionSha256": "daeda28d9084a15605a0e840d39c3587988f404c4d069952a10354c8004abd0c",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-held-weapon-active-effect.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doRouteHeldWeaponDamage",
+          "qntStateField": "qRoute",
+          "routeSubject": "heldWeaponActiveEffect"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "turn_advancement",
+            "packages/battle-runtime/src/index.ts#endTurn",
+            "project_qRoute"
+          ],
+          "routeEventSource": "Public reducer route events from battleReducerStartRouteEvent and BattleResolutionResult.routeEvents during weapon-hosted spell, weapon attack, damage-rider, item-target, and cleanup replay.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "BattleReducerRouteEvent.subject=heldWeaponActiveEffect",
+          "BattleReducerRouteEvent.tag=discoverBattleActs|resolveBattleSubject",
+          "BattleReducerRouteEvent.owners=battleActionEconomy|battleTargetSelection|battleAttackRoll|battleHitPoint|battleActiveEffect|battleItemTargetBoundary",
+          "BattleReducerRouteEvent.holes=damageTypeChoice|targetChoice|attackRoll|rolledDice|empty",
+          "BattleReducerRouteEvent.fill=damageTypeChoice|targetChoice|attackRoll|rolledDice|magicWeaponTargetItem|empty",
+          "BattleResolutionResult.routeEvents",
+          "BattleCreatureState.activeEffects",
+          "BattleCreatureState.hitPoints",
+          "BattleSubject.actionSpell.invocation.procedure"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Shillelagh damage fill resolves through Hit Point routing."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-held-weapon-release-cleanup.route.mbt.qnt",
+      "qntFileSha256": "0777a28b30cfa2dbc39b4d36e415c25109c2e0d5a316364c0589d1d219bc157a",
+      "routeConnectorSha256": "0972748e289758c295549bfad6fe7abbf4a237893c5f0a461ea317334a04d131",
+      "branchFamily": "step",
+      "branchAction": "doCleanShillelaghLetGo",
+      "observedActionTaken": "doCleanShillelaghLetGo",
+      "harnessTestPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+      "traceId": "reducer-route=WeaponHostedAttackAndRiders action=doCleanShillelaghLetGo connectorAction=doRouteHeldWeaponReleaseCleanup qRoute=weapon-hosted-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRouteHeldWeaponReleaseCleanup",
+        "qntStateField": "qRoute",
+        "routeConnectorPath": "packages/battle-runtime/battle-runtime-held-weapon-release-cleanup.route.mbt.qnt",
+        "routeSubject": "weaponHostedSpellEffectCleanup",
+        "targetDriverFactory": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts#createWeaponHostedRouteDriver",
+        "targetRouteObservation": "Driver reads qRoute from public battleReducerStartRouteEvent plus BattleResolutionResult.routeEvents emitted by public resolveBattleSubject/endTurn calls; it does not reconstruct route events from adapter-local subject/owner literals."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "471f95812b8ccd951659872d4b5255434044848a4823d3ace1b3fd4acaef833d",
+        "observedProjectionSha256": "471f95812b8ccd951659872d4b5255434044848a4823d3ace1b3fd4acaef833d",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-held-weapon-release-cleanup.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doRouteHeldWeaponReleaseCleanup",
+          "qntStateField": "qRoute",
+          "routeSubject": "weaponHostedSpellEffectCleanup"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "turn_advancement",
+            "packages/battle-runtime/src/index.ts#endTurn",
+            "project_qRoute"
+          ],
+          "routeEventSource": "Public reducer route events from battleReducerStartRouteEvent and BattleResolutionResult.routeEvents during weapon-hosted spell, weapon attack, damage-rider, item-target, and cleanup replay.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "BattleReducerRouteEvent.subject=weaponHostedSpellEffectCleanup",
+          "BattleReducerRouteEvent.tag=discoverBattleActs|resolveBattleSubject",
+          "BattleReducerRouteEvent.owners=battleActionEconomy|battleTargetSelection|battleAttackRoll|battleHitPoint|battleActiveEffect|battleItemTargetBoundary",
+          "BattleReducerRouteEvent.holes=damageTypeChoice|targetChoice|attackRoll|rolledDice|empty",
+          "BattleReducerRouteEvent.fill=damageTypeChoice|targetChoice|attackRoll|rolledDice|magicWeaponTargetItem|empty",
+          "BattleResolutionResult.routeEvents",
+          "BattleCreatureState.activeEffects",
+          "BattleCreatureState.hitPoints",
+          "BattleSubject.actionSpell.invocation.procedure"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Letting go of the Shillelagh weapon cleans up the hosted Spell Effect through active-effect ownership."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-damage-rider.route.mbt.qnt",
+      "qntFileSha256": "0777a28b30cfa2dbc39b4d36e415c25109c2e0d5a316364c0589d1d219bc157a",
+      "routeConnectorSha256": "eeedb51124a47900bd6b4992cf25bf608908f00bf20ff38806bc4e8e3efc6dc6",
+      "branchFamily": "step",
+      "branchAction": "doCastDivineFavor",
+      "observedActionTaken": "doCastDivineFavor",
+      "harnessTestPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+      "traceId": "reducer-route=WeaponHostedAttackAndRiders action=doCastDivineFavor connectorAction=doRouteWeaponDamageRiderActiveEffect qRoute=weapon-hosted-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRouteWeaponDamageRiderActiveEffect",
+        "qntStateField": "qRoute",
+        "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-damage-rider.route.mbt.qnt",
+        "routeSubject": "weaponDamageRider",
+        "targetDriverFactory": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts#createWeaponHostedRouteDriver",
+        "targetRouteObservation": "Driver reads qRoute from public battleReducerStartRouteEvent plus BattleResolutionResult.routeEvents emitted by public resolveBattleSubject/endTurn calls; it does not reconstruct route events from adapter-local subject/owner literals."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "d1b06e00c8c0f1aaab4e9959b079bd45f66108037f2903049a1b4ca84aef122b",
+        "observedProjectionSha256": "d1b06e00c8c0f1aaab4e9959b079bd45f66108037f2903049a1b4ca84aef122b",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-damage-rider.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doRouteWeaponDamageRiderActiveEffect",
+          "qntStateField": "qRoute",
+          "routeSubject": "weaponDamageRider"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "turn_advancement",
+            "packages/battle-runtime/src/index.ts#endTurn",
+            "project_qRoute"
+          ],
+          "routeEventSource": "Public reducer route events from battleReducerStartRouteEvent and BattleResolutionResult.routeEvents during weapon-hosted spell, weapon attack, damage-rider, item-target, and cleanup replay.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "BattleReducerRouteEvent.subject=weaponDamageRider",
+          "BattleReducerRouteEvent.tag=discoverBattleActs|resolveBattleSubject",
+          "BattleReducerRouteEvent.owners=battleActionEconomy|battleTargetSelection|battleAttackRoll|battleHitPoint|battleActiveEffect|battleItemTargetBoundary",
+          "BattleReducerRouteEvent.holes=damageTypeChoice|targetChoice|attackRoll|rolledDice|empty",
+          "BattleReducerRouteEvent.fill=damageTypeChoice|targetChoice|attackRoll|rolledDice|magicWeaponTargetItem|empty",
+          "BattleResolutionResult.routeEvents",
+          "BattleCreatureState.activeEffects",
+          "BattleCreatureState.hitPoints",
+          "BattleSubject.actionSpell.invocation.procedure"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Divine Favor cast installs a weapon damage-rider Spell Effect through spell-slot/action-economy and active-effect ownership."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-damage-rider.route.mbt.qnt",
+      "qntFileSha256": "0777a28b30cfa2dbc39b4d36e415c25109c2e0d5a316364c0589d1d219bc157a",
+      "routeConnectorSha256": "eeedb51124a47900bd6b4992cf25bf608908f00bf20ff38806bc4e8e3efc6dc6",
+      "branchFamily": "step",
+      "branchAction": "doDiscoverDivineFavorAttack",
+      "observedActionTaken": "doDiscoverDivineFavorAttack",
+      "harnessTestPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+      "traceId": "reducer-route=WeaponHostedAttackAndRiders action=doDiscoverDivineFavorAttack connectorAction=doRouteWeaponDamageRiderActiveEffect qRoute=weapon-hosted-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRouteWeaponDamageRiderActiveEffect",
+        "qntStateField": "qRoute",
+        "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-damage-rider.route.mbt.qnt",
+        "routeSubject": "weaponDamageRider",
+        "targetDriverFactory": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts#createWeaponHostedRouteDriver",
+        "targetRouteObservation": "Driver reads qRoute from public battleReducerStartRouteEvent plus BattleResolutionResult.routeEvents emitted by public resolveBattleSubject/endTurn calls; it does not reconstruct route events from adapter-local subject/owner literals."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "fe4d52fd2b7284ce8e4fe1135f0c712ba5039092e1db6ec1aef78a071509f376",
+        "observedProjectionSha256": "fe4d52fd2b7284ce8e4fe1135f0c712ba5039092e1db6ec1aef78a071509f376",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-damage-rider.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doRouteWeaponDamageRiderActiveEffect",
+          "qntStateField": "qRoute",
+          "routeSubject": "weaponDamageRider"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "turn_advancement",
+            "packages/battle-runtime/src/index.ts#endTurn",
+            "project_qRoute"
+          ],
+          "routeEventSource": "Public reducer route events from battleReducerStartRouteEvent and BattleResolutionResult.routeEvents during weapon-hosted spell, weapon attack, damage-rider, item-target, and cleanup replay.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "BattleReducerRouteEvent.subject=weaponDamageRider",
+          "BattleReducerRouteEvent.tag=discoverBattleActs|resolveBattleSubject",
+          "BattleReducerRouteEvent.owners=battleActionEconomy|battleTargetSelection|battleAttackRoll|battleHitPoint|battleActiveEffect|battleItemTargetBoundary",
+          "BattleReducerRouteEvent.holes=damageTypeChoice|targetChoice|attackRoll|rolledDice|empty",
+          "BattleReducerRouteEvent.fill=damageTypeChoice|targetChoice|attackRoll|rolledDice|magicWeaponTargetItem|empty",
+          "BattleResolutionResult.routeEvents",
+          "BattleCreatureState.activeEffects",
+          "BattleCreatureState.hitPoints",
+          "BattleSubject.actionSpell.invocation.procedure"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Divine Favor attack discovery carries the weapon damage-rider route subject from the active effect."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-damage-rider.route.mbt.qnt",
+      "qntFileSha256": "0777a28b30cfa2dbc39b4d36e415c25109c2e0d5a316364c0589d1d219bc157a",
+      "routeConnectorSha256": "eeedb51124a47900bd6b4992cf25bf608908f00bf20ff38806bc4e8e3efc6dc6",
+      "branchFamily": "step",
+      "branchAction": "doFillDivineFavorTarget",
+      "observedActionTaken": "doFillDivineFavorTarget",
+      "harnessTestPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+      "traceId": "reducer-route=WeaponHostedAttackAndRiders action=doFillDivineFavorTarget connectorAction=doRouteWeaponDamageRiderActiveEffect qRoute=weapon-hosted-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRouteWeaponDamageRiderActiveEffect",
+        "qntStateField": "qRoute",
+        "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-damage-rider.route.mbt.qnt",
+        "routeSubject": "weaponDamageRider",
+        "targetDriverFactory": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts#createWeaponHostedRouteDriver",
+        "targetRouteObservation": "Driver reads qRoute from public battleReducerStartRouteEvent plus BattleResolutionResult.routeEvents emitted by public resolveBattleSubject/endTurn calls; it does not reconstruct route events from adapter-local subject/owner literals."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "efa150d1d3f98c7e37bb9584e6e27017e3c7375568874a58a64240260a7e0ef7",
+        "observedProjectionSha256": "efa150d1d3f98c7e37bb9584e6e27017e3c7375568874a58a64240260a7e0ef7",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-damage-rider.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doRouteWeaponDamageRiderActiveEffect",
+          "qntStateField": "qRoute",
+          "routeSubject": "weaponDamageRider"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "turn_advancement",
+            "packages/battle-runtime/src/index.ts#endTurn",
+            "project_qRoute"
+          ],
+          "routeEventSource": "Public reducer route events from battleReducerStartRouteEvent and BattleResolutionResult.routeEvents during weapon-hosted spell, weapon attack, damage-rider, item-target, and cleanup replay.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "BattleReducerRouteEvent.subject=weaponDamageRider",
+          "BattleReducerRouteEvent.tag=discoverBattleActs|resolveBattleSubject",
+          "BattleReducerRouteEvent.owners=battleActionEconomy|battleTargetSelection|battleAttackRoll|battleHitPoint|battleActiveEffect|battleItemTargetBoundary",
+          "BattleReducerRouteEvent.holes=damageTypeChoice|targetChoice|attackRoll|rolledDice|empty",
+          "BattleReducerRouteEvent.fill=damageTypeChoice|targetChoice|attackRoll|rolledDice|magicWeaponTargetItem|empty",
+          "BattleResolutionResult.routeEvents",
+          "BattleCreatureState.activeEffects",
+          "BattleCreatureState.hitPoints",
+          "BattleSubject.actionSpell.invocation.procedure"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Divine Favor target fill preserves the rider active-effect route while the base weapon attack advances."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-damage-rider.route.mbt.qnt",
+      "qntFileSha256": "0777a28b30cfa2dbc39b4d36e415c25109c2e0d5a316364c0589d1d219bc157a",
+      "routeConnectorSha256": "eeedb51124a47900bd6b4992cf25bf608908f00bf20ff38806bc4e8e3efc6dc6",
+      "branchFamily": "step",
+      "branchAction": "doFillDivineFavorHit",
+      "observedActionTaken": "doFillDivineFavorHit",
+      "harnessTestPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+      "traceId": "reducer-route=WeaponHostedAttackAndRiders action=doFillDivineFavorHit connectorAction=doRouteWeaponDamageRiderDamage qRoute=weapon-hosted-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRouteWeaponDamageRiderDamage",
+        "qntStateField": "qRoute",
+        "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-damage-rider.route.mbt.qnt",
+        "routeSubject": "weaponDamageRider",
+        "targetDriverFactory": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts#createWeaponHostedRouteDriver",
+        "targetRouteObservation": "Driver reads qRoute from public battleReducerStartRouteEvent plus BattleResolutionResult.routeEvents emitted by public resolveBattleSubject/endTurn calls; it does not reconstruct route events from adapter-local subject/owner literals."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "912a2277c0057123b4c41f6e9299acc40a32e53667c78f1ebfd0444744f0f3e1",
+        "observedProjectionSha256": "912a2277c0057123b4c41f6e9299acc40a32e53667c78f1ebfd0444744f0f3e1",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-damage-rider.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doRouteWeaponDamageRiderDamage",
+          "qntStateField": "qRoute",
+          "routeSubject": "weaponDamageRider"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "turn_advancement",
+            "packages/battle-runtime/src/index.ts#endTurn",
+            "project_qRoute"
+          ],
+          "routeEventSource": "Public reducer route events from battleReducerStartRouteEvent and BattleResolutionResult.routeEvents during weapon-hosted spell, weapon attack, damage-rider, item-target, and cleanup replay.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "BattleReducerRouteEvent.subject=weaponDamageRider",
+          "BattleReducerRouteEvent.tag=discoverBattleActs|resolveBattleSubject",
+          "BattleReducerRouteEvent.owners=battleActionEconomy|battleTargetSelection|battleAttackRoll|battleHitPoint|battleActiveEffect|battleItemTargetBoundary",
+          "BattleReducerRouteEvent.holes=damageTypeChoice|targetChoice|attackRoll|rolledDice|empty",
+          "BattleReducerRouteEvent.fill=damageTypeChoice|targetChoice|attackRoll|rolledDice|magicWeaponTargetItem|empty",
+          "BattleResolutionResult.routeEvents",
+          "BattleCreatureState.activeEffects",
+          "BattleCreatureState.hitPoints",
+          "BattleSubject.actionSpell.invocation.procedure"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Divine Favor hit exposes rider damage dice through active-effect routing."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-damage-rider.route.mbt.qnt",
+      "qntFileSha256": "0777a28b30cfa2dbc39b4d36e415c25109c2e0d5a316364c0589d1d219bc157a",
+      "routeConnectorSha256": "eeedb51124a47900bd6b4992cf25bf608908f00bf20ff38806bc4e8e3efc6dc6",
+      "branchFamily": "step",
+      "branchAction": "doFillDivineFavorDamage",
+      "observedActionTaken": "doFillDivineFavorDamage",
+      "harnessTestPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+      "traceId": "reducer-route=WeaponHostedAttackAndRiders action=doFillDivineFavorDamage connectorAction=doRouteWeaponDamageRiderDamage qRoute=weapon-hosted-public-route",
+      "sampledInputs": [
+        {
+          "pickName": "riderDiePip",
+          "value": null
+        },
+        {
+          "pickName": "weaponDiePip",
+          "value": null
+        }
+      ],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRouteWeaponDamageRiderDamage",
+        "qntStateField": "qRoute",
+        "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-damage-rider.route.mbt.qnt",
+        "routeSubject": "weaponDamageRider",
+        "targetDriverFactory": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts#createWeaponHostedRouteDriver",
+        "targetRouteObservation": "Driver reads qRoute from public battleReducerStartRouteEvent plus BattleResolutionResult.routeEvents emitted by public resolveBattleSubject/endTurn calls; it does not reconstruct route events from adapter-local subject/owner literals."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "9472f904f441d596b84ec65384e07d25d29ec5d74e0748d72fb70e0d3beec9e4",
+        "observedProjectionSha256": "9472f904f441d596b84ec65384e07d25d29ec5d74e0748d72fb70e0d3beec9e4",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-damage-rider.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doRouteWeaponDamageRiderDamage",
+          "qntStateField": "qRoute",
+          "routeSubject": "weaponDamageRider"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "turn_advancement",
+            "packages/battle-runtime/src/index.ts#endTurn",
+            "project_qRoute"
+          ],
+          "routeEventSource": "Public reducer route events from battleReducerStartRouteEvent and BattleResolutionResult.routeEvents during weapon-hosted spell, weapon attack, damage-rider, item-target, and cleanup replay.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "BattleReducerRouteEvent.subject=weaponDamageRider",
+          "BattleReducerRouteEvent.tag=discoverBattleActs|resolveBattleSubject",
+          "BattleReducerRouteEvent.owners=battleActionEconomy|battleTargetSelection|battleAttackRoll|battleHitPoint|battleActiveEffect|battleItemTargetBoundary",
+          "BattleReducerRouteEvent.holes=damageTypeChoice|targetChoice|attackRoll|rolledDice|empty",
+          "BattleReducerRouteEvent.fill=damageTypeChoice|targetChoice|attackRoll|rolledDice|magicWeaponTargetItem|empty",
+          "BattleResolutionResult.routeEvents",
+          "BattleCreatureState.activeEffects",
+          "BattleCreatureState.hitPoints",
+          "BattleSubject.actionSpell.invocation.procedure"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Divine Favor rider damage fill resolves through Hit Point routing."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-damage-rider-cleanup.route.mbt.qnt",
+      "qntFileSha256": "0777a28b30cfa2dbc39b4d36e415c25109c2e0d5a316364c0589d1d219bc157a",
+      "routeConnectorSha256": "ff9a26e715d6f0c665e1492db3b352f946beb648f33ec3960fd872af7fa6eb4e",
+      "branchFamily": "step",
+      "branchAction": "doCleanDivineFavorDuration",
+      "observedActionTaken": "doCleanDivineFavorDuration",
+      "harnessTestPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+      "traceId": "reducer-route=WeaponHostedAttackAndRiders action=doCleanDivineFavorDuration connectorAction=doRouteWeaponDamageRiderDurationCleanup qRoute=weapon-hosted-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRouteWeaponDamageRiderDurationCleanup",
+        "qntStateField": "qRoute",
+        "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-damage-rider-cleanup.route.mbt.qnt",
+        "routeSubject": "weaponHostedSpellEffectCleanup",
+        "targetDriverFactory": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts#createWeaponHostedRouteDriver",
+        "targetRouteObservation": "Driver reads qRoute from public battleReducerStartRouteEvent plus BattleResolutionResult.routeEvents emitted by public resolveBattleSubject/endTurn calls; it does not reconstruct route events from adapter-local subject/owner literals."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "ab988fbc9ed03d27e086665f6e4fb865f697756ecca2ccd221e13972fc6397d3",
+        "observedProjectionSha256": "ab988fbc9ed03d27e086665f6e4fb865f697756ecca2ccd221e13972fc6397d3",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-damage-rider-cleanup.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doRouteWeaponDamageRiderDurationCleanup",
+          "qntStateField": "qRoute",
+          "routeSubject": "weaponHostedSpellEffectCleanup"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "turn_advancement",
+            "packages/battle-runtime/src/index.ts#endTurn",
+            "project_qRoute"
+          ],
+          "routeEventSource": "Public reducer route events from battleReducerStartRouteEvent and BattleResolutionResult.routeEvents during weapon-hosted spell, weapon attack, damage-rider, item-target, and cleanup replay.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "BattleReducerRouteEvent.subject=weaponHostedSpellEffectCleanup",
+          "BattleReducerRouteEvent.tag=discoverBattleActs|resolveBattleSubject",
+          "BattleReducerRouteEvent.owners=battleActionEconomy|battleTargetSelection|battleAttackRoll|battleHitPoint|battleActiveEffect|battleItemTargetBoundary",
+          "BattleReducerRouteEvent.holes=damageTypeChoice|targetChoice|attackRoll|rolledDice|empty",
+          "BattleReducerRouteEvent.fill=damageTypeChoice|targetChoice|attackRoll|rolledDice|magicWeaponTargetItem|empty",
+          "BattleResolutionResult.routeEvents",
+          "BattleCreatureState.activeEffects",
+          "BattleCreatureState.hitPoints",
+          "BattleSubject.actionSpell.invocation.procedure"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Divine Favor duration expiry removes the hosted Spell Effect through active-effect cleanup routing."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-enhancement-item-target.route.mbt.qnt",
+      "qntFileSha256": "0777a28b30cfa2dbc39b4d36e415c25109c2e0d5a316364c0589d1d219bc157a",
+      "routeConnectorSha256": "62d04c38905797ca11756984d6a86cb73bf5db4282420452e5bb564bfa3c1d52",
+      "branchFamily": "step",
+      "branchAction": "doDiscoverMagicWeapon",
+      "observedActionTaken": "doDiscoverMagicWeapon",
+      "harnessTestPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+      "traceId": "reducer-route=WeaponHostedAttackAndRiders action=doDiscoverMagicWeapon connectorAction=doRouteWeaponEnhancementItemTarget qRoute=weapon-hosted-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRouteWeaponEnhancementItemTarget",
+        "qntStateField": "qRoute",
+        "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-enhancement-item-target.route.mbt.qnt",
+        "routeSubject": "weaponEnhancementItemTarget",
+        "targetDriverFactory": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts#createWeaponHostedRouteDriver",
+        "targetRouteObservation": "Driver reads qRoute from public battleReducerStartRouteEvent plus BattleResolutionResult.routeEvents emitted by public resolveBattleSubject/endTurn calls; it does not reconstruct route events from adapter-local subject/owner literals."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "29f433e6cebc125c34137fa0244dd677ef663b9b68a090dc802d79dccaec970e",
+        "observedProjectionSha256": "29f433e6cebc125c34137fa0244dd677ef663b9b68a090dc802d79dccaec970e",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-enhancement-item-target.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doRouteWeaponEnhancementItemTarget",
+          "qntStateField": "qRoute",
+          "routeSubject": "weaponEnhancementItemTarget"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "turn_advancement",
+            "packages/battle-runtime/src/index.ts#endTurn",
+            "project_qRoute"
+          ],
+          "routeEventSource": "Public reducer route events from battleReducerStartRouteEvent and BattleResolutionResult.routeEvents during weapon-hosted spell, weapon attack, damage-rider, item-target, and cleanup replay.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "BattleReducerRouteEvent.subject=weaponEnhancementItemTarget",
+          "BattleReducerRouteEvent.tag=discoverBattleActs|resolveBattleSubject",
+          "BattleReducerRouteEvent.owners=battleActionEconomy|battleTargetSelection|battleAttackRoll|battleHitPoint|battleActiveEffect|battleItemTargetBoundary",
+          "BattleReducerRouteEvent.holes=damageTypeChoice|targetChoice|attackRoll|rolledDice|empty",
+          "BattleReducerRouteEvent.fill=damageTypeChoice|targetChoice|attackRoll|rolledDice|magicWeaponTargetItem|empty",
+          "BattleResolutionResult.routeEvents",
+          "BattleCreatureState.activeEffects",
+          "BattleCreatureState.hitPoints",
+          "BattleSubject.actionSpell.invocation.procedure"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Magic Weapon discovery routes item targeting through the item-target boundary and active-effect owner, with no qRoute hole for table-owned item identity."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-enhancement-item-target.route.mbt.qnt",
+      "qntFileSha256": "0777a28b30cfa2dbc39b4d36e415c25109c2e0d5a316364c0589d1d219bc157a",
+      "routeConnectorSha256": "62d04c38905797ca11756984d6a86cb73bf5db4282420452e5bb564bfa3c1d52",
+      "branchFamily": "step",
+      "branchAction": "doFillMagicWeaponTarget",
+      "observedActionTaken": "doFillMagicWeaponTarget",
+      "harnessTestPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+      "traceId": "reducer-route=WeaponHostedAttackAndRiders action=doFillMagicWeaponTarget connectorAction=doRouteWeaponEnhancementItemTarget qRoute=weapon-hosted-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRouteWeaponEnhancementItemTarget",
+        "qntStateField": "qRoute",
+        "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-enhancement-item-target.route.mbt.qnt",
+        "routeSubject": "weaponEnhancementItemTarget",
+        "targetDriverFactory": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts#createWeaponHostedRouteDriver",
+        "targetRouteObservation": "Driver reads qRoute from public battleReducerStartRouteEvent plus BattleResolutionResult.routeEvents emitted by public resolveBattleSubject/endTurn calls; it does not reconstruct route events from adapter-local subject/owner literals."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "98ae58c41caeae1ce6a0f079d1b198d15f963bb196962c321e9bc9d44dc72c15",
+        "observedProjectionSha256": "98ae58c41caeae1ce6a0f079d1b198d15f963bb196962c321e9bc9d44dc72c15",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-enhancement-item-target.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doRouteWeaponEnhancementItemTarget",
+          "qntStateField": "qRoute",
+          "routeSubject": "weaponEnhancementItemTarget"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "turn_advancement",
+            "packages/battle-runtime/src/index.ts#endTurn",
+            "project_qRoute"
+          ],
+          "routeEventSource": "Public reducer route events from battleReducerStartRouteEvent and BattleResolutionResult.routeEvents during weapon-hosted spell, weapon attack, damage-rider, item-target, and cleanup replay.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "BattleReducerRouteEvent.subject=weaponEnhancementItemTarget",
+          "BattleReducerRouteEvent.tag=discoverBattleActs|resolveBattleSubject",
+          "BattleReducerRouteEvent.owners=battleActionEconomy|battleTargetSelection|battleAttackRoll|battleHitPoint|battleActiveEffect|battleItemTargetBoundary",
+          "BattleReducerRouteEvent.holes=damageTypeChoice|targetChoice|attackRoll|rolledDice|empty",
+          "BattleReducerRouteEvent.fill=damageTypeChoice|targetChoice|attackRoll|rolledDice|magicWeaponTargetItem|empty",
+          "BattleResolutionResult.routeEvents",
+          "BattleCreatureState.activeEffects",
+          "BattleCreatureState.hitPoints",
+          "BattleSubject.actionSpell.invocation.procedure"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Magic Weapon item-target fill installs the enhancement through active-effect ownership."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-enhancement-cleanup.route.mbt.qnt",
+      "qntFileSha256": "0777a28b30cfa2dbc39b4d36e415c25109c2e0d5a316364c0589d1d219bc157a",
+      "routeConnectorSha256": "1c0b312363d87930a53161882ebbcdb23c91f8d4df537cd542c87cfc5a6b59b2",
+      "branchFamily": "step",
+      "branchAction": "doCleanMagicWeaponDuration",
+      "observedActionTaken": "doCleanMagicWeaponDuration",
+      "harnessTestPath": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts",
+      "traceId": "reducer-route=WeaponHostedAttackAndRiders action=doCleanMagicWeaponDuration connectorAction=doRouteWeaponEnhancementDurationCleanup qRoute=weapon-hosted-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRouteWeaponEnhancementDurationCleanup",
+        "qntStateField": "qRoute",
+        "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-enhancement-cleanup.route.mbt.qnt",
+        "routeSubject": "weaponHostedSpellEffectCleanup",
+        "targetDriverFactory": "packages/battle-runtime/src/weapon-hosted-attack-and-riders.mbt.test.ts#createWeaponHostedRouteDriver",
+        "targetRouteObservation": "Driver reads qRoute from public battleReducerStartRouteEvent plus BattleResolutionResult.routeEvents emitted by public resolveBattleSubject/endTurn calls; it does not reconstruct route events from adapter-local subject/owner literals."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "98347c929c57ede8e0b99d2d63907e737c57a60261f96762c76235cfc5f34b92",
+        "observedProjectionSha256": "98347c929c57ede8e0b99d2d63907e737c57a60261f96762c76235cfc5f34b92",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-enhancement-cleanup.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doRouteWeaponEnhancementDurationCleanup",
+          "qntStateField": "qRoute",
+          "routeSubject": "weaponHostedSpellEffectCleanup"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "turn_advancement",
+            "packages/battle-runtime/src/index.ts#endTurn",
+            "project_qRoute"
+          ],
+          "routeEventSource": "Public reducer route events from battleReducerStartRouteEvent and BattleResolutionResult.routeEvents during weapon-hosted spell, weapon attack, damage-rider, item-target, and cleanup replay.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "BattleReducerRouteEvent.subject=weaponHostedSpellEffectCleanup",
+          "BattleReducerRouteEvent.tag=discoverBattleActs|resolveBattleSubject",
+          "BattleReducerRouteEvent.owners=battleActionEconomy|battleTargetSelection|battleAttackRoll|battleHitPoint|battleActiveEffect|battleItemTargetBoundary",
+          "BattleReducerRouteEvent.holes=damageTypeChoice|targetChoice|attackRoll|rolledDice|empty",
+          "BattleReducerRouteEvent.fill=damageTypeChoice|targetChoice|attackRoll|rolledDice|magicWeaponTargetItem|empty",
+          "BattleResolutionResult.routeEvents",
+          "BattleCreatureState.activeEffects",
+          "BattleCreatureState.hitPoints",
+          "BattleSubject.actionSpell.invocation.procedure"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Magic Weapon duration expiry removes the hosted enhancement through active-effect cleanup routing."
+      }
+    }
+  ]
+}

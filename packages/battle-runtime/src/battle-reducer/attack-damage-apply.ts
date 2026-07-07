@@ -795,23 +795,17 @@ function weaponAttackWithActiveSpellOverride(
   attack: CharacterWeaponAttackActionOption,
   attachedWeaponItemId: string | undefined,
 ): CharacterWeaponAttackActionOption {
-  const effect = actor.activeEffects.find(
-    (
-      candidate,
-    ): candidate is Extract<
-      BattleActiveEffect,
-      { readonly kind: "spellWeaponAttackOverride" }
-    > =>
-      isSpellWeaponAttackOverrideEffect(candidate) &&
-      candidate.sourceCombatantId === actor.combatantId &&
-      candidate.weaponItemId === attachedWeaponItemId,
-  );
   if (
     attachedWeaponItemId === undefined ||
-    effect === undefined ||
-    attack.weapon.damage.kind !== "dice" ||
-    attack.weapon.usage !== "melee"
+    !weaponAttackCanUseActiveSpellOverride(attack)
   ) {
+    return attack;
+  }
+  const effect = activeSpellWeaponAttackOverrideEffectForWeapon(
+    actor,
+    attachedWeaponItemId,
+  );
+  if (effect === undefined) {
     return attack;
   }
   return {
@@ -840,6 +834,72 @@ function weaponAttackWithActiveSpellOverride(
       },
     },
   };
+}
+
+export function weaponAttackUsesActiveSpellOverride(
+  state: BattleState,
+  actorId: CombatantId,
+  attack: SupportedAttackActionOption,
+): boolean {
+  const actor = state.combatants.get(actorId);
+  if (actor === undefined || attack.kind !== "weapon") {
+    return false;
+  }
+  const attachedWeaponItemId = heldWeaponItemIdForAttack(
+    state,
+    actorId,
+    attack,
+  );
+  if (
+    attachedWeaponItemId === undefined ||
+    !weaponAttackCanUseActiveSpellOverride(attack)
+  ) {
+    return false;
+  }
+  return (
+    activeSpellWeaponAttackOverrideEffectForWeapon(
+      actor,
+      attachedWeaponItemId,
+    ) !== undefined
+  );
+}
+
+type SpellWeaponAttackOverrideShape = CharacterWeaponAttackActionOption & {
+  readonly weapon: CharacterWeaponAttackActionOption["weapon"] & {
+    readonly damage: Extract<
+      CharacterWeaponAttackActionOption["weapon"]["damage"],
+      { readonly kind: "dice" }
+    >;
+    readonly usage: "melee";
+  };
+};
+
+function weaponAttackCanUseActiveSpellOverride(
+  attack: CharacterWeaponAttackActionOption,
+): attack is SpellWeaponAttackOverrideShape {
+  return (
+    attack.weapon.damage.kind === "dice" &&
+    attack.weapon.usage === "melee"
+  );
+}
+
+function activeSpellWeaponAttackOverrideEffectForWeapon(
+  actor: BattleCreatureState,
+  attachedWeaponItemId: string,
+):
+  | Extract<BattleActiveEffect, { readonly kind: "spellWeaponAttackOverride" }>
+  | undefined {
+  return actor.activeEffects.find(
+    (
+      candidate,
+    ): candidate is Extract<
+      BattleActiveEffect,
+      { readonly kind: "spellWeaponAttackOverride" }
+    > =>
+      isSpellWeaponAttackOverrideEffect(candidate) &&
+      candidate.sourceCombatantId === actor.combatantId &&
+      candidate.weaponItemId === attachedWeaponItemId,
+  );
 }
 
 function weaponAttackWithMagicWeaponEnhancement(

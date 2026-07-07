@@ -20,15 +20,9 @@ import {
   quintStateRecord,
   quintVariantMappedValue,
   quintVariantTag,
-  reducerRouteDiscoverBattleActs,
-  reducerRouteResolveBattleSubject,
-  reducerRouteResolveBattleSubjectWithoutFill,
-  reducerRouteStartBattle,
   run,
   stateCheck,
   type ReducerRouteEvent,
-  type ReducerRouteFill,
-  type ReducerRouteOwnerGroup,
   type ReducerRouteSubjectFamily,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import {
@@ -60,6 +54,7 @@ import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import {
   battleWeaponItemHasMagicWeaponEnhancement,
   battleWeaponItemMagicWeaponEnhancementBonus,
+  battleReducerStartRouteEvent,
   endTurn,
   resolveBattleSubject,
   type BattleFill,
@@ -100,7 +95,10 @@ const WEAPON_HOSTED_HOLES = [
   "MagicWeaponTargetItem",
 ] as const;
 type WeaponHostedHole = (typeof WEAPON_HOSTED_HOLES)[number];
-type WeaponHostedAttackName = "Quarterstaff (force)" | "Longsword";
+type WeaponHostedAttackName =
+  | "Quarterstaff (force)"
+  | "Longsword"
+  | "Unarmed Strike";
 
 type WeaponHostedState = {
   readonly scenario: WeaponHostedScenario;
@@ -294,9 +292,7 @@ const WEAPON_ENHANCEMENT_ITEM_TARGET_ROUTE_SUBJECT =
   "weaponEnhancementItemTarget" satisfies ReducerRouteSubjectFamily;
 const WEAPON_HOSTED_CLEANUP_ROUTE_SUBJECT =
   "weaponHostedSpellEffectCleanup" satisfies ReducerRouteSubjectFamily;
-const WEAPON_HOSTED_ROUTE_START = reducerRouteStartBattle(
-  "battleActionEconomy",
-);
+const WEAPON_HOSTED_ROUTE_START = battleReducerStartRouteEvent();
 
 function createWeaponHostedDriver() {
   return defineDriver(weaponHostedDriverSchema, () => {
@@ -500,6 +496,47 @@ describe("Weapon-hosted attack and riders MBT parity", () => {
     MBT_TEST_TIMEOUT_MS,
   );
 
+  it("keeps normal weapon route for an unaffected attack while a held-weapon override is active", () => {
+    const targetChosen = fillWeaponTarget(
+      discoverWeaponAttack(
+        castShillelagh(initialRuntimeState("shillelaghHeldWeaponOverride")),
+        "Unarmed Strike",
+      ),
+    );
+    if (targetChosen.pending.tag !== "weaponAttackRoll") {
+      throw new Error("Expected pending unaffected weapon attack roll.");
+    }
+    const attack = requireHole(targetChosen.holes, "attackRoll");
+    const result = requireResolved(
+      resolveBattleSubject({
+        state: targetChosen.battle,
+        subject: targetChosen.pending.subject,
+        fills: [
+          targetChosen.pending.targetFill,
+          attackRollFill(attack, { total: 15, naturalD20: 10 }),
+        ],
+      }),
+      "Expected unaffected weapon hit to resolve without hosted holes.",
+    );
+    const route = weaponHostedRouteFromResult(
+      result,
+      "weaponAttack" satisfies ReducerRouteSubjectFamily,
+    );
+    expect(route).toEqual([
+      WEAPON_HOSTED_ROUTE_START,
+      {
+        kind: "resolveBattleSubject",
+        subject: "weaponAttack",
+        fill: "attackRoll",
+        holes: [],
+        owner: "battleAttackRoll",
+      },
+    ]);
+    expect(route).not.toContainEqual(
+      expect.objectContaining({ subject: HELD_WEAPON_ACTIVE_EFFECT_ROUTE_SUBJECT }),
+    );
+  });
+
   it(
     "routes weapon damage-rider surfaces",
     async () => {
@@ -648,14 +685,10 @@ function routeSpellHostedDamageTypeChoice(): readonly ReducerRouteEvent[] {
     "Expected True Strike damage type choice to leave target choice open.",
   );
   requireHole(result.holes, "targetChoice");
-  return weaponHostedRouteWithResolve({
-    subject: SPELL_HOSTED_WEAPON_ATTACK_ROUTE_SUBJECT,
-    holes: discovered.holes,
-    discoverOwner: "battleActionEconomy",
-    fill: "damageTypeChoice",
-    nextHoles: result.holes,
-    resolveOwner: "battleHoleFrontier",
-  });
+  return weaponHostedRouteFromResult(
+    result,
+    SPELL_HOSTED_WEAPON_ATTACK_ROUTE_SUBJECT,
+  );
 }
 
 function routeSpellHostedTargetChoice(): readonly ReducerRouteEvent[] {
@@ -691,29 +724,43 @@ function routeSpellHostedTargetChoice(): readonly ReducerRouteEvent[] {
     "Expected True Strike target choice to leave attack roll open.",
   );
   requireHole(result.holes, "attackRoll");
-  return weaponHostedRouteWithResolve({
-    subject: SPELL_HOSTED_WEAPON_ATTACK_ROUTE_SUBJECT,
-    holes: damageTypeResult.holes,
-    discoverOwner: "battleTargetSelection",
-    fill: "targetChoice",
-    nextHoles: result.holes,
-    resolveOwner: "battleTargetSelection",
-  });
+  return weaponHostedRouteFromResult(
+    result,
+    SPELL_HOSTED_WEAPON_ATTACK_ROUTE_SUBJECT,
+  );
 }
 
 function routeSpellHostedAttackRoll(): readonly ReducerRouteEvent[] {
   const targetChosen = fillTrueStrikeRadiantTarget(
     discoverTrueStrike(initialRuntimeState("trueStrikeRadiantHit", "init")),
   );
-  const damaged = fillTrueStrikeHit(targetChosen);
-  return weaponHostedRouteWithResolve({
-    subject: SPELL_HOSTED_WEAPON_ATTACK_ROUTE_SUBJECT,
-    holes: targetChosen.holes,
-    discoverOwner: "battleAttackRoll",
-    fill: "attackRoll",
-    nextHoles: damaged.holes,
-    resolveOwner: "battleAttackRoll",
-  });
+  if (targetChosen.pending.tag !== "trueStrikeAttackRoll") {
+    throw new Error("Expected pending True Strike attack roll.");
+  }
+  const attackFill = attackRollFill(
+    requireHole(targetChosen.holes, "attackRoll"),
+    {
+      total: 15,
+      naturalD20: 12,
+    },
+  );
+  const result = requireNeedsHoles(
+    resolveBattleSubject({
+      state: targetChosen.battle,
+      subject: targetChosen.pending.subject,
+      fills: [
+        targetChosen.pending.damageTypeFill,
+        targetChosen.pending.targetFill,
+        attackFill,
+      ],
+    }),
+    "Expected True Strike hit to leave damage roll open.",
+  );
+  requireHole(result.holes, "rolledDice");
+  return weaponHostedRouteFromResult(
+    result,
+    SPELL_HOSTED_WEAPON_ATTACK_ROUTE_SUBJECT,
+  );
 }
 
 function routeSpellHostedDamage(): readonly ReducerRouteEvent[] {
@@ -722,26 +769,46 @@ function routeSpellHostedDamage(): readonly ReducerRouteEvent[] {
       discoverTrueStrike(initialRuntimeState("trueStrikeRadiantHit", "init")),
     ),
   );
-  fillTrueStrikeDamage(hit, 2, 3);
-  return weaponHostedRouteWithResolve({
-    subject: SPELL_HOSTED_WEAPON_ATTACK_ROUTE_SUBJECT,
-    holes: hit.holes,
-    discoverOwner: "battleHitPoint",
-    fill: "rolledDice",
-    nextHoles: [],
-    resolveOwner: "battleHitPoint",
-  });
+  if (hit.pending.tag !== "trueStrikeDamage") {
+    throw new Error("Expected pending True Strike damage.");
+  }
+  const result = requireResolved(
+    resolveBattleSubject({
+      state: hit.battle,
+      subject: hit.pending.subject,
+      fills: [
+        hit.pending.damageTypeFill,
+        hit.pending.targetFill,
+        hit.pending.attackFill,
+        damageRollFillWithGroups(requireHole(hit.holes, "rolledDice"), [
+          [2],
+          [3],
+        ]),
+      ],
+    }),
+    "Expected True Strike damage to resolve.",
+  );
+  return weaponHostedRouteFromResult(
+    result,
+    SPELL_HOSTED_WEAPON_ATTACK_ROUTE_SUBJECT,
+  );
 }
 
 function routeHeldWeaponActiveEffect(): readonly ReducerRouteEvent[] {
-  castShillelagh(initialRuntimeState("shillelaghHeldWeaponOverride"));
-  return weaponHostedRouteWithResolveWithoutFill({
-    subject: HELD_WEAPON_ACTIVE_EFFECT_ROUTE_SUBJECT,
-    holes: [],
-    discoverOwner: "battleActionEconomy",
-    nextHoles: [],
-    resolveOwner: "battleActiveEffect",
-  });
+  const state = initialRuntimeState("shillelaghHeldWeaponOverride");
+  const result = requireResolved(
+    resolveBattleSubject({
+      state: state.battle,
+      subject: bonusSpellAct({ state: state.battle, spellId: shillelaghUnitId })
+        .subject,
+      fills: [],
+    }),
+    "Expected Shillelagh to resolve.",
+  );
+  return weaponHostedRouteFromResult(
+    result,
+    HELD_WEAPON_ACTIVE_EFFECT_ROUTE_SUBJECT,
+  );
 }
 
 function routeHeldWeaponAttackRoll(): readonly ReducerRouteEvent[] {
@@ -751,15 +818,27 @@ function routeHeldWeaponAttackRoll(): readonly ReducerRouteEvent[] {
       "Quarterstaff (force)",
     ),
   );
-  const hit = fillWeaponHit(targetChosen, { expectedAttackBonus: 5 });
-  return weaponHostedRouteWithResolve({
-    subject: HELD_WEAPON_ACTIVE_EFFECT_ROUTE_SUBJECT,
-    holes: targetChosen.holes,
-    discoverOwner: "battleActiveEffect",
-    fill: "attackRoll",
-    nextHoles: hit.holes,
-    resolveOwner: "battleAttackRoll",
-  });
+  if (targetChosen.pending.tag !== "weaponAttackRoll") {
+    throw new Error("Expected pending Shillelagh weapon attack roll.");
+  }
+  const attack = requireHole(targetChosen.holes, "attackRoll");
+  expect(attack.attackBonus).toBe(attackBonus(5));
+  const result = requireNeedsHoles(
+    resolveBattleSubject({
+      state: targetChosen.battle,
+      subject: targetChosen.pending.subject,
+      fills: [
+        targetChosen.pending.targetFill,
+        attackRollFill(attack, { total: 15, naturalD20: 10 }),
+      ],
+    }),
+    "Expected Shillelagh hit to leave damage roll open.",
+  );
+  requireHole(result.holes, "rolledDice");
+  return weaponHostedRouteFromResult(
+    result,
+    HELD_WEAPON_ACTIVE_EFFECT_ROUTE_SUBJECT,
+  );
 }
 
 function routeHeldWeaponDamage(): readonly ReducerRouteEvent[] {
@@ -772,26 +851,43 @@ function routeHeldWeaponDamage(): readonly ReducerRouteEvent[] {
     ),
     { expectedAttackBonus: 5 },
   );
-  fillWeaponDamage(hit, [[2, 2]]);
-  return weaponHostedRouteWithResolve({
-    subject: HELD_WEAPON_ACTIVE_EFFECT_ROUTE_SUBJECT,
-    holes: hit.holes,
-    discoverOwner: "battleActiveEffect",
-    fill: "rolledDice",
-    nextHoles: [],
-    resolveOwner: "battleHitPoint",
-  });
+  if (hit.pending.tag !== "weaponDamage") {
+    throw new Error("Expected pending Shillelagh weapon damage.");
+  }
+  const result = requireResolved(
+    resolveBattleSubject({
+      state: hit.battle,
+      subject: hit.pending.subject,
+      fills: [
+        hit.pending.targetFill,
+        hit.pending.attackFill,
+        damageRollFillWithGroups(requireHole(hit.holes, "rolledDice"), [
+          [2, 2],
+        ]),
+      ],
+    }),
+    "Expected Shillelagh weapon damage to resolve.",
+  );
+  return weaponHostedRouteFromResult(
+    result,
+    HELD_WEAPON_ACTIVE_EFFECT_ROUTE_SUBJECT,
+  );
 }
 
 function routeWeaponDamageRiderActiveEffect(): readonly ReducerRouteEvent[] {
-  castDivineFavor(initialRuntimeState("divineFavorWeaponDamageRider"));
-  return weaponHostedRouteWithResolveWithoutFill({
-    subject: WEAPON_DAMAGE_RIDER_ROUTE_SUBJECT,
-    holes: [],
-    discoverOwner: "battleSpellSlotAndActionEconomy",
-    nextHoles: [],
-    resolveOwner: "battleActiveEffect",
-  });
+  const state = initialRuntimeState("divineFavorWeaponDamageRider");
+  const result = requireResolved(
+    resolveBattleSubject({
+      state: state.battle,
+      subject: bonusSpellAct({
+        state: state.battle,
+        spellId: divineFavorUnitId,
+      }).subject,
+      fills: [],
+    }),
+    "Expected Divine Favor to resolve.",
+  );
+  return weaponHostedRouteFromResult(result, WEAPON_DAMAGE_RIDER_ROUTE_SUBJECT);
 }
 
 function routeWeaponDamageRiderDamage(): readonly ReducerRouteEvent[] {
@@ -804,29 +900,52 @@ function routeWeaponDamageRiderDamage(): readonly ReducerRouteEvent[] {
     ),
     { expectDamageRider: true },
   );
-  fillWeaponDamage(hit, [[2], [3]]);
-  return weaponHostedRouteWithResolve({
-    subject: WEAPON_DAMAGE_RIDER_ROUTE_SUBJECT,
-    holes: hit.holes,
-    discoverOwner: "battleActiveEffect",
-    fill: "rolledDice",
-    nextHoles: [],
-    resolveOwner: "battleHitPoint",
-  });
+  if (hit.pending.tag !== "weaponDamage") {
+    throw new Error("Expected pending Divine Favor weapon damage.");
+  }
+  const result = requireResolved(
+    resolveBattleSubject({
+      state: hit.battle,
+      subject: hit.pending.subject,
+      fills: [
+        hit.pending.targetFill,
+        hit.pending.attackFill,
+        damageRollFillWithGroups(requireHole(hit.holes, "rolledDice"), [
+          [2],
+          [3],
+        ]),
+      ],
+    }),
+    "Expected Divine Favor weapon damage to resolve.",
+  );
+  return weaponHostedRouteFromResult(result, WEAPON_DAMAGE_RIDER_ROUTE_SUBJECT);
 }
 
 function routeWeaponEnhancementItemTarget(): readonly ReducerRouteEvent[] {
   const discovered = discoverMagicWeapon(
     initialRuntimeState("magicWeaponEnhancement"),
   );
-  fillMagicWeaponTarget(discovered);
-  return weaponHostedRouteWithResolveWithoutFill({
-    subject: WEAPON_ENHANCEMENT_ITEM_TARGET_ROUTE_SUBJECT,
-    holes: discovered.holes,
-    discoverOwner: "battleItemTargetBoundary",
-    nextHoles: [],
-    resolveOwner: "battleActiveEffect",
-  });
+  if (discovered.pending.tag !== "magicWeaponTarget") {
+    throw new Error("Expected pending Magic Weapon target.");
+  }
+  const target = requireHole(discovered.holes, "magicWeaponTargetItem");
+  const result = requireResolved(
+    resolveBattleSubject({
+      state: discovered.battle,
+      subject: discovered.pending.subject,
+      fills: [
+        magicWeaponTargetItemFill(target, {
+          holderCombatantId: spellCasterId,
+          itemId: "main:weapon_longsword",
+        }),
+      ],
+    }),
+    "Expected Magic Weapon to resolve.",
+  );
+  return weaponHostedRouteFromResult(
+    result,
+    WEAPON_ENHANCEMENT_ITEM_TARGET_ROUTE_SUBJECT,
+  );
 }
 
 function routeHeldWeaponReleaseCleanup(): readonly ReducerRouteEvent[] {
@@ -842,14 +961,25 @@ function routeHeldWeaponReleaseCleanup(): readonly ReducerRouteEvent[] {
     ),
     [[2, 2]],
   );
-  cleanShillelaghLetGo(damaged);
-  return weaponHostedRouteWithResolveWithoutFill({
-    subject: WEAPON_HOSTED_CLEANUP_ROUTE_SUBJECT,
-    holes: [],
-    discoverOwner: "battleActiveEffect",
-    nextHoles: [],
-    resolveOwner: "battleActiveEffect",
-  });
+  const caster = requireCombatant(damaged.battle, spellCasterId);
+  if (caster.origin.kind !== "character") {
+    throw new Error("Expected Shillelagh caster character origin.");
+  }
+  const letGoState: BattleState = {
+    ...damaged.battle,
+    combatants: new Map(damaged.battle.combatants).set(spellCasterId, {
+      ...caster,
+      origin: {
+        ...caster.origin,
+        selectedLoadout: {},
+      },
+    }),
+  };
+  const result = requireResolved(
+    endTurn({ state: letGoState, actorId: spellCasterId }),
+    "Expected Shillelagh let-go cleanup to resolve.",
+  );
+  return weaponHostedRouteFromResult(result, WEAPON_HOSTED_CLEANUP_ROUTE_SUBJECT);
 }
 
 function routeWeaponDamageRiderDurationCleanup(): readonly ReducerRouteEvent[] {
@@ -865,73 +995,79 @@ function routeWeaponDamageRiderDurationCleanup(): readonly ReducerRouteEvent[] {
     ),
     [[2], [3]],
   );
-  cleanDivineFavorDuration(damaged);
-  return weaponHostedRouteWithResolveWithoutFill({
-    subject: WEAPON_HOSTED_CLEANUP_ROUTE_SUBJECT,
-    holes: [],
-    discoverOwner: "battleActiveEffect",
-    nextHoles: [],
-    resolveOwner: "battleActiveEffect",
-  });
+  const caster = requireCombatant(damaged.battle, spellCasterId);
+  const expiringState: BattleState = {
+    ...damaged.battle,
+    combatants: new Map(damaged.battle.combatants).set(spellCasterId, {
+      ...caster,
+      activeEffects: caster.activeEffects.map((effect) =>
+        effect.kind === "spellWeaponDamageRider" &&
+        effect.sourceSpellId === divineFavorUnitId
+          ? {
+              ...effect,
+              expiresAt: {
+                kind: "duration",
+                durationTicks: elapsedTimeTicks(1),
+              },
+            }
+          : effect,
+      ),
+    }),
+  };
+  const casterTurn = requireResolved(
+    endTurn({ state: expiringState, actorId: spellCasterId }),
+    "Expected Divine Favor caster end turn to resolve.",
+  );
+  const result = requireResolved(
+    endTurn({ state: casterTurn.state, actorId: spellTargetId }),
+    "Expected Divine Favor duration cleanup to resolve.",
+  );
+  return weaponHostedRouteFromResult(result, WEAPON_HOSTED_CLEANUP_ROUTE_SUBJECT);
 }
 
 function routeWeaponEnhancementDurationCleanup(): readonly ReducerRouteEvent[] {
   const enhanced = fillMagicWeaponTarget(
     discoverMagicWeapon(initialRuntimeState("magicWeaponEnhancement")),
   );
-  cleanMagicWeaponDuration(enhanced);
-  return weaponHostedRouteWithResolveWithoutFill({
-    subject: WEAPON_HOSTED_CLEANUP_ROUTE_SUBJECT,
-    holes: [],
-    discoverOwner: "battleActiveEffect",
-    nextHoles: [],
-    resolveOwner: "battleActiveEffect",
-  });
+  const caster = requireCombatant(enhanced.battle, spellCasterId);
+  const expiringState: BattleState = {
+    ...enhanced.battle,
+    combatants: new Map(enhanced.battle.combatants).set(spellCasterId, {
+      ...caster,
+      activeEffects: caster.activeEffects.map((effect) =>
+        effect.kind === "spellMagicWeaponEnhancement"
+          ? {
+              ...effect,
+              expiresAt: {
+                ...effect.expiresAt,
+                durationTicks: elapsedTimeTicks(1),
+              },
+            }
+          : effect,
+      ),
+    }),
+  };
+  const casterTurn = requireResolved(
+    endTurn({ state: expiringState, actorId: spellCasterId }),
+    "Expected Magic Weapon caster end turn to resolve.",
+  );
+  const result = requireResolved(
+    endTurn({ state: casterTurn.state, actorId: spellTargetId }),
+    "Expected Magic Weapon duration cleanup to resolve.",
+  );
+  return weaponHostedRouteFromResult(result, WEAPON_HOSTED_CLEANUP_ROUTE_SUBJECT);
 }
 
-function weaponHostedRouteWithResolve(input: {
-  readonly subject: ReducerRouteSubjectFamily;
-  readonly holes: readonly Pick<BattleHole, "kind">[];
-  readonly discoverOwner: ReducerRouteOwnerGroup;
-  readonly fill: ReducerRouteFill;
-  readonly nextHoles: readonly Pick<BattleHole, "kind">[];
-  readonly resolveOwner: ReducerRouteOwnerGroup;
-}): readonly ReducerRouteEvent[] {
+function weaponHostedRouteFromResult(
+  result: BattleResolutionResult,
+  subject: ReducerRouteSubjectFamily,
+): readonly ReducerRouteEvent[] {
+  if (result.routeEvents === undefined || result.routeEvents.length === 0) {
+    throw new Error(`Expected public weapon-hosted route events for ${subject}.`);
+  }
   return [
     WEAPON_HOSTED_ROUTE_START,
-    reducerRouteDiscoverBattleActs({
-      subject: input.subject,
-      holes: input.holes,
-      owner: input.discoverOwner,
-    }),
-    reducerRouteResolveBattleSubject({
-      subject: input.subject,
-      fill: input.fill,
-      holes: input.nextHoles,
-      owner: input.resolveOwner,
-    }),
-  ];
-}
-
-function weaponHostedRouteWithResolveWithoutFill(input: {
-  readonly subject: ReducerRouteSubjectFamily;
-  readonly holes: readonly Pick<BattleHole, "kind">[];
-  readonly discoverOwner: ReducerRouteOwnerGroup;
-  readonly nextHoles: readonly Pick<BattleHole, "kind">[];
-  readonly resolveOwner: ReducerRouteOwnerGroup;
-}): readonly ReducerRouteEvent[] {
-  return [
-    WEAPON_HOSTED_ROUTE_START,
-    reducerRouteDiscoverBattleActs({
-      subject: input.subject,
-      holes: input.holes,
-      owner: input.discoverOwner,
-    }),
-    reducerRouteResolveBattleSubjectWithoutFill({
-      subject: input.subject,
-      holes: input.nextHoles,
-      owner: input.resolveOwner,
-    }),
+    ...result.routeEvents,
   ];
 }
 

@@ -49,6 +49,7 @@ import { activeDruidWildShapeEffect } from "./druid-wild-shape.ts";
 import { battleLightEmitters } from "./spells-active-effects.ts";
 import {
   activeOngoingFeatureOccurrencesForCombatant,
+  battleSubjectActorId,
   isCharacterBattleCreatureState,
   ongoingFeatureProfileForSourceKey,
   ongoingFeatureSourceKeyForUnit,
@@ -61,6 +62,10 @@ import {
   ATTACK_ROLL_REQUIRED_BEFORE_DAMAGE_MESSAGE,
   ATTACK_TARGET_REQUIRED_BEFORE_ROLL_OR_DAMAGE_MESSAGE,
 } from "./attack-ordering-messages.ts";
+import {
+  attackActionOptionForSubject,
+  weaponAttackUsesActiveSpellOverride,
+} from "./attack-damage-apply.ts";
 
 type AfterHitDamageRiderChoice = Extract<
   BattleInterruptCheckpoint["choices"][number],
@@ -69,6 +74,14 @@ type AfterHitDamageRiderChoice = Extract<
 type AfterHitDamageRiderSelection = Extract<
   BattleInterruptProcedureSelection,
   { readonly kind: "castAttackHitBonusActionSpell" }
+>;
+type BattleSpellResolutionSubject = Extract<
+  BattleResolutionInput["subject"],
+  { readonly tag: "actionSpell" | "bonusActionSpell" }
+>;
+type WeaponAttackResolutionSubject = Extract<
+  BattleResolutionInput["subject"],
+  { readonly tag: "action"; readonly action: "attack" }
 >;
 
 export type BattleReducerRouteSubjectFamily =
@@ -80,6 +93,7 @@ export type BattleReducerRouteSubjectFamily =
   | "creatureTypeTargetAdmission"
   | "deathSavingThrow"
   | "hitPointRestoration"
+  | "heldWeaponActiveEffect"
   | "interruptStackResume"
   | "metamagicBonusActionCastingTime"
   | "metamagicDamageDiceReroll"
@@ -119,8 +133,12 @@ export type BattleReducerRouteSubjectFamily =
   | "companionReactionAttack"
   | "slotSpell"
   | "objectTargetSpellAttack"
+  | "spellHostedWeaponAttack"
   | "spellAttackProcedure"
   | "statBlockAction"
+  | "weaponDamageRider"
+  | "weaponEnhancementItemTarget"
+  | "weaponHostedSpellEffectCleanup"
   | "weaponAttack"
   | "weaponMasteryProperty"
   | "zeroHitPointStabilization";
@@ -146,6 +164,7 @@ export type BattleReducerRouteOwnerGroup =
   | "battleDamageType"
   | "battleConcentration"
   | "battleActiveEffect"
+  | "battleItemTargetBoundary"
   | "battleConditionLifecycle"
   | "battleCreatureState"
   | "battleCreatureSpaceMovement"
@@ -191,6 +210,7 @@ export type BattleReducerRouteFillKind =
   | "interruptDecision"
   | "damageTypeChoice"
   | "movement"
+  | "magicWeaponTargetItem"
   | "rolledDice"
   | "savingThrowOutcome"
   | "skillChoice"
@@ -685,6 +705,10 @@ export function battleReducerRouteEventsForDiscoveredAct(
       },
     ];
   }
+  const weaponHostedDiscoveryRoute = weaponHostedRouteForDiscoveredAct(act);
+  if (weaponHostedDiscoveryRoute !== undefined) {
+    return [weaponHostedDiscoveryRoute];
+  }
   if (isSlotSpellDiscoverySubject(act.subject)) {
     return [
       {
@@ -940,6 +964,26 @@ export function battleReducerRouteForResolution(
   if (saveGatedRoute !== undefined) {
     return composeWithActiveFormLifecycleTerminalRoute(
       saveGatedRoute,
+      activeFormLifecycleTerminalRoute,
+    );
+  }
+  const weaponHostedSpellRoute = weaponHostedSpellRouteForResolution(
+    input,
+    result,
+  );
+  if (weaponHostedSpellRoute !== undefined) {
+    return composeWithActiveFormLifecycleTerminalRoute(
+      weaponHostedSpellRoute,
+      activeFormLifecycleTerminalRoute,
+    );
+  }
+  const weaponHostedCleanupRoute = weaponHostedCleanupRouteForResolution(
+    input,
+    result,
+  );
+  if (weaponHostedCleanupRoute !== undefined) {
+    return composeWithActiveFormLifecycleTerminalRoute(
+      weaponHostedCleanupRoute,
       activeFormLifecycleTerminalRoute,
     );
   }
@@ -1651,6 +1695,263 @@ function activeFeatureSpellAttackRollModeResolutionRouteEvents(
       owner: "battleSpellAttackProcedure",
     },
   ];
+}
+
+function weaponHostedRouteForDiscoveredAct(
+  act: AvailableBattleAct,
+): BattleReducerRouteEvent | undefined {
+  const subject = weaponHostedSpellRouteSubject(act.subject);
+  if (subject === undefined) {
+    return undefined;
+  }
+  return {
+    kind: "discoverBattleActs",
+    subject,
+    holes: weaponHostedSpellDiscoveryHoles(subject, act.initialHoles),
+    owner: weaponHostedSpellDiscoveryOwner(subject),
+  };
+}
+
+function weaponHostedSpellRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  const subject = weaponHostedSpellRouteSubject(input.subject);
+  if (subject === undefined) {
+    return undefined;
+  }
+  const fill = input.fills.at(-1);
+  if (fill === undefined) {
+    if (result.tag !== "resolved" || subject === "spellHostedWeaponAttack") {
+      return undefined;
+    }
+    return [
+      {
+        kind: "discoverBattleActs",
+        subject,
+        holes: [],
+        owner: weaponHostedSpellDiscoveryOwner(subject),
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject,
+        holes: [],
+        owner: "battleActiveEffect",
+      },
+    ];
+  }
+  const routeFill = battleReducerRouteFill(fill);
+  if (routeFill === undefined) {
+    return undefined;
+  }
+  if (
+    subject === "weaponEnhancementItemTarget" &&
+    routeFill === "magicWeaponTargetItem" &&
+    result.tag === "resolved"
+  ) {
+    return [
+      {
+        kind: "discoverBattleActs",
+        subject,
+        holes: [],
+        owner: "battleItemTargetBoundary",
+      },
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject,
+        holes: [],
+        owner: "battleActiveEffect",
+      },
+    ];
+  }
+  if (subject !== "spellHostedWeaponAttack") {
+    return undefined;
+  }
+  const owners = spellHostedWeaponAttackRouteOwners(routeFill);
+  if (owners === undefined) {
+    return undefined;
+  }
+  const holes =
+    result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
+  return [
+    {
+      kind: "discoverBattleActs",
+      subject,
+      holes: owners.currentHoles,
+      owner: owners.discoverOwner,
+    },
+    {
+      kind: "resolveBattleSubject",
+      subject,
+      fill: routeFill,
+      holes,
+      owner: owners.resolveOwner,
+    },
+  ];
+}
+
+function weaponHostedSpellRouteSubject(
+  subject: BattleResolutionInput["subject"],
+): BattleReducerRouteSubjectFamily | undefined {
+  if (subject.tag !== "actionSpell" && subject.tag !== "bonusActionSpell") {
+    return undefined;
+  }
+  return weaponHostedRouteSubjectForProcedure(subject.invocation.procedure);
+}
+
+function weaponHostedRouteSubjectForProcedure(
+  procedure: BattleSpellResolutionSubject["invocation"]["procedure"],
+): BattleReducerRouteSubjectFamily | undefined {
+  if (procedure === "spellHostedWeaponAttack") {
+    return "spellHostedWeaponAttack";
+  }
+  if (procedure === "weaponDamageRider") {
+    return "weaponDamageRider";
+  }
+  if (procedure === "weaponAttackOverride") {
+    return "heldWeaponActiveEffect";
+  }
+  if (procedure === "magicWeaponEnhancement") {
+    return "weaponEnhancementItemTarget";
+  }
+  return undefined;
+}
+
+function weaponHostedSpellDiscoveryOwner(
+  subject: BattleReducerRouteSubjectFamily,
+): BattleReducerRouteOwnerGroup {
+  if (subject === "weaponDamageRider") {
+    return "battleSpellSlotAndActionEconomy";
+  }
+  if (subject === "weaponEnhancementItemTarget") {
+    return "battleItemTargetBoundary";
+  }
+  return "battleActionEconomy";
+}
+
+function weaponHostedSpellDiscoveryHoles(
+  subject: BattleReducerRouteSubjectFamily,
+  holes: readonly BattleHole[],
+): readonly BattleReducerRouteHole[] {
+  return subject === "weaponEnhancementItemTarget"
+    ? []
+    : battleReducerRouteHoles(holes);
+}
+
+function spellHostedWeaponAttackRouteOwners(
+  fill: BattleReducerRouteFill,
+):
+  | {
+      readonly currentHoles: readonly BattleReducerRouteHole[];
+      readonly discoverOwner: BattleReducerRouteOwnerGroup;
+      readonly resolveOwner: BattleReducerRouteOwnerGroup;
+    }
+  | undefined {
+  if (fill === "damageTypeChoice") {
+    return {
+      currentHoles: ["damageTypeChoice", "targetChoice"],
+      discoverOwner: "battleActionEconomy",
+      resolveOwner: "battleHoleFrontier",
+    };
+  }
+  if (fill === "targetChoice") {
+    return {
+      currentHoles: ["targetChoice"],
+      discoverOwner: "battleTargetSelection",
+      resolveOwner: "battleTargetSelection",
+    };
+  }
+  if (fill === "attackRoll") {
+    return {
+      currentHoles: ["attackRoll"],
+      discoverOwner: "battleAttackRoll",
+      resolveOwner: "battleAttackRoll",
+    };
+  }
+  if (fill === "rolledDice") {
+    return {
+      currentHoles: ["rolledDice"],
+      discoverOwner: "battleHitPoint",
+      resolveOwner: "battleHitPoint",
+    };
+  }
+  return undefined;
+}
+
+function weaponHostedCleanupRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  if (
+    result.tag !== "resolved" ||
+    input.subject.tag !== "runtimeCommand" ||
+    input.subject.command !== "endTurn" ||
+    !weaponHostedActiveEffectWasRemoved(input.state, result.state)
+  ) {
+    return undefined;
+  }
+  return [
+    {
+      kind: "discoverBattleActs",
+      subject: "weaponHostedSpellEffectCleanup",
+      holes: [],
+      owner: "battleActiveEffect",
+    },
+    {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "weaponHostedSpellEffectCleanup",
+      holes: [],
+      owner: "battleActiveEffect",
+    },
+  ];
+}
+
+function weaponHostedActiveEffectWasRemoved(
+  before: BattleState,
+  after: BattleState,
+): boolean {
+  const beforeCounts = weaponHostedActiveEffectCounts(before);
+  const afterCounts = weaponHostedActiveEffectCounts(after);
+  return (
+    afterCounts.weaponAttackOverride < beforeCounts.weaponAttackOverride ||
+    afterCounts.weaponDamageRider < beforeCounts.weaponDamageRider ||
+    afterCounts.magicWeaponEnhancement < beforeCounts.magicWeaponEnhancement
+  );
+}
+
+function weaponHostedActiveEffectCounts(state: BattleState): {
+  readonly weaponAttackOverride: number;
+  readonly weaponDamageRider: number;
+  readonly magicWeaponEnhancement: number;
+} {
+  return activeEffects(state).reduce(
+    (counts, effect) => {
+      if (effect.kind === "spellWeaponAttackOverride") {
+        return {
+          ...counts,
+          weaponAttackOverride: counts.weaponAttackOverride + 1,
+        };
+      }
+      if (effect.kind === "spellWeaponDamageRider") {
+        return {
+          ...counts,
+          weaponDamageRider: counts.weaponDamageRider + 1,
+        };
+      }
+      if (effect.kind === "spellMagicWeaponEnhancement") {
+        return {
+          ...counts,
+          magicWeaponEnhancement: counts.magicWeaponEnhancement + 1,
+        };
+      }
+      return counts;
+    },
+    {
+      weaponAttackOverride: 0,
+      weaponDamageRider: 0,
+      magicWeaponEnhancement: 0,
+    },
+  );
 }
 
 function attackActionAreaSaveDamageReplacementRouteForDiscoveredAct(
@@ -5389,6 +5690,15 @@ function weaponAttackRouteForResolution(
   }
   const holes =
     result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
+  const hostedRoute = weaponHostedAttackRouteForResolution({
+    state: input.state,
+    subject: input.subject,
+    fill: routeFill,
+    holes,
+  });
+  if (hostedRoute !== undefined) {
+    return hostedRoute;
+  }
   const event = (
     subject: BattleReducerRouteSubjectFamily,
     owner: BattleReducerRouteOwnerGroup,
@@ -5455,6 +5765,93 @@ function weaponAttackRouteForResolution(
     });
   }
   return [weaponDamageRoute, ...routeTail];
+}
+
+function weaponHostedAttackRouteForResolution(input: {
+  readonly state: BattleState;
+  readonly subject: WeaponAttackResolutionSubject;
+  readonly fill: BattleReducerRouteFill;
+  readonly holes: readonly BattleReducerRouteHole[];
+}): BattleReducerRouteEvents | undefined {
+  const subject = weaponHostedAttackRouteSubject(input);
+  if (subject === undefined) {
+    return undefined;
+  }
+  const owners = weaponHostedAttackRouteOwners(input.fill);
+  if (owners === undefined) {
+    return undefined;
+  }
+  return [
+    {
+      kind: "discoverBattleActs",
+      subject,
+      holes: owners.currentHoles,
+      owner: "battleActiveEffect",
+    },
+    {
+      kind: "resolveBattleSubject",
+      subject,
+      fill: input.fill,
+      holes: input.holes,
+      owner: owners.resolveOwner,
+    },
+  ];
+}
+
+function weaponHostedAttackRouteSubject(input: {
+  readonly state: BattleState;
+  readonly subject: WeaponAttackResolutionSubject;
+  readonly fill: BattleReducerRouteFill;
+}): BattleReducerRouteSubjectFamily | undefined {
+  if (input.fill !== "attackRoll" && input.fill !== "rolledDice") {
+    return undefined;
+  }
+  const actor = input.state.combatants.get(battleSubjectActorId(input.subject));
+  const attack = attackActionOptionForSubject(input.state, input.subject);
+  if (
+    attack !== undefined &&
+    weaponAttackUsesActiveSpellOverride(
+      input.state,
+      input.subject.actorId,
+      attack,
+    )
+  ) {
+    return "heldWeaponActiveEffect";
+  }
+  if (
+    input.fill === "rolledDice" &&
+    actor?.activeEffects.some(isWeaponDamageRiderEffect) === true
+  ) {
+    return "weaponDamageRider";
+  }
+  return undefined;
+}
+
+function weaponHostedAttackRouteOwners(
+  fill: BattleReducerRouteFill,
+):
+  | {
+      readonly currentHoles: readonly BattleReducerRouteHole[];
+      readonly resolveOwner: BattleReducerRouteOwnerGroup;
+    }
+  | undefined {
+  if (fill === "attackRoll") {
+    return {
+      currentHoles: ["attackRoll"],
+      resolveOwner: "battleAttackRoll",
+    };
+  }
+  if (fill === "rolledDice") {
+    return {
+      currentHoles: ["rolledDice"],
+      resolveOwner: "battleHitPoint",
+    };
+  }
+  return undefined;
+}
+
+function isWeaponDamageRiderEffect(effect: BattleActiveEffect): boolean {
+  return effect.kind === "spellWeaponDamageRider";
 }
 
 function weaponAttackInvalidFillRoute(
@@ -5830,7 +6227,7 @@ function isSleepTargetAdmissionSubject(
 
 function isWeaponAttackSubject(
   subject: BattleResolutionInput["subject"],
-): boolean {
+): subject is WeaponAttackResolutionSubject {
   return subject.tag === "action" && subject.action === "attack";
 }
 
@@ -6034,6 +6431,9 @@ function battleReducerRouteHole(
     return ["hitPointHealingDistribution"];
   }
   if (family === "interruptDecision") return ["interruptDecision"];
+  // Magic Weapon target item identity is caller/table-supplied inventory
+  // evidence, not a durable reducer-route frontier.
+  if (family === "magicWeaponTargetItem") return [];
   if (family === "movement") return ["movement"];
   if (family === "objectTargetChoice") return ["targetChoice"];
   if (family === "rolledDice") return ["rolledDice"];
@@ -6062,6 +6462,7 @@ function battleReducerRouteFill(
     return "hitPointHealingDistribution";
   }
   if (kind === "interruptDecision") return "interruptDecision";
+  if (kind === "magicWeaponTargetItem") return "magicWeaponTargetItem";
   if (kind === "movement") return "movement";
   if (kind === "objectTargetChoice") return "targetChoice";
   if (kind === "rolledDice") return "rolledDice";

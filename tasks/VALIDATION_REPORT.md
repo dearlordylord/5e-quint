@@ -1,3 +1,164 @@
+## CRPI-BLOCK-035
+
+Status: `pass`
+
+- Task: 64
+- Driver path: `packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt`
+- Route connector paths:
+  `packages/battle-runtime/battle-runtime-spell-hosted-weapon-attack.route.mbt.qnt`,
+  `packages/battle-runtime/battle-runtime-held-weapon-active-effect.route.mbt.qnt`,
+  `packages/battle-runtime/battle-runtime-weapon-damage-rider.route.mbt.qnt`,
+  `packages/battle-runtime/battle-runtime-weapon-enhancement-item-target.route.mbt.qnt`,
+  `packages/battle-runtime/battle-runtime-held-weapon-release-cleanup.route.mbt.qnt`,
+  `packages/battle-runtime/battle-runtime-weapon-damage-rider-cleanup.route.mbt.qnt`,
+  `packages/battle-runtime/battle-runtime-weapon-enhancement-cleanup.route.mbt.qnt`
+- Route class: `reducer-routed`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-035.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Behavior accepted:
+
+Task 64 accepts weapon-hosted attack and rider routing through public
+BattleState reducer entrypoints. The replay covers True Strike spell-hosted
+weapon attacks, Shillelagh held-weapon active effects and let-go cleanup, Divine
+Favor weapon damage riders and duration cleanup, and Magic Weapon item targeting
+and duration cleanup. The accepted owner chain covers action economy, target
+selection, Attack Roll, Hit Point damage, active-effect ownership, item-target
+boundary ownership, and end-turn cleanup. Production reducer routes derive from
+typed spell procedure, weapon attack, active-effect, fill, and cleanup facts,
+not selected item, spell, or attack authored identity.
+Revision round 2 narrows held-weapon active-effect attack routing to the
+actually selected attack: the route is emitted only when the selected attack's
+attached weapon item and weapon shape match the active held-weapon override.
+Unaffected weapon or Unarmed Strike attacks preserve the normal weapon route
+tail while the override remains active.
+
+No duplicate durable state was added. The replay uses existing `BattleState`
+combatants, `BattleCreatureState.activeEffects`, typed spell invocation
+procedure facts, public hole/fill kinds, `BattleResolutionResult.routeEvents`,
+Hit Point fields, and end-turn active-effect cleanup. Magic Weapon target item
+choice remains caller/table-supplied inventory evidence and is not represented
+as a reducer-route hole in the accepted `qRoute`.
+
+Generated branch coverage:
+
+| Obligation                                                                                                               | Evidence                                                                                                                                                                                                                                                                                                                         | Status    |
+| ------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| `packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doDiscoverTrueStrike`               | `tasks/target-replay-evidence/CRPI-BLOCK-035.json#driver:packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doDiscoverTrueStrike#trace:reducer-route=WeaponHostedAttackAndRiders action=doDiscoverTrueStrike connectorAction=doRouteSpellHostedDamageTypeChoice qRoute=weapon-hosted-public-route` | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doFillTrueStrikeRadiantTarget`      | `tasks/target-replay-evidence/CRPI-BLOCK-035.json#driver:packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doFillTrueStrikeRadiantTarget#trace:reducer-route=WeaponHostedAttackAndRiders action=doFillTrueStrikeRadiantTarget connectorAction=doRouteSpellHostedTargetChoice qRoute=weapon-hosted-public-route` | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doFillTrueStrikeHit`                | `tasks/target-replay-evidence/CRPI-BLOCK-035.json#driver:packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doFillTrueStrikeHit#trace:reducer-route=WeaponHostedAttackAndRiders action=doFillTrueStrikeHit connectorAction=doRouteSpellHostedAttackRoll qRoute=weapon-hosted-public-route` | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doFillTrueStrikeDamage`             | `tasks/target-replay-evidence/CRPI-BLOCK-035.json#driver:packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doFillTrueStrikeDamage#trace:reducer-route=WeaponHostedAttackAndRiders action=doFillTrueStrikeDamage connectorAction=doRouteSpellHostedDamage qRoute=weapon-hosted-public-route` | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doCastShillelagh`                   | `tasks/target-replay-evidence/CRPI-BLOCK-035.json#driver:packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doCastShillelagh#trace:reducer-route=WeaponHostedAttackAndRiders action=doCastShillelagh connectorAction=doRouteHeldWeaponActiveEffect qRoute=weapon-hosted-public-route` | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doDiscoverShillelaghAttack`         | `tasks/target-replay-evidence/CRPI-BLOCK-035.json#driver:packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doDiscoverShillelaghAttack#trace:reducer-route=WeaponHostedAttackAndRiders action=doDiscoverShillelaghAttack connectorAction=doRouteHeldWeaponActiveEffect qRoute=weapon-hosted-public-route` | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doFillShillelaghTarget`             | `tasks/target-replay-evidence/CRPI-BLOCK-035.json#driver:packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doFillShillelaghTarget#trace:reducer-route=WeaponHostedAttackAndRiders action=doFillShillelaghTarget connectorAction=doRouteHeldWeaponAttackRoll qRoute=weapon-hosted-public-route` | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doFillShillelaghHit`                | `tasks/target-replay-evidence/CRPI-BLOCK-035.json#driver:packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doFillShillelaghHit#trace:reducer-route=WeaponHostedAttackAndRiders action=doFillShillelaghHit connectorAction=doRouteHeldWeaponAttackRoll qRoute=weapon-hosted-public-route` | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doFillShillelaghDamage`             | `tasks/target-replay-evidence/CRPI-BLOCK-035.json#driver:packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doFillShillelaghDamage#trace:reducer-route=WeaponHostedAttackAndRiders action=doFillShillelaghDamage connectorAction=doRouteHeldWeaponDamage qRoute=weapon-hosted-public-route` | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doCleanShillelaghLetGo`             | `tasks/target-replay-evidence/CRPI-BLOCK-035.json#driver:packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doCleanShillelaghLetGo#trace:reducer-route=WeaponHostedAttackAndRiders action=doCleanShillelaghLetGo connectorAction=doRouteHeldWeaponReleaseCleanup qRoute=weapon-hosted-public-route` | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doCastDivineFavor`                 | `tasks/target-replay-evidence/CRPI-BLOCK-035.json#driver:packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doCastDivineFavor#trace:reducer-route=WeaponHostedAttackAndRiders action=doCastDivineFavor connectorAction=doRouteWeaponDamageRiderActiveEffect qRoute=weapon-hosted-public-route` | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doDiscoverDivineFavorAttack`       | `tasks/target-replay-evidence/CRPI-BLOCK-035.json#driver:packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doDiscoverDivineFavorAttack#trace:reducer-route=WeaponHostedAttackAndRiders action=doDiscoverDivineFavorAttack connectorAction=doRouteWeaponDamageRiderActiveEffect qRoute=weapon-hosted-public-route` | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doFillDivineFavorTarget`           | `tasks/target-replay-evidence/CRPI-BLOCK-035.json#driver:packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doFillDivineFavorTarget#trace:reducer-route=WeaponHostedAttackAndRiders action=doFillDivineFavorTarget connectorAction=doRouteWeaponDamageRiderActiveEffect qRoute=weapon-hosted-public-route` | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doFillDivineFavorHit`              | `tasks/target-replay-evidence/CRPI-BLOCK-035.json#driver:packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doFillDivineFavorHit#trace:reducer-route=WeaponHostedAttackAndRiders action=doFillDivineFavorHit connectorAction=doRouteWeaponDamageRiderDamage qRoute=weapon-hosted-public-route` | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doFillDivineFavorDamage`           | `tasks/target-replay-evidence/CRPI-BLOCK-035.json#driver:packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doFillDivineFavorDamage#trace:reducer-route=WeaponHostedAttackAndRiders action=doFillDivineFavorDamage connectorAction=doRouteWeaponDamageRiderDamage qRoute=weapon-hosted-public-route` | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doCleanDivineFavorDuration`        | `tasks/target-replay-evidence/CRPI-BLOCK-035.json#driver:packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doCleanDivineFavorDuration#trace:reducer-route=WeaponHostedAttackAndRiders action=doCleanDivineFavorDuration connectorAction=doRouteWeaponDamageRiderDurationCleanup qRoute=weapon-hosted-public-route` | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doDiscoverMagicWeapon`             | `tasks/target-replay-evidence/CRPI-BLOCK-035.json#driver:packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doDiscoverMagicWeapon#trace:reducer-route=WeaponHostedAttackAndRiders action=doDiscoverMagicWeapon connectorAction=doRouteWeaponEnhancementItemTarget qRoute=weapon-hosted-public-route` | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doFillMagicWeaponTarget`           | `tasks/target-replay-evidence/CRPI-BLOCK-035.json#driver:packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doFillMagicWeaponTarget#trace:reducer-route=WeaponHostedAttackAndRiders action=doFillMagicWeaponTarget connectorAction=doRouteWeaponEnhancementItemTarget qRoute=weapon-hosted-public-route` | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doCleanMagicWeaponDuration`        | `tasks/target-replay-evidence/CRPI-BLOCK-035.json#driver:packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt#step:doCleanMagicWeaponDuration#trace:reducer-route=WeaponHostedAttackAndRiders action=doCleanMagicWeaponDuration connectorAction=doRouteWeaponEnhancementDurationCleanup qRoute=weapon-hosted-public-route` | `covered` |
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-035/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 64.
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Spells/Descriptions-S-Z.md#True Strike` defines the
+  spell-hosted weapon attack, damage type choice, and Radiant damage rider.
+- SRD 5.2.1 `Spells/Descriptions-S-Z.md#Shillelagh` defines the held-weapon
+  active effect, force damage option, duration, recast replacement, and end when
+  the caster lets go of the weapon.
+- SRD 5.2.1 `Spells/Descriptions-A-D.md#Divine Favor` defines a weapon-hit
+  Attack Damage Rider Spell Effect.
+- SRD 5.2.1 `Spells/Descriptions-M-P.md#Magic Weapon` defines item-targeted
+  weapon enhancement, attack/damage bonus, duration, and same-spell replacement.
+- SRD 5.2.1 `Playing-the-Game.md#Making an Attack`, `#Damage Rolls`, and
+  `#Hit Points` define target choice, Attack Roll, damage roll, and Hit Point
+  ownership for weapon-hosted attack surfaces.
+- SRD 5.2.1 `Spells/Gaining-and-Casting.md#Duration` defines Spell Effect
+  duration and end conditions.
+- `UBIQUITOUS_LANGUAGE.md` defines Attack Roll, Damage Roll, Attack Damage
+  Rider, Bonus Action, Spend, Spell Invocation, Spell Effect, Duration, Hit
+  Points, and Holding / Wielding terms used by this route.
+
+Verification results:
+
+- Base check passed: declared base ref
+  `ralph/cleanroom-owner-battle-attack-20260706T213644Z/integration` and
+  `HEAD` both resolved to `23e0bc073 Mark Ralph task 63 done`; Base SHA
+  `23e0bc07311096d9feaa3bce574205d499c07248` was an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against the local SRD passages listed
+  above and `UBIQUITOUS_LANGUAGE.md`.
+- `pnpm --filter @dnd/battle-runtime exec tsc --noEmit --pretty false` passed
+  after adding production route subject families and moving Task 64 replay to
+  public reducer route events; revision round 2 rerun passed after sharing
+  selected-attack held-weapon override admission with route classification.
+- `pnpm --filter @dnd/battle-runtime exec vitest run src/weapon-hosted-attack-and-riders.mbt.test.ts -t "keeps normal weapon route"`
+  passed; it covers an Unarmed Strike while Shillelagh's held-weapon override
+  is active and asserts the normal `weaponAttack` route remains in use.
+- Focused weapon-hosted MBT replay passed:
+  `START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=6 pnpm --filter @dnd/battle-runtime exec vitest run src/weapon-hosted-attack-and-riders.mbt.test.ts ) 2>&1 & pid=$!; wait "$pid"; status=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"` passed with 9 tests; final rerun `TOTAL: 24s`.
+- `jq empty tasks/target-replay-evidence/CRPI-BLOCK-035.json` passed.
+- Diagnostic target-only cleanroom check with
+  `pnpm cleanroom-branch-coverage:check --target-replay-evidence tasks/target-replay-evidence/CRPI-BLOCK-035.json`
+  first exposed missing sampled input records for the three damage branches; the
+  evidence now records the required `riderDiePip`, `weaponDiePip`, and
+  `damageDiePip` sampled inputs from source inventory. The same diagnostic
+  command also reported unrelated broad missing-evidence baseline outside Task
+  64 when run without the full run ledger context.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24
+  sampled inputs after recording Task 64 in the run ledger.
+- `git diff --check` passed.
+- Requested broad verification passed: `pnpm quality`. App lint emitted the
+  existing 61 warnings and exited 0; all quality gates and typecheck passed.
+- Reviewer-loop convergence passed: round 1 verified RAW traceability,
+  ubiquitous-language/domain language, no duplicate durable state, no
+  authored-identity production dispatch, and route subject/owner/fill
+  connascence. Revision round 2 fixed held-weapon active-effect admission to
+  require the actually selected attack to use the active held-weapon override,
+  added unaffected Unarmed Strike regression coverage, and found no remaining
+  reasonable Task 64 findings.
+
+Plan Impact:
+
+- Status: `none`
+- Affected tasks:
+  - Task 64 / `CRPI-BLOCK-035`: `unblocked`; copied `qRoute` replay is accepted.
+  - Route task `L15-RR17-WEAPON-HOSTED-RIDER-ROUTES`: `left unchanged`.
+- Observations:
+  - Weapon-hosted attack and rider qRoute is observable through public
+    `battleReducerStartRouteEvent`, `resolveBattleSubject`, and `endTurn`
+    route events without adding durable BattleState fields.
+  - Held-weapon active-effect attack routing is selected-attack-specific:
+    unaffected weapon or Unarmed Strike attacks preserve the normal weapon route
+    tail while a held-weapon override remains active.
+  - Magic Weapon item target identity remains table boundary evidence; the
+    accepted route exposes item-target boundary ownership and active-effect
+    ownership with no reducer-route hole for the table-owned item choice.
+  - Selected item, spell, and attack identity remains outside production route
+    dispatch; runtime routes use typed procedure, active-effect, attack, fill,
+    Hit Point, Attack Roll, and cleanup facts.
+- Required plan edits: none.
+
 ## CRPI-BLOCK-034
 
 Status: `pass`
