@@ -139,7 +139,7 @@
     {
       "number": 23,
       "id": "CRPI-BLOCK-015",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-level1-buff-mark-smite-selected-identity"
     },
     {
