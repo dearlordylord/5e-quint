@@ -529,7 +529,7 @@
     {
       "number": 88,
       "id": "CRPI-BLOCK-045",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: character-creation-rogue-expertise-selected-identity"
     },
     {
@@ -5767,7 +5767,7 @@ Plan Impact:
 
 ### Task 88 - CRPI-BLOCK-045
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
