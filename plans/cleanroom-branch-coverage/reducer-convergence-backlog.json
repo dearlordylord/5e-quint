@@ -820,8 +820,8 @@
       "ownerClassification": "source-blocker",
       "sourceTaskId": "completed-baseline-reducer-spine-witness",
       "targetTaskId": "CRPI-BLOCK-023",
-      "status": "blocked",
-      "blockerId": "replay-refresh-only-baseline-witness"
+      "status": "applied",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt",
@@ -1038,10 +1038,10 @@
       "connectorBlockerId": null,
       "durableOwner": "BattleState owns Sleep active-effect state, Concentration, condition lifecycle, and turn-boundary repeat-save frontier; no duplicate repeat-save or condition ledger is introduced.",
       "ownerClassification": "durable-owner",
-      "sourceTaskId": "L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES",
+      "sourceTaskId": "CRPI-SOURCE-001",
       "targetTaskId": "CRPI-READY-010",
       "status": "blocked",
-      "blockerId": "source-qnt-corpus-blocker"
+      "blockerId": "CRPI-SOURCE-001"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt",
@@ -1053,10 +1053,10 @@
       "connectorBlockerId": null,
       "durableOwner": "BattleState and character-battle resource state own action economy, spell-slot spend, Sorcery Point point-pool expenditure, same-turn level-1-plus spell locks, roll-mode/damage/targeting projections, active Spell Effects, and pending reroll fills; selected Metamagic option identity stays at catalog, selection, admission, and SRD fixture boundaries.",
       "ownerClassification": "durable-owner",
-      "sourceTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+      "sourceTaskId": "CRPI-SOURCE-002",
       "targetTaskId": "CRPI-READY-011",
       "status": "blocked",
-      "blockerId": "source-qnt-corpus-blocker"
+      "blockerId": "CRPI-SOURCE-002"
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-distant-selected-identity.mbt.qnt",
@@ -1661,8 +1661,8 @@
       "ownerClassification": "component-owner",
       "sourceTaskId": "FCSF-03G-EXACT-DAMAGE-PROJECTION-FACTS",
       "targetTaskId": "CRPI-BLOCK-037",
-      "status": "blocked",
-      "blockerId": "source-qnt-corpus-blocker"
+      "status": "applied",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt",

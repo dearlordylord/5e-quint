@@ -205,7 +205,7 @@
     {
       "number": 34,
       "id": "CRPI-BLOCK-023",
-      "status": "blocked",
+      "status": "done",
       "title": "Blocked route replay: battle-runtime-reducer-spine-contract"
     },
     {
@@ -457,7 +457,7 @@
     {
       "number": 76,
       "id": "CRPI-BLOCK-037",
-      "status": "blocked",
+      "status": "done",
       "title": "Blocked route replay: rule-core-exact-damage-projection"
     },
     {
@@ -621,6 +621,24 @@
       "id": "CRPI-BLOCK-055",
       "status": "done",
       "title": "Implement route replay: character-sheet-weapon-mastery-containers-selected-identity"
+    },
+    {
+      "number": 104,
+      "id": "CRPI-SOURCE-001",
+      "status": "ready-for-research",
+      "title": "Refresh source QNT connector: battle-runtime-sleep-repeat-save"
+    },
+    {
+      "number": 105,
+      "id": "CRPI-SOURCE-002",
+      "status": "ready-for-research",
+      "title": "Split source QNT connector: careful metamagic saving-throw protection"
+    },
+    {
+      "number": 106,
+      "id": "CRPI-SOURCE-003",
+      "status": "deferred",
+      "title": "Split exact-damage residual selected-spell follow-ups"
     }
   ]
 }
@@ -637,9 +655,9 @@ This is the executable follow-on Ralph queue produced by `CRP-09-CLOSEOUT-EXPAND
 - Generated queue tasks: 103.
 - Runnable tasks: 26.
 - Blocked tasks: 4.
-- Queue statuses: done 73, ready-for-research 26, blocked 4.
+- Queue statuses: done 101, ready-for-research 2, blocked 2, deferred 1.
 
-The final queue has more tasks than the provisional nine-task bootstrap because the provisional plan was a bootstrap program, not the implementation denominator. The 107 backlog rows map into 103 Ralph tasks because the character-creation full vertical row intentionally splits into three fill-batch tasks while other related rows are grouped by owner/package task shape. The former `owner-todo` rows have been resolved into durable-owner runnable tasks where current route inventory and source evidence are sufficient; the remaining blocked rows are explicit source-corpus or replay-refresh blockers.
+The final queue has more tasks than the provisional nine-task bootstrap because the provisional plan was a bootstrap program, not the implementation denominator. The 107 backlog rows map into 103 implementation Ralph tasks because the character-creation full vertical row intentionally splits into three fill-batch tasks while other related rows are grouped by owner/package task shape. Owner decisions on 2026-07-07 close two non-implementation rows and add three explicit source/follow-up tasks, bringing the active coordinator index to 106 tasks. The former `owner-todo` rows have been resolved into durable-owner runnable tasks where current route inventory and source evidence are sufficient; the remaining blocked implementation rows are dependency-blocked on explicit source-QNT connector refresh tasks.
 
 ## Global Rules
 
@@ -686,15 +704,15 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRPI-READY-006` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-007` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-022` | `done` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-023` | `blocked` | blocked by task body | blocker resolution before implementation |
+| `CRPI-BLOCK-023` | `done` | none | closed as baseline/non-implementation |
 | `CRPI-READY-008` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-024` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-025` | `done` | none | target replay evidence and owner implementation |
 | `CRP07-DSR-02` | `done` | none | target replay evidence and owner implementation |
 | `CRP07-DSR-06` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-009` | `done` | none | target replay evidence and owner implementation |
-| `CRPI-READY-010` | `blocked` | source-qnt-corpus-blocker | owner/source-corpus decision before implementation |
-| `CRPI-READY-011` | `blocked` | source-qnt-corpus-blocker | owner/source-corpus decision before implementation |
+| `CRPI-READY-010` | `blocked` | `CRPI-SOURCE-001` | source connector refresh before implementation |
+| `CRPI-READY-011` | `blocked` | `CRPI-SOURCE-002` | source connector split before implementation |
 | `CRPI-READY-012` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-013` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-014` | `done` | none | target replay evidence and owner implementation |
@@ -728,7 +746,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRPI-READY-031` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-032` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-033` | `done` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-037` | `blocked` | blocked by task body | blocker resolution before implementation |
+| `CRPI-BLOCK-037` | `done` | none | closed as component-only evidence |
 | `CRPI-READY-034` | `done` | none | target replay evidence and owner implementation |
 | `CRP05-SBE-01` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-038` | `done` | none | target replay evidence and owner implementation |
@@ -756,6 +774,9 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRP06-SRO-03` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-054` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-055` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-SOURCE-001` | `ready-for-research` | none | refreshed Sleep repeat-save source connector |
+| `CRPI-SOURCE-002` | `ready-for-research` | none | split Careful Metamagic source connector |
+| `CRPI-SOURCE-003` | `deferred` | owner-directed later split | exact-damage residual branch follow-up tasks |
 
 ## Task Details
 
@@ -2710,15 +2731,19 @@ Plan Impact:
 
 ### Task 34 - CRPI-BLOCK-023
 
-Status: `blocked`
+Status: `done`
 
-Blocker Type: dependency
+Owner Decision Applied:
 
-Blocker Detail: Backlog row `packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt` is blocked by `replay-refresh-only-baseline-witness`; the dependency must provide source connector/acceptance evidence before implementation starts.
+The reducer-spine contract row is a baseline composition witness, not a queued
+cleanroom implementation driver. The owner decision on 2026-07-07 closes this
+row as non-implementation work instead of adding a replay-history adapter or a
+fake route connector.
 
 Goal:
 
-Unblock and then implement target replay for `packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt` as a `replay-refresh-only` reducer-convergence task.
+Close `packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt`
+as baseline/non-implementation evidence for this queue.
 
 Starting Points:
 
@@ -2730,19 +2755,19 @@ Starting Points:
 - `UBIQUITOUS_LANGUAGE.md`
 - `.references/srd-5.2.1/`
 
-Output After Unblock:
+Output:
 
-- Updated backlog row and queue entry replacing the blocker with a concrete durable owner or source dependency output.
-- Target production/harness changes and accepted replay evidence only after the blocker is resolved.
+- Updated queue entry and backlog row recording the closed baseline witness.
+- No target production changes, harness changes, or target replay evidence are required for this row.
 
-Acceptance After Unblock:
+Acceptance:
 
 - Driver Path: `packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt`
 - Route Class: `replay-refresh-only`
-- Connector Path(s): Blocker: `replay-refresh-only-baseline-witness`
+- Connector Path(s): none
 - Current Owner Field: source-blocker: baseline composition witness is not a queued cleanroom implementation driver.
-- Required Accepted Projection: `blocked-source-refresh`
-- Target replay evidence requirement: after unblock, evidence must be generated by public target entrypoints and record observed projection source, reducer/public API path, source manifest SHA, and source branch inventory SHA.
+- Required Accepted Projection: none for this queue row.
+- Target replay evidence requirement: none; future reducer-spine replay-refresh work must be opened as a new concrete task with measurable acceptance if the owner wants it.
 
 Forbidden Shortcuts:
 
@@ -2750,17 +2775,16 @@ Forbidden Shortcuts:
 - Do not use catalog identity, fixture labels, QNT action names, or historical target reports as a substitute for owner/source evidence.
 - Do not add workaround adapters or duplicate state to bypass the blocker.
 
-Verification After Unblock:
+Verification:
 
 - Run `pnpm cleanroom-branch-coverage:check` after updating the source queue/backlog.
-- Run target replay for `packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt` and the connector or dependency output that resolves this blocker.
-- Run RAW and ubiquitous-language review against the local `.references/srd-5.2.1/` passages selected by the unblocked owner plus `UBIQUITOUS_LANGUAGE.md` before modeling rule behavior.
 - Run `git diff --check`.
 - Run reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review passes; fix every reasonable finding or document a concrete rejection reason, and repeat until no reasonable findings remain.
 
 Plan Impact:
 
-`update-required` when the blocker is resolved; update this queue task, the backlog row, and any dependent implementation tasks in the same planning change.
+`applied`: owner decision closes this row as baseline/non-implementation. No
+source or target implementation task remains attached to this row.
 
 ### Task 35 - CRPI-READY-008
 
@@ -3111,13 +3135,13 @@ Plan Impact:
 
 Status: `blocked`
 
-Blocker Type: source-qnt-corpus-blocker
+Blocker Type: dependency
 
-Blocker Detail: Copied connector `packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt` expects post-Concentration-cleanup `battleTurnBoundary` no-op `qRoute` events after no reducer-owned `sleepPendingRepeatSave` frontier remains. The owner must decide whether to refresh/reclassify that copied connector obligation or introduce a durable reducer-owned route fact that permits unskipped copied `qRoute` replay without duplicate replay-history state.
+Blocker Detail: Owner decision on 2026-07-07 chooses source connector refresh/reclassification, not duplicate replay-history state or synthetic no-op route facts. This implementation row depends on `CRPI-SOURCE-001`, which must remove or reclassify the copied post-Concentration-cleanup `battleTurnBoundary` no-op obligation after no reducer-owned `sleepPendingRepeatSave` frontier remains.
 
 Goal:
 
-Refresh/reclassify the source route obligation, then implement target replay for `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt` as a `reducer-routed` reducer-convergence task.
+After `CRPI-SOURCE-001` lands, implement target replay for `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt` as a `reducer-routed` reducer-convergence task.
 
 Starting Points:
 
@@ -3164,19 +3188,19 @@ Verification:
 
 Plan Impact:
 
-`none` unless implementation discovers a durable source, owner, route, blocker, or verification change that should update this queue.
+`applied`: owner decision converted this from an owner-decision blocker into a dependency on `CRPI-SOURCE-001`.
 
 ### Task 42 - CRPI-READY-011
 
 Status: `blocked`
 
-Blocker Type: source-qnt-corpus-blocker
+Blocker Type: dependency
 
-Blocker Detail: Copied connector `packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt#doRouteSavingThrowProtection` is damage-shaped and begins at `savingThrowOutcome` / `RolledDiceHoleKind` / `BattleDamageAdjustmentOwner`. Ralph Task 42 evidence shows the target public reducer route for Careful Burning Hands starts earlier at the protected-target `spellTargetList` frontier, while the Careful Command/no-effect branch routes as `commandEffect` with no rolled-dice damage-adjustment frontier. The owner must decide whether to refresh/reclassify the copied connector obligation or introduce an honest reducer-owned route fact; synthetic damage route events or duplicate replay-history state are not acceptable.
+Blocker Detail: Owner decision on 2026-07-07 chooses source connector refresh/split, not synthetic damage route events or duplicate replay-history state. This implementation row depends on `CRPI-SOURCE-002`, which must split or refresh `packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt#doRouteSavingThrowProtection` so Careful Burning Hands can start at protected-target `spellTargetList` and Careful Command/no-effect can route through `commandEffect` without a rolled-dice damage-adjustment frontier.
 
 Goal:
 
-Refresh/reclassify the source route obligation, then implement target replay for `packages/battle-runtime/battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt` as a `reducer-routed` reducer-convergence task.
+After `CRPI-SOURCE-002` lands, implement target replay for `packages/battle-runtime/battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt` as a `reducer-routed` reducer-convergence task.
 
 Starting Points:
 
@@ -3223,7 +3247,7 @@ Verification:
 
 Plan Impact:
 
-`none` unless implementation discovers a durable source, owner, route, blocker, or verification change that should update this queue.
+`applied`: owner decision converted this from an owner-decision blocker into a dependency on `CRPI-SOURCE-002`.
 
 ### Task 43 - CRPI-READY-012
 
@@ -5074,15 +5098,19 @@ Plan Impact:
 
 ### Task 76 - CRPI-BLOCK-037
 
-Status: `blocked`
+Status: `done`
 
-Blocker Type: dependency
+Owner Decision Applied:
 
-Blocker Detail: Backlog row `packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt` is blocked by `source-qnt-corpus-blocker`; the dependency must provide source connector/acceptance evidence before implementation starts.
+The exact-damage row is accepted as component-only evidence. It must not
+over-accept selected-spell residual branches wholesale. Owner decision on
+2026-07-07 parks the selected-spell residual split as later work, logged as
+`CRPI-SOURCE-003`.
 
 Goal:
 
-Unblock and then implement target replay for `packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt` as a `component-first` reducer-convergence task.
+Close `packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt` as
+component-first exact-damage evidence for this queue.
 
 Starting Points:
 
@@ -5095,19 +5123,19 @@ Starting Points:
 - `packages/battle-runtime/rule-core-component-route.qnt`
 - `.references/srd-5.2.1/`
 
-Output After Unblock:
+Output:
 
-- Updated backlog row and queue entry replacing the blocker with a concrete durable owner or source dependency output.
-- Target production/harness changes and accepted replay evidence only after the blocker is resolved.
+- Updated queue entry and backlog row recording that the component connector is the accepted scope.
+- Deferred follow-up task `CRPI-SOURCE-003` preserving selected-spell residual split work.
 
-Acceptance After Unblock:
+Acceptance:
 
 - Driver Path: `packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt`
 - Route Class: `component-first`
 - Connector Path(s): `packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt`
 - Current Owner Field: RuleCoreSpellProcedureProfileOwner; RuleCoreHitPointDamageOwner
 - Required Accepted Projection: `qComponentRoute`
-- Target replay evidence requirement: after unblock, evidence must be generated by public target entrypoints and record observed projection source, reducer/public API path, source manifest SHA, and source branch inventory SHA.
+- Target replay evidence requirement: component-only scope is already source-corpus evidence; do not count selected spell identity, mixed-target ordering, object durability, duplicate-face limits, target-admission identity, selected item identity, selected attack identity, or authored spell identity from this row.
 
 Forbidden Shortcuts:
 
@@ -5115,17 +5143,15 @@ Forbidden Shortcuts:
 - Do not use catalog identity, fixture labels, QNT action names, or historical target reports as a substitute for owner/source evidence.
 - Do not add workaround adapters or duplicate state to bypass the blocker.
 
-Verification After Unblock:
+Verification:
 
 - Run `pnpm cleanroom-branch-coverage:check` after updating the source queue/backlog.
-- Run target replay for `packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt` and the connector or dependency output that resolves this blocker.
-- Run RAW and ubiquitous-language review against the local `.references/srd-5.2.1/` passages selected by the unblocked owner plus `UBIQUITOUS_LANGUAGE.md` before modeling rule behavior.
 - Run `git diff --check`.
 - Run reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review passes; fix every reasonable finding or document a concrete rejection reason, and repeat until no reasonable findings remain.
 
 Plan Impact:
 
-`update-required` when the blocker is resolved; update this queue task, the backlog row, and any dependent implementation tasks in the same planning change.
+`applied`: component-only exact-damage row is closed; selected residual splitting is preserved as `CRPI-SOURCE-003`.
 
 ### Task 77 - CRPI-READY-034
 
@@ -6748,3 +6774,179 @@ Verification:
 Plan Impact:
 
 `applied`: owner-decision blocker resolved from route connector owners, route inventory derivability facts, and accepted Character Sheet owner-boundary evidence where cited; this task is now runnable. The task still must produce its own copied `qRoute` versus public target replay evidence.
+### Task 104 - CRPI-SOURCE-001
+
+Status: `ready-for-research`
+
+Goal:
+
+Refresh or reclassify the Sleep repeat-save source QNT route connector so it no
+longer requires post-Concentration-cleanup `battleTurnBoundary` no-op route
+events after no reducer-owned `sleepPendingRepeatSave` frontier remains.
+
+Starting Points:
+
+- `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt`
+- `tasks/target-replay-evidence/CRPI-READY-010.json`
+- `tasks/history/CRPI-READY-010/README.md`
+- `plans/cleanroom-branch-coverage/reducer-convergence-backlog.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Spells/Descriptions-S-Z.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Output:
+
+- Source QNT connector refresh, reclassification, or task-body revision that
+  makes the Sleep route obligation honest about the live repeat-save frontier.
+- Updated backlog/route inventory rows explaining whether `CRPI-READY-010` is
+  unblocked for target replay or remains blocked for a concrete source reason.
+- If unblocked, update Task 41 status and dependency in this plan in the same
+  change.
+
+Acceptance:
+
+- The source connector must not require route events after Sleep repeat-save
+  ownership has no reducer-owned frontier in `BattleState`.
+- The accepted route shape must be derivable from Sleep active-effect state,
+  Concentration, condition lifecycle, and turn-boundary repeat-save frontier.
+- No replay-history state, duplicate condition ledger, or broad synthetic
+  end-turn no-op route may be introduced.
+- `CRPI-READY-010` may become runnable only if the copied source connector and
+  target replay acceptance can compare the same public `qRoute` shape.
+
+Verification:
+
+- Run RAW and ubiquitous-language review against Sleep, Concentration, Condition, Spell Effect, and Turn Structure.
+- Typecheck changed QNT files.
+- Run `node scripts/check-mbt-driver-closure.cjs` if any `*.mbt.qnt` import closure changes.
+- Run `pnpm cleanroom-branch-coverage:check`.
+- Run `git diff --check`.
+- Run reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review passes; fix every reasonable finding or document a concrete rejection reason, and repeat until no reasonable findings remain.
+
+Plan Impact:
+
+`update-required`: this task must either unblock Task 41 or leave it blocked
+with a concrete source-QNT reason that does not depend on an owner decision.
+
+### Task 105 - CRPI-SOURCE-002
+
+Status: `ready-for-research`
+
+Goal:
+
+Split or refresh the Careful Metamagic source QNT connector so saving-throw
+protection has honest route shapes for both Careful Burning Hands and Careful
+Command/no-effect.
+
+Starting Points:
+
+- `packages/battle-runtime/battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt`
+- `tasks/target-replay-evidence/CRPI-READY-011.json`
+- `tasks/history/CRPI-READY-011/README.md`
+- `plans/cleanroom-branch-coverage/reducer-convergence-backlog.json`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
+- `plans/cleanroom-guidance/reducer-spine.md`
+- `.references/srd-5.2.1/Classes/Sorcerer.md`
+- `.references/srd-5.2.1/Spells/Descriptions-A-D.md`
+- `.references/srd-5.2.1/Rules-Glossary.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Output:
+
+- Source QNT connector split, refresh, or task-body revision that models the
+  protected-target `spellTargetList` frontier separately from damage-adjustment
+  saving-throw protection.
+- Explicit handling for the Careful Command/no-effect route through
+  `commandEffect` without a rolled-dice damage frontier.
+- Updated backlog/route inventory rows explaining whether `CRPI-READY-011` is
+  unblocked for target replay or remains blocked for a concrete source reason.
+- If unblocked, update Task 42 status and dependency in this plan in the same
+  change.
+
+Acceptance:
+
+- Careful Burning Hands route evidence must include the public protected-target
+  `spellTargetList` frontier before `savingThrowOutcome`.
+- Careful Command/no-effect route evidence must route through `commandEffect`
+  and must not invent `RolledDiceHoleKind`, `BattleDamageAdjustmentOwner`, or a
+  synthetic damage route.
+- Selected Metamagic option identity remains a catalog, selection, admission,
+  and fixture boundary; route evidence must flow from typed metamagic effect
+  kind, spell procedure shape, Sorcery Point state, and public route events.
+- `CRPI-READY-011` may become runnable only if the copied source connector and
+  target replay acceptance can compare the same public `qRoute` shape.
+
+Verification:
+
+- Run RAW and ubiquitous-language review against Careful Spell, Saving Throw, Command, damage, and spell target terminology.
+- Typecheck changed QNT files.
+- Run `node scripts/check-mbt-driver-closure.cjs` if any `*.mbt.qnt` import closure changes.
+- Run `pnpm cleanroom-branch-coverage:check`.
+- Run `git diff --check`.
+- Run reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review passes; fix every reasonable finding or document a concrete rejection reason, and repeat until no reasonable findings remain.
+
+Plan Impact:
+
+`update-required`: this task must either unblock Task 42 or leave it blocked
+with a concrete source-QNT reason that does not depend on an owner decision.
+
+### Task 106 - CRPI-SOURCE-003
+
+Status: `deferred`
+
+Deferred Detail:
+
+Owner direction on 2026-07-07: close the current exact-damage row as
+component-only evidence and split selected-spell residuals later.
+
+Goal:
+
+When resumed, split exact-damage residual selected-spell work into branch-specific
+follow-up tasks instead of counting `rule-core-exact-damage-projection.mbt.qnt`
+as wholesale selected-spell replay evidence.
+
+Starting Points:
+
+- `packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-exact-damage-details.route.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt`
+- `packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt`
+- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
+- `plans/cleanroom-branch-coverage/reducer-convergence-backlog.json`
+- `.references/srd-5.2.1/Playing-the-Game.md`
+- `UBIQUITOUS_LANGUAGE.md`
+
+Output:
+
+- Concrete branch-specific Ralph tasks for selected-spell residuals that still
+  need non-damage route/component evidence.
+- Each task must name its driver, branch action(s), route/component owner,
+  accepted projection, forbidden shortcuts, and verification commands.
+
+Acceptance:
+
+- Do not over-accept selected spell identity drivers from component exact-damage
+  evidence alone.
+- Preserve blockers for mixed-target ordering, object durability,
+  duplicate-face limits, target-admission identity, selected item identity,
+  selected attack identity, and authored spell identity unless a branch-specific
+  connector owns them.
+- Keep `CRPI-BLOCK-037` closed as component-only evidence; future work must be
+  new branch-specific tasks.
+
+Verification:
+
+- Run `pnpm cleanroom-branch-coverage:check`.
+- Run `git diff --check`.
+- Run reviewer-loop convergence for architecture/connascence and code-review plan quality.
+
+Plan Impact:
+
+`deferred`: no active Ralph lane should run this task until the owner resumes
+the exact-damage residual split.
