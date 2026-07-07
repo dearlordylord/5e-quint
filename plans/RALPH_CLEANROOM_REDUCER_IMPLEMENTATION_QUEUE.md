@@ -379,7 +379,7 @@
     {
       "number": 63,
       "id": "CRPI-BLOCK-034",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-weapon-attack-skeleton"
     },
     {
@@ -4342,7 +4342,7 @@ Plan Impact:
 
 ### Task 63 - CRPI-BLOCK-034
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
