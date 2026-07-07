@@ -1,7 +1,43 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-045",
+  "taskId": "CRPI-BLOCK-046",
   "durableFields": [
+    {
+      "fieldPath": "CharacterBuild.features[kind=selectedEldritchInvocation]",
+      "owner": "character-build-eldritch-invocation-selection",
+      "introducedIn": "packages/character-creation-runtime/src/types.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing selected Eldritch Invocation option choices retain the Warlock invocation selected-reference boundary. Task 92 adds no duplicate invocation selected-reference cache."
+    },
+    {
+      "fieldPath": "CharacterBuild.spellcasting.slotPools.pactMagic",
+      "owner": "character-build-pact-magic-projection",
+      "introducedIn": "packages/character-creation-runtime/src/types.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Accepted Warlock level-gain replay reads existing Pact Magic slot count and slot level projection from CharacterBuild spellcasting facts; no parallel Pact Slot state is added."
+    },
+    {
+      "fieldPath": "CharacterCreationRouteEvent.kind=applyCreationFillBatch",
+      "owner": "character-build-warlock-level-gain-route",
+      "introducedIn": "packages/character-creation-runtime/src/character-build-advancement.ts",
+      "derivability": {
+        "tag": "runtime-projection"
+      },
+      "notes": "applyCharacterBuildWarlockLevelGainWithRoute emits CharacterBuildOwner route events for accepted Warlock level gains and CreationSupportProfileAdmissionOwner route events for duplicate/prerequisite invocation rejections."
+    },
+    {
+      "fieldPath": "CharacterBuildAdvancementIssue",
+      "owner": "character-build-warlock-level-gain-rejection",
+      "introducedIn": "packages/character-creation-runtime/src/character-build-advancement.ts",
+      "derivability": {
+        "tag": "runtime-projection"
+      },
+      "notes": "Duplicate and prerequisite-retained invocation failures remain typed advancement issues; Task 92 does not store rejection state on CharacterBuild."
+    },
     {
       "fieldPath": "CharacterBuild.proficiencyChoices",
       "owner": "character-build-proficiency-choice",
@@ -76,6 +112,11 @@
     }
   ],
   "notes": [
+    "Task 92 introduced no new durable CharacterBuild fields.",
+    "Selected Warlock Eldritch Invocation choices remain existing CharacterBuild.features selectedEldritchInvocation facts.",
+    "Pact Magic facts remain existing CharacterBuild.spellcasting source and pactMagic slot-pool facts.",
+    "Duplicate and prerequisite-retained invocation rejection state remains typed CharacterBuildAdvancementIssue output plus route evidence.",
+    "The level-5 prerequisite-retained replacement branch is explicitly tracked as the source inventory's out-of-scope level-5 branch.",
     "Task 88 introduced no new durable CharacterBuild fields.",
     "Level-1 Rogue Expertise selected refs remain existing CharacterBuild.proficiencyChoices skill_expertise facts.",
     "Final Expertise proficiency-level facts derive from existing CharacterBuild proficiency projection and selected skill proficiency facts, not a duplicate durable skill-state store.",

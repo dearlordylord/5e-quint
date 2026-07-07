@@ -1,0 +1,440 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts Warlock Eldritch Invocations copied qRoute versus public creation reducer replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "acceptance": {
+    "driverPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",
+    "connectorPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.route.mbt.qnt",
+    "routeClass": "reducer-routed",
+    "durableOwner": "CreationSelectedReferenceOwner owns retained Eldritch Invocation option choices; CharacterBuildOwner owns accepted Warlock level-gain and Pact Magic projection; CreationSupportProfileAdmissionOwner owns duplicate and prerequisite invocation rejection. The level-5 prerequisite-retained replacement branch is covered and recorded as the branch-inventory out-of-scope level-5 branch.",
+    "acceptedProjection": "qRoute"
+  },
+  "status": "pass",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "aa258c7268f7f2ad3fc41280771be7fe14c5e7917c5c4866a7592e0e26ab4ec4",
+      "routeConnectorSha256": "38e4d604764761e721bcd0cb22b08cf8782859c10d91b5f3aa4d5b198a392122",
+      "branchFamily": "step",
+      "branchAction": "doSelectLevelOneArmorOfShadows",
+      "observedActionTaken": "doSelectLevelOneArmorOfShadows",
+      "harnessTestPath": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=completedReducerSurfaceRoute action=doSelectLevelOneArmorOfShadows qRoute=warlock-invocation-level-one-retain-project-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doSelectLevelOneArmorOfShadows",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#createCompletedReducerRouteDriver",
+        "routeSubject": "CreationSelectedReferenceRouteSubject + CreationBuildProjectionRouteSubject",
+        "owners": [
+          "CreationSelectedReferenceOwner",
+          "CharacterBuildOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "a07a6144bf0851cd52fb5ec6745f59f9e1937703b268f9c5d1d51f0a65a491e8",
+        "observedProjectionSha256": "a07a6144bf0851cd52fb5ec6745f59f9e1937703b268f9c5d1d51f0a65a491e8",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "CreationSelectedReferenceRouteSubject",
+            "CreationBuildProjectionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_draft",
+            "packages/character-creation-runtime/src/index.ts#createCharacterDraft",
+            "discover_creation_holes",
+            "packages/character-creation-runtime/src/index.ts#discoverCreationHoles",
+            "fill_creation_holes",
+            "packages/character-creation-runtime/src/index.ts#fillCreationHoles",
+            "finalize_character_draft",
+            "packages/character-creation-runtime/src/index.ts#finalizeCharacterDraft",
+            "retain_creation_selected_references",
+            "packages/character-creation-runtime/src/character-build-selected-reference-route.ts#characterBuildSelectedReferencesWithRoute",
+            "project_character_build_with_route",
+            "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts#characterBuildProjectionWithRoute",
+            "read_public_qRoute",
+            "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterCreationRouteQuintState"
+          ],
+          "routeEventSource": "The public selected-reference route reads a level-1 Warlock CharacterBuild with one selectedEldritchInvocation feature, then emits the CreationSelectedReferenceOwner and CharacterBuildOwner qRoute events copied by the route connector.",
+          "reducerPublicApiPath": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts#characterBuildSelectedReferencesWithRoute"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.features contains selectedEldritchInvocation selectedFromUnitId=warlock_eldritch_invocations invocationId=armor_of_shadows",
+          "CharacterBuild.spellcasting.sources[class_warlock] retains two Pact Magic cantrips and two prepared spells",
+          "CharacterBuild.spellcasting.slotPools.pactMagic count=1 slotLevel=1",
+          "characterBuildSelectedReferenceCount(warlockLevelOneInvocationBuild())=5",
+          "CharacterCreationRouteEvent.kind=retainCreationSelectedReferences",
+          "CharacterCreationRouteEvent.owner=creationSelectedReference",
+          "CharacterCreationRouteEvent.kind=projectCharacterBuildFacts",
+          "CharacterCreationRouteEvent.owner=characterBuild"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Level-1 Armor of Shadows selection is retained as existing selectedEldritchInvocation build state and projected through public selected-reference and CharacterBuild route helpers."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "aa258c7268f7f2ad3fc41280771be7fe14c5e7917c5c4866a7592e0e26ab4ec4",
+      "routeConnectorSha256": "38e4d604764761e721bcd0cb22b08cf8782859c10d91b5f3aa4d5b198a392122",
+      "branchFamily": "step",
+      "branchAction": "doGainLevelTwoInvocations",
+      "observedActionTaken": "doGainLevelTwoInvocations",
+      "harnessTestPath": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=completedReducerSurfaceRoute action=doGainLevelTwoInvocations qRoute=warlock-invocation-level-gain-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doGainLevelTwoInvocations",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#createCompletedReducerRouteDriver",
+        "routeSubject": "CreationSelectedReferenceRouteSubject + CreationBuildProjectionRouteSubject",
+        "owners": [
+          "CharacterBuildOwner",
+          "CreationSelectedReferenceOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "57d7a4fa20fe95e17c324b7c9c5da87fff1f189c98147cc9e71c1db7f91e6c1b",
+        "observedProjectionSha256": "57d7a4fa20fe95e17c324b7c9c5da87fff1f189c98147cc9e71c1db7f91e6c1b",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "CreationSelectedReferenceRouteSubject",
+            "CreationBuildProjectionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "apply_warlock_level_gain_with_route",
+            "packages/character-creation-runtime/src/character-build-advancement.ts#applyCharacterBuildWarlockLevelGainWithRoute",
+            "retain_creation_selected_references",
+            "packages/character-creation-runtime/src/character-build-selected-reference-route.ts#characterBuildSelectedReferencesWithRoute",
+            "project_character_build_with_route",
+            "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts#characterBuildProjectionWithRoute",
+            "read_public_qRoute",
+            "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterCreationRouteQuintState"
+          ],
+          "routeEventSource": "The public Warlock level-gain route wrapper accepts a level-2 Warlock gain, then selected-reference retention and CharacterBuild projection emit the copied qRoute owners.",
+          "reducerPublicApiPath": "packages/character-creation-runtime/src/character-build-advancement.ts#applyCharacterBuildWarlockLevelGainWithRoute"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.progression.advancements contains one class_warlock fixedHigherLevelGain entry",
+          "CharacterBuild.features selectedEldritchInvocation count=3",
+          "CharacterBuild.spellcasting.sources[class_warlock].preparedSpells count=3",
+          "CharacterBuild.spellcasting.slotPools.pactMagic count=2 slotLevel=1",
+          "CharacterCreationRouteEvent.kind=applyCreationFillBatch",
+          "CharacterCreationRouteEvent.subject=selectedReference",
+          "CharacterCreationRouteEvent.owner=characterBuild",
+          "CharacterCreationRouteEvent.kind=retainCreationSelectedReferences",
+          "CharacterCreationRouteEvent.owner=creationSelectedReference",
+          "CharacterCreationRouteEvent.kind=projectCharacterBuildFacts"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Warlock level 2 accepted invocation gain is routed through CharacterBuildOwner, then retained selected invocation choices and Pact Magic projection are observed through public qRoute helpers."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "aa258c7268f7f2ad3fc41280771be7fe14c5e7917c5c4866a7592e0e26ab4ec4",
+      "routeConnectorSha256": "38e4d604764761e721bcd0cb22b08cf8782859c10d91b5f3aa4d5b198a392122",
+      "branchFamily": "step",
+      "branchAction": "doReplaceArmorWithEldritchMindOnWarlockLevelGain",
+      "observedActionTaken": "doReplaceArmorWithEldritchMindOnWarlockLevelGain",
+      "harnessTestPath": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=completedReducerSurfaceRoute action=doReplaceArmorWithEldritchMindOnWarlockLevelGain qRoute=warlock-invocation-level-gain-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doReplaceArmorWithEldritchMindOnWarlockLevelGain",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#createCompletedReducerRouteDriver",
+        "routeSubject": "CreationSelectedReferenceRouteSubject + CreationBuildProjectionRouteSubject",
+        "owners": [
+          "CharacterBuildOwner",
+          "CreationSelectedReferenceOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "57d7a4fa20fe95e17c324b7c9c5da87fff1f189c98147cc9e71c1db7f91e6c1b",
+        "observedProjectionSha256": "57d7a4fa20fe95e17c324b7c9c5da87fff1f189c98147cc9e71c1db7f91e6c1b",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "CreationSelectedReferenceRouteSubject",
+            "CreationBuildProjectionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "apply_warlock_level_gain_with_route",
+            "packages/character-creation-runtime/src/character-build-advancement.ts#applyCharacterBuildWarlockLevelGainWithRoute",
+            "retain_creation_selected_references",
+            "packages/character-creation-runtime/src/character-build-selected-reference-route.ts#characterBuildSelectedReferencesWithRoute",
+            "project_character_build_with_route",
+            "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts#characterBuildProjectionWithRoute",
+            "read_public_qRoute",
+            "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterCreationRouteQuintState"
+          ],
+          "routeEventSource": "The public Warlock level-gain route wrapper accepts a non-repeatable invocation replacement, then selected-reference retention and CharacterBuild projection emit the copied qRoute owners.",
+          "reducerPublicApiPath": "packages/character-creation-runtime/src/character-build-advancement.ts#applyCharacterBuildWarlockLevelGainWithRoute"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.features removes selectedEldritchInvocation invocationId=armor_of_shadows",
+          "CharacterBuild.features contains selectedEldritchInvocation invocationId=eldritch_mind",
+          "CharacterBuild.features selectedEldritchInvocation count=3",
+          "CharacterBuild.spellcasting.slotPools.pactMagic count=2 slotLevel=2",
+          "CharacterCreationRouteEvent.kind=applyCreationFillBatch",
+          "CharacterCreationRouteEvent.owner=characterBuild",
+          "CharacterCreationRouteEvent.kind=retainCreationSelectedReferences",
+          "CharacterCreationRouteEvent.owner=creationSelectedReference",
+          "CharacterCreationRouteEvent.kind=projectCharacterBuildFacts"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Warlock level 3 non-repeatable invocation replacement is routed through CharacterBuildOwner and projects retained invocation choices plus Pact Magic facts."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "aa258c7268f7f2ad3fc41280771be7fe14c5e7917c5c4866a7592e0e26ab4ec4",
+      "routeConnectorSha256": "38e4d604764761e721bcd0cb22b08cf8782859c10d91b5f3aa4d5b198a392122",
+      "branchFamily": "step",
+      "branchAction": "doReplaceRepeatableInvocationByChoice",
+      "observedActionTaken": "doReplaceRepeatableInvocationByChoice",
+      "harnessTestPath": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=completedReducerSurfaceRoute action=doReplaceRepeatableInvocationByChoice qRoute=warlock-invocation-level-gain-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doReplaceRepeatableInvocationByChoice",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#createCompletedReducerRouteDriver",
+        "routeSubject": "CreationSelectedReferenceRouteSubject + CreationBuildProjectionRouteSubject",
+        "owners": [
+          "CharacterBuildOwner",
+          "CreationSelectedReferenceOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "57d7a4fa20fe95e17c324b7c9c5da87fff1f189c98147cc9e71c1db7f91e6c1b",
+        "observedProjectionSha256": "57d7a4fa20fe95e17c324b7c9c5da87fff1f189c98147cc9e71c1db7f91e6c1b",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "CreationSelectedReferenceRouteSubject",
+            "CreationBuildProjectionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "apply_warlock_level_gain_with_route",
+            "packages/character-creation-runtime/src/character-build-advancement.ts#applyCharacterBuildWarlockLevelGainWithRoute",
+            "retain_creation_selected_references",
+            "packages/character-creation-runtime/src/character-build-selected-reference-route.ts#characterBuildSelectedReferencesWithRoute",
+            "project_character_build_with_route",
+            "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts#characterBuildProjectionWithRoute",
+            "read_public_qRoute",
+            "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterCreationRouteQuintState"
+          ],
+          "routeEventSource": "The public Warlock level-gain route wrapper accepts a repeatable invocation replacement keyed by a known Warlock cantrip choice, then selected-reference retention and CharacterBuild projection emit the copied qRoute owners.",
+          "reducerPublicApiPath": "packages/character-creation-runtime/src/character-build-advancement.ts#applyCharacterBuildWarlockLevelGainWithRoute"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.features removes selectedEldritchInvocation repeatable repelling_blast choice eldritch_blast",
+          "CharacterBuild.features retains selectedEldritchInvocation repeatable repelling_blast choice poison_spray",
+          "CharacterBuild.features contains selectedEldritchInvocation invocationId=devils_sight",
+          "CharacterBuild.spellcasting.slotPools.pactMagic count=2 slotLevel=2",
+          "CharacterCreationRouteEvent.kind=applyCreationFillBatch",
+          "CharacterCreationRouteEvent.owner=characterBuild",
+          "CharacterCreationRouteEvent.kind=retainCreationSelectedReferences",
+          "CharacterCreationRouteEvent.owner=creationSelectedReference",
+          "CharacterCreationRouteEvent.kind=projectCharacterBuildFacts"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Warlock repeatable invocation replacement is routed through CharacterBuildOwner with the repeatable cantrip choice retained as existing selectedEldritchInvocation build state."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "aa258c7268f7f2ad3fc41280771be7fe14c5e7917c5c4866a7592e0e26ab4ec4",
+      "routeConnectorSha256": "38e4d604764761e721bcd0cb22b08cf8782859c10d91b5f3aa4d5b198a392122",
+      "branchFamily": "step",
+      "branchAction": "doRejectPrerequisiteRetainedInvocationReplacement",
+      "observedActionTaken": "doRejectPrerequisiteRetainedInvocationReplacement",
+      "harnessTestPath": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=completedReducerSurfaceRoute action=doRejectPrerequisiteRetainedInvocationReplacement qRoute=warlock-invocation-rejection-route scope=level-5-prerequisite",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRejectPrerequisiteRetainedInvocationReplacement",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#createCompletedReducerRouteDriver",
+        "routeSubject": "CreationSelectedReferenceRouteSubject",
+        "owners": [
+          "CreationSupportProfileAdmissionOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "313691c72b08fc28588550c042f62973aa097413b948c7d65f91ac9d5abd0579",
+        "observedProjectionSha256": "313691c72b08fc28588550c042f62973aa097413b948c7d65f91ac9d5abd0579",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "CreationSelectedReferenceRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "apply_warlock_level_gain_with_route",
+            "packages/character-creation-runtime/src/character-build-advancement.ts#applyCharacterBuildWarlockLevelGainWithRoute",
+            "read_public_qRoute",
+            "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterCreationRouteQuintState"
+          ],
+          "routeEventSource": "The public Warlock level-gain route wrapper rejects replacement of Pact of the Blade while Thirsting Blade depends on it and emits the CreationSupportProfileAdmissionOwner qRoute event copied by the route connector.",
+          "reducerPublicApiPath": "packages/character-creation-runtime/src/character-build-advancement.ts#applyCharacterBuildWarlockLevelGainWithRoute"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.features level-5 selectedEldritchInvocation count=5",
+          "CharacterBuild.features includes selectedEldritchInvocation invocationId=pact_of_the_blade",
+          "CharacterBuild.features includes selectedEldritchInvocation invocationId=thirsting_blade",
+          "CharacterBuildWarlockLevelGainRoute.tag=rejected",
+          "CharacterBuildAdvancementIssue.code=lockedEldritchInvocationReplacement",
+          "CharacterCreationRouteEvent.kind=applyCreationFillBatch",
+          "CharacterCreationRouteEvent.subject=selectedReference",
+          "CharacterCreationRouteEvent.holes=unitChoice",
+          "CharacterCreationRouteEvent.owner=creationSupportProfileAdmission",
+          "Branch inventory scope is out-of-scope because this prerequisite-retained invocation replacement uses Warlock level 5 facts"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "The level-5 prerequisite-retained replacement branch is explicitly tracked and observed as a support-profile admission rejection through the public Warlock level-gain route wrapper."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "aa258c7268f7f2ad3fc41280771be7fe14c5e7917c5c4866a7592e0e26ab4ec4",
+      "routeConnectorSha256": "38e4d604764761e721bcd0cb22b08cf8782859c10d91b5f3aa4d5b198a392122",
+      "branchFamily": "step",
+      "branchAction": "doRejectDuplicateInvocationSelections",
+      "observedActionTaken": "doRejectDuplicateInvocationSelections",
+      "harnessTestPath": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=completedReducerSurfaceRoute action=doRejectDuplicateInvocationSelections qRoute=warlock-invocation-rejection-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRejectDuplicateInvocationSelections",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#createCompletedReducerRouteDriver",
+        "routeSubject": "CreationSelectedReferenceRouteSubject",
+        "owners": [
+          "CreationSupportProfileAdmissionOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "313691c72b08fc28588550c042f62973aa097413b948c7d65f91ac9d5abd0579",
+        "observedProjectionSha256": "313691c72b08fc28588550c042f62973aa097413b948c7d65f91ac9d5abd0579",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "CreationSelectedReferenceRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "apply_warlock_level_gain_with_route",
+            "packages/character-creation-runtime/src/character-build-advancement.ts#applyCharacterBuildWarlockLevelGainWithRoute",
+            "read_public_qRoute",
+            "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterCreationRouteQuintState"
+          ],
+          "routeEventSource": "The public Warlock level-gain route wrapper rejects both duplicate non-repeatable and duplicate repeatable invocation selections and emits the CreationSupportProfileAdmissionOwner qRoute event copied by the route connector.",
+          "reducerPublicApiPath": "packages/character-creation-runtime/src/character-build-advancement.ts#applyCharacterBuildWarlockLevelGainWithRoute"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.features selectedEldritchInvocation count remains 1 after rejection",
+          "CharacterBuildWarlockLevelGainRoute.tag=rejected for duplicate non-repeatable invocation",
+          "CharacterBuildWarlockLevelGainRoute.tag=rejected for duplicate repeatable invocation choice",
+          "CharacterBuildAdvancementIssue.code=duplicateEldritchInvocationSelection",
+          "CharacterCreationRouteEvent.kind=applyCreationFillBatch",
+          "CharacterCreationRouteEvent.subject=selectedReference",
+          "CharacterCreationRouteEvent.holes=unitChoice",
+          "CharacterCreationRouteEvent.owner=creationSupportProfileAdmission"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Duplicate non-repeatable and duplicate repeatable invocation choices are rejected through CreationSupportProfileAdmissionOwner without mutating existing selected invocation state."
+      }
+    }
+  ]
+}

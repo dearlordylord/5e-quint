@@ -1,5 +1,81 @@
 # Validation Report
 
+## CRPI-BLOCK-046
+
+Status: `pass`
+
+- Task: 92
+- Driver path: `packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt`
+- Route connector path: `packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.route.mbt.qnt`
+- Route class: `reducer-routed`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-046.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Behavior implemented:
+
+Task 92 accepts Character Creation Warlock Eldritch Invocations selected-identity
+route replay through public target entrypoints. Accepted Warlock level-gain and
+replacement branches use `applyCharacterBuildWarlockLevelGainWithRoute`, then
+reuse `characterBuildSelectedReferencesWithRoute` and
+`characterBuildProjectionWithRoute`. Duplicate and prerequisite-retained
+invocation rejections are routed by the same public Warlock wrapper as
+`CreationSupportProfileAdmissionOwner` events. No duplicate selected-invocation,
+Pact Magic, or rejection state was added.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt#step:doSelectLevelOneArmorOfShadows` | `tasks/target-replay-evidence/CRPI-BLOCK-046.json#driver:packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt#step:doSelectLevelOneArmorOfShadows#trace:public-route=completedReducerSurfaceRoute action=doSelectLevelOneArmorOfShadows qRoute=warlock-invocation-level-one-retain-project-route` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt#step:doGainLevelTwoInvocations` | `tasks/target-replay-evidence/CRPI-BLOCK-046.json#driver:packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt#step:doGainLevelTwoInvocations#trace:public-route=completedReducerSurfaceRoute action=doGainLevelTwoInvocations qRoute=warlock-invocation-level-gain-route` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt#step:doRejectDuplicateInvocationSelections` | `tasks/target-replay-evidence/CRPI-BLOCK-046.json#driver:packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt#step:doRejectDuplicateInvocationSelections#trace:public-route=completedReducerSurfaceRoute action=doRejectDuplicateInvocationSelections qRoute=warlock-invocation-rejection-route` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt#step:doRejectPrerequisiteRetainedInvocationReplacement` | `tasks/target-replay-evidence/CRPI-BLOCK-046.json#driver:packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt#step:doRejectPrerequisiteRetainedInvocationReplacement#trace:public-route=completedReducerSurfaceRoute action=doRejectPrerequisiteRetainedInvocationReplacement qRoute=warlock-invocation-rejection-route scope=level-5-prerequisite` | `_none_` | `covered; branch-inventory scope out-of-scope` |
+| `packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt#step:doReplaceArmorWithEldritchMindOnWarlockLevelGain` | `tasks/target-replay-evidence/CRPI-BLOCK-046.json#driver:packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt#step:doReplaceArmorWithEldritchMindOnWarlockLevelGain#trace:public-route=completedReducerSurfaceRoute action=doReplaceArmorWithEldritchMindOnWarlockLevelGain qRoute=warlock-invocation-level-gain-route` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt#step:doReplaceRepeatableInvocationByChoice` | `tasks/target-replay-evidence/CRPI-BLOCK-046.json#driver:packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt#step:doReplaceRepeatableInvocationByChoice#trace:public-route=completedReducerSurfaceRoute action=doReplaceRepeatableInvocationByChoice qRoute=warlock-invocation-level-gain-route` | `_none_` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-046.json`
+- Reproduction trace family: `public-route=completedReducerSurfaceRoute qRoute=warlock-invocation-level-one-retain-project-route`, `qRoute=warlock-invocation-level-gain-route`, and `qRoute=warlock-invocation-rejection-route`
+- The copied connector projection source is `packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.route.mbt.qnt#qRoute`; observed projections are produced by `applyCharacterBuildWarlockLevelGainWithRoute`, `characterBuildSelectedReferencesWithRoute`, and `characterBuildProjectionWithRoute`.
+- Checked target facts: selected invocation choices remain `CharacterBuild.features` `selectedEldritchInvocation` facts; Pact Magic remains `CharacterBuild.spellcasting`; duplicate/prerequisite failures remain typed `CharacterBuildAdvancementIssue` output plus route evidence.
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-046/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 92. The level-5 prerequisite-retained replacement branch is covered in evidence and remains explicitly marked as the source inventory's out-of-scope level-5 branch.
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Classes/Warlock.md#Level 1: Eldritch Invocations` says Warlocks choose eligible invocations, must meet prerequisites, can replace one invocation on Warlock level gain, cannot replace an invocation required by another invocation they have, and cannot pick the same invocation more than once unless repeatable.
+- SRD 5.2.1 `Classes/Warlock.md#Level 1: Pact Magic` defines Warlock cantrips, prepared spells, Pact Magic slots, and level-gain spell replacement.
+- `UBIQUITOUS_LANGUAGE.md` defines Pact Slot and Spell Access; this task keeps Pact Magic as build Spell Access and slot-pool projection, not battle Spell Invocation or Spell Effect state.
+
+Verification results:
+
+- Base check passed: declared integration ref and `HEAD` both resolved to `27d7101a0 Mark Ralph task 88 done`; Base SHA `27d7101a03706ca330addbc1e69c69c892cdb8a0` is an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against the SRD and vocabulary passages listed above.
+- Character Creation runtime typecheck passed: `pnpm --filter @dnd/character-creation-runtime exec tsc --noEmit --pretty false`.
+- Focused semantic plus route MBT replay passed: `START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/character-creation-runtime exec vitest run src/warlock-eldritch-invocations-selected-identity.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "replays Character Creation Warlock Eldritch Invocations selected identity parity|routes Warlock invocation selections" ) 2>&1 & pid=$!; wait "$pid"; status=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"` passed with 2 tests and 9 skipped; `TOTAL: 4s`.
+- Pre-MBT process check with `ps aux | grep vitest | grep -v grep` and `ps aux | grep quint_evaluator | grep -v grep` reported only a Ralph monitoring shell whose command text contained those words; no actual Vitest runner or Quint evaluator was active.
+- Target replay evidence diagnostic `node scripts/cleanroom-branch-coverage-check.cjs --target-replay-evidence tasks/target-replay-evidence/CRPI-BLOCK-046.json` failed on unrelated full-corpus missing-evidence baseline entries; no `CRPI-BLOCK-046`, Warlock target-driver, or Task 92 target-evidence metadata errors appeared in the checker log after the evidence metadata fix.
+- Cleanroom branch coverage passed: `pnpm cleanroom-branch-coverage:check` reported 738 obligations and 24 sampled inputs.
+- Requested verification passed: `pnpm quality`.
+- JSON artifact parse check passed for `tasks/target-replay-evidence/CRPI-BLOCK-046.json`, `tasks/ENGINE_DEPTH_MANIFEST.json`, `tasks/STATE_OWNER_MANIFEST.json`, and `tasks/RUN_LEDGER.json`.
+- `git diff --check` passed.
+- Reviewer-loop convergence passed: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks found no remaining reasonable Task 92 findings after routing Warlock accepted and rejected level-gain paths through the public wrapper and confirming no duplicate durable state was added.
+
 ## CRPI-BLOCK-045
 
 Status: `pass`

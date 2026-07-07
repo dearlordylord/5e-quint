@@ -553,7 +553,7 @@
     {
       "number": 92,
       "id": "CRPI-BLOCK-046",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: character-creation-warlock-eldritch-invocations-selected-identity"
     },
     {
@@ -744,7 +744,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRP04-CCF-01` | `done` | none | target replay evidence and owner implementation |
 | `CRP04-CCF-02` | `done` | none | target replay evidence and owner implementation |
 | `CRP04-CCF-03` | `done` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-046` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-046` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-047` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-048` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-049` | `done` | none | target replay evidence and owner implementation |
@@ -2197,7 +2197,7 @@ Plan Impact:
 
 ### Task 25 - CRPI-BLOCK-017
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

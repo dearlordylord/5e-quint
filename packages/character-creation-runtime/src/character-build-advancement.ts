@@ -1267,6 +1267,61 @@ export type CharacterBuildFightingStyleReplacementRoute<RouteEvent> = {
   )[];
 };
 
+export type CharacterBuildWarlockLevelGainRouteSubject = "selectedReference";
+
+export type CharacterBuildWarlockLevelGainRouteFill = "choiceSet";
+
+export type CharacterBuildWarlockLevelGainAcceptedRouteOwner =
+  "characterBuild";
+
+export type CharacterBuildWarlockLevelGainRejectedRouteOwner =
+  "creationSupportProfileAdmission";
+
+export type CharacterBuildWarlockLevelGainAcceptedRouteEvent = {
+  readonly kind: "applyCreationFillBatch";
+  readonly subject: CharacterBuildWarlockLevelGainRouteSubject;
+  readonly fills: readonly [CharacterBuildWarlockLevelGainRouteFill];
+  readonly holes: readonly [];
+  readonly owner: CharacterBuildWarlockLevelGainAcceptedRouteOwner;
+};
+
+export type CharacterBuildWarlockLevelGainRejectedRouteEvent = {
+  readonly kind: "applyCreationFillBatch";
+  readonly subject: CharacterBuildWarlockLevelGainRouteSubject;
+  readonly fills: readonly [CharacterBuildWarlockLevelGainRouteFill];
+  readonly holes: readonly ["unitChoice"];
+  readonly owner: CharacterBuildWarlockLevelGainRejectedRouteOwner;
+};
+
+export type CharacterBuildWarlockLevelGainRoute<RouteEvent> =
+  | {
+      readonly tag: "accepted";
+      readonly build: CharacterBuild;
+      readonly route: readonly (
+        | RouteEvent
+        | CharacterBuildWarlockLevelGainAcceptedRouteEvent
+      )[];
+    }
+  | {
+      readonly tag: "rejected";
+      readonly build: CharacterBuild;
+      readonly issue: CharacterBuildWarlockInvocationRouteRejectionIssue;
+      readonly route: readonly (
+        | RouteEvent
+        | CharacterBuildWarlockLevelGainRejectedRouteEvent
+      )[];
+    };
+
+export type CharacterBuildWarlockInvocationRouteRejectionIssue = Extract<
+  CharacterBuildAdvancementIssue,
+  {
+    readonly code:
+      | "lockedEldritchInvocationReplacement"
+      | "duplicateEldritchInvocationSelection"
+      | "unmetEldritchInvocationPrerequisite";
+  }
+>;
+
 export function advanceCharacterBuildFightingStyleReplacementWithRoute<
   RouteEvent,
 >(input: {
@@ -1291,6 +1346,40 @@ export function advanceCharacterBuildFightingStyleReplacementWithRoute<
   });
 }
 
+export function applyCharacterBuildWarlockLevelGainWithRoute<RouteEvent>(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly levelGain: CharacterBuildWarlockLevelGain;
+  readonly route: readonly RouteEvent[];
+}): Either.Either<
+  CharacterBuildWarlockLevelGainRoute<RouteEvent>,
+  CharacterBuildAdvancementIssue
+> {
+  const advanced = advanceCharacterBuildClassLevel({
+    build: input.build,
+    unitLibrary: input.unitLibrary,
+    levelGain: input.levelGain,
+  });
+  if (Either.isRight(advanced)) {
+    return Either.right({
+      tag: "accepted",
+      build: advanced.right,
+      route: [...input.route, routeApplyWarlockLevelGainFill()],
+    });
+  }
+
+  if (isWarlockInvocationRouteRejectionIssue(advanced.left)) {
+    return Either.right({
+      tag: "rejected",
+      build: input.build,
+      issue: advanced.left,
+      route: [...input.route, routeRejectWarlockInvocationSelectionFill()],
+    });
+  }
+
+  return Either.left(advanced.left);
+}
+
 function characterBuildWithSpellcasting(
   build: CharacterBuild,
   spellcasting: CharacterBuild["spellcasting"],
@@ -1309,6 +1398,36 @@ function routeApplyFightingStyleReplacementFill(): CharacterBuildFightingStyleRe
     holes: [],
     owner: "characterBuild",
   };
+}
+
+function routeApplyWarlockLevelGainFill(): CharacterBuildWarlockLevelGainAcceptedRouteEvent {
+  return {
+    kind: "applyCreationFillBatch",
+    subject: "selectedReference",
+    fills: ["choiceSet"],
+    holes: [],
+    owner: "characterBuild",
+  };
+}
+
+function routeRejectWarlockInvocationSelectionFill(): CharacterBuildWarlockLevelGainRejectedRouteEvent {
+  return {
+    kind: "applyCreationFillBatch",
+    subject: "selectedReference",
+    fills: ["choiceSet"],
+    holes: ["unitChoice"],
+    owner: "creationSupportProfileAdmission",
+  };
+}
+
+function isWarlockInvocationRouteRejectionIssue(
+  issue: CharacterBuildAdvancementIssue,
+): issue is CharacterBuildWarlockInvocationRouteRejectionIssue {
+  return (
+    issue.code === "lockedEldritchInvocationReplacement" ||
+    issue.code === "duplicateEldritchInvocationSelection" ||
+    issue.code === "unmetEldritchInvocationPrerequisite"
+  );
 }
 
 function updateSpellcastingForClassLevelGain(input: {
