@@ -10,6 +10,7 @@ import {
   sorcererMetamagicOptionId,
   type CharacterBuild,
   type CharacterBuildFeature,
+  type CharacterBuildProficiencyChoiceSubject,
 } from "./index.ts";
 
 const selectedReferenceFeatureCases = [
@@ -96,6 +97,33 @@ describe("characterBuildSelectedReferencesWithRoute", () => {
     ).toBe(true);
   });
 
+  test("routes retained skill Expertise choices from build proficiency facts", () => {
+    const build = testBuild({
+      proficiencyChoices: [
+        { kind: "skill", skill: "sleight_of_hand" },
+        { kind: "skill", skill: "stealth" },
+        { kind: "skill_expertise", skill: "sleight_of_hand" },
+        { kind: "skill_expertise", skill: "stealth" },
+      ],
+    });
+    const result = characterBuildSelectedReferencesWithRoute({
+      build,
+      route: ["seed"],
+    });
+
+    expect(characterBuildSelectedReferenceCount(build)).toBe(2);
+    expect(Either.isRight(result)).toBe(true);
+    if (Either.isLeft(result)) return;
+    expect(result.right.route).toEqual([
+      "seed",
+      {
+        kind: "retainCreationSelectedReferences",
+        subject: "selectedReference",
+        owner: "creationSelectedReference",
+      },
+    ]);
+  });
+
   test("rejects a build without retained selected references", () => {
     const build = testBuild({
       features: [
@@ -129,6 +157,7 @@ describe("characterBuildSelectedReferencesWithRoute", () => {
 
 function testBuild(input: {
   readonly features?: readonly CharacterBuildFeature[];
+  readonly proficiencyChoices?: readonly CharacterBuildProficiencyChoiceSubject[];
   readonly spellcasting?: CharacterBuild["spellcasting"];
 }): CharacterBuild {
   const build: CharacterBuild = {
@@ -151,7 +180,7 @@ function testBuild(input: {
         cha: 10,
       }),
     ),
-    proficiencyChoices: [],
+    proficiencyChoices: input.proficiencyChoices ?? [],
     features: input.features ?? [],
     equipment: {
       owned: [],

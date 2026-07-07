@@ -1,6 +1,10 @@
 import { Either } from "effect";
 
-import type { CharacterBuild, CharacterBuildFeature } from "./types.ts";
+import type {
+  CharacterBuild,
+  CharacterBuildFeature,
+  CharacterBuildProficiencyChoiceSubject,
+} from "./types.ts";
 
 const MIN_SELECTED_REFERENCE_COUNT = 1;
 const SELECTED_REFERENCE_FEATURE_KINDS = [
@@ -83,6 +87,8 @@ export function characterBuildSelectedReferenceCount(
 ): number {
   return (
     build.features.filter(isSelectedReferenceFeature).length +
+    build.proficiencyChoices.filter(isSelectedReferenceProficiencyChoice)
+      .length +
     (build.spellcasting?.sources.reduce(
       (count, source) =>
         count +
@@ -100,6 +106,12 @@ function isSelectedReferenceFeature(feature: CharacterBuildFeature): boolean {
   return SELECTED_REFERENCE_FEATURE_KINDS.some(
     (selectedReferenceKind) => selectedReferenceKind === feature.kind,
   );
+}
+
+function isSelectedReferenceProficiencyChoice(
+  choice: CharacterBuildProficiencyChoiceSubject,
+): boolean {
+  return choice.kind === "skill_expertise";
 }
 
 function routeRetainCreationSelectedReferences(): CharacterCreationSelectedReferenceRouteEvent {

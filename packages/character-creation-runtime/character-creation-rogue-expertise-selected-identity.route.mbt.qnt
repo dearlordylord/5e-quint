@@ -20,7 +20,55 @@ module characterCreationRogueExpertiseSelectedIdentityRouteMbt {
   pure def qRoute: List[CharacterCreationRouteEvent] = qState.qRoute
 
   pure val initialRogueExpertiseRoute: List[CharacterCreationRouteEvent] =
-    completedFighterCreationRoute
+    completedRogueExpertiseCreationRoute
+
+  pure val afterRogueExpertiseClassSkillChoiceRoute: List[CharacterCreationRouteEvent] =
+    routeApplyAndDiscoverCreationFill(
+      afterInitialManifestCreationRoute,
+      Set(CreationChoiceSetFill),
+      Set(CreationUnitChoiceHoleFamily, CreationEquipmentSelectionHoleFamily),
+      CharacterDraftOwner,
+    )
+
+  pure val completedRogueExpertiseCreationRoute: List[CharacterCreationRouteEvent] =
+    routeApplyAndDiscoverCreationFill(
+      routeApplyAndDiscoverCreationFill(
+        routeApplyAndDiscoverCreationFill(
+          afterRogueExpertiseClassSkillChoiceRoute,
+          Set(CreationChoiceSetFill, CreationEquipmentSelectionFill),
+          Set(CreationEquipmentSelectionHoleFamily),
+          CreationSupportProfileAdmissionOwner,
+        ),
+        Set(CreationEquipmentSelectionFill),
+        Set(CreationLoadoutHoleFamily),
+        CreationSupportProfileAdmissionOwner,
+      ),
+      Set(CreationLoadoutSelectionFill),
+      Set(),
+      CharacterDraftOwner,
+    )
+      .append(
+        routeProjectCharacterBuildFacts(
+          CreationBuildProjectionRouteSubject,
+          CharacterBuildOwner,
+        )
+      )
+      .append(
+        routeRecordCreationFacts(
+          CreationBuildProjectionRouteSubject,
+          Set(
+            CreationBuildProjectionInputFact,
+            CreationHitPointMaximumBuildInputFact,
+          ),
+          CharacterBuildOwner,
+        )
+      )
+      .append(
+        routeFinalizeCharacterDraft(
+          CreationFinalizationRouteSubject,
+          CharacterBuildOwner,
+        )
+      )
 
   pure def retainExpertiseRoute(
     route: List[CharacterCreationRouteEvent],

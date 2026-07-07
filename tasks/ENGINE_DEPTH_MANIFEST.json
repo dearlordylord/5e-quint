@@ -1,8 +1,39 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-044",
+  "taskId": "CRPI-BLOCK-045",
   "accumulatorGrowth": [],
   "adapterModules": [
+    {
+      "path": "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.mbt.qnt",
+      "quarantinedWitnessNames": [
+        "qState",
+        "doSelectLevelOneOwnedSkillExpertise"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-045.json"
+      ]
+    },
+    {
+      "path": "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.route.mbt.qnt",
+      "quarantinedWitnessNames": [
+        "qRoute"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-045.json"
+      ]
+    },
+    {
+      "path": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "quarantinedWitnessNames": [
+        "rogueExpertiseRouteDriverSchema",
+        "createRogueExpertiseReducerRouteDriver",
+        "levelOneRogueExpertisePublicCreationReplay",
+        "retainLevelOneRogueExpertiseSelectedReferenceRoute"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-045.json"
+      ]
+    },
     {
       "path": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
       "quarantinedWitnessNames": [
@@ -44,6 +75,10 @@
   ],
   "productionModulesExtended": [
     {
+      "path": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts",
+      "notes": "Extends selected-reference counting to include existing CharacterBuild.proficiencyChoices entries whose subject is skill_expertise, so Rogue Expertise skill refs are retained by CreationSelectedReferenceOwner without adding duplicate selected-reference state."
+    },
+    {
       "path": "packages/character-creation-runtime/src/character-build-advancement.ts",
       "notes": "Adds advanceCharacterBuildFightingStyleReplacementWithRoute, a public route wrapper around the existing typed Fighter Fighting Style replacement advancement reducer."
     },
@@ -55,7 +90,7 @@
   "expectedNextReuse": [
     {
       "path": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts",
-      "notes": "Initial selected-reference branches continue to derive CreationSelectedReferenceOwner events from existing CharacterBuild selected refs."
+      "notes": "Initial selected-reference branches continue to derive CreationSelectedReferenceOwner events from existing CharacterBuild selected refs, including selected class-choice refs and skill_expertise proficiency choices."
     },
     {
       "path": "packages/character-creation-runtime/src/character-build-advancement.ts",
@@ -68,6 +103,6 @@
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 87 observes copied Fighter Fighting Style qRoute through public selected-reference, CharacterBuild level-gain replacement, and build-projection route entrypoints. No new durable CharacterBuild fields were added."
+    "notes": "Task 88 observes copied Rogue Expertise level-1 qRoute through an actual Rogue public creation replay and public selected-reference route entrypoints. No new durable CharacterBuild fields were added; final Expertise proficiency-level projection remains derived from existing build/proficiency facts."
   }
 }

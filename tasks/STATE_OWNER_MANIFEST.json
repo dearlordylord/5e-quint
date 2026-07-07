@@ -1,7 +1,34 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-044",
+  "taskId": "CRPI-BLOCK-045",
   "durableFields": [
+    {
+      "fieldPath": "CharacterBuild.proficiencyChoices",
+      "owner": "character-build-proficiency-choice",
+      "introducedIn": "packages/character-creation-runtime/src/types.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing skill_expertise proficiency choices retain the level-1 Rogue Expertise selected-reference boundary. Task 88 adds no duplicate selected-reference cache and does not model the out-of-denominator level-six additional Expertise branch."
+    },
+    {
+      "fieldPath": "CharacterBuild proficiency projection",
+      "owner": "character-build-proficiency-projection",
+      "introducedIn": "packages/character-creation-runtime/src/types.ts",
+      "derivability": {
+        "tag": "runtime-projection"
+      },
+      "notes": "Final Expertise proficiency-level facts derive from CharacterBuild.proficiencyChoices and CharacterBuild proficiency projection rather than being stored as parallel durable skill state."
+    },
+    {
+      "fieldPath": "CharacterCreationRouteEvent.subject=selectedReference",
+      "owner": "character-creation-selected-reference-route-projection",
+      "introducedIn": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts",
+      "derivability": {
+        "tag": "runtime-projection"
+      },
+      "notes": "CreationSelectedReferenceOwner route events are emitted after reading retained CharacterBuild skill_expertise proficiency choices for the level-1 Rogue Expertise replay."
+    },
     {
       "fieldPath": "CharacterBuild.features",
       "owner": "character-build",
@@ -49,9 +76,9 @@
     }
   ],
   "notes": [
-    "Task 87 introduced no new durable CharacterBuild fields.",
-    "Initial and replacement Fighter Fighting Style selected refs remain existing CharacterBuild selected class-choice facts.",
-    "Replacement replay fixtures include the current level-1 Fighter Weapon Mastery selected refs as existing CharacterBuild selected class-choice facts rather than storing a parallel route-local state.",
-    "Replacement qRoute evidence is projected at the reducer-route boundary through advanceCharacterBuildFightingStyleReplacementWithRoute, characterBuildSelectedReferencesWithRoute, and characterBuildProjectionWithRoute."
+    "Task 88 introduced no new durable CharacterBuild fields.",
+    "Level-1 Rogue Expertise selected refs remain existing CharacterBuild.proficiencyChoices skill_expertise facts.",
+    "Final Expertise proficiency-level facts derive from existing CharacterBuild proficiency projection and selected skill proficiency facts, not a duplicate durable skill-state store.",
+    "The level-six additional Rogue Expertise branch remains out of this task denominator."
   ]
 }

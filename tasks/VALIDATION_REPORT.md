@@ -1,5 +1,75 @@
 # Validation Report
 
+## CRPI-BLOCK-045
+
+Status: `pass`
+
+- Task: 88
+- Driver path: `packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.mbt.qnt`
+- Route connector path: `packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.route.mbt.qnt`
+- Route class: `reducer-routed`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-045.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Behavior implemented:
+
+Task 88 accepts Character Creation Rogue Expertise selected-identity route
+replay through public target entrypoints. The in-scope level-1 branch derives
+selected-reference route events from existing `CharacterBuild.proficiencyChoices`
+`skill_expertise` facts through `characterBuildSelectedReferencesWithRoute`.
+Final Expertise proficiency-level facts remain derived from the existing
+CharacterBuild proficiency projection and selected skill proficiency facts. No
+duplicate selected-reference or skill state was added, and the level-six
+additional Expertise branch remains outside this task denominator.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.mbt.qnt#step:doSelectLevelOneOwnedSkillExpertise` | `tasks/target-replay-evidence/CRPI-BLOCK-045.json#driver:packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.mbt.qnt#step:doSelectLevelOneOwnedSkillExpertise#trace:public-route=levelOneRogueExpertisePublicCreationReplay action=doSelectLevelOneOwnedSkillExpertise qRoute=rogue-expertise-retain-selected-reference-route` | `_none_` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-045.json`
+- Reproduction trace family: `public-route=levelOneRogueExpertisePublicCreationReplay qRoute=rogue-expertise-retain-selected-reference-route`
+- The copied connector projection source is `packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.route.mbt.qnt#qRoute`; observed projections are produced by an actual level-1 Rogue public creation reducer sequence plus `characterBuildSelectedReferencesWithRoute`.
+- Checked target facts: `CharacterBuild.proficiencyChoices` contains two `skill_expertise` choices for `sleight_of_hand` and `stealth`; `characterBuildProficiencies(...).expertise` derives those two Expertise skills; the valid level-1 Rogue build has four total retained selected references because it also selects two Rogue Weapon Mastery Unit refs.
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-045/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 88. The copied level-six Rogue Expertise branch remains outside this task denominator.
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Classes/Rogue.md#Level 1: Expertise` says a Rogue gains Expertise in two chosen skill proficiencies at level 1 and gains two more at Rogue level 6.
+- SRD 5.2.1 `Rules-Glossary.md#Expertise` says Expertise applies to a skill in which the character has proficiency, doubles the Proficiency Bonus for the relevant check, and cannot be duplicated for the same skill proficiency.
+- `UBIQUITOUS_LANGUAGE.md` defines Skill, Proficiency Level, Proficiency Bonus, and Expertise; this task keeps Expertise as a proficiency-level projection over owned skill proficiency facts.
+
+Verification results:
+
+- Base check passed: declared integration ref and `HEAD` both resolved to `b3e75a590 Mark Ralph task 87 done`; Base SHA `b3e75a5902b90822cb404ded894912ef6ee27fe5` is an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against the SRD and vocabulary passages listed above.
+- Character Creation runtime typecheck passed: `pnpm --filter @dnd/character-creation-runtime exec tsc --noEmit --pretty false`.
+- Focused semantic plus route MBT replay passed: `START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/character-creation-runtime exec vitest run src/rogue-expertise-selected-identity.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "replays Character Creation Rogue Expertise selected identity parity|routes Rogue Expertise selections" ) 2>&1 & pid=$!; wait "$pid"; status=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"` passed with 2 tests and 9 skipped; `TOTAL: 3s`.
+- Task-scoped target replay evidence validation passed with 1 Task 88 obligation covered.
+- `pnpm cleanroom-branch-coverage:check --target-replay-evidence tasks/target-replay-evidence/CRPI-BLOCK-045.json` failed on unrelated broad missing-evidence baseline obligations outside Task 88; the direct task-scoped validator found no Task 88 evidence issues.
+- `pnpm cleanroom-branch-coverage:check` passed.
+- `git diff --check` passed.
+- `pnpm quality` passed.
+- Reviewer-loop convergence passed: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks found no remaining reasonable Task 88 findings after confirming selected-reference state and final Expertise proficiency-level projection are derived from existing CharacterBuild facts.
+
 ## CRPI-BLOCK-044
 
 Status: `pass`
