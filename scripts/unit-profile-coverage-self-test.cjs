@@ -19,6 +19,8 @@ const {
 } = require("./unit-profile-coverage-discovery.cjs");
 const {
   buildLevel16FullSupport,
+  buildLevel17FullSupport,
+  buildLevel18FullSupport,
   buildSelectedIdentityReadiness,
   characterLevelBands,
   buildSrdAuthoredProductReadiness,
@@ -801,8 +803,8 @@ function assertLevelOneSevenMiningAuditSeparatesRowPresenceFromSupport() {
   }
 }
 
-function assertNoMatrixRowsPreserveInventoryAccounting(root) {
-  const adoptedDecisionRows = fs
+function adoptedNoMatrixDecisionRowsForSelfTest(root) {
+  return fs
     .readdirSync(path.join(root, "plans/unit-profile-coverage/frontier-decisions"))
     .filter((filename) => filename.endsWith(".md") && filename !== "README.md")
     .map((filename) => {
@@ -830,6 +832,10 @@ function assertNoMatrixRowsPreserveInventoryAccounting(root) {
         nextAction: "Fixture adopted no-matrix decision row.",
       };
     });
+}
+
+function assertNoMatrixRowsPreserveInventoryAccounting(root) {
+  const adoptedDecisionRows = adoptedNoMatrixDecisionRowsForSelfTest(root);
   const fixtureClosure = {
     source: "unit-claim",
     kind: battleReadinessClosureKind.outsideBattleRuntime,
@@ -985,6 +991,80 @@ function runSelfTest(root) {
   ) {
     fail(
       `Self-test failed: expected character level 6 bands to include level-6 and still exclude spell-level-4, got ${JSON.stringify(levelSixBands)}`,
+    );
+  }
+  const levelSevenBands = characterLevelBands(7);
+  if (
+    JSON.stringify(levelSevenBands) !==
+    JSON.stringify([
+      "level-1",
+      "level-2",
+      "level-3",
+      "level-4",
+      "level-5",
+      "level-6",
+      "level-7",
+      "spell-level-0",
+      "spell-level-1",
+      "spell-level-2",
+      "spell-level-3",
+      "spell-level-4",
+    ])
+  ) {
+    fail(
+      `Self-test failed: expected character level 7 bands to include level-7 and spell-level-4, got ${JSON.stringify(levelSevenBands)}`,
+    );
+  }
+  const levelEightBands = characterLevelBands(8);
+  if (
+    JSON.stringify(levelEightBands) !==
+    JSON.stringify([
+      "level-1",
+      "level-2",
+      "level-3",
+      "level-4",
+      "level-5",
+      "level-6",
+      "level-7",
+      "level-8",
+      "spell-level-0",
+      "spell-level-1",
+      "spell-level-2",
+      "spell-level-3",
+      "spell-level-4",
+    ])
+  ) {
+    fail(
+      `Self-test failed: expected character level 8 bands to include level-8 and still exclude spell-level-5, got ${JSON.stringify(levelEightBands)}`,
+    );
+  }
+  const emptyFullSupportMatrix = {
+    units: [],
+    rulesKernelProfileJoin: { profiles: [] },
+  };
+  const minimalFullSupportInventory = {
+    rows: adoptedNoMatrixDecisionRowsForSelfTest(root),
+  };
+  const level17FullSupport = buildLevel17FullSupport(
+    emptyFullSupportMatrix,
+    minimalFullSupportInventory,
+    { root },
+  );
+  const level18FullSupport = buildLevel18FullSupport(
+    emptyFullSupportMatrix,
+    minimalFullSupportInventory,
+    { root },
+  );
+  if (
+    JSON.stringify(level17FullSupport.scope.levelBands) !==
+      JSON.stringify(levelSevenBands) ||
+    level17FullSupport.scope.title !== "Character Levels 1-7" ||
+    JSON.stringify(level18FullSupport.scope.levelBands) !==
+      JSON.stringify(levelEightBands) ||
+    level18FullSupport.scope.title !== "Character Levels 1-8"
+  ) {
+    fail(
+      `Self-test failed: expected level 1-7/1-8 full-support scopes to expose the new band frontiers, got ${JSON.stringify({ level17: level17FullSupport.scope, level18: level18FullSupport.scope })}`,
     );
   }
   assertLaterLevelOnlyScopeAccounting();

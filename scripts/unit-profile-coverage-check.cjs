@@ -27,12 +27,16 @@ const {
   buildLevel14FullSupport,
   buildLevel15FullSupport,
   buildLevel16FullSupport,
+  buildLevel17FullSupport,
+  buildLevel18FullSupport,
   renderLevel1FullSupport,
   renderLevel12FullSupport,
   renderLevel13FullSupport,
   renderLevel14FullSupport,
   renderLevel15FullSupport,
   renderLevel16FullSupport,
+  renderLevel17FullSupport,
+  renderLevel18FullSupport,
 } = require("./level1-full-support-report.cjs");
 const {
   buildSrdUnitInventory,
@@ -254,6 +258,12 @@ function main() {
   const level16FullSupport = buildLevel16FullSupport(matrix, srdUnitInventory, {
     root,
   });
+  const level17FullSupport = buildLevel17FullSupport(matrix, srdUnitInventory, {
+    root,
+  });
+  const level18FullSupport = buildLevel18FullSupport(matrix, srdUnitInventory, {
+    root,
+  });
   const levelOneSevenMiningAudit =
     buildLevelOneSevenMiningAudit(srdUnitInventory);
   const levelOneEightMiningAudit =
@@ -422,6 +432,26 @@ function main() {
     { root, write },
     paths.level16FullSupportReport,
     renderLevel16FullSupport(level16FullSupport),
+  );
+  writeOrCompare(
+    { root, write },
+    paths.level17FullSupport,
+    `${JSON.stringify(level17FullSupport, null, 2)}\n`,
+  );
+  writeOrCompare(
+    { root, write },
+    paths.level17FullSupportReport,
+    renderLevel17FullSupport(level17FullSupport),
+  );
+  writeOrCompare(
+    { root, write },
+    paths.level18FullSupport,
+    `${JSON.stringify(level18FullSupport, null, 2)}\n`,
+  );
+  writeOrCompare(
+    { root, write },
+    paths.level18FullSupportReport,
+    renderLevel18FullSupport(level18FullSupport),
   );
   writeOrCompare(
     { root, write },

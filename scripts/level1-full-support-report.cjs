@@ -37,6 +37,8 @@ const strictLevel13Bands = characterLevelBands(3);
 const strictLevel14Bands = characterLevelBands(4);
 const strictLevel15Bands = characterLevelBands(5);
 const strictLevel16Bands = characterLevelBands(6);
+const strictLevel17Bands = characterLevelBands(7);
+const strictLevel18Bands = characterLevelBands(8);
 const companionWorktreeExcludedUnitIds = ["find_familiar"];
 const srdAuthoredCharacterCreationOptionGroups = [
   {
@@ -100,6 +102,22 @@ const level16Scope = {
     "This strict view tracks executable SRD character-level-1 through character-level-6 pressure, cantrips, and spell-level-1 through spell-level-3 pressure separately from the broader product readiness closure metric. Spell-level-4 pressure first enters the character-level-7 frontier for full casters and Warlock Pact Magic.",
   levelBands: strictLevel16Bands,
   maxCharacterLevel: 6,
+};
+const level17Scope = {
+  title: "Character Levels 1-7",
+  outputTitle: "Character Levels 1-7 Full Support",
+  description:
+    "This strict view tracks executable SRD character-level-1 through character-level-7 pressure, cantrips, and spell-level-1 through spell-level-4 pressure separately from the broader product readiness closure metric. Spell-level-4 pressure enters at character level 7 for full casters and Warlock Pact Magic.",
+  levelBands: strictLevel17Bands,
+  maxCharacterLevel: 7,
+};
+const level18Scope = {
+  title: "Character Levels 1-8",
+  outputTitle: "Character Levels 1-8 Full Support",
+  description:
+    "This strict view tracks executable SRD character-level-1 through character-level-8 pressure, cantrips, and spell-level-1 through spell-level-4 pressure separately from the broader product readiness closure metric. Spell-level-5 pressure first enters the character-level-9 frontier for full casters and Warlock Pact Magic.",
+  levelBands: strictLevel18Bands,
+  maxCharacterLevel: 8,
 };
 const adoptedNoMatrixSrdPressureDecisionUnitIds = new Set([
   "create_or_destroy_water",
@@ -1447,6 +1465,24 @@ function buildLevel16FullSupport(matrix, srdUnitInventory, options = {}) {
   );
 }
 
+function buildLevel17FullSupport(matrix, srdUnitInventory, options = {}) {
+  return buildStrictFullSupport(
+    matrix,
+    srdUnitInventory,
+    level17Scope,
+    options,
+  );
+}
+
+function buildLevel18FullSupport(matrix, srdUnitInventory, options = {}) {
+  return buildStrictFullSupport(
+    matrix,
+    srdUnitInventory,
+    level18Scope,
+    options,
+  );
+}
+
 function md(value) {
   return String(value ?? "")
     .replace(/\n/g, " ")
@@ -1812,6 +1848,14 @@ function renderLevel16FullSupport(report) {
   return renderStrictFullSupport(report, level16Scope);
 }
 
+function renderLevel17FullSupport(report) {
+  return renderStrictFullSupport(report, level17Scope);
+}
+
+function renderLevel18FullSupport(report) {
+  return renderStrictFullSupport(report, level18Scope);
+}
+
 module.exports = {
   characterLevelBands,
   buildLevel1FullSupport,
@@ -1820,6 +1864,8 @@ module.exports = {
   buildLevel14FullSupport,
   buildLevel15FullSupport,
   buildLevel16FullSupport,
+  buildLevel17FullSupport,
+  buildLevel18FullSupport,
   buildSrdAuthoredProductReadiness,
   buildSelectedIdentityReadiness,
   strictStatusForUnitForTest: (unit, maxCharacterLevel) =>
@@ -1833,4 +1879,6 @@ module.exports = {
   renderLevel14FullSupport,
   renderLevel15FullSupport,
   renderLevel16FullSupport,
+  renderLevel17FullSupport,
+  renderLevel18FullSupport,
 };
