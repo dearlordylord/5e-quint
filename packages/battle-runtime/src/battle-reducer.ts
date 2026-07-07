@@ -6853,6 +6853,7 @@ export type BattleFeatherFallLandingResult =
       readonly tag: "mitigated";
       readonly state: BattleState;
       readonly snapshot: BattleSnapshot;
+      readonly routeEvents?: BattleReducerRouteEvents;
       readonly targetId: CombatantId;
       readonly fallDamagePrevented: true;
       readonly fallingPronePrevented: true;
@@ -6861,6 +6862,7 @@ export type BattleFeatherFallLandingResult =
       readonly tag: "unmitigated";
       readonly state: BattleState;
       readonly snapshot: BattleSnapshot;
+      readonly routeEvents?: BattleReducerRouteEvents;
       readonly targetId: CombatantId;
       readonly fallDamagePrevented: false;
       readonly fallingPronePrevented: false;
@@ -6869,6 +6871,7 @@ export type BattleFeatherFallLandingResult =
       readonly tag: "invalid";
       readonly state: BattleState;
       readonly snapshot: BattleSnapshot;
+      readonly routeEvents?: BattleReducerRouteEvents;
       readonly reason: "missingCombatant";
       readonly message: string;
     };

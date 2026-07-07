@@ -9,6 +9,7 @@ import type {
   BattleActiveEffect,
   BattleCreatureState,
   BattleDamageRollHole,
+  BattleFeatherFallLandingResult,
   BattleFill,
   BattleInterruptCheckpoint,
   BattleInterruptProcedureSelection,
@@ -96,10 +97,17 @@ export type BattleReducerRouteSubjectFamily =
   | "passiveSavingThrowRollMode"
   | "passiveAbilityCheckRollMode"
   | "creatureSpaceMovementPermission"
+  | "movementPresentation"
+  | "objectLightRider"
   | "reactionSpell"
+  | "reactionArmorClassEffect"
+  | "reactionAfterDamageEffect"
+  | "reactionSpellInterruption"
+  | "reactionFallMitigation"
   | "rollModifierEffect"
   | "saveGatedSpell"
   | "scalarBuffEffect"
+  | "spatialEffect"
   | "spellHostedWeaponAttack"
   | "weaponDamageRider"
   | "heldWeaponActiveEffect"
@@ -139,6 +147,7 @@ export type BattleReducerRouteOwnerGroup =
   | "battleObjectTargetBoundary"
   | "battleAbilityCheckRollMode"
   | "battleAttackRoll"
+  | "battleAttackRollMode"
   | "battleSpellAttackProcedure"
   | "battleAbilityCheck"
   | "battleAbilityCheckRollMode"
@@ -154,11 +163,17 @@ export type BattleReducerRouteOwnerGroup =
   | "battleCreatureState"
   | "battleCreatureSpaceMovement"
   | "battleDamageAdjustment"
+  | "battleArmorClass"
   | "battleFeatureResource"
   | "battleStatBlockAction"
   | "battleMovementResource"
   | "battleTemporaryHitPoint"
   | "battleInterruptStack"
+  | "battleLightProjection"
+  | "battleSightProjection"
+  | "battleObscurementProjection"
+  | "battleAreaHazard"
+  | "battleTablePresentation"
   | "battleTurnBoundary";
 
 export type BattleReducerRouteHole =
@@ -687,6 +702,30 @@ export function battleReducerRouteEventsForDiscoveredAct(
       },
     ];
   }
+  const levelOneSpatialRoute =
+    levelOneSpatialCompositionRouteForDiscoveredAct(state, act);
+  const runtimeSpatialRoute =
+    levelOneSpatialCompositionRuntimeRouteForDiscoveredAct(state, act);
+  const thunderwavePresentationRoute =
+    thunderwavePresentationRouteForDiscoveredAct(state, act);
+  const saveGatedDiscoveryRoute = saveGatedSpellRouteForDiscoveredAct(act);
+  if (
+    levelOneSpatialRoute !== undefined ||
+    runtimeSpatialRoute !== undefined ||
+    thunderwavePresentationRoute !== undefined
+  ) {
+    return nonEmptyRouteEvents([
+      ...(levelOneSpatialRoute === undefined ? [] : [levelOneSpatialRoute]),
+      ...(runtimeSpatialRoute === undefined ? [] : [runtimeSpatialRoute]),
+      ...(thunderwavePresentationRoute === undefined
+        ? []
+        : [thunderwavePresentationRoute]),
+      ...(saveGatedDiscoveryRoute ?? []),
+      ...(saveGatedDiscoveryRoute === undefined
+        ? []
+        : passiveDamageAdjustmentRouteForSpellDiscovery(state)),
+    ]);
+  }
   if (isSlotSpellDiscoverySubject(act.subject)) {
     return [
       {
@@ -697,20 +736,9 @@ export function battleReducerRouteEventsForDiscoveredAct(
       },
     ];
   }
-  if (
-    act.subject.tag === "actionSpell" &&
-    isSaveGatedSpellProcedure(act.subject.invocation.procedure)
-  ) {
+  if (saveGatedDiscoveryRoute !== undefined) {
     return nonEmptyRouteEvents([
-      {
-        kind: "discoverBattleActs",
-        subject: "saveGatedSpell",
-        holes: battleReducerRouteHoles(act.initialHoles),
-        owner:
-          act.subject.invocation.tag === "spellSlot"
-            ? "battleSpellSlotAndActionEconomy"
-            : "battleActionEconomy",
-      },
+      ...saveGatedDiscoveryRoute,
       ...passiveDamageAdjustmentRouteForSpellDiscovery(state),
     ]);
   }
@@ -949,6 +977,18 @@ export function battleReducerRouteForResolution(
   if (zeroHitPointStabilizationRoute !== undefined) {
     return composeWithActiveFormLifecycleTerminalRoute(
       [zeroHitPointStabilizationRoute],
+      activeFormLifecycleTerminalRoute,
+    );
+  }
+  const levelOneSpatialCompositionRoute =
+    levelOneSpatialCompositionRouteForResolution(input, result);
+  if (levelOneSpatialCompositionRoute !== undefined) {
+    const saveGatedRoute = saveGatedSpellRouteForResolution(input, result);
+    return composeWithActiveFormLifecycleTerminalRoute(
+      nonEmptyRouteEvents([
+        ...levelOneSpatialCompositionRoute,
+        ...(saveGatedRoute ?? []),
+      ]),
       activeFormLifecycleTerminalRoute,
     );
   }
@@ -1506,6 +1546,54 @@ export function battleReducerRouteForInterrupt(
     ];
   }
   return [eventForOwner("battleInterruptStack")];
+}
+
+export function battleReducerRouteForCreatureFallsInterruptWindow(
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  if (result.tag !== "needsHoles") {
+    return undefined;
+  }
+  const holes = battleReducerRouteHoles(result.holes);
+  if (!holes.includes("interruptDecision")) {
+    return undefined;
+  }
+  return [
+    {
+      kind: "discoverBattleActs",
+      subject: "reactionSpell",
+      holes: ["interruptDecision"],
+      owner: "battleInterruptStack",
+    },
+    {
+      kind: "discoverBattleActs",
+      subject: "reactionFallMitigation",
+      holes: ["interruptDecision"],
+      owner: "battleInterruptStack",
+    },
+  ];
+}
+
+export function battleReducerRouteForFeatherFallLanding(
+  result: BattleFeatherFallLandingResult,
+): BattleReducerRouteEvents | undefined {
+  if (result.tag !== "mitigated") {
+    return undefined;
+  }
+  return [
+    spatialCompositionResolveWithoutFill(
+      "reactionFallMitigation",
+      "battleActiveEffect",
+    ),
+    spatialCompositionResolveWithoutFill(
+      "reactionFallMitigation",
+      "battleMovementResource",
+    ),
+    spatialCompositionResolveWithoutFill(
+      "reactionFallMitigation",
+      "battleHitPoint",
+    ),
+  ];
 }
 
 function isUnitFeatureBonusActionRouteSubject(
@@ -2220,27 +2308,38 @@ function reactionSpellRouteForInterrupt(input: {
   }
 
   const eventForOwner = (
+    subject: BattleReducerRouteSubjectFamily,
     owner: BattleReducerRouteOwnerGroup,
   ): BattleReducerRouteEvent => ({
     kind: "resolveBattleInterrupt",
-    subject: "reactionSpell",
+    subject,
     fill: "interruptDecision",
     holes: input.holes,
     owner,
   });
+  if (frame.trigger === "creatureFalls" && input.result.tag === "resolved") {
+    return [
+      eventForOwner("reactionSpell", "battleInterruptStack"),
+      eventForOwner("reactionSpell", "battleSpellSlotAndActionEconomy"),
+      eventForOwner(
+        "reactionFallMitigation",
+        "battleSpellSlotAndActionEconomy",
+      ),
+    ];
+  }
   if (frame.trigger === "afterDamage" && input.result.tag === "resolved") {
     const route: BattleReducerRouteEvents = [
-      eventForOwner("battleInterruptStack"),
-      eventForOwner("battleSpellSlotAndActionEconomy"),
+      eventForOwner("reactionSpell", "battleInterruptStack"),
+      eventForOwner("reactionSpell", "battleSpellSlotAndActionEconomy"),
     ];
     return combatantHitPointsChanged(input.before, input.result.state)
-      ? [...route, eventForOwner("battleHitPoint")]
+      ? [...route, eventForOwner("reactionSpell", "battleHitPoint")]
       : route;
   }
   if (frame.trigger === "spellCast") {
     return [
-      eventForOwner("battleInterruptStack"),
-      eventForOwner("battleSpellSlotAndActionEconomy"),
+      eventForOwner("reactionSpell", "battleInterruptStack"),
+      eventForOwner("reactionSpell", "battleSpellSlotAndActionEconomy"),
     ];
   }
   return undefined;
@@ -3545,6 +3644,28 @@ function saveGatedSpellRouteForResolution(
   ];
 }
 
+function saveGatedSpellRouteForDiscoveredAct(
+  act: AvailableBattleAct,
+): BattleReducerRouteEvents | undefined {
+  if (
+    act.subject.tag !== "actionSpell" ||
+    !isSaveGatedSpellProcedure(act.subject.invocation.procedure)
+  ) {
+    return undefined;
+  }
+  return [
+    {
+      kind: "discoverBattleActs",
+      subject: "saveGatedSpell",
+      holes: battleReducerRouteHoles(act.initialHoles),
+      owner:
+        act.subject.invocation.tag === "spellSlot"
+          ? "battleSpellSlotAndActionEconomy"
+          : "battleActionEconomy",
+    },
+  ];
+}
+
 function saveGatedSpellRouteOwner(
   fill: BattleReducerRouteFill,
 ): BattleReducerRouteOwnerGroup | undefined {
@@ -3561,6 +3682,515 @@ function saveGatedSpellRouteOwner(
     return "battleHitPoint";
   }
   return undefined;
+}
+
+function levelOneSpatialCompositionRouteForDiscoveredAct(
+  state: BattleState,
+  act: AvailableBattleAct,
+): BattleReducerRouteEvent | undefined {
+  if (
+    act.subject.tag !== "actionSpell" &&
+    act.subject.tag !== "bonusActionSpell"
+  ) {
+    return undefined;
+  }
+  const invocation = spellInvocationForRouteSubject(
+    state,
+    act.subject,
+  );
+  if (invocation === undefined) {
+    return undefined;
+  }
+  if (isLevelOneObjectLightDiscoverySubject(invocation)) {
+    return spatialCompositionDiscover(
+      "objectLightRider",
+      ["targetChoice"],
+      "battleSpellSlotAndActionEconomy",
+    );
+  }
+  if (!isLevelOneSpatialCompositionDiscoverySubject(invocation)) {
+    return undefined;
+  }
+  return spatialCompositionDiscover(
+    "spatialEffect",
+    levelOneSpatialCompositionDiscoveryHoles(invocation),
+    "battleSpellSlotAndActionEconomy",
+  );
+}
+
+function levelOneSpatialCompositionRuntimeRouteForDiscoveredAct(
+  state: BattleState,
+  act: AvailableBattleAct,
+): BattleReducerRouteEvent | undefined {
+  if (act.subject.tag !== "runtimeCommand") {
+    return undefined;
+  }
+  if (
+    act.subject.command === "move" &&
+    battleHasActiveGreaseGroundHazard(state)
+  ) {
+    return spatialCompositionDiscover(
+      "spatialEffect",
+      ["movement"],
+      "battleAreaHazard",
+    );
+  }
+  if (act.subject.command === "greaseGroundHazardSave") {
+    return spatialCompositionDiscover(
+      "spatialEffect",
+      ["savingThrowOutcome"],
+      "battleAreaHazard",
+    );
+  }
+  if (act.subject.command === "jumpMovementReplacement") {
+    return spatialCompositionDiscover(
+      "movementPresentation",
+      ["movement"],
+      "battleMovementResource",
+    );
+  }
+  return undefined;
+}
+
+function levelOneSpatialCompositionRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  if (result.tag === "invalid") {
+    return undefined;
+  }
+  if (input.subject.tag === "runtimeCommand") {
+    return levelOneSpatialCompositionRuntimeRouteForResolution(input, result);
+  }
+  if (
+    input.subject.tag !== "actionSpell" &&
+    input.subject.tag !== "bonusActionSpell"
+  ) {
+    return undefined;
+  }
+  const procedure = input.subject.invocation.procedure;
+  if (
+    procedure === "dancingLightsSeparateCast" ||
+    procedure === "dancingLightsCombinedCast"
+  ) {
+    return [
+      spatialCompositionResolveWithoutFill(
+        "spatialEffect",
+        "battleActiveEffect",
+      ),
+      spatialCompositionResolveWithoutFill(
+        "spatialEffect",
+        "battleConcentration",
+      ),
+      spatialCompositionResolveWithoutFill(
+        "spatialEffect",
+        "battleLightProjection",
+      ),
+    ];
+  }
+  if (procedure === "dancingLightsReposition") {
+    return [
+      spatialCompositionResolve(
+        "spatialEffect",
+        "targetChoice",
+        [],
+        "battleAreaShape",
+      ),
+      spatialCompositionResolveWithoutFill(
+        "spatialEffect",
+        "battleLightProjection",
+      ),
+    ];
+  }
+  if (procedure === "saveGatedAttackRollAdvantage") {
+    return [
+      spatialCompositionResolve(
+        "spatialEffect",
+        "targetChoice",
+        ["savingThrowOutcome"],
+        "battleAreaShape",
+      ),
+      spatialCompositionResolve(
+        "spatialEffect",
+        "savingThrowOutcome",
+        [],
+        "battleSavingThrowOutcome",
+      ),
+      spatialCompositionResolveWithoutFill(
+        "spatialEffect",
+        "battleActiveEffect",
+      ),
+      spatialCompositionResolveWithoutFill(
+        "spatialEffect",
+        "battleConcentration",
+      ),
+      spatialCompositionResolveWithoutFill(
+        "spatialEffect",
+        "battleLightProjection",
+      ),
+      spatialCompositionResolveWithoutFill(
+        "spatialEffect",
+        "battleSightProjection",
+      ),
+      spatialCompositionResolveWithoutFill(
+        "spatialEffect",
+        "battleAttackRollMode",
+      ),
+    ];
+  }
+  if (procedure === "fogCloudObscurement") {
+    return [
+      spatialCompositionResolve(
+        "spatialEffect",
+        "targetChoice",
+        [],
+        "battleAreaShape",
+      ),
+      spatialCompositionResolveWithoutFill(
+        "spatialEffect",
+        "battleActiveEffect",
+      ),
+      spatialCompositionResolveWithoutFill(
+        "spatialEffect",
+        "battleConcentration",
+      ),
+      spatialCompositionResolveWithoutFill(
+        "spatialEffect",
+        "battleObscurementProjection",
+      ),
+      spatialCompositionResolveWithoutFill(
+        "spatialEffect",
+        "battleSightProjection",
+      ),
+    ];
+  }
+  if (procedure === "greaseGroundHazard") {
+    return [
+      spatialCompositionResolve(
+        "spatialEffect",
+        "targetChoice",
+        [],
+        "battleAreaShape",
+      ),
+      spatialCompositionResolveWithoutFill(
+        "spatialEffect",
+        "battleActiveEffect",
+      ),
+      spatialCompositionResolveWithoutFill(
+        "spatialEffect",
+        "battleAreaHazard",
+      ),
+      spatialCompositionResolveWithoutFill(
+        "spatialEffect",
+        "battleCreatureSpaceMovement",
+      ),
+    ];
+  }
+  if (procedure === "objectLight") {
+    return [
+      spatialCompositionResolve(
+        "objectLightRider",
+        "targetChoice",
+        [],
+        "battleObjectTargetBoundary",
+      ),
+      spatialCompositionResolveWithoutFill(
+        "objectLightRider",
+        "battleActiveEffect",
+      ),
+      spatialCompositionResolveWithoutFill(
+        "objectLightRider",
+        "battleLightProjection",
+      ),
+      spatialCompositionResolveWithoutFill(
+        "objectLightRider",
+        "battleActiveEffect",
+      ),
+    ];
+  }
+  if (procedure === "heldLight") {
+    return [
+      spatialCompositionResolveWithoutFill(
+        "objectLightRider",
+        "battleActiveEffect",
+      ),
+      spatialCompositionResolveWithoutFill(
+        "objectLightRider",
+        "battleLightProjection",
+      ),
+      spatialCompositionResolveWithoutFill(
+        "objectLightRider",
+        "battleActiveEffect",
+      ),
+    ];
+  }
+  if (procedure !== "saveGatedDamage") {
+    return undefined;
+  }
+  const invocation = spellInvocationForRouteSubject(input.state, input.subject);
+  if (
+    invocation === undefined ||
+    !isThunderwavePostSaveAreaEffect(invocation)
+  ) {
+    return undefined;
+  }
+  const fill = input.fills.at(-1);
+  if (fill === undefined) {
+    return undefined;
+  }
+  const routeFill = battleReducerRouteFill(fill);
+  if (routeFill === "savingThrowOutcome") {
+    return [
+      spatialCompositionResolve(
+        "movementPresentation",
+        "savingThrowOutcome",
+        ["movement"],
+        "battleSavingThrowOutcome",
+      ),
+    ];
+  }
+  if (routeFill !== "rolledDice" || result.tag !== "resolved") {
+    return undefined;
+  }
+  return [
+    spatialCompositionResolve(
+      "movementPresentation",
+      "movement",
+      [],
+      "battleMovementResource",
+    ),
+    spatialCompositionResolveWithoutFill(
+      "movementPresentation",
+      "battleTablePresentation",
+    ),
+    spatialCompositionDiscover(
+      "movementPresentation",
+      [],
+      "battleObjectTargetBoundary",
+    ),
+    spatialCompositionResolveWithoutFill(
+      "movementPresentation",
+      "battleObjectTargetBoundary",
+    ),
+    spatialCompositionResolveWithoutFill(
+      "movementPresentation",
+      "battleTablePresentation",
+    ),
+  ];
+}
+
+function levelOneSpatialCompositionRuntimeRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  if (input.subject.tag !== "runtimeCommand") {
+    return undefined;
+  }
+  if (input.subject.command === "disperseFogCloud" && result.tag === "resolved") {
+    return [
+      spatialCompositionResolveWithoutFill(
+        "spatialEffect",
+        "battleObscurementProjection",
+      ),
+      spatialCompositionResolveWithoutFill(
+        "spatialEffect",
+        "battleActiveEffect",
+      ),
+      spatialCompositionResolveWithoutFill(
+        "spatialEffect",
+        "battleConcentration",
+      ),
+    ];
+  }
+  if (input.subject.command === "move") {
+    const fill = input.fills.at(-1);
+    if (
+      fill === undefined ||
+      fill.kind !== "movement" ||
+      !fill.value.areaDifficultTerrain?.sources.some(
+        (source) => source.kind === "greaseGroundHazard",
+      )
+    ) {
+      return undefined;
+    }
+    return [
+      spatialCompositionResolve(
+        "spatialEffect",
+        "movement",
+        [],
+        "battleMovementResource",
+      ),
+      spatialCompositionResolveWithoutFill(
+        "spatialEffect",
+        "battleTurnBoundary",
+      ),
+      spatialCompositionResolveWithoutFill(
+        "spatialEffect",
+        "battleAreaHazard",
+      ),
+      spatialCompositionResolveWithoutFill(
+        "spatialEffect",
+        "battleActiveEffect",
+      ),
+    ];
+  }
+  if (input.subject.command === "greaseGroundHazardSave") {
+    const fill = input.fills.at(-1);
+    if (fill === undefined || battleReducerRouteFill(fill) !== "savingThrowOutcome") {
+      return undefined;
+    }
+    return [
+      spatialCompositionResolve(
+        "spatialEffect",
+        "savingThrowOutcome",
+        [],
+        "battleSavingThrowOutcome",
+      ),
+      spatialCompositionResolveWithoutFill(
+        "spatialEffect",
+        "battleConditionLifecycle",
+      ),
+    ];
+  }
+  if (input.subject.command !== "jumpMovementReplacement") {
+    return undefined;
+  }
+  const fill = input.fills.at(-1);
+  if (fill === undefined || battleReducerRouteFill(fill) !== "movement") {
+    return undefined;
+  }
+  return [
+    spatialCompositionResolve(
+      "movementPresentation",
+      "movement",
+      [],
+      "battleMovementResource",
+    ),
+    spatialCompositionResolveWithoutFill(
+      "movementPresentation",
+      "battleTablePresentation",
+    ),
+    spatialCompositionResolveWithoutFill(
+      "movementPresentation",
+      "battleConditionLifecycle",
+    ),
+  ];
+}
+
+function thunderwavePresentationRouteForDiscoveredAct(
+  state: BattleState,
+  act: AvailableBattleAct,
+): BattleReducerRouteEvent | undefined {
+  if (
+    act.subject.tag !== "actionSpell" &&
+    act.subject.tag !== "bonusActionSpell"
+  ) {
+    return undefined;
+  }
+  const invocation = spellInvocationForRouteSubject(state, act.subject);
+  if (
+    invocation === undefined ||
+    !isThunderwavePostSaveAreaEffect(invocation)
+  ) {
+    return undefined;
+  }
+  return spatialCompositionDiscover(
+    "movementPresentation",
+    ["movement", "savingThrowOutcome"],
+    "battleSavingThrowOutcome",
+  );
+}
+
+function levelOneSpatialCompositionDiscoveryHoles(
+  invocation: SupportedSpellInvocation,
+): readonly BattleReducerRouteHole[] {
+  if (
+    invocation.procedure === "dancingLightsSeparateCast" ||
+    invocation.procedure === "dancingLightsCombinedCast"
+  ) {
+    return [];
+  }
+  if (invocation.procedure === "saveGatedAttackRollAdvantage") {
+    return ["savingThrowOutcome", "targetChoice"];
+  }
+  return ["targetChoice"];
+}
+
+function isLevelOneSpatialCompositionDiscoverySubject(
+  invocation: SupportedSpellInvocation,
+): boolean {
+  const procedure = invocation.procedure;
+  return (
+    procedure === "dancingLightsSeparateCast" ||
+    procedure === "dancingLightsCombinedCast" ||
+    procedure === "dancingLightsReposition" ||
+    procedure === "saveGatedAttackRollAdvantage" ||
+    procedure === "fogCloudObscurement" ||
+    procedure === "greaseGroundHazard"
+  );
+}
+
+function isLevelOneObjectLightDiscoverySubject(
+  invocation: SupportedSpellInvocation,
+): boolean {
+  return invocation.procedure === "objectLight";
+}
+
+function isThunderwavePostSaveAreaEffect(
+  invocation: SupportedSpellInvocation,
+): boolean {
+  return (
+    invocation.procedure === "saveGatedDamage" &&
+    invocation.postSaveAreaEffect?.kind === "thunderwave"
+  );
+}
+
+function battleHasActiveGreaseGroundHazard(state: BattleState): boolean {
+  return [...state.combatants.values()].some((combatant) =>
+    combatant.activeEffects.some(
+      (effect) => effect.kind === "greaseGroundHazard",
+    ),
+  );
+}
+
+function spatialCompositionDiscover(
+  subject: BattleReducerRouteSubjectFamily,
+  holes: readonly BattleReducerRouteHole[],
+  owner: BattleReducerRouteOwnerGroup,
+): BattleReducerRouteEvent {
+  return {
+    kind: "discoverBattleActs",
+    subject,
+    holes,
+    owner,
+  };
+}
+
+function spatialCompositionResolve(
+  subject: BattleReducerRouteSubjectFamily,
+  fill: BattleReducerRouteFill,
+  holes: readonly BattleReducerRouteHole[],
+  owner: BattleReducerRouteOwnerGroup,
+): BattleReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubject",
+    subject,
+    fill,
+    holes,
+    owner,
+  };
+}
+
+function spatialCompositionResolveWithoutFill(
+  subject: BattleReducerRouteSubjectFamily,
+  owner: BattleReducerRouteOwnerGroup,
+): BattleReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubjectWithoutFill",
+    subject,
+    holes: [],
+    owner,
+  };
 }
 
 function spellAttackHitActiveEffectAdmissionRouteForResolution(
@@ -3680,9 +4310,13 @@ function isReactionSpellCastingTimeFrame(
   frame: BattleInterruptCheckpoint,
 ): frame is Extract<
   BattleInterruptCheckpoint,
-  { readonly trigger: "afterDamage" | "spellCast" }
+  { readonly trigger: "afterDamage" | "creatureFalls" | "spellCast" }
 > {
-  return frame.trigger === "afterDamage" || frame.trigger === "spellCast";
+  return (
+    frame.trigger === "afterDamage" ||
+    frame.trigger === "creatureFalls" ||
+    frame.trigger === "spellCast"
+  );
 }
 
 function combatantHitPointsChanged(

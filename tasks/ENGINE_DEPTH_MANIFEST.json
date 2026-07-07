@@ -1,157 +1,159 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-046",
+  "taskId": "CRPI-BLOCK-017",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt",
       "quarantinedWitnessNames": [
+        "cleanroomManifestSourceCommitSha",
+        "comparator",
+        "expectedProjectionSha256",
+        "harnessTestPath",
+        "mbt::actionTaken",
+        "mbt::nondetPicks",
+        "observedActionTaken",
+        "observedProjectionSha256",
+        "observedProjectionSource",
+        "protocol",
+        "qRoute",
+        "qScenarioOutcome",
         "qState",
-        "doSelectLevelOneArmorOfShadows",
-        "doGainLevelTwoInvocations",
-        "doReplaceArmorWithEldritchMindOnWarlockLevelGain",
-        "doReplaceRepeatableInvocationByChoice",
-        "doRejectPrerequisiteRetainedInvocationReplacement",
-        "doRejectDuplicateInvocationSelections"
+        "qntFileSha256",
+        "reducerPublicApiPath",
+        "routeEventSource",
+        "sourceBranchInventorySha256",
+        "stateCheck",
+        "targetEntrypointSequence",
+        "targetProfile",
+        "targetProfileSha256",
+        "targetPublicApiPath",
+        "traceId"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-046.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-017.json"
       ]
     },
     {
-      "path": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.route.mbt.qnt",
-      "quarantinedWitnessNames": [
-        "qRoute"
-      ],
+      "path": "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.route.mbt.qnt",
+      "coverageStatus": "covered-public-qRoute",
+      "quarantinedWitnessNames": ["qRoute"],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-046.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-017.json"
       ]
     },
     {
-      "path": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
-      "quarantinedWitnessNames": [
-        "warlockInvocationRouteDriverSchema",
-        "retainAndProjectWarlockLevelOneInvocationRoute",
-        "warlockLevelGainSelectedReferenceRoute",
-        "rejectedPrerequisiteRetainedInvocationReplacementRoute",
-        "rejectedDuplicateInvocationSelectionsRoute"
-      ],
+      "path": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
+      "coverageStatus": "covered-public-qRoute",
+      "quarantinedWitnessNames": ["qRoute"],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-046.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-017.json"
       ]
     },
     {
-      "path": "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt",
+      "coverageStatus": "covered-public-qRoute",
+      "quarantinedWitnessNames": ["qRoute"],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-017.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/battle-runtime-reaction-interrupt-payload-taxonomy.route.mbt.qnt",
+      "coverageStatus": "covered-public-qRoute",
+      "quarantinedWitnessNames": ["qRoute"],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-017.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/battle-runtime-object-light-riders.route.mbt.qnt",
+      "coverageStatus": "covered-public-qRoute",
+      "quarantinedWitnessNames": ["qRoute"],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-017.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt",
+      "coverageStatus": "covered-public-qRoute",
+      "quarantinedWitnessNames": ["qRoute"],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-017.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/battle-runtime-movement-presentation.route.mbt.qnt",
+      "coverageStatus": "covered-public-qRoute",
+      "quarantinedWitnessNames": ["qRoute"],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-017.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts",
       "quarantinedWitnessNames": [
+        "Level1SpatialWitnessSelectedIdentityAction",
+        "cleanroomManifestSourceCommitSha",
+        "comparator",
+        "expectedProjectionSha256",
+        "harnessTestPath",
+        "mbt::actionTaken",
+        "mbt::nondetPicks",
+        "observedActionTaken",
+        "observedProjectionSha256",
+        "observedProjectionSource",
+        "protocol",
+        "qRoute",
+        "qScenarioOutcome",
         "qState",
-        "doSelectLevelOneOwnedSkillExpertise"
+        "qntFileSha256",
+        "reducerPublicApiPath",
+        "routeEventSource",
+        "sourceBranchInventorySha256",
+        "stateCheck",
+        "targetEntrypointSequence",
+        "targetProfile",
+        "targetProfileSha256",
+        "targetPublicApiPath",
+        "traceId"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-045.json"
-      ]
-    },
-    {
-      "path": "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.route.mbt.qnt",
-      "quarantinedWitnessNames": [
-        "qRoute"
-      ],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-045.json"
-      ]
-    },
-    {
-      "path": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
-      "quarantinedWitnessNames": [
-        "rogueExpertiseRouteDriverSchema",
-        "createRogueExpertiseReducerRouteDriver",
-        "levelOneRogueExpertisePublicCreationReplay",
-        "retainLevelOneRogueExpertiseSelectedReferenceRoute"
-      ],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-045.json"
-      ]
-    },
-    {
-      "path": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
-      "quarantinedWitnessNames": [
-        "qState",
-        "doSelectDefenseFightingStyle",
-        "doSelectArcheryFightingStyle",
-        "doSelectGreatWeaponFightingStyle",
-        "doSelectTwoWeaponFightingStyle",
-        "doReplaceArcheryWithDefenseOnFighterLevelGain",
-        "doReplaceDefenseWithArcheryOnFighterLevelGain",
-        "doReplaceDefenseWithGreatWeaponFightingOnFighterLevelGain",
-        "doReplaceDefenseWithTwoWeaponFightingOnFighterLevelGain"
-      ],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-044.json"
-      ]
-    },
-    {
-      "path": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.route.mbt.qnt",
-      "quarantinedWitnessNames": [
-        "qRoute"
-      ],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-044.json"
-      ]
-    },
-    {
-      "path": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
-      "quarantinedWitnessNames": [
-        "fighterFightingStyleRouteDriverSchema",
-        "createCompletedReducerRouteDriver",
-        "replaceFighterFightingStyleSelectedReferenceRoute",
-        "selectedReferenceRetentionRoute"
-      ],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-044.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-017.json"
       ]
     }
   ],
   "productionModulesExtended": [
     {
-      "path": "packages/character-creation-runtime/src/character-build-advancement.ts",
-      "notes": "Adds applyCharacterBuildWarlockLevelGainWithRoute, a public route wrapper around the existing typed Warlock level-gain reducer. Accepted level gains emit CharacterBuildOwner selected-reference fill routing; duplicate/prerequisite invocation rejections emit CreationSupportProfileAdmissionOwner routing without adding durable state."
-    },
-    {
-      "path": "packages/character-creation-runtime/src/index.ts",
-      "notes": "Exports the Warlock level-gain route wrapper and route event/result types through the package public surface."
-    },
-    {
-      "path": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts",
-      "notes": "Extends selected-reference counting to include existing CharacterBuild.proficiencyChoices entries whose subject is skill_expertise, so Rogue Expertise skill refs are retained by CreationSelectedReferenceOwner without adding duplicate selected-reference state."
-    },
-    {
-      "path": "packages/character-creation-runtime/src/character-build-advancement.ts",
-      "notes": "Adds advanceCharacterBuildFightingStyleReplacementWithRoute, a public route wrapper around the existing typed Fighter Fighting Style replacement advancement reducer."
-    },
-    {
-      "path": "packages/character-creation-runtime/src/index.ts",
-      "notes": "Exports the Fighter Fighting Style replacement route wrapper and route event types through the package public surface."
+      "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "role": "runtime-projection-vocabulary",
+      "domainApis": [
+        "BattleReducerRouteSubjectFamily.reactionArmorClassEffect",
+        "BattleReducerRouteSubjectFamily.reactionAfterDamageEffect",
+        "BattleReducerRouteSubjectFamily.reactionSpellInterruption",
+        "BattleReducerRouteSubjectFamily.reactionFallMitigation",
+        "BattleReducerRouteSubjectFamily.movementPresentation",
+        "BattleReducerRouteSubjectFamily.objectLightRider",
+        "BattleReducerRouteSubjectFamily.spatialEffect",
+        "BattleReducerRouteOwnerGroup.battleLightProjection",
+        "BattleReducerRouteOwnerGroup.battleSightProjection",
+        "BattleReducerRouteOwnerGroup.battleObscurementProjection",
+        "BattleReducerRouteOwnerGroup.battleAreaHazard",
+        "BattleReducerRouteOwnerGroup.battleTablePresentation"
+      ],
+      "notes": "Extends production route event vocabulary to match the copied reducer-routed spatial witness connector families. No new reducer behavior, authored spell identity dispatch, or duplicate BattleState field is added."
     }
   ],
   "expectedNextReuse": [
     {
-      "path": "packages/character-creation-runtime/src/character-build-advancement.ts",
-      "notes": "Future Warlock character-creation route tasks should use applyCharacterBuildWarlockLevelGainWithRoute for accepted level gains and support-profile invocation rejections, then reuse selected-reference and build-projection route entrypoints."
-    },
-    {
-      "path": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts",
-      "notes": "Initial selected-reference branches continue to derive CreationSelectedReferenceOwner events from existing CharacterBuild selected refs, including selected class-choice refs and skill_expertise proficiency choices."
-    },
-    {
-      "path": "packages/character-creation-runtime/src/character-build-advancement.ts",
-      "notes": "Future CharacterBuild level-gain replacement route tasks should wrap the typed advancement reducer, start from fixture builds that satisfy current class-level choice preconditions, and then reuse selected-reference and build-projection route entrypoints."
-    },
-    {
-      "path": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts",
-      "notes": "Replacement branches reuse characterBuildProjectionWithRoute for CharacterBuildOwner build-projection events without storing a parallel projection state field."
+      "driver": "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt",
+      "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "api": "BattleReducerRouteEvent",
+      "notes": "Future spatial, movement, object-light, and reaction selected replay tasks should reuse these generic route subject and owner terms instead of adding selected-id adapters or connector-local vocabulary."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 92 observes copied Warlock Eldritch Invocations qRoute through public Warlock level-gain, selected-reference, and CharacterBuild projection route entrypoints. No new durable CharacterBuild fields were added; selected invocation choices and Pact Magic remain existing CharacterBuild facts, and duplicate/prerequisite failures remain typed advancement issues plus route evidence."
+    "notes": "Task 25 observes copied qRoute substrates through public battle reducer route evidence for all required connector paths and aligns production route vocabulary with the existing QNT route connector vocabulary without adding durable duplicate state."
   }
 }

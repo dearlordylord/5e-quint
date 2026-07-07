@@ -1,125 +1,104 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-046",
+  "taskId": "CRPI-BLOCK-017",
   "durableFields": [
     {
-      "fieldPath": "CharacterBuild.features[kind=selectedEldritchInvocation]",
-      "owner": "character-build-eldritch-invocation-selection",
-      "introducedIn": "packages/character-creation-runtime/src/types.ts",
+      "fieldPath": "AvailableBattleAct.routeEvents",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleState plus AvailableBattleAct/BattleResolutionResult routeEvents",
+        "boundary": "battle-runtime public reducer route event boundary"
+      },
+      "notes": "Projection is emitted at public reducer entrypoints from existing owner-local facts; it is not stored as a second BattleState copy."
+    },
+    {
+      "fieldPath": "BattleCreatureState.activeEffects",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing selected Eldritch Invocation option choices retain the Warlock invocation selected-reference boundary. Task 92 adds no duplicate invocation selected-reference cache."
+      "notes": "Existing BattleState runtime state owns spell light emitters, obscurement zones, ground hazards, jump replacement, Feather Fall mitigation, and other active effects reached by Task 25 selected spatial witness spells."
     },
     {
-      "fieldPath": "CharacterBuild.spellcasting.slotPools.pactMagic",
-      "owner": "character-build-pact-magic-projection",
-      "introducedIn": "packages/character-creation-runtime/src/types.ts",
+      "fieldPath": "BattleCreatureState.conditions",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Accepted Warlock level-gain replay reads existing Pact Magic slot count and slot level projection from CharacterBuild spellcasting facts; no parallel Pact Slot state is added."
+      "notes": "Existing BattleState runtime state owns applied conditions such as Prone and sight-dependent attack-roll mode effects reached by Grease, Jump landing, and Faerie Fire substrates."
     },
     {
-      "fieldPath": "CharacterCreationRouteEvent.kind=applyCreationFillBatch",
-      "owner": "character-build-warlock-level-gain-route",
-      "introducedIn": "packages/character-creation-runtime/src/character-build-advancement.ts",
-      "derivability": {
-        "tag": "runtime-projection"
-      },
-      "notes": "applyCharacterBuildWarlockLevelGainWithRoute emits CharacterBuildOwner route events for accepted Warlock level gains and CreationSupportProfileAdmissionOwner route events for duplicate/prerequisite invocation rejections."
-    },
-    {
-      "fieldPath": "CharacterBuildAdvancementIssue",
-      "owner": "character-build-warlock-level-gain-rejection",
-      "introducedIn": "packages/character-creation-runtime/src/character-build-advancement.ts",
-      "derivability": {
-        "tag": "runtime-projection"
-      },
-      "notes": "Duplicate and prerequisite-retained invocation failures remain typed advancement issues; Task 92 does not store rejection state on CharacterBuild."
-    },
-    {
-      "fieldPath": "CharacterBuild.proficiencyChoices",
-      "owner": "character-build-proficiency-choice",
-      "introducedIn": "packages/character-creation-runtime/src/types.ts",
+      "fieldPath": "BattleCreatureState.hp",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing skill_expertise proficiency choices retain the level-1 Rogue Expertise selected-reference boundary. Task 88 adds no duplicate selected-reference cache and does not model the out-of-denominator level-six additional Expertise branch."
+      "notes": "Existing BattleState runtime state owns Hit Point effects for Thunderwave damage and Produce Flame hurl damage; Task 25 adds no duplicate durable state."
     },
     {
-      "fieldPath": "CharacterBuild proficiency projection",
-      "owner": "character-build-proficiency-projection",
-      "introducedIn": "packages/character-creation-runtime/src/types.ts",
+      "fieldPath": "BattleReducerRouteEvent.subject=reactionFallMitigation",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
-        "tag": "runtime-projection"
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleState interrupt stack plus BattleResolutionResult routeEvents",
+        "boundary": "battle-runtime public reducer route event boundary"
       },
-      "notes": "Final Expertise proficiency-level facts derive from CharacterBuild.proficiencyChoices and CharacterBuild proficiency projection rather than being stored as parallel durable skill state."
+      "notes": "Projection is derived from typed falling-trigger Reaction and Feather Fall mitigation facts."
     },
     {
-      "fieldPath": "CharacterCreationRouteEvent.subject=selectedReference",
-      "owner": "character-creation-selected-reference-route-projection",
-      "introducedIn": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts",
+      "fieldPath": "BattleReducerRouteEvent.subject=movementPresentation",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
-        "tag": "runtime-projection"
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleState plus movement, forced movement, landing, and object-push facts",
+        "boundary": "battle-runtime public reducer route event boundary"
       },
-      "notes": "CreationSelectedReferenceOwner route events are emitted after reading retained CharacterBuild skill_expertise proficiency choices for the level-1 Rogue Expertise replay."
+      "notes": "Projection is derived from movement fills, landing witnesses, forced movement facts, object-push facts, and table presentation facts."
     },
     {
-      "fieldPath": "CharacterBuild.features",
-      "owner": "character-build",
-      "introducedIn": "packages/character-creation-runtime/src/types.ts",
+      "fieldPath": "BattleReducerRouteEvent.subject=objectLightRider",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
-        "tag": "canonical-source"
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleState plus object-light active effects and target spatial facts",
+        "boundary": "battle-runtime public reducer route event boundary"
       },
-      "notes": "Existing selected class-choice refs retain the Fighter Fighting Style feat selected during creation and after Fighter level-gain replacement. The replacement replay also preserves the existing level-1 Fighter Weapon Mastery selected refs in CharacterBuild.features so the advancement reducer can check the current table count. Task 87 adds no duplicate selected-reference cache."
+      "notes": "Projection is derived from object target boundary, active-effect, light projection, cleanup, and table-witness facts."
     },
     {
-      "fieldPath": "CharacterBuild.progression.advancements",
-      "owner": "character-build",
-      "introducedIn": "packages/character-creation-runtime/src/types.ts",
+      "fieldPath": "BattleReducerRouteEvent.subject=spatialEffect",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
-        "tag": "canonical-source"
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleState plus spatial active effects, area witnesses, light/sight/obscurement projections, and hazard facts",
+        "boundary": "battle-runtime public reducer route event boundary"
       },
-      "notes": "The Fighter level-gain replacement operation appends the existing class advancement entry through advanceCharacterBuildClassLevel; replacement route evidence reads this canonical progression instead of storing route-local level state."
+      "notes": "Projection is derived from generic spatial owner facts for multi-emitter lights, outlines, area obscurement, area hazards, and table spatial witnesses."
     },
     {
-      "fieldPath": "CharacterCreationRouteEvent.subject=selectedReference",
-      "owner": "character-creation-selected-reference-route-projection",
-      "introducedIn": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts",
+      "fieldPath": "BattleResolutionResult.routeEvents",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
-        "tag": "runtime-projection"
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleState plus AvailableBattleAct/BattleResolutionResult routeEvents",
+        "boundary": "battle-runtime public reducer route event boundary"
       },
-      "notes": "CreationSelectedReferenceOwner route events are emitted after reading retained CharacterBuild selected refs."
-    },
-    {
-      "fieldPath": "CharacterCreationRouteEvent.kind=applyCreationFillBatch",
-      "owner": "character-build-fighting-style-replacement-route",
-      "introducedIn": "packages/character-creation-runtime/src/character-build-advancement.ts",
-      "derivability": {
-        "tag": "runtime-projection"
-      },
-      "notes": "The Fighter Fighting Style replacement route event records the CharacterBuildOwner replacement fill boundary around the existing typed advancement reducer."
-    },
-    {
-      "fieldPath": "CharacterCreationRouteEvent.subject=buildProjection",
-      "owner": "character-build-projection-route",
-      "introducedIn": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts",
-      "derivability": {
-        "tag": "runtime-projection"
-      },
-      "notes": "CharacterBuildOwner build-projection route events are emitted by characterBuildProjectionWithRoute without storing a parallel projection state field."
+      "notes": "Projection is emitted at public reducer entrypoints from existing owner-local facts; it is not stored as a second BattleState copy."
     }
   ],
   "notes": [
-    "Task 92 introduced no new durable CharacterBuild fields.",
-    "Selected Warlock Eldritch Invocation choices remain existing CharacterBuild.features selectedEldritchInvocation facts.",
-    "Pact Magic facts remain existing CharacterBuild.spellcasting source and pactMagic slot-pool facts.",
-    "Duplicate and prerequisite-retained invocation rejection state remains typed CharacterBuildAdvancementIssue output plus route evidence.",
-    "The level-5 prerequisite-retained replacement branch is explicitly tracked as the source inventory's out-of-scope level-5 branch.",
-    "Task 88 introduced no new durable CharacterBuild fields.",
-    "Level-1 Rogue Expertise selected refs remain existing CharacterBuild.proficiencyChoices skill_expertise facts.",
-    "Final Expertise proficiency-level facts derive from existing CharacterBuild proficiency projection and selected skill proficiency facts, not a duplicate durable skill-state store.",
-    "The level-six additional Rogue Expertise branch remains out of this task denominator."
+    "Task 25 introduced no new durable BattleState or BattleCreatureState fields.",
+    "Selected spell identity is retained only at catalog/support-profile and selected replay boundaries; production route vocabulary uses typed reaction, movement, object-light, spatial-effect, save-gated, projection, hazard, and table witness subjects.",
+    "Route subjects are executable boundary projections derived from existing owner state and public reducer results, not a stored route ledger or duplicate active-effect state."
   ]
 }

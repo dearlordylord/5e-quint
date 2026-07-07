@@ -163,6 +163,8 @@ import {
 } from "./reaction-triggered-spells.ts";
 import { invalidResult } from "./result-helpers.ts";
 import {
+  battleReducerRouteForCreatureFallsInterruptWindow,
+  battleReducerRouteForFeatherFallLanding,
   battleReducerRouteForInterrupt,
   battleReducerRouteForResolution,
 } from "./reducer-route.ts";
@@ -2627,13 +2629,14 @@ export function openCreatureFallsInterruptWindow(input: {
     },
     undefined,
   );
-  return (
+  const result =
     reactionWindow ?? {
-      tag: "resolved",
+      tag: "resolved" as const,
       state: input.state,
       snapshot: snapshotBattle(input.state),
-    }
-  );
+    };
+  const routeEvents = battleReducerRouteForCreatureFallsInterruptWindow(result);
+  return routeEvents === undefined ? result : { ...result, routeEvents };
 }
 
 const FLY_END_CAN_STOP_FALL_REASONS = ["hovering", "otherMeans"] as const;
@@ -2835,14 +2838,16 @@ export function resolveFeatherFallLanding(input: {
       cleanup.combatant,
     ),
   };
-  return {
+  const result = {
     tag: "mitigated",
     state: nextState,
     snapshot: snapshotBattle(nextState),
     targetId: input.targetId,
     fallDamagePrevented: true,
     fallingPronePrevented: true,
-  };
+  } as const satisfies BattleFeatherFallLandingResult;
+  const routeEvents = battleReducerRouteForFeatherFallLanding(result);
+  return routeEvents === undefined ? result : { ...result, routeEvents };
 }
 
 export function resolveFallDamageLanding(input: {

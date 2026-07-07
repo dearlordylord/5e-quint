@@ -10,6 +10,7 @@
 // UNIT-IDENTITY-REPLAY: level1-spatial-witness thunderwave doThunderwaveSavePushObjectsBoom
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE
 import { Either } from "effect";
+import { describe, expect, it } from "vitest";
 
 import {
   canSpendAction,
@@ -53,6 +54,7 @@ import {
   battleIlluminationFromLightEmitters,
   battleObjectId,
   battleObscurementZones,
+  battleReducerStartRouteEvent,
   battleSightObscurement,
   battleTablePositionId,
   characterId,
@@ -78,6 +80,8 @@ import {
   type BattleLightEmitterProjectionFact,
   type BattleObscurementZone,
   type BattleObjectId,
+  type BattleReducerRouteEvent,
+  type BattleReducerRouteSubjectFamily,
   type BattleResolutionResult,
   type BattleRolledDiceFill,
   type BattleSightObscurement,
@@ -950,6 +954,978 @@ defineSelectedIdentityReplayAndQntReplay({
     }),
   })),
 });
+
+describe("Level 1 spatial witness public reducer route replay", () => {
+  it("observes the copied qRoute projection through public reducer entrypoints", () => {
+    const observed = replayLevel1SpatialWitnessPublicReducerRoutes();
+    const expected = expectedLevel1SpatialWitnessPublicReducerRoutes();
+    for (const surface of LEVEL1_SPATIAL_WITNESS_PUBLIC_ROUTE_SURFACES) {
+      expect(observed[surface], surface).toEqual(expected[surface]);
+    }
+  });
+
+  it("observes every Task 25 supporting connector qRoute through public reducer entrypoints", () => {
+    const observed = replayTask25SupportingConnectorPublicReducerRoutes();
+    const expected = expectedTask25SupportingConnectorPublicReducerRoutes();
+    for (const connector of TASK25_SUPPORTING_PUBLIC_ROUTE_CONNECTORS) {
+      expect(observed[connector], connector).toEqual(expected[connector]);
+    }
+  });
+});
+
+const LEVEL1_SPATIAL_WITNESS_PUBLIC_ROUTE_SURFACES = [
+  "movableMultiEmitterLight",
+  "outlineSightAdvantage",
+  "fallMitigation",
+  "areaObscurementCleanup",
+  "areaHazardSave",
+  "areaHazardMovement",
+  "movementReplacement",
+  "objectLightEmitter",
+  "heldLightEmitter",
+  "savePushPresentation",
+] as const;
+type Level1SpatialWitnessPublicRouteSurface =
+  (typeof LEVEL1_SPATIAL_WITNESS_PUBLIC_ROUTE_SURFACES)[number];
+const TASK25_SUPPORTING_PUBLIC_ROUTE_CONNECTORS = [
+  "saveGatedSpellOrdering",
+  "reactionCastingTime",
+  "reactionInterruptPayloadTaxonomy",
+  "objectLightRiders",
+  "spatialEffects",
+  "movementPresentation",
+] as const;
+type Task25SupportingPublicRouteConnector =
+  (typeof TASK25_SUPPORTING_PUBLIC_ROUTE_CONNECTORS)[number];
+type RouteDiscoverEvent = Extract<
+  BattleReducerRouteEvent,
+  { readonly kind: "discoverBattleActs" }
+>;
+type RouteResolveEvent = Extract<
+  BattleReducerRouteEvent,
+  { readonly kind: "resolveBattleSubject" }
+>;
+type RouteResolveWithoutFillEvent = Extract<
+  BattleReducerRouteEvent,
+  { readonly kind: "resolveBattleSubjectWithoutFill" }
+>;
+type RouteInterruptEvent = Extract<
+  BattleReducerRouteEvent,
+  { readonly kind: "resolveBattleInterrupt" }
+>;
+type RouteOwner = Extract<
+  BattleReducerRouteEvent,
+  { readonly kind: "startBattle" }
+>["owner"];
+type RouteHoles = RouteDiscoverEvent["holes"];
+
+function replayLevel1SpatialWitnessPublicReducerRoutes(): Readonly<
+  Record<
+    Level1SpatialWitnessPublicRouteSurface,
+    readonly BattleReducerRouteEvent[]
+  >
+> {
+  return {
+    movableMultiEmitterLight: replayMovableMultiEmitterLightRoute(),
+    outlineSightAdvantage: replayOutlineSightAdvantageRoute(),
+    fallMitigation: replayFallMitigationRoute(),
+    areaObscurementCleanup: replayAreaObscurementCleanupRoute(),
+    areaHazardSave: replayAreaHazardSaveRoute(),
+    areaHazardMovement: replayAreaHazardMovementRoute(),
+    movementReplacement: replayMovementReplacementRoute(),
+    objectLightEmitter: replayObjectLightEmitterRoute(),
+    heldLightEmitter: replayHeldLightEmitterRoute(),
+    savePushPresentation: replaySavePushPresentationRoute(),
+  };
+}
+
+function expectedLevel1SpatialWitnessPublicReducerRoutes(): Readonly<
+  Record<
+    Level1SpatialWitnessPublicRouteSurface,
+    readonly BattleReducerRouteEvent[]
+  >
+> {
+  return {
+    movableMultiEmitterLight: [
+      startRoute(),
+      spatialDiscover([], "battleSpellSlotAndActionEconomy"),
+      spatialResolveWithoutFill("battleActiveEffect"),
+      spatialResolveWithoutFill("battleConcentration"),
+      spatialResolveWithoutFill("battleLightProjection"),
+      spatialDiscover(["targetChoice"], "battleSpellSlotAndActionEconomy"),
+      spatialResolve("targetChoice", [], "battleAreaShape"),
+      spatialResolveWithoutFill("battleLightProjection"),
+    ],
+    outlineSightAdvantage: [
+      startRoute(),
+      spatialDiscover(
+        ["savingThrowOutcome", "targetChoice"],
+        "battleSpellSlotAndActionEconomy",
+      ),
+      spatialResolve(
+        "targetChoice",
+        ["savingThrowOutcome"],
+        "battleAreaShape",
+      ),
+      spatialResolve("savingThrowOutcome", [], "battleSavingThrowOutcome"),
+      spatialResolveWithoutFill("battleActiveEffect"),
+      spatialResolveWithoutFill("battleConcentration"),
+      spatialResolveWithoutFill("battleLightProjection"),
+      spatialResolveWithoutFill("battleSightProjection"),
+      spatialResolveWithoutFill("battleAttackRollMode"),
+    ],
+    fallMitigation: [
+      startRoute(),
+      discover(
+        "reactionFallMitigation",
+        ["interruptDecision"],
+        "battleInterruptStack",
+      ),
+      resolveInterrupt(
+        "reactionFallMitigation",
+        "interruptDecision",
+        [],
+        "battleSpellSlotAndActionEconomy",
+      ),
+      resolveWithoutFill("reactionFallMitigation", "battleActiveEffect"),
+      resolveWithoutFill("reactionFallMitigation", "battleMovementResource"),
+      resolveWithoutFill("reactionFallMitigation", "battleHitPoint"),
+    ],
+    areaObscurementCleanup: [
+      startRoute(),
+      spatialDiscover(["targetChoice"], "battleSpellSlotAndActionEconomy"),
+      spatialResolve("targetChoice", [], "battleAreaShape"),
+      spatialResolveWithoutFill("battleActiveEffect"),
+      spatialResolveWithoutFill("battleConcentration"),
+      spatialResolveWithoutFill("battleObscurementProjection"),
+      spatialResolveWithoutFill("battleSightProjection"),
+      spatialResolveWithoutFill("battleObscurementProjection"),
+      spatialResolveWithoutFill("battleActiveEffect"),
+      spatialResolveWithoutFill("battleConcentration"),
+    ],
+    areaHazardSave: [
+      startRoute(),
+      spatialDiscover(["targetChoice"], "battleSpellSlotAndActionEconomy"),
+      spatialResolve("targetChoice", [], "battleAreaShape"),
+      spatialResolveWithoutFill("battleActiveEffect"),
+      spatialResolveWithoutFill("battleAreaHazard"),
+      spatialResolveWithoutFill("battleCreatureSpaceMovement"),
+      spatialDiscover(["savingThrowOutcome"], "battleAreaHazard"),
+      spatialResolve("savingThrowOutcome", [], "battleSavingThrowOutcome"),
+      spatialResolveWithoutFill("battleConditionLifecycle"),
+    ],
+    areaHazardMovement: [
+      startRoute(),
+      spatialDiscover(["targetChoice"], "battleSpellSlotAndActionEconomy"),
+      spatialResolve("targetChoice", [], "battleAreaShape"),
+      spatialResolveWithoutFill("battleActiveEffect"),
+      spatialResolveWithoutFill("battleAreaHazard"),
+      spatialResolveWithoutFill("battleCreatureSpaceMovement"),
+      spatialDiscover(["movement"], "battleAreaHazard"),
+      spatialResolve("movement", [], "battleMovementResource"),
+      spatialResolveWithoutFill("battleTurnBoundary"),
+      spatialResolveWithoutFill("battleAreaHazard"),
+      spatialResolveWithoutFill("battleActiveEffect"),
+    ],
+    movementReplacement: [
+      startRoute(),
+      discover(
+        "movementPresentation",
+        ["movement"],
+        "battleMovementResource",
+      ),
+      resolve(
+        "movementPresentation",
+        "movement",
+        [],
+        "battleMovementResource",
+      ),
+      resolveWithoutFill("movementPresentation", "battleTablePresentation"),
+      resolveWithoutFill("movementPresentation", "battleConditionLifecycle"),
+    ],
+    objectLightEmitter: [
+      startRoute(),
+      discover(
+        "objectLightRider",
+        ["targetChoice"],
+        "battleSpellSlotAndActionEconomy",
+      ),
+      resolve(
+        "objectLightRider",
+        "targetChoice",
+        [],
+        "battleObjectTargetBoundary",
+      ),
+      resolveWithoutFill("objectLightRider", "battleActiveEffect"),
+      resolveWithoutFill("objectLightRider", "battleLightProjection"),
+      resolveWithoutFill("objectLightRider", "battleActiveEffect"),
+    ],
+    heldLightEmitter: [
+      startRoute(),
+      resolveWithoutFill("objectLightRider", "battleActiveEffect"),
+      resolveWithoutFill("objectLightRider", "battleLightProjection"),
+      resolveWithoutFill("objectLightRider", "battleActiveEffect"),
+    ],
+    savePushPresentation: [
+      startRoute(),
+      discover(
+        "movementPresentation",
+        ["movement", "savingThrowOutcome"],
+        "battleSavingThrowOutcome",
+      ),
+      resolve(
+        "movementPresentation",
+        "savingThrowOutcome",
+        ["movement"],
+        "battleSavingThrowOutcome",
+      ),
+      resolve(
+        "movementPresentation",
+        "movement",
+        [],
+        "battleMovementResource",
+      ),
+      resolveWithoutFill("movementPresentation", "battleTablePresentation"),
+      discover("movementPresentation", [], "battleObjectTargetBoundary"),
+      resolveWithoutFill("movementPresentation", "battleObjectTargetBoundary"),
+      resolveWithoutFill("movementPresentation", "battleTablePresentation"),
+    ],
+  };
+}
+
+function replayTask25SupportingConnectorPublicReducerRoutes(): Readonly<
+  Record<
+    Task25SupportingPublicRouteConnector,
+    Readonly<Record<string, readonly BattleReducerRouteEvent[]>>
+  >
+> {
+  return {
+    saveGatedSpellOrdering: {
+      thunderwaveSaveDamage: replaySaveGatedSpellOrderingRoute(),
+    },
+    reactionCastingTime: {
+      featherFallReactionSpell: replayReactionCastingTimeRoute(),
+    },
+    reactionInterruptPayloadTaxonomy: {
+      featherFallMitigationPayload: replayFallMitigationRoute(),
+    },
+    objectLightRiders: {
+      objectAttachedEmitter: replayObjectLightEmitterRoute(),
+      heldEmitter: replayHeldLightEmitterRoute(),
+    },
+    spatialEffects: {
+      movableMultiEmitterLight: replayMovableMultiEmitterLightRoute(),
+      outlineSightAdvantage: replayOutlineSightAdvantageRoute(),
+      areaObscurementCleanup: replayAreaObscurementCleanupRoute(),
+      areaHazardSave: replayAreaHazardSaveRoute(),
+      areaHazardMovement: replayAreaHazardMovementRoute(),
+    },
+    movementPresentation: {
+      movementReplacement: replayMovementReplacementRoute(),
+      savePushPresentation: replaySavePushPresentationRoute(),
+    },
+  };
+}
+
+function expectedTask25SupportingConnectorPublicReducerRoutes(): Readonly<
+  Record<
+    Task25SupportingPublicRouteConnector,
+    Readonly<Record<string, readonly BattleReducerRouteEvent[]>>
+  >
+> {
+  return {
+    saveGatedSpellOrdering: {
+      thunderwaveSaveDamage: [
+        startRoute(),
+        discover(
+          "saveGatedSpell",
+          ["savingThrowOutcome"],
+          "battleSpellSlotAndActionEconomy",
+        ),
+        resolve(
+          "saveGatedSpell",
+          "savingThrowOutcome",
+          ["rolledDice"],
+          "battleHoleFrontier",
+        ),
+        resolve("saveGatedSpell", "rolledDice", [], "battleHitPoint"),
+      ],
+    },
+    reactionCastingTime: {
+      featherFallReactionSpell: [
+        startRoute(),
+        discover(
+          "reactionSpell",
+          ["interruptDecision"],
+          "battleInterruptStack",
+        ),
+        resolveInterrupt(
+          "reactionSpell",
+          "interruptDecision",
+          [],
+          "battleInterruptStack",
+        ),
+        resolveInterrupt(
+          "reactionSpell",
+          "interruptDecision",
+          [],
+          "battleSpellSlotAndActionEconomy",
+        ),
+      ],
+    },
+    reactionInterruptPayloadTaxonomy: {
+      featherFallMitigationPayload:
+        expectedLevel1SpatialWitnessPublicReducerRoutes().fallMitigation,
+    },
+    objectLightRiders: {
+      objectAttachedEmitter:
+        expectedLevel1SpatialWitnessPublicReducerRoutes().objectLightEmitter,
+      heldEmitter:
+        expectedLevel1SpatialWitnessPublicReducerRoutes().heldLightEmitter,
+    },
+    spatialEffects: {
+      movableMultiEmitterLight:
+        expectedLevel1SpatialWitnessPublicReducerRoutes()
+          .movableMultiEmitterLight,
+      outlineSightAdvantage:
+        expectedLevel1SpatialWitnessPublicReducerRoutes().outlineSightAdvantage,
+      areaObscurementCleanup:
+        expectedLevel1SpatialWitnessPublicReducerRoutes()
+          .areaObscurementCleanup,
+      areaHazardSave:
+        expectedLevel1SpatialWitnessPublicReducerRoutes().areaHazardSave,
+      areaHazardMovement:
+        expectedLevel1SpatialWitnessPublicReducerRoutes().areaHazardMovement,
+    },
+    movementPresentation: {
+      movementReplacement:
+        expectedLevel1SpatialWitnessPublicReducerRoutes().movementReplacement,
+      savePushPresentation:
+        expectedLevel1SpatialWitnessPublicReducerRoutes().savePushPresentation,
+    },
+  };
+}
+
+function replayMovableMultiEmitterLightRoute(): readonly BattleReducerRouteEvent[] {
+  const state = dancingLightsBattle();
+  const route: BattleReducerRouteEvent[] = [startRoute()];
+  const castAct = dancingLightsSeparateCastAct(state);
+  route.push(
+    ...routeEventsOfSubject(
+      castAct,
+      "Dancing Lights cast discovery",
+      "spatialEffect",
+    ),
+  );
+  const cast = resolveBattleSubject({
+    state,
+    subject: castAct.subject,
+    fills: [
+      separateCastPlacement(
+        requireHole(castAct.initialHoles, "dancingLightsPlacement"),
+      ),
+    ],
+  });
+  route.push(
+    ...routeEventsOfSubject(
+      cast,
+      "Dancing Lights cast resolution",
+      "spatialEffect",
+    ),
+  );
+  if (cast.tag !== "resolved") {
+    throw new Error(`Expected Dancing Lights cast to resolve, got ${cast.tag}.`);
+  }
+  const moveAct = dancingLightsRepositionAct(cast.state);
+  route.push(
+    ...routeEventsOfSubject(
+      moveAct,
+      "Dancing Lights move discovery",
+      "spatialEffect",
+    ),
+  );
+  const moved = resolveBattleSubject({
+    state: cast.state,
+    subject: moveAct.subject,
+    fills: [
+      separateRepositionPlacement(
+        requireHole(moveAct.initialHoles, "dancingLightsPlacement"),
+        dancingLightEmitters(cast.state),
+      ),
+    ],
+  });
+  route.push(
+    ...routeEventsOfSubject(
+      moved,
+      "Dancing Lights move resolution",
+      "spatialEffect",
+    ),
+  );
+  return route;
+}
+
+function replayOutlineSightAdvantageRoute(): readonly BattleReducerRouteEvent[] {
+  const state = faerieFireBattle();
+  const route: BattleReducerRouteEvent[] = [startRoute()];
+  const act = faerieFireAct(state);
+  route.push(
+    ...routeEventsOfSubject(act, "Faerie Fire discovery", "spatialEffect"),
+  );
+  const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+  const outlined = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [
+      faerieFireSavingThrowOutcomeFill(
+        savingThrow,
+        [
+          { targetId: casterId, succeeded: true },
+          { targetId: observerId, succeeded: false },
+        ],
+        [faerieFireObjectId],
+      ),
+    ],
+  });
+  route.push(
+    ...routeEventsOfSubject(outlined, "Faerie Fire resolution", "spatialEffect"),
+  );
+  return route;
+}
+
+function replayFallMitigationRoute(): readonly BattleReducerRouteEvent[] {
+  const state = featherFallBattle();
+  const route: BattleReducerRouteEvent[] = [startRoute()];
+  const awaitingReaction = openFeatherFallWindow(state, [
+    featherFallTriggerFact(),
+  ]);
+  route.push(
+    ...routeEventsOfSubject(
+      awaitingReaction,
+      "Feather Fall window",
+      "reactionFallMitigation",
+    ),
+  );
+  if (awaitingReaction.tag !== "needsHoles") {
+    throw new Error("Expected Feather Fall falling-trigger Reaction window.");
+  }
+  const choice = featherFallReactionChoice(awaitingReaction);
+  const resolved = resolveBattleInterrupt({
+    state: awaitingReaction.state,
+    fill: interruptDecisionFill(
+      requireHole(awaitingReaction.holes, "interruptDecision"),
+      {
+        kind: "resolve",
+        responderId: casterId,
+        choice: {
+          kind: "castTriggeredReactionSpell",
+          invocation: choice.invocation,
+          fills: [
+            featherFallTargetListFill(
+              requireHole(choice.initialHoles, "spellTargetList"),
+              [featherFallFallingAllyId, featherFallOtherFallingAllyId],
+            ),
+          ],
+        },
+      },
+    ),
+  });
+  route.push(
+    ...routeEventsOfSubject(
+      resolved,
+      "Feather Fall interrupt",
+      "reactionFallMitigation",
+    ),
+  );
+  if (resolved.tag !== "resolved") {
+    throw new Error(`Expected Feather Fall to resolve, got ${resolved.tag}.`);
+  }
+  const landing = resolveFeatherFallLanding({
+    state: resolved.state,
+    targetId: featherFallFallingAllyId,
+  });
+  route.push(
+    ...routeEventsOfSubject(
+      landing,
+      "Feather Fall landing",
+      "reactionFallMitigation",
+    ),
+  );
+  return route;
+}
+
+function replayAreaObscurementCleanupRoute(): readonly BattleReducerRouteEvent[] {
+  const state = fogCloudBattle();
+  const route: BattleReducerRouteEvent[] = [startRoute()];
+  const act = fogCloudAct(state);
+  route.push(...routeEventsOfSubject(act, "Fog Cloud discovery", "spatialEffect"));
+  const cast = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [fogCloudAreaFill(requireHole(act.initialHoles, "spellAreaChoice"))],
+  });
+  route.push(...routeEventsOfSubject(cast, "Fog Cloud cast", "spatialEffect"));
+  if (cast.tag !== "resolved") {
+    throw new Error(`Expected Fog Cloud cast to resolve, got ${cast.tag}.`);
+  }
+  const command = fogCloudStrongWindDispersalAct(cast.state);
+  const dispersed = resolveBattleSubject({
+    state: cast.state,
+    subject: command.subject,
+    fills: [],
+  });
+  route.push(
+    ...routeEventsOfSubject(dispersed, "Fog Cloud dispersal", "spatialEffect"),
+  );
+  return route;
+}
+
+function replayAreaHazardSaveRoute(): readonly BattleReducerRouteEvent[] {
+  const state = greaseBattle();
+  const route: BattleReducerRouteEvent[] = [startRoute()];
+  const act = greaseAct(state);
+  route.push(...routeEventsOfSubject(act, "Grease discovery", "spatialEffect"));
+  const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+  const cast = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [
+      greaseSavingThrowOutcomeFill(
+        savingThrow,
+        greaseAffectedTargetIds,
+        greaseCastSavingThrowOutcomes(),
+      ),
+    ],
+  });
+  route.push(...routeEventsOfSubject(cast, "Grease cast", "spatialEffect"));
+  if (cast.tag !== "resolved") {
+    throw new Error(`Expected Grease cast to resolve, got ${cast.tag}.`);
+  }
+  const movementAct = greaseMovementAct(cast.state);
+  const moved = resolveBattleSubject({
+    state: cast.state,
+    subject: movementAct.subject,
+    fills: [
+      greaseMovementFill(requireHole(movementAct.initialHoles, "movement"), {
+        areaId: greaseAreaId,
+        movementCostFeet: greaseDifficultTerrainMovementCostFeet,
+      }),
+    ],
+  });
+  if (moved.tag !== "resolved") {
+    throw new Error(`Expected Grease setup movement, got ${moved.tag}.`);
+  }
+  const entryAct = greaseGroundHazardSaveAct(
+    moved.state,
+    casterId,
+    "entersArea",
+  );
+  route.push(
+    ...routeEventsOfSubject(
+      entryAct,
+      "Grease entry save discovery",
+      "spatialEffect",
+    ),
+  );
+  const entrySave = requireHole(entryAct.initialHoles, "savingThrowOutcome");
+  const entryFailed = resolveBattleSubject({
+    state: moved.state,
+    subject: entryAct.subject,
+    fills: [
+      greaseGroundHazardSavingThrowOutcomeFill(entrySave, {
+        targetId: casterId,
+        succeeded: false,
+      }),
+    ],
+  });
+  route.push(
+    ...routeEventsOfSubject(
+      entryFailed,
+      "Grease entry save resolution",
+      "spatialEffect",
+    ),
+  );
+  return route;
+}
+
+function replayAreaHazardMovementRoute(): readonly BattleReducerRouteEvent[] {
+  const state = greaseBattle();
+  const route: BattleReducerRouteEvent[] = [startRoute()];
+  const act = greaseAct(state);
+  route.push(...routeEventsOfSubject(act, "Grease discovery", "spatialEffect"));
+  const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+  const cast = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [
+      greaseSavingThrowOutcomeFill(
+        savingThrow,
+        greaseAffectedTargetIds,
+        greaseCastSavingThrowOutcomes(),
+      ),
+    ],
+  });
+  route.push(...routeEventsOfSubject(cast, "Grease cast", "spatialEffect"));
+  if (cast.tag !== "resolved") {
+    throw new Error(`Expected Grease cast to resolve, got ${cast.tag}.`);
+  }
+  const movementAct = greaseMovementAct(cast.state);
+  route.push(
+    ...routeEventsOfSubject(
+      movementAct,
+      "Grease movement discovery",
+      "spatialEffect",
+    ),
+  );
+  const moved = resolveBattleSubject({
+    state: cast.state,
+    subject: movementAct.subject,
+    fills: [
+      greaseMovementFill(requireHole(movementAct.initialHoles, "movement"), {
+        areaId: greaseAreaId,
+        movementCostFeet: greaseDifficultTerrainMovementCostFeet,
+      }),
+    ],
+  });
+  route.push(
+    ...routeEventsOfSubject(
+      moved,
+      "Grease movement resolution",
+      "spatialEffect",
+    ),
+  );
+  return route;
+}
+
+function replayMovementReplacementRoute(): readonly BattleReducerRouteEvent[] {
+  const initial = jumpBattle();
+  const castAct = jumpCastAct(initial);
+  const cast = resolveBattleSubject({
+    state: initial,
+    subject: castAct.subject,
+    fills: [
+      jumpTargetListFill(
+        requireHole(castAct.initialHoles, "spellTargetList"),
+        [jumpTargetId],
+      ),
+    ],
+  });
+  if (cast.tag !== "resolved") {
+    throw new Error(`Expected Jump cast to resolve, got ${cast.tag}.`);
+  }
+  const targetTurn = resolveEndTurn(cast.state, casterId, "Jump caster");
+  const route: BattleReducerRouteEvent[] = [startRoute()];
+  const jumpAct = jumpMovementReplacementAct(targetTurn, jumpTargetId);
+  route.push(
+    ...routeEventsOfSubject(
+      jumpAct,
+      "Jump movement discovery",
+      "movementPresentation",
+    ),
+  );
+  const jumped = resolveBattleSubject({
+    state: targetTurn,
+    subject: jumpAct.subject,
+    fills: [
+      jumpMovementReplacementFill(
+        requireHole(jumpAct.initialHoles, "movement"),
+        {
+          difficultTerrainAcrobatics: "notRequired",
+        },
+      ),
+    ],
+  });
+  route.push(
+    ...routeEventsOfSubject(
+      jumped,
+      "Jump movement resolution",
+      "movementPresentation",
+    ),
+  );
+  return route;
+}
+
+function replayObjectLightEmitterRoute(): readonly BattleReducerRouteEvent[] {
+  const state = lightBattle();
+  const route: BattleReducerRouteEvent[] = [startRoute()];
+  const act = lightAct(state);
+  route.push(...routeEventsOfSubject(act, "Light discovery", "objectLightRider"));
+  const admitted = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [
+      lightObjectTargetFill(requireHole(act.initialHoles, "objectTargetChoice"), {
+        objectId: lightObjectId,
+        size: "large",
+        wornOrCarried: { kind: "caster" },
+      }),
+    ],
+  });
+  route.push(
+    ...routeEventsOfSubject(admitted, "Light resolution", "objectLightRider"),
+  );
+  return route;
+}
+
+function replayHeldLightEmitterRoute(): readonly BattleReducerRouteEvent[] {
+  const state = produceFlameBattle();
+  const route: BattleReducerRouteEvent[] = [startRoute()];
+  const act = produceFlameHeldLightAct(state);
+  const lit = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [],
+  });
+  route.push(
+    ...routeEventsOfSubject(
+      lit,
+      "Produce Flame held light",
+      "objectLightRider",
+    ),
+  );
+  return route;
+}
+
+function replaySavePushPresentationRoute(): readonly BattleReducerRouteEvent[] {
+  const state = thunderwaveBattle();
+  const route: BattleReducerRouteEvent[] = [startRoute()];
+  const act = thunderwaveAct(state);
+  route.push(
+    ...routeEventsOfSubject(
+      act,
+      "Thunderwave discovery",
+      "movementPresentation",
+    ),
+  );
+  const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+  const outcomes = thunderwaveSavingThrowOutcomes();
+  const acceptedArea = thunderwaveAreaChoice();
+  const awaitingDamage = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [
+      thunderwaveSavingThrowOutcomeFill(savingThrow, outcomes, acceptedArea),
+    ],
+  });
+  route.push(
+    ...routeEventsOfSubject(
+      awaitingDamage,
+      "Thunderwave save",
+      "movementPresentation",
+    ),
+  );
+  const damage = requireResultHole(awaitingDamage, "rolledDice");
+  const resolved = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [
+      thunderwaveSavingThrowOutcomeFill(savingThrow, outcomes, acceptedArea),
+      damageRollFillWithGroups(damage, [[4, 4]]),
+    ],
+  });
+  route.push(
+    ...routeEventsOfSubject(
+      resolved,
+      "Thunderwave push presentation",
+      "movementPresentation",
+    ),
+  );
+  return route;
+}
+
+function replaySaveGatedSpellOrderingRoute(): readonly BattleReducerRouteEvent[] {
+  const state = thunderwaveBattle();
+  const route: BattleReducerRouteEvent[] = [startRoute()];
+  const act = thunderwaveAct(state);
+  route.push(
+    ...routeEventsOfSubject(act, "Thunderwave discovery", "saveGatedSpell"),
+  );
+  const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+  const outcomes = thunderwaveSavingThrowOutcomes();
+  const acceptedArea = thunderwaveAreaChoice();
+  const awaitingDamage = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [
+      thunderwaveSavingThrowOutcomeFill(savingThrow, outcomes, acceptedArea),
+    ],
+  });
+  route.push(
+    ...routeEventsOfSubject(
+      awaitingDamage,
+      "Thunderwave save",
+      "saveGatedSpell",
+    ),
+  );
+  const damage = requireResultHole(awaitingDamage, "rolledDice");
+  const resolved = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [
+      thunderwaveSavingThrowOutcomeFill(savingThrow, outcomes, acceptedArea),
+      damageRollFillWithGroups(damage, [[4, 4]]),
+    ],
+  });
+  route.push(
+    ...routeEventsOfSubject(
+      resolved,
+      "Thunderwave damage",
+      "saveGatedSpell",
+    ),
+  );
+  return route;
+}
+
+function replayReactionCastingTimeRoute(): readonly BattleReducerRouteEvent[] {
+  const state = featherFallBattle();
+  const route: BattleReducerRouteEvent[] = [startRoute()];
+  const awaitingReaction = openFeatherFallWindow(state, [
+    featherFallTriggerFact(),
+  ]);
+  route.push(
+    ...routeEventsOfSubject(
+      awaitingReaction,
+      "Feather Fall window",
+      "reactionSpell",
+    ),
+  );
+  if (awaitingReaction.tag !== "needsHoles") {
+    throw new Error("Expected Feather Fall falling-trigger Reaction window.");
+  }
+  const choice = featherFallReactionChoice(awaitingReaction);
+  const resolved = resolveBattleInterrupt({
+    state: awaitingReaction.state,
+    fill: interruptDecisionFill(
+      requireHole(awaitingReaction.holes, "interruptDecision"),
+      {
+        kind: "resolve",
+        responderId: casterId,
+        choice: {
+          kind: "castTriggeredReactionSpell",
+          invocation: choice.invocation,
+          fills: [
+            featherFallTargetListFill(
+              requireHole(choice.initialHoles, "spellTargetList"),
+              [featherFallFallingAllyId, featherFallOtherFallingAllyId],
+            ),
+          ],
+        },
+      },
+    ),
+  });
+  route.push(
+    ...routeEventsOfSubject(
+      resolved,
+      "Feather Fall interrupt",
+      "reactionSpell",
+    ),
+  );
+  return route;
+}
+
+function startRoute(): BattleReducerRouteEvent {
+  return battleReducerStartRouteEvent();
+}
+
+function spatialDiscover(
+  holes: RouteHoles,
+  owner: RouteOwner,
+): BattleReducerRouteEvent {
+  return discover("spatialEffect", holes, owner);
+}
+
+function spatialResolve(
+  fill: RouteResolveEvent["fill"],
+  holes: RouteHoles,
+  owner: RouteOwner,
+): BattleReducerRouteEvent {
+  return resolve("spatialEffect", fill, holes, owner);
+}
+
+function spatialResolveWithoutFill(
+  owner: RouteOwner,
+): BattleReducerRouteEvent {
+  return resolveWithoutFill("spatialEffect", owner);
+}
+
+function discover(
+  subject: RouteDiscoverEvent["subject"],
+  holes: RouteHoles,
+  owner: RouteOwner,
+): BattleReducerRouteEvent {
+  return {
+    kind: "discoverBattleActs",
+    subject,
+    holes,
+    owner,
+  };
+}
+
+function resolve(
+  subject: RouteResolveEvent["subject"],
+  fill: RouteResolveEvent["fill"],
+  holes: RouteResolveEvent["holes"],
+  owner: RouteOwner,
+): BattleReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubject",
+    subject,
+    fill,
+    holes,
+    owner,
+  };
+}
+
+function resolveWithoutFill(
+  subject: RouteResolveWithoutFillEvent["subject"],
+  owner: RouteOwner,
+): BattleReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubjectWithoutFill",
+    subject,
+    holes: [],
+    owner,
+  };
+}
+
+function resolveInterrupt(
+  subject: RouteInterruptEvent["subject"],
+  fill: RouteInterruptEvent["fill"],
+  holes: RouteInterruptEvent["holes"],
+  owner: RouteOwner,
+): BattleReducerRouteEvent {
+  return {
+    kind: "resolveBattleInterrupt",
+    subject,
+    fill,
+    holes,
+    owner,
+  };
+}
+
+function routeEventsOf(
+  source: { readonly routeEvents?: readonly BattleReducerRouteEvent[] },
+  label: string,
+): readonly BattleReducerRouteEvent[] {
+  if (source.routeEvents === undefined || source.routeEvents.length === 0) {
+    throw new Error(`Expected public reducer route events for ${label}.`);
+  }
+  return source.routeEvents;
+}
+
+function routeEventsOfSubject(
+  source: { readonly routeEvents?: readonly BattleReducerRouteEvent[] },
+  label: string,
+  subject: BattleReducerRouteSubjectFamily,
+): readonly BattleReducerRouteEvent[] {
+  const events = routeEventsOf(source, label).filter(
+    (event): event is Exclude<BattleReducerRouteEvent, { kind: "startBattle" }> =>
+      event.kind !== "startBattle" && event.subject === subject,
+  );
+  if (events.length === 0) {
+    throw new Error(`Expected ${subject} public reducer route events for ${label}.`);
+  }
+  return events;
+}
 
 function singleReplayAction(
   unitId: Level1SpatialWitnessSelectedUnitId,

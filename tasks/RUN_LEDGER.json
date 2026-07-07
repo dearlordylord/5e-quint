@@ -4,6 +4,111 @@
   "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
   "entries": [
     {
+      "taskId": "CRPI-BLOCK-017",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
+      "artifacts": {
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "42ca460031188cb1ad0c204fe712a13ff1b49224b9d3a55874439c52764a7eec"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-BLOCK-017/README.md",
+          "sha256": "eac049d3f500a0541182d8c9f9e1c1736e48608facac94ecc80327fe39739b8e"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-017.json",
+          "sha256": "814a95024ac93a06468b9c5b86fc073a6fdad11686a1b03cf66a9102769afbbd",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-017.json#publicQRouteCoverage:level1-spatial-witness-selected-identity",
+            "tasks/target-replay-evidence/CRPI-BLOCK-017.json#publicQRouteCoverage:save-gated-spell-ordering",
+            "tasks/target-replay-evidence/CRPI-BLOCK-017.json#publicQRouteCoverage:reaction-casting-time",
+            "tasks/target-replay-evidence/CRPI-BLOCK-017.json#publicQRouteCoverage:reaction-interrupt-payload-taxonomy",
+            "tasks/target-replay-evidence/CRPI-BLOCK-017.json#publicQRouteCoverage:object-light-riders",
+            "tasks/target-replay-evidence/CRPI-BLOCK-017.json#publicQRouteCoverage:spatial-effects",
+            "tasks/target-replay-evidence/CRPI-BLOCK-017.json#publicQRouteCoverage:movement-presentation"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-owner-battle-spell-20260706T213644Z/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor a4eadb62b47429f2bdfc1b450f3bdd5df4abfe86 HEAD",
+          "status": "pass",
+          "detail": "Base ref and HEAD both resolved to a4eadb62b Mark Ralph task 24 done; Base SHA is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language review: rg local SRD 5.2.1 spell, movement, vision/light, difficult terrain, Reaction, Area of Effect, Cover, Dim Light, Heavily Obscured, and Long Jump passages plus UBIQUITOUS_LANGUAGE.md route-owner terms",
+          "status": "pass",
+          "detail": "Checked local SRD 5.2.1 spell and generic rules passages for Dancing Lights, Faerie Fire, Feather Fall, Fog Cloud, Grease, Jump, Light, Produce Flame, Thunderwave, movement, vision/light, object, area, cover, and reaction vocabulary; checked UBIQUITOUS_LANGUAGE.md terms for Reaction, Area of Effect, Cover, Difficult Terrain, Long Jump, Illumination, Obscurement, Movement, Speed, Spell Invocation, Spell Effect, Boundary Crossing, and Table Decision."
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Required MBT preflight found no active Vitest runner and no stale quint_evaluator before focused MBT runs."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime typecheck",
+          "status": "pass",
+          "detail": "Battle runtime TypeScript check passed after adding public route projection for Task 25 spatial composition surfaces."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec vitest run src/level1-spatial-witness-selected-identity.mbt.test.ts -t \"public reducer route replay\"",
+          "status": "pass",
+          "detail": "Focused public reducer qRoute replay passed: copied Task 25 aggregate and supporting connector qRoute literals matched routeEvents returned by public reducer calls; 2 passed, 1 skipped."
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 pnpm --filter @dnd/battle-runtime exec vitest run src/level1-spatial-witness-selected-identity.mbt.test.ts src/reducer-route-connectors.mbt.test.ts src/reaction-interrupt-routes.mbt.test.ts src/movement-forced-movement-selected-identity.mbt.test.ts -t \"(Level 1 spatial witness selected identity replay|public reducer route replay|routes the grouped level-1 spatial witness through composed generic reducer surfaces|routes save-gated spell ordering through the shared reducer surface|routes Reaction casting time through explicit battle owners|routes reaction payload taxonomy through generic trigger families and owners|routes object and light riders through object boundary, active-effect, projection, and table-witness owners|routes spatial effects through light, sight, hazard, and table-witness owners|routes movement replacement, forced movement, and object-push presentation through generic facts)\" 2>&1; STATUS=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$STATUS\"",
+          "status": "pass",
+          "detail": "Focused Task 25 MBT passed with the aggregate and supporting connector public reducer route replay included: 4 files passed; 10 tests passed, 36 skipped; TOTAL: 22s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "Cleanroom branch coverage passed with Task 25 evidence: 738 obligations, 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass",
+          "detail": "Whitespace check passed."
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "Full quality chain passed. App lint reported existing warnings and exited 0; turbo typecheck completed 9 successful tasks, 5 from cache."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-017",
+            "impact": "unblocked"
+          },
+          {
+            "taskId": "CRPI-BLOCK-018",
+            "impact": "left unchanged"
+          },
+          {
+            "taskId": "CRPI-BLOCK-021",
+            "impact": "left unchanged"
+          }
+        ],
+        "observations": [
+          "Level-1 spatial witness selected identity replay now observes copied qRoute literals through public reducer route events for the aggregate level-1 spatial connector plus explicit supporting connector replays for save-gated spells, reaction casting and payload taxonomy, object-light riders, spatial effects, and movement presentation.",
+          "Production reducer-route projection needed to expose the spatial/object-light/movement/reaction route subjects and light/sight/obscurement/hazard/table owner terms already present in copied QNT route connectors and MBT decoding vocabulary.",
+          "No new durable BattleState field or authored spell id production dispatch was needed for Task 25."
+        ],
+        "requiredPlanEdits": "none"
+      }
+    },
+    {
       "taskId": "CRPI-BLOCK-046",
       "assignmentId": "reducer-spine-diagnostic-character-creation",
       "laneId": "character-creation",
