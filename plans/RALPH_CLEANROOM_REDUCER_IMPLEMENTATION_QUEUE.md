@@ -385,7 +385,7 @@
     {
       "number": 64,
       "id": "CRPI-BLOCK-035",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-weapon-hosted-attack-and-riders"
     },
     {
@@ -4397,7 +4397,7 @@ Plan Impact:
 
 ### Task 64 - CRPI-BLOCK-035
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
