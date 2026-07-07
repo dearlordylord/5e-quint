@@ -1,101 +1,202 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-026",
+  "taskId": "CRPI-BLOCK-027",
   "durableFields": [
     {
-      "fieldPath": "BattleCreatureState.size",
+      "fieldPath": "AvailableBattleAct.routeEvents",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "AvailableBattleAct.initialHoles",
+        "boundary": "discoverBattleActs public reducer result"
+      },
+      "notes": "Existing public discovery result carries route events derived from the action spell invocation and initial hole frontier."
+    },
+    {
+      "fieldPath": "AvailableBattleAct.initialHoles",
       "owner": "battle-state",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing creature state owns Size projected from character species/build input at battle start; species identity is not used as a runtime dispatch key."
+      "notes": "Existing discovery holes are the canonical action frontier for target choice and damage type choice."
     },
     {
-      "fieldPath": "BattleCreatureState.origin.speed",
+      "fieldPath": "BattleResolutionResult.routeEvents",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleResolutionResult.holes",
+        "boundary": "resolveBattleSubject public reducer result"
+      },
+      "notes": "Existing public resolution result carries route events derived from submitted fills, remaining holes, and reducer outcome."
+    },
+    {
+      "fieldPath": "BattleResolutionResult.holes",
       "owner": "battle-state",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing character creature origin owns walking Speed used by movement-resource projection."
+      "notes": "Existing result holes are the canonical next frontier after target, damage type, Attack Roll, or damage dice fills."
     },
     {
-      "fieldPath": "BattleCreatureState.origin.characterUnitRefs",
+      "fieldPath": "BattleResolutionResult.tag=resolved",
       "owner": "battle-state",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing selected unit refs carry admitted passive support profiles for damage resistance and creature-space movement permission; selected identity remains an admission/source boundary."
+      "notes": "Existing result tag distinguishes terminal miss and damage-resolution states from open-hole states."
     },
     {
-      "fieldPath": "BattleCreatureState.origin.passiveSavingThrowRollModeProfiles",
+      "fieldPath": "BattleSubject.actionSpell.invocation.procedure=spellAttackDamage",
       "owner": "battle-state",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing parsed support-profile map owns passive Saving Throw roll-mode facts for condition-scoped species traits."
+      "notes": "Existing typed invocation procedure admits generic spell Attack damage behavior without dispatching on spell identity."
     },
     {
-      "fieldPath": "BattleCreatureState.origin.passiveAbilityCheckRollModeProfiles",
+      "fieldPath": "BattleFill.kind=targetChoice",
       "owner": "battle-state",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing parsed support-profile map owns passive Ability Check roll-mode facts for ending Grappled."
+      "notes": "Existing fill kind identifies target selection for spell Attack resolution."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=creatureStatProjection",
-      "owner": "battle-reducer-route-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "fieldPath": "BattleFill.kind=attackRoll",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
-        "tag": "runtime-projection"
+        "tag": "canonical-source"
       },
-      "notes": "Route events are derived from existing BattleCreatureState size and speed facts plus movement-resource ownership; no route cache is stored in BattleState."
+      "notes": "Existing fill kind identifies the spell Attack Roll outcome."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=passiveDamageAdjustment",
-      "owner": "battle-reducer-route-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "fieldPath": "BattleFill.kind=rolledDice",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
-        "tag": "runtime-projection"
+        "tag": "canonical-source"
       },
-      "notes": "Route events are derived from existing passive damage-resistance support-profile facts and the shared damage adjustment helper."
+      "notes": "Existing fill kind identifies hit-gated damage dice for spell Attack damage."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=passiveSavingThrowRollMode",
-      "owner": "battle-reducer-route-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "fieldPath": "BattleFill.kind=damageTypeChoice",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
-        "tag": "runtime-projection"
+        "tag": "canonical-source"
       },
-      "notes": "Existing route projection owns passive Saving Throw roll-mode route evidence."
+      "notes": "Existing fill kind identifies the typed damage-type choice frontier for generic typed spell Attack damage."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=passiveAbilityCheckRollMode",
-      "owner": "battle-reducer-route-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "fieldPath": "BattleCreatureState.hp",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
-        "tag": "runtime-projection"
+        "tag": "canonical-source"
       },
-      "notes": "Route events are derived from existing passive Ability Check roll-mode support-profile facts for ending Grappled."
+      "notes": "Existing creature state owns target Hit Point damage after a hit and damage dice fill."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=creatureSpaceMovementPermission",
-      "owner": "battle-reducer-route-projection",
+      "fieldPath": "BattleReducerRouteEvent.subject=spellAttackProcedure",
+      "owner": "executable-boundary-projection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
-        "tag": "runtime-projection"
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleSubject.actionSpell.invocation.procedure",
+        "boundary": "battle reducer route event"
       },
-      "notes": "Existing public Movement fill route projection owns creature-space traversal permission outcomes."
+      "notes": "Route subject is derived from the typed spell Attack procedure, not selected spell identity."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.owner=battleActionEconomy",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "AvailableBattleAct.subject.invocation",
+        "boundary": "discoverBattleActs route event"
+      },
+      "notes": "Discovery owner is derived from action spell availability and current turn action economy."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.owner=battleObjectTargetBoundary",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "AvailableBattleAct.initialHoles.kind=objectTargetChoice",
+        "boundary": "discoverBattleActs route event"
+      },
+      "notes": "Object-target-boundary discovery is derived from the public act hole shape for spell Attacks that can target objects."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.owner=battleTargetSelection",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleFill.kind=targetChoice",
+        "boundary": "resolveBattleSubject route event"
+      },
+      "notes": "Target-choice fills route to the battle target-selection owner."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.owner=battleAttackRoll",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleFill.kind=attackRoll",
+        "boundary": "resolveBattleSubject route event"
+      },
+      "notes": "Attack Roll fills route to the battle Attack Roll owner."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.owner=battleSpellAttackProcedure",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleFill.kind=damageTypeChoice",
+        "boundary": "resolveBattleSubject route event"
+      },
+      "notes": "Damage-type choice fills route to the spell Attack procedure owner."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.owner=battleHitPoint",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleFill.kind=rolledDice",
+        "boundary": "resolveBattleSubject route event"
+      },
+      "notes": "Damage dice fills route to the Hit Point owner when damage is applied."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.owner=battleHoleFrontier",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleResolutionResult.holes",
+        "boundary": "resolveBattleSubject route event"
+      },
+      "notes": "Earlier-frontier requests route to the shared hole-frontier owner."
     }
   ],
   "notes": [
-    "Task 54 introduced no new durable BattleState or BattleCreatureState fields.",
-    "Species passive trait route evidence is derived from existing support-profile, creature-state, damage adjustment, roll-mode, movement-resource, and movement-fill facts.",
-    "Production behavior does not branch on species trait ids, names, QNT action names, fixture labels, or connector filenames."
+    "Task 55 introduced no new durable BattleState or BattleCreatureState fields.",
+    "Spell Attack ordering evidence is derived from existing action spell invocation, fill, hole frontier, route-event, and Hit Point state.",
+    "Production behavior does not branch on authored spell ids, names, QNT branch action names, fixture labels, or connector filenames."
   ]
 }

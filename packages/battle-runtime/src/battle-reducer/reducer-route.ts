@@ -5828,10 +5828,16 @@ function spellAttackProcedureRouteOwners(input: {
 }): readonly BattleReducerRouteOwnerGroup[] {
   const kind = battleFillKind(input.fill);
   if (kind === "attackRoll") {
+    if (spellAttackResolutionRequestsHole(input.result, "targetChoice")) {
+      return ["battleHoleFrontier"];
+    }
     return ["battleAttackRoll"];
   }
   if (kind === "damageTypeChoice") return ["battleSpellAttackProcedure"];
   if (kind === "rolledDice") {
+    if (spellAttackResolutionRequestsHole(input.result, "attackRoll")) {
+      return ["battleHoleFrontier"];
+    }
     return input.result.tag === "needsHoles" &&
       input.result.holes.some(
         (hole) => hole.kind === "concentrationSavingThrow",
@@ -5844,6 +5850,16 @@ function spellAttackProcedureRouteOwners(input: {
   }
   if (kind === "concentrationSavingThrow") return ["battleConcentration"];
   return [];
+}
+
+function spellAttackResolutionRequestsHole(
+  result: BattleResolutionResult,
+  holeKind: BattleReducerRouteHole,
+): boolean {
+  return (
+    result.tag === "needsHoles" &&
+    battleReducerRouteHoles(result.holes).includes(holeKind)
+  );
 }
 
 function spellAttackProcedureRouteHoles(

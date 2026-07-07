@@ -6369,3 +6369,121 @@ Verification results:
 - `git diff --check` passed.
 - `pnpm quality` passed. The app lint phase emitted 61 warnings and exited 0.
 - Reviewer-loop convergence passed: round 1 verified RAW traceability, ubiquitous-language/domain language, public route-event comparison, no duplicate durable state, and no authored-identity production dispatch. Revision round 2 fixed the Animal Friendship failed-save active-effect discovery mismatch and added public scoped Charmed-prevention route evidence before possession prevention. Revision round 3 replaced the route-local creature-type Charmed-prevention predicate with the shared runtime helper and removed the avoidable target-choice cast. Revision round 5 moved scoped Charmed and possession prevention qRoute evidence onto public `resolveBattleSubject` results. Revision round 6 removed unused duplicate `WithRoute` helper exports so route projection stays owned by public reducer route events. Revision round 7 corrected engine-depth artifact ownership to list the actual changed production surfaces. Revision round 8 replaced the fabricated Humanoid protection-scope replay with a public creature-type-protection Charmed condition-attempt runtime command using a scoped Fey source. Revision round 9 tightened the possession-attempt command to resolve only for creature-type-protection prevention and narrowed charm-source damage-break routing to removed Charmed spell conditions. Revision round 12 added condition-sensitive subject identity and split condition/possession prevention into `runtimeProtectionPrevention`, separate from `runtimeProtectionSave`; no remaining reasonable Task 10 findings.
+
+## CRPI-BLOCK-027
+
+Status: `pass`
+
+- Task: 55
+- Driver path: `packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt`
+- Route connector path: `packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt`
+- Route class: `reducer-routed`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-027.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Behavior accepted:
+
+Task 55 accepts generic spell Attack ordering through public battle reducer
+route events. The focused route harness compares the copied
+`SpellAttackProcedureRouteSubject` `qRoute` projection to route events directly
+from `battleReducerStartRouteEvent`, `AvailableBattleAct.routeEvents` produced
+by `discoverBattleActs`, and `BattleResolutionResult.routeEvents` produced by
+`resolveBattleSubject`. Single-target spell Attack discovery, typed
+damage-type-and-target discovery, target-choice fills, damage-type fills,
+Attack Roll fills, earlier-frontier requests, and hit-gated damage dice all use
+the existing `spellAttackProcedure` route subject and owner mapping.
+
+No parallel ordering ledger was added. Magic Action availability remains in
+`BattleState.currentTurnResources`, target and damage-type choices remain
+submitted `BattleFill` facts, Attack Rolls remain Attack Roll fills, target
+Hit Point damage remains `BattleCreatureState.hp`, and route labels are derived
+from public reducer result route events.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Status |
+| --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doDiscoverSingleTargetSpellAttack` | `tasks/target-replay-evidence/CRPI-BLOCK-027.json#driver:packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doDiscoverSingleTargetSpellAttack#trace:MBT_TRACES=1 MBT_STEPS=5 action=doDiscoverSingleTargetSpellAttack qRoute=spell-attack-ordering-public-route` | `covered` |
+| `packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doDiscoverTypedSpellAttack` | `tasks/target-replay-evidence/CRPI-BLOCK-027.json#driver:packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doDiscoverTypedSpellAttack#trace:MBT_TRACES=1 MBT_STEPS=5 action=doDiscoverTypedSpellAttack qRoute=spell-attack-ordering-public-route` | `covered` |
+| `packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doFillTargetChoice` | `tasks/target-replay-evidence/CRPI-BLOCK-027.json#driver:packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doFillTargetChoice#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillTargetChoice qRoute=spell-attack-ordering-public-route` | `covered` |
+| `packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doSubmitAttackRollBeforeTargetChoice` | `tasks/target-replay-evidence/CRPI-BLOCK-027.json#driver:packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doSubmitAttackRollBeforeTargetChoice#trace:MBT_TRACES=1 MBT_STEPS=5 action=doSubmitAttackRollBeforeTargetChoice qRoute=spell-attack-ordering-public-route` | `covered` |
+| `packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doFillAttackRollMiss` | `tasks/target-replay-evidence/CRPI-BLOCK-027.json#driver:packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doFillAttackRollMiss#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillAttackRollMiss qRoute=spell-attack-ordering-public-route` | `covered` |
+| `packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doFillAttackRollHit` | `tasks/target-replay-evidence/CRPI-BLOCK-027.json#driver:packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doFillAttackRollHit#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillAttackRollHit qRoute=spell-attack-ordering-public-route` | `covered` |
+| `packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doSubmitDamageBeforeAttackRoll` | `tasks/target-replay-evidence/CRPI-BLOCK-027.json#driver:packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doSubmitDamageBeforeAttackRoll#trace:MBT_TRACES=1 MBT_STEPS=5 action=doSubmitDamageBeforeAttackRoll qRoute=spell-attack-ordering-public-route` | `covered` |
+| `packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doFillDamageDice` | `tasks/target-replay-evidence/CRPI-BLOCK-027.json#driver:packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doFillDamageDice#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillDamageDice qRoute=spell-attack-ordering-public-route` | `covered` |
+| `packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doFillDamageTypeBeforeTargetChoice` | `tasks/target-replay-evidence/CRPI-BLOCK-027.json#driver:packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doFillDamageTypeBeforeTargetChoice#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillDamageTypeBeforeTargetChoice qRoute=spell-attack-ordering-public-route` | `covered` |
+| `packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doFillTargetChoiceBeforeDamageType` | `tasks/target-replay-evidence/CRPI-BLOCK-027.json#driver:packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doFillTargetChoiceBeforeDamageType#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillTargetChoiceBeforeDamageType qRoute=spell-attack-ordering-public-route` | `covered` |
+| `packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doFillDamageTypeAfterTargetChoice` | `tasks/target-replay-evidence/CRPI-BLOCK-027.json#driver:packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doFillDamageTypeAfterTargetChoice#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillDamageTypeAfterTargetChoice qRoute=spell-attack-ordering-public-route` | `covered` |
+| `packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doFillTargetChoiceAfterDamageType` | `tasks/target-replay-evidence/CRPI-BLOCK-027.json#driver:packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doFillTargetChoiceAfterDamageType#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillTargetChoiceAfterDamageType qRoute=spell-attack-ordering-public-route` | `covered` |
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-027/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 55.
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Playing-the-Game.md#Making-an-Attack` applies the same attack
+  structure to attacks made as part of a spell: choose a target, determine
+  modifiers, then resolve the attack.
+- SRD 5.2.1 `Playing-the-Game.md#Attack-Rolls` and
+  `Spells/Gaining-and-Casting.md#Attack-Rolls` define spell Attack Rolls and
+  spell attack modifiers.
+- SRD 5.2.1 `Playing-the-Game.md#Damage-Rolls` defines hit-gated damage dice
+  for spells and other damaging effects.
+- `UBIQUITOUS_LANGUAGE.md` defines Attack Roll, Spell Invocation, Damage Type,
+  Hit Points, and action lifecycle terms used by this route.
+
+Verification results:
+
+- Base check passed: declared base ref
+  `ralph/cleanroom-owner-battle-attack-20260706T213644Z/integration` and
+  `HEAD` both resolved to `f00fb2d0f Mark Ralph task 54 done`; Base SHA
+  `f00fb2d0f2c77e49e98b2d010d97cbce95f783cc` was an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against the local SRD passages listed
+  above and `UBIQUITOUS_LANGUAGE.md`.
+- Focused route connector replay passed:
+  `START=$(date +%s); (while true; do sleep 60; echo "PROGRESS: $(( $(date +%s) - START ))s"; done) & REPORTER=$!; MBT_TRACES=1 MBT_STEPS=5 pnpm --filter @dnd/battle-runtime exec vitest run src/reducer-route-connectors.mbt.test.ts -t "routes spell Attack ordering" 2>&1 & MBT_PID=$!; wait "$MBT_PID"; STATUS=$?; kill "$REPORTER" 2>/dev/null || true; wait "$REPORTER" 2>/dev/null || true; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$STATUS"` passed with 1 test and 33 skipped; `TOTAL: 10s`.
+- Revision-round-2 focused route connector replay passed after switching the
+  driver to append public `AvailableBattleAct.routeEvents` and
+  `BattleResolutionResult.routeEvents` directly:
+  `START=$(date +%s); (while true; do sleep 60; echo "PROGRESS: $(( $(date +%s) - START ))s"; done) & REPORTER=$!; MBT_TRACES=1 MBT_STEPS=5 pnpm --filter @dnd/battle-runtime exec vitest run src/reducer-route-connectors.mbt.test.ts -t "routes spell Attack ordering" 2>&1; STATUS=$?; kill "$REPORTER" 2>/dev/null || true; wait "$REPORTER" 2>/dev/null || true; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$STATUS"` passed with 1 test and 33 skipped; `TOTAL: 9s`.
+- Focused base spell Attack ordering MBT passed:
+  `START=$(date +%s); (while true; do sleep 60; echo "PROGRESS: $(( $(date +%s) - START ))s"; done) & REPORTER=$!; MBT_TRACES=1 MBT_STEPS=5 pnpm --filter @dnd/battle-runtime exec vitest run src/spell-attack-ordering.mbt.test.ts 2>&1 & MBT_PID=$!; wait "$MBT_PID"; STATUS=$?; kill "$REPORTER" 2>/dev/null || true; wait "$REPORTER" 2>/dev/null || true; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$STATUS"` passed with 1 test; `TOTAL: 7s`.
+- Task-scoped target evidence validation passed with 12 covered obligations for
+  `packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt`.
+- Final branch coverage, diff check, and broad quality results are recorded in
+  `tasks/RUN_LEDGER.json`.
+- Reviewer-loop convergence passed: round 1 verified RAW traceability,
+  ubiquitous-language/domain language, no duplicate durable state, and no
+  authored-identity production dispatch. Round 2 fixed the review finding by
+  removing adapter-synthesized spell Attack ordering routes, aligned the copied
+  route connector with public `spellAttackProcedure` and object-boundary
+  discovery events, verified route subject/owner/fill connascence, and found no
+  remaining reasonable Task 55 findings.
+
+Plan Impact:
+
+- Status: `none`
+- Affected tasks:
+  - Task 55 / `CRPI-BLOCK-027`: `unblocked`; copied `qRoute` replay is accepted.
+  - Task 24 / `CRPI-BLOCK-016`: `left unchanged`; it can reuse the generic
+    spell Attack ordering route evidence when selected spell identity work
+    reaches generic spell Attack branches.
+- Observations:
+  - Generic spell Attack ordering is already observable through the public
+    reducer route surface; no new BattleState field is needed for this owner.
+  - The route subject should remain `spellAttackProcedure`, derived from typed
+    spell procedure shape and fill frontier rather than selected spell identity.
+- Required plan edits: none.

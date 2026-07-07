@@ -1989,6 +1989,13 @@ export function reducerRouteResolveBattleSubjectWithoutFill(input: {
   };
 }
 
+function appendPublicRouteEvents(
+  route: readonly ReducerRouteEvent[],
+  events: readonly ReducerRouteEvent[] | undefined,
+): readonly ReducerRouteEvent[] {
+  return events === undefined ? route : [...route, ...events];
+}
+
 if (statBlockCatalogResult.tag !== "ok" || unitCatalogResult.tag !== "ok") {
   throw new Error("Battle runtime MBT catalogs must build successfully.");
 }
@@ -9336,7 +9343,7 @@ export function createSpellAttackOrderingRouteDriver() {
       subject = spellAttackSubject("fire_bolt", "spellAttackDamage");
       fills = [];
       holes = [];
-      route = [reducerRouteStartBattle("battleActionEconomy")];
+      route = [battleReducerStartRouteEvent()];
       stage = "actSelection";
       lastResult = "init";
       orderingError = "";
@@ -9349,48 +9356,23 @@ export function createSpellAttackOrderingRouteDriver() {
       state = spellAttackOrderingBattle(spellId);
       subject = spellAttackSubject(spellId, "spellAttackDamage");
       fills = [];
-      holes = discoverSpellAttackHoles(state, subject, spellId);
-      route = [
-        ...route,
-        reducerRouteDiscoverBattleActs({
-          subject: "spellAttack",
-          holes,
-          owner: "battleActionEconomy",
-        }),
-      ];
+      const act = discoverSpellAttackAct(state, subject, spellId);
+      holes = act.initialHoles;
+      route = appendPublicRouteEvents(route, act.routeEvents);
       stage = nextStage;
       lastResult = "needsHoles";
       orderingError = "";
     }
 
-    function routeHolesAfter(
-      result: BattleResolutionResult,
-    ): readonly BattleHole[] {
-      if (result.tag === "resolved") return [];
-      if (result.tag === "needsHoles") return result.holes;
-      return holes;
-    }
-
     function recordAccepted(
       result: BattleResolutionResult,
       nextStage: SpellAttackOrderingProjection["stage"],
-      fill: ReducerRouteFill,
-      owner: ReducerRouteOwnerGroup,
     ): void {
       lastResult = result.tag;
-      const nextRouteHoles = routeHolesAfter(result);
       if (result.tag === "resolved") {
         state = result.state;
         holes = [];
-        route = [
-          ...route,
-          reducerRouteResolveBattleSubject({
-            subject: "spellAttack",
-            fill,
-            holes: nextRouteHoles,
-            owner,
-          }),
-        ];
+        route = appendPublicRouteEvents(route, result.routeEvents);
         stage = nextStage;
         orderingError = "";
         return;
@@ -9398,15 +9380,7 @@ export function createSpellAttackOrderingRouteDriver() {
       if (result.tag === "needsHoles") {
         state = result.state;
         holes = result.holes;
-        route = [
-          ...route,
-          reducerRouteResolveBattleSubject({
-            subject: "spellAttack",
-            fill,
-            holes: nextRouteHoles,
-            owner,
-          }),
-        ];
+        route = appendPublicRouteEvents(route, result.routeEvents);
         stage = nextStage;
         orderingError = "";
         return;
@@ -9425,22 +9399,13 @@ export function createSpellAttackOrderingRouteDriver() {
         ""
       >,
       expectedStage: SpellAttackOrderingProjection["stage"],
-      fill: ReducerRouteFill,
     ): void {
       if (result.tag !== "needsHoles") {
         throw new Error("Expected spell attack fill to request earlier holes.");
       }
       lastResult = result.tag;
       holes = result.holes;
-      route = [
-        ...route,
-        reducerRouteResolveBattleSubject({
-          subject: "spellAttack",
-          fill,
-          holes,
-          owner: "battleHoleFrontier",
-        }),
-      ];
+      route = appendPublicRouteEvents(route, result.routeEvents);
       stage = expectedStage;
       orderingError = expectedOrderingError;
     }
@@ -9468,7 +9433,6 @@ export function createSpellAttackOrderingRouteDriver() {
           }),
           "targetRequired",
           "targetChoice",
-          "attackRoll",
         );
       },
       doFillTargetChoice: () => {
@@ -9477,8 +9441,6 @@ export function createSpellAttackOrderingRouteDriver() {
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
           "attackRoll",
-          "targetChoice",
-          "battleTargetSelection",
         );
       },
       doSubmitDamageBeforeAttackRoll: () => {
@@ -9498,7 +9460,6 @@ export function createSpellAttackOrderingRouteDriver() {
           }),
           "attackRollRequired",
           "attackRoll",
-          "rolledDice",
         );
       },
       doFillAttackRollMiss: () => {
@@ -9510,8 +9471,6 @@ export function createSpellAttackOrderingRouteDriver() {
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
           "resolved",
-          "attackRoll",
-          "battleAttackRoll",
         );
       },
       doFillAttackRollHit: () => {
@@ -9523,8 +9482,6 @@ export function createSpellAttackOrderingRouteDriver() {
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
           "damageDice",
-          "attackRoll",
-          "battleAttackRoll",
         );
       },
       doFillDamageDice: () => {
@@ -9533,8 +9490,6 @@ export function createSpellAttackOrderingRouteDriver() {
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
           "resolved",
-          "rolledDice",
-          "battleHitPoint",
         );
       },
       doDiscoverTypedSpellAttack: () => {
@@ -9546,8 +9501,6 @@ export function createSpellAttackOrderingRouteDriver() {
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
           "typedTargetChoice",
-          "damageTypeChoice",
-          "battleHoleFrontier",
         );
       },
       doFillTargetChoiceBeforeDamageType: () => {
@@ -9556,8 +9509,6 @@ export function createSpellAttackOrderingRouteDriver() {
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
           "damageTypeChoice",
-          "targetChoice",
-          "battleTargetSelection",
         );
       },
       doFillDamageTypeAfterTargetChoice: () => {
@@ -9566,8 +9517,6 @@ export function createSpellAttackOrderingRouteDriver() {
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
           "attackRoll",
-          "damageTypeChoice",
-          "battleHoleFrontier",
         );
       },
       doFillTargetChoiceAfterDamageType: () => {
@@ -9579,8 +9528,6 @@ export function createSpellAttackOrderingRouteDriver() {
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
           "attackRoll",
-          "targetChoice",
-          "battleTargetSelection",
         );
       },
       step: () => {},
@@ -15861,6 +15808,14 @@ function discoverSpellAttackHoles(
   subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
   spellId: string,
 ): readonly BattleHole[] {
+  return discoverSpellAttackAct(state, subject, spellId).initialHoles;
+}
+
+function discoverSpellAttackAct(
+  state: BattleState,
+  subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
+  spellId: string,
+): AvailableBattleAct {
   const act = discoverBattleActs(state).find(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
@@ -15871,7 +15826,7 @@ function discoverSpellAttackHoles(
     throw new Error(`Expected ${spellId} spell attack act.`);
   }
 
-  return act.initialHoles;
+  return act;
 }
 
 function holesAfterFills(

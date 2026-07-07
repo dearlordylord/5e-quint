@@ -3887,7 +3887,9 @@
       "assignmentId": "reducer-spine-diagnostic-battle",
       "laneId": "rules-core",
       "status": "accepted",
-      "selectedDrivers": ["packages/battle-runtime/rule-core-features.mbt.qnt"],
+      "selectedDrivers": [
+        "packages/battle-runtime/rule-core-features.mbt.qnt"
+      ],
       "observedExistingSplitDrivers": [
         "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
         "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
@@ -4723,7 +4725,9 @@
       "taskId": "CRPI-READY-030",
       "assignmentId": "reducer-spine-diagnostic-battle",
       "laneId": "battle",
-      "selectedDrivers": ["packages/battle-runtime/rule-core-movement.mbt.qnt"],
+      "selectedDrivers": [
+        "packages/battle-runtime/rule-core-movement.mbt.qnt"
+      ],
       "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
       "sourceBranchInventorySha256": "5c13304a2b520e2138438b840310c0080f116dba58aead4b68ab944c9731afdf",
       "artifacts": {
@@ -6708,6 +6712,129 @@
           "The generic repeatSaveConditionEffect projection covers end-turn spell condition repeat-save discovery and cleanup from existing owner hole-id projections and condition, active-effect, and Concentration state deltas without selected spell identity dispatch.",
           "Mixed end-turn frontiers can include repeat saves, Sleep repeat saves, death saves, and turn-boundary effects; route projection now composes owner events and matches batched fills by requested hole id.",
           "Hypnotic Pattern, Blindness/Deafness, and Hold Person remain outside Task 9 accepted evidence scope when excluded by source inventory level or task row scope; the focused test still guards shared save-gated route shapes for adjacent spell profiles."
+        ],
+        "requiredPlanEdits": "none"
+      }
+    },
+    {
+      "taskId": "CRPI-BLOCK-027",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "6336580d8871f6862c0dc51e2dae2224487a83610c6218d57a857055d9d78d04"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "da337bbba33848cdac949a95295426fa838efedbe3fd56b66e350cb9f4a6f291"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "8f7f91091560b4e67e9ae42cdd06d5d98a9d2a3d5c284d3c625492c511191a05"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-BLOCK-027/README.md",
+          "sha256": "c2d9081fa5990fd0cf0e8296ee126f8322854ba6621bac429fc5d1bf7a26045c"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-027.json",
+          "sha256": "139b40b1cc9b70f5a9791afd42bf1b0e3fabc60bf7608f520d4c99153ea833c6",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-027.json#driver:packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doDiscoverSingleTargetSpellAttack#trace:MBT_TRACES=1 MBT_STEPS=5 action=doDiscoverSingleTargetSpellAttack qRoute=spell-attack-ordering-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-027.json#driver:packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doDiscoverTypedSpellAttack#trace:MBT_TRACES=1 MBT_STEPS=5 action=doDiscoverTypedSpellAttack qRoute=spell-attack-ordering-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-027.json#driver:packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doFillTargetChoice#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillTargetChoice qRoute=spell-attack-ordering-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-027.json#driver:packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doSubmitAttackRollBeforeTargetChoice#trace:MBT_TRACES=1 MBT_STEPS=5 action=doSubmitAttackRollBeforeTargetChoice qRoute=spell-attack-ordering-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-027.json#driver:packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doFillAttackRollMiss#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillAttackRollMiss qRoute=spell-attack-ordering-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-027.json#driver:packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doFillAttackRollHit#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillAttackRollHit qRoute=spell-attack-ordering-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-027.json#driver:packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doSubmitDamageBeforeAttackRoll#trace:MBT_TRACES=1 MBT_STEPS=5 action=doSubmitDamageBeforeAttackRoll qRoute=spell-attack-ordering-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-027.json#driver:packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doFillDamageDice#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillDamageDice qRoute=spell-attack-ordering-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-027.json#driver:packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doFillDamageTypeBeforeTargetChoice#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillDamageTypeBeforeTargetChoice qRoute=spell-attack-ordering-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-027.json#driver:packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doFillTargetChoiceBeforeDamageType#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillTargetChoiceBeforeDamageType qRoute=spell-attack-ordering-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-027.json#driver:packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doFillDamageTypeAfterTargetChoice#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillDamageTypeAfterTargetChoice qRoute=spell-attack-ordering-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-027.json#driver:packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt#step:doFillTargetChoiceAfterDamageType#trace:MBT_TRACES=1 MBT_STEPS=5 action=doFillTargetChoiceAfterDamageType qRoute=spell-attack-ordering-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-owner-battle-attack-20260706T213644Z/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor f00fb2d0f2c77e49e98b2d010d97cbce95f783cc HEAD",
+          "status": "pass",
+          "detail": "Base ref and HEAD both resolved to f00fb2d0f Mark Ralph task 54 done; Base SHA is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language check for Making an Attack, spell Attack Rolls, Damage Rolls, Attack Roll, Spell Invocation, Damage Type, and Hit Points",
+          "status": "pass",
+          "detail": "Checked .references/srd-5.2.1/Playing-the-Game.md, .references/srd-5.2.1/Spells/Gaining-and-Casting.md, Rules-Glossary spell attack language, and UBIQUITOUS_LANGUAGE.md before accepting route evidence."
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Pre-MBT process check found no active Vitest runner or Quint evaluator."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime typecheck",
+          "status": "pass",
+          "detail": "Battle runtime TypeScript typecheck passed after direct public route-event threading and route owner changes."
+        },
+        {
+          "command": "START=$(date +%s); (while true; do sleep 60; echo \"PROGRESS: $(( $(date +%s) - START ))s\"; done) & REPORTER=$!; MBT_TRACES=1 MBT_STEPS=5 pnpm --filter @dnd/battle-runtime exec vitest run src/reducer-route-connectors.mbt.test.ts -t \"routes spell Attack ordering\" 2>&1; STATUS=$?; kill \"$REPORTER\" 2>/dev/null || true; wait \"$REPORTER\" 2>/dev/null || true; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$STATUS\"",
+          "status": "pass",
+          "detail": "Revision-round-2 focused route connector replay for spell Attack ordering passed with direct public AvailableBattleAct.routeEvents and BattleResolutionResult.routeEvents; 1 test and 33 skipped; TOTAL: 9s."
+        },
+        {
+          "command": "START=$(date +%s); (while true; do sleep 60; echo \"PROGRESS: $(( $(date +%s) - START ))s\"; done) & REPORTER=$!; MBT_TRACES=1 MBT_STEPS=5 pnpm --filter @dnd/battle-runtime exec vitest run src/spell-attack-ordering.mbt.test.ts 2>&1 & MBT_PID=$!; wait \"$MBT_PID\"; STATUS=$?; kill \"$REPORTER\" 2>/dev/null || true; wait \"$REPORTER\" 2>/dev/null || true; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$STATUS\"",
+          "status": "pass",
+          "detail": "Focused base spell Attack ordering MBT passed with 1 test; TOTAL: 7s."
+        },
+        {
+          "command": "node task-scoped validateTargetReplayEvidence for packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt",
+          "status": "pass",
+          "detail": "Validated tasks/target-replay-evidence/CRPI-BLOCK-027.json with scripts/cleanroom-branch-coverage-check.cjs#validateTargetReplayEvidence and current source inventory SHA; 12 obligations covered."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "Cleanroom branch coverage passed with 738 obligations and 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "All quality gates passed; app lint emitted 61 warnings and exited 0."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 verified SRD traceability, no duplicate durable state, and no authored-identity production dispatch. Round 2 fixed adapter-synthesized route replay by appending public AvailableBattleAct.routeEvents and BattleResolutionResult.routeEvents directly, aligned the connector with public spellAttackProcedure/object-boundary discovery, localized earlier-frontier route owner connascence, and found no remaining reasonable Task 55 findings."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-027",
+            "impact": "unblocked"
+          },
+          {
+            "taskId": "CRPI-BLOCK-016",
+            "impact": "left unchanged"
+          }
+        ],
+        "observations": [
+          "Generic spell Attack ordering qRoute is accepted through public BattleState route events for all 12 source obligations.",
+          "No new durable BattleState field is needed; the route is derived from typed spellAttackDamage invocation shape, public holes/fills, Attack Roll results, and target Hit Point state.",
+          "Future selected spell identity tasks can reuse spellAttackProcedure route evidence for generic spell Attack ordering, while keeping selected identity at catalog/admission boundaries."
         ],
         "requiredPlanEdits": "none"
       }
