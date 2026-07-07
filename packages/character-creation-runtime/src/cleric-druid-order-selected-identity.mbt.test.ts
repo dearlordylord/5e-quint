@@ -514,7 +514,7 @@ function completeOrderDraft(input: OrderProjectionInput): CharacterDraft {
     draftId: characterDraftId(input.draftId),
   });
   const progression = levelOneProgression(input.classUnitId);
-  const preferredOptionIdsBySource = preferredOrderOptionIdsBySource(input);
+  const optionSelectionPolicy = orderOptionSelectionPolicy(input);
   draft = acceptedBatch(
     fillCreationHoles({
       draft,
@@ -523,7 +523,7 @@ function completeOrderDraft(input: OrderProjectionInput): CharacterDraft {
       fills: initialOrderFills({
         holes: discoverCreationHoles({ draft, unitLibrary }),
         progression,
-        preferredOptionIdsBySource,
+        optionSelectionPolicy,
       }),
     }),
   ).draft;
@@ -541,7 +541,7 @@ function completeOrderDraft(input: OrderProjectionInput): CharacterDraft {
         unitLibrary,
         expectedRevision: draft.revision,
         fills: holes.map((hole) =>
-          supportProfileFillForHole(hole, preferredOptionIdsBySource),
+          supportProfileFillForHole(hole, optionSelectionPolicy),
         ),
       }),
     ).draft;
@@ -557,7 +557,7 @@ function completeOrderDraft(input: OrderProjectionInput): CharacterDraft {
 function initialOrderFills(input: {
   readonly holes: readonly CreationHole[];
   readonly progression: CharacterProgression;
-  readonly preferredOptionIdsBySource: PreferredOrderOptionIdsBySource;
+  readonly optionSelectionPolicy: OrderOptionSelectionPolicy;
 }): readonly CreationFill[] {
   return input.holes.map((hole) => {
     if (
@@ -568,34 +568,52 @@ function initialOrderFills(input: {
       return choiceFill(hole, [progressionOptionId(input.progression)]);
     }
 
-    return supportProfileFillForHole(hole, input.preferredOptionIdsBySource);
+    return supportProfileFillForHole(hole, input.optionSelectionPolicy);
   });
 }
 
 type PreferredOrderOptionIdsBySource = Readonly<
   Record<string, readonly CreationChoiceOptionId[]>
 >;
+type OrderOptionSelectionPolicy = {
+  readonly preferredOptionIdsBySource: PreferredOrderOptionIdsBySource;
+  readonly excludedOptionIdsBySource: PreferredOrderOptionIdsBySource;
+};
 
-function preferredOrderOptionIdsBySource(
+function orderOptionSelectionPolicy(
   input: OrderProjectionInput,
-): PreferredOrderOptionIdsBySource {
+): OrderOptionSelectionPolicy {
+  const extraCantripOptionIds =
+    input.extraCantripUnitId === "none"
+      ? []
+      : [creationChoiceOptionId(input.extraCantripUnitId)];
   return {
-    [orderChoiceSourceKey(input.orderUnitId, input.orderChoiceKey)]: [
-      creationChoiceOptionId(input.selectedOrderOptionId),
-    ],
-    ...(input.extraCantripUnitId === "none"
-      ? {}
-      : {
-          [orderChoiceSourceKey(input.orderUnitId, CLASS_CANTRIP_CHOICE_KEY)]: [
-            creationChoiceOptionId(input.extraCantripUnitId),
-          ],
-        }),
+    preferredOptionIdsBySource: {
+      [orderChoiceSourceKey(input.orderUnitId, input.orderChoiceKey)]: [
+        creationChoiceOptionId(input.selectedOrderOptionId),
+      ],
+      ...(extraCantripOptionIds.length === 0
+        ? {}
+        : {
+            [orderChoiceSourceKey(
+              input.orderUnitId,
+              CLASS_CANTRIP_CHOICE_KEY,
+            )]: extraCantripOptionIds,
+          }),
+    },
+    excludedOptionIdsBySource:
+      extraCantripOptionIds.length === 0
+        ? {}
+        : {
+            [orderChoiceSourceKey(input.classUnitId, CLASS_CANTRIP_CHOICE_KEY)]:
+              extraCantripOptionIds,
+          },
   };
 }
 
 function supportProfileFillForHole(
   hole: CreationHole,
-  preferredOptionIdsBySource: PreferredOrderOptionIdsBySource,
+  optionSelectionPolicy: OrderOptionSelectionPolicy,
 ): CreationFill {
   if (hole.kind === "abilityScores") {
     const scores = abilityScoreAssignment({
@@ -629,16 +647,29 @@ function supportProfileFillForHole(
   const holeOptionIdSet = new Set(
     hole.options.map((option) => option.optionId),
   );
+  const sourceKey =
+    hole.source.tag === "unitChoice"
+      ? unitChoiceSourceKey(hole.source)
+      : undefined;
+  const excludedOptionIds = new Set(
+    sourceKey === undefined
+      ? []
+      : (optionSelectionPolicy.excludedOptionIdsBySource[sourceKey] ?? []),
+  );
   const preferredOptionIds =
     hole.source.tag === "draft" && hole.source.path === "draft.background"
       ? [creationChoiceOptionId("background_soldier")]
       : hole.source.tag === "draft" && hole.source.path === "draft.species"
         ? [creationChoiceOptionId("species_orc")]
         : hole.source.tag === "unitChoice"
-          ? (preferredOptionIdsBySource[unitChoiceSourceKey(hole.source)] ??
+          ? (optionSelectionPolicy.preferredOptionIdsBySource[
+              unitChoiceSourceKey(hole.source)
+            ] ??
             soldierBackgroundFixtureOptionIds(hole.source))
           : undefined;
-  const defaultOptionIds = hole.options.map((option) => option.optionId);
+  const defaultOptionIds = hole.options
+    .map((option) => option.optionId)
+    .filter((optionId) => !excludedOptionIds.has(optionId));
   const selectedOptionIds = (preferredOptionIds ?? defaultOptionIds)
     .filter((optionId) => holeOptionIdSet.has(optionId))
     .filter((optionId) => supportedOptionIdSet.has(optionId))

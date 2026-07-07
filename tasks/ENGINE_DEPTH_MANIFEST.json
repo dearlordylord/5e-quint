@@ -1,74 +1,65 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-042",
+  "taskId": "CRPI-BLOCK-043",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+      "path": "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt",
       "quarantinedWitnessNames": [
         "qState",
-        "doSelectBardExpertise",
-        "doProjectClericChannelDivinity",
-        "doProjectDruidWildShape",
-        "doProjectDruidWildCompanion",
-        "doProjectMonksFocus",
-        "doProjectMonkUncannyMetabolism",
-        "doSelectPaladinFightingStyle",
-        "doSelectRangerDeftExplorer",
-        "doSelectRangerFightingStyle",
-        "doProjectWarlockPactMagic",
-        "doSelectWizardScholar",
-        "doSelectWizardEvocationSavant"
+        "doSelectClericProtectorOrder",
+        "doSelectClericThaumaturgeOrder",
+        "doSelectDruidMagicianOrder",
+        "doSelectDruidWardenOrder"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-042.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-043.json"
       ]
     },
     {
-      "path": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt",
+      "path": "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.route.mbt.qnt",
       "quarantinedWitnessNames": [
         "qRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-042.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-043.json"
       ]
     },
     {
       "path": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "classFeatureSelectedIdentityRouteDriverSchema",
+        "clericDruidOrderRouteDriverSchema",
         "createCompletedReducerRouteDriver",
-        "selectedReferenceRetentionRoute",
-        "retainSelectedReferenceWithFactsRoute",
-        "projectSelectedReferenceWithFactsRoute"
+        "retainAndProjectSelectedReferenceRoute",
+        "selectedReferenceRetentionRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-042.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-043.json"
       ]
     }
   ],
   "productionModulesExtended": [
     {
-      "path": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts",
-      "notes": "Adds the public CharacterBuild selected-reference route projection. It derives selected-reference count from existing CharacterBuild facts and emits CreationSelectedReferenceOwner route events without storing duplicate selected Unit refs."
+      "path": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts",
+      "notes": "Adds the public characterBuildProjectionWithRoute entrypoint, which emits the CharacterBuildOwner build-projection route event without requiring downstream class-feature fact recording."
     },
     {
       "path": "packages/character-creation-runtime/src/index.ts",
-      "notes": "Exports the CharacterBuild selected-reference route projection and route event types through the package public surface."
+      "notes": "Exports characterBuildProjectionWithRoute and CharacterBuildProjectionRoute through the package public surface."
     }
   ],
   "expectedNextReuse": [
     {
       "path": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts",
-      "notes": "Future Character Creation selected-identity route tasks should use characterBuildSelectedReferencesWithRoute when copied connectors require CreationSelectedReferenceOwner retention events."
+      "notes": "Selected-reference route tasks continue to use characterBuildSelectedReferencesWithRoute for CreationSelectedReferenceOwner retention events."
     },
     {
       "path": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts",
-      "notes": "Projection branches continue to use characterBuildClassFeatureFactsProjectionWithRoute for CharacterBuildOwner build-projection route events."
+      "notes": "Future route connectors that need only the build-projection event can use characterBuildProjectionWithRoute; connectors that need projected class-feature facts should keep using characterBuildClassFeatureFactsProjectionWithRoute."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 85 observes qRoute through public CharacterBuild selected-reference and class-feature projection route entrypoints. No new durable CharacterBuild fields were added."
+    "notes": "Task 86 observes copied Cleric and Druid Order qRoute through public CharacterBuild selected-reference and build-projection route entrypoints. No new durable CharacterBuild fields were added."
   }
 }

@@ -74,6 +74,21 @@ export type CharacterBuildClassFeatureFactsProjectionRoute<
   readonly route: readonly (RouteEvent | CharacterCreationBuildProjectionRouteEvent)[];
 };
 
+export type CharacterBuildProjectionRoute<RouteEvent> = {
+  readonly build: CharacterBuild;
+  readonly route: readonly (RouteEvent | CharacterCreationBuildProjectionRouteEvent)[];
+};
+
+export function characterBuildProjectionWithRoute<RouteEvent>(input: {
+  readonly build: CharacterBuild;
+  readonly route: readonly RouteEvent[];
+}): CharacterBuildProjectionRoute<RouteEvent> {
+  return {
+    build: input.build,
+    route: [...input.route, routeProjectCharacterBuildFacts()],
+  };
+}
+
 export function characterBuildClassFeatureFactsProjectionWithRoute<RouteEvent>(
   input: {
     readonly build: CharacterBuild;
@@ -110,8 +125,7 @@ export function characterBuildClassFeatureFactsProjectionWithRoute<RouteEvent>(
       sorcererMetamagic: sorcererMetamagic.right,
     },
     route: [
-      ...input.route,
-      routeProjectCharacterBuildFacts(),
+      ...characterBuildProjectionWithRoute(input).route,
       routeRecordCharacterBuildProjectionInputFact(),
     ],
   });

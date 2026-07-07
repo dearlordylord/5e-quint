@@ -39,6 +39,7 @@ import {
   WEAPON_MASTERY_OPTIONS_CHOICE_KEY,
   abilityScoreAssignment,
   characterBuildClassFeatureFactsProjectionWithRoute,
+  characterBuildProjectionWithRoute,
   characterBuildSelectedReferenceCount,
   characterBuildSelectedReferencesWithRoute,
   characterDraftId,
@@ -1581,17 +1582,8 @@ function retainSelectedReferenceWithFactsRoute(
 function retainAndProjectSelectedReferenceRoute(
   route: readonly CharacterCreationRouteEvent[],
 ): readonly CharacterCreationRouteEvent[] {
-  return [
-    ...route,
-    retainCreationSelectedReferences({
-      subject: "selectedReference",
-      owner: "creationSelectedReference",
-    }),
-    projectCharacterBuildFacts({
-      subject: "buildProjection",
-      owner: "characterBuild",
-    }),
-  ];
+  const retained = selectedReferenceRetentionRoute(route);
+  return characterBuildProjectionWithRoute(retained).route;
 }
 
 function projectSelectedReferenceRoute(

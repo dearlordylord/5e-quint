@@ -6836,6 +6836,123 @@
         ],
         "requiredPlanEdits": "none"
       }
+    },
+    {
+      "taskId": "CRPI-BLOCK-043",
+      "assignmentId": "reducer-spine-diagnostic-creation",
+      "laneId": "creation",
+      "selectedDrivers": [
+        "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "6c86dbeb5e062ebe7cfb8bc74882accaf68e1d11baa1b5134d46ca3f70d72412"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "79dc8693ec254cf0c3072ef5cb59fc1be876347335830c117c6eb2e872066eb9"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "23ee12fb87090cac8a063694c39cd30367be538f07af5e84796af8356b48406b"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-BLOCK-043/README.md",
+          "sha256": "3bc8d4e45143868d42367ff6ad993cdb2ff785adf69aa3b94409fe9041f48e84"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-043.json",
+          "sha256": "dd5db6727fac981e67255eb7dc550bb6065c924713d478d220b6d04400db1b0f",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-043.json#driver:packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt#step:doSelectClericProtectorOrder#trace:public-route=completedReducerSurfaceRoute action=doSelectClericProtectorOrder qRoute=cleric-druid-order-selected-reference-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-043.json#driver:packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt#step:doSelectClericThaumaturgeOrder#trace:public-route=completedReducerSurfaceRoute action=doSelectClericThaumaturgeOrder qRoute=cleric-druid-order-selected-reference-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-043.json#driver:packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt#step:doSelectDruidMagicianOrder#trace:public-route=completedReducerSurfaceRoute action=doSelectDruidMagicianOrder qRoute=cleric-druid-order-selected-reference-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-043.json#driver:packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt#step:doSelectDruidWardenOrder#trace:public-route=completedReducerSurfaceRoute action=doSelectDruidWardenOrder qRoute=cleric-druid-order-selected-reference-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-owner-character-creation-20260706T213644Z/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor a3315c239bbf2a80ed12337f607573cd99d4fc9f HEAD",
+          "status": "pass",
+          "detail": "Prompt-declared integration ref and HEAD both resolved to a3315c239 Mark Ralph task 85 done; Base SHA is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language check for Character Creation Record Class Features, Cleric Divine Order, Druid Primal Order, and selected-reference vocabulary",
+          "status": "pass",
+          "detail": "Checked .references/srd-5.2.1/Character-Creation.md, .references/srd-5.2.1/Classes/Cleric.md, .references/srd-5.2.1/Classes/Druid.md, UBIQUITOUS_LANGUAGE.md, and packages/character-creation-runtime/VOCABULARY.md before route/evidence changes."
+        },
+        {
+          "command": "pnpm --filter @dnd/character-creation-runtime exec tsc --noEmit",
+          "status": "pass",
+          "detail": "Character Creation runtime TypeScript check passed after adding characterBuildProjectionWithRoute and making the Order replay fixture avoid duplicate primary/extra cantrip choices."
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Pre-MBT process check matched only a Ralph monitor shell whose command text contained vitest and quint_evaluator; no actual vitest runner or quint_evaluator process was active."
+        },
+        {
+          "command": "START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/character-creation-runtime exec vitest run src/cleric-druid-order-selected-identity.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"replays Character Creation Cleric and Druid Order selected identity parity|replays selected Unit identities deterministically|routes Cleric and Druid order selections\" ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "status": "pass",
+          "detail": "Focused Character Creation Cleric/Druid Order semantic replay and reducer-route qRoute replay passed with 3 tests and 8 skipped; TOTAL: 4s."
+        },
+        {
+          "command": "node task-scoped validateTargetReplayEvidence for packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt",
+          "status": "pass",
+          "detail": "Validated tasks/target-replay-evidence/CRPI-BLOCK-043.json with scripts/cleanroom-branch-coverage-check.cjs#validateTargetReplayEvidence against the task-scoped source inventory; 4 obligations covered."
+        },
+        {
+          "command": "jq empty tasks/target-replay-evidence/CRPI-BLOCK-043.json tasks/ENGINE_DEPTH_MANIFEST.json tasks/STATE_OWNER_MANIFEST.json tasks/RUN_LEDGER.json",
+          "status": "pass",
+          "detail": "Task 86 evidence, manifest, state-owner, and ledger JSON parsed successfully."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "Cleanroom branch coverage passed with 738 obligations and 24 sampled inputs."
+        },
+        {
+          "command": "pnpm cleanroom-harness:check",
+          "status": "pass",
+          "detail": "Cleanroom harness self-test passed."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass",
+          "detail": "Whitespace check passed."
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "Quality passed end to end; app lint reported 61 warnings and exited 0."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 moved qRoute replay from adapter-local appends to public characterBuildSelectedReferencesWithRoute plus characterBuildProjectionWithRoute. Round 2 fixed the semantic fixture to avoid duplicate primary/extra cantrip choices. Follow-up RAW/domain, architecture/connascence, and code-review checks found no remaining reasonable Task 86 findings before final validation."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-043",
+            "impact": "unblocked"
+          }
+        ],
+        "observations": [
+          "Character Creation Cleric and Druid Order qRoute is accepted through public characterBuildSelectedReferencesWithRoute and characterBuildProjectionWithRoute entrypoints.",
+          "The public characterBuildProjectionWithRoute entrypoint covers connectors that need the build-projection event without requiring class-feature fact-recording route events.",
+          "Order extra-cantrip replay fixtures must keep primary class cantrip selections disjoint from the selected extra cantrip because discovery removes already selected primary cantrips from class-feature grant choices."
+        ],
+        "requiredPlanEdits": "none"
+      }
     }
   ]
 }

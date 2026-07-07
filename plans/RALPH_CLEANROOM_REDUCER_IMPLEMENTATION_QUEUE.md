@@ -517,7 +517,7 @@
     {
       "number": 86,
       "id": "CRPI-BLOCK-043",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: character-creation-cleric-druid-order-selected-identity"
     },
     {
@@ -5657,7 +5657,7 @@ Plan Impact:
 
 ### Task 86 - CRPI-BLOCK-043
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
