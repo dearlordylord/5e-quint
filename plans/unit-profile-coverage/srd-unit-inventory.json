@@ -4760,6 +4760,16 @@
       "concept": "Barbarian Ability Score Improvement",
       "detail": "Level 8 table-derived repeated class feature; the feature's dedicated rule text appears at an earlier level.",
       "candidateUnitId": "barbarian_ability_score_improvement_l8",
+      "relatedSources": [
+        {
+          "kind": "dedicated-rule-text",
+          "source": {
+            "path": ".references/srd-5.2.1/Classes/Barbarian.md",
+            "lineStart": 108,
+            "lineEnd": 111
+          }
+        }
+      ],
       "surface": {
         "state": "current-surface-can-express-source-facts"
       },
@@ -6014,6 +6024,16 @@
       "concept": "Bard Ability Score Improvement",
       "detail": "Level 8 table-derived repeated class feature; the feature's dedicated rule text appears at an earlier level.",
       "candidateUnitId": "bard_ability_score_improvement_l8",
+      "relatedSources": [
+        {
+          "kind": "dedicated-rule-text",
+          "source": {
+            "path": ".references/srd-5.2.1/Classes/Bard.md",
+            "lineStart": 109,
+            "lineEnd": 112
+          }
+        }
+      ],
       "surface": {
         "state": "current-surface-can-express-source-facts"
       },
@@ -6044,6 +6064,7 @@
       "candidateUnitId": "class_bard",
       "progressionDeltas": [
         {
+          "kind": "class-table-column",
           "column": "Prepared Spells",
           "previousValue": "11",
           "currentValue": "12",
@@ -6059,7 +6080,8 @@
           }
         },
         {
-          "column": "4",
+          "kind": "spell-slot-count",
+          "spellLevel": 4,
           "previousValue": "1",
           "currentValue": "2",
           "previousSource": {
@@ -10696,6 +10718,16 @@
       "concept": "Cleric Ability Score Improvement",
       "detail": "Level 8 table-derived repeated class feature; the feature's dedicated rule text appears at an earlier level.",
       "candidateUnitId": "cleric_ability_score_improvement_l8",
+      "relatedSources": [
+        {
+          "kind": "dedicated-rule-text",
+          "source": {
+            "path": ".references/srd-5.2.1/Classes/Cleric.md",
+            "lineStart": 106,
+            "lineEnd": 109
+          }
+        }
+      ],
       "surface": {
         "state": "current-surface-can-express-source-facts"
       },
@@ -10726,6 +10758,7 @@
       "candidateUnitId": "class_cleric",
       "progressionDeltas": [
         {
+          "kind": "class-table-column",
           "column": "Prepared Spells",
           "previousValue": "11",
           "currentValue": "12",
@@ -10741,7 +10774,8 @@
           }
         },
         {
-          "column": "4",
+          "kind": "spell-slot-count",
+          "spellLevel": 4,
           "previousValue": "1",
           "currentValue": "2",
           "previousSource": {
@@ -14888,6 +14922,16 @@
       "concept": "Druid Ability Score Improvement",
       "detail": "Level 8 table-derived repeated class feature; the feature's dedicated rule text appears at an earlier level.",
       "candidateUnitId": "druid_ability_score_improvement_l8",
+      "relatedSources": [
+        {
+          "kind": "dedicated-rule-text",
+          "source": {
+            "path": ".references/srd-5.2.1/Classes/Druid.md",
+            "lineStart": 134,
+            "lineEnd": 137
+          }
+        }
+      ],
       "surface": {
         "state": "current-surface-can-express-source-facts"
       },
@@ -14918,6 +14962,7 @@
       "candidateUnitId": "class_druid",
       "progressionDeltas": [
         {
+          "kind": "class-table-column",
           "column": "Prepared Spells",
           "previousValue": "11",
           "currentValue": "12",
@@ -14933,7 +14978,8 @@
           }
         },
         {
-          "column": "4",
+          "kind": "spell-slot-count",
+          "spellLevel": 4,
           "previousValue": "1",
           "currentValue": "2",
           "previousSource": {
@@ -19398,6 +19444,16 @@
       "concept": "Fighter Ability Score Improvement",
       "detail": "Level 6 table-derived repeated class feature; the feature's dedicated rule text appears at an earlier level.",
       "candidateUnitId": "fighter_ability_score_improvement_l6",
+      "relatedSources": [
+        {
+          "kind": "dedicated-rule-text",
+          "source": {
+            "path": ".references/srd-5.2.1/Classes/Fighter.md",
+            "lineStart": 90,
+            "lineEnd": 93
+          }
+        }
+      ],
       "surface": {
         "state": "current-surface-can-express-source-facts"
       },
@@ -19533,6 +19589,16 @@
       "concept": "Fighter Ability Score Improvement",
       "detail": "Level 8 table-derived repeated class feature; the feature's dedicated rule text appears at an earlier level.",
       "candidateUnitId": "fighter_ability_score_improvement_l8",
+      "relatedSources": [
+        {
+          "kind": "dedicated-rule-text",
+          "source": {
+            "path": ".references/srd-5.2.1/Classes/Fighter.md",
+            "lineStart": 90,
+            "lineEnd": 93
+          }
+        }
+      ],
       "surface": {
         "state": "current-surface-can-express-source-facts"
       },
@@ -20983,6 +21049,16 @@
       "concept": "Monk Ability Score Improvement",
       "detail": "Level 8 table-derived repeated class feature; the feature's dedicated rule text appears at an earlier level.",
       "candidateUnitId": "monk_ability_score_improvement_l8",
+      "relatedSources": [
+        {
+          "kind": "dedicated-rule-text",
+          "source": {
+            "path": ".references/srd-5.2.1/Classes/Monk.md",
+            "lineStart": 112,
+            "lineEnd": 115
+          }
+        }
+      ],
       "surface": {
         "state": "current-surface-can-express-source-facts"
       },
@@ -21013,6 +21089,7 @@
       "candidateUnitId": "class_monk",
       "progressionDeltas": [
         {
+          "kind": "class-table-column",
           "column": "Focus Points",
           "previousValue": "7",
           "currentValue": "8",
@@ -22355,6 +22432,16 @@
       "concept": "Paladin Ability Score Improvement",
       "detail": "Level 8 table-derived repeated class feature; the feature's dedicated rule text appears at an earlier level.",
       "candidateUnitId": "paladin_ability_score_improvement_l8",
+      "relatedSources": [
+        {
+          "kind": "dedicated-rule-text",
+          "source": {
+            "path": ".references/srd-5.2.1/Classes/Paladin.md",
+            "lineStart": 122,
+            "lineEnd": 125
+          }
+        }
+      ],
       "surface": {
         "state": "current-surface-can-express-source-facts"
       },
@@ -24682,6 +24769,16 @@
       "concept": "Ranger Ability Score Improvement",
       "detail": "Level 8 table-derived repeated class feature; the feature's dedicated rule text appears at an earlier level.",
       "candidateUnitId": "ranger_ability_score_improvement_l8",
+      "relatedSources": [
+        {
+          "kind": "dedicated-rule-text",
+          "source": {
+            "path": ".references/srd-5.2.1/Classes/Ranger.md",
+            "lineStart": 106,
+            "lineEnd": 109
+          }
+        }
+      ],
       "surface": {
         "state": "current-surface-can-express-source-facts"
       },
@@ -27211,6 +27308,16 @@
       "concept": "Rogue Expertise",
       "detail": "Level 6 table-derived repeated class feature; the feature's dedicated rule text appears at an earlier level.",
       "candidateUnitId": "rogue_expertise",
+      "relatedSources": [
+        {
+          "kind": "dedicated-rule-text",
+          "source": {
+            "path": ".references/srd-5.2.1/Classes/Rogue.md",
+            "lineStart": 57,
+            "lineEnd": 62
+          }
+        }
+      ],
       "surface": {
         "state": "current-surface-can-express-source-facts"
       },
@@ -27395,6 +27502,16 @@
       "concept": "Rogue Ability Score Improvement",
       "detail": "Level 8 table-derived repeated class feature; the feature's dedicated rule text appears at an earlier level.",
       "candidateUnitId": "rogue_ability_score_improvement_l8",
+      "relatedSources": [
+        {
+          "kind": "dedicated-rule-text",
+          "source": {
+            "path": ".references/srd-5.2.1/Classes/Rogue.md",
+            "lineStart": 93,
+            "lineEnd": 96
+          }
+        }
+      ],
       "surface": {
         "state": "current-surface-can-express-source-facts"
       },
@@ -28645,6 +28762,16 @@
       "concept": "Sorcerer Ability Score Improvement",
       "detail": "Level 8 table-derived repeated class feature; the feature's dedicated rule text appears at an earlier level.",
       "candidateUnitId": "sorcerer_ability_score_improvement_l8",
+      "relatedSources": [
+        {
+          "kind": "dedicated-rule-text",
+          "source": {
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md",
+            "lineStart": 123,
+            "lineEnd": 126
+          }
+        }
+      ],
       "surface": {
         "state": "current-surface-can-express-source-facts"
       },
@@ -28675,6 +28802,7 @@
       "candidateUnitId": "class_sorcerer",
       "progressionDeltas": [
         {
+          "kind": "class-table-column",
           "column": "Sorcery Points",
           "previousValue": "7",
           "currentValue": "8",
@@ -28690,6 +28818,7 @@
           }
         },
         {
+          "kind": "class-table-column",
           "column": "Prepared Spells",
           "previousValue": "11",
           "currentValue": "12",
@@ -28705,7 +28834,8 @@
           }
         },
         {
-          "column": "4",
+          "kind": "spell-slot-count",
+          "spellLevel": 4,
           "previousValue": "1",
           "currentValue": "2",
           "previousSource": {
@@ -33839,6 +33969,16 @@
       "concept": "Warlock Ability Score Improvement",
       "detail": "Level 8 table-derived repeated class feature; the feature's dedicated rule text appears at an earlier level.",
       "candidateUnitId": "warlock_ability_score_improvement_l8",
+      "relatedSources": [
+        {
+          "kind": "dedicated-rule-text",
+          "source": {
+            "path": ".references/srd-5.2.1/Classes/Warlock.md",
+            "lineStart": 100,
+            "lineEnd": 103
+          }
+        }
+      ],
       "surface": {
         "state": "current-surface-can-express-source-facts"
       },
@@ -33869,6 +34009,7 @@
       "candidateUnitId": "class_warlock",
       "progressionDeltas": [
         {
+          "kind": "class-table-column",
           "column": "Prepared Spells",
           "previousValue": "8",
           "currentValue": "9",
@@ -36926,6 +37067,16 @@
       "concept": "Wizard Ability Score Improvement",
       "detail": "Level 8 table-derived repeated class feature; the feature's dedicated rule text appears at an earlier level.",
       "candidateUnitId": "wizard_ability_score_improvement_l8",
+      "relatedSources": [
+        {
+          "kind": "dedicated-rule-text",
+          "source": {
+            "path": ".references/srd-5.2.1/Classes/Wizard.md",
+            "lineStart": 112,
+            "lineEnd": 115
+          }
+        }
+      ],
       "surface": {
         "state": "current-surface-can-express-source-facts"
       },
@@ -36956,6 +37107,7 @@
       "candidateUnitId": "class_wizard",
       "progressionDeltas": [
         {
+          "kind": "class-table-column",
           "column": "Prepared Spells",
           "previousValue": "11",
           "currentValue": "12",
@@ -36971,7 +37123,8 @@
           }
         },
         {
-          "column": "4",
+          "kind": "spell-slot-count",
+          "spellLevel": 4,
           "previousValue": "1",
           "currentValue": "2",
           "previousSource": {
