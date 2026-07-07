@@ -1,8 +1,8 @@
 # CRPI-READY-010
 
-Task 41 route replay was recorded against source commit
+Task 41 route replay was refreshed against source commit
 `895539634f9595f8e4650d3c95aaee7084afe8b5` and source branch inventory SHA
-`de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec`.
+`0d4862acd0e2483409904973d30705bf14c194f530e85e50a6f1e244f333f917`.
 
 Current immutable artifacts for this run:
 
@@ -12,42 +12,21 @@ Current immutable artifacts for this run:
 - Run ledger: `tasks/RUN_LEDGER.json`
 - Validation report: `tasks/VALIDATION_REPORT.md`
 
-The target replay adds public reducer route events for the executable Sleep
-repeat-save lifecycle: initial Sleep save discovery/resolution, Condition
-lifecycle mutation, active Spell Effect admission/cleanup, Concentration
-ownership, and turn-boundary repeat-save discovery while the pending Sleep
-effect exists.
-
-Revision round 3 removed the rejected caller-authored input and identified that
-post-cleanup end-turn surface transitions have no Sleep repeat-save frontier in
-reducer-owned state. No Sleep replay history or condition ledger is stored in
-`BattleState`.
-
-Revision round 4 narrowed the turn-boundary route predicate to the pending
-repeat-save frontier, `BattleCreatureState.activeEffects[kind=sleepPendingRepeatSave]`.
-The later `sleepUnconscious` effect is a condition effect, not a live
-repeat-save frontier, so later end turns no longer emit repeat-save
-turn-boundary route events.
-
-Revision round 5 restored the copied route connector projection to source hash
-`c124d6c23ba30449dcceb346d88f57a321ccf9c953db6af627285b60861d95d2`.
-The remaining mismatch is recorded as a source-QNT-corpus blocker: the copied
-connector expects post-Concentration-cleanup turn-boundary no-op route events
-after no reducer-owned Sleep repeat-save frontier remains.
-
-Revision round 6 removed the overclaimed accepted coverage from
-`tasks/VALIDATION_REPORT.md`. The checked-in artifacts now consistently record
-Task 41 as blocked, with no accepted copied-connector `qRoute` replay evidence.
-
-Revision round 8 recorded the concrete required plan edits in
-`tasks/VALIDATION_REPORT.md`. The Ralph plan file itself is outside this task
-worktree's permitted edit root, so the decider must reclassify
-`CRPI-READY-010` from ready to blocked and add the source-QNT-corpus follow-up.
-
-Task 104 / `CRPI-SOURCE-001` refreshed the source route connector to hash
-`ec1f467e9088fec4d15fc2e4bdd22dc3303e8d76cb098e269409c222b2d06794`.
+Task 104 / `CRPI-SOURCE-001` refreshed the copied source route connector to
+hash `ec1f467e9088fec4d15fc2e4bdd22dc3303e8d76cb098e269409c222b2d06794`.
 The connector now preserves post-Concentration-cleanup surface transitions
 without appending repeat-save turn-boundary no-op route events after
-`sleepPendingRepeatSave` has been removed. The checked-in target evidence above
-still records the pre-refresh copied connector hash and should be replaced by a
-fresh Task 41 target replay against the refreshed `qRoute` shape.
+`sleepPendingRepeatSave` has been removed.
+
+Task 41 now records accepted public reducer `qRoute` replay evidence for all
+eight Sleep repeat-save source branch obligations. The replay observes public
+`startBattle`, `discoverBattleActs`, and `resolveBattleSubject` route events
+from `packages/battle-runtime/src/index.ts`, scoped to the copied Sleep route
+connector's `startBattle` marker and `repeatSaveConditionEffect` subject. The
+harness does not reconstruct adapter-local route events.
+
+No production module or durable `BattleState` field was introduced in this
+attempt. Sleep repeat-save ownership remains in existing
+`BattleCreatureState.activeEffects[kind=sleepPendingRepeatSave]`,
+`BattleCreatureState.activeEffects[kind=sleepUnconscious]`,
+`BattleCreatureState.concentration`, and `BattleCreatureState.conditions`.

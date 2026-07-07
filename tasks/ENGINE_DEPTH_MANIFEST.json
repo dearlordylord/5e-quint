@@ -1,67 +1,52 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-025",
+  "taskId": "CRPI-READY-010",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt",
-      "coverageStatus": "covered-selected-identity-qRoute",
+      "path": "packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt",
+      "coverageStatus": "covered-public-qRoute",
       "quarantinedWitnessNames": [
-        "qState",
-        "qRoute"
+        "qState"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-025.json"
+        "tasks/target-replay-evidence/CRPI-READY-010.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.route.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt",
       "coverageStatus": "covered-public-qRoute",
       "quarantinedWitnessNames": [
         "qRoute",
         "qSurface"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-025.json"
+        "tasks/target-replay-evidence/CRPI-READY-010.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/sanctuary-selected-identity.mbt.test.ts",
+      "path": "packages/battle-runtime/src/sleep-repeat-save.mbt.test.ts",
       "coverageStatus": "covered-public-qRoute",
       "quarantinedWitnessNames": [
-        "Sanctuary selected identity projection",
-        "Sanctuary selected identity public reducer route replay"
+        "Sleep repeat-save projection",
+        "Sleep repeat-save public reducer route replay"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-025.json"
+        "tasks/target-replay-evidence/CRPI-READY-010.json"
       ]
     }
   ],
-  "productionModulesExtended": [
-    {
-      "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "role": "runtime-projection",
-      "domainApis": [
-        "BattleReducerRouteSubjectFamily.wardedTargetInterdiction",
-        "BattleReducerRouteHole.sanctuaryInterdictionOutcome",
-        "BattleReducerRouteFillKind.sanctuaryInterdictionOutcome",
-        "BattleReducerRouteEvent.subject=wardedTargetInterdiction",
-        "battleReducerRouteEventsForDiscoveredAct",
-        "battleReducerRouteForResolution"
-      ],
-      "notes": "Extends public reducer route projection for typed sanctuaryTargetingInterdiction invocations, sanctuaryInterdictionOutcome holes/fills, sanctuaryWard active effects, save-gated area bypass, and early ward end. No new BattleState field or authored spell-id dispatch is added."
-    }
-  ],
+  "productionModulesExtended": [],
   "expectedNextReuse": [
     {
-      "driver": "future Sanctuary, warded-target, and spell-protection selected-identity tasks",
+      "driver": "future repeat-save condition-effect route tasks",
       "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "api": "BattleReducerRouteEvent.subject=wardedTargetInterdiction",
-      "notes": "Future warded-target route tasks should reuse the generic wardedTargetInterdiction subject and existing owners for spell-slot/action economy, target selection, active effects, saving throw outcome, area shape, attack roll, hit point damage, and hole frontier."
+      "api": "BattleReducerRouteEvent.subject=repeatSaveConditionEffect",
+      "notes": "Future repeat-save route tasks should reuse the existing repeatSaveConditionEffect subject and the existing condition, active-effect, Concentration, and turn-boundary owners instead of adding a duplicate repeat-save ledger."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 37 observes selected Sanctuary warded-target interdiction qRoute evidence through public battle reducer route events without adding durable duplicate ward state."
+    "notes": "Task 41 observes Sleep repeat-save qRoute evidence through public battle reducer route events. No new production module or durable BattleState field was introduced in this attempt; the harness scopes public route events to the copied Sleep route connector's startBattle and repeatSaveConditionEffect subject."
   }
 }

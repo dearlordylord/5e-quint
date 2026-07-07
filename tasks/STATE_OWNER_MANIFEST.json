@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-025",
+  "taskId": "CRPI-READY-010",
   "durableFields": [
     {
       "fieldPath": "AvailableBattleAct.routeEvents",
@@ -11,7 +11,7 @@
         "sourceField": "BattleState plus AvailableBattleAct routeEvents",
         "boundary": "battle-runtime public reducer route event boundary"
       },
-      "notes": "Projection is emitted at public reducer entrypoints from existing owner-local facts; it is not stored as a second BattleState copy."
+      "notes": "Sleep spell discovery emits repeatSaveConditionEffect route evidence from public discovery results; this is not stored as BattleState replay history."
     },
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
@@ -22,72 +22,59 @@
         "sourceField": "BattleState plus BattleResolutionResult routeEvents",
         "boundary": "battle-runtime public reducer route event boundary"
       },
-      "notes": "Projection is emitted at public reducer entrypoints from existing owner-local facts; it is not stored as a second BattleState copy."
+      "notes": "Sleep repeat-save resolution, Concentration cleanup, active-effect cleanup, and turn-boundary discovery are emitted at public reducer entrypoints from existing owner-local facts."
     },
     {
-      "fieldPath": "BattleSubject.bonusActionSpell.invocation.procedure",
-      "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "typed BattleSubject.bonusActionSpell invocation procedure",
-        "boundary": "battle-runtime public reducer route event boundary"
-      },
-      "notes": "Route projection reads the typed sanctuaryTargetingInterdiction procedure fact; it does not branch on authored spell identity."
-    },
-    {
-      "fieldPath": "BattleCreatureState.activeEffects",
+      "fieldPath": "BattleCreatureState.activeEffects[kind=sleepPendingRepeatSave]",
       "owner": "battle-state",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Active effects remain the canonical battle-state source for Sanctuary ward presence and removal."
+      "notes": "The pending Sleep repeat-save active effect is the canonical frontier for target end-turn repeat-save discovery."
     },
     {
-      "fieldPath": "BattleActiveEffect.kind=sanctuaryWard",
+      "fieldPath": "BattleCreatureState.activeEffects[kind=sleepUnconscious]",
       "owner": "battle-state",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "The sanctuaryWard active-effect variant is the canonical source for ward source and target interdiction state."
+      "notes": "The failed repeat-save Unconscious effect is condition state after the frontier is consumed; it is not a live repeat-save frontier."
     },
     {
-      "fieldPath": "BattleCreatureState.hp",
+      "fieldPath": "BattleCreatureState.concentration",
       "owner": "battle-state",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Hit Points remain the canonical source for damage results observed by the damage-dealt early-end branch."
+      "notes": "Concentration remains the canonical source for Sleep spell-effect teardown."
     },
     {
-      "fieldPath": "BattleHole.kind=sanctuaryInterdictionOutcome",
+      "fieldPath": "BattleCreatureState.conditions",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Condition lifecycle state remains the canonical source for Incapacitated cleanup and Unconscious/Prone application."
+    },
+    {
+      "fieldPath": "BattleSubject.actionSpell.invocation.procedure",
       "owner": "executable-boundary-projection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleResolutionResult holes",
+        "sourceField": "typed BattleSubject.actionSpell invocation procedure",
         "boundary": "battle-runtime public reducer route event boundary"
       },
-      "notes": "The Sanctuary interdiction outcome hole projects the public saving throw and replacement-target decision point."
-    },
-    {
-      "fieldPath": "BattleFill.kind=sanctuaryInterdictionOutcome",
-      "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleResolutionInput fills",
-        "boundary": "battle-runtime public reducer route event boundary"
-      },
-      "notes": "The Sanctuary interdiction outcome fill projects public failed-save loss, successful-save pass-through, and replacement target choices."
+      "notes": "Sleep target admission is selected at the public invocation boundary; production replay uses typed procedure facts and active-effect state, not authored spell-name dispatch."
     }
   ],
   "notes": [
-    "Task 37 introduced no new durable BattleState or BattleCreatureState fields.",
-    "Selected spell identity remains at catalog/support-profile and selected replay boundaries; production route projection uses typed invocation procedure, active-effect, hole, fill, and reducer-result facts.",
-    "The wardedTargetInterdiction route subject is an executable boundary projection derived from existing Sanctuary ward active effects, target-selection holes, saving throw outcome fills, area-shape facts, attack roll and spell-cast resolution, and hit point damage."
+    "Task 41 introduced no new durable BattleState or BattleCreatureState fields.",
+    "The target replay threads existing active-effect, Concentration, condition, and public route-event facts instead of adding a duplicate repeat-save or condition ledger.",
+    "The replay harness scopes observed public route events to the copied Sleep connector's startBattle and repeatSaveConditionEffect subject; unrelated generic battleAction route events remain public reducer facts but are outside this connector projection."
   ]
 }
