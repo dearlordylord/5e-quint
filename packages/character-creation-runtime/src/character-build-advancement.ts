@@ -1244,6 +1244,53 @@ export function advanceCharacterBuildClassLevel(input: {
   });
 }
 
+export type CharacterBuildFightingStyleReplacementRouteSubject =
+  "selectedReference";
+
+export type CharacterBuildFightingStyleReplacementRouteOwner = "characterBuild";
+
+export type CharacterBuildFightingStyleReplacementRouteFill = "choiceSet";
+
+export type CharacterBuildFightingStyleReplacementRouteEvent = {
+  readonly kind: "applyCreationFillBatch";
+  readonly subject: CharacterBuildFightingStyleReplacementRouteSubject;
+  readonly fills: readonly [CharacterBuildFightingStyleReplacementRouteFill];
+  readonly holes: readonly [];
+  readonly owner: CharacterBuildFightingStyleReplacementRouteOwner;
+};
+
+export type CharacterBuildFightingStyleReplacementRoute<RouteEvent> = {
+  readonly build: CharacterBuild;
+  readonly route: readonly (
+    | RouteEvent
+    | CharacterBuildFightingStyleReplacementRouteEvent
+  )[];
+};
+
+export function advanceCharacterBuildFightingStyleReplacementWithRoute<
+  RouteEvent,
+>(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly levelGain: CharacterBuildFighterFightingStyleReplacementLevelGain;
+  readonly route: readonly RouteEvent[];
+}): Either.Either<
+  CharacterBuildFightingStyleReplacementRoute<RouteEvent>,
+  CharacterBuildAdvancementIssue
+> {
+  const advanced = advanceCharacterBuildClassLevel({
+    build: input.build,
+    unitLibrary: input.unitLibrary,
+    levelGain: input.levelGain,
+  });
+  if (Either.isLeft(advanced)) return Either.left(advanced.left);
+
+  return Either.right({
+    build: advanced.right,
+    route: [...input.route, routeApplyFightingStyleReplacementFill()],
+  });
+}
+
 function characterBuildWithSpellcasting(
   build: CharacterBuild,
   spellcasting: CharacterBuild["spellcasting"],
@@ -1252,6 +1299,16 @@ function characterBuildWithSpellcasting(
   return spellcasting === undefined
     ? buildWithoutSpellcasting
     : { ...buildWithoutSpellcasting, spellcasting };
+}
+
+function routeApplyFightingStyleReplacementFill(): CharacterBuildFightingStyleReplacementRouteEvent {
+  return {
+    kind: "applyCreationFillBatch",
+    subject: "selectedReference",
+    fills: ["choiceSet"],
+    holes: [],
+    owner: "characterBuild",
+  };
 }
 
 function updateSpellcastingForClassLevelGain(input: {

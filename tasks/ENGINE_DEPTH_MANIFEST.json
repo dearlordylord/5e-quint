@@ -1,166 +1,73 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-016",
+  "taskId": "CRPI-BLOCK-044",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
+      "path": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
       "quarantinedWitnessNames": [
-        "checkedTargetStateFields",
-        "cleanroomManifestSourceCommitSha",
-        "comparator",
-        "doResolveBurningHandsMixedConeSavingThrows",
-        "doResolveChromaticOrbDuplicateDamageLeap",
-        "doResolveIceKnifeHitAttackDamageAndBurstSavingThrows",
-        "doResolveIceKnifeMissBurstSavingThrows",
-        "doResolvePoisonSpraySpellAttackDamage",
-        "doResolveRayOfSicknessSpellAttackDamageAndPoisoned",
-        "doResolveSacredFlameDexteritySavingThrowRadiantDamage",
-        "doResolveSorcerousBurstSpellAttackDamage",
-        "doResolveStarryWispObjectSpellAttackDamageAndDimLight",
-        "doResolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage",
-        "expectedProjectionSha256",
-        "harnessTestPath",
-        "mbt::actionTaken",
-        "mbt::nondetPicks",
-        "observedActionTaken",
-        "observedProjectionSha256",
-        "observedProjectionSource",
-        "protocol",
-        "qRoute",
-        "qScenarioOutcome",
         "qState",
-        "qntFileSha256",
-        "reducerPublicApiPath",
-        "routeEventSource",
-        "semanticProjectionSource",
-        "sourceBranchInventorySha256",
-        "stateCheck",
-        "targetEntrypointSequence",
-        "targetProfile",
-        "targetProfileSha256",
-        "targetPublicApiPath",
-        "traceId"
+        "doSelectDefenseFightingStyle",
+        "doSelectArcheryFightingStyle",
+        "doSelectGreatWeaponFightingStyle",
+        "doSelectTwoWeaponFightingStyle",
+        "doReplaceArcheryWithDefenseOnFighterLevelGain",
+        "doReplaceDefenseWithArcheryOnFighterLevelGain",
+        "doReplaceDefenseWithGreatWeaponFightingOnFighterLevelGain",
+        "doReplaceDefenseWithTwoWeaponFightingOnFighterLevelGain"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-016.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-044.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
-      "coverageStatus": "covered-public-qRoute",
-      "quarantinedWitnessNames": ["qRoute"],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-016.json"
-      ]
-    },
-    {
-      "path": "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt",
-      "coverageStatus": "covered-public-qRoute",
-      "quarantinedWitnessNames": ["qRoute"],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-016.json"
-      ]
-    },
-    {
-      "path": "packages/battle-runtime/battle-runtime-chained-attack-sequence.route.mbt.qnt",
-      "coverageStatus": "covered-public-qRoute",
-      "quarantinedWitnessNames": ["qRoute"],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-016.json"
-      ]
-    },
-    {
-      "path": "packages/battle-runtime/battle-runtime-mixed-target-outcomes.route.mbt.qnt",
-      "coverageStatus": "covered-public-qRoute",
-      "quarantinedWitnessNames": ["qRoute"],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-016.json"
-      ]
-    },
-    {
-      "path": "packages/battle-runtime/battle-runtime-starry-wisp-object.route.mbt.qnt",
-      "coverageStatus": "covered-public-qRoute",
-      "quarantinedWitnessNames": ["qRoute"],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-016.json"
-      ]
-    },
-    {
-      "path": "packages/battle-runtime/battle-runtime-condition-riders.route.mbt.qnt",
-      "coverageStatus": "covered-public-qRoute",
-      "quarantinedWitnessNames": ["qRoute"],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-016.json"
-      ]
-    },
-    {
-      "path": "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
+      "path": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.route.mbt.qnt",
       "quarantinedWitnessNames": [
-        "Level1DamageSpellSelectedIdentityAction",
-        "checkedTargetStateFields",
-        "cleanroomManifestSourceCommitSha",
-        "comparator",
-        "doResolveBurningHandsMixedConeSavingThrows",
-        "doResolveChromaticOrbDuplicateDamageLeap",
-        "doResolveIceKnifeHitAttackDamageAndBurstSavingThrows",
-        "doResolveIceKnifeMissBurstSavingThrows",
-        "doResolvePoisonSpraySpellAttackDamage",
-        "doResolveRayOfSicknessSpellAttackDamageAndPoisoned",
-        "doResolveSacredFlameDexteritySavingThrowRadiantDamage",
-        "doResolveSorcerousBurstSpellAttackDamage",
-        "doResolveStarryWispObjectSpellAttackDamageAndDimLight",
-        "doResolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage",
-        "expectedProjectionSha256",
-        "harnessTestPath",
-        "mbt::actionTaken",
-        "mbt::nondetPicks",
-        "observedActionTaken",
-        "observedProjectionSha256",
-        "observedProjectionSource",
-        "protocol",
-        "qRoute",
-        "qScenarioOutcome",
-        "qState",
-        "qntFileSha256",
-        "reducerPublicApiPath",
-        "routeEventSource",
-        "semanticProjectionSource",
-        "sourceBranchInventorySha256",
-        "stateCheck",
-        "targetEntrypointSequence",
-        "targetProfile",
-        "targetProfileSha256",
-        "targetPublicApiPath",
-        "traceId"
+        "qRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-016.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-044.json"
+      ]
+    },
+    {
+      "path": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "quarantinedWitnessNames": [
+        "fighterFightingStyleRouteDriverSchema",
+        "createCompletedReducerRouteDriver",
+        "replaceFighterFightingStyleSelectedReferenceRoute",
+        "selectedReferenceRetentionRoute"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-044.json"
       ]
     }
   ],
   "productionModulesExtended": [
     {
-      "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "role": "runtime-projection",
-      "domainApis": [
-        "battleReducerRouteForResolution",
-        "BattleReducerRouteEvent.subject=spellAttackProcedure",
-        "BattleReducerRouteEvent.owner=battleSpellAttackProcedure for chainedSpellAttackDamage target-choice and damage fills"
-      ],
-      "notes": "Extends the existing public reducer route projection for chained spell Attack procedures so target-choice and damage fills expose both local target/Hit Point ownership and the generic spell Attack procedure owner expected by the copied chained route connector. No authored spell id, name, slug, or connector filename dispatch is added."
+      "path": "packages/character-creation-runtime/src/character-build-advancement.ts",
+      "notes": "Adds advanceCharacterBuildFightingStyleReplacementWithRoute, a public route wrapper around the existing typed Fighter Fighting Style replacement advancement reducer."
+    },
+    {
+      "path": "packages/character-creation-runtime/src/index.ts",
+      "notes": "Exports the Fighter Fighting Style replacement route wrapper and route event types through the package public surface."
     }
   ],
   "expectedNextReuse": [
     {
-      "driver": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
-      "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "api": "battleReducerRouteEventsForDiscoveredAct/battleReducerRouteForResolution",
-      "notes": "Future level-1 and level-2 selected damage spell replay tasks should reuse the generic save-gated spell, spell Attack, chained Attack, mixed target outcome, object-target boundary, condition rider, and Hit Point route subjects instead of adding selected-id adapters or duplicate BattleState fields."
+      "path": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts",
+      "notes": "Initial selected-reference branches continue to derive CreationSelectedReferenceOwner events from existing CharacterBuild selected refs."
+    },
+    {
+      "path": "packages/character-creation-runtime/src/character-build-advancement.ts",
+      "notes": "Future CharacterBuild level-gain replacement route tasks should wrap the typed advancement reducer, start from fixture builds that satisfy current class-level choice preconditions, and then reuse selected-reference and build-projection route entrypoints."
+    },
+    {
+      "path": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts",
+      "notes": "Replacement branches reuse characterBuildProjectionWithRoute for CharacterBuildOwner build-projection events without storing a parallel projection state field."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 24 observes copied qRoute substrates through existing public battle reducer route evidence for all required connector paths and fixes chained spell Attack procedure route ownership without adding production runtime dispatch on authored spell identity."
+    "notes": "Task 87 observes copied Fighter Fighting Style qRoute through public selected-reference, CharacterBuild level-gain replacement, and build-projection route entrypoints. No new durable CharacterBuild fields were added."
   }
 }

@@ -523,7 +523,7 @@
     {
       "number": 87,
       "id": "CRPI-BLOCK-044",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: character-creation-fighter-fighting-style-selected-identity"
     },
     {
@@ -739,7 +739,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRPI-BLOCK-041` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-042` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-043` | `done` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-044` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-044` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-045` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRP04-CCF-01` | `done` | none | target replay evidence and owner implementation |
 | `CRP04-CCF-02` | `done` | none | target replay evidence and owner implementation |
@@ -5712,7 +5712,7 @@ Plan Impact:
 
 ### Task 87 - CRPI-BLOCK-044
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

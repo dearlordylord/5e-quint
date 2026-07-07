@@ -28,7 +28,10 @@ import {
   PHASE1_BACKGROUND_TOOL_OPTION_ID,
   PHASE1_CLASS_EQUIPMENT_OPTION_ID,
   PHASE1_CLASS_FIGHTER_UNIT_ID,
+  PHASE1_FIGHTING_STYLE_ARCHERY_UNIT_ID,
   PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
+  PHASE1_FIGHTING_STYLE_GREAT_WEAPON_FIGHTING_UNIT_ID,
+  PHASE1_FIGHTING_STYLE_TWO_WEAPON_FIGHTING_UNIT_ID,
   PHASE1_LOADOUT_ARMOR_OPTION_ID,
   PHASE1_LOADOUT_SHIELD_OPTION_ID,
   PHASE1_LOADOUT_WEAPON_OPTION_ID,
@@ -37,6 +40,7 @@ import {
   PHASE1_WEAPON_LONGSWORD_UNIT_ID,
   PHASE1_WEAPON_MASTERY_UNIT_IDS,
   WEAPON_MASTERY_OPTIONS_CHOICE_KEY,
+  advanceCharacterBuildFightingStyleReplacementWithRoute,
   abilityScoreAssignment,
   characterBuildClassFeatureFactsProjectionWithRoute,
   characterBuildProjectionWithRoute,
@@ -49,6 +53,7 @@ import {
   creationHoleId,
   discoverCreationHoles as discoverRuntimeCreationHoles,
   draftRevision,
+  fighterLevelGainWithFightingStyleReplacement,
   fillCreationHoles,
   finalizeCharacterDraft as finalizeRuntimeCharacterDraft,
   loadoutEquipmentUnitId,
@@ -90,6 +95,23 @@ const SUBJECT_BY_TAG = {
 } as const;
 type CharacterCreationRouteSubject =
   (typeof SUBJECT_BY_TAG)[keyof typeof SUBJECT_BY_TAG];
+type SelectedClassChoiceFeature = Extract<
+  CharacterBuild["features"][number],
+  { readonly kind: "selectedClassChoice" }
+>;
+
+const FIGHTER_FIGHTING_STYLE_UNIT_ID = "fighter_fighting_style";
+const FIGHTER_WEAPON_MASTERY_UNIT_ID = "fighter_weapon_mastery";
+const FIGHTER_FIGHTING_STYLE_SELECTION_COUNT = 1;
+const FIGHTER_LEVEL_ONE_WEAPON_MASTERY_SELECTION_COUNT = 3;
+const FIGHTER_LEVEL_ONE_SELECTED_REFERENCE_COUNT =
+  FIGHTER_FIGHTING_STYLE_SELECTION_COUNT +
+  FIGHTER_LEVEL_ONE_WEAPON_MASTERY_SELECTION_COUNT;
+const FIGHTER_LEVEL_ONE_WEAPON_MASTERY_UNIT_IDS =
+  PHASE1_WEAPON_MASTERY_UNIT_IDS.slice(
+    0,
+    FIGHTER_LEVEL_ONE_WEAPON_MASTERY_SELECTION_COUNT,
+  );
 
 const HOLE_BY_TAG = {
   CreationDraftStructureHoleFamily: "draftStructure",
@@ -530,13 +552,27 @@ describe("character creation reducer route connector MBT", () => {
           doSelectGreatWeaponFightingStyle: retainSelectedReferenceRoute,
           doSelectTwoWeaponFightingStyle: retainSelectedReferenceRoute,
           doReplaceArcheryWithDefenseOnFighterLevelGain:
-            replaceSelectedReferenceRoute,
+            replaceFighterFightingStyleSelectedReferenceRoute({
+              initialFeatUnitId: PHASE1_FIGHTING_STYLE_ARCHERY_UNIT_ID,
+              selectedFeatUnitId: PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
+            }),
           doReplaceDefenseWithArcheryOnFighterLevelGain:
-            replaceSelectedReferenceRoute,
+            replaceFighterFightingStyleSelectedReferenceRoute({
+              initialFeatUnitId: PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
+              selectedFeatUnitId: PHASE1_FIGHTING_STYLE_ARCHERY_UNIT_ID,
+            }),
           doReplaceDefenseWithGreatWeaponFightingOnFighterLevelGain:
-            replaceSelectedReferenceRoute,
+            replaceFighterFightingStyleSelectedReferenceRoute({
+              initialFeatUnitId: PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
+              selectedFeatUnitId:
+                PHASE1_FIGHTING_STYLE_GREAT_WEAPON_FIGHTING_UNIT_ID,
+            }),
           doReplaceDefenseWithTwoWeaponFightingOnFighterLevelGain:
-            replaceSelectedReferenceRoute,
+            replaceFighterFightingStyleSelectedReferenceRoute({
+              initialFeatUnitId: PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
+              selectedFeatUnitId:
+                PHASE1_FIGHTING_STYLE_TWO_WEAPON_FIGHTING_UNIT_ID,
+            }),
         },
       ),
       maxSteps: focusedMbtMaxSteps(1),
@@ -1618,16 +1654,18 @@ function selectedReferenceRetentionRoute(
 }
 
 function selectedReferenceFixtureBuild(): CharacterBuild {
+  return fightingStyleSelectedReferenceFixtureBuild(
+    PHASE1_FIGHTING_STYLE_DEFENSE_UNIT_ID,
+  );
+}
+
+function fightingStyleSelectedReferenceFixtureBuild(
+  selectedFeatUnitId: string,
+): CharacterBuild {
   return classFeatureProjectionBuild({
     startingClass: "class_fighter",
     totalLevel: 1,
-    features: [
-      {
-        kind: "selectedClassChoice",
-        selectedFromUnitId: "fighter_fighting_style",
-        unitId: "defense",
-      },
-    ],
+    features: [fightingStyleSelectedReferenceFeature(selectedFeatUnitId)],
   });
 }
 
@@ -1635,6 +1673,104 @@ function projectSelectedReferenceWithFactsRoute(
   route: readonly CharacterCreationRouteEvent[],
 ): readonly CharacterCreationRouteEvent[] {
   return projectSelectedReferenceRoute(route);
+}
+
+function fighterLevelOneFightingStyleReplacementFixtureBuild(
+  selectedFeatUnitId: string,
+): CharacterBuild {
+  return classFeatureProjectionBuild({
+    startingClass: "class_fighter",
+    totalLevel: 1,
+    features: [
+      fightingStyleSelectedReferenceFeature(selectedFeatUnitId),
+      ...fighterLevelOneWeaponMasterySelectedReferenceFeatures(),
+    ],
+  });
+}
+
+function fightingStyleSelectedReferenceFeature(
+  selectedFeatUnitId: string,
+): SelectedClassChoiceFeature {
+  return {
+    kind: "selectedClassChoice",
+    selectedFromUnitId: FIGHTER_FIGHTING_STYLE_UNIT_ID,
+    unitId: selectedFeatUnitId,
+  };
+}
+
+function fighterLevelOneWeaponMasterySelectedReferenceFeatures(): readonly SelectedClassChoiceFeature[] {
+  return FIGHTER_LEVEL_ONE_WEAPON_MASTERY_UNIT_IDS.map((unitId) => ({
+    kind: "selectedClassChoice",
+    selectedFromUnitId: FIGHTER_WEAPON_MASTERY_UNIT_ID,
+    unitId,
+  }));
+}
+
+function selectedClassChoiceFeaturesFor(
+  build: CharacterBuild,
+  selectedFromUnitId: string,
+): readonly SelectedClassChoiceFeature[] {
+  return build.features.filter(
+    (feature): feature is SelectedClassChoiceFeature =>
+      feature.kind === "selectedClassChoice" &&
+      feature.selectedFromUnitId === selectedFromUnitId,
+  );
+}
+
+function replaceFighterFightingStyleSelectedReferenceRoute(input: {
+  readonly initialFeatUnitId: string;
+  readonly selectedFeatUnitId: string;
+}): (
+  route: readonly CharacterCreationRouteEvent[],
+) => readonly CharacterCreationRouteEvent[] {
+  return (route) => {
+    const levelGain = requireRight(
+      fighterLevelGainWithFightingStyleReplacement({
+        unitLibrary,
+        classUnitId: classUnitId(PHASE1_CLASS_FIGHTER_UNIT_ID),
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+        selectedFeatUnitId: input.selectedFeatUnitId,
+      }),
+    );
+    const replacement = requireRight(
+      advanceCharacterBuildFightingStyleReplacementWithRoute({
+        build: fighterLevelOneFightingStyleReplacementFixtureBuild(
+          input.initialFeatUnitId,
+        ),
+        unitLibrary,
+        levelGain,
+        route,
+      }),
+    );
+    const retained = requireRight(
+      characterBuildSelectedReferencesWithRoute({
+        build: replacement.build,
+        route: replacement.route,
+      }),
+    );
+    expect(
+      selectedClassChoiceFeaturesFor(
+        replacement.build,
+        FIGHTER_FIGHTING_STYLE_UNIT_ID,
+      ),
+    ).toEqual([fightingStyleSelectedReferenceFeature(input.selectedFeatUnitId)]);
+    expect(
+      selectedClassChoiceFeaturesFor(
+        replacement.build,
+        FIGHTER_WEAPON_MASTERY_UNIT_ID,
+      ).map((feature) => feature.unitId),
+    ).toEqual(FIGHTER_LEVEL_ONE_WEAPON_MASTERY_UNIT_IDS);
+    expect(replacement.build.progression.advancements).toEqual([
+      {
+        classUnitId: classUnitId(PHASE1_CLASS_FIGHTER_UNIT_ID),
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+      },
+    ]);
+    expect(characterBuildSelectedReferenceCount(replacement.build)).toBe(
+      FIGHTER_LEVEL_ONE_SELECTED_REFERENCE_COUNT,
+    );
+    return characterBuildProjectionWithRoute(retained).route;
+  };
 }
 
 function replaceSelectedReferenceRoute(

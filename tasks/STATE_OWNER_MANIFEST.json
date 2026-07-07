@@ -1,104 +1,57 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-016",
+  "taskId": "CRPI-BLOCK-044",
   "durableFields": [
     {
-      "fieldPath": "AvailableBattleAct.routeEvents",
-      "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleState plus AvailableBattleAct/BattleResolutionResult routeEvents",
-        "boundary": "battle-runtime public reducer route event boundary"
-      },
-      "notes": "Projection is emitted at public reducer entrypoints from existing owner-local facts; it is not stored as a second BattleState copy."
-    },
-    {
-      "fieldPath": "BattleCreatureState.activeEffects",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "fieldPath": "CharacterBuild.features",
+      "owner": "character-build",
+      "introducedIn": "packages/character-creation-runtime/src/types.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing BattleState runtime state owns spell condition, next Attack Roll mode, object-light, and other active effects reached by Task 24 selected damage spells; Task 24 adds no duplicate durable state."
+      "notes": "Existing selected class-choice refs retain the Fighter Fighting Style feat selected during creation and after Fighter level-gain replacement. The replacement replay also preserves the existing level-1 Fighter Weapon Mastery selected refs in CharacterBuild.features so the advancement reducer can check the current table count. Task 87 adds no duplicate selected-reference cache."
     },
     {
-      "fieldPath": "BattleCreatureState.conditions",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "fieldPath": "CharacterBuild.progression.advancements",
+      "owner": "character-build",
+      "introducedIn": "packages/character-creation-runtime/src/types.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing BattleState runtime state owns applied conditions such as Poisoned; Task 24 adds no duplicate durable state."
+      "notes": "The Fighter level-gain replacement operation appends the existing class advancement entry through advanceCharacterBuildClassLevel; replacement route evidence reads this canonical progression instead of storing route-local level state."
     },
     {
-      "fieldPath": "BattleCreatureState.hp",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "fieldPath": "CharacterCreationRouteEvent.subject=selectedReference",
+      "owner": "character-creation-selected-reference-route-projection",
+      "introducedIn": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts",
       "derivability": {
-        "tag": "canonical-source"
+        "tag": "runtime-projection"
       },
-      "notes": "Existing BattleState runtime state owns Hit Point effects; Task 24 adds no duplicate durable state."
+      "notes": "CreationSelectedReferenceOwner route events are emitted after reading retained CharacterBuild selected refs."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=saveGatedSpell",
-      "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "fieldPath": "CharacterCreationRouteEvent.kind=applyCreationFillBatch",
+      "owner": "character-build-fighting-style-replacement-route",
+      "introducedIn": "packages/character-creation-runtime/src/character-build-advancement.ts",
       "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleState plus AvailableBattleAct/BattleResolutionResult routeEvents",
-        "boundary": "battle-runtime public reducer route event boundary"
+        "tag": "runtime-projection"
       },
-      "notes": "Projection is derived from typed save-gated spell procedure and public reducer holes/fills."
+      "notes": "The Fighter Fighting Style replacement route event records the CharacterBuildOwner replacement fill boundary around the existing typed advancement reducer."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=spellAttackProcedure",
-      "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "fieldPath": "CharacterCreationRouteEvent.subject=buildProjection",
+      "owner": "character-build-projection-route",
+      "introducedIn": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts",
       "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleState plus AvailableBattleAct/BattleResolutionResult routeEvents",
-        "boundary": "battle-runtime public reducer route event boundary"
+        "tag": "runtime-projection"
       },
-      "notes": "Projection is derived from typed spell Attack procedure and public reducer holes/fills."
-    },
-    {
-      "fieldPath": "BattleReducerRouteEvent.subject=spellAttackProcedure(chained)",
-      "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleState plus AvailableBattleAct/BattleResolutionResult routeEvents",
-        "boundary": "battle-runtime public reducer route event boundary"
-      },
-      "notes": "Chromatic Orb duplicate-damage leap reuses the existing chained spell Attack route projection; no selected spell id dispatch is added."
-    },
-    {
-      "fieldPath": "BattleReducerRouteEvent.subject=objectTargetSpellAttack",
-      "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleState plus object-target spell Attack holes/fills",
-        "boundary": "battle-runtime public reducer route event boundary"
-      },
-      "notes": "Starry Wisp object-target boundary evidence is projected from existing object target and light-emitter facts."
-    },
-    {
-      "fieldPath": "BattleResolutionResult.routeEvents",
-      "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleState plus AvailableBattleAct/BattleResolutionResult routeEvents",
-        "boundary": "battle-runtime public reducer route event boundary"
-      },
-      "notes": "Projection is emitted at public reducer entrypoints from existing owner-local facts; it is not stored as a second BattleState copy."
+      "notes": "CharacterBuildOwner build-projection route events are emitted by characterBuildProjectionWithRoute without storing a parallel projection state field."
     }
   ],
   "notes": [
-    "Task 24 introduced no new durable BattleState or BattleCreatureState fields.",
-    "Selected spell identity is retained only at catalog/support-profile and selected replay boundaries; production route dispatch uses typed invocation procedure, target fills, object-target facts, condition rider facts, and BattleState deltas.",
-    "Route subjects are executable boundary projections derived from existing owner state and public reducer results, not a stored route ledger or duplicate active-effect state."
+    "Task 87 introduced no new durable CharacterBuild fields.",
+    "Initial and replacement Fighter Fighting Style selected refs remain existing CharacterBuild selected class-choice facts.",
+    "Replacement replay fixtures include the current level-1 Fighter Weapon Mastery selected refs as existing CharacterBuild selected class-choice facts rather than storing a parallel route-local state.",
+    "Replacement qRoute evidence is projected at the reducer-route boundary through advanceCharacterBuildFightingStyleReplacementWithRoute, characterBuildSelectedReferencesWithRoute, and characterBuildProjectionWithRoute."
   ]
 }

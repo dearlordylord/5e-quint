@@ -4,6 +4,128 @@
   "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
   "entries": [
     {
+      "taskId": "CRPI-BLOCK-044",
+      "assignmentId": "reducer-spine-diagnostic-character-creation",
+      "laneId": "character-creation",
+      "selectedDrivers": [
+        "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
+      "artifacts": {
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "d503369dc2d5cbd543bda8360276c5b563c4f7ac15dce95a37e7aaca6817c64d"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-BLOCK-044/README.md",
+          "sha256": "7bb37a607e5275a90ebe7bf34a04635d83ea484509ba3758258ffc464e402b14"
+        },
+        "engineDepthManifest": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "13b8496518503c8000013c7712ccb20d8c7bddea335d78e317b3220a9cb3a5da"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "b096fd87a8740735160f66d7b2ed7d06ef1c319700ebb523738a30ba1fc07ecf"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-044.json",
+          "sha256": "0f5ff93e69f926242961e7c29833be06e93158ea8b20973b2cf733769b233642",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-044.json#driver:packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt#step:doSelectDefenseFightingStyle#trace:public-route=completedReducerSurfaceRoute action=doSelectDefenseFightingStyle qRoute=fighter-fighting-style-retain-selected-reference-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-044.json#driver:packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt#step:doSelectArcheryFightingStyle#trace:public-route=completedReducerSurfaceRoute action=doSelectArcheryFightingStyle qRoute=fighter-fighting-style-retain-selected-reference-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-044.json#driver:packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt#step:doSelectGreatWeaponFightingStyle#trace:public-route=completedReducerSurfaceRoute action=doSelectGreatWeaponFightingStyle qRoute=fighter-fighting-style-retain-selected-reference-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-044.json#driver:packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt#step:doSelectTwoWeaponFightingStyle#trace:public-route=completedReducerSurfaceRoute action=doSelectTwoWeaponFightingStyle qRoute=fighter-fighting-style-retain-selected-reference-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-044.json#driver:packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt#step:doReplaceArcheryWithDefenseOnFighterLevelGain#trace:public-route=completedReducerSurfaceRoute action=doReplaceArcheryWithDefenseOnFighterLevelGain qRoute=fighter-fighting-style-level-gain-replacement-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-044.json#driver:packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt#step:doReplaceDefenseWithArcheryOnFighterLevelGain#trace:public-route=completedReducerSurfaceRoute action=doReplaceDefenseWithArcheryOnFighterLevelGain qRoute=fighter-fighting-style-level-gain-replacement-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-044.json#driver:packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt#step:doReplaceDefenseWithGreatWeaponFightingOnFighterLevelGain#trace:public-route=completedReducerSurfaceRoute action=doReplaceDefenseWithGreatWeaponFightingOnFighterLevelGain qRoute=fighter-fighting-style-level-gain-replacement-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-044.json#driver:packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt#step:doReplaceDefenseWithTwoWeaponFightingOnFighterLevelGain#trace:public-route=completedReducerSurfaceRoute action=doReplaceDefenseWithTwoWeaponFightingOnFighterLevelGain qRoute=fighter-fighting-style-level-gain-replacement-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-owner-character-creation-20260706T213644Z/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor 6c5bc2d7689f7cd2652b5adf131d05ef6edb8eaa HEAD",
+          "status": "pass",
+          "detail": "Declared integration ref and HEAD both resolved to 6c5bc2d76 Accept Ralph task 86; Base SHA is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language check for Fighter Fighting Style selection and replacement",
+          "status": "pass",
+          "detail": "Checked .references/srd-5.2.1/Classes/Fighter.md#Level 1: Fighting Style, #Fighter Features, #Level 1: Weapon Mastery, UBIQUITOUS_LANGUAGE.md, and packages/character-creation-runtime/VOCABULARY.md before modeling route behavior."
+        },
+        {
+          "command": "pnpm --filter @dnd/character-creation-runtime typecheck",
+          "status": "pass",
+          "detail": "Character Creation runtime TypeScript check passed after adding the current level-1 Fighter Weapon Mastery selected refs to the replacement replay fixture."
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Revision round 2 pre-MBT process check found no active vitest runner or quint_evaluator process; both grep commands exited 1 with no output before the protocol-form focused replay."
+        },
+        {
+          "command": "START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/character-creation-runtime exec vitest run src/fighter-fighting-style-selected-identity.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"replays Character Creation Fighter Fighting Style selected identity parity|replays selected Unit identities deterministically|routes Fighter Fighting Style selections\" ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "status": "pass",
+          "detail": "Revision round 2 focused Fighter Fighting Style selected-identity semantic replay and qRoute connector replay passed after preserving the current level-1 Fighter Weapon Mastery selected refs in the replacement fixture; 3 tests passed, 8 skipped; TOTAL: 3s."
+        },
+        {
+          "command": "node task-scoped validateTargetReplayEvidence for packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
+          "status": "pass",
+          "detail": "Validated tasks/target-replay-evidence/CRPI-BLOCK-044.json with scripts/cleanroom-branch-coverage-check.cjs#validateTargetReplayEvidence and requireAllObligations=false; 8 obligations covered."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check --target-replay-evidence tasks/target-replay-evidence/CRPI-BLOCK-044.json",
+          "status": "fail",
+          "detail": "Diagnostic target-only command failed on unrelated broad missing-evidence baseline across the full corpus; the direct task-scoped validator found no Task 87 evidence issues."
+        },
+        {
+          "command": "node JSON parse check for tasks/target-replay-evidence/CRPI-BLOCK-044.json, tasks/ENGINE_DEPTH_MANIFEST.json, tasks/STATE_OWNER_MANIFEST.json, and tasks/RUN_LEDGER.json",
+          "status": "pass",
+          "detail": "All updated machine-readable Task 87 artifacts parsed as valid JSON."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass",
+          "detail": "Whitespace check passed."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "Cleanroom branch coverage passed with 738 obligations and 24 sampled inputs."
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "All quality gates passed; app lint emitted 61 warnings and exited 0."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Resolved Task 87 route concerns by moving Fighter Fighting Style level-gain replacement through a public CharacterBuild advancement route wrapper, preserving selected-reference facts as derived CharacterBuild refs, and ensuring replacement replay fixtures satisfy the Fighter Weapon Mastery current-choice precondition."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-044",
+            "impact": "unblocked"
+          }
+        ],
+        "observations": [
+          "Initial Fighter Fighting Style qRoute is accepted through selected-reference retention over existing CharacterBuild selected class-choice refs.",
+          "Fighter level-gain replacement qRoute is accepted through advanceCharacterBuildFightingStyleReplacementWithRoute, which wraps the existing typed advancement reducer before selected-reference retention and build projection.",
+          "Fighter level-gain replacement replay fixtures must preserve the current level-1 Fighter Weapon Mastery selected refs because the advancement reducer enforces the SRD table count before replacing the Fighting Style feat.",
+          "No duplicate selected-reference state or authored-identity production dispatch was added."
+        ],
+        "requiredPlanEdits": "none"
+      }
+    },
+    {
       "taskId": "CRPI-BLOCK-016",
       "assignmentId": "reducer-spine-diagnostic-battle",
       "laneId": "battle",
