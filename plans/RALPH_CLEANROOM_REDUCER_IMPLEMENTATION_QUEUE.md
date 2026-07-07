@@ -223,7 +223,7 @@
     {
       "number": 37,
       "id": "CRPI-BLOCK-025",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-sanctuary-selected-identity"
     },
     {
@@ -2876,7 +2876,7 @@ Plan Impact:
 
 ### Task 37 - CRPI-BLOCK-025
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

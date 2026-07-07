@@ -1,5 +1,98 @@
 # Validation Report
 
+## CRPI-BLOCK-025
+
+Status: `pass`
+
+- Task: 37
+- Driver path: `packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt`
+- Route connector path: `packages/battle-runtime/battle-runtime-sanctuary-selected-identity.route.mbt.qnt`
+- Route class: `catalog-after-substrate`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-025.json`
+
+Task 37 records public reducer qRoute evidence for the Sanctuary selected-identity
+driver. The selected replay binds SRD catalog identity at the replay/admission
+boundary; route evidence is observed from generic warded-target interdiction,
+spell-slot/action-economy, target-selection, active-effect, saving-throw,
+action-economy, hole-frontier, area-shape, attack-roll, and hit-point owners.
+The damage-dealt early-end branch observes `qRoute` through
+a public Flaming Sphere `movableZoneRam` `resolveBattleSubject` result, so the
+route source is `BattleResolutionResult.routeEvents` from the accepted public
+reducer surface rather than adapter-local expected route literals.
+
+Current public qRoute coverage:
+
+- Covered: `battle-runtime-sanctuary-selected-identity.route.mbt.qnt` through
+  public Sanctuary ward creation, direct attack/spell interdiction, replacement
+  target legality, area-effect exclusion, attack-roll early end, spell-cast early
+  end, and damage-dealt early end replay in
+  `packages/battle-runtime/src/sanctuary-selected-identity.mbt.test.ts`.
+- Remaining required public qRoute coverage: none.
+
+Task 37 fixed the production route projection needed for public evidence:
+`packages/battle-runtime/src/battle-reducer/reducer-route.ts` now includes the
+generic `wardedTargetInterdiction` route subject and
+`sanctuaryInterdictionOutcome` route hole/fill kind. The projection is derived
+from typed `sanctuaryTargetingInterdiction` invocation procedure facts, existing
+`sanctuaryWard` active effects, public holes/fills, save-gated area-shape facts,
+attack-roll and spell-cast resolution, hit-point damage, and reducer result
+deltas, including the warded source creature's hit-point damage via the public
+Flaming Sphere ram resolution. No durable `BattleState` field was added.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt#step:doCastSanctuaryWardCreation` | `tasks/target-replay-evidence/CRPI-BLOCK-025.json#driver:packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt#step:doCastSanctuaryWardCreation#trace:MBT_TRACES=1 MBT_STEPS=1 action=doCastSanctuaryWardCreation qRoute=warded-target-interdiction-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt#step:doEndWardOnWardedAttackRoll` | `tasks/target-replay-evidence/CRPI-BLOCK-025.json#driver:packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt#step:doEndWardOnWardedAttackRoll#trace:MBT_TRACES=1 MBT_STEPS=1 action=doEndWardOnWardedAttackRoll qRoute=warded-target-interdiction-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt#step:doEndWardOnWardedDamageDealt` | `tasks/target-replay-evidence/CRPI-BLOCK-025.json#driver:packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt#step:doEndWardOnWardedDamageDealt#trace:MBT_TRACES=1 MBT_STEPS=1 action=doEndWardOnWardedDamageDealt qRoute=warded-target-interdiction-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt#step:doEndWardOnWardedSpellCast` | `tasks/target-replay-evidence/CRPI-BLOCK-025.json#driver:packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt#step:doEndWardOnWardedSpellCast#trace:MBT_TRACES=1 MBT_STEPS=1 action=doEndWardOnWardedSpellCast qRoute=warded-target-interdiction-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt#step:doExcludeAreaEffectFromInterdiction` | `tasks/target-replay-evidence/CRPI-BLOCK-025.json#driver:packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt#step:doExcludeAreaEffectFromInterdiction#trace:MBT_TRACES=1 MBT_STEPS=1 action=doExcludeAreaEffectFromInterdiction qRoute=warded-target-interdiction-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt#step:doInterdictDirectAttackFailedSaveLoss` | `tasks/target-replay-evidence/CRPI-BLOCK-025.json#driver:packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt#step:doInterdictDirectAttackFailedSaveLoss#trace:MBT_TRACES=1 MBT_STEPS=1 action=doInterdictDirectAttackFailedSaveLoss qRoute=warded-target-interdiction-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt#step:doInterdictDirectSpellSuccessfulSavePassThrough` | `tasks/target-replay-evidence/CRPI-BLOCK-025.json#driver:packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt#step:doInterdictDirectSpellSuccessfulSavePassThrough#trace:MBT_TRACES=1 MBT_STEPS=1 action=doInterdictDirectSpellSuccessfulSavePassThrough qRoute=warded-target-interdiction-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt#step:doRejectIllegalReplacementTarget` | `tasks/target-replay-evidence/CRPI-BLOCK-025.json#driver:packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt#step:doRejectIllegalReplacementTarget#trace:MBT_TRACES=1 MBT_STEPS=1 action=doRejectIllegalReplacementTarget qRoute=warded-target-interdiction-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt#step:doRetargetDirectAttackToLegalReplacement` | `tasks/target-replay-evidence/CRPI-BLOCK-025.json#driver:packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt#step:doRetargetDirectAttackToLegalReplacement#trace:MBT_TRACES=1 MBT_STEPS=1 action=doRetargetDirectAttackToLegalReplacement qRoute=warded-target-interdiction-public-route` | `_none_` | `covered` |
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-025/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 37. The damage-dealt early-end replay uses
+  public Flaming Sphere `movableZoneRam` discovery/resolution because the normal
+  public weapon-attack path ends Sanctuary at the attack-roll boundary before
+  damage.
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Spells/Descriptions-S-Z.md#Sanctuary` defines ward creation,
+  direct attack/damaging-spell interdiction, Wisdom saving throw outcome,
+  replacement target choice, area-effect exclusion, and early ward end.
+- SRD 5.2.1 `Spells/Descriptions-E-L.md#Flaming-Sphere` defines the Bonus
+  Action movable sphere ram that can make a creature save and take damage.
+- SRD 5.2.1 `Rules-Glossary.md#Target` and `#Area-of-Effect` define target and
+  area-effect boundaries.
+- SRD 5.2.1 `Playing-the-Game.md` Saving Throws and Attack Rolls sections define
+  the affected runtime resolution contexts.
+- `UBIQUITOUS_LANGUAGE.md` defines Saving Throw, Attack Roll, Spell Save DC,
+  Spell Invocation, Spell Effect, and Area of Effect terms used by this route.
+
+Verification results:
+
+- Task-base check passed: base ref
+  `ralph/cleanroom-owner-battle-spell-20260706T213644Z/integration` and `HEAD`
+  both resolved to `09438b1c5 Mark Ralph task 36 done`; Base SHA
+  `09438b1c5c181271e9ee92649fd239858e583422` is an ancestor of `HEAD`.
+- `pnpm --filter @dnd/battle-runtime exec tsc --noEmit --pretty false` passed.
+- Revision round 3 reran `pnpm --filter @dnd/battle-runtime typecheck`; it
+  passed after moving damage-dealt early-end replay to the public
+  `resolveBattleSubject` movable-
+
 ## CRPI-BLOCK-036
 
 Status: `pass`

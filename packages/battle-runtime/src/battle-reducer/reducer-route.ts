@@ -159,6 +159,7 @@ export type BattleReducerRouteSubjectFamily =
   | "reactionInterdiction"
   | "repeatSaveConditionEffect"
   | "turnBoundaryEffectLifecycle"
+  | "wardedTargetInterdiction"
   | "zeroHitPointSpellEffectTeardown"
   | "spellBaseArmorClassEffect"
   | "afterHitDamageRider"
@@ -239,6 +240,7 @@ export type BattleReducerRouteHole =
   | "hitPointHealingDistribution"
   | "movement"
   | "rolledDice"
+  | "sanctuaryInterdictionOutcome"
   | "savingThrowOutcome"
   | "skillChoice"
   | "spellTargetAllocation"
@@ -262,6 +264,7 @@ export type BattleReducerRouteFillKind =
   | "movement"
   | "magicWeaponTargetItem"
   | "rolledDice"
+  | "sanctuaryInterdictionOutcome"
   | "savingThrowOutcome"
   | "skillChoice"
   | "spellTargetAllocation"
@@ -783,6 +786,13 @@ export function battleReducerRouteEventsForDiscoveredAct(
       },
     ];
   }
+  const wardedTargetRoute = wardedTargetInterdictionRouteForDiscoveredAct(
+    state,
+    act,
+  );
+  if (wardedTargetRoute !== undefined) {
+    return wardedTargetRoute;
+  }
   const spellBaseArmorClassRoute =
     spellBaseArmorClassEffectRouteForDiscoveredAct(act);
   if (spellBaseArmorClassRoute !== undefined) {
@@ -944,6 +954,11 @@ export function battleReducerRouteForResolution(
   const protectionCharmRoute = protectionCharmRouteForResolution(input, result);
   if (protectionCharmRoute !== undefined) {
     return protectionCharmRoute;
+  }
+  const wardedTargetInterdictionRoute =
+    wardedTargetInterdictionRouteForResolution(input, result);
+  if (wardedTargetInterdictionRoute !== undefined) {
+    return wardedTargetInterdictionRoute;
   }
   const scalarBuffRoute = scalarBuffRouteForResolution(input, result);
   if (scalarBuffRoute !== undefined) {
@@ -1790,6 +1805,278 @@ function spellBaseArmorClassEffectRouteForDiscoveredAct(
     holes: battleReducerRouteHoles(act.initialHoles),
     owner: "battleSpellSlotAndActionEconomy",
   };
+}
+
+function wardedTargetInterdictionRouteForDiscoveredAct(
+  state: BattleState,
+  act: AvailableBattleAct,
+): BattleReducerRouteEvents | undefined {
+  if (isSanctuaryTargetingInterdictionSubject(act.subject)) {
+    return [
+      {
+        kind: "discoverBattleActs",
+        subject: "wardedTargetInterdiction",
+        holes: ["targetChoice"],
+        owner: "battleSpellSlotAndActionEconomy",
+      },
+    ];
+  }
+  if (areaEffectBypassesWardedTargetInterdiction(state, act)) {
+    return [
+      {
+        kind: "discoverBattleActs",
+        subject: "wardedTargetInterdiction",
+        holes: [],
+        owner: "battleAreaShape",
+      },
+    ];
+  }
+  return undefined;
+}
+
+function wardedTargetInterdictionRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  const fill = input.fills.at(-1);
+  if (fill === undefined) {
+    return undefined;
+  }
+  if (isSanctuaryTargetingInterdictionSubject(input.subject)) {
+    const routeFill = battleReducerRouteFill(fill);
+    if (routeFill !== "spellTargetList") {
+      return undefined;
+    }
+    const targetSelectionRoute: BattleReducerRouteEvent = {
+      kind: "resolveBattleSubject",
+      subject: "wardedTargetInterdiction",
+      fill: "targetChoice",
+      holes:
+        result.tag === "needsHoles"
+          ? battleReducerRouteHoles(result.holes)
+          : result.tag === "invalid"
+            ? ["targetChoice"]
+            : [],
+      owner: "battleTargetSelection",
+    };
+    if (
+      result.tag !== "resolved" ||
+      !activeEffectKindsAdded(input.state, result.state).includes(
+        "sanctuaryWard",
+      )
+    ) {
+      return [targetSelectionRoute];
+    }
+    return [
+      targetSelectionRoute,
+      wardedTargetInterdictionResolveWithoutFill("battleActiveEffect"),
+    ];
+  }
+  if (fill.kind === "sanctuaryInterdictionOutcome") {
+    const replacementTarget =
+      !fill.value.saveSucceeded && fill.value.outcome.kind === "newTarget";
+    const route: BattleReducerRouteEvent[] = [
+      {
+        kind: "discoverBattleActs",
+        subject: "wardedTargetInterdiction",
+        holes: replacementTarget
+          ? ["sanctuaryInterdictionOutcome", "targetChoice"]
+          : ["sanctuaryInterdictionOutcome"],
+        owner: "battleActiveEffect",
+      },
+      {
+        kind: "resolveBattleSubject",
+        subject: "wardedTargetInterdiction",
+        fill: "sanctuaryInterdictionOutcome",
+        holes: replacementTarget ? ["targetChoice"] : [],
+        owner: "battleSavingThrowOutcome",
+      },
+    ];
+    if (replacementTarget) {
+      route.push({
+        kind: "resolveBattleSubject",
+        subject: "wardedTargetInterdiction",
+        fill: "targetChoice",
+        holes: result.tag === "invalid" ? ["targetChoice"] : [],
+        owner: "battleTargetSelection",
+      });
+    } else {
+      route.push(
+        wardedTargetInterdictionResolveWithoutFill(
+          fill.value.saveSucceeded
+            ? "battleHoleFrontier"
+            : "battleActionEconomy",
+        ),
+      );
+    }
+    return nonEmptyRouteEvents(route);
+  }
+  if (areaEffectBypassesWardedTargetInterdiction(input.state, input)) {
+    const routeFill = battleReducerRouteFill(fill);
+    if (routeFill !== "savingThrowOutcome") {
+      return undefined;
+    }
+    return [wardedTargetInterdictionResolveWithoutFill("battleAreaShape")];
+  }
+  const actorId = subjectActorId(input.subject);
+  if (
+    actorId === undefined ||
+    !sanctuaryWardRemoved(input.state, result, actorId)
+  ) {
+    return undefined;
+  }
+  const routeFill = battleReducerRouteFill(fill);
+  if (routeFill === "attackRoll") {
+    return wardedTargetInterdictionEarlyEndRoute("battleAttackRoll");
+  }
+  if (routeFill === "rolledDice") {
+    return wardedTargetInterdictionEarlyEndRoute("battleHitPoint");
+  }
+  if (
+    (routeFill === "targetChoice" || routeFill === "spellTargetList") &&
+    input.subject.tag === "actionSpell"
+  ) {
+    return wardedTargetInterdictionEarlyEndRoute(
+      "battleSpellSlotAndActionEconomy",
+    );
+  }
+  return undefined;
+}
+
+function wardedTargetInterdictionEarlyEndRoute(
+  owner: Extract<
+    BattleReducerRouteOwnerGroup,
+    "battleAttackRoll" | "battleHitPoint" | "battleSpellSlotAndActionEconomy"
+  >,
+): BattleReducerRouteEvents {
+  return [
+    {
+      kind: "discoverBattleActs",
+      subject: "wardedTargetInterdiction",
+      holes: [],
+      owner: "battleActiveEffect",
+    },
+    wardedTargetInterdictionResolveWithoutFill(owner),
+    wardedTargetInterdictionResolveWithoutFill("battleActiveEffect"),
+  ];
+}
+
+function wardedTargetInterdictionResolveWithoutFill(
+  owner: BattleReducerRouteOwnerGroup,
+): BattleReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubjectWithoutFill",
+    subject: "wardedTargetInterdiction",
+    holes: [],
+    owner,
+  };
+}
+
+function sanctuaryWardRemoved(
+  state: BattleState,
+  result: BattleResolutionResult,
+  actorId: CombatantId,
+): boolean {
+  if (result.tag !== "needsHoles" && result.tag !== "resolved") {
+    return false;
+  }
+  return (
+    combatantHasSanctuaryWard(state, actorId) &&
+    !combatantHasSanctuaryWard(result.state, actorId)
+  );
+}
+
+function areaEffectBypassesWardedTargetInterdiction(
+  state: BattleState,
+  source:
+    | Pick<AvailableBattleAct, "subject" | "initialHoles">
+    | Pick<BattleResolutionInput, "subject" | "fills">,
+): boolean {
+  if (
+    source.subject.tag !== "actionSpell" ||
+    source.subject.invocation.procedure !== "saveGatedDamage"
+  ) {
+    return false;
+  }
+  if (!battleHasSanctuaryWard(state)) {
+    return false;
+  }
+  if ("initialHoles" in source) {
+    const hasDirectTargetHole = source.initialHoles.some((hole) => {
+      const family = battleHoleFamilyKind(hole);
+      return (
+        family === "targetChoice" ||
+        family === "spellTargetList" ||
+        family === "objectTargetChoice"
+      );
+    });
+    const savingThrowHole = source.initialHoles.find(
+      (hole): hole is Extract<BattleHole, { readonly kind: "savingThrowOutcome" }> =>
+        hole.kind === "savingThrowOutcome",
+    );
+    return (
+      !hasDirectTargetHole &&
+      savingThrowHole !== undefined &&
+      (!("areaChoices" in savingThrowHole) ||
+        savingThrowHole.areaChoices.some((areaChoice) =>
+          areaChoice.affectedTargetIds.some((targetId) =>
+            combatantHasSanctuaryWard(state, targetId),
+          ),
+        ))
+    );
+  }
+  if (
+    source.fills.some((fill) => {
+      const kind = battleFillKind(fill);
+      return (
+        kind === "targetChoice" ||
+        kind === "spellTargetList" ||
+        kind === "objectTargetChoice"
+      );
+    })
+  ) {
+    return false;
+  }
+  const savingThrowFill = source.fills.find(
+    (fill): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+      fill.kind === "savingThrowOutcome",
+  );
+  if (savingThrowFill === undefined) {
+    return false;
+  }
+  const affectedTargetIds =
+    "area" in savingThrowFill.value
+      ? savingThrowFill.value.area.affectedTargetIds
+      : savingThrowFill.value.outcomes.map((outcome) => outcome.targetId);
+  return affectedTargetIds.some((targetId) =>
+    combatantHasSanctuaryWard(state, targetId),
+  );
+}
+
+function battleHasSanctuaryWard(state: BattleState): boolean {
+  for (const combatant of state.combatants.values()) {
+    if (combatantHasSanctuaryWard(state, combatant.combatantId)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function combatantHasSanctuaryWard(
+  state: BattleState,
+  combatantId: CombatantId,
+): boolean {
+  return (
+    state.combatants
+      .get(combatantId)
+      ?.activeEffects.some((effect) => effect.kind === "sanctuaryWard") ?? false
+  );
+}
+
+function subjectActorId(
+  subject: BattleResolutionInput["subject"],
+): CombatantId | undefined {
+  return "actorId" in subject ? subject.actorId : undefined;
 }
 
 function spellBaseArmorClassEffectRouteForResolution(
@@ -8908,6 +9195,18 @@ function isScalarBuffEffectSubject(
   );
 }
 
+function isSanctuaryTargetingInterdictionSubject(
+  subject: BattleResolutionInput["subject"] | AvailableBattleAct["subject"],
+): subject is Extract<
+  BattleResolutionInput["subject"],
+  { readonly tag: "bonusActionSpell" }
+> {
+  return (
+    subject.tag === "bonusActionSpell" &&
+    subject.invocation.procedure === "sanctuaryTargetingInterdiction"
+  );
+}
+
 function isSleepTargetAdmissionSubject(
   subject: BattleResolutionInput["subject"],
 ): subject is Extract<
@@ -9133,6 +9432,9 @@ function battleReducerRouteHole(
   if (family === "movement") return ["movement"];
   if (family === "objectTargetChoice") return ["targetChoice"];
   if (family === "rolledDice") return ["rolledDice"];
+  if (family === "sanctuaryInterdictionOutcome") {
+    return ["sanctuaryInterdictionOutcome"];
+  }
   if (family === "savingThrowOutcome") return ["savingThrowOutcome"];
   if (family === "spellTargetAllocation") return ["spellTargetAllocation"];
   if (family === "spellTargetList") return ["spellTargetList"];
@@ -9166,6 +9468,9 @@ function battleReducerRouteFill(
   if (kind === "movement") return "movement";
   if (kind === "objectTargetChoice") return "targetChoice";
   if (kind === "rolledDice") return "rolledDice";
+  if (kind === "sanctuaryInterdictionOutcome") {
+    return "sanctuaryInterdictionOutcome";
+  }
   if (kind === "savingThrowOutcome") return "savingThrowOutcome";
   if (kind === "spellTargetAllocation") return "spellTargetAllocation";
   if (kind === "spellTargetList") return "spellTargetList";

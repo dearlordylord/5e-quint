@@ -1,0 +1,578 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/sanctuary-selected-identity.mbt.test.ts public reducer warded-target interdiction qRoute replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "8c856409a423a320bf05e4b4a927e76b1902af823ba01f2b5a928f867a6a6be6",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "acceptance": {
+    "driverPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt",
+    "routeClass": "catalog-after-substrate",
+    "acceptedProjection": "qRoute",
+    "requiredConnectorPaths": [
+      "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.route.mbt.qnt"
+    ]
+  },
+  "status": "pass",
+  "driverQntFileSha256": "ba22087a57edfd67d90d502db97b956297a5c8d58ff0b6e27542c32598ddb6e7",
+  "connectorSha256": {
+    "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.route.mbt.qnt": "299839bf0f573c3d74b237923fa50c74b5d0d2b46430cda48ca8a3e1be5798b7"
+  },
+  "publicQRouteCoverage": [
+    {
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.route.mbt.qnt"
+      ],
+      "qRouteSource": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.route.mbt.qnt#qRoute",
+      "observedProjectionSource": "packages/battle-runtime/src/sanctuary-selected-identity.mbt.test.ts#createSanctuaryRouteReplayDriver observes public reducer route events for ward creation, attack and spell interdiction, replacement target legality, area-effect exclusion, attack/spell early ward end, and damage-dealt early ward end through a public Flaming Sphere movable-zone ram resolution.",
+      "targetEntrypointSequence": [
+        "start_battle",
+        "discover_battle_acts",
+        "resolve_battle_subject",
+        "battleReducerStartRouteEvent"
+      ],
+      "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#startBattle/discoverBattleActs/resolveBattleSubject/battleReducerStartRouteEvent",
+      "coveredRouteActions": [
+        "doCastSanctuaryWardCreation",
+        "doInterdictDirectAttackFailedSaveLoss",
+        "doInterdictDirectSpellSuccessfulSavePassThrough",
+        "doRetargetDirectAttackToLegalReplacement",
+        "doRejectIllegalReplacementTarget",
+        "doExcludeAreaEffectFromInterdiction",
+        "doEndWardOnWardedAttackRoll",
+        "doEndWardOnWardedSpellCast",
+        "doEndWardOnWardedDamageDealt"
+      ],
+      "checkedTargetStateFields": [
+        "AvailableBattleAct.routeEvents",
+        "BattleResolutionResult.routeEvents",
+        "BattleReducerRouteEvent.subject=wardedTargetInterdiction",
+        "BattleReducerRouteEvent.owner=battleSpellSlotAndActionEconomy",
+        "BattleReducerRouteEvent.owner=battleTargetSelection",
+        "BattleReducerRouteEvent.owner=battleActiveEffect",
+        "BattleReducerRouteEvent.owner=battleSavingThrowOutcome",
+        "BattleReducerRouteEvent.owner=battleActionEconomy",
+        "BattleReducerRouteEvent.owner=battleHoleFrontier",
+        "BattleReducerRouteEvent.owner=battleAreaShape",
+        "BattleReducerRouteEvent.owner=battleAttackRoll",
+        "BattleReducerRouteEvent.owner=battleHitPoint",
+        "BattleCreatureState.activeEffects",
+        "BattleCreatureState.hp",
+        "BattleHole.kind=sanctuaryInterdictionOutcome",
+        "BattleFill.kind=sanctuaryInterdictionOutcome"
+      ],
+      "result": "pass"
+    }
+  ],
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "ba22087a57edfd67d90d502db97b956297a5c8d58ff0b6e27542c32598ddb6e7",
+      "routeConnectorSha256": "299839bf0f573c3d74b237923fa50c74b5d0d2b46430cda48ca8a3e1be5798b7",
+      "branchFamily": "step",
+      "branchAction": "doCastSanctuaryWardCreation",
+      "observedActionTaken": "doCastSanctuaryWardCreation",
+      "harnessTestPath": "packages/battle-runtime/src/sanctuary-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=1 action=doCastSanctuaryWardCreation qRoute=warded-target-interdiction-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "fbb0191f7165af0140d58426936ff9bcf9edebce66dd80b49e2808d41abba269",
+        "observedProjectionSha256": "fbb0191f7165af0140d58426936ff9bcf9edebce66dd80b49e2808d41abba269",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.route.mbt.qnt"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent, AvailableBattleAct.routeEvents, and BattleResolutionResult.routeEvents for Sanctuary target choice and ward active-effect creation",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=wardedTargetInterdiction",
+          "BattleReducerRouteEvent.owner=battleSpellSlotAndActionEconomy",
+          "BattleReducerRouteEvent.owner=battleTargetSelection",
+          "BattleReducerRouteEvent.owner=battleActiveEffect",
+          "BattleCreatureState.activeEffects",
+          "BattleHole.kind",
+          "BattleFill.kind"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "ba22087a57edfd67d90d502db97b956297a5c8d58ff0b6e27542c32598ddb6e7",
+      "routeConnectorSha256": "299839bf0f573c3d74b237923fa50c74b5d0d2b46430cda48ca8a3e1be5798b7",
+      "branchFamily": "step",
+      "branchAction": "doEndWardOnWardedAttackRoll",
+      "observedActionTaken": "doEndWardOnWardedAttackRoll",
+      "harnessTestPath": "packages/battle-runtime/src/sanctuary-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=1 action=doEndWardOnWardedAttackRoll qRoute=warded-target-interdiction-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "7784405b2098ffdcf515ba7b31d6ef9c1c24a5fc907f188554c460ad0e43fe61",
+        "observedProjectionSha256": "7784405b2098ffdcf515ba7b31d6ef9c1c24a5fc907f188554c460ad0e43fe61",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.route.mbt.qnt"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent, AvailableBattleAct.routeEvents, and BattleResolutionResult.routeEvents for Sanctuary early end after the warded creature makes an attack roll",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=wardedTargetInterdiction",
+          "BattleReducerRouteEvent.owner=battleActiveEffect",
+          "BattleReducerRouteEvent.owner=battleAttackRoll",
+          "BattleCreatureState.activeEffects",
+          "BattleFill.kind"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "ba22087a57edfd67d90d502db97b956297a5c8d58ff0b6e27542c32598ddb6e7",
+      "routeConnectorSha256": "299839bf0f573c3d74b237923fa50c74b5d0d2b46430cda48ca8a3e1be5798b7",
+      "branchFamily": "step",
+      "branchAction": "doEndWardOnWardedDamageDealt",
+      "observedActionTaken": "doEndWardOnWardedDamageDealt",
+      "harnessTestPath": "packages/battle-runtime/src/sanctuary-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=1 action=doEndWardOnWardedDamageDealt qRoute=warded-target-interdiction-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "425fb8b93203577628de70acb78d0b62a74568dc38e0d176ec2a89ac3b6deaf6",
+        "observedProjectionSha256": "425fb8b93203577628de70acb78d0b62a74568dc38e0d176ec2a89ac3b6deaf6",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.route.mbt.qnt"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from BattleResolutionResult.routeEvents for a Flaming Sphere movable-zone ram that deals damage after its source creature is warded by Sanctuary",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "BattleResolutionResult.routeEvents",
+          "BattleSubject.runtimeCommand.command=movableZoneRam",
+          "BattleReducerRouteEvent.subject=wardedTargetInterdiction",
+          "BattleReducerRouteEvent.owner=battleActiveEffect",
+          "BattleReducerRouteEvent.owner=battleHitPoint",
+          "BattleCreatureState.activeEffects",
+          "BattleCreatureState.hp"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "ba22087a57edfd67d90d502db97b956297a5c8d58ff0b6e27542c32598ddb6e7",
+      "routeConnectorSha256": "299839bf0f573c3d74b237923fa50c74b5d0d2b46430cda48ca8a3e1be5798b7",
+      "branchFamily": "step",
+      "branchAction": "doEndWardOnWardedSpellCast",
+      "observedActionTaken": "doEndWardOnWardedSpellCast",
+      "harnessTestPath": "packages/battle-runtime/src/sanctuary-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=1 action=doEndWardOnWardedSpellCast qRoute=warded-target-interdiction-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "4e533b9b1dcf9d574832395d37e4a70f3284fd6cbc1fdb6280384453999abc1f",
+        "observedProjectionSha256": "4e533b9b1dcf9d574832395d37e4a70f3284fd6cbc1fdb6280384453999abc1f",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.route.mbt.qnt"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent, AvailableBattleAct.routeEvents, and BattleResolutionResult.routeEvents for Sanctuary early end when the warded creature casts a spell",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=wardedTargetInterdiction",
+          "BattleReducerRouteEvent.owner=battleActiveEffect",
+          "BattleReducerRouteEvent.owner=battleSpellSlotAndActionEconomy",
+          "BattleCreatureState.activeEffects",
+          "BattleFill.kind"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "ba22087a57edfd67d90d502db97b956297a5c8d58ff0b6e27542c32598ddb6e7",
+      "routeConnectorSha256": "299839bf0f573c3d74b237923fa50c74b5d0d2b46430cda48ca8a3e1be5798b7",
+      "branchFamily": "step",
+      "branchAction": "doExcludeAreaEffectFromInterdiction",
+      "observedActionTaken": "doExcludeAreaEffectFromInterdiction",
+      "harnessTestPath": "packages/battle-runtime/src/sanctuary-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=1 action=doExcludeAreaEffectFromInterdiction qRoute=warded-target-interdiction-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "7318c04d044d42e9991f74f87e355571640bd735385e0d61e1fcdd168ac15bc5",
+        "observedProjectionSha256": "7318c04d044d42e9991f74f87e355571640bd735385e0d61e1fcdd168ac15bc5",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.route.mbt.qnt"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent, AvailableBattleAct.routeEvents, and BattleResolutionResult.routeEvents for area-effect exclusion from Sanctuary interdiction",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=wardedTargetInterdiction",
+          "BattleReducerRouteEvent.owner=battleAreaShape",
+          "BattleCreatureState.activeEffects",
+          "BattleHole.kind",
+          "BattleFill.kind"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "ba22087a57edfd67d90d502db97b956297a5c8d58ff0b6e27542c32598ddb6e7",
+      "routeConnectorSha256": "299839bf0f573c3d74b237923fa50c74b5d0d2b46430cda48ca8a3e1be5798b7",
+      "branchFamily": "step",
+      "branchAction": "doInterdictDirectAttackFailedSaveLoss",
+      "observedActionTaken": "doInterdictDirectAttackFailedSaveLoss",
+      "harnessTestPath": "packages/battle-runtime/src/sanctuary-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=1 action=doInterdictDirectAttackFailedSaveLoss qRoute=warded-target-interdiction-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "2931da08a349012238ab6a7916a37aa5e52358850cac6d01a777cc009df70674",
+        "observedProjectionSha256": "2931da08a349012238ab6a7916a37aa5e52358850cac6d01a777cc009df70674",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.route.mbt.qnt"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent, AvailableBattleAct.routeEvents, and BattleResolutionResult.routeEvents for Sanctuary failed save direct attack loss",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=wardedTargetInterdiction",
+          "BattleReducerRouteEvent.owner=battleActiveEffect",
+          "BattleReducerRouteEvent.owner=battleSavingThrowOutcome",
+          "BattleReducerRouteEvent.owner=battleActionEconomy",
+          "BattleHole.kind=sanctuaryInterdictionOutcome",
+          "BattleFill.kind=sanctuaryInterdictionOutcome"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "ba22087a57edfd67d90d502db97b956297a5c8d58ff0b6e27542c32598ddb6e7",
+      "routeConnectorSha256": "299839bf0f573c3d74b237923fa50c74b5d0d2b46430cda48ca8a3e1be5798b7",
+      "branchFamily": "step",
+      "branchAction": "doInterdictDirectSpellSuccessfulSavePassThrough",
+      "observedActionTaken": "doInterdictDirectSpellSuccessfulSavePassThrough",
+      "harnessTestPath": "packages/battle-runtime/src/sanctuary-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=1 action=doInterdictDirectSpellSuccessfulSavePassThrough qRoute=warded-target-interdiction-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "40a14f08bda9855846f72d9b5ac087bbb88dc829a635bfc19a6397884b274d44",
+        "observedProjectionSha256": "40a14f08bda9855846f72d9b5ac087bbb88dc829a635bfc19a6397884b274d44",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.route.mbt.qnt"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent, AvailableBattleAct.routeEvents, and BattleResolutionResult.routeEvents for Sanctuary successful save direct spell pass-through",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=wardedTargetInterdiction",
+          "BattleReducerRouteEvent.owner=battleActiveEffect",
+          "BattleReducerRouteEvent.owner=battleSavingThrowOutcome",
+          "BattleReducerRouteEvent.owner=battleHoleFrontier",
+          "BattleHole.kind=sanctuaryInterdictionOutcome",
+          "BattleFill.kind=sanctuaryInterdictionOutcome"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "ba22087a57edfd67d90d502db97b956297a5c8d58ff0b6e27542c32598ddb6e7",
+      "routeConnectorSha256": "299839bf0f573c3d74b237923fa50c74b5d0d2b46430cda48ca8a3e1be5798b7",
+      "branchFamily": "step",
+      "branchAction": "doRejectIllegalReplacementTarget",
+      "observedActionTaken": "doRejectIllegalReplacementTarget",
+      "harnessTestPath": "packages/battle-runtime/src/sanctuary-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=1 action=doRejectIllegalReplacementTarget qRoute=warded-target-interdiction-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "54aa1fa48e36b112b9931637559207200283b676c311dd4304b4061717438dfc",
+        "observedProjectionSha256": "54aa1fa48e36b112b9931637559207200283b676c311dd4304b4061717438dfc",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.route.mbt.qnt"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent, AvailableBattleAct.routeEvents, and BattleResolutionResult.routeEvents for Sanctuary illegal replacement target rejection",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=wardedTargetInterdiction",
+          "BattleReducerRouteEvent.owner=battleActiveEffect",
+          "BattleReducerRouteEvent.owner=battleSavingThrowOutcome",
+          "BattleReducerRouteEvent.owner=battleTargetSelection",
+          "BattleHole.kind=sanctuaryInterdictionOutcome",
+          "BattleFill.kind=sanctuaryInterdictionOutcome",
+          "BattleFill.kind"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "ba22087a57edfd67d90d502db97b956297a5c8d58ff0b6e27542c32598ddb6e7",
+      "routeConnectorSha256": "299839bf0f573c3d74b237923fa50c74b5d0d2b46430cda48ca8a3e1be5798b7",
+      "branchFamily": "step",
+      "branchAction": "doRetargetDirectAttackToLegalReplacement",
+      "observedActionTaken": "doRetargetDirectAttackToLegalReplacement",
+      "harnessTestPath": "packages/battle-runtime/src/sanctuary-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=1 action=doRetargetDirectAttackToLegalReplacement qRoute=warded-target-interdiction-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "47243aa507177b04854d56c4858797aca7c3af48bf0bb34ab25a8599d8390663",
+        "observedProjectionSha256": "47243aa507177b04854d56c4858797aca7c3af48bf0bb34ab25a8599d8390663",
+        "qntAcceptance": {
+          "tag": "qnt-route",
+          "connectorPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.route.mbt.qnt"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent, AvailableBattleAct.routeEvents, and BattleResolutionResult.routeEvents for Sanctuary legal replacement target admission",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleReducerRouteEvent.subject=wardedTargetInterdiction",
+          "BattleReducerRouteEvent.owner=battleActiveEffect",
+          "BattleReducerRouteEvent.owner=battleSavingThrowOutcome",
+          "BattleReducerRouteEvent.owner=battleTargetSelection",
+          "BattleHole.kind=sanctuaryInterdictionOutcome",
+          "BattleFill.kind=sanctuaryInterdictionOutcome",
+          "BattleFill.kind"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ],
+  "remainingRequiredPublicQRouteCoverage": [],
+  "reviewerFindingsAddressed": [
+    {
+      "finding": "The selected Sanctuary replay previously had deterministic state parity but no public reducer qRoute comparison for the copied warded-target interdiction connector.",
+      "resolution": "Added public route projection for the generic wardedTargetInterdiction route subject and replayed all nine selected Sanctuary qRoute actions against public reducer route events."
+    },
+    {
+      "finding": "Sanctuary area-effect exclusion and early ward-end route ownership needed to remain generic and derived from runtime facts rather than selected spell identity.",
+      "resolution": "The reducer derives route events from typed sanctuaryTargetingInterdiction procedure facts, sanctuaryInterdictionOutcome holes/fills, active sanctuaryWard effects, save-gated area shape facts, attack rolls, spell casts, hit point damage, and reducer result deltas."
+    },
+    {
+      "finding": "Revision review found doEndWardOnWardedDamageDealt route evidence was adapter-local because applyBattleHitPointDamage returned only BattleState.",
+      "resolution": "Changed the replay to set up SRD Flaming Sphere before Sanctuary, then observe damage-dealt early-end qRoute from public resolveBattleSubject BattleResolutionResult.routeEvents for the warded source creature's movableZoneRam resolution."
+    }
+  ],
+  "verification": [
+    {
+      "command": "git log --oneline -1 ralph/cleanroom-owner-battle-spell-20260706T213644Z/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor 09438b1c5c181271e9ee92649fd239858e583422 HEAD",
+      "status": "pass",
+      "detail": "Base ref and HEAD both resolved to 09438b1c5 Mark Ralph task 36 done; Base SHA is an ancestor of HEAD."
+    },
+    {
+      "command": "RAW/ubiquitous-language review: local SRD 5.2.1 Sanctuary, Rules Glossary Target and Area of Effect, Playing the Game Saving Throws and Attack Rolls, and UBIQUITOUS_LANGUAGE.md Saving Throw, Attack Roll, Spell Save DC, Spell Invocation, Spell Effect, and Area of Effect terms",
+      "status": "pass",
+      "detail": "Checked local SRD and ubiquitous-language terms before and after implementation. Route projection is derived from typed runtime procedure/effect/hole/fill/result facts and does not dispatch on authored spell id or name."
+    },
+    {
+      "command": "pnpm --filter @dnd/battle-runtime exec tsc --noEmit --pretty false",
+      "status": "pass",
+      "detail": "Battle runtime TypeScript check passed after adding warded-target interdiction route projection and after moving the damage-dealt early-end replay to the public resolveBattleSubject movable-zone ram path."
+    },
+    {
+      "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+      "status": "pass",
+      "detail": "Required MBT preflight matched only an unrelated Ralph monitor shell command text; no active Vitest runner or stale quint_evaluator was present before focused MBT runs."
+    },
+    {
+      "command": "START=$(date +%s); (while true; do sleep 60; echo \"PROGRESS: $(( $(date +%s) - START ))s\"; done) & PROGRESS_PID=$!; cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=1 pnpm exec vitest run src/sanctuary-selected-identity.mbt.test.ts -t \"observes copied warded-target interdiction qRoute\" 2>&1; STATUS=$?; kill \"$PROGRESS_PID\" 2>/dev/null || true; wait \"$PROGRESS_PID\" 2>/dev/null || true; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$STATUS\"",
+      "status": "pass",
+      "detail": "Focused public qRoute replay passed after moving damage-dealt early-end evidence to resolveBattleSubject and admitting unresolved save-gated area discovery when affected targets are supplied by the later savingThrowOutcome fill: 1 file passed; 1 test passed, 1 skipped; TOTAL: 5s."
+    },
+    {
+      "command": "pnpm cleanroom-branch-coverage:check",
+      "status": "pass",
+      "detail": "Cleanroom branch coverage passed with Task 37 evidence: 738 obligations, 24 sampled inputs."
+    },
+    {
+      "command": "git diff --check",
+      "status": "pass",
+      "detail": "Whitespace check passed."
+    },
+    {
+      "command": "pnpm quality",
+      "status": "pass",
+      "detail": "Full quality chain passed. Cleanroom branch coverage passed with 738 obligations and 24 sampled inputs; app lint reported 61 existing warnings and exited 0; turbo typecheck completed 9 successful tasks, 5 from cache."
+    }
+  ]
+}
