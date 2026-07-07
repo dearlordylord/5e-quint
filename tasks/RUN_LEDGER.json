@@ -4798,60 +4798,101 @@
         "packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt"
       ],
       "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
-      "sourceBranchInventorySha256": "de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec",
+      "sourceBranchInventorySha256": "0d4862acd0e2483409904973d30705bf14c194f530e85e50a6f1e244f333f917",
       "artifacts": {
-        "engineDepth": {
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "795e9de42dd3c481d67aa2493279792fa01e8c4fee223f27d7cae995332e88c6"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-READY-010/README.md",
+          "sha256": "2048d681166981c5b37d1f2f2623dd5b53a0611d6d6db9818ebaafb3ca3d601d"
+        },
+        "engineDepthManifest": {
           "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
-          "sha256": "ca122c1f45bd12565bcd51a6685db75ab2c50c705f37f2c709ec3c72eb32aed3"
+          "sha256": "e9040f48013fd783af10b115d031ec48b3e94092f3ca83c8caca7a871cca7080"
         },
         "stateOwnerManifest": {
           "path": "tasks/STATE_OWNER_MANIFEST.json",
-          "sha256": "930ade5a283e02c6e3b6b5440025f7f448ec710a4800017abd5d6ff70a2762dc"
-        },
-        "validationReport": {
-          "path": "tasks/VALIDATION_REPORT.md",
-          "sha256": "538ede3ca8ba0676dcfe9c6c37b16bd74acf391ee72c84223c4e586185bf9f74"
+          "sha256": "669b0277e4927bfe49a61ab61026acb55c12f645240c89dd6aaead23bf0279e6"
         }
       },
       "targetReplayEvidence": [
         {
           "path": "tasks/target-replay-evidence/CRPI-READY-010.json",
-          "sha256": "559b4abaf58506b4be37d82802946cb85b70810cb4d9e361e10bc42a8661e9ab",
+          "sha256": "dec2b53d4bf7b80770b1feffa713762095256a1ba2550b96353def3c995cc7a5",
           "evidenceRefs": [
-            "tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndCasterTurnAfterConcentrationBreak#trace:MBT_TRACES=8 MBT_STEPS=5 qRoute=blocked-copied-connector-post-cleanup-no-op"
+            "tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doBreakConcentrationBeforeRepeat#trace:MBT_TRACES=8 MBT_STEPS=5 action=doBreakConcentrationBeforeRepeat qRoute=sleep-repeat-save-public-route",
+            "tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doDiscoverRepeatSave#trace:MBT_TRACES=8 MBT_STEPS=5 action=doDiscoverRepeatSave qRoute=sleep-repeat-save-public-route",
+            "tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndCasterTurn#trace:MBT_TRACES=8 MBT_STEPS=5 action=doEndCasterTurn qRoute=sleep-repeat-save-public-route",
+            "tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndCasterTurnAfterConcentrationBreak#trace:MBT_TRACES=8 MBT_STEPS=5 action=doEndCasterTurnAfterConcentrationBreak qRoute=sleep-repeat-save-public-route",
+            "tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndTargetTurnAfterConcentrationBreak#trace:MBT_TRACES=8 MBT_STEPS=5 action=doEndTargetTurnAfterConcentrationBreak qRoute=sleep-repeat-save-public-route",
+            "tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doFillInitialSaveFailure#trace:MBT_TRACES=8 MBT_STEPS=5 action=doFillInitialSaveFailure qRoute=sleep-repeat-save-public-route",
+            "tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doFillRepeatSaveFailure#trace:MBT_TRACES=8 MBT_STEPS=5 action=doFillRepeatSaveFailure qRoute=sleep-repeat-save-public-route",
+            "tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doFillRepeatSaveSuccess#trace:MBT_TRACES=8 MBT_STEPS=5 action=doFillRepeatSaveSuccess qRoute=sleep-repeat-save-public-route"
           ]
         }
       ],
       "commandResults": [
         {
-          "command": "git log --oneline -1 ralph/crpi-ready-010-sleep-repeat-save-route/integration && git log --oneline -1 HEAD && git merge-base --is-ancestor a4e419eb19bc6827c70bcd3fdc00e6c9af8af6c7 HEAD",
+          "command": "git log --oneline -1 ralph/cleanroom-sleep-replay-20260707T221938Z/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor 143c35035d42197e280ee0820c4e4c805fbb6421 HEAD",
           "status": "pass",
-          "detail": "Integration and HEAD were a4e419eb1; base SHA is an ancestor."
+          "detail": "Base ref and HEAD both resolved to 143c35035 Merge branch 'ralph/cleanroom-source-unblock-20260707T214846Z/integration'; Base SHA is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language review: local SRD 5.2.1 Sleep, Rules Glossary Concentration/Incapacitated/Unconscious, and UBIQUITOUS_LANGUAGE.md Saving Throw, Condition, Concentration, Boundary Crossing, Spell Effect, and Turn Structure terms",
+          "status": "pass",
+          "detail": "Checked local SRD and ubiquitous-language terms. Route evidence is derived from typed Sleep target admission, existing active-effect, Concentration, condition, hole, fill, and public reducer route-event facts; no authored-identity dispatch or duplicate repeat-save ledger was added."
         },
         {
           "command": "pnpm --filter @dnd/battle-runtime typecheck",
           "status": "pass"
         },
         {
-          "command": "START=$(date +%s); MBT_TRACES=8 MBT_STEPS=5 pnpm --filter @dnd/battle-runtime exec vitest run src/sleep-repeat-save.mbt.test.ts 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
           "status": "pass",
-          "detail": "2 tests passed and 1 copied-connector replay blocker was skipped; TOTAL: 7s."
+          "detail": "Required MBT preflight matched only an unrelated Ralph monitor shell command text; no active Vitest runner or stale quint_evaluator was present before the focused MBT rerun."
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=8 MBT_STEPS=5 pnpm --filter @dnd/battle-runtime exec vitest run src/sleep-repeat-save.mbt.test.ts 2>&1; STATUS=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$STATUS\"",
+          "status": "pass",
+          "detail": "Focused Sleep repeat-save state and qRoute replay passed: 1 file passed; 3 tests passed; TOTAL: 11s."
         },
         {
           "command": "pnpm cleanroom-branch-coverage:check",
           "status": "pass",
-          "detail": "738 obligations, 24 sampled inputs."
+          "detail": "Cleanroom branch coverage passed with 738 obligations and 24 sampled inputs."
         },
         {
           "command": "git diff --check",
-          "status": "pass"
+          "status": "pass",
+          "detail": "Whitespace check passed."
         },
         {
           "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
-          "status": "blocked",
-          "detail": "Round 1 rejected bounded replay; round 2 rejected caller-authored observation; round 3 removed that input; round 4 narrowed turn-boundary routing to sleepPendingRepeatSave; round 5 restored the copied connector and recorded the post-cleanup no-op mismatch as source-QNT-corpus blocker; round 6 removed overclaimed accepted coverage from the validation report; round 8 recorded concrete required plan edits in the validation artifacts because the plan file is outside the permitted task worktree edit root."
+          "status": "pass",
+          "detail": "Round 1 identified unrelated generic battleAction route events in the broader public reducer output; round 2 scoped the quarantined replay adapter to the copied Sleep connector startBattle and repeatSaveConditionEffect route subject and found no remaining reasonable findings. No production duplicate state was introduced."
         }
-      ]
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-READY-010",
+            "impact": "unblocked"
+          },
+          {
+            "taskId": "future repeat-save condition-effect route tasks",
+            "impact": "left unchanged"
+          }
+        ],
+        "observations": [
+          "Sleep repeat-save qRoute replay now observes all eight source branch obligations through public startBattle, discoverBattleActs, and resolveBattleSubject route events.",
+          "The replay adapter scopes public route events to the copied Sleep connector startBattle marker and repeatSaveConditionEffect route subject, so unrelated generic battleAction events from the broader reducer are not treated as part of this connector projection.",
+          "No durable BattleState field, duplicate repeat-save ledger, or authored spell-id production dispatch was added."
+        ],
+        "requiredPlanEdits": "none"
+      }
     },
     {
       "taskId": "CRPI-READY-011",
@@ -9512,8 +9553,7 @@
         "observations": [
           "Weapon-hosted attack and rider qRoute is observable through public battleReducerStartRouteEvent, resolveBattleSubject, and endTurn route events for spell-hosted weapon attacks, held-weapon active effects, weapon damage riders, item-target boundary, Hit Point/Attack Roll, and active-effect cleanup.",
           "No new durable BattleState fields were needed; route evidence is derived from existing subjects, typed spell invocation procedures, fills, holes, active effects, Hit Point facts, and cleanup state.",
-          "Magic Weapon item target identity remains table boundary evidence; the accepted qRoute uses item-target boundary ownership and active-effect ownership with no reducer-route hole for table-owned item choice."
-          ,
+          "Magic Weapon item target identity remains table boundary evidence; the accepted qRoute uses item-target boundary ownership and active-effect ownership with no reducer-route hole for table-owned item choice.",
           "Held-weapon active-effect attack routes now require the selected attack's attached weapon item and weapon shape to match the active override; unaffected weapon or Unarmed Strike attacks preserve the normal weapon route tail."
         ],
         "requiredPlanEdits": "none"

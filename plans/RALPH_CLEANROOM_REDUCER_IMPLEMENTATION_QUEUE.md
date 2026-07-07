@@ -247,7 +247,7 @@
     {
       "number": 41,
       "id": "CRPI-READY-010",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-sleep-repeat-save"
     },
     {
@@ -3133,7 +3133,7 @@ Plan Impact:
 
 ### Task 41 - CRPI-READY-010
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

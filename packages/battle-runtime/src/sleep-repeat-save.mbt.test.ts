@@ -123,6 +123,11 @@ const SLEEP_REPEAT_SAVE_ROUTE_SURFACE_BY_TAG = {
   RepeatSaveFailureUnconsciousRouteSurface:
     "repeatSaveFailureUnconscious",
 } as const satisfies Readonly<Record<string, SleepRepeatSaveRouteSurface>>;
+const SLEEP_REPEAT_SAVE_ROUTE_SUBJECT =
+  "repeatSaveConditionEffect" as const satisfies Extract<
+    ReducerRouteEvent,
+    { readonly subject: string }
+  >["subject"];
 
 const sleepUnit = unitLibrary.requireUnit("sleep");
 if (sleepUnit.kind !== "spell") {
@@ -257,7 +262,7 @@ function createSleepRepeatSavePublicRouteDriver() {
       events: readonly ReducerRouteEvent[] | undefined,
     ): void {
       if (events !== undefined) {
-        route = [...route, ...events];
+        route = [...route, ...events.filter(isSleepRepeatSaveRouteEvent)];
       }
     }
 
@@ -356,6 +361,13 @@ function createSleepRepeatSavePublicRouteDriver() {
   });
 }
 
+function isSleepRepeatSaveRouteEvent(event: ReducerRouteEvent): boolean {
+  return (
+    event.kind === "startBattle" ||
+    ("subject" in event && event.subject === SLEEP_REPEAT_SAVE_ROUTE_SUBJECT)
+  );
+}
+
 const sleepRepeatSaveStateCheck = stateCheck(
   normalizeSleepRepeatSaveQuintState,
   (spec: SleepRepeatSaveMbtProjection, impl: SleepRepeatSaveMbtProjection) => {
@@ -396,8 +408,8 @@ describe("Sleep repeat-save MBT parity", () => {
     MBT_TEST_TIMEOUT_MS,
   );
 
-  it.skip(
-    "blocked: copied Sleep repeat-save qRoute expects post-cleanup turn-boundary events with no reducer-owned frontier",
+  it(
+    "replays Sleep repeat-save qRoute through public reducer route events",
     async () => {
       await run({
         spec: mbtSpecPath(

@@ -6134,74 +6134,53 @@ Verification results:
 
 ## CRPI-READY-010
 
+Status: `pass`
+
+- Task: 41
+- Driver path: `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt`
+- Route connector path: `packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt`
+- Route class: `reducer-routed`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-010.json`
+- Target profile: `typescript-source-worktree`
 - Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
-- Source branch inventory SHA: `de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec`
-- Driver: `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt`
-- Route connector: `packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt`
-- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+- Source branch inventory SHA: `0d4862acd0e2483409904973d30705bf14c194f530e85e50a6f1e244f333f917`
 
-Allowed inputs used:
-
-- `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt`
-- `packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt`
-- `packages/battle-runtime/battle-runtime-reducer-route.qnt`
-- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
-- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
-- `plans/cleanroom-guidance/reducer-spine.md`
-- `.references/srd-5.2.1/Spells/Descriptions-S-Z.md`
-- `.references/srd-5.2.1/Rules-Glossary.md`
-- `UBIQUITOUS_LANGUAGE.md`
-
-Behavior implemented:
-
-Sleep repeat-save route instrumentation was added for the executable,
-state-owned route segments available through public battle reducer route
-events. The route starts with `battleReducerStartRouteEvent`, discovers the
-Sleep spell act through `AvailableBattleAct.routeEvents`, resolves the selected
-Sleep target admission subject through `BattleResolutionResult.routeEvents`,
-observes concentration cleanup through the public `endConcentration` runtime
-command, and observes turn-boundary repeat-save frontier and fill routes
-through public `endTurn` resolution.
+Task 41 accepts Sleep repeat-save route replay through public battle reducer
+route events. The target replay starts with `battleReducerStartRouteEvent`,
+discovers the Sleep spell act through `AvailableBattleAct.routeEvents`, resolves
+Sleep target admission and repeat-save fills through
+`BattleResolutionResult.routeEvents`, observes Concentration cleanup through the
+public `endConcentration` runtime command, and observes turn-boundary
+repeat-save discovery through public `endTurn` resolution while
+`sleepPendingRepeatSave` exists.
 
 The runtime does not add a parallel repeat-save ledger. Sleep repeat-save
-ownership remains in existing `BattleCreatureState.activeEffects` entries,
+ownership remains in existing `BattleCreatureState.activeEffects`,
 Concentration remains `BattleCreatureState.concentration`, condition lifecycle
-state remains `BattleCreatureState.conditions`, and turn-boundary repeat-save
-frontier is derived from the existing `sleepPendingRepeatSave` active effect
-and `sleepRepeatSave` hole. After a failed repeat save replaces that frontier
-with `sleepUnconscious`, later end turns no longer emit
+state remains `BattleCreatureState.conditions`, and the turn-boundary
+repeat-save frontier is derived from the existing `sleepPendingRepeatSave`
+active effect and `sleepRepeatSave` hole. After Concentration cleanup removes
+that frontier, later turn-boundary surface transitions emit no
 `repeatSaveConditionEffect` turn-boundary route events.
 
-The restored copied connector still appends `repeatSaveConditionEffect`
-`battleTurnBoundary` no-op events after Concentration cleanup has removed the
-Sleep frontier. The target reducer intentionally does not emit those events
-because no reducer-owned `sleepPendingRepeatSave` frontier remains. This is
-recorded as a source-QNT-corpus blocker, not accepted replay. Therefore Task 41
-does not have accepted target replay evidence for the copied connector
-projection.
+The replay harness scopes observed public route events to the copied Sleep
+connector's `startBattle` marker and `repeatSaveConditionEffect` subject. This
+keeps unrelated generic public `battleAction` route events out of the connector
+projection without reconstructing adapter-local expected routes.
 
 Copied qRoute branch acceptance:
 
-| Obligation                                                                                                     | Target replay evidence                                                                                                                                                                                                                                                                                                           | Diagnostic tests                                                                                                                                                                                                                          | Status                                   |
-| -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doFillInitialSaveFailure`               | No accepted copied-connector replay evidence. Blocker evidence: `tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndCasterTurnAfterConcentrationBreak#trace:MBT_TRACES=8 MBT_STEPS=5 qRoute=blocked-copied-connector-post-cleanup-no-op`         | State-owned route segment is implemented diagnostically, but full copied `qRoute` replay is skipped because a later copied-connector branch cannot be matched from reducer-owned state.                                                   | `not-covered: source-qnt-corpus-blocked` |
-| `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doBreakConcentrationBeforeRepeat`       | No accepted copied-connector replay evidence. Blocker evidence: `tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndCasterTurnAfterConcentrationBreak#trace:MBT_TRACES=8 MBT_STEPS=5 qRoute=blocked-copied-connector-post-cleanup-no-op`         | State-owned concentration cleanup route segment is implemented diagnostically, but the copied connector then expects post-cleanup no-op turn-boundary route events.                                                                       | `not-covered: source-qnt-corpus-blocked` |
-| `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndCasterTurnAfterConcentrationBreak` | `tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndCasterTurnAfterConcentrationBreak#trace:MBT_TRACES=8 MBT_STEPS=5 qRoute=blocked-copied-connector-post-cleanup-no-op`                                                                         | The restored copied connector expects a post-cleanup no-op event after no reducer-owned Sleep frontier remains.                                                                                                                           | `not-covered: source-qnt-corpus-blocked` |
-| `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndTargetTurnAfterConcentrationBreak` | No accepted copied-connector replay evidence. Related blocker evidence: `tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndCasterTurnAfterConcentrationBreak#trace:MBT_TRACES=8 MBT_STEPS=5 qRoute=blocked-copied-connector-post-cleanup-no-op` | Same copied connector post-cleanup no-op mismatch.                                                                                                                                                                                        | `not-covered: source-qnt-corpus-blocked` |
-| `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doDiscoverRepeatSave`                   | No accepted copied-connector replay evidence. Blocker evidence: `tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndCasterTurnAfterConcentrationBreak#trace:MBT_TRACES=8 MBT_STEPS=5 qRoute=blocked-copied-connector-post-cleanup-no-op`         | State-owned repeat-save discovery route segment is implemented diagnostically, but full copied `qRoute` replay remains blocked.                                                                                                           | `not-covered: source-qnt-corpus-blocked` |
-| `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doFillRepeatSaveSuccess`                | No accepted copied-connector replay evidence. Blocker evidence: `tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndCasterTurnAfterConcentrationBreak#trace:MBT_TRACES=8 MBT_STEPS=5 qRoute=blocked-copied-connector-post-cleanup-no-op`         | State-owned repeat-save success cleanup route segment is implemented diagnostically, but full copied `qRoute` replay remains blocked.                                                                                                     | `not-covered: source-qnt-corpus-blocked` |
-| `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doFillRepeatSaveFailure`                | No accepted copied-connector replay evidence. Blocker evidence: `tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndCasterTurnAfterConcentrationBreak#trace:MBT_TRACES=8 MBT_STEPS=5 qRoute=blocked-copied-connector-post-cleanup-no-op`         | State-owned repeat-save failure cleanup route segment is implemented diagnostically; the added regression confirms later `sleepUnconscious` state does not leak repeat-save frontier events. Full copied `qRoute` replay remains blocked. | `not-covered: source-qnt-corpus-blocked` |
-
-Target replay evidence:
-
-- Evidence file: `tasks/target-replay-evidence/CRPI-READY-010.json`
-- Target profile: `typescript-source-worktree`
-- Reproduction trace id: `MBT_TRACES=8 MBT_STEPS=5 qRoute=blocked-copied-connector-post-cleanup-no-op`
-- Public route assertion:
-  - `packages/battle-runtime/src/sleep-repeat-save.mbt.test.ts#blocked: copied Sleep repeat-save qRoute expects post-cleanup turn-boundary events with no reducer-owned frontier`
-  - `packages/battle-runtime/src/sleep-repeat-save.mbt.test.ts#does not route repeat-save turn-boundary events after repeat-save failure consumes the frontier`
-- Accepted copied-connector replay: none; the copied route replay test is
-  intentionally skipped and recorded as blocked.
+| Obligation | Target replay evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doBreakConcentrationBeforeRepeat` | `tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doBreakConcentrationBeforeRepeat#trace:MBT_TRACES=8 MBT_STEPS=5 action=doBreakConcentrationBeforeRepeat qRoute=sleep-repeat-save-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doDiscoverRepeatSave` | `tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doDiscoverRepeatSave#trace:MBT_TRACES=8 MBT_STEPS=5 action=doDiscoverRepeatSave qRoute=sleep-repeat-save-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndCasterTurn` | `tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndCasterTurn#trace:MBT_TRACES=8 MBT_STEPS=5 action=doEndCasterTurn qRoute=sleep-repeat-save-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndCasterTurnAfterConcentrationBreak` | `tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndCasterTurnAfterConcentrationBreak#trace:MBT_TRACES=8 MBT_STEPS=5 action=doEndCasterTurnAfterConcentrationBreak qRoute=sleep-repeat-save-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndTargetTurnAfterConcentrationBreak` | `tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndTargetTurnAfterConcentrationBreak#trace:MBT_TRACES=8 MBT_STEPS=5 action=doEndTargetTurnAfterConcentrationBreak qRoute=sleep-repeat-save-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doFillInitialSaveFailure` | `tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doFillInitialSaveFailure#trace:MBT_TRACES=8 MBT_STEPS=5 action=doFillInitialSaveFailure qRoute=sleep-repeat-save-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doFillRepeatSaveFailure` | `tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doFillRepeatSaveFailure#trace:MBT_TRACES=8 MBT_STEPS=5 action=doFillRepeatSaveFailure qRoute=sleep-repeat-save-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doFillRepeatSaveSuccess` | `tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doFillRepeatSaveSuccess#trace:MBT_TRACES=8 MBT_STEPS=5 action=doFillRepeatSaveSuccess qRoute=sleep-repeat-save-public-route` | `_none_` | `covered` |
 
 Harness artifacts:
 
@@ -6212,61 +6191,40 @@ Harness artifacts:
 
 Remaining gaps:
 
-- Source-QNT-corpus blocker: copied connector
-  `packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt`
-  appends post-Concentration-cleanup `battleTurnBoundary` no-op events after
-  the Sleep repeat-save frontier has been removed. The target reducer cannot
-  derive those events from `BattleState`, holes, fills, or current active-effect
-  ownership without adding duplicate replay-history state.
+- None for Task 41.
 
-Required plan edits:
+RAW and ubiquitous-language review:
 
-- In `/workspace/typescript/dnd/.ralph/runs/crpi-ready-010-sleep-repeat-save-route/plan.md`
-  summary row 696, change `CRPI-READY-010` from `ready-for-research` to
-  `blocked` and change the blocker column from `none` to
-  `source-qnt-corpus-blocker`.
-- In the Task 41 body in the same plan, change `Status:
-ready-for-research` to `Status: blocked`.
-- Add a blocker detail to Task 41: copied connector
-  `packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt`
-  expects post-Concentration-cleanup `battleTurnBoundary` no-op `qRoute`
-  events after no reducer-owned Sleep repeat-save frontier remains.
-- Add a follow-up queue item to either refresh/reclassify the copied connector
-  obligation or introduce a valid reducer-owned route fact that allows
-  unskipped copied `qRoute` replay without duplicate replay-history state.
+- SRD 5.2.1 `Spells/Descriptions-S-Z.md#Sleep` defines the initial Wisdom
+  saving throw, Incapacitated pending repeat save, failed-repeat Unconscious
+  condition, and cleanup when the spell ends.
+- SRD 5.2.1 `Rules-Glossary.md#Concentration` defines effect end when the
+  creator loses Concentration.
+- SRD 5.2.1 `Rules-Glossary.md#Incapacitated [Condition]` and
+  `#Unconscious [Condition]` define the condition effects used by the replay.
+- `UBIQUITOUS_LANGUAGE.md` defines Saving Throw, Condition, Concentration,
+  Boundary Crossing, Spell Effect, and Turn Structure terms used by this route.
 
 Verification results:
 
-- Base check passed: `ralph/crpi-ready-010-sleep-repeat-save-route/integration`
-  and `HEAD` were both `a4e419eb1 Mark scalar buff route replay done`, and
-  `git merge-base --is-ancestor a4e419eb19bc6827c70bcd3fdc00e6c9af8af6c7 HEAD`
-  exited 0.
-- RAW/ubiquitous-language review passed against Sleep, Concentration,
-  Incapacitated, Unconscious, and UBIQUITOUS_LANGUAGE.md terms for conditions,
-  turn structure, Concentration, Spell Invocation, and Spell Effect.
+- Task-base check passed: base ref
+  `ralph/cleanroom-sleep-replay-20260707T221938Z/integration` and `HEAD`
+  both resolved to `143c35035 Merge branch 'ralph/cleanroom-source-unblock-20260707T214846Z/integration'`; Base SHA
+  `143c35035d42197e280ee0820c4e4c805fbb6421` is an ancestor of `HEAD`.
 - `pnpm --filter @dnd/battle-runtime typecheck` passed.
-- Before each MBT run, `ps aux | grep vitest | grep -v grep` and
-  `ps aux | grep quint_evaluator | grep -v grep` found no active runner or
-  evaluator.
-- Revision round 5 restored the copied route connector to hash
-  `c124d6c23ba30449dcceb346d88f57a321ccf9c953db6af627285b60861d95d2` and
-  recorded the post-cleanup no-op mismatch as a source-QNT-corpus blocker.
-- Full focused route MBT run
-  `START=$(date +%s); MBT_TRACES=8 MBT_STEPS=5 pnpm --filter @dnd/battle-runtime exec vitest run src/sleep-repeat-save.mbt.test.ts 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"`
-  passed with 2 tests and 1 skipped copied-connector replay blocker; `TOTAL: 7s`.
-- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24
-  sampled inputs.
+- Required MBT preflight found no active Vitest runner or stale
+  `quint_evaluator`; it only matched an unrelated Ralph monitor shell command
+  text.
+- Focused Sleep replay passed:
+  `START=$(date +%s); MBT_TRACES=8 MBT_STEPS=5 pnpm --filter @dnd/battle-runtime exec vitest run src/sleep-repeat-save.mbt.test.ts 2>&1; STATUS=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$STATUS"`
+  passed with 1 file and 3 tests; `TOTAL: 11s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
 - `git diff --check` passed.
-- Reviewer-loop completed with a blocker: round 1 found the bounded replay, round 2
-  rejected a caller-authored input, and round 3 removed that input and aligned
-  the connector with reducer-owned Sleep frontier facts. Round 4 narrowed the
-  turn-boundary route predicate to `sleepPendingRepeatSave` and added the
-  post-failure regression. Round 5 restored the copied connector and recorded
-  the remaining mismatch as a plan-impact blocker. Round 6 removed overclaimed
-  accepted coverage from this report. Round 8 recorded concrete required plan
-  edits inside the Task 41 validation artifacts; the plan file itself is
-  outside this task worktree's permitted edit root.
-
+- Reviewer-loop convergence passed: RAW traceability, ubiquitous-language/domain
+  terminology, architecture/connascence, and code-review passes found no
+  remaining reasonable findings after scoping the replay adapter to the copied
+  Sleep route connector subject and confirming no production duplicate state was
+  introduced.
 ## CRPI-READY-009
 
 - Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
@@ -12756,74 +12714,53 @@ Verification results:
 
 ## CRPI-READY-010
 
+Status: `pass`
+
+- Task: 41
+- Driver path: `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt`
+- Route connector path: `packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt`
+- Route class: `reducer-routed`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-READY-010.json`
+- Target profile: `typescript-source-worktree`
 - Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
-- Source branch inventory SHA: `de9d69d8883bbafdfed9a601732620fef6853862f0edaaf48b006ffff2ffa6ec`
-- Driver: `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt`
-- Route connector: `packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt`
-- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+- Source branch inventory SHA: `0d4862acd0e2483409904973d30705bf14c194f530e85e50a6f1e244f333f917`
 
-Allowed inputs used:
-
-- `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt`
-- `packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt`
-- `packages/battle-runtime/battle-runtime-reducer-route.qnt`
-- `plans/cleanroom-branch-coverage/source-branch-inventory.json`
-- `plans/cleanroom-branch-coverage/reducer-route-inventory.json`
-- `plans/cleanroom-guidance/reducer-spine.md`
-- `.references/srd-5.2.1/Spells/Descriptions-S-Z.md`
-- `.references/srd-5.2.1/Rules-Glossary.md`
-- `UBIQUITOUS_LANGUAGE.md`
-
-Behavior implemented:
-
-Sleep repeat-save route instrumentation was added for the executable,
-state-owned route segments available through public battle reducer route
-events. The route starts with `battleReducerStartRouteEvent`, discovers the
-Sleep spell act through `AvailableBattleAct.routeEvents`, resolves the selected
-Sleep target admission subject through `BattleResolutionResult.routeEvents`,
-observes concentration cleanup through the public `endConcentration` runtime
-command, and observes turn-boundary repeat-save frontier and fill routes
-through public `endTurn` resolution.
+Task 41 accepts Sleep repeat-save route replay through public battle reducer
+route events. The target replay starts with `battleReducerStartRouteEvent`,
+discovers the Sleep spell act through `AvailableBattleAct.routeEvents`, resolves
+Sleep target admission and repeat-save fills through
+`BattleResolutionResult.routeEvents`, observes Concentration cleanup through the
+public `endConcentration` runtime command, and observes turn-boundary
+repeat-save discovery through public `endTurn` resolution while
+`sleepPendingRepeatSave` exists.
 
 The runtime does not add a parallel repeat-save ledger. Sleep repeat-save
-ownership remains in existing `BattleCreatureState.activeEffects` entries,
+ownership remains in existing `BattleCreatureState.activeEffects`,
 Concentration remains `BattleCreatureState.concentration`, condition lifecycle
-state remains `BattleCreatureState.conditions`, and turn-boundary repeat-save
-frontier is derived from the existing `sleepPendingRepeatSave` active effect
-and `sleepRepeatSave` hole. After a failed repeat save replaces that frontier
-with `sleepUnconscious`, later end turns no longer emit
+state remains `BattleCreatureState.conditions`, and the turn-boundary
+repeat-save frontier is derived from the existing `sleepPendingRepeatSave`
+active effect and `sleepRepeatSave` hole. After Concentration cleanup removes
+that frontier, later turn-boundary surface transitions emit no
 `repeatSaveConditionEffect` turn-boundary route events.
 
-The restored copied connector still appends `repeatSaveConditionEffect`
-`battleTurnBoundary` no-op events after Concentration cleanup has removed the
-Sleep frontier. The target reducer intentionally does not emit those events
-because no reducer-owned `sleepPendingRepeatSave` frontier remains. This is
-recorded as a source-QNT-corpus blocker, not accepted replay. Therefore Task 41
-does not have accepted target replay evidence for the copied connector
-projection.
+The replay harness scopes observed public route events to the copied Sleep
+connector's `startBattle` marker and `repeatSaveConditionEffect` subject. This
+keeps unrelated generic public `battleAction` route events out of the connector
+projection without reconstructing adapter-local expected routes.
 
 Copied qRoute branch acceptance:
 
-| Obligation                                                                                                     | Target replay evidence                                                                                                                                                                                                                                                                                                           | Diagnostic tests                                                                                                                                                                                                                          | Status                                   |
-| -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doFillInitialSaveFailure`               | No accepted copied-connector replay evidence. Blocker evidence: `tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndCasterTurnAfterConcentrationBreak#trace:MBT_TRACES=8 MBT_STEPS=5 qRoute=blocked-copied-connector-post-cleanup-no-op`         | State-owned route segment is implemented diagnostically, but full copied `qRoute` replay is skipped because a later copied-connector branch cannot be matched from reducer-owned state.                                                   | `not-covered: source-qnt-corpus-blocked` |
-| `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doBreakConcentrationBeforeRepeat`       | No accepted copied-connector replay evidence. Blocker evidence: `tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndCasterTurnAfterConcentrationBreak#trace:MBT_TRACES=8 MBT_STEPS=5 qRoute=blocked-copied-connector-post-cleanup-no-op`         | State-owned concentration cleanup route segment is implemented diagnostically, but the copied connector then expects post-cleanup no-op turn-boundary route events.                                                                       | `not-covered: source-qnt-corpus-blocked` |
-| `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndCasterTurnAfterConcentrationBreak` | `tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndCasterTurnAfterConcentrationBreak#trace:MBT_TRACES=8 MBT_STEPS=5 qRoute=blocked-copied-connector-post-cleanup-no-op`                                                                         | The restored copied connector expects a post-cleanup no-op event after no reducer-owned Sleep frontier remains.                                                                                                                           | `not-covered: source-qnt-corpus-blocked` |
-| `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndTargetTurnAfterConcentrationBreak` | No accepted copied-connector replay evidence. Related blocker evidence: `tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndCasterTurnAfterConcentrationBreak#trace:MBT_TRACES=8 MBT_STEPS=5 qRoute=blocked-copied-connector-post-cleanup-no-op` | Same copied connector post-cleanup no-op mismatch.                                                                                                                                                                                        | `not-covered: source-qnt-corpus-blocked` |
-| `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doDiscoverRepeatSave`                   | No accepted copied-connector replay evidence. Blocker evidence: `tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndCasterTurnAfterConcentrationBreak#trace:MBT_TRACES=8 MBT_STEPS=5 qRoute=blocked-copied-connector-post-cleanup-no-op`         | State-owned repeat-save discovery route segment is implemented diagnostically, but full copied `qRoute` replay remains blocked.                                                                                                           | `not-covered: source-qnt-corpus-blocked` |
-| `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doFillRepeatSaveSuccess`                | No accepted copied-connector replay evidence. Blocker evidence: `tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndCasterTurnAfterConcentrationBreak#trace:MBT_TRACES=8 MBT_STEPS=5 qRoute=blocked-copied-connector-post-cleanup-no-op`         | State-owned repeat-save success cleanup route segment is implemented diagnostically, but full copied `qRoute` replay remains blocked.                                                                                                     | `not-covered: source-qnt-corpus-blocked` |
-| `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doFillRepeatSaveFailure`                | No accepted copied-connector replay evidence. Blocker evidence: `tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndCasterTurnAfterConcentrationBreak#trace:MBT_TRACES=8 MBT_STEPS=5 qRoute=blocked-copied-connector-post-cleanup-no-op`         | State-owned repeat-save failure cleanup route segment is implemented diagnostically; the added regression confirms later `sleepUnconscious` state does not leak repeat-save frontier events. Full copied `qRoute` replay remains blocked. | `not-covered: source-qnt-corpus-blocked` |
-
-Target replay evidence:
-
-- Evidence file: `tasks/target-replay-evidence/CRPI-READY-010.json`
-- Target profile: `typescript-source-worktree`
-- Reproduction trace id: `MBT_TRACES=8 MBT_STEPS=5 qRoute=blocked-copied-connector-post-cleanup-no-op`
-- Public route assertion:
-  - `packages/battle-runtime/src/sleep-repeat-save.mbt.test.ts#blocked: copied Sleep repeat-save qRoute expects post-cleanup turn-boundary events with no reducer-owned frontier`
-  - `packages/battle-runtime/src/sleep-repeat-save.mbt.test.ts#does not route repeat-save turn-boundary events after repeat-save failure consumes the frontier`
-- Accepted copied-connector replay: none; the copied route replay test is
-  intentionally skipped and recorded as blocked.
+| Obligation | Target replay evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doBreakConcentrationBeforeRepeat` | `tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doBreakConcentrationBeforeRepeat#trace:MBT_TRACES=8 MBT_STEPS=5 action=doBreakConcentrationBeforeRepeat qRoute=sleep-repeat-save-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doDiscoverRepeatSave` | `tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doDiscoverRepeatSave#trace:MBT_TRACES=8 MBT_STEPS=5 action=doDiscoverRepeatSave qRoute=sleep-repeat-save-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndCasterTurn` | `tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndCasterTurn#trace:MBT_TRACES=8 MBT_STEPS=5 action=doEndCasterTurn qRoute=sleep-repeat-save-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndCasterTurnAfterConcentrationBreak` | `tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndCasterTurnAfterConcentrationBreak#trace:MBT_TRACES=8 MBT_STEPS=5 action=doEndCasterTurnAfterConcentrationBreak qRoute=sleep-repeat-save-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndTargetTurnAfterConcentrationBreak` | `tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doEndTargetTurnAfterConcentrationBreak#trace:MBT_TRACES=8 MBT_STEPS=5 action=doEndTargetTurnAfterConcentrationBreak qRoute=sleep-repeat-save-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doFillInitialSaveFailure` | `tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doFillInitialSaveFailure#trace:MBT_TRACES=8 MBT_STEPS=5 action=doFillInitialSaveFailure qRoute=sleep-repeat-save-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doFillRepeatSaveFailure` | `tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doFillRepeatSaveFailure#trace:MBT_TRACES=8 MBT_STEPS=5 action=doFillRepeatSaveFailure qRoute=sleep-repeat-save-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doFillRepeatSaveSuccess` | `tasks/target-replay-evidence/CRPI-READY-010.json#driver:packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt#step:doFillRepeatSaveSuccess#trace:MBT_TRACES=8 MBT_STEPS=5 action=doFillRepeatSaveSuccess qRoute=sleep-repeat-save-public-route` | `_none_` | `covered` |
 
 Harness artifacts:
 
@@ -12834,61 +12771,40 @@ Harness artifacts:
 
 Remaining gaps:
 
-- Source-QNT-corpus blocker: copied connector
-  `packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt`
-  appends post-Concentration-cleanup `battleTurnBoundary` no-op events after
-  the Sleep repeat-save frontier has been removed. The target reducer cannot
-  derive those events from `BattleState`, holes, fills, or current active-effect
-  ownership without adding duplicate replay-history state.
+- None for Task 41.
 
-Required plan edits:
+RAW and ubiquitous-language review:
 
-- In `/workspace/typescript/dnd/.ralph/runs/crpi-ready-010-sleep-repeat-save-route/plan.md`
-  summary row 696, change `CRPI-READY-010` from `ready-for-research` to
-  `blocked` and change the blocker column from `none` to
-  `source-qnt-corpus-blocker`.
-- In the Task 41 body in the same plan, change `Status:
-ready-for-research` to `Status: blocked`.
-- Add a blocker detail to Task 41: copied connector
-  `packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt`
-  expects post-Concentration-cleanup `battleTurnBoundary` no-op `qRoute`
-  events after no reducer-owned Sleep repeat-save frontier remains.
-- Add a follow-up queue item to either refresh/reclassify the copied connector
-  obligation or introduce a valid reducer-owned route fact that allows
-  unskipped copied `qRoute` replay without duplicate replay-history state.
+- SRD 5.2.1 `Spells/Descriptions-S-Z.md#Sleep` defines the initial Wisdom
+  saving throw, Incapacitated pending repeat save, failed-repeat Unconscious
+  condition, and cleanup when the spell ends.
+- SRD 5.2.1 `Rules-Glossary.md#Concentration` defines effect end when the
+  creator loses Concentration.
+- SRD 5.2.1 `Rules-Glossary.md#Incapacitated [Condition]` and
+  `#Unconscious [Condition]` define the condition effects used by the replay.
+- `UBIQUITOUS_LANGUAGE.md` defines Saving Throw, Condition, Concentration,
+  Boundary Crossing, Spell Effect, and Turn Structure terms used by this route.
 
 Verification results:
 
-- Base check passed: `ralph/crpi-ready-010-sleep-repeat-save-route/integration`
-  and `HEAD` were both `a4e419eb1 Mark scalar buff route replay done`, and
-  `git merge-base --is-ancestor a4e419eb19bc6827c70bcd3fdc00e6c9af8af6c7 HEAD`
-  exited 0.
-- RAW/ubiquitous-language review passed against Sleep, Concentration,
-  Incapacitated, Unconscious, and UBIQUITOUS_LANGUAGE.md terms for conditions,
-  turn structure, Concentration, Spell Invocation, and Spell Effect.
+- Task-base check passed: base ref
+  `ralph/cleanroom-sleep-replay-20260707T221938Z/integration` and `HEAD`
+  both resolved to `143c35035 Merge branch 'ralph/cleanroom-source-unblock-20260707T214846Z/integration'`; Base SHA
+  `143c35035d42197e280ee0820c4e4c805fbb6421` is an ancestor of `HEAD`.
 - `pnpm --filter @dnd/battle-runtime typecheck` passed.
-- Before each MBT run, `ps aux | grep vitest | grep -v grep` and
-  `ps aux | grep quint_evaluator | grep -v grep` found no active runner or
-  evaluator.
-- Revision round 5 restored the copied route connector to hash
-  `c124d6c23ba30449dcceb346d88f57a321ccf9c953db6af627285b60861d95d2` and
-  recorded the post-cleanup no-op mismatch as a source-QNT-corpus blocker.
-- Full focused route MBT run
-  `START=$(date +%s); MBT_TRACES=8 MBT_STEPS=5 pnpm --filter @dnd/battle-runtime exec vitest run src/sleep-repeat-save.mbt.test.ts 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"`
-  passed with 2 tests and 1 skipped copied-connector replay blocker; `TOTAL: 7s`.
-- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24
-  sampled inputs.
+- Required MBT preflight found no active Vitest runner or stale
+  `quint_evaluator`; it only matched an unrelated Ralph monitor shell command
+  text.
+- Focused Sleep replay passed:
+  `START=$(date +%s); MBT_TRACES=8 MBT_STEPS=5 pnpm --filter @dnd/battle-runtime exec vitest run src/sleep-repeat-save.mbt.test.ts 2>&1; STATUS=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$STATUS"`
+  passed with 1 file and 3 tests; `TOTAL: 11s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
 - `git diff --check` passed.
-- Reviewer-loop completed with a blocker: round 1 found the bounded replay, round 2
-  rejected a caller-authored input, and round 3 removed that input and aligned
-  the connector with reducer-owned Sleep frontier facts. Round 4 narrowed the
-  turn-boundary route predicate to `sleepPendingRepeatSave` and added the
-  post-failure regression. Round 5 restored the copied connector and recorded
-  the remaining mismatch as a plan-impact blocker. Round 6 removed overclaimed
-  accepted coverage from this report. Round 8 recorded concrete required plan
-  edits inside the Task 41 validation artifacts; the plan file itself is
-  outside this task worktree's permitted edit root.
-
+- Reviewer-loop convergence passed: RAW traceability, ubiquitous-language/domain
+  terminology, architecture/connascence, and code-review passes found no
+  remaining reasonable findings after scoping the replay adapter to the copied
+  Sleep route connector subject and confirming no production duplicate state was
+  introduced.
 ## CRPI-READY-009
 
 - Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
