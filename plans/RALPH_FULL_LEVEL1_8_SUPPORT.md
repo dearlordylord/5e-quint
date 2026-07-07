@@ -19,13 +19,13 @@
     {
       "number": 3,
       "id": "L18FOUND-03-LEVEL17-18-REPORT-GATE-SHAPE",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add level-1-7 and level-1-8 full-support report plumbing"
     },
     {
       "number": 4,
       "id": "L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Add checker protection against empty or vacuous higher-level scopes"
     },
     {
@@ -328,8 +328,8 @@ Spell-level-4 unique identities currently in the level-7 mining audit:
 | --: | --- | --- | --- | --- |
 | 1 | L18FOUND-01-BASELINE-ACCOUNTING-SNAPSHOT - Capture the level-1-6 full and level-7 mining baseline | done | none | Baseline recorded in `plans/unit-profile-coverage/LEVEL1_8_BASELINE_2026-07-07.md`. |
 | 2 | L18FOUND-02-LEVEL8-INVENTORY-ENABLEMENT - Extend SRD inventory mining through character level 8 | done | L18FOUND-01-BASELINE-ACCOUNTING-SNAPSHOT | Added generated `level1-8-mining-audit` artifacts and level-8 inventory rows. |
-| 3 | L18FOUND-03-LEVEL17-18-REPORT-GATE-SHAPE - Add level-1-7 and level-1-8 full-support report plumbing | ready-for-implementation | L18FOUND-02-LEVEL8-INVENTORY-ENABLEMENT | Creates strict full-support artifacts for both scopes. |
-| 4 | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION - Add checker protection against empty or vacuous higher-level scopes | blocked | L18FOUND-03-LEVEL17-18-REPORT-GATE-SHAPE | Prevents accidental pass from missing bands or empty denominators. |
+| 3 | L18FOUND-03-LEVEL17-18-REPORT-GATE-SHAPE - Add level-1-7 and level-1-8 full-support report plumbing | done | L18FOUND-02-LEVEL8-INVENTORY-ENABLEMENT | Creates strict full-support artifacts for both scopes. |
+| 4 | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION - Add checker protection against empty or vacuous higher-level scopes | ready-for-implementation | L18FOUND-03-LEVEL17-18-REPORT-GATE-SHAPE | Prevents accidental pass from missing bands or empty denominators. |
 | 5 | L7FULL-01-CLASS-TABLE-SUMMARY-CLOSURE - Close the twelve level-7 class-table summary rows | blocked | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Table rows remain non-runtime but checker-visible. |
 | 6 | L7FULL-02-ROGUE-EVASION-EVIDENCE-PRESERVATION - Preserve existing Rogue Evasion support evidence | blocked | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Existing support must survive the new strict scope. |
 | 7 | L7FULL-03-MONK-EVASION-REUSE-ADMISSION - Admit Monk Evasion through the existing Evasion support model | blocked | L7FULL-02-ROGUE-EVASION-EVIDENCE-PRESERVATION | Reuses typed Evasion semantics without authored-identity dispatch. |
@@ -525,7 +525,7 @@ Plan Impact:
 
 ### Task 3 - L18FOUND-03-LEVEL17-18-REPORT-GATE-SHAPE
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on: `L18FOUND-02-LEVEL8-INVENTORY-ENABLEMENT`
 
@@ -565,16 +565,17 @@ Verification:
 
 Plan Impact:
 
-- Update-required if report plumbing changes downstream task filenames or gate
-  command names.
+- `applied`: commit `fadc66a5f` added checker-owned
+  `level1-7-full-support.json` / `LEVEL1_7_FULL_SUPPORT.md` and
+  `level1-8-full-support.json` / `LEVEL1_8_FULL_SUPPORT.md` artifacts, wired
+  the level 1-7 and level 1-8 scopes through `unit-profile-coverage:check`, and
+  added self-test coverage for the level/spell-band frontier. Both generated
+  claim gates are blocked by current strict open rows while selected identity
+  and SRD-authored readiness pass.
 
 ### Task 4 - L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: waits for `L18FOUND-03-LEVEL17-18-REPORT-GATE-SHAPE`.
+Status: `ready-for-implementation`
 
 Depends on: `L18FOUND-03-LEVEL17-18-REPORT-GATE-SHAPE`
 
