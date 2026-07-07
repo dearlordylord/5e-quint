@@ -22,6 +22,11 @@ invalid out-of-order fill route events owned by the hole frontier.
 Revision round 3 narrowed those invalid route events to the two established
 weapon Attack ordering invalid-fill messages, leaving unrelated invalid
 attack-roll or damage-fill failures without Task 62 hole-frontier route events.
+The 2026-07-07 Task 62 fresh-context run refreshed the rolling engine-depth
+and state-owner manifests back to `CRPI-BLOCK-033` after later task history had
+left them describing Sleep repeat-save. The refresh is metadata-only: it
+records the existing public route-event projections and BattleState combatant
+ownership without changing reducer behavior or target replay evidence.
 
 No duplicate durable state was introduced. The replay reuses existing
 `BattleState` combatants, public hole/fill kinds, typed

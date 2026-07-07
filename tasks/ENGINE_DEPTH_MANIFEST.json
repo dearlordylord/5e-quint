@@ -1,52 +1,171 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-010",
+  "taskId": "CRPI-BLOCK-033",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt",
       "coverageStatus": "covered-public-qRoute",
       "quarantinedWitnessNames": [
-        "qState"
+        "qStage",
+        "qProtocol",
+        "qLastOrderingError",
+        "doDiscoverAttack",
+        "doFillTargetChoice",
+        "doRejectAttackRollBeforeTargetChoice",
+        "doRejectDamageBeforeAttackRoll",
+        "doFillAttackRollMiss",
+        "doFillAttackRollHit",
+        "doFillDamageDice",
+        "mbt::actionTaken",
+        "mbt::nondetPicks",
+        "observedActionTaken",
+        "traceId",
+        "qntFileSha256",
+        "sourceBranchInventorySha256",
+        "cleanroomManifestSourceCommitSha",
+        "targetProfile",
+        "targetProfileSha256",
+        "stateCheck",
+        "comparator",
+        "expectedProjectionSha256",
+        "observedProjectionSha256",
+        "observedProjectionSource",
+        "targetEntrypointSequence",
+        "routeEventSource",
+        "reducerPublicApiPath",
+        "checkedTargetStateFields",
+        "harnessTestPath"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-010.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-033.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.route.mbt.qnt",
       "coverageStatus": "covered-public-qRoute",
       "quarantinedWitnessNames": [
+        "qStage",
+        "qProtocol",
+        "qLastOrderingError",
         "qRoute",
-        "qSurface"
+        "doDiscoverAttack",
+        "doFillTargetChoice",
+        "doRejectAttackRollBeforeTargetChoice",
+        "doRejectDamageBeforeAttackRoll",
+        "doFillAttackRollMiss",
+        "doFillAttackRollHit",
+        "doFillDamageDice",
+        "mbt::actionTaken",
+        "mbt::nondetPicks",
+        "observedActionTaken",
+        "traceId",
+        "qntFileSha256",
+        "sourceBranchInventorySha256",
+        "cleanroomManifestSourceCommitSha",
+        "targetProfile",
+        "targetProfileSha256",
+        "stateCheck",
+        "comparator",
+        "expectedProjectionSha256",
+        "observedProjectionSha256",
+        "observedProjectionSource",
+        "targetEntrypointSequence",
+        "routeEventSource",
+        "reducerPublicApiPath",
+        "checkedTargetStateFields",
+        "harnessTestPath"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-010.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-033.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/sleep-repeat-save.mbt.test.ts",
+      "path": "packages/battle-runtime/src/weapon-attack-ordering.mbt.test.ts",
       "coverageStatus": "covered-public-qRoute",
       "quarantinedWitnessNames": [
-        "Sleep repeat-save projection",
-        "Sleep repeat-save public reducer route replay"
+        "weapon attack ordering MBT",
+        "weapon Attack hole-frontier order",
+        "mbt::actionTaken"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-READY-010.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-033.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "coverageStatus": "covered-public-qRoute",
+      "quarantinedWitnessNames": [
+        "weapon Attack ordering",
+        "qRoute",
+        "mbt::actionTaken"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-033.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "coverageStatus": "covered-public-qRoute",
+      "quarantinedWitnessNames": [
+        "createWeaponAttackOrderingDriver",
+        "createWeaponAttackOrderingRouteDriver",
+        "reducerRoutedWeaponAttackOrderingStateCheck",
+        "weaponAttackOrderingStateCheck",
+        "qRoute",
+        "observedActionTaken",
+        "expectedProjectionSha256",
+        "observedProjectionSha256"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-033.json"
       ]
     }
   ],
-  "productionModulesExtended": [],
+  "productionModulesExtended": [
+    {
+      "path": "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+      "role": "domain-engine",
+      "domainApis": [
+        "resolveSelectedAttackProcedure",
+        "attack target choice before roll or damage",
+        "attack roll before damage"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/src/battle-reducer/attack-ordering-messages.ts",
+      "role": "rule-facts",
+      "domainApis": [
+        "attack target required before roll or damage message",
+        "attack roll required before damage message"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "role": "runtime-projection",
+      "domainApis": [
+        "discover battle acts route events",
+        "resolve battle subject route events",
+        "weapon attack ordering invalid fill route"
+      ]
+    }
+  ],
   "expectedNextReuse": [
     {
-      "driver": "future repeat-save condition-effect route tasks",
+      "driver": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt",
       "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "api": "BattleReducerRouteEvent.subject=repeatSaveConditionEffect",
-      "notes": "Future repeat-save route tasks should reuse the existing repeatSaveConditionEffect subject and the existing condition, active-effect, Concentration, and turn-boundary owners instead of adding a duplicate repeat-save ledger."
+      "api": "weapon attack route events",
+      "notes": "Task 63 and later weapon-attack route tasks should reuse the public AvailableBattleAct.routeEvents and BattleResolutionResult.routeEvents emitted from typed attack subjects and fills instead of adding adapter-local route ledgers."
+    },
+    {
+      "driver": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt",
+      "module": "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+      "api": "attack target and attack-roll ordering messages",
+      "notes": "Stat Block attack ordering should reuse the same attack target and Attack Roll frontier messages rather than introduce a parallel ordering-error vocabulary."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 41 observes Sleep repeat-save qRoute evidence through public battle reducer route events. No new production module or durable BattleState field was introduced in this attempt; the harness scopes public route events to the copied Sleep route connector's startBattle and repeatSaveConditionEffect subject."
+    "notes": "Task 62 observes copied weapon Attack ordering qRoute evidence through public startBattle, discoverBattleActs, and resolveBattleSubject route events. The target uses existing BattleState combatants, typed attack subjects, target-choice fills, Attack Roll fills, damage dice fills, and Hit Point damage owners; no driver-local route table or duplicate durable attack-ordering state is introduced."
   }
 }
