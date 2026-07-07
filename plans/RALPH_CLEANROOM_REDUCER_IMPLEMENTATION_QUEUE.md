@@ -157,7 +157,7 @@
     {
       "number": 26,
       "id": "CRPI-BLOCK-018",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-level2-damage-spell-selected-identity"
     },
     {
@@ -678,7 +678,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRPI-BLOCK-015` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-016` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-017` | `done` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-018` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-018` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-019` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-020` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRP07-DSR-01` | `done` | none | target replay evidence and owner implementation |
@@ -2258,7 +2258,7 @@ Plan Impact:
 
 ### Task 26 - CRPI-BLOCK-018
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

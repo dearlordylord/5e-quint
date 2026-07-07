@@ -11,13 +11,26 @@
 // UNIT-IDENTITY-REPLAY: B9-LEVEL2-DAMAGE-SPELL-IDENTITY-BATCH spiritual_weapon doDiscoverSpiritualWeaponAttackProxy
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import { expect } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import dragonsBreathInput from "../../surface/content/dragons_breath.json";
 import rayOfEnfeeblementInput from "../../surface/content/ray_of_enfeeblement.json";
+import {
+  damageRollFillWithGroups,
+  requireHole,
+  requireResultHole,
+} from "./unit-profile-admission-creature-fixture-support.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
-import type { BattleState } from "./index.ts";
+import {
+  battleReducerStartRouteEvent,
+  endTurn,
+  resolveBattleSubject,
+  type BattleReducerRouteEvent,
+  type BattleReducerRouteOwnerGroup,
+  type BattleReducerRouteSubjectFamily,
+  type BattleState,
+} from "./index.ts";
 import {
   acidArrowUnitId,
   dragonsBreathUnitId,
@@ -28,11 +41,17 @@ import {
   scorchingRayUnitId,
   shatterUnitId,
   spellCasterId,
+  spellTargetId,
   spiritualWeaponUnitId,
 } from "./unit-profile-admission-catalog-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   bonusSpellAct,
+  flamingSphereAreaFill,
+  flamingSphereEndTurnAct,
+  moonbeamAreaFill,
+  moonbeamEndTurnSaveAct,
+  singleTargetSavingThrowOutcomeFill,
   spellAct,
 } from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
@@ -231,6 +250,250 @@ defineSelectedIdentityReplayAndQntReplay({
     },
   ],
 });
+
+describe("Level 2 damage spell public reducer route replay", () => {
+  it("observes selected concentration hazard qRoute through public reducer entrypoints", () => {
+    expect(replayFlamingSphereHazardRoute()).toEqual(
+      expectedFlamingSphereHazardRoute(),
+    );
+    expect(replayMoonbeamHazardRoute()).toEqual(expectedMoonbeamHazardRoute());
+  });
+
+  it("observes concentration hazard exact-damage qRoute through public reducer entrypoints", () => {
+    expect(replayFlamingSphereExactDamageRoute()).toEqual(
+      expectedFlamingSphereExactDamageRoute(),
+    );
+    expect(replayMoonbeamExactDamageRoute()).toEqual(
+      expectedMoonbeamExactDamageRoute(),
+    );
+  });
+});
+
+type RouteDiscoverEvent = Extract<
+  BattleReducerRouteEvent,
+  { readonly kind: "discoverBattleActs" }
+>;
+type RouteResolveEvent = Extract<
+  BattleReducerRouteEvent,
+  { readonly kind: "resolveBattleSubject" }
+>;
+type RouteHoles = RouteDiscoverEvent["holes"];
+type HazardCastReplay = {
+  readonly route: readonly BattleReducerRouteEvent[];
+  readonly state: BattleState;
+};
+
+function replayFlamingSphereHazardRoute(): readonly BattleReducerRouteEvent[] {
+  return flamingSphereHazardCastReplay().route;
+}
+
+function replayMoonbeamHazardRoute(): readonly BattleReducerRouteEvent[] {
+  return moonbeamHazardCastReplay().route;
+}
+
+function flamingSphereHazardCastReplay(): HazardCastReplay {
+  const route: BattleReducerRouteEvent[] = [startRoute()];
+  const state = selectedSpellBattle(spellRecord(flamingSphereUnitId));
+  const act = spellAct({ state, spellId: flamingSphereUnitId, slotLevel: 2 });
+  route.push(...routeEventsOfSubject(act, "Flaming Sphere discovery"));
+  const area = requireHole(act.initialHoles, "spellAreaChoice");
+  const cast = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [flamingSphereAreaFill(area)],
+  });
+  route.push(...routeEventsOfSubject(cast, "Flaming Sphere cast"));
+  if (cast.tag !== "resolved") {
+    throw new Error(`Expected Flaming Sphere cast to resolve, got ${cast.tag}.`);
+  }
+  return { route, state: cast.state };
+}
+
+function moonbeamHazardCastReplay(): HazardCastReplay {
+  const route: BattleReducerRouteEvent[] = [startRoute()];
+  const state = selectedSpellBattle(spellRecord(moonbeamUnitId));
+  const act = spellAct({ state, spellId: moonbeamUnitId, slotLevel: 2 });
+  route.push(...routeEventsOfSubject(act, "Moonbeam discovery"));
+  const area = requireHole(act.initialHoles, "spellAreaChoice");
+  const cast = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [moonbeamAreaFill(area)],
+  });
+  route.push(...routeEventsOfSubject(cast, "Moonbeam cast"));
+  if (cast.tag !== "resolved") {
+    throw new Error(`Expected Moonbeam cast to resolve, got ${cast.tag}.`);
+  }
+  return { route, state: cast.state };
+}
+
+function replayFlamingSphereExactDamageRoute():
+  readonly BattleReducerRouteEvent[] {
+  const replay = flamingSphereHazardCastReplay();
+  const route = [...replay.route];
+  const targetTurn = endTurn({ state: replay.state, actorId: spellCasterId });
+  if (targetTurn.tag !== "resolved") {
+    throw new Error("Expected Flaming Sphere caster end turn to resolve.");
+  }
+  const saveAct = flamingSphereEndTurnAct(targetTurn.state);
+  route.push(...routeEventsOfSubject(saveAct, "Flaming Sphere save discovery"));
+  const save = requireHole(saveAct.initialHoles, "savingThrowOutcome");
+  const succeededSave = singleTargetSavingThrowOutcomeFill(
+    save,
+    spellTargetId,
+    true,
+  );
+  const needsDamage = resolveBattleSubject({
+    state: targetTurn.state,
+    subject: saveAct.subject,
+    fills: [succeededSave],
+  });
+  route.push(...routeEventsOfSubject(needsDamage, "Flaming Sphere save"));
+  const damage = requireResultHole(needsDamage, "rolledDice");
+  const damaged = resolveBattleSubject({
+    state: targetTurn.state,
+    subject: saveAct.subject,
+    fills: [succeededSave, damageRollFillWithGroups(damage, [[3, 3]])],
+  });
+  route.push(...routeEventsOfSubject(damaged, "Flaming Sphere damage"));
+  return route;
+}
+
+function replayMoonbeamExactDamageRoute(): readonly BattleReducerRouteEvent[] {
+  const replay = moonbeamHazardCastReplay();
+  const route = [...replay.route];
+  const targetTurn = endTurn({ state: replay.state, actorId: spellCasterId });
+  if (targetTurn.tag !== "resolved") {
+    throw new Error("Expected Moonbeam caster end turn to resolve.");
+  }
+  const saveAct = moonbeamEndTurnSaveAct(targetTurn.state);
+  route.push(...routeEventsOfSubject(saveAct, "Moonbeam save discovery"));
+  const save = requireHole(saveAct.initialHoles, "savingThrowOutcome");
+  const succeededSave = singleTargetSavingThrowOutcomeFill(
+    save,
+    spellTargetId,
+    true,
+  );
+  const needsDamage = resolveBattleSubject({
+    state: targetTurn.state,
+    subject: saveAct.subject,
+    fills: [succeededSave],
+  });
+  route.push(...routeEventsOfSubject(needsDamage, "Moonbeam save"));
+  const damage = requireResultHole(needsDamage, "rolledDice");
+  const damaged = resolveBattleSubject({
+    state: targetTurn.state,
+    subject: saveAct.subject,
+    fills: [succeededSave, damageRollFillWithGroups(damage, [[5, 6]])],
+  });
+  route.push(...routeEventsOfSubject(damaged, "Moonbeam damage"));
+  return route;
+}
+
+function expectedFlamingSphereHazardRoute(): readonly BattleReducerRouteEvent[] {
+  return [
+    startRoute(),
+    spatialDiscover(["targetChoice"], "battleSpellSlotAndActionEconomy"),
+    spatialResolve("targetChoice", [], "battleAreaShape"),
+    spatialResolveWithoutFill("battleActiveEffect"),
+    spatialResolveWithoutFill("battleConcentration"),
+    spatialResolveWithoutFill("battleAreaHazard"),
+    spatialResolveWithoutFill("battleCreatureSpaceMovement"),
+  ];
+}
+
+function expectedMoonbeamHazardRoute(): readonly BattleReducerRouteEvent[] {
+  return [
+    startRoute(),
+    spatialDiscover(["targetChoice"], "battleSpellSlotAndActionEconomy"),
+    spatialResolve("targetChoice", [], "battleAreaShape"),
+    spatialResolveWithoutFill("battleActiveEffect"),
+    spatialResolveWithoutFill("battleConcentration"),
+    spatialResolveWithoutFill("battleLightProjection"),
+    spatialResolveWithoutFill("battleAreaHazard"),
+    spatialResolveWithoutFill("battleCreatureSpaceMovement"),
+  ];
+}
+
+function expectedFlamingSphereExactDamageRoute():
+  readonly BattleReducerRouteEvent[] {
+  return [
+    ...expectedFlamingSphereHazardRoute(),
+    ...hazardSavingThrowDamageRoute(),
+  ];
+}
+
+function expectedMoonbeamExactDamageRoute(): readonly BattleReducerRouteEvent[] {
+  return [...expectedMoonbeamHazardRoute(), ...hazardSavingThrowDamageRoute()];
+}
+
+function hazardSavingThrowDamageRoute(): readonly BattleReducerRouteEvent[] {
+  return [
+    spatialDiscover(["savingThrowOutcome"], "battleAreaHazard"),
+    spatialResolve(
+      "savingThrowOutcome",
+      ["rolledDice"],
+      "battleSavingThrowOutcome",
+    ),
+    spatialResolve("rolledDice", [], "battleHitPoint"),
+  ];
+}
+
+function startRoute(): BattleReducerRouteEvent {
+  return battleReducerStartRouteEvent();
+}
+
+function spatialDiscover(
+  holes: RouteHoles,
+  owner: BattleReducerRouteOwnerGroup,
+): BattleReducerRouteEvent {
+  return {
+    kind: "discoverBattleActs",
+    subject: "spatialEffect",
+    holes,
+    owner,
+  };
+}
+
+function spatialResolve(
+  fill: RouteResolveEvent["fill"],
+  holes: RouteHoles,
+  owner: BattleReducerRouteOwnerGroup,
+): BattleReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubject",
+    subject: "spatialEffect",
+    fill,
+    holes,
+    owner,
+  };
+}
+
+function spatialResolveWithoutFill(
+  owner: BattleReducerRouteOwnerGroup,
+): BattleReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubjectWithoutFill",
+    subject: "spatialEffect",
+    holes: [],
+    owner,
+  };
+}
+
+function routeEventsOfSubject(
+  source: { readonly routeEvents?: readonly BattleReducerRouteEvent[] },
+  label: string,
+  subject: BattleReducerRouteSubjectFamily = "spatialEffect",
+): readonly BattleReducerRouteEvent[] {
+  const events = (source.routeEvents ?? []).filter(
+    (event): event is Exclude<BattleReducerRouteEvent, { kind: "startBattle" }> =>
+      event.kind !== "startBattle" && event.subject === subject,
+  );
+  if (events.length === 0) {
+    throw new Error(`Expected ${subject} public reducer route events for ${label}.`);
+  }
+  return events;
+}
 
 function selectedSpellProcedure(
   actionName: `do${string}`,

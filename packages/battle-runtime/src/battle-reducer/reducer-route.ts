@@ -702,20 +702,22 @@ export function battleReducerRouteEventsForDiscoveredAct(
       },
     ];
   }
-  const levelOneSpatialRoute =
-    levelOneSpatialCompositionRouteForDiscoveredAct(state, act);
+  const spatialEffectCompositionRoute =
+    spatialEffectCompositionRouteForDiscoveredAct(state, act);
   const runtimeSpatialRoute =
-    levelOneSpatialCompositionRuntimeRouteForDiscoveredAct(state, act);
+    spatialEffectCompositionRuntimeRouteForDiscoveredAct(state, act);
   const thunderwavePresentationRoute =
     thunderwavePresentationRouteForDiscoveredAct(state, act);
   const saveGatedDiscoveryRoute = saveGatedSpellRouteForDiscoveredAct(act);
   if (
-    levelOneSpatialRoute !== undefined ||
+    spatialEffectCompositionRoute !== undefined ||
     runtimeSpatialRoute !== undefined ||
     thunderwavePresentationRoute !== undefined
   ) {
     return nonEmptyRouteEvents([
-      ...(levelOneSpatialRoute === undefined ? [] : [levelOneSpatialRoute]),
+      ...(spatialEffectCompositionRoute === undefined
+        ? []
+        : [spatialEffectCompositionRoute]),
       ...(runtimeSpatialRoute === undefined ? [] : [runtimeSpatialRoute]),
       ...(thunderwavePresentationRoute === undefined
         ? []
@@ -980,13 +982,13 @@ export function battleReducerRouteForResolution(
       activeFormLifecycleTerminalRoute,
     );
   }
-  const levelOneSpatialCompositionRoute =
-    levelOneSpatialCompositionRouteForResolution(input, result);
-  if (levelOneSpatialCompositionRoute !== undefined) {
+  const spatialEffectCompositionRoute =
+    spatialEffectCompositionRouteForResolution(input, result);
+  if (spatialEffectCompositionRoute !== undefined) {
     const saveGatedRoute = saveGatedSpellRouteForResolution(input, result);
     return composeWithActiveFormLifecycleTerminalRoute(
       nonEmptyRouteEvents([
-        ...levelOneSpatialCompositionRoute,
+        ...spatialEffectCompositionRoute,
         ...(saveGatedRoute ?? []),
       ]),
       activeFormLifecycleTerminalRoute,
@@ -3684,7 +3686,7 @@ function saveGatedSpellRouteOwner(
   return undefined;
 }
 
-function levelOneSpatialCompositionRouteForDiscoveredAct(
+function spatialEffectCompositionRouteForDiscoveredAct(
   state: BattleState,
   act: AvailableBattleAct,
 ): BattleReducerRouteEvent | undefined {
@@ -3701,24 +3703,24 @@ function levelOneSpatialCompositionRouteForDiscoveredAct(
   if (invocation === undefined) {
     return undefined;
   }
-  if (isLevelOneObjectLightDiscoverySubject(invocation)) {
+  if (isObjectLightDiscoverySubject(invocation)) {
     return spatialCompositionDiscover(
       "objectLightRider",
       ["targetChoice"],
       "battleSpellSlotAndActionEconomy",
     );
   }
-  if (!isLevelOneSpatialCompositionDiscoverySubject(invocation)) {
+  if (!isSpatialEffectCompositionDiscoverySubject(invocation)) {
     return undefined;
   }
   return spatialCompositionDiscover(
     "spatialEffect",
-    levelOneSpatialCompositionDiscoveryHoles(invocation),
+    spatialEffectCompositionDiscoveryHoles(invocation),
     "battleSpellSlotAndActionEconomy",
   );
 }
 
-function levelOneSpatialCompositionRuntimeRouteForDiscoveredAct(
+function spatialEffectCompositionRuntimeRouteForDiscoveredAct(
   state: BattleState,
   act: AvailableBattleAct,
 ): BattleReducerRouteEvent | undefined {
@@ -3742,6 +3744,13 @@ function levelOneSpatialCompositionRuntimeRouteForDiscoveredAct(
       "battleAreaHazard",
     );
   }
+  if (act.subject.command === "movableZoneSave") {
+    return spatialCompositionDiscover(
+      "spatialEffect",
+      ["savingThrowOutcome"],
+      "battleAreaHazard",
+    );
+  }
   if (act.subject.command === "jumpMovementReplacement") {
     return spatialCompositionDiscover(
       "movementPresentation",
@@ -3752,7 +3761,7 @@ function levelOneSpatialCompositionRuntimeRouteForDiscoveredAct(
   return undefined;
 }
 
-function levelOneSpatialCompositionRouteForResolution(
+function spatialEffectCompositionRouteForResolution(
   input: BattleResolutionInput,
   result: BattleResolutionResult,
 ): BattleReducerRouteEvents | undefined {
@@ -3760,7 +3769,7 @@ function levelOneSpatialCompositionRouteForResolution(
     return undefined;
   }
   if (input.subject.tag === "runtimeCommand") {
-    return levelOneSpatialCompositionRuntimeRouteForResolution(input, result);
+    return spatialEffectCompositionRuntimeRouteForResolution(input, result);
   }
   if (
     input.subject.tag !== "actionSpell" &&
@@ -3886,6 +3895,40 @@ function levelOneSpatialCompositionRouteForResolution(
       ),
     ];
   }
+  if (procedure === "flamingSphere" || procedure === "moonbeam") {
+    return [
+      spatialCompositionResolve(
+        "spatialEffect",
+        "targetChoice",
+        [],
+        "battleAreaShape",
+      ),
+      spatialCompositionResolveWithoutFill(
+        "spatialEffect",
+        "battleActiveEffect",
+      ),
+      spatialCompositionResolveWithoutFill(
+        "spatialEffect",
+        "battleConcentration",
+      ),
+      ...(procedure === "moonbeam"
+        ? [
+            spatialCompositionResolveWithoutFill(
+              "spatialEffect",
+              "battleLightProjection",
+            ),
+          ]
+        : []),
+      spatialCompositionResolveWithoutFill(
+        "spatialEffect",
+        "battleAreaHazard",
+      ),
+      spatialCompositionResolveWithoutFill(
+        "spatialEffect",
+        "battleCreatureSpaceMovement",
+      ),
+    ];
+  }
   if (procedure === "objectLight") {
     return [
       spatialCompositionResolve(
@@ -3979,7 +4022,7 @@ function levelOneSpatialCompositionRouteForResolution(
   ];
 }
 
-function levelOneSpatialCompositionRuntimeRouteForResolution(
+function spatialEffectCompositionRuntimeRouteForResolution(
   input: BattleResolutionInput,
   result: BattleResolutionResult,
 ): BattleReducerRouteEvents | undefined {
@@ -4052,6 +4095,36 @@ function levelOneSpatialCompositionRuntimeRouteForResolution(
       ),
     ];
   }
+  if (input.subject.command === "movableZoneSave") {
+    const fill = input.fills.at(-1);
+    if (fill === undefined) {
+      return undefined;
+    }
+    const routeFill = battleReducerRouteFill(fill);
+    if (routeFill === "savingThrowOutcome") {
+      return [
+        spatialCompositionResolve(
+          "spatialEffect",
+          "savingThrowOutcome",
+          battleReducerRouteHoles(
+            result.tag === "needsHoles" ? result.holes : [],
+          ),
+          "battleSavingThrowOutcome",
+        ),
+      ];
+    }
+    if (routeFill !== "rolledDice" || result.tag !== "resolved") {
+      return undefined;
+    }
+    return [
+      spatialCompositionResolve(
+        "spatialEffect",
+        "rolledDice",
+        [],
+        "battleHitPoint",
+      ),
+    ];
+  }
   if (input.subject.command !== "jumpMovementReplacement") {
     return undefined;
   }
@@ -4101,7 +4174,7 @@ function thunderwavePresentationRouteForDiscoveredAct(
   );
 }
 
-function levelOneSpatialCompositionDiscoveryHoles(
+function spatialEffectCompositionDiscoveryHoles(
   invocation: SupportedSpellInvocation,
 ): readonly BattleReducerRouteHole[] {
   if (
@@ -4116,7 +4189,7 @@ function levelOneSpatialCompositionDiscoveryHoles(
   return ["targetChoice"];
 }
 
-function isLevelOneSpatialCompositionDiscoverySubject(
+function isSpatialEffectCompositionDiscoverySubject(
   invocation: SupportedSpellInvocation,
 ): boolean {
   const procedure = invocation.procedure;
@@ -4126,11 +4199,13 @@ function isLevelOneSpatialCompositionDiscoverySubject(
     procedure === "dancingLightsReposition" ||
     procedure === "saveGatedAttackRollAdvantage" ||
     procedure === "fogCloudObscurement" ||
-    procedure === "greaseGroundHazard"
+    procedure === "greaseGroundHazard" ||
+    procedure === "flamingSphere" ||
+    procedure === "moonbeam"
   );
 }
 
-function isLevelOneObjectLightDiscoverySubject(
+function isObjectLightDiscoverySubject(
   invocation: SupportedSpellInvocation,
 ): boolean {
   return invocation.procedure === "objectLight";

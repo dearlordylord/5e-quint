@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-017",
+  "taskId": "CRPI-BLOCK-018",
   "durableFields": [
     {
       "fieldPath": "AvailableBattleAct.routeEvents",
@@ -8,7 +8,18 @@
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleState plus AvailableBattleAct/BattleResolutionResult routeEvents",
+        "sourceField": "BattleState plus AvailableBattleAct routeEvents",
+        "boundary": "battle-runtime public reducer route event boundary"
+      },
+      "notes": "Projection is emitted at public reducer entrypoints from existing owner-local facts; it is not stored as a second BattleState copy."
+    },
+    {
+      "fieldPath": "BattleResolutionResult.routeEvents",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleState plus BattleResolutionResult routeEvents",
         "boundary": "battle-runtime public reducer route event boundary"
       },
       "notes": "Projection is emitted at public reducer entrypoints from existing owner-local facts; it is not stored as a second BattleState copy."
@@ -20,16 +31,16 @@
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing BattleState runtime state owns spell light emitters, obscurement zones, ground hazards, jump replacement, Feather Fall mitigation, and other active effects reached by Task 25 selected spatial witness spells."
+      "notes": "Existing BattleState runtime state owns Flaming Sphere and Moonbeam active effects, area ids, Concentration-backed expiration, damage facts, and light projection facts reached by Task 26."
     },
     {
-      "fieldPath": "BattleCreatureState.conditions",
+      "fieldPath": "BattleCreatureState.concentration",
       "owner": "battle-state",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing BattleState runtime state owns applied conditions such as Prone and sight-dependent attack-roll mode effects reached by Grease, Jump landing, and Faerie Fire substrates."
+      "notes": "Existing BattleState runtime state owns the caster Concentration fact for concentration-backed area hazards."
     },
     {
       "fieldPath": "BattleCreatureState.hp",
@@ -38,40 +49,7 @@
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing BattleState runtime state owns Hit Point effects for Thunderwave damage and Produce Flame hurl damage; Task 25 adds no duplicate durable state."
-    },
-    {
-      "fieldPath": "BattleReducerRouteEvent.subject=reactionFallMitigation",
-      "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleState interrupt stack plus BattleResolutionResult routeEvents",
-        "boundary": "battle-runtime public reducer route event boundary"
-      },
-      "notes": "Projection is derived from typed falling-trigger Reaction and Feather Fall mitigation facts."
-    },
-    {
-      "fieldPath": "BattleReducerRouteEvent.subject=movementPresentation",
-      "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleState plus movement, forced movement, landing, and object-push facts",
-        "boundary": "battle-runtime public reducer route event boundary"
-      },
-      "notes": "Projection is derived from movement fills, landing witnesses, forced movement facts, object-push facts, and table presentation facts."
-    },
-    {
-      "fieldPath": "BattleReducerRouteEvent.subject=objectLightRider",
-      "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleState plus object-light active effects and target spatial facts",
-        "boundary": "battle-runtime public reducer route event boundary"
-      },
-      "notes": "Projection is derived from object target boundary, active-effect, light projection, cleanup, and table-witness facts."
+      "notes": "Existing BattleState runtime state owns Hit Point loss from Flaming Sphere and Moonbeam save-triggered damage."
     },
     {
       "fieldPath": "BattleReducerRouteEvent.subject=spatialEffect",
@@ -79,26 +57,15 @@
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleState plus spatial active effects, area witnesses, light/sight/obscurement projections, and hazard facts",
+        "sourceField": "BattleState plus spatial active effects, area witnesses, light projection, saving throw outcomes, and Hit Point damage results",
         "boundary": "battle-runtime public reducer route event boundary"
       },
-      "notes": "Projection is derived from generic spatial owner facts for multi-emitter lights, outlines, area obscurement, area hazards, and table spatial witnesses."
-    },
-    {
-      "fieldPath": "BattleResolutionResult.routeEvents",
-      "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleState plus AvailableBattleAct/BattleResolutionResult routeEvents",
-        "boundary": "battle-runtime public reducer route event boundary"
-      },
-      "notes": "Projection is emitted at public reducer entrypoints from existing owner-local facts; it is not stored as a second BattleState copy."
+      "notes": "Projection is derived from generic spatial owner facts for concentration-backed area hazard admission and exact save-triggered damage."
     }
   ],
   "notes": [
-    "Task 25 introduced no new durable BattleState or BattleCreatureState fields.",
-    "Selected spell identity is retained only at catalog/support-profile and selected replay boundaries; production route vocabulary uses typed reaction, movement, object-light, spatial-effect, save-gated, projection, hazard, and table witness subjects.",
+    "Task 26 introduced no new durable BattleState or BattleCreatureState fields.",
+    "Selected spell identity remains at catalog/support-profile and selected replay boundaries; production route projection uses typed spell procedure and runtime command shape.",
     "Route subjects are executable boundary projections derived from existing owner state and public reducer results, not a stored route ledger or duplicate active-effect state."
   ]
 }
