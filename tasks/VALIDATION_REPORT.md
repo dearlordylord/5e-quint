@@ -1,5 +1,72 @@
 # Validation Report
 
+## CRPI-BLOCK-043
+
+Status: `pass`
+
+- Task: 86
+- Driver path: `packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt`
+- Route connector path: `packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.route.mbt.qnt`
+- Route class: `reducer-routed`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-043.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Behavior implemented:
+
+Task 86 accepts Character Creation Cleric and Druid Order selected-reference route replay through public target entrypoints. The target route creates a draft, discovers holes, fills supported choices, finalizes a `CharacterBuild`, emits selected-reference retention through `characterBuildSelectedReferencesWithRoute`, and emits CharacterBuildOwner projection through `characterBuildProjectionWithRoute`. Selected Divine/Primal Order option refs remain retained `CharacterBuild.features` selected-class-choice facts; no duplicate selected-reference state or authored-identity production dispatch was added.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt#step:doSelectClericProtectorOrder` | `tasks/target-replay-evidence/CRPI-BLOCK-043.json#driver:packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt#step:doSelectClericProtectorOrder#trace:public-route=completedReducerSurfaceRoute action=doSelectClericProtectorOrder qRoute=cleric-druid-order-selected-reference-public-route` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt#step:doSelectClericThaumaturgeOrder` | `tasks/target-replay-evidence/CRPI-BLOCK-043.json#driver:packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt#step:doSelectClericThaumaturgeOrder#trace:public-route=completedReducerSurfaceRoute action=doSelectClericThaumaturgeOrder qRoute=cleric-druid-order-selected-reference-public-route` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt#step:doSelectDruidMagicianOrder` | `tasks/target-replay-evidence/CRPI-BLOCK-043.json#driver:packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt#step:doSelectDruidMagicianOrder#trace:public-route=completedReducerSurfaceRoute action=doSelectDruidMagicianOrder qRoute=cleric-druid-order-selected-reference-public-route` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt#step:doSelectDruidWardenOrder` | `tasks/target-replay-evidence/CRPI-BLOCK-043.json#driver:packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt#step:doSelectDruidWardenOrder#trace:public-route=completedReducerSurfaceRoute action=doSelectDruidWardenOrder qRoute=cleric-druid-order-selected-reference-public-route` | `_none_` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-043.json`
+- Reproduction trace family: `public-route=completedReducerSurfaceRoute qRoute=cleric-druid-order-selected-reference-public-route`
+- The copied connector projection source is `packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.route.mbt.qnt#qRoute`; the observed projection source is the public Character Creation reducer sequence plus `characterBuildSelectedReferencesWithRoute` and `characterBuildProjectionWithRoute`.
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-043/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 86.
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Character-Creation.md#Record Class Features` says some class features offer choices during character creation.
+- SRD 5.2.1 `Classes/Cleric.md#Level 1: Divine Order` defines Protector and Thaumaturge as selected sacred-role choices.
+- SRD 5.2.1 `Classes/Druid.md#Level 1: Primal Order` defines Magician and Warden as selected sacred-role choices.
+- `UBIQUITOUS_LANGUAGE.md` and `packages/character-creation-runtime/VOCABULARY.md` keep selected Unit refs, retained build facts, and projected execution facts distinct.
+
+Verification results:
+
+- Base check passed: declared integration ref and `HEAD` both resolved to `a3315c239 Mark Ralph task 85 done`; Base SHA `a3315c239bbf2a80ed12337f607573cd99d4fc9f` is an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against the SRD and vocabulary passages listed above.
+- Character Creation runtime typecheck passed: `pnpm --filter @dnd/character-creation-runtime exec tsc --noEmit`.
+- Focused semantic plus route MBT replay passed: `START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/character-creation-runtime exec vitest run src/cleric-druid-order-selected-identity.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "replays Character Creation Cleric and Druid Order selected identity parity|replays selected Unit identities deterministically|routes Cleric and Druid order selections" ) 2>&1 & pid=$!; wait "$pid"; status=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"` passed with 3 tests and 8 skipped; `TOTAL: 4s`.
+- Reviewer-loop convergence passed: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks found no remaining reasonable Task 86 findings after routing the copied qRoute through public selected-reference and build-projection entrypoints.
+- Task-scoped target replay evidence validation passed with 4 obligations covered.
+- JSON parse check passed for `tasks/target-replay-evidence/CRPI-BLOCK-043.json`, `tasks/ENGINE_DEPTH_MANIFEST.json`, `tasks/STATE_OWNER_MANIFEST.json`, and `tasks/RUN_LEDGER.json`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `pnpm cleanroom-harness:check` passed.
+- `git diff --check` passed.
+- `pnpm quality` passed end to end; app lint reported 61 warnings and exited 0.
+
 ## CRPI-BLOCK-015
 
 Status: `pass`

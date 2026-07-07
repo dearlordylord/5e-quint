@@ -203,10 +203,12 @@ export {
   characterBuildUnitRefs,
 } from "./finalization.ts";
 export {
+  characterBuildProjectionWithRoute,
   characterBuildClassFeatureFactsProjectionWithRoute,
   type CharacterBuildClassFeatureFactsProjection,
   type CharacterBuildClassFeatureFactsProjectionIssue,
   type CharacterBuildClassFeatureFactsProjectionRoute,
+  type CharacterBuildProjectionRoute,
   type CharacterBuildProjectionRouteFact,
   type CharacterBuildProjectionRouteOwner,
   type CharacterBuildProjectionRouteSubject,

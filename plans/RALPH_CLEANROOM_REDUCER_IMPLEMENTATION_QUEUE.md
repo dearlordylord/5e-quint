@@ -517,7 +517,7 @@
     {
       "number": 86,
       "id": "CRPI-BLOCK-043",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: character-creation-cleric-druid-order-selected-identity"
     },
     {
@@ -653,108 +653,108 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 
 | Task | Status | Depends On | Output |
 | --- | --- | --- | --- |
-| `CRPI-READY-001` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-001` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-002` | `blocked` | blocked by task body | blocker resolution before implementation |
-| `CRPI-BLOCK-003` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-READY-002` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-004` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-READY-001` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-001` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-002` | `done` | blocked by task body | blocker resolution before implementation |
+| `CRPI-BLOCK-003` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-READY-002` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-004` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-003` | `done` | none | target replay evidence and owner implementation |
 | `CRP07-DSR-05` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-005` | `done` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-006` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-007` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRP07-DSR-04` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-008` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-009` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-READY-004` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-006` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-007` | `done` | none | target replay evidence and owner implementation |
+| `CRP07-DSR-04` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-008` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-009` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-READY-004` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-010` | `done` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-011` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-012` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-013` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-011` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-012` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-013` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-014` | `done` | none | target replay evidence and owner implementation |
-| `CRP07-DSR-03` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-READY-005` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRP07-DSR-03` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-READY-005` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-015` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-016` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-017` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-018` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-019` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-020` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRP07-DSR-01` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRP07-DSR-01` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-021` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-READY-006` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-READY-007` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-READY-006` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-READY-007` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-022` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-023` | `blocked` | blocked by task body | blocker resolution before implementation |
 | `CRPI-READY-008` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-024` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-025` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRP07-DSR-02` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRP07-DSR-06` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRP07-DSR-02` | `done` | none | target replay evidence and owner implementation |
+| `CRP07-DSR-06` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-009` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-010` | `blocked` | source-qnt-corpus-blocker | owner/source-corpus decision before implementation |
 | `CRPI-READY-011` | `blocked` | source-qnt-corpus-blocker | owner/source-corpus decision before implementation |
 | `CRPI-READY-012` | `done` | none | target replay evidence and owner implementation |
-| `CRPI-READY-013` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-READY-014` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-READY-015` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-READY-016` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-READY-017` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-READY-018` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-READY-019` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-READY-020` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-READY-021` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-READY-022` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-026` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-027` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-READY-013` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-READY-014` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-READY-015` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-READY-016` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-READY-017` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-READY-018` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-READY-019` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-READY-020` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-READY-021` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-READY-022` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-026` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-027` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-028` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-029` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-030` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-029` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-030` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-031` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-032` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-READY-023` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-READY-023` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-033` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-034` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-035` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-READY-024` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-READY-025` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-READY-024` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-READY-025` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-036` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-READY-026` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-READY-027` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-READY-026` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-READY-027` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-028` | `done` | none | target replay evidence and owner implementation |
-| `CRPI-READY-029` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-READY-029` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-030` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-031` | `done` | none | target replay evidence and owner implementation |
-| `CRPI-READY-032` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-READY-032` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-033` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-037` | `blocked` | blocked by task body | blocker resolution before implementation |
 | `CRPI-READY-034` | `done` | none | target replay evidence and owner implementation |
-| `CRP05-SBE-01` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRP05-SBE-01` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-038` | `done` | none | target replay evidence and owner implementation |
 | `CRP05-SBE-02` | `done` | none | target replay evidence and owner implementation |
-| `CRP06-SRO-01` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-039` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-040` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-041` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-042` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-043` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRP06-SRO-01` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-039` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-040` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-041` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-042` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-043` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-044` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-045` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRP04-CCF-01` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRP04-CCF-01` | `done` | none | target replay evidence and owner implementation |
 | `CRP04-CCF-02` | `done` | none | target replay evidence and owner implementation |
 | `CRP04-CCF-03` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-046` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-047` | `done` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-048` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-049` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-050` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-051` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-052` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-053` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRP06-SRO-02` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRP06-SRO-03` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-054` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-048` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-049` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-050` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-051` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-052` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-053` | `done` | none | target replay evidence and owner implementation |
+| `CRP06-SRO-02` | `done` | none | target replay evidence and owner implementation |
+| `CRP06-SRO-03` | `done` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-054` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-055` | `done` | none | target replay evidence and owner implementation |
 
 ## Task Details
@@ -5657,7 +5657,7 @@ Plan Impact:
 
 ### Task 86 - CRPI-BLOCK-043
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
