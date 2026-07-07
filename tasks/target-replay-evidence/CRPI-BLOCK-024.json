@@ -1,0 +1,258 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts public reducer qRoute replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "8c856409a423a320bf05e4b4a927e76b1902af823ba01f2b5a928f867a6a6be6",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "acceptance": {
+    "driverPath": "packages/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt",
+    "routeClass": "catalog-after-substrate",
+    "acceptedProjection": "qRoute",
+    "requiredConnectorPaths": [
+      "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt",
+      "packages/battle-runtime/battle-runtime-spell-damage-reduction.route.mbt.qnt",
+      "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt"
+    ]
+  },
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt",
+      "qntFileSha256": "831e17658f94e7a10b282d09e8d93032e03add48c2ee6683543210cb822f0d47",
+      "routeConnectorSha256": "b7d16f07f634e1a21f9be0d40a8136bb6706e9f236117c68d79cdaf14b39ee43",
+      "branchFamily": "step",
+      "branchAction": "doBlessAttackAndSaveModifier",
+      "observedActionTaken": "doBlessAttackAndSaveModifier",
+      "harnessTestPath": "packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=4 action=doBlessAttackAndSaveModifier qRoute=roll-modifier-active-effects-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "d535bd0d717b68f57f1d51695e937cc1dcb725fd08655bcef7ac9ac8afb34e21",
+        "observedProjectionSha256": "d535bd0d717b68f57f1d51695e937cc1dcb725fd08655bcef7ac9ac8afb34e21",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent, AvailableBattleAct.routeEvents, and BattleResolutionResult.routeEvents for the Bless roll-modifier active-effect substrate",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleCreatureState.activeEffects",
+          "BattleCreatureState.concentration",
+          "BattleHole.kind",
+          "BattleFill.kind"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt",
+      "qntFileSha256": "831e17658f94e7a10b282d09e8d93032e03add48c2ee6683543210cb822f0d47",
+      "routeConnectorSha256": "b7d16f07f634e1a21f9be0d40a8136bb6706e9f236117c68d79cdaf14b39ee43",
+      "branchFamily": "step",
+      "branchAction": "doBaneFailedSavePenalty",
+      "observedActionTaken": "doBaneFailedSavePenalty",
+      "harnessTestPath": "packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=4 action=doBaneFailedSavePenalty qRoute=roll-modifier-active-effects-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "5ac5bcc8b7e5d3c8ec946afec89885af5f181f77ef5f304853124f867b5993f9",
+        "observedProjectionSha256": "5ac5bcc8b7e5d3c8ec946afec89885af5f181f77ef5f304853124f867b5993f9",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent, AvailableBattleAct.routeEvents, and BattleResolutionResult.routeEvents for Bane target save and active-effect admission",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleCreatureState.activeEffects",
+          "BattleCreatureState.concentration",
+          "BattleHole.kind",
+          "BattleFill.kind"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt",
+      "qntFileSha256": "831e17658f94e7a10b282d09e8d93032e03add48c2ee6683543210cb822f0d47",
+      "routeConnectorSha256": "b7d16f07f634e1a21f9be0d40a8136bb6706e9f236117c68d79cdaf14b39ee43",
+      "branchFamily": "step",
+      "branchAction": "doGuidanceSkillAbilityCheckModifier",
+      "observedActionTaken": "doGuidanceSkillAbilityCheckModifier",
+      "harnessTestPath": "packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=4 action=doGuidanceSkillAbilityCheckModifier qRoute=roll-modifier-active-effects-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "fdf80fe0fe8735ae1421447b2c4c643dd9bcbdecb55e4d08e4e21829f9eb9bff",
+        "observedProjectionSha256": "fdf80fe0fe8735ae1421447b2c4c643dd9bcbdecb55e4d08e4e21829f9eb9bff",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent, AvailableBattleAct.routeEvents, and BattleResolutionResult.routeEvents for Guidance skill-choice active-effect admission",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleCreatureState.activeEffects",
+          "BattleCreatureState.concentration",
+          "BattleHole.kind",
+          "BattleFill.kind"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-spell-damage-reduction.route.mbt.qnt",
+      "qntFileSha256": "831e17658f94e7a10b282d09e8d93032e03add48c2ee6683543210cb822f0d47",
+      "routeConnectorSha256": "1b4d063136159781040c1adc7ba3c2f28a3948e81db5dd3b8a3765aad8f7751c",
+      "branchFamily": "step",
+      "branchAction": "doResistanceReducesMatchingDamage",
+      "observedActionTaken": "doResistanceReducesMatchingDamage",
+      "harnessTestPath": "packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=4 action=doResistanceReducesMatchingDamage qRoute=spell-damage-reduction-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "9ff81c4d76cebd80ee7ce74b9fdd53c6070f0982e8ab42bc6bf67113214faf0c",
+        "observedProjectionSha256": "9ff81c4d76cebd80ee7ce74b9fdd53c6070f0982e8ab42bc6bf67113214faf0c",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "end_turn",
+            "packages/battle-runtime/src/index.ts#endTurn"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent, AvailableBattleAct.routeEvents, and BattleResolutionResult.routeEvents for Resistance target choice, damage-type choice, active-effect admission, Concentration, damage-adjustment roll discovery, reduction roll resolution, and active-effect use",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleCreatureState.activeEffects",
+          "BattleCreatureState.concentration",
+          "BattleActiveEffect.kind=spellDamageReduction",
+          "BattleDamageRollHole.spellDamageReduction",
+          "BattleHole.kind",
+          "BattleFill.kind"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt",
+      "qntFileSha256": "831e17658f94e7a10b282d09e8d93032e03add48c2ee6683543210cb822f0d47",
+      "routeConnectorSha256": "70a836f0b6453b69a5164c30d7d4abf910aa95e49fd22aedd67711c467aab400",
+      "branchFamily": "step",
+      "branchAction": "doShieldOfFaithArmorClassBonus",
+      "observedActionTaken": "doShieldOfFaithArmorClassBonus",
+      "harnessTestPath": "packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts",
+      "traceId": "MBT_TRACES=1 MBT_STEPS=4 action=doShieldOfFaithArmorClassBonus qRoute=scalar-buff-active-effects-public-route",
+      "sampledInputs": [],
+      "stateCheck": {
+        "tag": "state-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "4e11a354cbbde429d9a3071ef0e4495e2a03a6cd26213ddc4ec1f05a0413ebc3",
+        "observedProjectionSha256": "4e11a354cbbde429d9a3071ef0e4495e2a03a6cd26213ddc4ec1f05a0413ebc3",
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+          ],
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent, AvailableBattleAct.routeEvents, and BattleResolutionResult.routeEvents for Shield of Faith scalar Armor Class active-effect admission",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject"
+        },
+        "checkedTargetStateFields": [
+          "AvailableBattleAct.routeEvents",
+          "BattleResolutionResult.routeEvents",
+          "BattleSubject.actionSpell.invocation.procedure",
+          "BattleCreatureState.activeEffects",
+          "BattleCreatureState.concentration",
+          "BattleHole.kind",
+          "BattleFill.kind"
+        ]
+      },
+      "result": {
+        "tag": "pass"
+      }
+    }
+  ],
+  "remainingRequiredPublicQRouteCoverage": [],
+  "reviewerFindingsAddressed": [
+    {
+      "finding": "Resistance damage-reduction qRoute was previously satisfied by adapter-local expected route literals.",
+      "resolution": "Added the production spellDamageReduction route subject and public route projection from typed damageReduction invocation, spellDamageReduction holes, and active-effect use state. The Task 36 route harness now compares the copied connector qRoute to public reducer routeEvents."
+    }
+  ]
+}

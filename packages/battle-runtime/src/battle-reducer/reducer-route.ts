@@ -145,6 +145,7 @@ export type BattleReducerRouteSubjectFamily =
   | "reactionSpellInterruption"
   | "reactionFallMitigation"
   | "rollModifierEffect"
+  | "spellDamageReduction"
   | "saveGatedSpell"
   | "scalarBuffEffect"
   | "spatialEffect"
@@ -599,6 +600,11 @@ export function battleReducerRouteEventsForDiscoveredAct(
   if (rollModifierRoute !== undefined) {
     return [rollModifierRoute];
   }
+  const spellDamageReductionRoute =
+    spellDamageReductionRouteForDiscoveredAct(act);
+  if (spellDamageReductionRoute !== undefined) {
+    return [spellDamageReductionRoute];
+  }
   const afterHitDamageRiderDiscoveryRoute =
     afterHitDamageRiderDiscoveryRoutesForDiscoveredAct(state, act);
   if (afterHitDamageRiderDiscoveryRoute !== undefined) {
@@ -911,6 +917,13 @@ export function battleReducerRouteForResolution(
   if (rollModifierRoute !== undefined) {
     return rollModifierRoute;
   }
+  const spellDamageReductionRoute = spellDamageReductionRouteForResolution(
+    input,
+    result,
+  );
+  if (spellDamageReductionRoute !== undefined) {
+    return spellDamageReductionRoute;
+  }
   const metamagicSpellComponentProjectionRoute =
     metamagicSpellComponentProjectionRouteForResolution(input, result);
   if (metamagicSpellComponentProjectionRoute !== undefined) {
@@ -1161,9 +1174,12 @@ export function battleReducerRouteForResolution(
     interruptStackResumeDiscoveryRouteForResolution(input, result);
   const afterHitDamageRiderDiscoveryRoutes =
     afterHitDamageRiderDiscoveryRoutesForResolution(result);
+  const spellDamageReductionAdjustmentDiscoveryRoute =
+    spellDamageReductionAdjustmentDiscoveryRouteForResolution(result);
   if (
     interruptResumeDiscoveryRoute !== undefined ||
-    afterHitDamageRiderDiscoveryRoutes !== undefined
+    afterHitDamageRiderDiscoveryRoutes !== undefined ||
+    spellDamageReductionAdjustmentDiscoveryRoute !== undefined
   ) {
     return composeWithActiveFormLifecycleTerminalRoute(
       nonEmptyRouteEvents([
@@ -1171,7 +1187,18 @@ export function battleReducerRouteForResolution(
           ? []
           : [interruptResumeDiscoveryRoute]),
         ...(afterHitDamageRiderDiscoveryRoutes ?? []),
+        ...(spellDamageReductionAdjustmentDiscoveryRoute === undefined
+          ? []
+          : [spellDamageReductionAdjustmentDiscoveryRoute]),
       ]),
+      activeFormLifecycleTerminalRoute,
+    );
+  }
+  const spellDamageReductionAdjustmentRoute =
+    spellDamageReductionAdjustmentRouteForResolution(input, result);
+  if (spellDamageReductionAdjustmentRoute !== undefined) {
+    return composeWithActiveFormLifecycleTerminalRoute(
+      spellDamageReductionAdjustmentRoute,
       activeFormLifecycleTerminalRoute,
     );
   }
@@ -5613,6 +5640,206 @@ function rollModifierResolveWithoutFill(
   return {
     kind: "resolveBattleSubjectWithoutFill",
     subject: "rollModifierEffect",
+    holes,
+    owner,
+  };
+}
+
+function spellDamageReductionRouteForDiscoveredAct(
+  act: AvailableBattleAct,
+): BattleReducerRouteEvent | undefined {
+  if (
+    act.subject.tag !== "actionSpell" ||
+    act.subject.invocation.procedure !== "damageReduction"
+  ) {
+    return undefined;
+  }
+  return {
+    kind: "discoverBattleActs",
+    subject: "spellDamageReduction",
+    holes: spellDamageReductionCastDiscoveryHoles(act.initialHoles),
+    owner: "battleSpellSlotAndActionEconomy",
+  };
+}
+
+function spellDamageReductionRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  if (
+    input.subject.tag !== "actionSpell" ||
+    input.subject.invocation.procedure !== "damageReduction" ||
+    result.tag === "invalid"
+  ) {
+    return undefined;
+  }
+  const fill = input.fills.at(-1);
+  if (fill === undefined) {
+    return undefined;
+  }
+  const routeFill = battleReducerRouteFill(fill);
+  if (routeFill === "targetChoice" && result.tag === "needsHoles") {
+    return [
+      spellDamageReductionResolveWithFill(
+        routeFill,
+        spellDamageReductionCastChoiceHoles(result.holes),
+        "battleTargetSelection",
+      ),
+    ];
+  }
+  if (routeFill === "damageTypeChoice" && result.tag === "resolved") {
+    return [
+      spellDamageReductionResolveWithFill(
+        routeFill,
+        [],
+        "battleActiveEffect",
+      ),
+      spellDamageReductionResolveWithoutFill([], "battleConcentration"),
+    ];
+  }
+  return undefined;
+}
+
+function spellDamageReductionAdjustmentDiscoveryRouteForResolution(
+  result: BattleResolutionResult,
+): BattleReducerRouteEvent | undefined {
+  if (
+    result.tag !== "needsHoles" ||
+    !hasSpellDamageReductionHole(result.holes)
+  ) {
+    return undefined;
+  }
+  return {
+    kind: "discoverBattleActs",
+    subject: "spellDamageReduction",
+    holes: ["rolledDice"],
+    owner: "battleDamageAdjustment",
+  };
+}
+
+function spellDamageReductionAdjustmentRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  if (result.tag !== "resolved") {
+    return undefined;
+  }
+  const fill = input.fills.at(-1);
+  if (fill === undefined || battleReducerRouteFill(fill) !== "rolledDice") {
+    return undefined;
+  }
+  if (!spellDamageReductionEffectUseChanged(input.state, result.state)) {
+    return undefined;
+  }
+  return [
+    spellDamageReductionResolveWithFill(
+      "rolledDice",
+      [],
+      "battleDamageAdjustment",
+    ),
+    spellDamageReductionResolveWithoutFill([], "battleActiveEffect"),
+  ];
+}
+
+function spellDamageReductionCastDiscoveryHoles(
+  holes: readonly BattleHole[],
+): readonly BattleReducerRouteHole[] {
+  return holes.some((hole) => hole.kind === "targetChoice")
+    ? ["targetChoice"]
+    : battleReducerRouteHoles(holes);
+}
+
+function spellDamageReductionCastChoiceHoles(
+  holes: readonly BattleHole[],
+): readonly BattleReducerRouteHole[] {
+  return battleReducerRouteHoles(
+    holes.filter((hole) => hole.kind === "damageTypeChoice"),
+  );
+}
+
+function hasSpellDamageReductionHole(holes: readonly BattleHole[]): boolean {
+  return holes.some(
+    (hole) => hole.kind === "rolledDice" && "spellDamageReduction" in hole,
+  );
+}
+
+function spellDamageReductionEffectUseChanged(
+  before: BattleState,
+  after: BattleState,
+): boolean {
+  const beforeEffects = spellDamageReductionEffectsByProtocol(before);
+  for (const [key, effect] of spellDamageReductionEffectsByProtocol(after)) {
+    const previous = beforeEffects.get(key);
+    if (
+      previous !== undefined &&
+      previous.usedThisTurn === false &&
+      effect.usedThisTurn === true
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function spellDamageReductionEffectsByProtocol(
+  state: BattleState,
+): ReadonlyMap<
+  string,
+  Extract<BattleActiveEffect, { readonly kind: "spellDamageReduction" }>
+> {
+  const effects = new Map<
+    string,
+    Extract<BattleActiveEffect, { readonly kind: "spellDamageReduction" }>
+  >();
+  for (const combatant of state.combatants.values()) {
+    for (const effect of combatant.activeEffects) {
+      if (effect.kind === "spellDamageReduction") {
+        effects.set(
+          spellDamageReductionEffectRouteKey(combatant, effect),
+          effect,
+        );
+      }
+    }
+  }
+  return effects;
+}
+
+function spellDamageReductionEffectRouteKey(
+  combatant: BattleCreatureState,
+  effect: Extract<BattleActiveEffect, { readonly kind: "spellDamageReduction" }>,
+): string {
+  return [
+    combatant.combatantId,
+    effect.sourceSpellId,
+    effect.sourceCombatantId,
+    effect.damageType,
+  ].join("\u0000");
+}
+
+function spellDamageReductionResolveWithFill(
+  fill: Extract<
+    BattleReducerRouteFill,
+    "targetChoice" | "damageTypeChoice" | "rolledDice"
+  >,
+  holes: readonly BattleReducerRouteHole[],
+  owner: BattleReducerRouteOwnerGroup,
+): BattleReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubject",
+    subject: "spellDamageReduction",
+    fill,
+    holes,
+    owner,
+  };
+}
+
+function spellDamageReductionResolveWithoutFill(
+  holes: readonly BattleReducerRouteHole[],
+  owner: BattleReducerRouteOwnerGroup,
+): BattleReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubjectWithoutFill",
+    subject: "spellDamageReduction",
     holes,
     owner,
   };

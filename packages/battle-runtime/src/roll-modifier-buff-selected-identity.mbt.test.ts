@@ -26,6 +26,7 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 import {
   battleCombatantSide,
   battleId,
+  battleReducerStartRouteEvent,
   characterId,
   combatantId,
   discoverBattleActs,
@@ -39,6 +40,7 @@ import {
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
+  type BattleReducerRouteEvent,
   type BattleResolutionResult,
   type BattleRolledDiceFill,
   type BattleState,
@@ -55,10 +57,6 @@ import {
   mbtTraceCount,
   quintField,
   quintStateRecord,
-  reducerRouteDiscoverBattleActs,
-  reducerRouteResolveBattleSubject,
-  reducerRouteResolveBattleSubjectWithoutFill,
-  reducerRouteStartBattle,
   run,
   stateCheck,
   type ReducerRouteEvent,
@@ -886,6 +884,11 @@ function isTrackedSpellEffect(
 type SpellDamageReductionRouteProjection = {
   readonly route: readonly ReducerRouteEvent[];
 };
+type SpellDamageReductionRouteRuntimeState = {
+  readonly battle: BattleState;
+  readonly holes: readonly BattleHole[];
+  readonly route: readonly ReducerRouteEvent[];
+};
 
 const spellDamageReductionRouteDriverSchema = {
   init: {},
@@ -923,10 +926,10 @@ function createSpellDamageReductionRouteDriver() {
     typeof spellDamageReductionRouteDriverSchema,
     SpellDamageReductionRouteProjection
   >(spellDamageReductionRouteDriverSchema, () => {
-    let route: readonly ReducerRouteEvent[] = [];
+    let state = initialSpellDamageReductionRouteState();
 
     function reset(): void {
-      route = [reducerRouteStartBattle("battleActionEconomy")];
+      state = initialSpellDamageReductionRouteState();
     }
 
     reset();
@@ -934,67 +937,179 @@ function createSpellDamageReductionRouteDriver() {
     return {
       init: reset,
       doDiscoverResistanceTargetChoice: () => {
-        route = [
-          ...route,
-          reducerRouteDiscoverBattleActs({
-            subject: "spellDamageReduction",
-            holes: [{ kind: "targetChoice" }],
-            owner: "battleSpellSlotAndActionEconomy",
-          }),
-        ];
+        state = discoverResistanceTargetChoiceRoute(state);
       },
       doFillResistanceTarget: () => {
-        route = [
-          ...route,
-          reducerRouteResolveBattleSubject({
-            subject: "spellDamageReduction",
-            fill: "targetChoice",
-            holes: [{ kind: "damageTypeChoice" }],
-            owner: "battleTargetSelection",
-          }),
-        ];
+        state = fillResistanceTargetRoute(state);
       },
       doChooseResistanceDamageType: () => {
-        route = [
-          ...route,
-          reducerRouteResolveBattleSubject({
-            subject: "spellDamageReduction",
-            fill: "damageTypeChoice",
-            holes: [],
-            owner: "battleActiveEffect",
-          }),
-          reducerRouteResolveBattleSubjectWithoutFill({
-            subject: "spellDamageReduction",
-            holes: [],
-            owner: "battleConcentration",
-          }),
-        ];
+        state = chooseResistanceDamageTypeRoute(state);
       },
       doApplyResistanceReductionRoll: () => {
-        route = [
-          ...route,
-          reducerRouteDiscoverBattleActs({
-            subject: "spellDamageReduction",
-            holes: [{ kind: "rolledDice" }],
-            owner: "battleDamageAdjustment",
-          }),
-          reducerRouteResolveBattleSubject({
-            subject: "spellDamageReduction",
-            fill: "rolledDice",
-            holes: [],
-            owner: "battleDamageAdjustment",
-          }),
-          reducerRouteResolveBattleSubjectWithoutFill({
-            subject: "spellDamageReduction",
-            holes: [],
-            owner: "battleActiveEffect",
-          }),
-        ];
+        state = applyResistanceReductionRollRoute(state);
       },
       step: () => {},
-      getState: () => ({ route }),
+      getState: () => ({ route: state.route }),
     };
   });
+}
+
+function initialSpellDamageReductionRouteState(): SpellDamageReductionRouteRuntimeState {
+  return {
+    battle: rollModifierBuffBattle({
+      cantrips: [spellRecord("resistance")],
+      spellSlots: [],
+    }),
+    holes: [],
+    route: [battleReducerStartRouteEvent()],
+  };
+}
+
+function discoverResistanceTargetChoiceRoute(
+  state: SpellDamageReductionRouteRuntimeState,
+): SpellDamageReductionRouteRuntimeState {
+  const act = actionSpellAct(state.battle, "resistance");
+  return spellDamageReductionRouteState({
+    state,
+    holes: [requireHoleFromList(act.initialHoles, "targetChoice")],
+    routeEvents: requirePublicRouteEvents(
+      act.routeEvents,
+      "Expected Resistance discovery route events.",
+    ),
+  });
+}
+
+function fillResistanceTargetRoute(
+  state: SpellDamageReductionRouteRuntimeState,
+): SpellDamageReductionRouteRuntimeState {
+  const act = actionSpellAct(state.battle, "resistance");
+  const target = requireHoleFromList(act.initialHoles, "targetChoice");
+  const result = resolveBattleSubject({
+    state: state.battle,
+    subject: act.subject,
+    fills: [spellTargetFill(target, "resistance", casterId)],
+  });
+  if (result.tag !== "needsHoles") {
+    throw new Error(`Expected Resistance damage-type frontier, got ${result.tag}.`);
+  }
+  return spellDamageReductionRouteState({
+    state,
+    battle: result.state,
+    holes: result.holes,
+    routeEvents: requirePublicRouteEvents(
+      result.routeEvents,
+      "Expected Resistance target-choice route events.",
+    ),
+  });
+}
+
+function chooseResistanceDamageTypeRoute(
+  state: SpellDamageReductionRouteRuntimeState,
+): SpellDamageReductionRouteRuntimeState {
+  const act = actionSpellAct(state.battle, "resistance");
+  const target = requireHoleFromList(act.initialHoles, "targetChoice");
+  const damageType = requireHoleFromList(state.holes, "damageTypeChoice");
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: state.battle,
+      subject: act.subject,
+      fills: [
+        spellTargetFill(target, "resistance", casterId),
+        damageTypeChoiceFill(damageType, "bludgeoning"),
+      ],
+    }),
+  );
+  return spellDamageReductionRouteState({
+    state,
+    battle: resolved.state,
+    holes: [],
+    routeEvents: requirePublicRouteEvents(
+      resolved.routeEvents,
+      "Expected Resistance damage-type route events.",
+    ),
+  });
+}
+
+function applyResistanceReductionRollRoute(
+  state: SpellDamageReductionRouteRuntimeState,
+): SpellDamageReductionRouteRuntimeState {
+  const nextTurn = requireResolved(
+    endTurn({ state: state.battle, actorId: casterId }),
+  );
+  const postTurnState = nextTurn.state;
+  const subject = unarmedStrikeSubject(primaryTargetId);
+  const attackTarget = requireResultHole(
+    resolveBattleSubject({ state: postTurnState, subject, fills: [] }),
+    "targetChoice",
+  );
+  const targetFill = attackTargetFill(attackTarget, primaryTargetId, casterId);
+  const attack = requireResultHole(
+    resolveBattleSubject({
+      state: postTurnState,
+      subject,
+      fills: [targetFill],
+    }),
+    "attackRoll",
+  );
+  const attackFill = attackRollFill(attack, {
+    total: 18,
+    naturalD20: 12,
+  });
+  const needsReduction = resolveBattleSubject({
+    state: postTurnState,
+    subject,
+    fills: [targetFill, attackFill],
+  });
+  const reduction = requireSpellDamageReductionHole(needsReduction);
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state: postTurnState,
+      subject,
+      fills: [
+        targetFill,
+        attackFill,
+        damageRollFillWithGroups(reduction, [[1]]),
+      ],
+    }),
+  );
+  return spellDamageReductionRouteState({
+    state,
+    battle: resolved.state,
+    holes: [],
+    routeEvents: [
+      ...requirePublicRouteEvents(
+        needsReduction.routeEvents,
+        "Expected Resistance reduction-roll discovery route events.",
+      ),
+      ...requirePublicRouteEvents(
+        resolved.routeEvents,
+        "Expected Resistance reduction-roll resolution route events.",
+      ),
+    ],
+  });
+}
+
+function spellDamageReductionRouteState(input: {
+  readonly state: SpellDamageReductionRouteRuntimeState;
+  readonly battle?: BattleState;
+  readonly holes: readonly BattleHole[];
+  readonly routeEvents: readonly BattleReducerRouteEvent[];
+}): SpellDamageReductionRouteRuntimeState {
+  return {
+    battle: input.battle ?? input.state.battle,
+    holes: input.holes,
+    route: [...input.state.route, ...input.routeEvents],
+  };
+}
+
+function requirePublicRouteEvents(
+  routeEvents: readonly BattleReducerRouteEvent[] | undefined,
+  message: string,
+): readonly BattleReducerRouteEvent[] {
+  if (routeEvents !== undefined && routeEvents.length > 0) {
+    return routeEvents;
+  }
+  throw new Error(message);
 }
 
 const spellDamageReductionRouteStateCheck = stateCheck(

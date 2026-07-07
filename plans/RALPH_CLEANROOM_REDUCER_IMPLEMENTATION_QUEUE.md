@@ -217,7 +217,7 @@
     {
       "number": 36,
       "id": "CRPI-BLOCK-024",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-roll-modifier-buff-selected-identity"
     },
     {
@@ -2819,7 +2819,7 @@ Plan Impact:
 
 ### Task 36 - CRPI-BLOCK-024
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
