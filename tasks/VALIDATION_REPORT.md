@@ -1,5 +1,107 @@
 # Validation Report
 
+## CRPI-BLOCK-032
+
+Status: `pass`
+
+- Task: 60
+- Driver path: `packages/battle-runtime/battle-runtime-thaumaturgy-selected-identity.mbt.qnt`
+- Route connector path: `packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt`
+- Route class: `catalog-after-substrate`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-032.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Behavior accepted:
+
+Task 60 accepts Thaumaturgy Booming Voice selected-identity routing through the
+generic roll-modifier active-effect route subject. The focused selected replay
+continues to compare the selected semantic QNT projection for
+`doResolveThaumaturgyBoomingVoice`. The target route evidence compares the
+copied roll-modifier active-effects connector `qRoute` for the Thaumaturgy
+active-effect branch to public battle reducer events observed from
+`startBattleRight`, `discoverBattleActs`, and `resolveBattleSubject`.
+
+No Thaumaturgy-specific counter or duplicate active-effect ledger was added.
+The active one-minute effect count remains caller boundary evidence on
+`BattleFill.kind=thaumaturgyActiveOneMinuteEffectCount`. BattleState already
+owns the active Spell Effect through `BattleCreatureState.activeEffects`, and
+route projection is derived from typed `thaumaturgyBoomingVoice` procedure
+shape plus public reducer route events rather than authored spell identity.
+
+Generated branch coverage:
+
+| Obligation                                                                                              | Evidence                                                                                                                                                                                                                                                                                  | Status    |
+| ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| `packages/battle-runtime/battle-runtime-thaumaturgy-selected-identity.mbt.qnt#step:doResolveThaumaturgyBoomingVoice` | `tasks/target-replay-evidence/CRPI-BLOCK-032.json#driver:packages/battle-runtime/battle-runtime-thaumaturgy-selected-identity.mbt.qnt#step:doResolveThaumaturgyBoomingVoice#trace:MBT_TRACES=1 MBT_STEPS=1 action=doResolveThaumaturgyBoomingVoice qRoute=roll-modifier-thaumaturgy-active-effect-public-route` | `covered` |
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-032/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 60.
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Spells/Descriptions-S-Z.md#Thaumaturgy` defines Booming Voice,
+  its 1-minute duration, the three active 1-minute effect cap, and Advantage on
+  Charisma (Intimidation) checks.
+- SRD 5.2.1 `Playing-the-Game.md#Advantage/Disadvantage` defines Advantage and
+  Disadvantage cancellation.
+- SRD 5.2.1 `Rules-Glossary.md#Concentration` was checked to confirm Booming
+  Voice is a non-Concentration active Spell Effect.
+- `UBIQUITOUS_LANGUAGE.md` defines D20 Rolls, Advantage and Disadvantage,
+  Spell Invocation, Spell Effect, and Concentration terms used by this route.
+
+Verification results:
+
+- Base check passed: declared base ref
+  `ralph/cleanroom-owner-battle-attack-20260706T213644Z/integration` and
+  `HEAD` both resolved to `827648e09 Mark Ralph task 56 done`; Base SHA
+  `827648e09ad907c96487632baf35257fadc4b22e` was an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against the local SRD passages listed
+  above and `UBIQUITOUS_LANGUAGE.md`.
+- `pnpm --filter @dnd/battle-runtime typecheck` passed after adding the focused
+  selected route assertion.
+- Focused Thaumaturgy selected-identity replay passed:
+  `START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/battle-runtime exec vitest run src/thaumaturgy-selected-identity.mbt.test.ts ) 2>&1 & pid=$!; wait "$pid"; status=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"` passed with 2 tests; `TOTAL: 5s`.
+- Focused copied route connector replay passed:
+  `START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=16 pnpm --filter @dnd/battle-runtime exec vitest run src/roll-modifier-active-effects.mbt.test.ts -t "replays roll-modifier active-effect qRoute through public reducer entrypoints" ) 2>&1 & pid=$!; wait "$pid"; status=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"` passed with 1 test; `TOTAL: 13s`.
+- Task-scoped target evidence validation passed for
+  `packages/battle-runtime/battle-runtime-thaumaturgy-selected-identity.mbt.qnt`.
+- `pnpm cleanroom-branch-coverage:check` passed.
+- `git diff --check` passed.
+- `pnpm quality` passed.
+- Reviewer-loop convergence passed: round 1 verified RAW traceability,
+  ubiquitous-language/domain language, no duplicate durable state, no
+  authored-identity production dispatch, and localized route
+  subject/owner/fill connascence. Round 2 found no remaining reasonable Task 60
+  findings after evidence and manifest updates.
+
+Plan Impact:
+
+- Status: `none`
+- Affected tasks:
+  - Task 60 / `CRPI-BLOCK-032`: `unblocked`; copied `qRoute` replay is accepted.
+  - Route task `L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES`: `left unchanged`.
+- Observations:
+  - Thaumaturgy Booming Voice selected identity reuses the generic
+    `rollModifierEffect` route subject and `battleActiveEffect` owner.
+  - The active one-minute effect count remains a boundary fill fact; no
+    Thaumaturgy-specific BattleState counter is needed.
+  - The copied route connector action is `doCastThaumaturgyBoomingVoice`; the
+    selected source branch remains `doResolveThaumaturgyBoomingVoice`.
+- Required plan edits: none.
+
 ## CRPI-BLOCK-028
 
 Status: `pass`
