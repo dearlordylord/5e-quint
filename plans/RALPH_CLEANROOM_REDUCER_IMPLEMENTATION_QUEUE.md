@@ -181,7 +181,7 @@
     {
       "number": 30,
       "id": "CRPI-BLOCK-021",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-movement-forced-movement-selected-identity"
     },
     {
@@ -2490,7 +2490,7 @@ Plan Impact:
 
 ### Task 30 - CRPI-BLOCK-021
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

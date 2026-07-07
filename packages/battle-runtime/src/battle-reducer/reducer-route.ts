@@ -50,6 +50,7 @@ import {
   sleepRepeatSaveSavingThrowHoleIds,
   spellTurnStartSavingThrowOutcomeHoleId,
 } from "./turn-end-movement.ts";
+import { representedMovementSpeedKinds } from "./movement-speed.ts";
 import { activeDruidWildShapeEffect } from "./druid-wild-shape.ts";
 import {
   activeOngoingFeatureOccurrencesForCombatant,
@@ -93,7 +94,10 @@ export type BattleReducerRouteSubjectFamily =
   | "metamagicSpellComponentProjection"
   | "passiveSavingThrowRollMode"
   | "creatureSpaceMovementPermission"
+  | "forcedMovement"
+  | "movementResource"
   | "movementPresentation"
+  | "specialSpeedProjection"
   | "objectLightRider"
   | "reactionSpell"
   | "reactionArmorClassEffect"
@@ -518,6 +522,11 @@ export function battleReducerRouteEventsForDiscoveredAct(
       },
     ];
   }
+  const movementSubstrateDiscoveryRoute =
+    movementSubstrateRouteForDiscoveredAct(state, act);
+  if (movementSubstrateDiscoveryRoute !== undefined) {
+    return movementSubstrateDiscoveryRoute;
+  }
   if (isQuickenedBonusActionCastingTimeSubject(act.subject)) {
     return [
       {
@@ -802,6 +811,19 @@ export function battleReducerRouteForResolution(
     );
   }
   const commandRoute = commandRouteForResolution(input, result);
+  const movementSubstrateRoute = movementSubstrateRouteForResolution(
+    input,
+    result,
+  );
+  if (movementSubstrateRoute !== undefined) {
+    return composeWithActiveFormLifecycleTerminalRoute(
+      nonEmptyRouteEvents([
+        ...(commandRoute === undefined ? [] : [commandRoute]),
+        ...movementSubstrateRoute,
+      ]),
+      activeFormLifecycleTerminalRoute,
+    );
+  }
   if (commandRoute !== undefined) {
     return composeWithActiveFormLifecycleTerminalRoute(
       [commandRoute],
@@ -985,6 +1007,278 @@ function creatureSpaceMovementPermissionRouteForResolution(
     });
   }
   return nonEmptyRouteEvents(route);
+}
+
+function movementSubstrateRouteForDiscoveredAct(
+  state: BattleState,
+  act: AvailableBattleAct,
+): BattleReducerRouteEvents | undefined {
+  if (isForcedReactionMovementSpellSubject(state, act.subject)) {
+    return [
+      {
+        kind: "discoverBattleActs",
+        subject: "forcedMovement",
+        holes: ["movement", "rolledDice", "savingThrowOutcome", "targetChoice"],
+        owner: "battleSpellSlotAndActionEconomy",
+      },
+    ];
+  }
+  if (isSpellGrantedDashSubject(act.subject)) {
+    return [
+      {
+        kind: "discoverBattleActs",
+        subject: "movementResource",
+        holes: [],
+        owner: "battleSpellSlotAndActionEconomy",
+      },
+    ];
+  }
+  if (isPassiveSpeedDashSubject(act.subject)) {
+    return [
+      {
+        kind: "discoverBattleActs",
+        subject: "movementResource",
+        holes: [],
+        owner: "battleActionEconomy",
+      },
+    ];
+  }
+  if (isSpecialSpeedMovementSubject(state, act.subject)) {
+    return [
+      {
+        kind: "discoverBattleActs",
+        subject: "specialSpeedProjection",
+        holes: [],
+        owner: "battleCreatureState",
+      },
+      movementSubstrateResolveWithoutFill(
+        "specialSpeedProjection",
+        "battleCreatureState",
+      ),
+      movementSubstrateResolveWithoutFill(
+        "specialSpeedProjection",
+        "battleMovementResource",
+      ),
+      {
+        kind: "discoverBattleActs",
+        subject: "movementResource",
+        holes: ["movement"],
+        owner: "battleMovementResource",
+      },
+    ];
+  }
+  return undefined;
+}
+
+function movementSubstrateRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  const commandFleeDiscoveryRoute = commandFleeForcedMovementDiscoveryRoute(
+    input,
+    result,
+  );
+  if (commandFleeDiscoveryRoute !== undefined) {
+    return commandFleeDiscoveryRoute;
+  }
+  if (result.tag !== "resolved") {
+    return undefined;
+  }
+  if (isForcedReactionMovementSpellSubject(input.state, input.subject)) {
+    const fill = input.fills.at(-1);
+    if (fill?.kind !== "movement") {
+      return undefined;
+    }
+    return forcedMovementResolvedRoute(
+      "battleActionEconomy",
+      "battleInterruptStack",
+    );
+  }
+  const commandFleeRoute = commandFleeForcedMovementRoute(input);
+  if (commandFleeRoute !== undefined) {
+    return commandFleeRoute;
+  }
+  if (isSpellGrantedDashSubject(input.subject)) {
+    return [
+      movementSubstrateResolveWithoutFill(
+        "movementResource",
+        "battleSpellSlotAndActionEconomy",
+      ),
+      movementSubstrateResolveWithoutFill(
+        "movementResource",
+        "battleActiveEffect",
+      ),
+      movementSubstrateResolveWithoutFill(
+        "movementResource",
+        "battleMovementResource",
+      ),
+    ];
+  }
+  if (isPassiveSpeedDashSubject(input.subject)) {
+    return [
+      movementSubstrateResolveWithoutFill(
+        "movementResource",
+        "battleActionEconomy",
+      ),
+      movementSubstrateResolveWithoutFill(
+        "movementResource",
+        "battleCreatureState",
+      ),
+      movementSubstrateResolveWithoutFill(
+        "movementResource",
+        "battleMovementResource",
+      ),
+    ];
+  }
+  if (isSpecialSpeedMovementSubject(input.state, input.subject)) {
+    const fill = input.fills.at(-1);
+    if (fill?.kind !== "movement") {
+      return undefined;
+    }
+    return [
+      {
+        kind: "resolveBattleSubject",
+        subject: "movementResource",
+        fill: "movement",
+        holes: [],
+        owner: "battleMovementResource",
+      },
+    ];
+  }
+  return undefined;
+}
+
+function commandFleeForcedMovementDiscoveryRoute(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  const fill = input.fills.at(-1);
+  if (
+    input.subject.tag !== "actionSpell" ||
+    input.subject.invocation.procedure !== "command" ||
+    fill?.kind !== "commandOptionChoice" ||
+    fill.value !== "flee" ||
+    result.tag !== "needsHoles"
+  ) {
+    return undefined;
+  }
+  return [
+    {
+      kind: "discoverBattleActs",
+      subject: "forcedMovement",
+      holes: [
+        "commandOptionChoice",
+        "movement",
+        "savingThrowOutcome",
+        "spellTargetList",
+      ],
+      owner: "battleSpellSlotAndActionEconomy",
+    },
+  ];
+}
+
+function commandFleeForcedMovementRoute(
+  input: BattleResolutionInput,
+): BattleReducerRouteEvents | undefined {
+  if (
+    input.subject.tag !== "runtimeCommand" ||
+    input.subject.command !== "commandFlee" ||
+    input.fills.at(-1)?.kind !== "movement"
+  ) {
+    return undefined;
+  }
+  return forcedMovementResolvedRoute(
+    "battleActionEconomy",
+    "battleInterruptStack",
+    "battleActiveEffect",
+    "battleTurnBoundary",
+  );
+}
+
+function forcedMovementResolvedRoute(
+  ...owners: readonly BattleReducerRouteOwnerGroup[]
+): BattleReducerRouteEvents {
+  return [
+    {
+      kind: "resolveBattleSubject",
+      subject: "forcedMovement",
+      fill: "movement",
+      holes: [],
+      owner: "battleMovementResource",
+    },
+    ...owners.map((owner) =>
+      movementSubstrateResolveWithoutFill("forcedMovement", owner),
+    ),
+  ];
+}
+
+function movementSubstrateResolveWithoutFill(
+  subject: Extract<
+    BattleReducerRouteSubjectFamily,
+    "forcedMovement" | "movementResource" | "specialSpeedProjection"
+  >,
+  owner: BattleReducerRouteOwnerGroup,
+): BattleReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubjectWithoutFill",
+    subject,
+    holes: [],
+    owner,
+  };
+}
+
+function isForcedReactionMovementSpellSubject(
+  state: BattleState,
+  subject: BattleResolutionInput["subject"] | AvailableBattleAct["subject"],
+): subject is Extract<
+  BattleResolutionInput["subject"],
+  { readonly tag: "actionSpell" }
+> {
+  const invocation = spellInvocationForRouteSubject(state, subject);
+  return (
+    invocation?.procedure === "saveGatedDamage" &&
+    invocation.failedSavePostDamageRiders.some(
+      (rider) => rider.kind === "forcedReactionMovement",
+    )
+  );
+}
+
+function isSpellGrantedDashSubject(
+  subject: BattleResolutionInput["subject"] | AvailableBattleAct["subject"],
+): subject is Extract<
+  BattleResolutionInput["subject"],
+  { readonly tag: "bonusActionDashSpell" }
+> {
+  return (
+    subject.tag === "bonusActionDashSpell" &&
+    subject.invocation.procedure === "expeditiousRetreatDash"
+  );
+}
+
+function isPassiveSpeedDashSubject(
+  subject: BattleResolutionInput["subject"] | AvailableBattleAct["subject"],
+): subject is Extract<
+  BattleResolutionInput["subject"],
+  { readonly tag: "action"; readonly action: "dash" }
+> {
+  return subject.tag === "action" && subject.action === "dash";
+}
+
+function isSpecialSpeedMovementSubject(
+  state: BattleState,
+  subject: BattleResolutionInput["subject"] | AvailableBattleAct["subject"],
+): subject is Extract<
+  BattleResolutionInput["subject"],
+  { readonly tag: "runtimeCommand"; readonly command: "move" }
+> {
+  if (subject.tag !== "runtimeCommand" || subject.command !== "move") {
+    return false;
+  }
+  const actor = state.combatants.get(subject.actorId);
+  return (
+    actor !== undefined &&
+    representedMovementSpeedKinds(actor).some((kind) => kind !== "walk")
+  );
 }
 
 function isZeroHitPointStabilizationSubject(

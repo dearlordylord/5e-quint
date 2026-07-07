@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-020",
+  "taskId": "CRPI-BLOCK-021",
   "durableFields": [
     {
       "fieldPath": "AvailableBattleAct.routeEvents",
@@ -25,38 +25,42 @@
       "notes": "Projection is emitted at public reducer entrypoints from existing owner-local facts; it is not stored as a second BattleState copy."
     },
     {
-      "fieldPath": "BattleCreatureState.activeEffects",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing BattleState runtime state owns the spellBaseArmorClass Spell Effect reached by Task 28."
-    },
-    {
-      "fieldPath": "BattleCreatureState.armorClass",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing stored armor/loadout state remains the canonical base character Armor Class state. Mage Armor projection is derived from activeEffects by activeEffectArmorClass rather than stored beside this field."
-    },
-    {
-      "fieldPath": "BattleReducerRouteEvent.subject=spellBaseArmorClassEffect",
+      "fieldPath": "BattleReducerRouteEvent.subject=forcedMovement",
       "owner": "executable-boundary-projection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleState plus typed persistentArmorEffect procedure, target fills, spellBaseArmorClass active effects, derived Armor Class projection, and duration expiry deltas",
+        "sourceField": "typed forcedReactionMovement spell rider, Command Flee movement fill, target Reaction state, interrupt-stack result, active Command effect, and turn-boundary cleanup",
         "boundary": "battle-runtime public reducer route event boundary"
       },
-      "notes": "Projection is derived from generic procedure/effect facts for target admission, active-effect admission, Armor Class projection, and duration cleanup."
+      "notes": "Projection is derived from typed runtime facts and public reducer results; production behavior does not branch on authored spell or feature identity."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.subject=movementResource",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleState.currentTurnResources, BattleCreatureState.movementSpentFeet, Dash resolution, and movement fills",
+        "boundary": "battle-runtime public reducer route event boundary"
+      },
+      "notes": "Projection keeps Speed source facts distinct from Movement budget consumption and derives route evidence from the existing movement budget owner."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.subject=specialSpeedProjection",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleCreatureState origin speed facts, passive speed-kind grants, active specialSpeedGrant effects, and representedMovementSpeedKinds projection",
+        "boundary": "battle-runtime public reducer route event boundary"
+      },
+      "notes": "Projection derives special-speed evidence from canonical creature-state speed facts and active effects; no duplicate special-speed state is added."
     }
   ],
   "notes": [
-    "Task 28 introduced no new durable BattleState or BattleCreatureState fields.",
-    "Selected spell identity remains at catalog/support-profile and selected replay boundaries; production route projection uses typed spell procedure shape and active-effect deltas.",
-    "Route subjects are executable boundary projections derived from existing owner state and public reducer results, not a stored route ledger or duplicate Armor Class state."
+    "Task 30 introduced no new durable BattleState or BattleCreatureState fields.",
+    "Selected spell/feature identity remains at catalog/support-profile and selected replay boundaries; production route projection uses typed spell procedure, effect, movement, and creature-state facts.",
+    "Route subjects are executable boundary projections derived from existing owner state and public reducer results, not a stored route ledger or duplicate Speed/Movement state."
   ]
 }
