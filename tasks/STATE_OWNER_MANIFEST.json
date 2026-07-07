@@ -1,47 +1,58 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-042",
+  "taskId": "CRPI-BLOCK-040",
   "durableFields": [
     {
-      "fieldPath": "CharacterBuild.features",
-      "owner": "character-build",
-      "introducedIn": "packages/character-creation-runtime/src/types.ts",
+      "fieldPath": "CharacterSheet.resourceExpenditures",
+      "owner": "character-sheet",
+      "introducedIn": "packages/character-sheet-runtime/src/sheet-types.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing selected class-choice, Eldritch Invocation, and Metamagic option refs remain retained build facts. Task 85 adds no duplicate selected-reference cache."
+      "notes": "Existing Character Sheet resource expenditure state owns Lay On Hands, use-count, Monk Focus, and Sorcery Point point-pool spend facts. Task 83 adds no duplicate resource expenditure field."
     },
     {
-      "fieldPath": "CharacterBuild.spellcasting.sources",
-      "owner": "character-build",
-      "introducedIn": "packages/character-creation-runtime/src/types.ts",
+      "fieldPath": "CharacterSheet.spellSlotSourceState",
+      "owner": "character-sheet",
+      "introducedIn": "packages/character-sheet-runtime/src/sheet-types.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing cantrip, spellbook, prepared-spell, and Book of Shadows selections are retained build facts used by selected-reference projection."
+      "notes": "Existing source-exact ordinary and created Spell Slot state owns Font of Magic conversion deltas. Pact Slot distinction remains separate and is not collapsed into this task's projection."
     },
     {
-      "fieldPath": "CharacterCreationRouteEvent.subject=selectedReference",
-      "owner": "character-creation-selected-reference-route-projection",
-      "introducedIn": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts",
+      "fieldPath": "CharacterSheet.restFeatureUses",
+      "owner": "character-sheet",
+      "introducedIn": "packages/character-sheet-runtime/src/sheet-types.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing Long Rest use-state owns Uncanny Metabolism repeat-use gating. Short Rest preserves it; Long Rest clears it."
+    },
+    {
+      "fieldPath": "BattleState.combatants[*].origin.resources",
+      "owner": "battle-runtime",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/model.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing battle combatant character resources own battle-time Sorcery Point spend used by the Metamagic bridge before settlement projects the delta back to Character Sheet state."
+    },
+    {
+      "fieldPath": "CharacterBattleRouteEvent",
+      "owner": "character-battle-route-projection",
+      "introducedIn": "packages/character-battle-runtime/src/character-battle-route.ts",
       "derivability": {
         "tag": "runtime-projection"
       },
-      "notes": "Selected-reference route events are emitted by the public projection entrypoint after it reads retained CharacterBuild selected refs."
-    },
-    {
-      "fieldPath": "CharacterCreationRouteEvent.facts=selectedReferenceRetention",
-      "owner": "character-creation-selected-reference-route-projection",
-      "introducedIn": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts",
-      "derivability": {
-        "tag": "runtime-projection"
-      },
-      "notes": "CreationSelectedReferenceRetentionFact records the selected-reference route boundary without storing a parallel selected Unit ref list."
+      "notes": "Route events project feature-resource handoff ownership, source-exact Spell Slot delta facts, rejection holes, and battle-runtime entry. They are not stored as a duplicate feature-resource state machine."
     }
   ],
   "notes": [
-    "Task 85 introduced no new durable CharacterBuild fields.",
-    "Selected Unit refs remain existing CharacterBuild facts; selected-reference route evidence is projected at the reducer-route boundary.",
-    "Projection branches reuse the existing CharacterBuild class-feature projection route for CharacterBuildOwner build-projection events."
+    "Task 83 introduced no durable CharacterSheet, BattleState, or BattleCreatureState fields.",
+    "CharacterBattleSheetOwner remains the sheet point/use state owner.",
+    "CharacterBattleResourceProjectionOwner remains the boundary-delta and hole owner for feature and Spell Slot resource projection.",
+    "CharacterBattleRuntimeOwner remains the battle-time Metamagic and spell action state owner.",
+    "Ordinary, created, and Pact slot distinctions remain source-exact and are not collapsed into a single resource field."
   ]
 }

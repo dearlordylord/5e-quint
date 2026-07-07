@@ -499,7 +499,7 @@
     {
       "number": 83,
       "id": "CRPI-BLOCK-040",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: character-sheet-feature-resources"
     },
     {
@@ -5492,7 +5492,7 @@ Plan Impact:
 
 ### Task 83 - CRPI-BLOCK-040
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

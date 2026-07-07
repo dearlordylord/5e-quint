@@ -1,4 +1,4 @@
-import { Match } from "effect";
+import { Either, Match } from "effect";
 
 export const CHARACTER_BATTLE_ROUTE_SUBJECTS = [
   "sheetToBattleInit",
@@ -152,6 +152,32 @@ export type CharacterBattleRouteEvent =
       readonly subject: CharacterBattleRouteSubject;
       readonly facts: readonly CharacterBattleRouteHandoffFact[];
       readonly owner: CharacterBattleRouteOwner;
+    };
+
+export type CharacterBattleFeatureResourceRouteObservation =
+  | {
+      readonly tag: "layOnHands";
+      readonly result: Either.Either<unknown, unknown>;
+    }
+  | {
+      readonly tag: "featureResourceRest";
+      readonly result: Either.Either<unknown, unknown>;
+    }
+  | {
+      readonly tag: "fontOfMagicSlotToPoints";
+      readonly result: Either.Either<unknown, unknown>;
+    }
+  | {
+      readonly tag: "fontOfMagicPointsToSlot";
+      readonly result: Either.Either<unknown, unknown>;
+    }
+  | {
+      readonly tag: "uncannyMetabolism";
+      readonly result: Either.Either<unknown, unknown>;
+    }
+  | {
+      readonly tag: "metamagicBattleBridgeAccepted";
+      readonly result: Either.Either<unknown, unknown>;
     };
 
 export function projectCharacterSheetToBattleRoute(input: {
@@ -323,6 +349,57 @@ export function characterSessionSheetDerivedBattleActsRouteStep(
     ),
     Match.when("doSettleSheetDerivedSpellSlot", () =>
       settleSheetDerivedSpellSlotRoute(route),
+    ),
+    Match.exhaustive,
+  );
+}
+
+export function initialCharacterBattleFeatureResourceHandoffRoute(): readonly CharacterBattleRouteEvent[] {
+  return [
+    projectCharacterSheetToBattleRoute({
+      subject: "handoffFeatureResourceProjection",
+      owner: "characterBattleSheet",
+    }),
+  ];
+}
+
+export function appendCharacterBattleFeatureResourceHandoffRoute(
+  route: readonly CharacterBattleRouteEvent[],
+  observation: CharacterBattleFeatureResourceRouteObservation,
+): readonly CharacterBattleRouteEvent[] {
+  return Match.value(observation).pipe(
+    Match.when({ tag: "layOnHands" }, (observed) =>
+      Either.isRight(observed.result)
+        ? acceptedFeatureResourceWithHitPointRoute(route)
+        : rejectedFeatureResourceRoute(route, ["featureResourceProjection"]),
+    ),
+    Match.when({ tag: "featureResourceRest" }, (observed) =>
+      Either.isRight(observed.result)
+        ? acceptedFeatureResourceRoute(route)
+        : rejectedFeatureResourceRoute(route, ["featureResourceProjection"]),
+    ),
+    Match.when({ tag: "fontOfMagicSlotToPoints" }, (observed) =>
+      Either.isRight(observed.result)
+        ? acceptedSpellResourceRoute(route)
+        : rejectedSpellResourceRoute(route, [
+            "spellResourceProjection",
+            "settlementConflict",
+          ]),
+    ),
+    Match.when({ tag: "fontOfMagicPointsToSlot" }, (observed) =>
+      Either.isRight(observed.result)
+        ? acceptedSpellResourceRoute(route)
+        : rejectedFeatureResourceRoute(route, ["featureResourceProjection"]),
+    ),
+    Match.when({ tag: "uncannyMetabolism" }, (observed) =>
+      Either.isRight(observed.result)
+        ? acceptedFeatureResourceWithHitPointRoute(route)
+        : rejectedFeatureResourceRoute(route, ["featureResourceProjection"]),
+    ),
+    Match.when({ tag: "metamagicBattleBridgeAccepted" }, (observed) =>
+      Either.isRight(observed.result)
+        ? metamagicBattleBridgeRoute(route)
+        : rejectedFeatureResourceRoute(route, ["featureResourceProjection"]),
     ),
     Match.exhaustive,
   );
@@ -649,6 +726,108 @@ function settleSheetDerivedSpellSlotRoute(
       subject: "handoffResourceProjection",
       facts: ["sourceExactSpellSlotDelta"],
       owner: "characterBattleResourceProjection",
+    }),
+  ];
+}
+
+function acceptedFeatureResourceRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  return [
+    ...route,
+    projectCharacterSheetToBattleRoute({
+      subject: "handoffFeatureResourceProjection",
+      owner: "characterBattleResourceProjection",
+    }),
+    recordCharacterBattleHandoffFactsRoute({
+      subject: "handoffFeatureResourceProjection",
+      facts: ["featureResourceDelta"],
+      owner: "characterBattleResourceProjection",
+    }),
+  ];
+}
+
+function acceptedFeatureResourceWithHitPointRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  return [
+    ...acceptedFeatureResourceRoute(route),
+    projectCharacterSheetToBattleRoute({
+      subject: "sheetToBattleInit",
+      owner: "characterBattleSheet",
+    }),
+  ];
+}
+
+function rejectedFeatureResourceRoute(
+  route: readonly CharacterBattleRouteEvent[],
+  holes: readonly CharacterBattleRouteHole[],
+): readonly CharacterBattleRouteEvent[] {
+  return [
+    ...route,
+    rejectCharacterBattleHandoffRoute({
+      subject: "handoffFeatureResourceProjection",
+      fill: "resourceDelta",
+      holes,
+      owner: "characterBattleResourceProjection",
+    }),
+    recordCharacterBattleHandoffFactsRoute({
+      subject: "handoffFeatureResourceProjection",
+      facts: ["settlementConflict"],
+      owner: "characterBattleResourceProjection",
+    }),
+  ];
+}
+
+function acceptedSpellResourceRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  return [
+    ...acceptedFeatureResourceRoute(route),
+    projectCharacterSheetToBattleRoute({
+      subject: "handoffResourceProjection",
+      owner: "characterBattleResourceProjection",
+    }),
+    recordCharacterBattleHandoffFactsRoute({
+      subject: "handoffResourceProjection",
+      facts: ["sourceExactSpellSlotDelta"],
+      owner: "characterBattleResourceProjection",
+    }),
+  ];
+}
+
+function rejectedSpellResourceRoute(
+  route: readonly CharacterBattleRouteEvent[],
+  holes: readonly CharacterBattleRouteHole[],
+): readonly CharacterBattleRouteEvent[] {
+  return [
+    ...route,
+    rejectCharacterBattleHandoffRoute({
+      subject: "handoffResourceProjection",
+      fill: "resourceDelta",
+      holes,
+      owner: "characterBattleResourceProjection",
+    }),
+    recordCharacterBattleHandoffFactsRoute({
+      subject: "handoffResourceProjection",
+      facts: ["settlementConflict"],
+      owner: "characterBattleResourceProjection",
+    }),
+  ];
+}
+
+function metamagicBattleBridgeRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  return [
+    ...acceptedFeatureResourceRoute(route),
+    enterBattleRuntimeRoute({
+      subject: "handoffBattleMutation",
+      owner: "characterBattleRuntime",
+    }),
+    enterBattleRuntimeRoute({
+      subject: "handoffResourceProjection",
+      owner: "characterBattleRuntime",
     }),
   ];
 }

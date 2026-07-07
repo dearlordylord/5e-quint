@@ -1,21 +1,36 @@
 import * as path from "node:path";
 
 import {
+  type AvailableBattleAct,
+  type BattleFill,
+  type BattleHole,
+  type BattleResolutionResult,
   battleCombatantSide,
+  battleCreatureInitFromStatBlock,
   battleId,
   combatantId,
+  discoverBattleActs,
   initiativeScore,
+  resolveBattleSubject,
+  spellSlotInvocationRef,
+  startBattle,
+  type BattleState,
 } from "@dnd/battle-runtime";
 import {
   abilityScoreAssignment,
+  classUnitId,
   characterDraftId,
   createCharacterDraft,
   creationChoiceOptionId,
   creationHoleId,
+  DRUID_WILD_SHAPE_UNIT_ID,
   fillCreationHoles,
   finalizeCharacterDraft,
   loadoutEquipmentUnitId,
   loadoutSourceHoleIdText,
+  MONK_MONKS_FOCUS_UNIT_ID,
+  SORCERER_FONT_OF_MAGIC_UNIT_ID,
+  sorcererMetamagicOptionId,
   unitChoiceSourceHoleIdText,
   unitChoiceSourceUnitId,
   type CharacterBuild,
@@ -26,10 +41,30 @@ import {
   type UnitChoiceKey,
 } from "@dnd/character-creation-runtime";
 import {
+  applyLayOnHands,
+  characterSheetCurrentHp,
+  characterSheetTempHp,
   characterSheetId,
+  completeLongRest,
+  completeShortRest,
+  convertFontOfMagicSorceryPointsToSpellSlot,
+  convertFontOfMagicSpellSlotToSorceryPoints,
   createFreshCharacterSheet,
+  finishLongRest,
+  finishShortRest,
+  startLongRest,
+  startShortRest,
+  useMonkUncannyMetabolismWhenRollingInitiative,
+  type CharacterSheet,
+  type CharacterSheetInput,
 } from "@dnd/character-sheet-runtime";
-import { Hp } from "@dnd/shared/types";
+import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
+import {
+  DieRollResult,
+  Hp,
+  resourceCount,
+  spellSlotLevel,
+} from "@dnd/shared/types";
 import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
@@ -44,7 +79,9 @@ import type { SimpleActionMap, SimpleDriver } from "@firfi/quint-connect";
 import { describe, expect, it } from "vitest";
 
 import {
+  appendCharacterBattleFeatureResourceHandoffRoute,
   characterBattleInitiativeScore,
+  characterSheetBattleInit,
   characterBattleEncounterCompositionRouteStep,
   characterBattleInitProjectionRouteStep,
   characterBattleSettlementRouteStep,
@@ -52,6 +89,7 @@ import {
   CHARACTER_BATTLE_SETTLEMENT_ROUTE_ACTIONS,
   composeBattleEncounterRoute as composeBattleEncounter,
   enterBattleRuntimeRoute as enterBattleRuntime,
+  initialCharacterBattleFeatureResourceHandoffRoute,
   initialCharacterBattleEncounterCompositionRoute,
   initialCharacterBattleInitProjectionRoute,
   initialCharacterBattleSettlementRoute,
@@ -61,7 +99,9 @@ import {
   rejectCharacterBattleHandoffRoute as rejectCharacterBattleHandoff,
   settleBattleToCharacterSheetRoute as settleBattleToCharacterSheet,
   characterSheetBattleInitWithRoute,
+  settleCharacterSheetFromBattle,
   startBattleFromCharacterSheetAndStatBlock,
+  type CharacterBattleFeatureResourceRouteObservation,
   type CharacterBattleEncounterCompositionRouteAction,
   type CharacterBattleInitProjectionRouteAction,
   type CharacterBattleRouteCompositionFact,
@@ -342,7 +382,7 @@ describe("character battle reducer route connector MBT", () => {
       driver: createIndexedRouteDriver(
         featureResourceRouteDriverSchema,
         featureResourceRouteActions,
-        initialFeatureResourceHandoffRoute,
+        initialCharacterBattleFeatureResourceHandoffRoute,
       ),
       maxSteps: 14,
     });
@@ -451,41 +491,863 @@ const featureResourceRouteActions = indexedActionEntries(
   [
     [
       "doLayOnHandsRestoresHpAndRemovesPoisoned",
-      acceptedFeatureResourceWithHitPointRoute,
+      layOnHandsRestoresHpAndRemovesPoisonedRoute,
     ],
     [
       "doRejectLayOnHandsOverspend",
-      rejectedFeatureResourceRoute(["featureResourceProjection"]),
+      rejectLayOnHandsOverspendRoute,
     ],
-    ["doLongRestClearsLayOnHandsPool", acceptedFeatureResourceRoute],
-    ["doShortRestRecoversUseCountPools", acceptedFeatureResourceRoute],
-    ["doLongRestClearsPointPoolAndUseState", acceptedFeatureResourceRoute],
-    ["doFontOfMagicSlotToPoints", acceptedSpellResourceRoute],
+    ["doLongRestClearsLayOnHandsPool", longRestClearsLayOnHandsPoolRoute],
+    ["doShortRestRecoversUseCountPools", shortRestRecoversUseCountPoolsRoute],
+    [
+      "doLongRestClearsPointPoolAndUseState",
+      longRestClearsPointPoolAndUseStateRoute,
+    ],
+    ["doFontOfMagicSlotToPoints", fontOfMagicSlotToPointsRoute],
     [
       "doRejectFontOfMagicAmbiguousSlotSource",
-      rejectedSpellResourceRoute([
-        "spellResourceProjection",
-        "settlementConflict",
-      ]),
+      rejectFontOfMagicAmbiguousSlotSourceRoute,
     ],
-    ["doFontOfMagicPointsToSlot", acceptedSpellResourceRoute],
+    ["doFontOfMagicPointsToSlot", fontOfMagicPointsToSlotRoute],
     [
       "doRejectFontOfMagicInsufficientPoints",
-      rejectedFeatureResourceRoute(["featureResourceProjection"]),
+      rejectFontOfMagicInsufficientPointsRoute,
     ],
-    ["doShortRestPreservesUncannyUseState", acceptedFeatureResourceRoute],
-    ["doLongRestClearsUncannyUseState", acceptedFeatureResourceRoute],
+    ["doShortRestPreservesUncannyUseState", shortRestPreservesUncannyUseStateRoute],
+    ["doLongRestClearsUncannyUseState", longRestClearsUncannyUseStateRoute],
     [
       "doUncannyMetabolismRecoversFocusAndHeals",
-      acceptedFeatureResourceWithHitPointRoute,
+      uncannyMetabolismRecoversFocusAndHealsRoute,
     ],
     [
       "doRejectUncannyMetabolismRepeatUse",
-      rejectedFeatureResourceRoute(["featureResourceProjection"]),
+      rejectUncannyMetabolismRepeatUseRoute,
     ],
-    ["doMetamagicBridgeUsesSharedPointPool", metamagicBattleBridgeRoute],
+    ["doMetamagicBridgeUsesSharedPointPool", metamagicBridgeUsesSharedPointPoolRoute],
   ],
 );
+
+function layOnHandsRestoresHpAndRemovesPoisonedRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  const source = featureResourceSheetFixture({
+    characterIdText: "character:route-lay-on-hands-source",
+    build: featureResourceBaseBuild({
+      startingClass: "class_paladin",
+      advancements: ["class_paladin"],
+    }),
+    currentHp: 12,
+  });
+  const target = featureResourceSheetFixture({
+    characterIdText: "character:route-lay-on-hands-target",
+    build: featureResourceBaseBuild({ startingClass: "class_fighter" }),
+    currentHp: 3,
+    conditions: ["poisoned"],
+  });
+  const result = applyLayOnHands({
+    source,
+    target,
+    unitLibrary,
+    restoreHp: Hp(2),
+    removePoisoned: true,
+  });
+  const accepted = expectRight(result);
+  expect(characterSheetCurrentHp(accepted.target)).toBe(5);
+  expect(accepted.target.conditions).not.toContain("poisoned");
+  return appendObservedFeatureResourceRoute(route, {
+    tag: "layOnHands",
+    result,
+  });
+}
+
+function rejectLayOnHandsOverspendRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  const sheet = featureResourceSheetFixture({
+    characterIdText: "character:route-lay-on-hands-overspend",
+    build: featureResourceBaseBuild({ startingClass: "class_paladin" }),
+    currentHp: 6,
+    conditions: ["poisoned"],
+  });
+  const result = applyLayOnHands({
+    source: sheet,
+    target: sheet,
+    unitLibrary,
+    restoreHp: Hp(1),
+    removePoisoned: true,
+  });
+  expect(Either.isLeft(result)).toBe(true);
+  return appendObservedFeatureResourceRoute(route, {
+    tag: "layOnHands",
+    result,
+  });
+}
+
+function longRestClearsLayOnHandsPoolRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  const source = featureResourceSheetFixture({
+    characterIdText: "character:route-lay-on-hands-long-rest",
+    build: featureResourceBaseBuild({ startingClass: "class_paladin" }),
+    currentHp: 6,
+  });
+  const spent = expectRight(
+    applyLayOnHands({
+      source,
+      target: source,
+      unitLibrary,
+      restoreHp: Hp(4),
+      removePoisoned: false,
+    }),
+  ).source;
+  const result = completeLongRestForFeatureResourceRoute(spent);
+  expect(Either.isRight(result)).toBe(true);
+  return appendObservedFeatureResourceRoute(route, {
+    tag: "featureResourceRest",
+    result,
+  });
+}
+
+function shortRestRecoversUseCountPoolsRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  const druid = featureResourceSheetFixture({
+    characterIdText: "character:route-druid-use-count-short-rest",
+    build: featureResourceBaseBuild({
+      startingClass: "class_druid",
+      advancements: ["class_druid"],
+    }),
+    currentHp: 15,
+    druidWildShapeKnownFormStatBlockIds: [
+      "stat_block_rat",
+      "stat_block_riding_horse",
+      "stat_block_spider",
+      "stat_block_wolf",
+    ],
+    resourceExpenditures: [
+      {
+        tag: "useCountResource",
+        unitId: DRUID_WILD_SHAPE_UNIT_ID,
+        expended: resourceCount(2),
+      },
+    ],
+  });
+  const monk = featureResourceSheetFixture({
+    characterIdText: "character:route-monk-focus-short-rest",
+    build: featureResourceMonkBuild(2),
+    currentHp: 15,
+    resourceExpenditures: [
+      {
+        tag: "useCountResource",
+        unitId: MONK_MONKS_FOCUS_UNIT_ID,
+        expended: resourceCount(2),
+      },
+    ],
+  });
+  const druidResult = completeShortRestForFeatureResourceRoute(druid);
+  const monkResult = completeShortRestForFeatureResourceRoute(monk);
+  expect(Either.isRight(druidResult)).toBe(true);
+  expect(Either.isRight(monkResult)).toBe(true);
+  return appendObservedFeatureResourceRoute(route, {
+    tag: "featureResourceRest",
+    result: monkResult,
+  });
+}
+
+function longRestClearsPointPoolAndUseStateRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  const sheet = featureResourceSheetFixture({
+    characterIdText: "character:route-sorcerer-point-pool-long-rest",
+    build: featureResourceSorcererFontOfMagicBuild({ level: 2 }),
+    currentHp: 12,
+    resourceExpenditures: [
+      {
+        tag: "pointPoolResource",
+        unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
+        expended: resourceCount(2),
+      },
+    ],
+  });
+  const result = completeLongRestForFeatureResourceRoute(sheet);
+  expect(Either.isRight(result)).toBe(true);
+  return appendObservedFeatureResourceRoute(route, {
+    tag: "featureResourceRest",
+    result,
+  });
+}
+
+function fontOfMagicSlotToPointsRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  const sheet = featureResourceSheetFixture({
+    characterIdText: "character:route-font-slot-to-points",
+    build: featureResourceSorcererFontOfMagicBuild({
+      level: 3,
+      spellSlots: [
+        { spellLevel: 1, count: 4 },
+        { spellLevel: 2, count: 2 },
+      ],
+    }),
+    currentHp: 17,
+    spellSlotExpenditures: [
+      { spellLevel: spellSlotLevel(2), expended: resourceCount(1) },
+    ],
+    resourceExpenditures: [
+      {
+        tag: "pointPoolResource",
+        unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
+        expended: resourceCount(3),
+      },
+    ],
+  });
+  const result = convertFontOfMagicSpellSlotToSorceryPoints({
+    sheet,
+    unitLibrary,
+    spellLevel: spellSlotLevel(2),
+  });
+  expect(Either.isRight(result)).toBe(true);
+  return appendObservedFeatureResourceRoute(route, {
+    tag: "fontOfMagicSlotToPoints",
+    result,
+  });
+}
+
+function rejectFontOfMagicAmbiguousSlotSourceRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  const created = fontOfMagicCreatedLevel3RouteSheet();
+  const result = convertFontOfMagicSpellSlotToSorceryPoints({
+    sheet: created,
+    unitLibrary,
+    spellLevel: spellSlotLevel(3),
+  });
+  expect(Either.isLeft(result)).toBe(true);
+  return appendObservedFeatureResourceRoute(route, {
+    tag: "fontOfMagicSlotToPoints",
+    result,
+  });
+}
+
+function fontOfMagicPointsToSlotRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  const sheet = featureResourceSheetFixture({
+    characterIdText: "character:route-font-points-to-slot",
+    build: featureResourceSorcererFontOfMagicBuild({
+      level: 5,
+      spellSlots: [
+        { spellLevel: 1, count: 4 },
+        { spellLevel: 2, count: 3 },
+        { spellLevel: 3, count: 2 },
+      ],
+    }),
+    currentHp: 24,
+  });
+  const result = convertFontOfMagicSorceryPointsToSpellSlot({
+    sheet,
+    unitLibrary,
+    spellLevel: spellSlotLevel(3),
+  });
+  expect(Either.isRight(result)).toBe(true);
+  return appendObservedFeatureResourceRoute(route, {
+    tag: "fontOfMagicPointsToSlot",
+    result,
+  });
+}
+
+function rejectFontOfMagicInsufficientPointsRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  const sheet = featureResourceSheetFixture({
+    characterIdText: "character:route-font-insufficient-points",
+    build: featureResourceSorcererFontOfMagicBuild({
+      level: 3,
+      spellSlots: [
+        { spellLevel: 1, count: 4 },
+        { spellLevel: 2, count: 2 },
+      ],
+    }),
+    currentHp: 17,
+    resourceExpenditures: [
+      {
+        tag: "pointPoolResource",
+        unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
+        expended: resourceCount(1),
+      },
+    ],
+  });
+  const result = convertFontOfMagicSorceryPointsToSpellSlot({
+    sheet,
+    unitLibrary,
+    spellLevel: spellSlotLevel(2),
+  });
+  expect(Either.isLeft(result)).toBe(true);
+  return appendObservedFeatureResourceRoute(route, {
+    tag: "fontOfMagicPointsToSlot",
+    result,
+  });
+}
+
+function shortRestPreservesUncannyUseStateRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  const sheet = featureResourceSheetFixture({
+    characterIdText: "character:route-uncanny-short-rest",
+    build: featureResourceMonkBuild(2),
+    currentHp: 15,
+    restFeatureUses: [{ tag: "uncannyMetabolism", usedSinceLongRest: true }],
+    resourceExpenditures: [
+      {
+        tag: "useCountResource",
+        unitId: MONK_MONKS_FOCUS_UNIT_ID,
+        expended: resourceCount(2),
+      },
+    ],
+  });
+  const result = completeShortRestForFeatureResourceRoute(sheet);
+  expect(Either.isRight(result)).toBe(true);
+  return appendObservedFeatureResourceRoute(route, {
+    tag: "featureResourceRest",
+    result,
+  });
+}
+
+function longRestClearsUncannyUseStateRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  const sheet = featureResourceSheetFixture({
+    characterIdText: "character:route-uncanny-long-rest",
+    build: featureResourceMonkBuild(2),
+    currentHp: 15,
+    restFeatureUses: [{ tag: "uncannyMetabolism", usedSinceLongRest: true }],
+    resourceExpenditures: [
+      {
+        tag: "useCountResource",
+        unitId: MONK_MONKS_FOCUS_UNIT_ID,
+        expended: resourceCount(2),
+      },
+    ],
+  });
+  const result = completeLongRestForFeatureResourceRoute(sheet);
+  expect(Either.isRight(result)).toBe(true);
+  return appendObservedFeatureResourceRoute(route, {
+    tag: "featureResourceRest",
+    result,
+  });
+}
+
+function uncannyMetabolismRecoversFocusAndHealsRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  const sheet = featureResourceSheetFixture({
+    characterIdText: "character:route-uncanny-use",
+    build: featureResourceMonkBuild(2),
+    currentHp: 8,
+    tempHp: 3,
+    resourceExpenditures: [
+      {
+        tag: "useCountResource",
+        unitId: MONK_MONKS_FOCUS_UNIT_ID,
+        expended: resourceCount(2),
+      },
+    ],
+  });
+  const result = useMonkUncannyMetabolismWhenRollingInitiative({
+    sheet,
+    unitLibrary,
+    martialArtsRoll: DieRollResult(4),
+  });
+  const recovered = expectRight(result);
+  expect(characterSheetCurrentHp(recovered)).toBe(14);
+  expect(characterSheetTempHp(recovered)).toBe(3);
+  return appendObservedFeatureResourceRoute(route, {
+    tag: "uncannyMetabolism",
+    result,
+  });
+}
+
+function rejectUncannyMetabolismRepeatUseRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  const used = expectRight(
+    useMonkUncannyMetabolismWhenRollingInitiative({
+      sheet: featureResourceSheetFixture({
+        characterIdText: "character:route-uncanny-repeat",
+        build: featureResourceMonkBuild(2),
+        currentHp: 8,
+        tempHp: 3,
+        resourceExpenditures: [
+          {
+            tag: "useCountResource",
+            unitId: MONK_MONKS_FOCUS_UNIT_ID,
+            expended: resourceCount(2),
+          },
+        ],
+      }),
+      unitLibrary,
+      martialArtsRoll: DieRollResult(4),
+    }),
+  );
+  const result = useMonkUncannyMetabolismWhenRollingInitiative({
+    sheet: used,
+    unitLibrary,
+    martialArtsRoll: DieRollResult(4),
+  });
+  expect(Either.isLeft(result)).toBe(true);
+  return appendObservedFeatureResourceRoute(route, {
+    tag: "uncannyMetabolism",
+    result,
+  });
+}
+
+function metamagicBridgeUsesSharedPointPoolRoute(
+  route: readonly CharacterBattleRouteEvent[],
+): readonly CharacterBattleRouteEvent[] {
+  const characterSheetIdValue = characterSheetId(
+    "character:route-metamagic-feature-resource-bridge",
+  );
+  const sorcererCombatantId = combatantId(
+    "combatant:route-metamagic-feature-resource-bridge",
+  );
+  const sheet = featureResourceSheetFixture({
+    characterIdText: characterSheetIdValue,
+    build: featureResourceSorcererMetamagicBuild(),
+    currentHp: 24,
+    resourceExpenditures: [
+      {
+        tag: "pointPoolResource",
+        unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
+        expended: resourceCount(1),
+      },
+    ],
+  });
+  const characterInit = expectRight(
+    characterSheetBattleInit({
+      sheet,
+      unitLibrary,
+      statBlockCatalog,
+      combatantId: sorcererCombatantId,
+      displayName: "Sorcerer",
+      initiative: initiativeScore(12),
+      side: battleCombatantSide("party"),
+    }),
+  );
+  if (characterInit.creatureInit.kind !== "character") {
+    throw new Error("Expected character battle creature init.");
+  }
+  const targetCombatantId = combatantId("combatant:route-metamagic-skeleton");
+  const battle = expectRight(
+    startBattle({
+      battleId: battleId("battle:route-metamagic-feature-resource-bridge"),
+      combatants: [
+        characterInit,
+        battleCreatureInitFromStatBlock({
+          combatantId: targetCombatantId,
+          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          initiative: initiativeScore(10),
+          side: battleCombatantSide("monsters"),
+        }),
+      ],
+    }),
+  );
+  const act = requireHeightenedBurningHandsAct(battle, sorcererCombatantId);
+  const heightenedTargetHole = requireBattleHoleFromList(
+    act.initialHoles,
+    "targetChoice",
+  );
+  const heightenedTarget = targetChoiceFill(
+    heightenedTargetHole,
+    targetCombatantId,
+  );
+  const awaitingSave = resolveBattleSubject({
+    state: battle,
+    subject: act.subject,
+    fills: [heightenedTarget],
+  });
+  const saveHole = requireBattleHole(awaitingSave, "savingThrowOutcome");
+  const failedSave = areaSavingThrowOutcomeFill(
+    saveHole,
+    sorcererCombatantId,
+    [{ targetId: targetCombatantId, succeeded: false }],
+  );
+  const awaitingDamage = resolveBattleSubject({
+    state: battle,
+    subject: act.subject,
+    fills: [heightenedTarget, failedSave],
+  });
+  const damageHole = requireBattleHole(awaitingDamage, "rolledDice");
+  const resolved = requireBattleResolved(
+    resolveBattleSubject({
+      state: battle,
+      subject: act.subject,
+      fills: [
+        heightenedTarget,
+        failedSave,
+        damageRollFillWithGroups(damageHole, [[4, 3, 2]]),
+      ],
+    }),
+  );
+  const settledCombatant = resolved.state.combatants.get(sorcererCombatantId);
+  if (settledCombatant?.origin.kind !== "character") {
+    throw new Error("Expected resolved Sorcerer character combatant.");
+  }
+  const result = settleCharacterSheetFromBattle({
+    sheet,
+    state: resolved.state,
+    unitLibrary,
+    combatant: settledCombatant,
+  });
+  expect(Either.isRight(result)).toBe(true);
+  return appendObservedFeatureResourceRoute(route, {
+    tag: "metamagicBattleBridgeAccepted",
+    result,
+  });
+}
+
+function appendObservedFeatureResourceRoute(
+  route: readonly CharacterBattleRouteEvent[],
+  observation: CharacterBattleFeatureResourceRouteObservation,
+): readonly CharacterBattleRouteEvent[] {
+  return appendCharacterBattleFeatureResourceHandoffRoute(route, observation);
+}
+
+function requireHeightenedBurningHandsAct(
+  state: BattleState,
+  actorId: ReturnType<typeof combatantId>,
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    AvailableBattleAct["subject"],
+    { readonly tag: "actionSpell" }
+  >;
+} {
+  const expectedInvocation = spellSlotInvocationRef(
+    "burning_hands",
+    1,
+    "saveGatedDamage",
+  );
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        AvailableBattleAct["subject"],
+        { readonly tag: "actionSpell" }
+      >;
+    } =>
+      candidate.subject.tag === "actionSpell" &&
+      candidate.subject.actorId === actorId &&
+      JSON.stringify(candidate.subject.invocation) ===
+        JSON.stringify(expectedInvocation) &&
+      candidate.subject.metamagic?.some(
+        (selection) => selection.effectKind === "saving_throw_disadvantage",
+      ) === true,
+  );
+  if (act === undefined) {
+    throw new Error("Expected Heightened Burning Hands battle act.");
+  }
+  return act;
+}
+
+function requireBattleHole<K extends BattleHole["kind"]>(
+  result: BattleResolutionResult,
+  kind: K,
+): Extract<BattleHole, { readonly kind: K }> {
+  if (result.tag !== "needsHoles") {
+    throw new Error(`Expected ${kind} battle hole, got ${result.tag}.`);
+  }
+  return requireBattleHoleFromList(result.holes, kind);
+}
+
+function requireBattleHoleFromList<K extends BattleHole["kind"]>(
+  holes: readonly BattleHole[],
+  kind: K,
+): Extract<BattleHole, { readonly kind: K }> {
+  const hole = holes.find(
+    (candidate): candidate is Extract<BattleHole, { readonly kind: K }> =>
+      candidate.kind === kind,
+  );
+  if (hole === undefined) {
+    throw new Error(`Expected ${kind} battle hole.`);
+  }
+  return hole;
+}
+
+function requireBattleResolved(
+  result: BattleResolutionResult,
+): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
+  if (result.tag !== "resolved") {
+    throw new Error(`Expected resolved battle result, got ${result.tag}.`);
+  }
+  return result;
+}
+
+function targetChoiceFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  targetId: ReturnType<typeof combatantId>,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  return {
+    kind: "targetChoice",
+    holeId: hole.holeId,
+    value: targetId,
+  };
+}
+
+function areaSavingThrowOutcomeFill(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+  originAnchorId: ReturnType<typeof combatantId>,
+  outcomes: readonly {
+    readonly targetId: ReturnType<typeof combatantId>;
+    readonly succeeded: boolean;
+  }[],
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value: {
+      area: {
+        originAnchorId,
+        affectedTargetIds: outcomes.map((outcome) => outcome.targetId),
+      },
+      outcomes,
+    },
+  };
+}
+
+function damageRollFillWithGroups(
+  hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
+  groups: readonly (readonly number[])[],
+): Extract<BattleFill, { readonly kind: "rolledDice" }> {
+  const [firstGroup, ...restGroups] = groups;
+  if (firstGroup === undefined) {
+    throw new Error("Expected at least one damage roll group.");
+  }
+  return {
+    kind: "rolledDice",
+    holeId: hole.holeId,
+    value: [
+      rolledDiceGroup(firstGroup),
+      ...restGroups.map((group) => rolledDiceGroup(group)),
+    ],
+  };
+}
+
+function rolledDiceGroup(
+  results: readonly number[],
+): Extract<BattleFill, { readonly kind: "rolledDice" }>["value"][number] {
+  const [firstResult, ...restResults] = results;
+  if (firstResult === undefined) {
+    throw new Error("Expected at least one die result.");
+  }
+  return {
+    results: [
+      DieRollResult(firstResult),
+      ...restResults.map((result) => DieRollResult(result)),
+    ],
+  };
+}
+
+function completeShortRestForFeatureResourceRoute(sheet: CharacterSheet) {
+  const rest = expectRight(startShortRest({ sheet }));
+  const completion = expectRight(
+    finishShortRest({
+      rest,
+      restedTicks: elapsedTimeTicks(600),
+    }),
+  );
+  return completeShortRest({ completion, unitLibrary });
+}
+
+function completeLongRestForFeatureResourceRoute(sheet: CharacterSheet) {
+  const rest = expectRight(
+    startLongRest({ sheet, timing: { tag: "noPriorLongRest" } }),
+  );
+  const completion = expectRight(
+    finishLongRest({
+      rest,
+      restedTicks: elapsedTimeTicks(4800),
+    }),
+  );
+  return completeLongRest({ completion, unitLibrary });
+}
+
+function fontOfMagicCreatedLevel3RouteSheet(): CharacterSheet {
+  const sheet = featureResourceSheetFixture({
+    characterIdText: "character:route-font-created-level-3",
+    build: featureResourceSorcererFontOfMagicBuild({
+      level: 5,
+      spellSlots: [
+        { spellLevel: 1, count: 4 },
+        { spellLevel: 2, count: 3 },
+        { spellLevel: 3, count: 2 },
+      ],
+    }),
+    currentHp: 24,
+  });
+  return expectRight(
+    convertFontOfMagicSorceryPointsToSpellSlot({
+      sheet,
+      unitLibrary,
+      spellLevel: spellSlotLevel(3),
+    }),
+  );
+}
+
+function featureResourceSheetFixture(
+  input: {
+    readonly characterIdText: string;
+    readonly build: CharacterBuild;
+    readonly currentHp: number;
+    readonly tempHp?: number;
+  } & Partial<
+    Pick<
+      CharacterSheetInput,
+      | "conditions"
+      | "spellSlotExpenditures"
+      | "resourceExpenditures"
+      | "restFeatureUses"
+      | "druidWildShapeKnownFormStatBlockIds"
+    >
+  >,
+): CharacterSheet {
+  return expectRight(
+    createFreshCharacterSheet({
+      characterId: characterSheetId(input.characterIdText),
+      build: input.build,
+      currentHp: Hp(input.currentHp),
+      tempHp: Hp(input.tempHp ?? 0),
+      hitPointMaximumReduction: Hp(0),
+      conditions: input.conditions ?? [],
+      unitLibrary,
+      ...(input.spellSlotExpenditures === undefined
+        ? {}
+        : { spellSlotExpenditures: input.spellSlotExpenditures }),
+      ...(input.resourceExpenditures === undefined
+        ? {}
+        : { resourceExpenditures: input.resourceExpenditures }),
+      ...(input.restFeatureUses === undefined
+        ? {}
+        : { restFeatureUses: input.restFeatureUses }),
+      ...(input.druidWildShapeKnownFormStatBlockIds === undefined
+        ? {}
+        : {
+            druidWildShapeKnownFormStatBlockIds:
+              input.druidWildShapeKnownFormStatBlockIds,
+          }),
+    }),
+  );
+}
+
+function featureResourceBaseBuild(input: {
+  readonly startingClass: string;
+  readonly advancements?: readonly string[];
+}): CharacterBuild {
+  return {
+    progression: {
+      startingClass: classUnitId(input.startingClass),
+      advancements: (input.advancements ?? []).map((classId) => ({
+        classUnitId: classUnitId(classId),
+        hitPointRule: { tag: "fixedHigherLevelGain" },
+      })),
+    },
+    background: "background_soldier",
+    species: "species_orc",
+    originLanguages: ["Common", "Dwarvish", "Goblin"],
+    classFeatureLanguages: [],
+    alignment: { order: "lawful", morality: "good" },
+    abilityScores: expectRight(
+      abilityScoreAssignment({
+        str: 13,
+        dex: 14,
+        con: 13,
+        int: 10,
+        wis: 16,
+        cha: 16,
+      }),
+    ),
+    proficiencyChoices: [],
+    features: [],
+    equipment: {
+      owned: [],
+      loadout: {},
+    },
+  };
+}
+
+function featureResourceMonkBuild(level: number): CharacterBuild {
+  return featureResourceBaseBuild({
+    startingClass: "class_monk",
+    advancements: Array.from({ length: level - 1 }, () => "class_monk"),
+  });
+}
+
+function featureResourceSorcererFontOfMagicBuild(input: {
+  readonly level: number;
+  readonly spellSlots?: readonly {
+    readonly spellLevel: number;
+    readonly count: number;
+  }[];
+  readonly preparedSpells?: readonly string[];
+}): CharacterBuild {
+  return {
+    ...featureResourceBaseBuild({
+      startingClass: "class_sorcerer",
+      advancements: Array.from(
+        { length: input.level - 1 },
+        () => "class_sorcerer",
+      ),
+    }),
+    spellcasting: {
+      sources: [
+        {
+          sourceUnitId: "class_sorcerer",
+          spellcastingAbility: "cha",
+          cantrips: [],
+          spellbook: [],
+          preparedSpells: input.preparedSpells ?? [],
+          spellcastingFocuses: ["arcane_focus"],
+        },
+      ],
+      slotPools: {
+        spellcasting: {
+          kind: "spellcasting",
+          slots: input.spellSlots ?? [{ spellLevel: 1, count: 3 }],
+        },
+      },
+    },
+  };
+}
+
+function featureResourceSorcererMetamagicBuild(): CharacterBuild {
+  const build = featureResourceSorcererFontOfMagicBuild({
+    level: 5,
+    spellSlots: [
+      { spellLevel: 1, count: 4 },
+      { spellLevel: 2, count: 3 },
+      { spellLevel: 3, count: 2 },
+    ],
+    preparedSpells: ["burning_hands"],
+  });
+  return {
+    ...build,
+    features: [
+      {
+        kind: "selectedSorcererMetamagicOption",
+        selectedFromUnitId: "sorcerer_metamagic",
+        optionId: expectRight(
+          sorcererMetamagicOptionId("sorcerer_empowered_spell"),
+        ),
+      },
+      {
+        kind: "selectedSorcererMetamagicOption",
+        selectedFromUnitId: "sorcerer_metamagic",
+        optionId: expectRight(
+          sorcererMetamagicOptionId("sorcerer_heightened_spell"),
+        ),
+      },
+    ],
+  };
+}
 
 function originFeatSelectedReferenceRetentionRoute(): readonly CharacterBattleRouteEvent[] {
   const build = criminalAlertRouteBuild();
@@ -605,15 +1467,6 @@ function initialCharacterLayerRoute(): readonly CharacterBattleRouteEvent[] {
   return [];
 }
 
-function initialFeatureResourceHandoffRoute(): readonly CharacterBattleRouteEvent[] {
-  return [
-    projectCharacterSheetToBattle({
-      subject: "handoffFeatureResourceProjection",
-      owner: "characterBattleSheet",
-    }),
-  ];
-}
-
 function finalizeDraftToBuildRoute(
   route: readonly CharacterBattleRouteEvent[],
 ): readonly CharacterBattleRouteEvent[] {
@@ -677,106 +1530,6 @@ function settleBattleToSheetRoute(
       fill: "battleDelta",
       holes: [],
       owner: "characterBattleSettlement",
-    }),
-  ];
-}
-
-function acceptedFeatureResourceRoute(
-  route: readonly CharacterBattleRouteEvent[],
-): readonly CharacterBattleRouteEvent[] {
-  return [
-    ...route,
-    projectCharacterSheetToBattle({
-      subject: "handoffFeatureResourceProjection",
-      owner: "characterBattleResourceProjection",
-    }),
-    recordCharacterBattleHandoffFacts({
-      subject: "handoffFeatureResourceProjection",
-      facts: ["featureResourceDelta"],
-      owner: "characterBattleResourceProjection",
-    }),
-  ];
-}
-
-function acceptedFeatureResourceWithHitPointRoute(
-  route: readonly CharacterBattleRouteEvent[],
-): readonly CharacterBattleRouteEvent[] {
-  return [
-    ...acceptedFeatureResourceRoute(route),
-    projectCharacterSheetToBattle({
-      subject: "sheetToBattleInit",
-      owner: "characterBattleSheet",
-    }),
-  ];
-}
-
-function rejectedFeatureResourceRoute(
-  holes: readonly CharacterBattleRouteHole[],
-): RouteAppender {
-  return (route) => [
-    ...route,
-    rejectCharacterBattleHandoff({
-      subject: "handoffFeatureResourceProjection",
-      fill: "resourceDelta",
-      holes,
-      owner: "characterBattleResourceProjection",
-    }),
-    recordCharacterBattleHandoffFacts({
-      subject: "handoffFeatureResourceProjection",
-      facts: ["settlementConflict"],
-      owner: "characterBattleResourceProjection",
-    }),
-  ];
-}
-
-function acceptedSpellResourceRoute(
-  route: readonly CharacterBattleRouteEvent[],
-): readonly CharacterBattleRouteEvent[] {
-  return [
-    ...acceptedFeatureResourceRoute(route),
-    projectCharacterSheetToBattle({
-      subject: "handoffResourceProjection",
-      owner: "characterBattleResourceProjection",
-    }),
-    recordCharacterBattleHandoffFacts({
-      subject: "handoffResourceProjection",
-      facts: ["sourceExactSpellSlotDelta"],
-      owner: "characterBattleResourceProjection",
-    }),
-  ];
-}
-
-function rejectedSpellResourceRoute(
-  holes: readonly CharacterBattleRouteHole[],
-): RouteAppender {
-  return (route) => [
-    ...route,
-    rejectCharacterBattleHandoff({
-      subject: "handoffResourceProjection",
-      fill: "resourceDelta",
-      holes,
-      owner: "characterBattleResourceProjection",
-    }),
-    recordCharacterBattleHandoffFacts({
-      subject: "handoffResourceProjection",
-      facts: ["settlementConflict"],
-      owner: "characterBattleResourceProjection",
-    }),
-  ];
-}
-
-function metamagicBattleBridgeRoute(
-  route: readonly CharacterBattleRouteEvent[],
-): readonly CharacterBattleRouteEvent[] {
-  return [
-    ...acceptedFeatureResourceRoute(route),
-    enterBattleRuntime({
-      subject: "handoffBattleMutation",
-      owner: "characterBattleRuntime",
-    }),
-    enterBattleRuntime({
-      subject: "handoffResourceProjection",
-      owner: "characterBattleRuntime",
     }),
   ];
 }

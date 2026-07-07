@@ -1,74 +1,75 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-042",
+  "taskId": "CRPI-BLOCK-040",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+      "path": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
       "quarantinedWitnessNames": [
-        "qState",
-        "doSelectBardExpertise",
-        "doProjectClericChannelDivinity",
-        "doProjectDruidWildShape",
-        "doProjectDruidWildCompanion",
-        "doProjectMonksFocus",
-        "doProjectMonkUncannyMetabolism",
-        "doSelectPaladinFightingStyle",
-        "doSelectRangerDeftExplorer",
-        "doSelectRangerFightingStyle",
-        "doProjectWarlockPactMagic",
-        "doSelectWizardScholar",
-        "doSelectWizardEvocationSavant"
+        "CharacterSheetFeatureResourcesOutcome",
+        "SheetFeatureResourceFacts",
+        "replayIndex"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-042.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-040.json"
       ]
     },
     {
-      "path": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt",
+      "path": "packages/character-battle-runtime/character-sheet-feature-resources.route.mbt.qnt",
       "quarantinedWitnessNames": [
+        "FeatureResourceHandoffRouteState",
         "qRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-042.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-040.json"
       ]
     },
     {
-      "path": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "path": "packages/character-battle-runtime/src/character-sheet-feature-resources.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "classFeatureSelectedIdentityRouteDriverSchema",
-        "createCompletedReducerRouteDriver",
-        "selectedReferenceRetentionRoute",
-        "retainSelectedReferenceWithFactsRoute",
-        "projectSelectedReferenceWithFactsRoute"
+        "FeatureResourceProjection",
+        "Character Sheet feature-resource deterministic QNT replay"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-042.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-040.json"
+      ]
+    },
+    {
+      "path": "packages/character-battle-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "quarantinedWitnessNames": [
+        "routes feature-resource handoff through sheet and battle owners"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-040.json"
       ]
     }
   ],
   "productionModulesExtended": [
     {
-      "path": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts",
-      "notes": "Adds the public CharacterBuild selected-reference route projection. It derives selected-reference count from existing CharacterBuild facts and emits CreationSelectedReferenceOwner route events without storing duplicate selected Unit refs."
+      "path": "packages/character-battle-runtime/src/character-battle-route.ts",
+      "exportedEntrypoints": [
+        "initialCharacterBattleFeatureResourceHandoffRoute",
+        "appendCharacterBattleFeatureResourceHandoffRoute"
+      ],
+      "notes": "Owns the production route projection for Character Sheet feature-resource public reducer-result handoff, source-exact Spell Slot resource projection, feature-resource rejection holes, and the Metamagic battle bridge. It does not export copied QNT branch action names or store route state as durable runtime state."
     },
     {
-      "path": "packages/character-creation-runtime/src/index.ts",
-      "notes": "Exports the CharacterBuild selected-reference route projection and route event types through the package public surface."
+      "path": "packages/character-battle-runtime/src/index.ts",
+      "exportedEntrypoints": [
+        "initialCharacterBattleFeatureResourceHandoffRoute",
+        "appendCharacterBattleFeatureResourceHandoffRoute"
+      ],
+      "notes": "Re-exports the Character Battle feature-resource public-result route projection for target replay and future handoff tasks."
     }
   ],
   "expectedNextReuse": [
     {
-      "path": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts",
-      "notes": "Future Character Creation selected-identity route tasks should use characterBuildSelectedReferencesWithRoute when copied connectors require CreationSelectedReferenceOwner retention events."
-    },
-    {
-      "path": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts",
-      "notes": "Projection branches continue to use characterBuildClassFeatureFactsProjectionWithRoute for CharacterBuildOwner build-projection route events."
+      "path": "packages/character-battle-runtime/src/character-battle-route.ts",
+      "notes": "Future Character Sheet feature-resource and resource-settlement route replays should reuse appendCharacterBattleFeatureResourceHandoffRoute with public reducer results rather than adding adapter-local qRoute tables."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 85 observes qRoute through public CharacterBuild selected-reference and class-feature projection route entrypoints. No new durable CharacterBuild fields were added."
+    "notes": "Task 83 observes copied qRoute for all Character Sheet feature-resource branches through public Character Sheet resource/rest entrypoints, Font of Magic conversion, Uncanny Metabolism recovery, and production Character Battle public-result route projection. No duplicate durable feature-resource, Spell Slot, or Metamagic resource ledger was introduced."
   }
 }
