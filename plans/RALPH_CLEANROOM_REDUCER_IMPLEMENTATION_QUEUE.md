@@ -689,7 +689,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRPI-BLOCK-023` | `blocked` | blocked by task body | blocker resolution before implementation |
 | `CRPI-READY-008` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-024` | `done` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-025` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-025` | `done` | none | target replay evidence and owner implementation |
 | `CRP07-DSR-02` | `done` | none | target replay evidence and owner implementation |
 | `CRP07-DSR-06` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-009` | `done` | none | target replay evidence and owner implementation |
