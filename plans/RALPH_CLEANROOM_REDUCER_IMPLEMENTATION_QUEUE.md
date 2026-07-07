@@ -511,7 +511,7 @@
     {
       "number": 85,
       "id": "CRPI-BLOCK-042",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: character-creation-class-feature-selected-identity"
     },
     {
@@ -5602,7 +5602,7 @@ Plan Impact:
 
 ### Task 85 - CRPI-BLOCK-042
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
