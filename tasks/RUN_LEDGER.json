@@ -4,6 +4,109 @@
   "sourceBranchInventorySha256": "8c856409a423a320bf05e4b4a927e76b1902af823ba01f2b5a928f867a6a6be6",
   "entries": [
     {
+      "taskId": "CRPI-BLOCK-024",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "8c856409a423a320bf05e4b4a927e76b1902af823ba01f2b5a928f867a6a6be6",
+      "artifacts": {
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "7d5de5147a8c92061605f3759d01f70e4b09591be9f0f8b5a51e9a2f22243ee7"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-BLOCK-024/README.md",
+          "sha256": "1820b3256329ae76895fa07ccf307c50d0d1f41d293c0571e569f50a595db748"
+        },
+        "engineDepthManifest": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "830ea35cd94578c2f69d5219cb9523666e057459f57bb9be868284f63e31f003"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "1139356ac5971d4e2ff9d76111871e3dc77f12f644744908ab7c0791c16628b5"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-024.json",
+          "sha256": "a96bd8485453a45bb1e5564ee1b07309cf138e9a2307a7535714878edf1c3728",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-024.json#publicQRouteCoverage:roll-modifier-buff-selected-identity"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 master; git log --oneline -1 HEAD; git merge-base --is-ancestor 2dab32c2f863f08687e5a8147f26d0238fd8b67d HEAD",
+          "status": "pass",
+          "detail": "Review base ref master resolved to 214a9330f Merge branch 'ralph/cleanroom-owner-battle-spell-20260706T213644Z/integration'; HEAD resolved to 2dab32c2f Complete Task 33 reaction spell route replay; Base SHA is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language review: local SRD 5.2.1 Bless, Bane, Guidance, Resistance, Shield of Faith, Playing the Game D20 Tests/Armor Class/Damage Rolls/Damage, and UBIQUITOUS_LANGUAGE.md D20 Roll, Damage Roll, Damage, Armor Class, Spell Invocation, Spell Effect, Concentration, and Active Effect terms",
+          "status": "pass",
+          "detail": "Checked local SRD and ubiquitous-language terms. Route evidence is derived from typed spell invocation procedure, active-effect, Concentration, hole, fill, and reducer-result facts; production code does not branch on selected spell ids or names."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec tsc --noEmit --pretty false",
+          "status": "pass",
+          "detail": "Battle runtime TypeScript check passed before and after the final spellDamageReduction route-key cleanup."
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Required MBT preflight matched only an unrelated Ralph monitor shell command text; no active Vitest runner or stale quint_evaluator was present before focused MBT runs."
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 MBT_STEPS=4 pnpm --filter @dnd/battle-runtime exec vitest run src/roll-modifier-buff-selected-identity.mbt.test.ts -t \"routes Resistance through target, damage-type, active-effect, and reduction-roll owners\" 2>&1; STATUS=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$STATUS\"",
+          "status": "pass",
+          "detail": "Focused Resistance public qRoute replay passed: 1 file passed; 1 test passed, 1 skipped; TOTAL: 6s."
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 MBT_STEPS=4 pnpm --filter @dnd/battle-runtime exec vitest run src/roll-modifier-buff-selected-identity.mbt.test.ts 2>&1; STATUS=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$STATUS\"",
+          "status": "pass",
+          "detail": "Full selected-identity replay passed before and after final cleanup: 1 file passed; 2 tests passed; final TOTAL: 7s."
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 MBT_STEPS=16 pnpm --filter @dnd/battle-runtime exec vitest run src/roll-modifier-active-effects.mbt.test.ts src/scalar-buff-active-effects.mbt.test.ts -t \"(replays roll-modifier active-effect qRoute|observes scalar buff active-effect qRoute)\" 2>&1; STATUS=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$STATUS\"",
+          "status": "pass",
+          "detail": "Required dependent connector replay passed: 2 files passed; 2 tests passed, 6 skipped; TOTAL: 13s."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass",
+          "detail": "Whitespace check passed."
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "Full quality chain passed. Cleanroom branch coverage passed with 738 obligations and 24 sampled inputs; app lint reported 61 existing warnings and exited 0; turbo typecheck completed 9 successful tasks, 5 from cache."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-024",
+            "impact": "unblocked"
+          },
+          {
+            "taskId": "future roll-modifier, spell damage-reduction, and scalar-buff selected-identity route tasks",
+            "impact": "left unchanged"
+          }
+        ],
+        "observations": [
+          "Roll modifier buff selected identity replay now observes public reducer qRoute events for Bless, Bane, Guidance, Resistance, and Shield of Faith.",
+          "Resistance public route projection is derived from typed damageReduction invocation procedure, active-effect, Concentration, damage-roll hole, and reducer-result facts; no durable BattleState field or authored spell-id production dispatch was added.",
+          "Bless, Bane, and Guidance reuse the existing rollModifierEffect active-effect route subject, while Shield of Faith reuses the existing scalarBuffEffect route subject."
+        ],
+        "requiredPlanEdits": "none"
+      }
+    },
+    {
       "taskId": "CRPI-BLOCK-022",
       "assignmentId": "reducer-spine-diagnostic-battle",
       "laneId": "battle",

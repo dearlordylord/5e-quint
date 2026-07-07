@@ -1,5 +1,71 @@
 # Validation Report
 
+## CRPI-BLOCK-024
+
+Status: `pass`
+
+- Task: 36
+- Driver path: `packages/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt`
+- Route connector paths: `packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt`, `packages/battle-runtime/battle-runtime-spell-damage-reduction.route.mbt.qnt`, `packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt`
+- Route class: `catalog-after-substrate`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-024.json`
+
+Task 36 records public reducer qRoute evidence for the roll-modifier buff selected-identity driver. Bless, Bane, and Guidance reuse the accepted roll-modifier active-effect route subject; Resistance now observes the copied spell damage-reduction route through public reducer route events for target choice, damage type choice, active-effect admission, Concentration, damage-adjustment roll discovery, reduction roll resolution, and active-effect use; Shield of Faith reuses the scalar-buff active-effect route subject.
+
+Current public qRoute coverage:
+
+- Covered: `battle-runtime-roll-modifier-active-effects.route.mbt.qnt` through public Bless, Bane, and Guidance replay in `packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts`.
+- Covered: `battle-runtime-spell-damage-reduction.route.mbt.qnt` through public Resistance replay in `packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts`.
+- Covered: `battle-runtime-scalar-buff-active-effects.route.mbt.qnt` through public Shield of Faith replay in `packages/battle-runtime/src/roll-modifier-buff-selected-identity.mbt.test.ts`.
+- Remaining required public qRoute coverage: none.
+
+Task 36 fixed the production route projection needed for public Resistance evidence: `packages/battle-runtime/src/battle-reducer/reducer-route.ts` now derives `spellDamageReduction` route events from typed `damageReduction` spell invocation facts, existing damage-reduction active effects, Concentration, public hole/fill kinds, and reducer results. No durable `BattleState` field was added, and production code does not dispatch on selected spell ids or names.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt#step:doBlessAttackAndSaveModifier` | `tasks/target-replay-evidence/CRPI-BLOCK-024.json#driver:packages/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt#step:doBlessAttackAndSaveModifier#trace:MBT_TRACES=1 MBT_STEPS=4 action=doBlessAttackAndSaveModifier qRoute=roll-modifier-active-effects-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt#step:doBaneFailedSavePenalty` | `tasks/target-replay-evidence/CRPI-BLOCK-024.json#driver:packages/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt#step:doBaneFailedSavePenalty#trace:MBT_TRACES=1 MBT_STEPS=4 action=doBaneFailedSavePenalty qRoute=roll-modifier-active-effects-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt#step:doGuidanceSkillAbilityCheckModifier` | `tasks/target-replay-evidence/CRPI-BLOCK-024.json#driver:packages/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt#step:doGuidanceSkillAbilityCheckModifier#trace:MBT_TRACES=1 MBT_STEPS=4 action=doGuidanceSkillAbilityCheckModifier qRoute=roll-modifier-active-effects-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt#step:doResistanceReducesMatchingDamage` | `tasks/target-replay-evidence/CRPI-BLOCK-024.json#driver:packages/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt#step:doResistanceReducesMatchingDamage#trace:MBT_TRACES=1 MBT_STEPS=4 action=doResistanceReducesMatchingDamage qRoute=spell-damage-reduction-public-route` | `_none_` | `covered` |
+| `packages/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt#step:doShieldOfFaithArmorClassBonus` | `tasks/target-replay-evidence/CRPI-BLOCK-024.json#driver:packages/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt#step:doShieldOfFaithArmorClassBonus#trace:MBT_TRACES=1 MBT_STEPS=4 action=doShieldOfFaithArmorClassBonus qRoute=scalar-buff-active-effects-public-route` | `_none_` | `covered` |
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-024/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 36.
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Spells/Descriptions-A-D.md#Bane` and `#Bless` define the D20 roll modifier active effects for attacks and saving throws.
+- SRD 5.2.1 `Spells/Descriptions-E-L.md#Guidance` defines the ability-check modifier active effect.
+- SRD 5.2.1 `Spells/Descriptions-Q-R.md#Resistance` defines target choice, damage-type choice, damage reduction, and Concentration.
+- SRD 5.2.1 `Spells/Descriptions-S-Z.md#Shield-of-Faith` defines the Armor Class scalar buff and Concentration.
+- SRD 5.2.1 `Playing-the-Game.md` D20 Tests, Armor Class, Damage Rolls, and Damage sections define the affected runtime roll and damage contexts.
+- `UBIQUITOUS_LANGUAGE.md` defines D20 Roll, Damage Roll, Damage, Armor Class, Spell Invocation, Spell Effect, Concentration, and Active Effect terms used by this route.
+
+Verification results:
+
+- Task-base check passed: review base ref `master` resolved to `214a9330f Merge branch 'ralph/cleanroom-owner-battle-spell-20260706T213644Z/integration'`; `HEAD` resolved to `2dab32c2f Complete Task 33 reaction spell route replay`; Base SHA `2dab32c2f863f08687e5a8147f26d0238fd8b67d` was an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against the local SRD passages listed above and `UBIQUITOUS_LANGUAGE.md`.
+- `pnpm --filter @dnd/battle-runtime exec tsc --noEmit --pretty false` passed before and after the final route-key cleanup.
+- MBT preflight matched only an unrelated Ralph monitor shell command text; no active Vitest runner and no stale `quint_evaluator` were present before focused MBT runs.
+- Focused Resistance public qRoute replay passed: `MBT_TRACES=1 MBT_STEPS=4 pnpm --filter @dnd/battle-runtime exec vitest run src/roll-modifier-buff-selected-identity.mbt.test.ts -t "routes Resistance through target, damage-type, active-effect, and reduction-roll owners"` passed with 1 test, 1 skipped; `TOTAL: 6s`.
+- Full selected-identity replay passed before and after the final route-key cleanup: `MBT_TRACES=1 MBT_STEPS=4 pnpm --filter @dnd/battle-runtime exec vitest run src/roll-modifier-buff-selected-identity.mbt.test.ts` passed with 2 tests; final rerun `TOTAL: 7s`.
+- Required dependent connector replay passed: `MBT_TRACES=1 MBT_STEPS=16 pnpm --filter @dnd/battle-runtime exec vitest run src/roll-modifier-active-effects.mbt.test.ts src/scalar-buff-active-effects.mbt.test.ts -t "(replays roll-modifier active-effect qRoute|observes scalar buff active-effect qRoute)"` passed with 2 tests, 6 skipped; `TOTAL: 13s`.
+- `pnpm cleanroom-branch-coverage:check --target-replay-evidence tasks/target-replay-evidence/CRPI-BLOCK-024.json` was diagnostic only and exited 1 because of the repo-wide known missing target-replay backlog outside Task 36; the captured log contained no Task 36-specific evidence validation error.
+- `git diff --check` passed.
+- `pnpm quality` passed end to end; app lint reported 61 existing warnings and exited 0; turbo typecheck completed 9 successful tasks, 5 from cache.
+- Reviewer-loop convergence passed: round 1 verified RAW traceability, ubiquitous-language/domain language, public route-event comparison, no duplicate durable state, and no authored-identity production dispatch. Round 2 tightened spell damage-reduction active-effect protocol key connascence into one helper and found no remaining reasonable Task 36 findings.
+
 ## CRPI-BLOCK-022
 
 Status: `pass`

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-022",
+  "taskId": "CRPI-BLOCK-024",
   "durableFields": [
     {
       "fieldPath": "AvailableBattleAct.routeEvents",
@@ -25,42 +25,80 @@
       "notes": "Projection is emitted at public reducer entrypoints from existing owner-local facts; it is not stored as a second BattleState copy."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=reactionArmorClassEffect",
+      "fieldPath": "BattleSubject.actionSpell.invocation.procedure",
       "owner": "executable-boundary-projection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleInterruptCheckpoint trigger, selected Reaction invocation procedure, BattleCreatureState.activeEffects, Armor Class projection, reaction availability, and spell-slot spend",
+        "sourceField": "typed BattleSubject.actionSpell invocation procedure",
         "boundary": "battle-runtime public reducer route event boundary"
       },
-      "notes": "Projection is derived from typed Shield attack-hit Reaction armor-class payload facts and public reducer results; production behavior does not branch on selected spell identity."
+      "notes": "Route projection reads typed procedure facts such as rollModifier, damageReduction, and scalarBuff; it does not branch on authored spell identity."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=reactionAfterDamageEffect",
-      "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "fieldPath": "BattleCreatureState.activeEffects",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleInterruptCheckpoint afterDamage trigger, selected Reaction invocation procedure, nested Saving Throw and rolled-dice fills, Hit Point state, reaction availability, and spell-slot spend",
-        "boundary": "battle-runtime public reducer route event boundary"
+        "tag": "canonical-source"
       },
-      "notes": "Projection is derived from typed after-damage save/damage payload facts and public reducer results; production behavior does not branch on selected spell identity."
+      "notes": "Active spell effects remain the canonical battle-state source for roll modifiers, scalar buffs, and spell damage-reduction use."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=reactionSpellInterruption",
+      "fieldPath": "BattleCreatureState.concentration",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Concentration remains the canonical battle-state source for active concentration spell ownership."
+    },
+    {
+      "fieldPath": "BattleActiveEffect.kind=spellDamageReduction",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "The spellDamageReduction active-effect variant is the canonical source for damage type, source spell, source combatant, and per-turn use."
+    },
+    {
+      "fieldPath": "BattleDamageRollHole.spellDamageReduction",
       "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleInterruptCheckpoint spellCast trigger, selected Reaction invocation procedure, interrupt-stack continuation state, reaction availability, reaction spell-slot spend, and triggering spell slot spend or non-spend",
+        "sourceField": "resolved damage roll holes plus matching spellDamageReduction active effects",
+        "boundary": "battle-runtime public reducer damage-adjustment boundary"
+      },
+      "notes": "The roll hole projects an available damage-reduction adjustment from battle state at the reducer boundary rather than duplicating the active effect."
+    },
+    {
+      "fieldPath": "BattleHole.kind",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleResolutionResult holes",
         "boundary": "battle-runtime public reducer route event boundary"
       },
-      "notes": "Projection is derived from typed spell-interruption payload facts and public reducer results; production behavior does not branch on selected spell identity."
+      "notes": "Route holes are projected from public reducer hole kinds such as targetChoice, damageTypeChoice, and rolledDice."
+    },
+    {
+      "fieldPath": "BattleFill.kind",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleResolutionInput fills",
+        "boundary": "battle-runtime public reducer route event boundary"
+      },
+      "notes": "Route fills are projected from public reducer fill kinds such as targetChoice, damageTypeChoice, and rolledDice."
     }
   ],
   "notes": [
-    "Task 33 introduced no new durable BattleState or BattleCreatureState fields.",
-    "Selected spell identity remains at catalog/support-profile and selected replay boundaries; production route projection uses typed trigger, invocation procedure, payload, and reducer-result facts.",
-    "Route subjects are executable boundary projections derived from existing owner state and public reducer results, not a stored route ledger or duplicate Reaction payload state."
+    "Task 36 introduced no new durable BattleState or BattleCreatureState fields.",
+    "Selected spell identity remains at catalog/support-profile and selected replay boundaries; production route projection uses typed invocation procedure, active-effect, hole, fill, and reducer-result facts.",
+    "The spellDamageReduction route subject is an executable boundary projection derived from existing damage-reduction active effects, Concentration, and damage-roll holes."
   ]
 }
