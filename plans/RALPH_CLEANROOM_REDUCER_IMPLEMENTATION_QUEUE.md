@@ -253,7 +253,7 @@
     {
       "number": 42,
       "id": "CRPI-READY-011",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-sorcerer-metamagic-careful-selected-identity"
     },
     {
@@ -3188,7 +3188,7 @@ Plan Impact:
 
 ### Task 42 - CRPI-READY-011
 
-Status: `ready-for-research`
+Status: `done`
 
 Unblock Detail: `CRPI-SOURCE-002` split the copied source connector so Careful
 Burning Hands routes through protected-target `spellTargetList` before
