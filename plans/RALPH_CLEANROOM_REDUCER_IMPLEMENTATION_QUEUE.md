@@ -379,7 +379,7 @@
     {
       "number": 63,
       "id": "CRPI-BLOCK-034",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-weapon-attack-skeleton"
     },
     {
@@ -680,7 +680,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRPI-BLOCK-017` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-018` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-019` | `done` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-020` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-020` | `done` | none | target replay evidence and owner implementation |
 | `CRP07-DSR-01` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-021` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-READY-006` | `done` | none | target replay evidence and owner implementation |
@@ -715,7 +715,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRPI-BLOCK-032` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-023` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-033` | `done` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-034` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-034` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-035` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-READY-024` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-025` | `done` | none | target replay evidence and owner implementation |
@@ -4342,7 +4342,7 @@ Plan Impact:
 
 ### Task 63 - CRPI-BLOCK-034
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

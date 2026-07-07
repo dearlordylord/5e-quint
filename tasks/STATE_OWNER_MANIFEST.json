@@ -1,62 +1,109 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-020",
+  "taskId": "CRPI-BLOCK-034",
   "durableFields": [
     {
       "fieldPath": "AvailableBattleAct.routeEvents",
       "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleState plus AvailableBattleAct routeEvents",
-        "boundary": "battle-runtime public reducer route event boundary"
+        "sourceField": "AvailableBattleAct.initialHoles",
+        "boundary": "discoverBattleActs public reducer result"
       },
-      "notes": "Projection is emitted at public reducer entrypoints from existing owner-local facts; it is not stored as a second BattleState copy."
+      "notes": "Existing discovery results carry weaponAttack and statBlockAction route events derived from typed subject shape and TargetChoice initial hole facts."
     },
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
       "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleState plus BattleResolutionResult routeEvents",
-        "boundary": "battle-runtime public reducer route event boundary"
+        "sourceField": "BattleResolutionResult.tag",
+        "boundary": "resolveBattleSubject public reducer result"
       },
-      "notes": "Projection is emitted at public reducer entrypoints from existing owner-local facts; it is not stored as a second BattleState copy."
+      "notes": "Existing resolution results carry route events derived from submitted targetChoice, attackRoll, and rolledDice fills, no-fill battle actions, no-fill stat-block Multiattack actions, and resolved, needs-holes, or stale-subject result shape."
     },
     {
-      "fieldPath": "BattleCreatureState.activeEffects",
+      "fieldPath": "BattleSubject.action=attack",
+      "owner": "caller-boundary-evidence",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing typed Attack action subjects feed weapon Attack and stat-block attack reducers; production route behavior does not dispatch on authored weapon, monster, or source identity."
+    },
+    {
+      "fieldPath": "BattleSubject.action=attack|multiattack; BattleSubject.runtimeCommand=endTurn",
+      "owner": "caller-boundary-evidence",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing typed subjects own End Turn, Multiattack, recursive Multiattack stale replay, and stat-block attack dispatch routing; reducer-route projects them to battleAction and statBlockAction route subjects while stale no-fill Attack replay remains a weaponAttack hole-frontier route."
+    },
+    {
+      "fieldPath": "BattleFill.kind=targetChoice|attackRoll|rolledDice",
+      "owner": "caller-boundary-evidence",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing fills drive weapon Attack and stat-block attack frontiers through target selection, Attack Roll, and Hit Point damage without adding a parallel route ledger."
+    },
+    {
+      "fieldPath": "BattleCreatureState.hp",
       "owner": "battle-state",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing BattleState runtime state owns the spellBaseArmorClass Spell Effect reached by Task 28."
+      "notes": "Existing target Hit Points own durable weapon damage results; Task 63 introduced no parallel damage or HP field."
     },
     {
-      "fieldPath": "BattleCreatureState.armorClass",
+      "fieldPath": "BattleTurnState.actionResources",
       "owner": "battle-state",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing stored armor/loadout state remains the canonical base character Armor Class state. Mage Armor projection is derived from activeEffects by activeEffectArmorClass rather than stored beside this field."
+      "notes": "Existing turn action resources own ordinary action availability and stat-block Multiattack dispatch resources."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=spellBaseArmorClassEffect",
+      "fieldPath": "BattleTurnState.attackDamageRidersUsedThisTurn",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing per-turn damage-rider usage records Sneak Attack use; route evidence does not duplicate this as a skeleton-specific flag."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.subject=weaponAttack|battleAction|statBlockAction",
       "owner": "executable-boundary-projection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleState plus typed persistentArmorEffect procedure, target fills, spellBaseArmorClass active effects, derived Armor Class projection, and duration expiry deltas",
-        "boundary": "battle-runtime public reducer route event boundary"
+        "sourceField": "BattleSubject",
+        "boundary": "battle reducer route event"
       },
-      "notes": "Projection is derived from generic procedure/effect facts for target admission, active-effect admission, Armor Class projection, and duration cleanup."
+      "notes": "Generic route subjects are derived from typed BattleSubject shape, not authored identity or connector filenames."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.owner=battleActionEconomy|battleTargetSelection|battleAttackRoll|battleHoleFrontier|battleHitPoint|battleStatBlockAction",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleResolutionResult.tag",
+        "boundary": "battle reducer route event"
+      },
+      "notes": "Weapon Attack skeleton route owners are derived from public discovery, fill/result shape, no-fill battle actions, stat-block action dispatch, and Hit Point damage application."
     }
   ],
   "notes": [
-    "Task 28 introduced no new durable BattleState or BattleCreatureState fields.",
-    "Selected spell identity remains at catalog/support-profile and selected replay boundaries; production route projection uses typed spell procedure shape and active-effect deltas.",
-    "Route subjects are executable boundary projections derived from existing owner state and public reducer results, not a stored route ledger or duplicate Armor Class state."
+    "Task 63 introduced no new durable BattleState fields.",
+    "Weapon/source and stat-block identity remain typed facts selected at the boundary; production route behavior uses subject, fill, hole, result shape, turn action resources, and Hit Point facts.",
+    "Route evidence records executable-boundary projection state only; it does not duplicate target choice, Attack Roll, damage dice, HP, Sneak Attack, action-resource, or Multiattack dispatch state."
   ]
 }

@@ -78,6 +78,7 @@ type AfterHitDamageRiderSelection = Extract<
 
 export type BattleReducerRouteSubjectFamily =
   | "activeFormLifecycle"
+  | "battleAction"
   | "concentrationTeardown"
   | "commandEffect"
   | "charmSourceDamageBreak"
@@ -137,6 +138,7 @@ export type BattleReducerRouteSubjectFamily =
   | "slotSpell"
   | "objectTargetSpellAttack"
   | "spellAttackProcedure"
+  | "statBlockAction"
   | "weaponAttack"
   | "weaponMasteryProperty"
   | "zeroHitPointStabilization";
@@ -598,6 +600,16 @@ export function battleReducerRouteEventsForDiscoveredAct(
   if (activeFormLifecycleRoute !== undefined) {
     return [activeFormLifecycleRoute];
   }
+  if (isStatBlockActionRouteSubject(state, act.subject)) {
+    return [
+      {
+        kind: "discoverBattleActs",
+        subject: "statBlockAction",
+        holes: battleReducerRouteHoles(act.initialHoles),
+        owner: "battleStatBlockAction",
+      },
+    ];
+  }
   if (isWeaponAttackSubject(act.subject)) {
     const markedDamageRiderWeaponAttackDiscoveryRoute =
       markedDamageRiderWeaponAttackRouteForDiscoveredAct(state, act);
@@ -1045,6 +1057,13 @@ export function battleReducerRouteForResolution(
   if (activeFeatureBonusActionRoute !== undefined) {
     return composeWithActiveFormLifecycleTerminalRoute(
       activeFeatureBonusActionRoute,
+      activeFormLifecycleTerminalRoute,
+    );
+  }
+  const battleActionRoute = battleActionRouteForResolution(input, result);
+  if (battleActionRoute !== undefined) {
+    return composeWithActiveFormLifecycleTerminalRoute(
+      [battleActionRoute],
       activeFormLifecycleTerminalRoute,
     );
   }
@@ -7159,16 +7178,27 @@ function weaponAttackRouteForResolution(
     return undefined;
   }
 
+  const routeSubject = attackRouteSubject(input.state, input.subject);
   const fill = input.fills.at(-1);
   if (fill === undefined) {
-    return undefined;
+    if (result.tag !== "invalid" || result.reason !== "staleSubject") {
+      return undefined;
+    }
+    return [
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "weaponAttack",
+        holes: [],
+        owner: "battleHoleFrontier",
+      },
+    ];
   }
   const routeFill = battleReducerRouteFill(fill);
   if (routeFill === undefined) {
     return undefined;
   }
   if (result.tag === "invalid") {
-    return weaponAttackInvalidFillRoute(result, routeFill);
+    return weaponAttackInvalidFillRoute(result, routeSubject, routeFill);
   }
   const holes =
     result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
@@ -7189,14 +7219,14 @@ function weaponAttackRouteForResolution(
 
   if (routeFill === "targetChoice") {
     return [
-      event("weaponAttack", "battleTargetSelection"),
+      event(routeSubject, "battleTargetSelection"),
       ...protectionCharmAttackRollModeRouteForResolution(input, result),
     ];
   }
   if (routeFill === "attackRoll") {
     return holes.includes("savingThrowOutcome")
       ? [event("weaponMasteryProperty", "battleConditionLifecycle")]
-      : [event("weaponAttack", "battleAttackRoll")];
+      : [event(routeSubject, "battleAttackRoll")];
   }
   if (routeFill === "savingThrowOutcome") {
     return [event("weaponMasteryProperty", "battleConditionLifecycle")];
@@ -7205,7 +7235,7 @@ function weaponAttackRouteForResolution(
     return undefined;
   }
 
-  const weaponDamageRoute = event("weaponAttack", "battleHitPoint");
+  const weaponDamageRoute = event(routeSubject, "battleHitPoint");
   const routeTail: BattleReducerRouteEvent[] = [];
   if (battleHasAfterHitAttackDamageAddition(input.state)) {
     routeTail.push(event("afterHitDamageRider", "battleHitPoint"));
@@ -7242,19 +7272,31 @@ function weaponAttackRouteForResolution(
 
 function weaponAttackInvalidFillRoute(
   result: Extract<BattleResolutionResult, { readonly tag: "invalid" }>,
+  subject: BattleReducerRouteSubjectFamily,
   routeFill: BattleReducerRouteFill,
 ): BattleReducerRouteEvents | undefined {
   const holes = weaponAttackOrderingInvalidHoles(result, routeFill);
-  if (holes === undefined) {
+  if (holes !== undefined) {
+    return [
+      {
+        kind: "resolveBattleSubject",
+        subject,
+        fill: routeFill,
+        holes,
+        owner: "battleHoleFrontier",
+      },
+    ];
+  }
+  if (routeFill !== "targetChoice") {
     return undefined;
   }
   return [
     {
       kind: "resolveBattleSubject",
-      subject: "weaponAttack",
+      subject,
       fill: routeFill,
-      holes,
-      owner: "battleHoleFrontier",
+      holes: ["targetChoice"],
+      owner: "battleTargetSelection",
     },
   ];
 }
@@ -7654,6 +7696,68 @@ function isWeaponAttackSubject(
   { readonly tag: "action"; readonly action: "attack" }
 > {
   return subject.tag === "action" && subject.action === "attack";
+}
+
+function isStatBlockActionRouteSubject(
+  state: BattleState,
+  subject: BattleResolutionInput["subject"],
+): boolean {
+  if (subject.tag !== "action") {
+    return false;
+  }
+  if (subject.action !== "attack" && subject.action !== "multiattack") {
+    return false;
+  }
+  return state.combatants.get(subject.actorId)?.origin.kind === "statBlock";
+}
+
+function attackRouteSubject(
+  state: BattleState,
+  subject: BattleResolutionInput["subject"],
+): "statBlockAction" | "weaponAttack" {
+  return isStatBlockActionRouteSubject(state, subject)
+    ? "statBlockAction"
+    : "weaponAttack";
+}
+
+function battleActionRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvent | undefined {
+  if (input.subject.tag === "runtimeCommand") {
+    if (input.subject.command !== "endTurn") {
+      return undefined;
+    }
+    if (input.fills.length !== 0) {
+      return undefined;
+    }
+    return {
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "battleAction",
+      holes: [],
+      owner: "battleActionEconomy",
+    };
+  }
+  if (
+    input.subject.tag !== "action" ||
+    input.subject.action !== "multiattack" ||
+    !isStatBlockActionRouteSubject(input.state, input.subject) ||
+    input.fills.length !== 0
+  ) {
+    return undefined;
+  }
+  if (
+    result.tag !== "resolved" &&
+    (result.tag !== "invalid" || result.reason !== "staleSubject")
+  ) {
+    return undefined;
+  }
+  return {
+    kind: "resolveBattleSubjectWithoutFill",
+    subject: "statBlockAction",
+    holes: [],
+    owner: "battleStatBlockAction",
+  };
 }
 
 function isCommandEffectSubject(

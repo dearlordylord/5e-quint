@@ -4,6 +4,130 @@
   "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
   "entries": [
     {
+      "taskId": "CRPI-BLOCK-034",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "b499668400fef6e0c2d72e62e5b0f92c1fc123acc6f06532380619f18c6b865a"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "e759d041932deeacfb47c807306516c58df3cf46b96e68feb98e5c11fe8a2460"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "9a4cd3c1592b7124435bbaba915761682184d1a3e012b1751674431d5b4dc707"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-BLOCK-034/README.md",
+          "sha256": "63b36e19fbbdf64d98437d4e972ddb89d2064655c60a9d714a7d4dd9e37761b6"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-034.json",
+          "sha256": "0a0da52e08639cfc870d10b27aac65e1d358957691dd74107ea63ce1a9dc9b38",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-034.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doDiscoverAttack#trace:reducer-route=WeaponAttackSkeleton action=doDiscoverAttack qRoute=weapon-attack-skeleton-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-034.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doFillTarget#trace:reducer-route=WeaponAttackSkeleton action=doFillTarget qRoute=weapon-attack-skeleton-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-034.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doRejectWrongTarget#trace:reducer-route=WeaponAttackSkeleton action=doRejectWrongTarget qRoute=weapon-attack-skeleton-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-034.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doFillAttackRollMiss#trace:reducer-route=WeaponAttackSkeleton action=doFillAttackRollMiss qRoute=weapon-attack-skeleton-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-034.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doFillAttackRollHit#trace:reducer-route=WeaponAttackSkeleton action=doFillAttackRollHit qRoute=weapon-attack-skeleton-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-034.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doFillDamageLow#trace:reducer-route=WeaponAttackSkeleton action=doFillDamageLow qRoute=weapon-attack-skeleton-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-034.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doFillDamageHigh#trace:reducer-route=WeaponAttackSkeleton action=doFillDamageHigh qRoute=weapon-attack-skeleton-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-034.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doFillDamageLowSneakAttack#trace:reducer-route=WeaponAttackSkeleton action=doFillDamageLowSneakAttack qRoute=weapon-attack-skeleton-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-034.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doFillDamageHighSneakAttack#trace:reducer-route=WeaponAttackSkeleton action=doFillDamageHighSneakAttack qRoute=weapon-attack-skeleton-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-034.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doRejectStaleAfterResolved#trace:reducer-route=WeaponAttackSkeleton action=doRejectStaleAfterResolved qRoute=weapon-attack-skeleton-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-034.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doStartSkeletonTurn#trace:reducer-route=WeaponAttackSkeleton action=doStartSkeletonTurn qRoute=weapon-attack-skeleton-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-034.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doResolveSkeletonMultiattack#trace:reducer-route=WeaponAttackSkeleton action=doResolveSkeletonMultiattack qRoute=weapon-attack-skeleton-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-034.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doRejectRecursiveSkeletonMultiattack#trace:reducer-route=WeaponAttackSkeleton action=doRejectRecursiveSkeletonMultiattack qRoute=weapon-attack-skeleton-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-034.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doSpendSkeletonMultiattackDispatch#trace:reducer-route=WeaponAttackSkeleton action=doSpendSkeletonMultiattackDispatch qRoute=weapon-attack-skeleton-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-owner-battle-attack-20260706T213644Z/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor 323cd5acc560b8311a73b7d6a7556d6e0daa298d HEAD",
+          "status": "pass",
+          "detail": "Base ref and HEAD both resolved to 323cd5acc Mark Ralph task 62 done; Base SHA is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language check for Making an Attack, Attack Rolls, Damage Rolls, Hit Points, Stat Block, Attack Roll, Damage, Hit Points, Multiattack, and UBIQUITOUS_LANGUAGE.md",
+          "status": "pass",
+          "detail": "Checked .references/srd-5.2.1/Playing-the-Game.md, .references/srd-5.2.1/Rules-Glossary.md, and UBIQUITOUS_LANGUAGE.md before route/evidence updates."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime typecheck",
+          "status": "pass",
+          "detail": "Battle-runtime typecheck passed after adding production battleAction/statBlockAction route subjects and moving Task 63 replay to public routeEvents."
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Pre-MBT process checks found no active Vitest runner or Quint evaluator before the passing focused MBT runs."
+        },
+        {
+          "command": "START=$(date +%s); ( while sleep 60; do printf 'MBT progress: %ss elapsed\\n' \"$(( $(date +%s) - START ))\"; done ) & PROGRESS=$!; MBT_TRACES=1 MBT_STEPS=4 pnpm --filter @dnd/battle-runtime exec vitest run src/reducer-route-connectors.mbt.test.ts -t \"weapon Attack skeleton\" 2>&1; STATUS=$?; kill \"$PROGRESS\" 2>/dev/null || true; wait \"$PROGRESS\" 2>/dev/null || true; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$STATUS\"",
+          "status": "pass",
+          "detail": "Focused copied qRoute connector replay passed with 1 test and 33 skipped; TOTAL: 9s. The first round-2 attempt exposed stale fills in doRejectStaleAfterResolved and was fixed before this passing run. Decider replay exposed a stat-block attack stale no-fill route mismatch; final projection keeps stale no-fill Attack replay on weaponAttack/battleHoleFrontier while recursive Multiattack stale remains statBlockAction."
+        },
+        {
+          "command": "START=$(date +%s); ( while sleep 60; do printf 'MBT progress: %ss elapsed\\n' \"$(( $(date +%s) - START ))\"; done ) & PROGRESS=$!; MBT_TRACES=1 MBT_STEPS=4 pnpm --filter @dnd/battle-runtime exec vitest run src/weapon-attack-skeleton.mbt.test.ts 2>&1; STATUS=$?; kill \"$PROGRESS\" 2>/dev/null || true; wait \"$PROGRESS\" 2>/dev/null || true; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$STATUS\"",
+          "status": "pass",
+          "detail": "Focused original weapon Attack skeleton semantic replay passed with 1 test; TOTAL: 7s."
+        },
+        {
+          "command": "jq empty tasks/target-replay-evidence/CRPI-BLOCK-034.json tasks/ENGINE_DEPTH_MANIFEST.json tasks/STATE_OWNER_MANIFEST.json tasks/RUN_LEDGER.json",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "Cleanroom branch coverage passed with 738 obligations and 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "All quality gates and typecheck passed; app lint emitted the existing 61 warnings and exited 0."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 2 addressed reviewer blockers by adding production battleAction/statBlockAction route subjects and collecting qRoute from public AvailableBattleAct.routeEvents and BattleResolutionResult.routeEvents. Decider replay fixed stale no-fill Attack route subject/owner coupling after stat-block dispatch; no remaining reasonable Task 63 findings."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-034",
+            "impact": "unblocked"
+          },
+          {
+            "taskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
+            "impact": "left unchanged"
+          }
+        ],
+        "observations": [
+          "Weapon Attack skeleton qRoute is observable through public startBattle route marker, discoverBattleActs AvailableBattleAct.routeEvents, and resolveBattleSubject BattleResolutionResult.routeEvents for weapon action, battle action, stat-block action routing, action economy, Attack Roll, Hit Point damage, and stat-block attack dispatch.",
+          "No new durable BattleState fields were needed; route evidence is derived from existing subjects, actor origin, fills, holes, result shape, turn action resources, damage-rider usage, and Hit Point facts.",
+          "Stat-block control reuse remains separate upstream CRPI-READY-034 evidence; Task 63 records downstream BattleState route replay."
+        ],
+        "requiredPlanEdits": "none"
+      }
+    },
+    {
       "taskId": "CRPI-BLOCK-020",
       "assignmentId": "reducer-spine-diagnostic-battle",
       "laneId": "battle",

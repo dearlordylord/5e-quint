@@ -1,0 +1,992 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts weapon Attack skeleton copied qRoute versus reducer-routed target replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "acceptance": {
+    "driverPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt",
+    "connectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt",
+    "routeClass": "reducer-routed",
+    "durableOwner": "BattleState owns weapon action, battle action, stat-block action routing, action economy, Attack Roll, Hit Point damage, and stat-block action dispatch. Keep stat-block control reuse separate from route replay evidence.",
+    "acceptedProjection": "qRoute"
+  },
+  "status": "pass",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt",
+      "qntFileSha256": "5a11ba9ce2e3fcc8b030993adfd4b7950923edb728064a6d3ca6e0f2060daa11",
+      "routeConnectorSha256": "f355389eca8ee5fe8ab3b0af0d8e50eed42d6a80d795179fd80e1636d81aae4f",
+      "branchFamily": "step",
+      "branchAction": "doDiscoverAttack",
+      "observedActionTaken": "doDiscoverAttack",
+      "harnessTestPath": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "reducer-route=WeaponAttackSkeleton action=doDiscoverAttack qRoute=weapon-attack-skeleton-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doDiscoverAttack",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createBattleRuntimeRouteDriver",
+        "routeSubject": "WeaponAttackRouteSubject|BattleActionRouteSubject|StatBlockActionRouteSubject",
+        "owners": ["BattleActionEconomyOwner"],
+        "targetRouteObservation": "Driver appends copied qRoute observations from public AvailableBattleAct.routeEvents and BattleResolutionResult.routeEvents after the startBattle route marker; it does not reconstruct discover/resolve route events from adapter-local subjects or owners."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "7cbe328e62cf1eef08a46e8f5ac3d091a4a7bd2b87016af8ccfc09785ff9366e",
+        "observedProjectionSha256": "7cbe328e62cf1eef08a46e8f5ac3d091a4a7bd2b87016af8ccfc09785ff9366e",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doDiscoverAttack",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "WeaponAttackRouteSubject",
+            "BattleActionRouteSubject",
+            "StatBlockActionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "discover_battle_acts",
+            "discover_battle_acts",
+            "project_qRoute"
+          ],
+          "routeEventSource": "Weapon Attack discovery exposes TargetChoice holes through public battle action discovery.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/battle-reducer.ts#discoverBattleActs; packages/battle-runtime/src/battle-reducer/dispatcher.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "AvailableBattleAct.routeEvents",
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=startBattle",
+          "ReducerRouteEvent.tag=discoverBattleActs",
+          "ReducerRouteEvent.subject=weaponAttack",
+          "ReducerRouteEvent.owner=battleActionEconomy",
+          "BattleHole.kind=targetChoice",
+          "AvailableBattleAct.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Weapon Attack discovery routes TargetChoice holes through the battle action-economy owner."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt",
+      "qntFileSha256": "5a11ba9ce2e3fcc8b030993adfd4b7950923edb728064a6d3ca6e0f2060daa11",
+      "routeConnectorSha256": "f355389eca8ee5fe8ab3b0af0d8e50eed42d6a80d795179fd80e1636d81aae4f",
+      "branchFamily": "step",
+      "branchAction": "doFillTarget",
+      "observedActionTaken": "doFillTarget",
+      "harnessTestPath": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "reducer-route=WeaponAttackSkeleton action=doFillTarget qRoute=weapon-attack-skeleton-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doFillTarget",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createBattleRuntimeRouteDriver",
+        "routeSubject": "WeaponAttackRouteSubject|BattleActionRouteSubject|StatBlockActionRouteSubject",
+        "owners": ["BattleTargetSelectionOwner"],
+        "targetRouteObservation": "Driver appends copied qRoute observations from public AvailableBattleAct.routeEvents and BattleResolutionResult.routeEvents after the startBattle route marker; it does not reconstruct discover/resolve route events from adapter-local subjects or owners."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "31064d6aa19162c718dbbc3983eeaf70850e2acf99884f432ef98156238b17b4",
+        "observedProjectionSha256": "31064d6aa19162c718dbbc3983eeaf70850e2acf99884f432ef98156238b17b4",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doFillTarget",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "WeaponAttackRouteSubject",
+            "BattleActionRouteSubject",
+            "StatBlockActionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject",
+            "project_qRoute"
+          ],
+          "routeEventSource": "Target choice fill routes weapon Attack resolution to target selection and exposes the Attack Roll hole.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/battle-reducer.ts#discoverBattleActs; packages/battle-runtime/src/battle-reducer/dispatcher.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "AvailableBattleAct.routeEvents",
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=resolveBattleSubject",
+          "ReducerRouteEvent.subject=weaponAttack",
+          "ReducerRouteEvent.fill=targetChoice",
+          "ReducerRouteEvent.owner=battleTargetSelection",
+          "BattleHole.kind=attackRoll",
+          "BattleResolutionResult.tag=needsHoles"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Target choice advances the weapon Attack frontier to Attack Roll through target selection."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt",
+      "qntFileSha256": "5a11ba9ce2e3fcc8b030993adfd4b7950923edb728064a6d3ca6e0f2060daa11",
+      "routeConnectorSha256": "f355389eca8ee5fe8ab3b0af0d8e50eed42d6a80d795179fd80e1636d81aae4f",
+      "branchFamily": "step",
+      "branchAction": "doRejectWrongTarget",
+      "observedActionTaken": "doRejectWrongTarget",
+      "harnessTestPath": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "reducer-route=WeaponAttackSkeleton action=doRejectWrongTarget qRoute=weapon-attack-skeleton-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRejectWrongTarget",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createBattleRuntimeRouteDriver",
+        "routeSubject": "WeaponAttackRouteSubject|BattleActionRouteSubject|StatBlockActionRouteSubject",
+        "owners": ["BattleTargetSelectionOwner"],
+        "targetRouteObservation": "Driver appends copied qRoute observations from public AvailableBattleAct.routeEvents and BattleResolutionResult.routeEvents after the startBattle route marker; it does not reconstruct discover/resolve route events from adapter-local subjects or owners."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "b8f62b5060aaad439ad0f9ced413642857bcb6cfef26a788f68d1540c6c129a5",
+        "observedProjectionSha256": "b8f62b5060aaad439ad0f9ced413642857bcb6cfef26a788f68d1540c6c129a5",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doRejectWrongTarget",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "WeaponAttackRouteSubject",
+            "BattleActionRouteSubject",
+            "StatBlockActionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject",
+            "project_qRoute"
+          ],
+          "routeEventSource": "Wrong target fill is rejected through public weapon Attack resolution while retaining the TargetChoice frontier.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/battle-reducer.ts#discoverBattleActs; packages/battle-runtime/src/battle-reducer/dispatcher.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "AvailableBattleAct.routeEvents",
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=resolveBattleSubject",
+          "ReducerRouteEvent.subject=weaponAttack",
+          "ReducerRouteEvent.fill=targetChoice",
+          "ReducerRouteEvent.owner=battleTargetSelection",
+          "BattleHole.kind=targetChoice",
+          "BattleResolutionResult.reason=invalidFill"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Wrong target rejection stays on target selection and preserves the TargetChoice frontier."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt",
+      "qntFileSha256": "5a11ba9ce2e3fcc8b030993adfd4b7950923edb728064a6d3ca6e0f2060daa11",
+      "routeConnectorSha256": "f355389eca8ee5fe8ab3b0af0d8e50eed42d6a80d795179fd80e1636d81aae4f",
+      "branchFamily": "step",
+      "branchAction": "doFillAttackRollMiss",
+      "observedActionTaken": "doFillAttackRollMiss",
+      "harnessTestPath": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "reducer-route=WeaponAttackSkeleton action=doFillAttackRollMiss qRoute=weapon-attack-skeleton-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doFillAttackRollMiss",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createBattleRuntimeRouteDriver",
+        "routeSubject": "WeaponAttackRouteSubject|BattleActionRouteSubject|StatBlockActionRouteSubject",
+        "owners": ["BattleAttackRollOwner"],
+        "targetRouteObservation": "Driver appends copied qRoute observations from public AvailableBattleAct.routeEvents and BattleResolutionResult.routeEvents after the startBattle route marker; it does not reconstruct discover/resolve route events from adapter-local subjects or owners."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "c85a83e6e48c9fe5c30b18ea64e094b3b1303c2e94d84fbd4ad55f7f608f2a65",
+        "observedProjectionSha256": "c85a83e6e48c9fe5c30b18ea64e094b3b1303c2e94d84fbd4ad55f7f608f2a65",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doFillAttackRollMiss",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "WeaponAttackRouteSubject",
+            "BattleActionRouteSubject",
+            "StatBlockActionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject",
+            "resolve_battle_subject",
+            "project_qRoute"
+          ],
+          "routeEventSource": "Attack Roll miss routes to the attack-roll owner and resolves without damage holes.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/battle-reducer.ts#discoverBattleActs; packages/battle-runtime/src/battle-reducer/dispatcher.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "AvailableBattleAct.routeEvents",
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=resolveBattleSubject",
+          "ReducerRouteEvent.subject=weaponAttack",
+          "ReducerRouteEvent.fill=attackRoll",
+          "ReducerRouteEvent.owner=battleAttackRoll",
+          "BattleFill.kind=attackRoll",
+          "BattleResolutionResult.tag=resolved"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Attack Roll miss resolves through the attack-roll owner without Hit Point damage."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt",
+      "qntFileSha256": "5a11ba9ce2e3fcc8b030993adfd4b7950923edb728064a6d3ca6e0f2060daa11",
+      "routeConnectorSha256": "f355389eca8ee5fe8ab3b0af0d8e50eed42d6a80d795179fd80e1636d81aae4f",
+      "branchFamily": "step",
+      "branchAction": "doFillAttackRollHit",
+      "observedActionTaken": "doFillAttackRollHit",
+      "harnessTestPath": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "reducer-route=WeaponAttackSkeleton action=doFillAttackRollHit qRoute=weapon-attack-skeleton-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doFillAttackRollHit",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createBattleRuntimeRouteDriver",
+        "routeSubject": "WeaponAttackRouteSubject|BattleActionRouteSubject|StatBlockActionRouteSubject",
+        "owners": ["BattleAttackRollOwner"],
+        "targetRouteObservation": "Driver appends copied qRoute observations from public AvailableBattleAct.routeEvents and BattleResolutionResult.routeEvents after the startBattle route marker; it does not reconstruct discover/resolve route events from adapter-local subjects or owners."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "c14497bced317f91d0bddf48e349481795b1a00b77fe45208b6de6b5b3749ce3",
+        "observedProjectionSha256": "c14497bced317f91d0bddf48e349481795b1a00b77fe45208b6de6b5b3749ce3",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doFillAttackRollHit",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "WeaponAttackRouteSubject",
+            "BattleActionRouteSubject",
+            "StatBlockActionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject",
+            "resolve_battle_subject",
+            "project_qRoute"
+          ],
+          "routeEventSource": "Attack Roll hit routes to the attack-roll owner and exposes rolled damage dice.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/battle-reducer.ts#discoverBattleActs; packages/battle-runtime/src/battle-reducer/dispatcher.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "AvailableBattleAct.routeEvents",
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=resolveBattleSubject",
+          "ReducerRouteEvent.subject=weaponAttack",
+          "ReducerRouteEvent.fill=attackRoll",
+          "ReducerRouteEvent.owner=battleAttackRoll",
+          "BattleHole.kind=rolledDice",
+          "BattleResolutionResult.tag=needsHoles"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Attack Roll hit advances the weapon Attack frontier to rolled damage dice."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt",
+      "qntFileSha256": "5a11ba9ce2e3fcc8b030993adfd4b7950923edb728064a6d3ca6e0f2060daa11",
+      "routeConnectorSha256": "f355389eca8ee5fe8ab3b0af0d8e50eed42d6a80d795179fd80e1636d81aae4f",
+      "branchFamily": "step",
+      "branchAction": "doFillDamageLow",
+      "observedActionTaken": "doFillDamageLow",
+      "harnessTestPath": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "reducer-route=WeaponAttackSkeleton action=doFillDamageLow qRoute=weapon-attack-skeleton-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doFillDamageLow",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createBattleRuntimeRouteDriver",
+        "routeSubject": "WeaponAttackRouteSubject|BattleActionRouteSubject|StatBlockActionRouteSubject",
+        "owners": ["BattleHitPointOwner"],
+        "targetRouteObservation": "Driver appends copied qRoute observations from public AvailableBattleAct.routeEvents and BattleResolutionResult.routeEvents after the startBattle route marker; it does not reconstruct discover/resolve route events from adapter-local subjects or owners."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "91a73fffcf51e0b905f7e0f31a68cef918b50663cd35c9deae6c40c58c434d0f",
+        "observedProjectionSha256": "91a73fffcf51e0b905f7e0f31a68cef918b50663cd35c9deae6c40c58c434d0f",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doFillDamageLow",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "WeaponAttackRouteSubject",
+            "BattleActionRouteSubject",
+            "StatBlockActionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject",
+            "resolve_battle_subject",
+            "resolve_battle_subject",
+            "project_qRoute"
+          ],
+          "routeEventSource": "Low weapon damage routes hit damage through the Hit Point owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/battle-reducer.ts#discoverBattleActs; packages/battle-runtime/src/battle-reducer/dispatcher.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "AvailableBattleAct.routeEvents",
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=resolveBattleSubject",
+          "ReducerRouteEvent.subject=weaponAttack",
+          "ReducerRouteEvent.fill=rolledDice",
+          "ReducerRouteEvent.owner=battleHitPoint",
+          "BattleCreatureState.hp",
+          "BattleResolutionResult.tag=resolved"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Low weapon damage resolves through existing Hit Point damage ownership."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt",
+      "qntFileSha256": "5a11ba9ce2e3fcc8b030993adfd4b7950923edb728064a6d3ca6e0f2060daa11",
+      "routeConnectorSha256": "f355389eca8ee5fe8ab3b0af0d8e50eed42d6a80d795179fd80e1636d81aae4f",
+      "branchFamily": "step",
+      "branchAction": "doFillDamageHigh",
+      "observedActionTaken": "doFillDamageHigh",
+      "harnessTestPath": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "reducer-route=WeaponAttackSkeleton action=doFillDamageHigh qRoute=weapon-attack-skeleton-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doFillDamageHigh",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createBattleRuntimeRouteDriver",
+        "routeSubject": "WeaponAttackRouteSubject|BattleActionRouteSubject|StatBlockActionRouteSubject",
+        "owners": ["BattleHitPointOwner"],
+        "targetRouteObservation": "Driver appends copied qRoute observations from public AvailableBattleAct.routeEvents and BattleResolutionResult.routeEvents after the startBattle route marker; it does not reconstruct discover/resolve route events from adapter-local subjects or owners."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "91a73fffcf51e0b905f7e0f31a68cef918b50663cd35c9deae6c40c58c434d0f",
+        "observedProjectionSha256": "91a73fffcf51e0b905f7e0f31a68cef918b50663cd35c9deae6c40c58c434d0f",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doFillDamageHigh",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "WeaponAttackRouteSubject",
+            "BattleActionRouteSubject",
+            "StatBlockActionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject",
+            "resolve_battle_subject",
+            "resolve_battle_subject",
+            "project_qRoute"
+          ],
+          "routeEventSource": "High weapon damage routes hit damage through the Hit Point owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/battle-reducer.ts#discoverBattleActs; packages/battle-runtime/src/battle-reducer/dispatcher.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "AvailableBattleAct.routeEvents",
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=resolveBattleSubject",
+          "ReducerRouteEvent.subject=weaponAttack",
+          "ReducerRouteEvent.fill=rolledDice",
+          "ReducerRouteEvent.owner=battleHitPoint",
+          "BattleCreatureState.hp",
+          "BattleResolutionResult.tag=resolved"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "High weapon damage resolves through existing Hit Point damage ownership."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt",
+      "qntFileSha256": "5a11ba9ce2e3fcc8b030993adfd4b7950923edb728064a6d3ca6e0f2060daa11",
+      "routeConnectorSha256": "f355389eca8ee5fe8ab3b0af0d8e50eed42d6a80d795179fd80e1636d81aae4f",
+      "branchFamily": "step",
+      "branchAction": "doFillDamageLowSneakAttack",
+      "observedActionTaken": "doFillDamageLowSneakAttack",
+      "harnessTestPath": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "reducer-route=WeaponAttackSkeleton action=doFillDamageLowSneakAttack qRoute=weapon-attack-skeleton-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doFillDamageLowSneakAttack",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createBattleRuntimeRouteDriver",
+        "routeSubject": "WeaponAttackRouteSubject|BattleActionRouteSubject|StatBlockActionRouteSubject",
+        "owners": ["BattleHitPointOwner"],
+        "targetRouteObservation": "Driver appends copied qRoute observations from public AvailableBattleAct.routeEvents and BattleResolutionResult.routeEvents after the startBattle route marker; it does not reconstruct discover/resolve route events from adapter-local subjects or owners."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "91a73fffcf51e0b905f7e0f31a68cef918b50663cd35c9deae6c40c58c434d0f",
+        "observedProjectionSha256": "91a73fffcf51e0b905f7e0f31a68cef918b50663cd35c9deae6c40c58c434d0f",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doFillDamageLowSneakAttack",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "WeaponAttackRouteSubject",
+            "BattleActionRouteSubject",
+            "StatBlockActionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject",
+            "resolve_battle_subject",
+            "resolve_battle_subject",
+            "project_qRoute"
+          ],
+          "routeEventSource": "Sneak Attack low damage uses the same public rolled-dice Hit Point route as weapon damage.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/battle-reducer.ts#discoverBattleActs; packages/battle-runtime/src/battle-reducer/dispatcher.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "AvailableBattleAct.routeEvents",
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=resolveBattleSubject",
+          "ReducerRouteEvent.subject=weaponAttack",
+          "ReducerRouteEvent.fill=rolledDice",
+          "ReducerRouteEvent.owner=battleHitPoint",
+          "BattleTurnState.attackDamageRidersUsedThisTurn",
+          "BattleResolutionResult.tag=resolved"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Sneak Attack low damage is recorded as damage-rider usage while hit damage remains owned by Hit Points."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt",
+      "qntFileSha256": "5a11ba9ce2e3fcc8b030993adfd4b7950923edb728064a6d3ca6e0f2060daa11",
+      "routeConnectorSha256": "f355389eca8ee5fe8ab3b0af0d8e50eed42d6a80d795179fd80e1636d81aae4f",
+      "branchFamily": "step",
+      "branchAction": "doFillDamageHighSneakAttack",
+      "observedActionTaken": "doFillDamageHighSneakAttack",
+      "harnessTestPath": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "reducer-route=WeaponAttackSkeleton action=doFillDamageHighSneakAttack qRoute=weapon-attack-skeleton-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doFillDamageHighSneakAttack",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createBattleRuntimeRouteDriver",
+        "routeSubject": "WeaponAttackRouteSubject|BattleActionRouteSubject|StatBlockActionRouteSubject",
+        "owners": ["BattleHitPointOwner"],
+        "targetRouteObservation": "Driver appends copied qRoute observations from public AvailableBattleAct.routeEvents and BattleResolutionResult.routeEvents after the startBattle route marker; it does not reconstruct discover/resolve route events from adapter-local subjects or owners."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "91a73fffcf51e0b905f7e0f31a68cef918b50663cd35c9deae6c40c58c434d0f",
+        "observedProjectionSha256": "91a73fffcf51e0b905f7e0f31a68cef918b50663cd35c9deae6c40c58c434d0f",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doFillDamageHighSneakAttack",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "WeaponAttackRouteSubject",
+            "BattleActionRouteSubject",
+            "StatBlockActionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject",
+            "resolve_battle_subject",
+            "resolve_battle_subject",
+            "project_qRoute"
+          ],
+          "routeEventSource": "Sneak Attack high damage uses the same public rolled-dice Hit Point route as weapon damage.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/battle-reducer.ts#discoverBattleActs; packages/battle-runtime/src/battle-reducer/dispatcher.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "AvailableBattleAct.routeEvents",
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=resolveBattleSubject",
+          "ReducerRouteEvent.subject=weaponAttack",
+          "ReducerRouteEvent.fill=rolledDice",
+          "ReducerRouteEvent.owner=battleHitPoint",
+          "BattleTurnState.attackDamageRidersUsedThisTurn",
+          "BattleResolutionResult.tag=resolved"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Sneak Attack high damage is recorded as damage-rider usage while hit damage remains owned by Hit Points."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt",
+      "qntFileSha256": "5a11ba9ce2e3fcc8b030993adfd4b7950923edb728064a6d3ca6e0f2060daa11",
+      "routeConnectorSha256": "f355389eca8ee5fe8ab3b0af0d8e50eed42d6a80d795179fd80e1636d81aae4f",
+      "branchFamily": "step",
+      "branchAction": "doRejectStaleAfterResolved",
+      "observedActionTaken": "doRejectStaleAfterResolved",
+      "harnessTestPath": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "reducer-route=WeaponAttackSkeleton action=doRejectStaleAfterResolved qRoute=weapon-attack-skeleton-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRejectStaleAfterResolved",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createBattleRuntimeRouteDriver",
+        "routeSubject": "WeaponAttackRouteSubject|BattleActionRouteSubject|StatBlockActionRouteSubject",
+        "owners": ["BattleHoleFrontierOwner"],
+        "targetRouteObservation": "Driver appends copied qRoute observations from public AvailableBattleAct.routeEvents and BattleResolutionResult.routeEvents after the startBattle route marker; it does not reconstruct discover/resolve route events from adapter-local subjects or owners."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "b815b4c9ce179ca65bf8aa4d524ac49ca4f8d9bd47b8b322e6002cee2236c89a",
+        "observedProjectionSha256": "b815b4c9ce179ca65bf8aa4d524ac49ca4f8d9bd47b8b322e6002cee2236c89a",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doRejectStaleAfterResolved",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "WeaponAttackRouteSubject",
+            "BattleActionRouteSubject",
+            "StatBlockActionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject",
+            "resolve_battle_subject",
+            "resolve_battle_subject",
+            "project_qRoute"
+          ],
+          "routeEventSource": "Stale weapon Attack subject replay is rejected through the public hole-frontier owner after resolution.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/battle-reducer.ts#discoverBattleActs; packages/battle-runtime/src/battle-reducer/dispatcher.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "AvailableBattleAct.routeEvents",
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=resolveBattleSubjectWithoutFill",
+          "ReducerRouteEvent.subject=weaponAttack",
+          "ReducerRouteEvent.owner=battleHoleFrontier",
+          "BattleResolutionResult.reason=staleSubject",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Resolved weapon Attack subjects reject stale replay through the hole-frontier owner."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt",
+      "qntFileSha256": "5a11ba9ce2e3fcc8b030993adfd4b7950923edb728064a6d3ca6e0f2060daa11",
+      "routeConnectorSha256": "f355389eca8ee5fe8ab3b0af0d8e50eed42d6a80d795179fd80e1636d81aae4f",
+      "branchFamily": "step",
+      "branchAction": "doStartSkeletonTurn",
+      "observedActionTaken": "doStartSkeletonTurn",
+      "harnessTestPath": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "reducer-route=WeaponAttackSkeleton action=doStartSkeletonTurn qRoute=weapon-attack-skeleton-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doStartSkeletonTurn",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createBattleRuntimeRouteDriver",
+        "routeSubject": "WeaponAttackRouteSubject|BattleActionRouteSubject|StatBlockActionRouteSubject",
+        "owners": ["BattleActionEconomyOwner"],
+        "targetRouteObservation": "Driver appends copied qRoute observations from public AvailableBattleAct.routeEvents and BattleResolutionResult.routeEvents after the startBattle route marker; it does not reconstruct discover/resolve route events from adapter-local subjects or owners."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "a46afddb6fae90f17aa20167a11f04b7d8724560909581cbf819c3242a3b8302",
+        "observedProjectionSha256": "a46afddb6fae90f17aa20167a11f04b7d8724560909581cbf819c3242a3b8302",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doStartSkeletonTurn",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "WeaponAttackRouteSubject",
+            "BattleActionRouteSubject",
+            "StatBlockActionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject",
+            "project_qRoute"
+          ],
+          "routeEventSource": "End-turn battle action routes through the public battle action economy owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/battle-reducer.ts#discoverBattleActs; packages/battle-runtime/src/battle-reducer/dispatcher.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "AvailableBattleAct.routeEvents",
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=resolveBattleSubjectWithoutFill",
+          "ReducerRouteEvent.subject=battleAction",
+          "ReducerRouteEvent.owner=battleActionEconomy",
+          "BattleTurnState.actionResources",
+          "BattleResolutionResult.tag=resolved"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Starting the Skeleton turn uses the public battle action route through action economy."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt",
+      "qntFileSha256": "5a11ba9ce2e3fcc8b030993adfd4b7950923edb728064a6d3ca6e0f2060daa11",
+      "routeConnectorSha256": "f355389eca8ee5fe8ab3b0af0d8e50eed42d6a80d795179fd80e1636d81aae4f",
+      "branchFamily": "step",
+      "branchAction": "doResolveSkeletonMultiattack",
+      "observedActionTaken": "doResolveSkeletonMultiattack",
+      "harnessTestPath": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "reducer-route=WeaponAttackSkeleton action=doResolveSkeletonMultiattack qRoute=weapon-attack-skeleton-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doResolveSkeletonMultiattack",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createBattleRuntimeRouteDriver",
+        "routeSubject": "WeaponAttackRouteSubject|BattleActionRouteSubject|StatBlockActionRouteSubject",
+        "owners": ["BattleStatBlockActionOwner"],
+        "targetRouteObservation": "Driver appends copied qRoute observations from public AvailableBattleAct.routeEvents and BattleResolutionResult.routeEvents after the startBattle route marker; it does not reconstruct discover/resolve route events from adapter-local subjects or owners."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "d4fbb17af2ae4a98a812db4230d02fd430a967ae944535105103b681069210ab",
+        "observedProjectionSha256": "d4fbb17af2ae4a98a812db4230d02fd430a967ae944535105103b681069210ab",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doResolveSkeletonMultiattack",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "WeaponAttackRouteSubject",
+            "BattleActionRouteSubject",
+            "StatBlockActionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject",
+            "resolve_battle_subject",
+            "project_qRoute"
+          ],
+          "routeEventSource": "Skeleton Multiattack routes through public stat-block action dispatch and grants dispatch resources.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/battle-reducer.ts#discoverBattleActs; packages/battle-runtime/src/battle-reducer/dispatcher.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "AvailableBattleAct.routeEvents",
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=resolveBattleSubjectWithoutFill",
+          "ReducerRouteEvent.subject=statBlockAction",
+          "ReducerRouteEvent.owner=battleStatBlockAction",
+          "BattleTurnState.actionResources.source=statBlockMultiattack",
+          "BattleResolutionResult.tag=resolved"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Skeleton Multiattack resolves through stat-block action dispatch and creates dispatch resources."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt",
+      "qntFileSha256": "5a11ba9ce2e3fcc8b030993adfd4b7950923edb728064a6d3ca6e0f2060daa11",
+      "routeConnectorSha256": "f355389eca8ee5fe8ab3b0af0d8e50eed42d6a80d795179fd80e1636d81aae4f",
+      "branchFamily": "step",
+      "branchAction": "doRejectRecursiveSkeletonMultiattack",
+      "observedActionTaken": "doRejectRecursiveSkeletonMultiattack",
+      "harnessTestPath": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "reducer-route=WeaponAttackSkeleton action=doRejectRecursiveSkeletonMultiattack qRoute=weapon-attack-skeleton-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRejectRecursiveSkeletonMultiattack",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createBattleRuntimeRouteDriver",
+        "routeSubject": "WeaponAttackRouteSubject|BattleActionRouteSubject|StatBlockActionRouteSubject",
+        "owners": ["BattleStatBlockActionOwner"],
+        "targetRouteObservation": "Driver appends copied qRoute observations from public AvailableBattleAct.routeEvents and BattleResolutionResult.routeEvents after the startBattle route marker; it does not reconstruct discover/resolve route events from adapter-local subjects or owners."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "d08e8d0cefe45842fb32fd46c1c33bde4621c892022dfd42494c113637c66086",
+        "observedProjectionSha256": "d08e8d0cefe45842fb32fd46c1c33bde4621c892022dfd42494c113637c66086",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doRejectRecursiveSkeletonMultiattack",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "WeaponAttackRouteSubject",
+            "BattleActionRouteSubject",
+            "StatBlockActionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject",
+            "resolve_battle_subject",
+            "resolve_battle_subject",
+            "project_qRoute"
+          ],
+          "routeEventSource": "Recursive Skeleton Multiattack replay stays on public stat-block action dispatch and is rejected as stale.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/battle-reducer.ts#discoverBattleActs; packages/battle-runtime/src/battle-reducer/dispatcher.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "AvailableBattleAct.routeEvents",
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=resolveBattleSubjectWithoutFill",
+          "ReducerRouteEvent.subject=statBlockAction",
+          "ReducerRouteEvent.owner=battleStatBlockAction",
+          "BattleResolutionResult.reason=staleSubject",
+          "BattleTurnState.actionResources.source=statBlockMultiattack"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Recursive Skeleton Multiattack replay remains routed to stat-block action dispatch and rejects stale replay."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt",
+      "qntFileSha256": "5a11ba9ce2e3fcc8b030993adfd4b7950923edb728064a6d3ca6e0f2060daa11",
+      "routeConnectorSha256": "f355389eca8ee5fe8ab3b0af0d8e50eed42d6a80d795179fd80e1636d81aae4f",
+      "branchFamily": "step",
+      "branchAction": "doSpendSkeletonMultiattackDispatch",
+      "observedActionTaken": "doSpendSkeletonMultiattackDispatch",
+      "harnessTestPath": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "reducer-route=WeaponAttackSkeleton action=doSpendSkeletonMultiattackDispatch qRoute=weapon-attack-skeleton-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doSpendSkeletonMultiattackDispatch",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createBattleRuntimeRouteDriver",
+        "routeSubject": "WeaponAttackRouteSubject|BattleActionRouteSubject|StatBlockActionRouteSubject",
+        "owners": [
+          "BattleStatBlockActionOwner",
+          "BattleTargetSelectionOwner",
+          "BattleAttackRollOwner"
+        ],
+        "targetRouteObservation": "Driver appends copied qRoute observations from public AvailableBattleAct.routeEvents and BattleResolutionResult.routeEvents after the startBattle route marker; it does not reconstruct discover/resolve route events from adapter-local subjects or owners."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "3d84e87d9386456e87e9a9235ff9f0116484ca84e0eb8ee7665c263814cd638c",
+        "observedProjectionSha256": "3d84e87d9386456e87e9a9235ff9f0116484ca84e0eb8ee7665c263814cd638c",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doSpendSkeletonMultiattackDispatch",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "WeaponAttackRouteSubject",
+            "BattleActionRouteSubject",
+            "StatBlockActionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "discover_battle_acts",
+            "resolve_battle_subject",
+            "resolve_battle_subject",
+            "discover_battle_acts",
+            "resolve_battle_subject",
+            "resolve_battle_subject",
+            "project_qRoute"
+          ],
+          "routeEventSource": "Spending a Skeleton Multiattack dispatch discovers and resolves the stat-block shortsword attack through target-selection and attack-roll owners.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/battle-reducer.ts#discoverBattleActs; packages/battle-runtime/src/battle-reducer/dispatcher.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "AvailableBattleAct.routeEvents",
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=discoverBattleActs",
+          "ReducerRouteEvent.subject=statBlockAction",
+          "ReducerRouteEvent.owner=battleStatBlockAction",
+          "ReducerRouteEvent.fill=targetChoice",
+          "ReducerRouteEvent.fill=attackRoll",
+          "BattleTurnState.actionResources.source=statBlockMultiattack",
+          "BattleResolutionResult.tag=resolved"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Skeleton Multiattack dispatch spends the stat-block resource through public stat-block attack discovery and resolution."
+      }
+    }
+  ]
+}
