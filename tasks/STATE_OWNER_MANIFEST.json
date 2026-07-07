@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-027",
+  "taskId": "CRPI-BLOCK-028",
   "durableFields": [
     {
       "fieldPath": "AvailableBattleAct.routeEvents",
@@ -11,16 +11,7 @@
         "sourceField": "AvailableBattleAct.initialHoles",
         "boundary": "discoverBattleActs public reducer result"
       },
-      "notes": "Existing public discovery result carries route events derived from the action spell invocation and initial hole frontier."
-    },
-    {
-      "fieldPath": "AvailableBattleAct.initialHoles",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing discovery holes are the canonical action frontier for target choice and damage type choice."
+      "notes": "Existing discovery results carry route events derived from action spell availability and object-target-boundary hole shape."
     },
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
@@ -31,101 +22,71 @@
         "sourceField": "BattleResolutionResult.holes",
         "boundary": "resolveBattleSubject public reducer result"
       },
-      "notes": "Existing public resolution result carries route events derived from submitted fills, remaining holes, and reducer outcome."
-    },
-    {
-      "fieldPath": "BattleResolutionResult.holes",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing result holes are the canonical next frontier after target, damage type, Attack Roll, or damage dice fills."
-    },
-    {
-      "fieldPath": "BattleResolutionResult.tag=resolved",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing result tag distinguishes terminal miss and damage-resolution states from open-hole states."
+      "notes": "Existing resolution results carry route events derived from submitted fills, remaining holes, object damage, light-emitter admission, and invalid stale-subject outcomes."
     },
     {
       "fieldPath": "BattleSubject.actionSpell.invocation.procedure=spellAttackDamage",
       "owner": "battle-state",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing typed invocation procedure admits generic spell Attack damage behavior without dispatching on spell identity."
+      "derivability": { "tag": "canonical-source" },
+      "notes": "Existing typed invocation procedure admits spell Attack behavior without production dispatch on spell name or id."
     },
     {
-      "fieldPath": "BattleFill.kind=targetChoice",
+      "fieldPath": "BattleFill.kind=objectTargetChoice",
       "owner": "battle-state",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing fill kind identifies target selection for spell Attack resolution."
+      "derivability": { "tag": "canonical-source" },
+      "notes": "Existing object-target fill carries the table-supplied range, Armor Class, Hit Point, and spatial facts at the object boundary."
     },
     {
       "fieldPath": "BattleFill.kind=attackRoll",
       "owner": "battle-state",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing fill kind identifies the spell Attack Roll outcome."
+      "derivability": { "tag": "canonical-source" },
+      "notes": "Existing Attack Roll fill owns object-target spell Attack hit or miss progression."
     },
     {
       "fieldPath": "BattleFill.kind=rolledDice",
       "owner": "battle-state",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing fill kind identifies hit-gated damage dice for spell Attack damage."
+      "derivability": { "tag": "canonical-source" },
+      "notes": "Existing rolled-dice fill owns hit-gated object damage input."
     },
     {
-      "fieldPath": "BattleFill.kind=damageTypeChoice",
+      "fieldPath": "BattleResolutionResult.objectDamages",
       "owner": "battle-state",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing fill kind identifies the typed damage-type choice frontier for generic typed spell Attack damage."
+      "derivability": { "tag": "canonical-source" },
+      "notes": "Existing object damage outcomes own prior/next object Hit Points, effective damage, and destroyed status."
     },
     {
-      "fieldPath": "BattleCreatureState.hp",
+      "fieldPath": "BattleState light emitters",
       "owner": "battle-state",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing creature state owns target Hit Point damage after a hit and damage dice fill."
+      "derivability": { "tag": "canonical-source" },
+      "notes": "Existing light-emitter state owns Starry Wisp object reveal Dim Light and Invisible-benefit denial projection."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=spellAttackProcedure",
+      "fieldPath": "AvailableBattleAct.routeEvents.subject=spellAttackProcedure",
       "owner": "executable-boundary-projection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject.actionSpell.invocation.procedure",
+        "sourceField": "AvailableBattleAct.initialHoles",
+        "boundary": "discoverBattleActs public reducer result"
+      },
+      "notes": "Spell attack discovery route subject is derived from typed spell Attack procedure availability and public initial holes; object-target discovery remains on this existing public subject."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.subject=objectTargetSpellAttack",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleFill.kind=objectTargetChoice",
         "boundary": "battle reducer route event"
       },
-      "notes": "Route subject is derived from the typed spell Attack procedure, not selected spell identity."
-    },
-    {
-      "fieldPath": "BattleReducerRouteEvent.owner=battleActionEconomy",
-      "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "AvailableBattleAct.subject.invocation",
-        "boundary": "discoverBattleActs route event"
-      },
-      "notes": "Discovery owner is derived from action spell availability and current turn action economy."
+      "notes": "Resolution route subject is derived from object-target spell attack fill shape, not authored spell identity."
     },
     {
       "fieldPath": "BattleReducerRouteEvent.owner=battleObjectTargetBoundary",
@@ -133,21 +94,10 @@
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "AvailableBattleAct.initialHoles.kind=objectTargetChoice",
-        "boundary": "discoverBattleActs route event"
+        "sourceField": "BattleFill.kind=objectTargetChoice | BattleFill.kind=rolledDice",
+        "boundary": "battle reducer route event"
       },
-      "notes": "Object-target-boundary discovery is derived from the public act hole shape for spell Attacks that can target objects."
-    },
-    {
-      "fieldPath": "BattleReducerRouteEvent.owner=battleTargetSelection",
-      "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleFill.kind=targetChoice",
-        "boundary": "resolveBattleSubject route event"
-      },
-      "notes": "Target-choice fills route to the battle target-selection owner."
+      "notes": "Object-target boundary ownership is derived from object-target admission and object damage frontier facts."
     },
     {
       "fieldPath": "BattleReducerRouteEvent.owner=battleAttackRoll",
@@ -156,31 +106,20 @@
       "derivability": {
         "tag": "stored-executable-boundary-projection",
         "sourceField": "BattleFill.kind=attackRoll",
-        "boundary": "resolveBattleSubject route event"
+        "boundary": "battle reducer route event"
       },
-      "notes": "Attack Roll fills route to the battle Attack Roll owner."
+      "notes": "Attack Roll ownership is derived from the submitted Attack Roll fill."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.owner=battleSpellAttackProcedure",
+      "fieldPath": "BattleReducerRouteEvent.owner=battleActiveEffect",
       "owner": "executable-boundary-projection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleFill.kind=damageTypeChoice",
-        "boundary": "resolveBattleSubject route event"
+        "sourceField": "BattleState light emitters",
+        "boundary": "battle reducer route event"
       },
-      "notes": "Damage-type choice fills route to the spell Attack procedure owner."
-    },
-    {
-      "fieldPath": "BattleReducerRouteEvent.owner=battleHitPoint",
-      "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleFill.kind=rolledDice",
-        "boundary": "resolveBattleSubject route event"
-      },
-      "notes": "Damage dice fills route to the Hit Point owner when damage is applied."
+      "notes": "Reveal-light admission ownership is derived from an added objectInvisibleRevealLightEmitter state delta."
     },
     {
       "fieldPath": "BattleReducerRouteEvent.owner=battleHoleFrontier",
@@ -188,15 +127,15 @@
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleResolutionResult.holes",
-        "boundary": "resolveBattleSubject route event"
+        "sourceField": "BattleResolutionResult.reason=staleSubject",
+        "boundary": "battle reducer route event"
       },
-      "notes": "Earlier-frontier requests route to the shared hole-frontier owner."
+      "notes": "Stale replay rejection is derived from the public invalid stale-subject result."
     }
   ],
   "notes": [
-    "Task 55 introduced no new durable BattleState or BattleCreatureState fields.",
-    "Spell Attack ordering evidence is derived from existing action spell invocation, fill, hole frontier, route-event, and Hit Point state.",
-    "Production behavior does not branch on authored spell ids, names, QNT branch action names, fixture labels, or connector filenames."
+    "Task 56 introduced no new durable BattleState fields.",
+    "Object facts remain table-supplied boundary facts carried by objectTargetChoice fills.",
+    "Production route behavior branches on typed spell Attack procedure shape, object-target spell attack fill kind, route result, and light-emitter deltas; it does not branch on authored spell id, name, QNT action names, fixture labels, or connector filenames."
   ]
 }

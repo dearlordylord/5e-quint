@@ -31,6 +31,73 @@ module battleRuntimeStarryWispObjectRouteMbt {
   pure def startRoute: ReducerRouteEvent =
     routeStartBattle(BattleActionEconomyOwner)
 
+  pure def discoverRoute: List[ReducerRouteEvent] =
+    List(
+      routeDiscoverBattleActs(
+        SpellAttackProcedureRouteSubject,
+        Set(TargetChoiceHoleKind),
+        BattleActionEconomyOwner,
+      ),
+      routeDiscoverBattleActs(
+        SpellAttackProcedureRouteSubject,
+        Set(TargetChoiceHoleKind),
+        BattleObjectTargetBoundaryOwner,
+      ),
+    )
+
+  pure def objectTargetBoundaryRoute(
+    holes: Set[BattleHoleFamilyKind],
+  ): List[ReducerRouteEvent] =
+    discoverRoute
+      .append(
+        routeResolveBattleSubjectWithoutFill(
+          ObjectTargetSpellAttackRouteSubject,
+          holes,
+          BattleObjectTargetBoundaryOwner,
+        )
+      )
+
+  pure def objectAttackRollRoute(
+    holes: Set[BattleHoleFamilyKind],
+  ): List[ReducerRouteEvent] =
+    objectTargetBoundaryRoute(Set(AttackRollHoleKind))
+      .append(
+        routeResolveBattleSubject(
+          ObjectTargetSpellAttackRouteSubject,
+          AttackRollFillKind,
+          holes,
+          BattleAttackRollOwner,
+        )
+      )
+
+  pure def objectDamageAndLightRoute: List[ReducerRouteEvent] =
+    objectAttackRollRoute(Set(RolledDiceHoleKind))
+      .append(
+        routeResolveBattleSubject(
+          ObjectTargetSpellAttackRouteSubject,
+          RolledDiceFillKind,
+          Set(),
+          BattleObjectTargetBoundaryOwner,
+        )
+      )
+      .append(
+        routeResolveBattleSubjectWithoutFill(
+          ObjectTargetSpellAttackRouteSubject,
+          Set(),
+          BattleActiveEffectOwner,
+        )
+      )
+
+  pure def objectStaleReplayRoute: List[ReducerRouteEvent] =
+    objectDamageAndLightRoute
+      .append(
+        routeResolveBattleSubjectWithoutFill(
+          ObjectTargetSpellAttackRouteSubject,
+          Set(),
+          BattleHoleFrontierOwner,
+        )
+      )
+
   action recordSurface(
     surface: StarryWispObjectRouteSurface,
     route: List[ReducerRouteEvent],
@@ -45,18 +112,8 @@ module battleRuntimeStarryWispObjectRouteMbt {
     qSurface == FreshObjectRouteSurface,
     recordSurface(
       ObjectTargetBoundaryRouteSurface,
-      List(
-        startRoute,
-        routeDiscoverBattleActs(
-          ObjectTargetSpellAttackRouteSubject,
-          Set(),
-          BattleObjectTargetBoundaryOwner,
-        ),
-        routeResolveBattleSubjectWithoutFill(
-          ObjectTargetSpellAttackRouteSubject,
-          Set(AttackRollHoleKind),
-          BattleObjectTargetBoundaryOwner,
-        ),
+      List(startRoute).concat(
+        objectTargetBoundaryRoute(Set(AttackRollHoleKind))
       ),
     ),
   }
@@ -65,19 +122,7 @@ module battleRuntimeStarryWispObjectRouteMbt {
     qSurface == FreshObjectRouteSurface,
     recordSurface(
       ObjectTargetBoundaryRejectionRouteSurface,
-      List(
-        startRoute,
-        routeDiscoverBattleActs(
-          ObjectTargetSpellAttackRouteSubject,
-          Set(),
-          BattleObjectTargetBoundaryOwner,
-        ),
-        routeResolveBattleSubjectWithoutFill(
-          ObjectTargetSpellAttackRouteSubject,
-          Set(),
-          BattleObjectTargetBoundaryOwner,
-        ),
-      ),
+      List(startRoute).concat(objectTargetBoundaryRoute(Set())),
     ),
   }
 
@@ -85,20 +130,7 @@ module battleRuntimeStarryWispObjectRouteMbt {
     qSurface == FreshObjectRouteSurface,
     recordSurface(
       ObjectAttackMissRouteSurface,
-      List(
-        startRoute,
-        routeDiscoverBattleActs(
-          ObjectTargetSpellAttackRouteSubject,
-          Set(AttackRollHoleKind),
-          BattleAttackRollOwner,
-        ),
-        routeResolveBattleSubject(
-          ObjectTargetSpellAttackRouteSubject,
-          AttackRollFillKind,
-          Set(),
-          BattleAttackRollOwner,
-        ),
-      ),
+      List(startRoute).concat(objectAttackRollRoute(Set())),
     ),
   }
 
@@ -106,20 +138,7 @@ module battleRuntimeStarryWispObjectRouteMbt {
     qSurface == FreshObjectRouteSurface,
     recordSurface(
       ObjectAttackHitRouteSurface,
-      List(
-        startRoute,
-        routeDiscoverBattleActs(
-          ObjectTargetSpellAttackRouteSubject,
-          Set(AttackRollHoleKind),
-          BattleAttackRollOwner,
-        ),
-        routeResolveBattleSubject(
-          ObjectTargetSpellAttackRouteSubject,
-          AttackRollFillKind,
-          Set(RolledDiceHoleKind),
-          BattleAttackRollOwner,
-        ),
-      ),
+      List(startRoute).concat(objectAttackRollRoute(Set(RolledDiceHoleKind))),
     ),
   }
 
@@ -127,25 +146,7 @@ module battleRuntimeStarryWispObjectRouteMbt {
     qSurface == FreshObjectRouteSurface,
     recordSurface(
       ObjectDamageAndLightRouteSurface,
-      List(
-        startRoute,
-        routeDiscoverBattleActs(
-          ObjectTargetSpellAttackRouteSubject,
-          Set(RolledDiceHoleKind),
-          BattleObjectTargetBoundaryOwner,
-        ),
-        routeResolveBattleSubject(
-          ObjectTargetSpellAttackRouteSubject,
-          RolledDiceFillKind,
-          Set(),
-          BattleObjectTargetBoundaryOwner,
-        ),
-        routeResolveBattleSubjectWithoutFill(
-          ObjectTargetSpellAttackRouteSubject,
-          Set(),
-          BattleActiveEffectOwner,
-        ),
-      ),
+      List(startRoute).concat(objectDamageAndLightRoute),
     ),
   }
 
@@ -153,51 +154,7 @@ module battleRuntimeStarryWispObjectRouteMbt {
     qSurface == FreshObjectRouteSurface,
     recordSurface(
       ObjectStaleReplayRouteSurface,
-      List(
-        startRoute,
-        routeDiscoverBattleActs(
-          ObjectTargetSpellAttackRouteSubject,
-          Set(),
-          BattleObjectTargetBoundaryOwner,
-        ),
-        routeResolveBattleSubjectWithoutFill(
-          ObjectTargetSpellAttackRouteSubject,
-          Set(AttackRollHoleKind),
-          BattleObjectTargetBoundaryOwner,
-        ),
-        routeDiscoverBattleActs(
-          ObjectTargetSpellAttackRouteSubject,
-          Set(AttackRollHoleKind),
-          BattleAttackRollOwner,
-        ),
-        routeResolveBattleSubject(
-          ObjectTargetSpellAttackRouteSubject,
-          AttackRollFillKind,
-          Set(RolledDiceHoleKind),
-          BattleAttackRollOwner,
-        ),
-        routeDiscoverBattleActs(
-          ObjectTargetSpellAttackRouteSubject,
-          Set(RolledDiceHoleKind),
-          BattleObjectTargetBoundaryOwner,
-        ),
-        routeResolveBattleSubject(
-          ObjectTargetSpellAttackRouteSubject,
-          RolledDiceFillKind,
-          Set(),
-          BattleObjectTargetBoundaryOwner,
-        ),
-        routeResolveBattleSubjectWithoutFill(
-          ObjectTargetSpellAttackRouteSubject,
-          Set(),
-          BattleActiveEffectOwner,
-        ),
-        routeResolveBattleSubjectWithoutFill(
-          ObjectTargetSpellAttackRouteSubject,
-          Set(),
-          BattleHoleFrontierOwner,
-        ),
-      ),
+      List(startRoute).concat(objectStaleReplayRoute),
     ),
   }
 

@@ -46,6 +46,7 @@ import {
   spellTurnStartSavingThrowOutcomeHoleId,
 } from "./turn-end-movement.ts";
 import { activeDruidWildShapeEffect } from "./druid-wild-shape.ts";
+import { battleLightEmitters } from "./spells-active-effects.ts";
 import {
   activeOngoingFeatureOccurrencesForCombatant,
   isCharacterBattleCreatureState,
@@ -112,6 +113,7 @@ export type BattleReducerRouteSubjectFamily =
   | "companionTouchDelivery"
   | "companionReactionAttack"
   | "slotSpell"
+  | "objectTargetSpellAttack"
   | "spellAttackProcedure"
   | "weaponAttack"
   | "weaponMasteryProperty"
@@ -1252,6 +1254,13 @@ function spellAttackProcedureRouteForResolution(
   ) {
     return undefined;
   }
+  const objectTargetRoute = objectTargetSpellAttackRouteForResolution(
+    input,
+    result,
+  );
+  if (objectTargetRoute !== undefined) {
+    return objectTargetRoute;
+  }
   if (result.tag === "invalid") {
     if (result.reason === "staleSubject") {
       return [
@@ -1302,6 +1311,103 @@ function spellAttackProcedureRouteForResolution(
     ...spellAttackHitActiveEffectAdmissionRouteForResolution(input, result),
     ...zeroHitPointSpellEffectTeardownRouteForResolution(input, fill, result),
   ];
+}
+
+function objectTargetSpellAttackRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  const fill = input.fills.at(-1);
+  if (fill === undefined) {
+    return undefined;
+  }
+  const hasObjectTarget = input.fills.some(
+    (candidate) => battleFillKind(candidate) === "objectTargetChoice",
+  );
+  const fillKind = battleFillKind(fill);
+  if (fillKind === "objectTargetChoice") {
+    return [
+      {
+        kind: "resolveBattleSubjectWithoutFill",
+        subject: "objectTargetSpellAttack",
+        holes:
+          result.tag === "needsHoles"
+            ? battleReducerRouteHoles(result.holes)
+            : [],
+        owner: "battleObjectTargetBoundary",
+      },
+    ];
+  }
+  if (!hasObjectTarget) {
+    return undefined;
+  }
+  if (result.tag === "invalid") {
+    return result.reason === "staleSubject"
+      ? [
+          {
+            kind: "resolveBattleSubjectWithoutFill",
+            subject: "objectTargetSpellAttack",
+            holes: [],
+            owner: "battleHoleFrontier",
+          },
+        ]
+      : undefined;
+  }
+  if (fillKind === "attackRoll") {
+    return [
+      {
+        kind: "resolveBattleSubject",
+        subject: "objectTargetSpellAttack",
+        fill: "attackRoll",
+        holes:
+          result.tag === "needsHoles"
+            ? battleReducerRouteHoles(result.holes)
+            : [],
+        owner: "battleAttackRoll",
+      },
+    ];
+  }
+  if (fillKind !== "rolledDice") {
+    return undefined;
+  }
+  const route: BattleReducerRouteEvent[] = [
+    {
+      kind: "resolveBattleSubject",
+      subject: "objectTargetSpellAttack",
+      fill: "rolledDice",
+      holes:
+        result.tag === "needsHoles"
+          ? battleReducerRouteHoles(result.holes)
+          : [],
+      owner: "battleObjectTargetBoundary",
+    },
+  ];
+  if (
+    result.tag === "resolved" &&
+    objectInvisibleRevealLightEmitterWasAdded(input.state, result.state)
+  ) {
+    route.push({
+      kind: "resolveBattleSubjectWithoutFill",
+      subject: "objectTargetSpellAttack",
+      holes: [],
+      owner: "battleActiveEffect",
+    });
+  }
+  return nonEmptyRouteEvents(route);
+}
+
+function objectInvisibleRevealLightEmitterWasAdded(
+  before: BattleState,
+  after: BattleState,
+): boolean {
+  const beforeCount = battleLightEmitters(before).filter(
+    (emitter) => emitter.kind === "objectInvisibleRevealLightEmitter",
+  ).length;
+  return (
+    battleLightEmitters(after).filter(
+      (emitter) => emitter.kind === "objectInvisibleRevealLightEmitter",
+    ).length > beforeCount
+  );
 }
 
 function passiveDamageAdjustmentRouteForSpellDamageResolution(
