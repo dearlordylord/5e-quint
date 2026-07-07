@@ -199,7 +199,7 @@
     {
       "number": 33,
       "id": "CRPI-BLOCK-022",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-reaction-spell-selected-identity"
     },
     {
@@ -635,9 +635,9 @@ This is the executable follow-on Ralph queue produced by `CRP-09-CLOSEOUT-EXPAND
 - Backlog denominator rows: 101.
 - Route classes: reducer-routed 75, catalog-after-substrate 15, replay-refresh-only 1, component-first 10.
 - Generated queue tasks: 103.
-- Runnable tasks: 27.
+- Runnable tasks: 26.
 - Blocked tasks: 4.
-- Queue statuses: done 72, ready-for-research 27, blocked 4.
+- Queue statuses: done 73, ready-for-research 26, blocked 4.
 
 The final queue has more tasks than the provisional nine-task bootstrap because the provisional plan was a bootstrap program, not the implementation denominator. The 107 backlog rows map into 103 Ralph tasks because the character-creation full vertical row intentionally splits into three fill-batch tasks while other related rows are grouped by owner/package task shape. The former `owner-todo` rows have been resolved into durable-owner runnable tasks where current route inventory and source evidence are sufficient; the remaining blocked rows are explicit source-corpus or replay-refresh blockers.
 
@@ -685,7 +685,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRPI-BLOCK-021` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-READY-006` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-READY-007` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-022` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-022` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-023` | `blocked` | blocked by task body | blocker resolution before implementation |
 | `CRPI-READY-008` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-024` | `ready-for-research` | none | target replay evidence and owner implementation |
@@ -2651,11 +2651,11 @@ Verification:
 
 Plan Impact:
 
-`none` unless implementation discovers a durable source, owner, route, blocker, or verification change that should update this queue.
+`applied`: Task 33 superseded the Hellish Rebuke after-damage generic `reactionSpell` route evidence with the `reactionAfterDamageEffect` payload-taxonomy route. The CRPI-READY-007 history and evidence were refreshed in Task 33; no follow-up task is required.
 
 ### Task 33 - CRPI-BLOCK-022
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
@@ -2706,7 +2706,7 @@ Verification:
 
 Plan Impact:
 
-`applied`: owner-decision blocker resolved from reducer route inventory derivability facts, QNT route connector owner evidence, RAW/domain language, and reducer-route owner vocabulary. This task is now runnable and still must produce its own copied `qRoute` versus public target replay evidence.
+`applied`: owner-decision blocker resolved from reducer route inventory derivability facts, QNT route connector owner evidence, RAW/domain language, and reducer-route owner vocabulary. Task 33 produced copied `qRoute` versus public target replay evidence for Shield armor-class, Hellish Rebuke after-damage, and Counterspell spell-interruption payload routes. The implementation also refreshed CRPI-READY-007 Hellish Rebuke evidence to the same `reactionAfterDamageEffect` payload-taxonomy route, so no separate follow-up task is required.
 
 ### Task 34 - CRPI-BLOCK-023
 

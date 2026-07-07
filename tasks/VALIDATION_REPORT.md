@@ -1,5 +1,47 @@
 # Validation Report
 
+## CRPI-BLOCK-022
+
+Status: `pass`
+
+- Task: 33
+- Driver path: `packages/battle-runtime/battle-runtime-reaction-spell-selected-identity.mbt.qnt`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-022.json`
+
+Task 33 records public reducer qRoute evidence for the Reaction spell selected-identity driver as a `reducer-routed` task. The selected replay binds SRD spell identity at the replay/admission boundary; route evidence is observed from generic `reactionArmorClassEffect`, `reactionAfterDamageEffect`, and `reactionSpellInterruption` subjects derived from typed trigger/procedure/payload facts.
+
+Current public qRoute coverage:
+
+- Covered: `battle-runtime-reaction-interrupt-payload-taxonomy.route.mbt.qnt` through public Shield attack-hit Reaction, Hellish Rebuke after-damage Reaction, Counterspell failed-save interruption, and Counterspell successful-save spell resume replay in `packages/battle-runtime/src/reaction-spell-selected-identity.mbt.test.ts`.
+- Remaining required public qRoute coverage: none.
+
+Task 33 fixed the production route projection needed for public evidence: `packages/battle-runtime/src/battle-reducer/reducer-route.ts` now derives Reaction payload taxonomy route subjects from existing interrupt checkpoint trigger facts plus selected Reaction spell invocation procedure facts. No durable `BattleState` field was added, and production code does not dispatch on selected spell ids or names.
+
+Verification results:
+
+- Task-base check passed: base ref and HEAD both resolved to `7383c481b Complete Task 30 movement route replay`; Base SHA is an ancestor of HEAD.
+- RAW/ubiquitous-language review passed for local SRD 5.2.1 Reactions, Reaction spell casting-time triggers, Spell Slots, Saving Throws, Damage Rolls, Armor Class, Shield, Hellish Rebuke, Counterspell, and `UBIQUITOUS_LANGUAGE.md` Reaction, Spell Effect, Spell Slot, Saving Throw, Damage Roll, Armor Class, Offer, Decline, and Advance terms.
+- `pnpm --filter @dnd/battle-runtime typecheck` passed.
+- `pnpm --filter @dnd/battle-runtime exec vitest run src/reaction-spell-selected-identity.mbt.test.ts -t "compares reaction payload"` passed: 1 file passed; 1 test passed, 1 skipped; TOTAL: 13s. Shield, Hellish Rebuke, Counterspell interruption ended, and Counterspell interruption resumed routes were decoded from copied connector qRoute and compared with public reducer routeEvents.
+- Revision round 2 Feather Fall regression check passed: `pnpm --filter @dnd/battle-runtime exec vitest run src/level1-spatial-witness-selected-identity.mbt.test.ts -t "public reducer route replay"` passed: 1 file passed; 2 tests passed, 1 skipped.
+- MBT preflight matched only an unrelated Ralph monitor shell command text; no active Vitest runner and no stale `quint_evaluator` were present.
+- Revision round 5 focused qRoute replay passed: `pnpm --filter @dnd/battle-runtime exec vitest run src/reaction-casting-time.mbt.test.ts src/reaction-interrupt-routes.mbt.test.ts src/reaction-spell-selected-identity.mbt.test.ts -t "observes the copied Hellish Rebuke qRoute|routes Reaction casting time through explicit battle owners|compares reaction payload"` passed: 3 files passed; 3 tests passed, 8 skipped; TOTAL: 13s.
+- Required route connector MBT passed: `MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/battle-runtime exec vitest run src/reaction-interrupt-routes.mbt.test.ts -t "routes reaction payload taxonomy through generic trigger families and owners"` passed: 1 file passed; 1 test passed, 5 skipped; TOTAL: 6s.
+- Required selected identity MBT passed: `MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/battle-runtime exec vitest run src/reaction-spell-selected-identity.mbt.test.ts -t "replays deterministic QNT parity"` passed: 1 file passed; 1 test passed, 1 skipped; TOTAL: 5s.
+- `pnpm cleanroom-branch-coverage:check` passed with Task 33 evidence: 738 obligations, 24 sampled inputs.
+- `git diff --check` passed.
+- `pnpm quality` passed end to end; app lint reported existing warnings and exited 0; turbo typecheck completed 9 successful tasks, 5 from cache.
+
+Reviewer-loop status:
+
+- Round 1 fixed the missing public route projection for selected Reaction spell payload taxonomy. The route mapper derives subjects from typed trigger/procedure facts and reuses existing interrupt-stack, spell-slot/action-economy, active-effect, Armor Class, Saving Throw, and Hit Point owners. No new durable state was added, and selected spell identity remains outside production dispatch.
+- Revision round 2 fixed the reviewer-found Feather Fall route regression by scoping payload taxonomy route subjects to the Task 33 selected Shield, Hellish Rebuke, and Counterspell branches. Feather Fall remains on the accepted generic `reactionSpell` casting-time route and landing-owned fall mitigation route.
+- Revision round 3 fixed the reviewer-found Counterspell connector mismatch by comparing public reducer routeEvents against copied `SpellInterruptionEndedRouteSurface` and `SpellInterruptionResumedRouteSurface` qRoute. Resumed Counterspell now leaves the Magic Missile `rolledDice` hole after the save fill and routes resumed spell damage as `slotSpell` before interrupt-stack cleanup.
+- Revision round 4 fixed the reviewer-found Shield and Hellish Rebuke evidence gap by comparing `ReactionArmorClassEffectRouteSurface` and `AfterDamageSaveDamageRouteSurface` public reducer routeEvents against copied connector qRoute instead of adapter-local expected route literals.
+- Revision round 5 fixed the reviewer-found Task 32 evidence conflict by updating the prior Hellish Rebuke casting-time route connector/evidence to the same `reactionAfterDamageEffect` payload-taxonomy qRoute now emitted by the public reducer.
+- Final reviewer-loop pass found no remaining RAW traceability, ubiquitous-language, architecture/connascence, or code-review findings in the Task 33 diff after the round 5 copied qRoute comparison and prior-evidence refresh.
+
 ## CRPI-BLOCK-021
 
 Status: `pass`
@@ -4730,10 +4772,11 @@ through public battle reducer route events for the in-scope Hellish Rebuke
 after-damage branch. The target route begins with `battleReducerStartRouteEvent`,
 opens the after-damage Reaction spell window through public
 `resolveBattleSubject` route events, and resolves the chosen triggered Reaction
-spell through public `resolveBattleInterrupt` route events. The interrupt route
-projection now uses the `reactionSpell` route subject for spell-cast and
-after-damage triggered Reaction spell windows, while retaining the existing
-interrupt-stack resume subject for unrelated interrupt-resume surfaces.
+spell through public `resolveBattleInterrupt` plus nested save/damage route
+events. The Hellish Rebuke after-damage route was superseded by Task 33's
+payload-taxonomy route and now uses the `reactionAfterDamageEffect` subject;
+spell-cast Counterspell branches in this connector retain the existing generic
+`reactionSpell` route subject.
 
 The runtime does not add a parallel Reaction casting-time ledger: Reaction
 availability remains `BattleCreatureState.reactionAvailable`, Reaction Spell
@@ -4788,6 +4831,7 @@ Verification results:
   no actual Vitest runner. `ps aux | grep quint_evaluator | grep -v grep` only
   matched the same Ralph monitor command and no active evaluator.
 - `cd packages/battle-runtime && START=$(date +%s); MBT_TRACES=1 MBT_STEPS=1 pnpm exec vitest run src/reaction-casting-time.mbt.test.ts src/reaction-interrupt-routes.mbt.test.ts -t "Reaction casting time|Reaction casting route|Hellish Rebuke qRoute" 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"` passed with 5 tests and 4 skipped; final timed run `TOTAL: 6s`.
+- Task 33 revision round 5 refreshed this evidence after the Hellish Rebuke route was superseded by the payload-taxonomy route: `pnpm --filter @dnd/battle-runtime exec vitest run src/reaction-casting-time.mbt.test.ts src/reaction-interrupt-routes.mbt.test.ts src/reaction-spell-selected-identity.mbt.test.ts -t "observes the copied Hellish Rebuke qRoute|routes Reaction casting time through explicit battle owners|compares reaction payload"` passed with 3 tests and 8 skipped; final timed run `TOTAL: 13s`.
 - `pnpm cleanroom-branch-coverage:check` passed.
 - `git diff --check` passed.
 - Reviewer-loop convergence passed: round 1 found public route projection was too generic (`interruptStackResume`) for the copied Reaction casting-time connector; implementation moved the route subject and owner sequence into production public route events. Round 2 found no remaining reasonable RAW/domain, architecture/connascence, or code-review findings.

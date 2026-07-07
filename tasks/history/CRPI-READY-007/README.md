@@ -17,7 +17,11 @@ Reaction casting-time branch for
 `packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt`.
 Replay observes the copied `qRoute` projection through public reducer route
 events produced from `battleReducerStartRouteEvent`,
-`resolveBattleSubject`, and `resolveBattleInterrupt`. The Counterspell
-branches in the copied driver remain out of scope for this run because
+`resolveBattleSubject`, and `resolveBattleInterrupt`. Task 33 later superseded
+the Hellish Rebuke generic `reactionSpell` route with the
+`reactionAfterDamageEffect` payload-taxonomy route; this history and evidence
+were refreshed in that same worktree so the copied connector and public reducer
+route remain consistent. The Counterspell branches in the copied driver remain
+out of scope for this run because
 `plans/cleanroom-branch-coverage/branch-scope.jsonl` marks them out of scope as
 level-3 spell branches.

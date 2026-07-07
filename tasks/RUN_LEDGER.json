@@ -4,6 +4,137 @@
   "sourceBranchInventorySha256": "8c856409a423a320bf05e4b4a927e76b1902af823ba01f2b5a928f867a6a6be6",
   "entries": [
     {
+      "taskId": "CRPI-BLOCK-022",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-reaction-spell-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "8c856409a423a320bf05e4b4a927e76b1902af823ba01f2b5a928f867a6a6be6",
+      "artifacts": {
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "5a3308045a58c010d600482a5130a980e238e36613cc3839c9e740b452c45d17"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-BLOCK-022/README.md",
+          "sha256": "28c67c098f4a29c8604a994578cd6bb3f9927f69e8efbfafdde3f11f037af62b"
+        },
+        "engineDepthManifest": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "15d44bae1371697404c3ef8d4407c7b260d683b6ba9bc31ef4a896377d8ab489"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "5936917c9a8ee29e11e4759d20d34d22b0a2c0dd770d2125f12368096f7c85d0"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-022.json",
+          "sha256": "792b61f2c2ff775e71af4308b228f126960ecfb8b767cbe1b1e11c39431c3d03",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-022.json#publicQRouteCoverage:reaction-spell-selected-identity"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-owner-battle-spell-20260706T213644Z/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor 7383c481b37a2d5a880b7ca7200b509bc33d8317 HEAD",
+          "status": "pass",
+          "detail": "Base ref and HEAD both resolved to 7383c481b Complete Task 30 movement route replay; Base SHA is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language review: local SRD 5.2.1 Playing the Game Reactions, Armor Class, Damage Rolls, Gaining and Casting Casting Time/Reaction triggers/Spell Slots/Saving Throws, Shield, Hellish Rebuke, Counterspell, and UBIQUITOUS_LANGUAGE.md Reaction, Spell Effect, Spell Slot, Saving Throw, Damage Roll, Armor Class, Offer, Decline, and Advance terms",
+          "status": "pass",
+          "detail": "Checked local SRD and ubiquitous-language terms. Route evidence is derived from typed trigger/procedure/payload facts and public reducer state, not selected spell authored identity."
+        },
+        {
+          "command": "artifact/connector consistency check: packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt#doHellishRebukeAfterDamage, packages/battle-runtime/src/reaction-casting-time.mbt.test.ts#hellishRebukeAfterDamageExpectedRoute, packages/battle-runtime/src/reaction-interrupt-routes.mbt.test.ts#hellishRebukeAfterDamageRouteState, tasks/target-replay-evidence/CRPI-READY-007.json",
+          "status": "pass",
+          "detail": "Revision round 5 refreshed the prior CRPI-READY-007 Hellish Rebuke qRoute evidence to the reactionAfterDamageEffect payload-taxonomy route. Updated connector SHA is ecea41e2ef6c137af617ba634b64965a21d28bf84358383d6fbcc450ac1282fa and updated route projection SHA is 50f195639cc9dfb4d0120cbe9a021d60c03adc5fa099d4e3d0b43e45a2594c7a."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime typecheck",
+          "status": "pass",
+          "detail": "Battle runtime TypeScript check passed after adding reaction payload taxonomy routing and selected public replay assertions."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec vitest run src/reaction-spell-selected-identity.mbt.test.ts -t \"compares reaction payload\"",
+          "status": "pass",
+          "detail": "Revision round 4 public route replay passed: 1 file passed; 1 test passed, 1 skipped; TOTAL: 13s. Shield, Hellish Rebuke, Counterspell interruption ended, and Counterspell interruption resumed routes were decoded from copied connector qRoute and compared with public reducer routeEvents."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec vitest run src/level1-spatial-witness-selected-identity.mbt.test.ts -t \"public reducer route replay\"",
+          "status": "pass",
+          "detail": "Revision round 2 regression check passed: Feather Fall public route replay kept the accepted generic reactionSpell interrupt route and landing-owned fall mitigation route; 1 file passed, 2 tests passed, 1 skipped."
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Required MBT preflight matched only an unrelated Ralph monitor shell command text; no active Vitest runner or stale quint_evaluator was present before focused MBT runs."
+        },
+        {
+          "command": "START=$(date +%s); pnpm --filter @dnd/battle-runtime exec vitest run src/reaction-casting-time.mbt.test.ts src/reaction-interrupt-routes.mbt.test.ts src/reaction-spell-selected-identity.mbt.test.ts -t \"observes the copied Hellish Rebuke qRoute|routes Reaction casting time through explicit battle owners|compares reaction payload\" 2>&1; STATUS=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$STATUS\"",
+          "status": "pass",
+          "detail": "Revision round 5 focused qRoute replay passed: 3 files passed; 3 tests passed, 8 skipped; TOTAL: 13s. This covered the refreshed CRPI-READY-007 casting-time connector route and the Task 33 copied reaction payload qRoute replay."
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/battle-runtime exec vitest run src/reaction-interrupt-routes.mbt.test.ts -t \"routes reaction payload taxonomy through generic trigger families and owners\" 2>&1; STATUS=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$STATUS\"",
+          "status": "pass",
+          "detail": "Required route connector MBT passed: 1 file passed; 1 test passed, 5 skipped; TOTAL: 6s."
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/battle-runtime exec vitest run src/reaction-spell-selected-identity.mbt.test.ts -t \"replays deterministic QNT parity\" 2>&1; STATUS=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$STATUS\"",
+          "status": "pass",
+          "detail": "Required selected identity MBT passed: 1 file passed; 1 test passed, 1 skipped; TOTAL: 5s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "Cleanroom branch coverage passed with Task 33 evidence: 738 obligations, 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass",
+          "detail": "Whitespace check passed."
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "Full quality chain passed. App lint reported existing warnings and exited 0; turbo typecheck completed 9 successful tasks, 5 from cache."
+        }
+      ],
+      "planImpact": {
+        "status": "update-required",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-022",
+            "impact": "unblocked"
+          },
+          {
+            "taskId": "CRPI-READY-007",
+            "impact": "revised"
+          },
+          {
+            "taskId": "future Reaction payload selected-identity or interruption tasks",
+            "impact": "left unchanged"
+          }
+        ],
+        "observations": [
+          "Reaction spell selected identity replay now observes public reducer qRoute events for Shield armor-class payload, Hellish Rebuke after-damage save/damage payload, and Counterspell spell-interruption payload.",
+          "Production route projection derives payload taxonomy subjects from typed interrupt trigger and invocation procedure facts; no durable BattleState field or authored spell id production dispatch was needed.",
+          "The selected Counterspell branch remains the level-3 sufficient-slot scenario from the source driver; its public route uses the shared reactionSpellInterruption subject with no Saving Throw hole.",
+          "Revision round 2 kept Feather Fall outside the Task 33 payload taxonomy route subjects so the accepted Task 25 generic reactionSpell casting-time route and landing-owned fall mitigation route remain unchanged.",
+          "Revision round 3 added public reducer qRoute comparison for copied Counterspell SpellInterruptionEndedRouteSurface and SpellInterruptionResumedRouteSurface; resumed spell damage routes as slotSpell with battleHitPoint owner before reactionSpellInterruption interrupt-stack cleanup.",
+          "Revision round 4 moved Shield ReactionArmorClassEffectRouteSurface and Hellish Rebuke AfterDamageSaveDamageRouteSurface into the same copied connector qRoute comparison path, removing adapter-local route literals from the acceptance test.",
+          "Revision round 5 revised the prior CRPI-READY-007 Hellish Rebuke casting-time connector/evidence so it no longer claims the superseded generic reactionSpell route and instead records the reactionAfterDamageEffect payload-taxonomy qRoute."
+        ],
+        "requiredPlanEdits": "Record that Task 33 supersedes the CRPI-READY-007 Hellish Rebuke after-damage generic reactionSpell route evidence with the reactionAfterDamageEffect payload-taxonomy route; no new implementation task is required because the copied connector and target evidence were updated in this task."
+      }
+    },
+    {
       "taskId": "CRPI-BLOCK-021",
       "assignmentId": "reducer-spine-diagnostic-battle",
       "laneId": "battle",
@@ -427,7 +558,7 @@
       "targetReplayEvidence": [
         {
           "path": "tasks/target-replay-evidence/CRPI-BLOCK-017.json",
-          "sha256": "814a95024ac93a06468b9c5b86fc073a6fdad11686a1b03cf66a9102769afbbd",
+          "sha256": "197134ca4fd4d0c65c6ae9e86b6f8a8b4094c24fc4e1a14e7069caba8abc7938",
           "evidenceRefs": [
             "tasks/target-replay-evidence/CRPI-BLOCK-017.json#publicQRouteCoverage:level1-spatial-witness-selected-identity",
             "tasks/target-replay-evidence/CRPI-BLOCK-017.json#publicQRouteCoverage:save-gated-spell-ordering",
@@ -2733,17 +2864,17 @@
         },
         "stateOwnerManifest": {
           "path": "tasks/STATE_OWNER_MANIFEST.json",
-          "sha256": "a80b4865a5cc7ffbcc240fb9bd323372564a06e080201b7d29488fec32163c13"
+          "sha256": "5936917c9a8ee29e11e4759d20d34d22b0a2c0dd770d2125f12368096f7c85d0"
         },
         "validationReport": {
           "path": "tasks/VALIDATION_REPORT.md",
-          "sha256": "68c81dfb5e798113bc266e906cfc9e1a9c933df11b97fcb0bc236897c265e05a"
+          "sha256": "5a3308045a58c010d600482a5130a980e238e36613cc3839c9e740b452c45d17"
         }
       },
       "targetReplayEvidence": [
         {
           "path": "tasks/target-replay-evidence/CRPI-READY-007.json",
-          "sha256": "deb3a51a9c1540901da737ed3a70d045e2b1ca3de2546d1463e4f09125a2dcdc",
+          "sha256": "46427bd30aa48c85ba749c8296f33d01f9f3a95eec29431439927e5f237f8261",
           "evidenceRefs": [
             "tasks/target-replay-evidence/CRPI-READY-007.json#driver:packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt#step:doHellishRebukeAfterDamage#trace:MBT_TRACES=1 MBT_STEPS=1 action=doHellishRebukeAfterDamage qRoute=hellish-rebuke-after-damage-public-route"
           ]
