@@ -601,6 +601,14 @@ module battleRuntimeSorcererMetamagicRouteMbt {
     ),
   }
 
+  action stepRouteSavingThrowProtectionSaveGatedDamage = any {
+    doRouteSavingThrowProtectionSaveGatedDamage,
+  }
+
+  action stepRouteSavingThrowProtectionNoEffect = any {
+    doRouteSavingThrowProtectionNoEffect,
+  }
+
   action doRouteSavingThrowRollMode = all {
     qStage == Init,
     recordStage(

@@ -19,7 +19,18 @@
 //   Sorcery Points as a Pool, and Spend.
 import { expect, it } from "vitest";
 
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
+import {
+  defineDriver,
+  focusedMbtMaxSteps,
+  MBT_TEST_TIMEOUT_MS,
+  mbtSpecPath,
+  reducerRoutedMetamagicStateCheck,
+  run,
+} from "./battle-runtime-mbt-driver-kit.ts";
+import {
+  battleReducerStartRouteEvent,
+  type BattleReducerRouteEvent,
+} from "./index.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
   observeCarefulCommandNoEffectRoute,
@@ -29,6 +40,18 @@ import {
   resolveCarefulBurningHands,
   resolveCarefulCommand,
 } from "./sorcerer-metamagic-selected-identity-support.ts";
+
+const carefulMetamagicRouteReplayDriverSchema = {
+  init: {},
+  doRouteSavingThrowProtectionSaveGatedDamage: {},
+  stepRouteSavingThrowProtectionSaveGatedDamage: {},
+  doRouteSavingThrowProtectionNoEffect: {},
+  stepRouteSavingThrowProtectionNoEffect: {},
+} as const;
+
+type CarefulMetamagicRouteReplayProjection = {
+  readonly route: readonly BattleReducerRouteEvent[];
+};
 
 defineSelectedIdentityReplayAndQntReplay({
   describeLabel: "Sorcerer Metamagic Careful Spell selected identity replay",
@@ -87,6 +110,84 @@ defineSelectedIdentityReplayAndQntReplay({
     },
   ],
 });
+
+it(
+  "compares Careful Spell save-gated damage public reducer route to copied qRoute",
+  async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "stepRouteSavingThrowProtectionSaveGatedDamage",
+      driver: createCarefulMetamagicRouteReplayDriver(),
+      backend: "typescript",
+      nTraces: 1,
+      maxSteps: focusedMbtMaxSteps(1),
+      stateCheck: reducerRoutedMetamagicStateCheck,
+    });
+  },
+  MBT_TEST_TIMEOUT_MS,
+);
+
+it(
+  "compares Careful Command no-effect public reducer route to copied qRoute",
+  async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-sorcerer-metamagic.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "stepRouteSavingThrowProtectionNoEffect",
+      driver: createCarefulMetamagicRouteReplayDriver(),
+      backend: "typescript",
+      nTraces: 1,
+      maxSteps: focusedMbtMaxSteps(1),
+      stateCheck: reducerRoutedMetamagicStateCheck,
+    });
+  },
+  MBT_TEST_TIMEOUT_MS,
+);
+
+function createCarefulMetamagicRouteReplayDriver() {
+  return defineDriver(carefulMetamagicRouteReplayDriverSchema, () => {
+    let route: readonly BattleReducerRouteEvent[] =
+      observeCarefulMetamagicInitialRoute();
+
+    function reset(): void {
+      route = observeCarefulMetamagicInitialRoute();
+    }
+
+    function recordSaveGatedDamageRoute(): void {
+      route = observeCarefulSavingThrowProtectionRoute(
+        carefulSorcererMetamagicBattle(),
+      );
+    }
+
+    function recordNoEffectRoute(): void {
+      route = observeCarefulCommandNoEffectRoute(
+        carefulSorcererMetamagicBattle(),
+      );
+    }
+
+    reset();
+
+    return {
+      init: reset,
+      doRouteSavingThrowProtectionSaveGatedDamage: recordSaveGatedDamageRoute,
+      stepRouteSavingThrowProtectionSaveGatedDamage: recordSaveGatedDamageRoute,
+      doRouteSavingThrowProtectionNoEffect: recordNoEffectRoute,
+      stepRouteSavingThrowProtectionNoEffect: recordNoEffectRoute,
+      getState: (): CarefulMetamagicRouteReplayProjection => ({ route }),
+    };
+  });
+}
+
+function observeCarefulMetamagicInitialRoute() {
+  return [battleReducerStartRouteEvent()] as const;
+}
 
 it("observes Careful Spell save-protection route through public reducer entrypoints", () => {
   expect(
