@@ -164,17 +164,17 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Battle Hole Frontier
 
-- Total classified rows: 167
+- Total classified rows: 171
 
 | Subject | Count |
 | --- | ---: |
-| battle-hole-family | 82 |
-| battle-fill-kind | 48 |
-| battle-subject-kind | 37 |
+| battle-hole-family | 84 |
+| battle-fill-kind | 49 |
+| battle-subject-kind | 38 |
 
 | Classification | Count |
 | --- | ---: |
-| semantic-frontier | 136 |
+| semantic-frontier | 140 |
 | deterministic-boundary-projection | 0 |
 | table-owned-fact | 31 |
 | unsupported-dead-branch | 0 |
@@ -346,8 +346,12 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | battle-subject-kind | `runtimeAltitudeControl` | `runtimeAltitudeControl` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
 | battle-subject-kind | `runtimeAreaEffect` | `runtimeAreaEffect` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
 | battle-hole-family | `BattleToolPossessionFactsHole` | `toolPossessionFacts` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-hole-family | `BattleCreatureAttackRollHole` | `attackRoll` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-hole-family | `BattleCreatureAttackDamageRollHole` | `rolledDice` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-fill-kind | `creatureAttackZeroDamage` | `creatureAttackZeroDamage` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
 | battle-hole-family | `BattleUnitFeatureConditionEndTurnSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` | _none_ |
 | battle-fill-kind | `toolPossessionFacts` | `toolPossessionFacts` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-subject-kind | `creatureAttack` | `creatureAttack` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
 
 ## QNT Owner Roles
 

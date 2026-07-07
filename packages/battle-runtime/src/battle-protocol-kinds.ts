@@ -39,6 +39,10 @@ export function battleFillKind(fill: BattleFill): BattleFillKind {
         () => "concentrationSavingThrow" as const,
       ),
       byBattleFillKind("conditionChoice", () => "conditionChoice" as const),
+      byBattleFillKind(
+        "creatureAttackZeroDamage",
+        () => "creatureAttackZeroDamage" as const,
+      ),
       byBattleFillKind("damageTypeChoice", () => "damageTypeChoice" as const),
       byBattleFillKind(
         "dancingLightsPlacement",
@@ -175,6 +179,7 @@ export function battleSubjectKind(subject: BattleSubject) {
         "pactOfTheChainFamiliarAttack",
         () => "companionAttack" as const,
       ),
+      byBattleSubjectTag("creatureAttack", () => "creatureAttack" as const),
       byBattleSubjectTag("bonusAction", bonusActionSubjectKind),
       byBattleSubjectTag(
         "bonusActionStandardAction",

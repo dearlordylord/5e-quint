@@ -25,6 +25,7 @@ module battleRuntimeSubjectKinds {
     | FeatureAttackSubjectKind
     | ActionMagicSubjectKind
     | BonusActionMagicSubjectKind
+    | CreatureAttackSubjectKind
     | SpellGrantedMovementSubjectKind
     | FeatureActivationSubjectKind
     | FeatureWeaponActivationSubjectKind

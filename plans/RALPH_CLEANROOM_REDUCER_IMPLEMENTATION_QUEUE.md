@@ -403,7 +403,7 @@
     {
       "number": 67,
       "id": "CRPI-BLOCK-036",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: creature-attack"
     },
     {
@@ -719,7 +719,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRPI-BLOCK-035` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-024` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-025` | `done` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-036` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-036` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-026` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-027` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-028` | `done` | none | target replay evidence and owner implementation |
@@ -4568,7 +4568,7 @@ Plan Impact:
 
 ### Task 67 - CRPI-BLOCK-036
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

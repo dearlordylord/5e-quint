@@ -90,6 +90,16 @@ import { CombatantId, battleReplayStackDepth } from "../identity.ts";
 
 import { currentActorId } from "./creature-state-leaves.ts";
 import {
+  battleStateAfterCreatureAttackDamage,
+  creatureAttackDamageHole,
+  creatureAttackDamageTotal,
+  creatureAttackFillSequence,
+  creatureAttackHit,
+  creatureAttackPilotActor,
+  creatureAttackRollHole,
+  creatureAttackSubjectCombatants,
+} from "./creature-attack.ts";
+import {
   activeLevitatedCreatureEffect,
   levitatedTargetWithinSpellRangeFactPresent,
   levitateAltitudeChangeHole,
@@ -1142,6 +1152,103 @@ export function resolveBattleSubjectInternal(
                 options.pendingAttackDamageAdditions,
             }),
       });
+    }
+    if (subject.tag === "creatureAttack") {
+      const combatants = creatureAttackSubjectCombatants({
+        state: input.state,
+        subject,
+      });
+      if (combatants.tag === "missing") {
+        return invalidResult(
+          input.state,
+          "missingCombatant",
+          `Creature Attack combatant is not in this battle: ${combatants.combatantId}`,
+        );
+      }
+      if (!creatureAttackPilotActor(combatants.actor)) {
+        return invalidResult(
+          input.state,
+          "unsupportedSubject",
+          "Creature Attack is available only for the narrow stat-block no-actions pilot.",
+        );
+      }
+      if (!combatantCanTakeActions(combatants.actor)) {
+        return invalidResult(
+          input.state,
+          "staleSubject",
+          "Creature Attack requires an actor that can take actions.",
+        );
+      }
+      if (!canSpendAction(input.state.currentTurnResources, "attack")) {
+        return invalidResult(
+          input.state,
+          "staleSubject",
+          "Creature Attack requires an available Attack action.",
+        );
+      }
+      const fills = creatureAttackFillSequence({ ...input, subject });
+      if (fills.tag === "invalid") {
+        return invalidResult(input.state, "invalidFill", fills.message);
+      }
+      if (fills.tag === "empty") {
+        return needsHolesResult(input.state, subject, [
+          creatureAttackRollHole(subject),
+        ]);
+      }
+      const hit = creatureAttackHit({
+        target: combatants.target,
+        attackRoll: fills.attackRoll,
+      });
+      if (!hit) {
+        if (fills.tag === "damageRoll") {
+          return invalidResult(
+            input.state,
+            "invalidFill",
+            "Creature Attack damage cannot be supplied after a missed Attack Roll.",
+          );
+        }
+        const spent = spendAction(input.state.currentTurnResources, "attack");
+        if (Either.isLeft(spent)) {
+          return invalidResult(
+            input.state,
+            "staleSubject",
+            "Creature Attack requires an available Attack action.",
+          );
+        }
+        const nextState = {
+          ...input.state,
+          currentTurnResources: spent.right,
+        };
+        return {
+          tag: "resolved" as const,
+          state: nextState,
+          snapshot: snapshotBattle(nextState),
+        };
+      }
+      if (fills.tag === "attackRoll") {
+        return needsHolesResult(input.state, subject, [
+          creatureAttackDamageHole(subject),
+        ]);
+      }
+      const spent = spendAction(input.state.currentTurnResources, "attack");
+      if (Either.isLeft(spent)) {
+        return invalidResult(
+          input.state,
+          "staleSubject",
+          "Creature Attack requires an available Attack action.",
+        );
+      }
+      const nextState = battleStateAfterCreatureAttackDamage({
+        state: { ...input.state, currentTurnResources: spent.right },
+        actor: combatants.actor,
+        target: combatants.target,
+        damage: creatureAttackDamageTotal(fills.damageRoll),
+      });
+      return {
+        tag: "resolved" as const,
+        state: nextState,
+        snapshot: snapshotBattle(nextState),
+      };
     }
     if (subject.tag === "action" && subject.action === "dash") {
       return resolveDash(input);

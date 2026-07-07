@@ -1,104 +1,95 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-024",
+  "taskId": "CRPI-BLOCK-036",
   "durableFields": [
+    {
+      "fieldPath": "BattleSubject.tag=creatureAttack",
+      "owner": "caller-boundary-evidence",
+      "introducedIn": "packages/battle-runtime/src/battle-subjects.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "The minimal creature attack subject stores actor and target combatant ids selected by the caller. Discovery admits this subject only for the current actor when it can take actions, has an available Attack action, and is a stat-block-origin creature with no structured action section; the subject does not encode authored monster, weapon, or fixture identity. Task replay fixtures use synthetic-test provenance rather than claiming SRD provenance."
+    },
+    {
+      "fieldPath": "BattleCreatureAttackRollHole.creatureAttack",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleSubject.tag=creatureAttack",
+        "boundary": "discoverBattleActs public reducer result"
+      },
+      "notes": "The Attack Roll hole carries only the actor and target ids needed to return the public fill to the typed creatureAttack subject."
+    },
+    {
+      "fieldPath": "BattleCreatureAttackDamageRollHole.creatureAttack",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleSubject.tag=creatureAttack + BattleFill.kind=attackRoll",
+        "boundary": "resolveBattleSubject public reducer result"
+      },
+      "notes": "The Rolled Dice hole is emitted only after a public Attack Roll fill hits the target Armor Class."
+    },
+    {
+      "fieldPath": "BattleCreatureState.hp",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing target Hit Points own the durable creature attack damage result. Task 67 applies damage through applyBattleHitPointDamage and does not introduce a parallel HP field."
+    },
     {
       "fieldPath": "AvailableBattleAct.routeEvents",
       "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleState plus AvailableBattleAct routeEvents",
-        "boundary": "battle-runtime public reducer route event boundary"
+        "sourceField": "AvailableBattleAct.initialHoles",
+        "boundary": "discoverBattleActs public reducer result"
       },
-      "notes": "Projection is emitted at public reducer entrypoints from existing owner-local facts; it is not stored as a second BattleState copy."
+      "notes": "Creature attack discovery route events are derived from the typed subject and Attack Roll initial hole."
     },
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
       "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleState plus BattleResolutionResult routeEvents",
-        "boundary": "battle-runtime public reducer route event boundary"
+        "sourceField": "BattleResolutionResult.tag",
+        "boundary": "resolveBattleSubject public reducer result"
       },
-      "notes": "Projection is emitted at public reducer entrypoints from existing owner-local facts; it is not stored as a second BattleState copy."
+      "notes": "Creature attack resolution route events are derived from submitted fill kind, hit/miss outcome, needed holes, Attack action eligibility, and resolved Hit Point damage."
     },
     {
-      "fieldPath": "BattleSubject.actionSpell.invocation.procedure",
+      "fieldPath": "BattleReducerRouteEvent.subject=creatureAttack",
       "owner": "executable-boundary-projection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "typed BattleSubject.actionSpell invocation procedure",
-        "boundary": "battle-runtime public reducer route event boundary"
+        "sourceField": "BattleSubject.tag=creatureAttack",
+        "boundary": "battle reducer route event"
       },
-      "notes": "Route projection reads typed procedure facts such as rollModifier, damageReduction, and scalarBuff; it does not branch on authored spell identity."
+      "notes": "The route subject is derived from typed BattleSubject shape, not from connector names or source action names."
     },
     {
-      "fieldPath": "BattleCreatureState.activeEffects",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Active spell effects remain the canonical battle-state source for roll modifiers, scalar buffs, and spell damage-reduction use."
-    },
-    {
-      "fieldPath": "BattleCreatureState.concentration",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Concentration remains the canonical battle-state source for active concentration spell ownership."
-    },
-    {
-      "fieldPath": "BattleActiveEffect.kind=spellDamageReduction",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "The spellDamageReduction active-effect variant is the canonical source for damage type, source spell, source combatant, and per-turn use."
-    },
-    {
-      "fieldPath": "BattleDamageRollHole.spellDamageReduction",
+      "fieldPath": "BattleReducerRouteEvent.owner=battleAttackRoll|battleHitPoint",
       "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "resolved damage roll holes plus matching spellDamageReduction active effects",
-        "boundary": "battle-runtime public reducer damage-adjustment boundary"
+        "sourceField": "BattleFill.kind + BattleResolutionResult.tag",
+        "boundary": "battle reducer route event"
       },
-      "notes": "The roll hole projects an available damage-reduction adjustment from battle state at the reducer boundary rather than duplicating the active effect."
-    },
-    {
-      "fieldPath": "BattleHole.kind",
-      "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleResolutionResult holes",
-        "boundary": "battle-runtime public reducer route event boundary"
-      },
-      "notes": "Route holes are projected from public reducer hole kinds such as targetChoice, damageTypeChoice, and rolledDice."
-    },
-    {
-      "fieldPath": "BattleFill.kind",
-      "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleResolutionInput fills",
-        "boundary": "battle-runtime public reducer route event boundary"
-      },
-      "notes": "Route fills are projected from public reducer fill kinds such as targetChoice, damageTypeChoice, and rolledDice."
+      "notes": "Attack Roll fills route through battleAttackRoll; hit damage fills route through battleHitPoint. The owner is derived from public fill/result shape."
     }
   ],
   "notes": [
-    "Task 36 introduced no new durable BattleState or BattleCreatureState fields.",
-    "Selected spell identity remains at catalog/support-profile and selected replay boundaries; production route projection uses typed invocation procedure, active-effect, hole, fill, and reducer-result facts.",
-    "The spellDamageReduction route subject is an executable boundary projection derived from existing damage-reduction active effects, Concentration, and damage-roll holes."
+    "Task 67 introduced no new durable BattleState fields.",
+    "The minimal creature attack pilot uses existing combatant ids, stat-block origin facts with synthetic-test fixture provenance in replay, current-turn action resources, Armor Class projection, BattleFill values, Hit Point state, and public routeEvents. Copied zero damage is represented as a creatureAttackZeroDamage fill, not as a forged positive die result or a global empty rolled-dice fill.",
+    "Route evidence records executable-boundary projection state only; it does not duplicate hit, damage, HP, target, or action state in a parallel ledger."
   ]
 }

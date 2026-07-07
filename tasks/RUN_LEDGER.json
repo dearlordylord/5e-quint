@@ -2377,7 +2377,7 @@
           "detail": "Checked .references/srd-5.2.1/Spells/Descriptions-S-Z.md, .references/srd-5.2.1/Playing-the-Game.md, .references/srd-5.2.1/Rules-Glossary.md, and UBIQUITOUS_LANGUAGE.md before route/runtime changes."
         },
         {
-          "command": "pnpm --filter @dnd/battle-runtime exec tsc --noEmit --pretty false",
+          "command": "pnpm --filter @dnd/battle-runtime typecheck",
           "status": "pass",
           "detail": "Battle runtime TypeScript check passed after moving qRoute replay onto the selected healing/stabilization driver action."
         },
@@ -2501,7 +2501,7 @@
           "detail": "Focused Halfling Nimbleness selected-identity semantic replay and species passive trait substrate route connector replay passed; 4 tests passed; TOTAL: 9s."
         },
         {
-          "command": "pnpm --filter @dnd/battle-runtime exec tsc --noEmit --pretty false",
+          "command": "pnpm --filter @dnd/battle-runtime typecheck",
           "status": "pass",
           "detail": "Battle runtime TypeScript check passed after adding public Movement qRoute observability."
         },
@@ -9417,6 +9417,146 @@
           "Magic Weapon item target identity remains table boundary evidence; the accepted qRoute uses item-target boundary ownership and active-effect ownership with no reducer-route hole for table-owned item choice."
           ,
           "Held-weapon active-effect attack routes now require the selected attack's attached weapon item and weapon shape to match the active override; unaffected weapon or Unarmed Strike attacks preserve the normal weapon route tail."
+        ],
+        "requiredPlanEdits": "none"
+      }
+    },
+    {
+      "taskId": "CRPI-BLOCK-036",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/creature-attack.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "29e87f447a567b9e25b2d808bff10d231a5062ad240ee1d853517eb5d717dffc"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "fe5dad65c49dfcad762ea2d9b708f1080e3344b92ca1e3b5ff55439567120bde"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "4ae9364169b980c0c99a466fa4cba2e0dbb53b95f760e35bd2ffdd78604f498e"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-BLOCK-036/README.md",
+          "sha256": "22672593b3951e8587aafe69c2bcbf4b804e49878bd77d4220cb00b41fca1f76"
+        },
+        "rulesKernelBattleHoleFrontier": {
+          "path": "plans/rules-kernel-coverage/battle-hole-frontier.jsonl",
+          "sha256": "868510adee1dc0cbdc11f1d7ccd6d3d2d5a5ccb8a820ca3d1c650be941037d4a"
+        },
+        "rulesKernelMatrix": {
+          "path": "plans/rules-kernel-coverage/matrix.json",
+          "sha256": "ab2457de57b7dae97152829a858f9f56e0459745093334f0b47e50e66b55d2dc"
+        },
+        "rulesKernelReport": {
+          "path": "plans/rules-kernel-coverage/REPORT.md",
+          "sha256": "a150e8a85545bf405d2409b0fc7cad671eb4ea80126651ad6cb0301840ba7520"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-036.json",
+          "sha256": "fcd000cbf0cbce43fbea103fc0b9dabc5f1f96e8600c5c967710a98221d476cf",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-036.json#driver:packages/battle-runtime/creature-attack.mbt.qnt#step:doAttackerAAttacks#trace:reducer-route=CreatureAttack action=doAttackerAAttacks qRoute=creature-attack-public-route-hit",
+            "tasks/target-replay-evidence/CRPI-BLOCK-036.json#driver:packages/battle-runtime/creature-attack.mbt.qnt#step:doAttackerBAttacks#trace:reducer-route=CreatureAttack action=doAttackerBAttacks qRoute=creature-attack-public-route-miss"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-owner-battle-attack-20260706T213644Z/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor ec0fa07aaaa3eccab53d501092026a2237af644e HEAD",
+          "status": "pass",
+          "detail": "Base ref and HEAD both resolved to ec0fa07aa Mark Ralph task 64 done; Base SHA is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language check for Attack Rolls, Damage Rolls, Hit Points, and UBIQUITOUS_LANGUAGE.md",
+          "status": "pass",
+          "detail": "Checked .references/srd-5.2.1/Playing-the-Game.md Attack Rolls, Damage Rolls, and Hit Points plus UBIQUITOUS_LANGUAGE.md before modeling creature attack hit/damage ownership."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec tsc --noEmit --pretty false",
+          "status": "pass",
+          "detail": "Battle-runtime TypeScript check passed after adding the typed creatureAttack subject, public holes, reducer resolution, route projection, current-actor/action-resource/action-eligibility gates, and restored copied zero-damage replay representation."
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Pre-MBT process checks found no Vitest runner or Quint evaluator."
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 MBT_STEPS=6 pnpm --dir packages/battle-runtime exec vitest run src/creature-attack.mbt.test.ts 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "Focused creature attack public-boundary tests plus semantic and copied qRoute replay passed with 11 tests, including Incapacitated and terminal zero-HP action-eligibility regressions; final rerun TOTAL: 10s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check -- --write",
+          "status": "pass",
+          "detail": "Refreshed generated cleanroom branch coverage source inventory/report after restoring the copied creature attack 0..6 damage domain and preserving public zero-damage replay with a creature-attack-specific fill."
+        },
+        {
+          "command": "node task-scoped target replay evidence validation for CRPI-BLOCK-036",
+          "status": "pass",
+          "detail": "Direct validateTargetReplayEvidence call with requireAllObligations=false covered 2 obligations."
+        },
+        {
+          "command": "pnpm rules-kernel-coverage:check -- --write",
+          "status": "pass",
+          "detail": "Refreshed generated rules-kernel coverage matrix/report after adding creatureAttack subject and creature attack hole-family frontier rows."
+        },
+        {
+          "command": "pnpm rules-kernel-coverage:check",
+          "status": "pass",
+          "detail": "Rules kernel coverage passed with 131 obligations."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "Cleanroom branch coverage passed with 738 obligations and 24 sampled inputs."
+        },
+        {
+          "command": "jq empty tasks/target-replay-evidence/CRPI-BLOCK-036.json tasks/ENGINE_DEPTH_MANIFEST.json tasks/STATE_OWNER_MANIFEST.json tasks/RUN_LEDGER.json",
+          "status": "pass"
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "All quality gates and typecheck passed on the final diff; app lint emitted the existing 61 warnings and exited 0."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 moved manual HP mutation to applyBattleHitPointDamage. Round 2 narrowed discovery to stat-block-origin creatures with no structured action section. Round 3 added missing rules-kernel protocol frontier coverage for the new subject and hole families. Revision round 2 rejected post-miss damage fills and changed the fixture to synthetic-test provenance instead of synthetic SRD provenance. Revision round 3 restored the copied QNT 0..6 damage domain and constrained discovery/resolution to current-actor Attack action eligibility plus the narrow stat-block no-actions pilot. Revision round 4 represented copied zero damage as creatureAttackZeroDamage instead of widening global rolledDice fills, and removed the unsupported +0 attack bonus from the creatureAttack attack-roll hole. Revision round 5 routed discovery and forged-subject resolution through combatantCanTakeActions, rejecting Incapacitated and terminal zero-HP pilot actors. Final RAW/domain, architecture/connascence, and code-review pass found no remaining reasonable Task 67 findings."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-036",
+            "impact": "unblocked"
+          },
+          {
+            "taskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
+            "impact": "left unchanged"
+          }
+        ],
+        "observations": [
+          "Creature attack qRoute is observable through public battleReducerStartRouteEvent, discoverBattleActs AvailableBattleAct.routeEvents, and resolveBattleSubject BattleResolutionResult.routeEvents for Attack Roll and Hit Point ownership; the replay harness uses public endTurn only to align target turn state for copied actions whose actor is not currently able to act.",
+          "Minimal creature attack discovery is limited to current-actor stat-block-origin creatures that can take actions, have an available Attack action, and have no structured action section, so off-turn actors, Incapacitated or terminal zero-HP actors, spent-action actors, ordinary character turns, and structured stat-block attacks do not gain an extra generic action. Task replay fixtures use synthetic-test provenance rather than claiming SRD provenance.",
+          "No new durable BattleState fields were needed; route evidence is derived from typed subjects, public holes/fills, Armor Class projection, current-turn action resources, BattleResolutionResult shape, and existing Hit Point state. Copied zero damage is represented as creatureAttackZeroDamage, not as a forged positive DieRollResult or a global empty rolled-dice fill.",
+          "The rules-kernel battle-hole frontier now records the typed creatureAttack subject and the two public creature attack hole families as protocol vocabulary covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY."
         ],
         "requiredPlanEdits": "none"
       }

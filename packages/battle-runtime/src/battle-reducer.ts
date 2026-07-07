@@ -4499,6 +4499,26 @@ export type BattleTargetChoiceHole = Extract<
   readonly choices: readonly CombatantId[];
   readonly requiresTableSpatialFact?: boolean;
 };
+export type BattleCreatureAttackRollHole = Extract<
+  RuntimeHole,
+  { readonly kind: "attackRoll" }
+> & {
+  readonly attackBonus?: never;
+  readonly rollMode?: AttackRollMode;
+  readonly creatureAttack: {
+    readonly actorId: CombatantId;
+    readonly targetId: CombatantId;
+  };
+};
+export type BattleCreatureAttackDamageRollHole = Extract<
+  RuntimeHole,
+  { readonly kind: "rolledDice" }
+> & {
+  readonly creatureAttack: {
+    readonly actorId: CombatantId;
+    readonly targetId: CombatantId;
+  };
+};
 export type BattleObjectTargetChoiceHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -6149,6 +6169,8 @@ export type BattleWildShapeEquipmentDispositionHole = {
 };
 export type BattleHole =
   | BattleTargetChoiceHole
+  | BattleCreatureAttackRollHole
+  | BattleCreatureAttackDamageRollHole
   | BattleSpellCastReactionFactsHole
   | BattleSlowSomaticSpellFailureOutcomeHole
   | BattleWardingBondSeparationFactsHole
@@ -6258,6 +6280,14 @@ export type BattleRolledDiceFill = {
   readonly attackDamageAbilityModifierChoice?: AttackDamageAbilityModifierChoiceFill;
   readonly spellDamageReroll?: BattleSpellDamageRerollDecision;
 };
+export type BattleCreatureAttackZeroDamageFill = {
+  readonly kind: "creatureAttackZeroDamage";
+  readonly holeId: BattleHoleId;
+  readonly creatureAttack: {
+    readonly actorId: CombatantId;
+    readonly targetId: CombatantId;
+  };
+};
 export const EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE =
   "Empowered Spell damage rerolls are not available for this damage-roll owner.";
 export function spellDamageRerollUnsupportedIssue(
@@ -6357,6 +6387,7 @@ export type BattleFill =
       readonly holeId: BattleHoleId;
       readonly value: BattleAttackRollResult;
     }
+  | BattleCreatureAttackZeroDamageFill
   | BattleRolledDiceFill
   | {
       readonly kind: "damageTypeChoice";

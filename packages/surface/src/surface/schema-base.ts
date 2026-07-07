@@ -677,7 +677,7 @@ export const GrantedSpellDurationOverrideSchema = Schema.Struct({
 });
 
 export const ProvenanceSchema = Schema.Struct({
-  kind: Schema.Literal("srd-5.2.1", "xphb"),
+  kind: Schema.Literal("srd-5.2.1", "xphb", "synthetic-test"),
   section: Schema.String,
 });
 

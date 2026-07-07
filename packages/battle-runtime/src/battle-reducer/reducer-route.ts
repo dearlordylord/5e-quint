@@ -75,6 +75,7 @@ import {
   attackActionOptionForSubject,
   weaponAttackUsesActiveSpellOverride,
 } from "./attack-damage-apply.ts";
+import { creatureAttackHit } from "./creature-attack.ts";
 
 type AfterHitDamageRiderChoice = Extract<
   BattleInterruptCheckpoint["choices"][number],
@@ -171,6 +172,7 @@ export type BattleReducerRouteSubjectFamily =
   | "companionSharedSenses"
   | "companionTouchDelivery"
   | "companionReactionAttack"
+  | "creatureAttack"
   | "slotSpell"
   | "objectTargetSpellAttack"
   | "spellHostedWeaponAttack"
@@ -654,6 +656,16 @@ export function battleReducerRouteEventsForDiscoveredAct(
         subject: "statBlockAction",
         holes: battleReducerRouteHoles(act.initialHoles),
         owner: "battleStatBlockAction",
+      },
+    ];
+  }
+  if (act.subject.tag === "creatureAttack") {
+    return [
+      {
+        kind: "discoverBattleActs",
+        subject: "creatureAttack",
+        holes: battleReducerRouteHoles(act.initialHoles),
+        owner: "battleAttackRoll",
       },
     ];
   }
@@ -1206,6 +1218,13 @@ export function battleReducerRouteForResolution(
   if (weaponAttackRoute !== undefined) {
     return composeWithActiveFormLifecycleTerminalRoute(
       weaponAttackRoute,
+      activeFormLifecycleTerminalRoute,
+    );
+  }
+  const creatureAttackRoute = creatureAttackRouteForResolution(input, result);
+  if (creatureAttackRoute !== undefined) {
+    return composeWithActiveFormLifecycleTerminalRoute(
+      creatureAttackRoute,
       activeFormLifecycleTerminalRoute,
     );
   }
@@ -8240,6 +8259,52 @@ function rollModifierRouteFill(
   return undefined;
 }
 
+function creatureAttackRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  if (input.subject.tag !== "creatureAttack") {
+    return undefined;
+  }
+  const fill = input.fills.at(-1);
+  if (fill === undefined || result.tag === "invalid") {
+    return undefined;
+  }
+  const routeFill = battleReducerRouteFill(fill);
+  if (routeFill === "attackRoll" && fill.kind === "attackRoll") {
+    const target = input.state.combatants.get(input.subject.targetId);
+    if (target === undefined) {
+      return undefined;
+    }
+    const holes = creatureAttackHit({ target, attackRoll: fill })
+      ? result.tag === "needsHoles"
+        ? battleReducerRouteHoles(result.holes)
+        : []
+      : [];
+    return [
+      {
+        kind: "resolveBattleSubject",
+        subject: "creatureAttack",
+        fill: routeFill,
+        holes,
+        owner: "battleAttackRoll",
+      },
+    ];
+  }
+  if (routeFill !== "rolledDice") {
+    return undefined;
+  }
+  return [
+    {
+      kind: "resolveBattleSubject",
+      subject: "creatureAttack",
+      fill: routeFill,
+      holes: result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [],
+      owner: "battleHitPoint",
+    },
+  ];
+}
+
 function weaponAttackRouteForResolution(
   input: BattleResolutionInput,
   result: BattleResolutionResult,
@@ -9089,6 +9154,7 @@ function battleReducerRouteFill(
   }
   if (kind === "attackRoll") return "attackRoll";
   if (kind === "concentrationSavingThrow") return "concentrationSavingThrow";
+  if (kind === "creatureAttackZeroDamage") return "rolledDice";
   if (kind === "damageTypeChoice") return "damageTypeChoice";
   if (kind === "deathSavingThrow") return "deathSavingThrow";
   if (kind === "grappleOutcome") return "grappleOutcome";

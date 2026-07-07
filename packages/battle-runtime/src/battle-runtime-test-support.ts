@@ -390,6 +390,7 @@ export function subjectName(
   | "bonusActionSpell"
   | "bonusActionDashSpell"
   | "pactOfTheChainFamiliarAttack"
+  | "creatureAttack"
   | "monkFocusOption"
   | "monkFocusFlurryOfBlowsStrike"
   | "unitFeature"
@@ -479,6 +480,9 @@ export function subjectName(
   }
   if (subject.tag === "findFamiliarTouchSpell") {
     return "findFamiliarTouchSpell";
+  }
+  if (subject.tag === "creatureAttack") {
+    return "creatureAttack";
   }
   return subject.command;
 }
