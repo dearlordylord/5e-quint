@@ -1,46 +1,64 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-018",
+  "taskId": "CRPI-BLOCK-033",
   "durableFields": [
     {
       "fieldPath": "AvailableBattleAct.routeEvents",
       "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleState plus AvailableBattleAct routeEvents",
-        "boundary": "battle-runtime public reducer route event boundary"
+        "sourceField": "AvailableBattleAct.initialHoles",
+        "boundary": "discoverBattleActs public reducer result"
       },
-      "notes": "Projection is emitted at public reducer entrypoints from existing owner-local facts; it is not stored as a second BattleState copy."
+      "notes": "Existing discovery results carry weaponAttack route events derived from typed weapon Attack subject shape and TargetChoice initial hole facts."
     },
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
       "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleState plus BattleResolutionResult routeEvents",
-        "boundary": "battle-runtime public reducer route event boundary"
+        "sourceField": "BattleResolutionResult.tag",
+        "boundary": "resolveBattleSubject public reducer result"
       },
-      "notes": "Projection is emitted at public reducer entrypoints from existing owner-local facts; it is not stored as a second BattleState copy."
+      "notes": "Existing resolution results carry weaponAttack route events derived from submitted targetChoice, attackRoll, and rolledDice fills plus resolved or needs-holes result shape. Invalid route events are limited to the two established weapon Attack ordering invalid-fill messages."
     },
     {
-      "fieldPath": "BattleCreatureState.activeEffects",
-      "owner": "battle-state",
+      "fieldPath": "BattleSubject.action=attack",
+      "owner": "caller-boundary-evidence",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing BattleState runtime state owns Flaming Sphere and Moonbeam active effects, area ids, Concentration-backed expiration, damage facts, and light projection facts reached by Task 26."
+      "notes": "Existing typed Attack action subject facts feed the reducer; production route behavior does not dispatch on authored weapon or source identity."
     },
     {
-      "fieldPath": "BattleCreatureState.concentration",
-      "owner": "battle-state",
+      "fieldPath": "BattleFill.kind=targetChoice",
+      "owner": "caller-boundary-evidence",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing BattleState runtime state owns the caster Concentration fact for concentration-backed area hazards."
+      "notes": "Existing targetChoice fills satisfy the first weapon Attack ordering frontier and advance to Attack Roll holes."
+    },
+    {
+      "fieldPath": "BattleFill.kind=attackRoll",
+      "owner": "caller-boundary-evidence",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing Attack Roll fills route through the attack-roll owner and either resolve a miss or expose rolledDice holes on a hit."
+    },
+    {
+      "fieldPath": "BattleFill.kind=rolledDice",
+      "owner": "caller-boundary-evidence",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing rolledDice fills route hit damage through the Hit Point owner after Attack Roll success."
     },
     {
       "fieldPath": "BattleCreatureState.hp",
@@ -49,23 +67,43 @@
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing BattleState runtime state owns Hit Point loss from Flaming Sphere and Moonbeam save-triggered damage."
+      "notes": "Existing target Hit Points own durable damage results; Task 62 introduced no parallel damage or HP ledger."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=spatialEffect",
+      "fieldPath": "BattleCreatureState.tempHp",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing Temporary Hit Points remain part of Hit Point damage application and are not copied into route evidence state."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.subject=weaponAttack",
       "owner": "executable-boundary-projection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleState plus spatial active effects, area witnesses, light projection, saving throw outcomes, and Hit Point damage results",
-        "boundary": "battle-runtime public reducer route event boundary"
+        "sourceField": "BattleSubject.action=attack",
+        "boundary": "battle reducer route event"
       },
-      "notes": "Projection is derived from generic spatial owner facts for concentration-backed area hazard admission and exact save-triggered damage."
+      "notes": "Generic weaponAttack route subject is derived from typed BattleSubject shape, not authored identity or connector filenames."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.owner=battleActionEconomy|battleTargetSelection|battleAttackRoll|battleHoleFrontier|battleHitPoint",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleResolutionResult.tag",
+        "boundary": "battle reducer route event"
+      },
+      "notes": "Weapon Attack ordering route owners are derived from public discovery and fill/result shape: action economy for discovery, target selection for targetChoice, attack-roll owner for Attack Roll, hole frontier only for the two ordering invalid-fill messages, and Hit Point owner for damage. Invalid out-of-order route events preserve the still-open targetChoice or attackRoll frontier rather than storing a separate ordering ledger."
     }
   ],
   "notes": [
-    "Task 26 introduced no new durable BattleState or BattleCreatureState fields.",
-    "Selected spell identity remains at catalog/support-profile and selected replay boundaries; production route projection uses typed spell procedure and runtime command shape.",
-    "Route subjects are executable boundary projections derived from existing owner state and public reducer results, not a stored route ledger or duplicate active-effect state."
+    "Task 62 introduced no new durable BattleState fields.",
+    "Weapon/source identity remains a typed attack fact selected at the boundary; production route behavior uses subject, fill, hole, result shape, and established ordering invalid-fill messages.",
+    "Route evidence records executable-boundary projection state only; it does not duplicate target choice, Attack Roll, damage dice, HP, or invalid-fill state."
   ]
 }

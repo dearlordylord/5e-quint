@@ -1,0 +1,493 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts weapon Attack ordering copied qRoute versus reducer-routed target replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "acceptance": {
+    "driverPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt",
+    "connectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.route.mbt.qnt",
+    "routeClass": "reducer-routed",
+    "durableOwner": "BattleState owns weapon attack action economy, target selection, Attack Roll, hole frontier, and Hit Point damage. Weapon/source identity feeds typed attack facts only.",
+    "acceptedProjection": "qRoute"
+  },
+  "status": "pass",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.route.mbt.qnt",
+      "qntFileSha256": "8ee8f3d49af502c11b82883d825e1054a57ba7c37fd15c927ccb40784f69f8bc",
+      "routeConnectorSha256": "04894515cb05a86207e518fb866403d48aa1182b75a12ca340dfe4f40b7a3902",
+      "branchFamily": "step",
+      "branchAction": "doDiscoverAttack",
+      "observedActionTaken": "doDiscoverAttack",
+      "harnessTestPath": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "reducer-route=WeaponAttackRouteSubject action=doDiscoverAttack qRoute=weapon-attack-ordering-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doDiscoverAttack",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createWeaponAttackOrderingRouteDriver",
+        "routeSubject": "WeaponAttackRouteSubject",
+        "owners": [
+          "BattleActionEconomyOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "25e301eb7942322584d4d655748a30608594a5a19034c85540518380bfdc385f",
+        "observedProjectionSha256": "25e301eb7942322584d4d655748a30608594a5a19034c85540518380bfdc385f",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doDiscoverAttack",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "WeaponAttackRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#fighterVsSkeletonBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#discoverAttackAct",
+            "project_qRoute",
+            "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createWeaponAttackOrderingRouteDriver"
+          ],
+          "routeEventSource": "Reducer route events emitted by public battle-runtime startBattle and discoverBattleActs project WeaponAttackRouteSubject discovery with TargetChoice holes through the battle action-economy owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createWeaponAttackOrderingRouteDriver"
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=startBattle",
+          "ReducerRouteEvent.tag=discoverBattleActs",
+          "ReducerRouteEvent.subject=weaponAttack",
+          "ReducerRouteEvent.owner=battleActionEconomy",
+          "BattleHole.kind=targetChoice",
+          "AvailableBattleAct.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Weapon Attack discovery routes TargetChoice holes through public action discovery and the battle action-economy owner."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.route.mbt.qnt",
+      "qntFileSha256": "8ee8f3d49af502c11b82883d825e1054a57ba7c37fd15c927ccb40784f69f8bc",
+      "routeConnectorSha256": "04894515cb05a86207e518fb866403d48aa1182b75a12ca340dfe4f40b7a3902",
+      "branchFamily": "step",
+      "branchAction": "doRejectAttackRollBeforeTargetChoice",
+      "observedActionTaken": "doRejectAttackRollBeforeTargetChoice",
+      "harnessTestPath": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "reducer-route=WeaponAttackRouteSubject action=doRejectAttackRollBeforeTargetChoice qRoute=weapon-attack-ordering-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRejectAttackRollBeforeTargetChoice",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createWeaponAttackOrderingRouteDriver",
+        "routeSubject": "WeaponAttackRouteSubject",
+        "owners": [
+          "BattleHoleFrontierOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "35022a603228ca4a9e8bda6cce8a4ad7854dbb11937519c7a0f43df7c25234f2",
+        "observedProjectionSha256": "35022a603228ca4a9e8bda6cce8a4ad7854dbb11937519c7a0f43df7c25234f2",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doRejectAttackRollBeforeTargetChoice",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "WeaponAttackRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#fighterVsSkeletonBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#discoverAttackAct",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createWeaponAttackOrderingRouteDriver",
+            "project_qRoute",
+            "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createWeaponAttackOrderingRouteDriver"
+          ],
+          "routeEventSource": "Reducer route events emitted by public battle-runtime resolveBattleSubject keep Attack Roll before target choice on the hole-frontier owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createWeaponAttackOrderingRouteDriver"
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=resolveBattleSubject",
+          "ReducerRouteEvent.subject=weaponAttack",
+          "ReducerRouteEvent.owner=battleHoleFrontier",
+          "BattleFill.kind=attackRoll",
+          "BattleHole.kind=targetChoice",
+          "BattleResolutionResult.routeEvents",
+          "BattleResolutionResult.reason=invalidFill"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Attack Roll fill before target choice is rejected through public resolveBattleSubject and routed to the hole-frontier owner."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.route.mbt.qnt",
+      "qntFileSha256": "8ee8f3d49af502c11b82883d825e1054a57ba7c37fd15c927ccb40784f69f8bc",
+      "routeConnectorSha256": "04894515cb05a86207e518fb866403d48aa1182b75a12ca340dfe4f40b7a3902",
+      "branchFamily": "step",
+      "branchAction": "doFillTargetChoice",
+      "observedActionTaken": "doFillTargetChoice",
+      "harnessTestPath": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "reducer-route=WeaponAttackRouteSubject action=doFillTargetChoice qRoute=weapon-attack-ordering-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doFillTargetChoice",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createWeaponAttackOrderingRouteDriver",
+        "routeSubject": "WeaponAttackRouteSubject",
+        "owners": [
+          "BattleTargetSelectionOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "31064d6aa19162c718dbbc3983eeaf70850e2acf99884f432ef98156238b17b4",
+        "observedProjectionSha256": "31064d6aa19162c718dbbc3983eeaf70850e2acf99884f432ef98156238b17b4",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doFillTargetChoice",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "WeaponAttackRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#fighterVsSkeletonBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#discoverAttackAct",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createWeaponAttackOrderingRouteDriver",
+            "project_qRoute",
+            "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createWeaponAttackOrderingRouteDriver"
+          ],
+          "routeEventSource": "Reducer route events emitted by public battle-runtime resolveBattleSubject route target-choice fill to the target-selection owner and expose the Attack Roll hole frontier.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createWeaponAttackOrderingRouteDriver"
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=resolveBattleSubject",
+          "ReducerRouteEvent.subject=weaponAttack",
+          "ReducerRouteEvent.owner=battleTargetSelection",
+          "BattleFill.kind=targetChoice",
+          "BattleHole.kind=attackRoll",
+          "BattleResolutionResult.routeEvents",
+          "BattleResolutionResult.tag=needsHoles"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Target choice fill routes to target selection and advances the public weapon Attack frontier to Attack Roll."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.route.mbt.qnt",
+      "qntFileSha256": "8ee8f3d49af502c11b82883d825e1054a57ba7c37fd15c927ccb40784f69f8bc",
+      "routeConnectorSha256": "04894515cb05a86207e518fb866403d48aa1182b75a12ca340dfe4f40b7a3902",
+      "branchFamily": "step",
+      "branchAction": "doRejectDamageBeforeAttackRoll",
+      "observedActionTaken": "doRejectDamageBeforeAttackRoll",
+      "harnessTestPath": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "reducer-route=WeaponAttackRouteSubject action=doRejectDamageBeforeAttackRoll qRoute=weapon-attack-ordering-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doRejectDamageBeforeAttackRoll",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createWeaponAttackOrderingRouteDriver",
+        "routeSubject": "WeaponAttackRouteSubject",
+        "owners": [
+          "BattleHoleFrontierOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "8fc58425ea00293adbbdd5b942cd3427274b531af35d619f3e4d8d353290c607",
+        "observedProjectionSha256": "8fc58425ea00293adbbdd5b942cd3427274b531af35d619f3e4d8d353290c607",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doRejectDamageBeforeAttackRoll",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "WeaponAttackRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#fighterVsSkeletonBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#discoverAttackAct",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createWeaponAttackOrderingRouteDriver",
+            "project_qRoute",
+            "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createWeaponAttackOrderingRouteDriver"
+          ],
+          "routeEventSource": "Reducer route events emitted by public battle-runtime resolveBattleSubject keep damage dice before Attack Roll on the hole-frontier owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createWeaponAttackOrderingRouteDriver"
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=resolveBattleSubject",
+          "ReducerRouteEvent.subject=weaponAttack",
+          "ReducerRouteEvent.owner=battleHoleFrontier",
+          "BattleFill.kind=rolledDice",
+          "BattleHole.kind=attackRoll",
+          "BattleResolutionResult.routeEvents",
+          "BattleResolutionResult.reason=invalidFill"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Rolled damage fill before Attack Roll is rejected through public resolveBattleSubject and routed to the hole-frontier owner."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.route.mbt.qnt",
+      "qntFileSha256": "8ee8f3d49af502c11b82883d825e1054a57ba7c37fd15c927ccb40784f69f8bc",
+      "routeConnectorSha256": "04894515cb05a86207e518fb866403d48aa1182b75a12ca340dfe4f40b7a3902",
+      "branchFamily": "step",
+      "branchAction": "doFillAttackRollMiss",
+      "observedActionTaken": "doFillAttackRollMiss",
+      "harnessTestPath": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "reducer-route=WeaponAttackRouteSubject action=doFillAttackRollMiss qRoute=weapon-attack-ordering-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doFillAttackRollMiss",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createWeaponAttackOrderingRouteDriver",
+        "routeSubject": "WeaponAttackRouteSubject",
+        "owners": [
+          "BattleAttackRollOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "c85a83e6e48c9fe5c30b18ea64e094b3b1303c2e94d84fbd4ad55f7f608f2a65",
+        "observedProjectionSha256": "c85a83e6e48c9fe5c30b18ea64e094b3b1303c2e94d84fbd4ad55f7f608f2a65",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doFillAttackRollMiss",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "WeaponAttackRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#fighterVsSkeletonBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#discoverAttackAct",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createWeaponAttackOrderingRouteDriver",
+            "project_qRoute",
+            "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createWeaponAttackOrderingRouteDriver"
+          ],
+          "routeEventSource": "Reducer route events emitted by public battle-runtime resolveBattleSubject route a missing Attack Roll to the attack-roll owner and resolve without damage holes.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createWeaponAttackOrderingRouteDriver"
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=resolveBattleSubject",
+          "ReducerRouteEvent.subject=weaponAttack",
+          "ReducerRouteEvent.owner=battleAttackRoll",
+          "BattleFill.kind=attackRoll",
+          "BattleResolutionResult.routeEvents",
+          "BattleResolutionResult.tag=resolved"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "A missing weapon Attack Roll routes to the attack-roll owner and resolves the public weapon Attack subject without Hit Point damage."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.route.mbt.qnt",
+      "qntFileSha256": "8ee8f3d49af502c11b82883d825e1054a57ba7c37fd15c927ccb40784f69f8bc",
+      "routeConnectorSha256": "04894515cb05a86207e518fb866403d48aa1182b75a12ca340dfe4f40b7a3902",
+      "branchFamily": "step",
+      "branchAction": "doFillAttackRollHit",
+      "observedActionTaken": "doFillAttackRollHit",
+      "harnessTestPath": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "reducer-route=WeaponAttackRouteSubject action=doFillAttackRollHit qRoute=weapon-attack-ordering-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doFillAttackRollHit",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createWeaponAttackOrderingRouteDriver",
+        "routeSubject": "WeaponAttackRouteSubject",
+        "owners": [
+          "BattleAttackRollOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "c14497bced317f91d0bddf48e349481795b1a00b77fe45208b6de6b5b3749ce3",
+        "observedProjectionSha256": "c14497bced317f91d0bddf48e349481795b1a00b77fe45208b6de6b5b3749ce3",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doFillAttackRollHit",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "WeaponAttackRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#fighterVsSkeletonBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#discoverAttackAct",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createWeaponAttackOrderingRouteDriver",
+            "project_qRoute",
+            "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createWeaponAttackOrderingRouteDriver"
+          ],
+          "routeEventSource": "Reducer route events emitted by public battle-runtime resolveBattleSubject route a hitting Attack Roll to the attack-roll owner and expose Rolled Dice holes for damage.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createWeaponAttackOrderingRouteDriver"
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=resolveBattleSubject",
+          "ReducerRouteEvent.subject=weaponAttack",
+          "ReducerRouteEvent.owner=battleAttackRoll",
+          "BattleFill.kind=attackRoll",
+          "BattleHole.kind=rolledDice",
+          "BattleResolutionResult.routeEvents",
+          "BattleResolutionResult.tag=needsHoles"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "A hitting weapon Attack Roll routes to the attack-roll owner and advances to the Rolled Dice damage frontier."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.route.mbt.qnt",
+      "qntFileSha256": "8ee8f3d49af502c11b82883d825e1054a57ba7c37fd15c927ccb40784f69f8bc",
+      "routeConnectorSha256": "04894515cb05a86207e518fb866403d48aa1182b75a12ca340dfe4f40b7a3902",
+      "branchFamily": "step",
+      "branchAction": "doFillDamageDice",
+      "observedActionTaken": "doFillDamageDice",
+      "harnessTestPath": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "reducer-route=WeaponAttackRouteSubject action=doFillDamageDice qRoute=weapon-attack-ordering-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doFillDamageDice",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createWeaponAttackOrderingRouteDriver",
+        "routeSubject": "WeaponAttackRouteSubject",
+        "owners": [
+          "BattleHitPointOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "91a73fffcf51e0b905f7e0f31a68cef918b50663cd35c9deae6c40c58c434d0f",
+        "observedProjectionSha256": "91a73fffcf51e0b905f7e0f31a68cef918b50663cd35c9deae6c40c58c434d0f",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doFillDamageDice",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "WeaponAttackRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#fighterVsSkeletonBattle",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#discoverAttackAct",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createWeaponAttackOrderingRouteDriver",
+            "project_qRoute",
+            "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createWeaponAttackOrderingRouteDriver"
+          ],
+          "routeEventSource": "Reducer route events emitted by public battle-runtime resolveBattleSubject route rolled weapon damage to the Hit Point owner.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts#createWeaponAttackOrderingRouteDriver"
+        },
+        "checkedTargetStateFields": [
+          "ReducerRouteEvent.tag=resolveBattleSubject",
+          "ReducerRouteEvent.subject=weaponAttack",
+          "ReducerRouteEvent.owner=battleHitPoint",
+          "BattleFill.kind=rolledDice",
+          "BattleCreatureState.hp",
+          "BattleCreatureState.tempHp",
+          "BattleResolutionResult.routeEvents",
+          "BattleResolutionResult.tag=resolved"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Rolled weapon damage routes through public resolveBattleSubject to Hit Point updates."
+      }
+    }
+  ]
+}

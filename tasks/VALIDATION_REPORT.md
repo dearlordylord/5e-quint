@@ -1,5 +1,149 @@
 # Validation Report
 
+## CRPI-BLOCK-033
+
+Status: `pass`
+
+- Task: 62
+- Driver path: `packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt`
+- Route connector path: `packages/battle-runtime/battle-runtime-weapon-attack-ordering.route.mbt.qnt`
+- Route class: `reducer-routed`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-033.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Behavior accepted:
+
+Task 62 accepts weapon Attack ordering through the public battle reducer route
+surface for `WeaponAttackRouteSubject`. Revision round 2 moved the target
+replay off adapter-local route construction: the route driver now compares the
+copied connector `qRoute` projection to `AvailableBattleAct.routeEvents` from
+`discoverBattleActs` and `BattleResolutionResult.routeEvents` from
+`resolveBattleSubject` while resolving target choice, Attack Roll, invalid
+out-of-order fills, rolled damage dice, and target Hit Point updates.
+Revision round 3 narrowed invalid route projection to the two established
+weapon Attack ordering invalid-fill messages, so unrelated invalid attack-roll
+or damage-fill failures do not emit Task 62 hole-frontier route events.
+
+No weapon Attack ordering ledger or duplicate durable state was added.
+BattleState already owns combatants, target Hit Points, Temporary Hit Points,
+and public resolution results. Weapon/source identity remains a typed attack
+fact supplied to the reducer; route projection is derived from subject, fill,
+hole, result shape, and established ordering invalid-fill messages rather than
+authored identity.
+
+Generated branch coverage:
+
+| Obligation                                                                                                                     | Evidence                                                                                                                                                                                                                                                                                          | Status    |
+| ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| `packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doDiscoverAttack`                                  | `tasks/target-replay-evidence/CRPI-BLOCK-033.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doDiscoverAttack#trace:reducer-route=WeaponAttackRouteSubject action=doDiscoverAttack qRoute=weapon-attack-ordering-public-route`                                  | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doFillTargetChoice`                                | `tasks/target-replay-evidence/CRPI-BLOCK-033.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doFillTargetChoice#trace:reducer-route=WeaponAttackRouteSubject action=doFillTargetChoice qRoute=weapon-attack-ordering-public-route`                                | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doRejectAttackRollBeforeTargetChoice`              | `tasks/target-replay-evidence/CRPI-BLOCK-033.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doRejectAttackRollBeforeTargetChoice#trace:reducer-route=WeaponAttackRouteSubject action=doRejectAttackRollBeforeTargetChoice qRoute=weapon-attack-ordering-public-route` | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doRejectDamageBeforeAttackRoll`                    | `tasks/target-replay-evidence/CRPI-BLOCK-033.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doRejectDamageBeforeAttackRoll#trace:reducer-route=WeaponAttackRouteSubject action=doRejectDamageBeforeAttackRoll qRoute=weapon-attack-ordering-public-route`          | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doFillAttackRollMiss`                              | `tasks/target-replay-evidence/CRPI-BLOCK-033.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doFillAttackRollMiss#trace:reducer-route=WeaponAttackRouteSubject action=doFillAttackRollMiss qRoute=weapon-attack-ordering-public-route`                              | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doFillAttackRollHit`                               | `tasks/target-replay-evidence/CRPI-BLOCK-033.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doFillAttackRollHit#trace:reducer-route=WeaponAttackRouteSubject action=doFillAttackRollHit qRoute=weapon-attack-ordering-public-route`                                | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doFillDamageDice`                                  | `tasks/target-replay-evidence/CRPI-BLOCK-033.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doFillDamageDice#trace:reducer-route=WeaponAttackRouteSubject action=doFillDamageDice qRoute=weapon-attack-ordering-public-route`                                  | `covered` |
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-033/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 62.
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Playing-the-Game.md#Making an Attack` defines target choice,
+  Attack Roll resolution, and hit damage order.
+- SRD 5.2.1 `Playing-the-Game.md#Attack Rolls` defines Attack Roll hit
+  resolution against Armor Class.
+- SRD 5.2.1 `Playing-the-Game.md#Damage Rolls` defines weapon damage dice and
+  damage dealt to the target.
+- SRD 5.2.1 `Playing-the-Game.md#Hit Points` defines damage subtracting from
+  Hit Points.
+- `UBIQUITOUS_LANGUAGE.md` defines Attack Roll, Damage, Hit Points, and related
+  roll/condition terms used by this route.
+
+Verification results:
+
+- Base check passed: prompt-declared integration ref
+  `ralph/cleanroom-owner-battle-attack-20260706T213644Z/integration` resolved
+  to `1271106eb Mark Ralph task 60 done`; review-time `master` resolved to
+  `406fb5a7c Merge Ralph task 25`; `HEAD` resolved to
+  `1271106eb Mark Ralph task 60 done`; Base SHA
+  `1271106ebfb65d2c1dcc6e85a19a5814cb6ed23a` was an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against the local SRD passages listed
+  above and `UBIQUITOUS_LANGUAGE.md`.
+- Task-scoped target evidence validation passed: direct
+  `scripts/cleanroom-branch-coverage-check.cjs#validateTargetReplayEvidence`
+  call with `requireAllObligations: false` covered all 7 Task 62 obligations in
+  `tasks/target-replay-evidence/CRPI-BLOCK-033.json`. Revision round 4
+  corrected all seven `targetEntrypointSequence` entries from the stale
+  `discoverAttackHoles` helper to `discoverAttackAct`. Revision round 5 reran
+  the same validator after tracking the required source, evidence, and history
+  files, again covering all 7 obligations.
+- Revision round 5 packaging check passed:
+  `git ls-files packages/battle-runtime/src/battle-reducer/attack-ordering-messages.ts tasks/history/CRPI-BLOCK-033/README.md tasks/target-replay-evidence/CRPI-BLOCK-033.json`
+  lists all three required new paths, so the reviewed diff includes the
+  imported source module and required Task 62 evidence/history artifacts.
+- Revision round 6 generated-artifact honesty check passed:
+  `tasks/ENGINE_DEPTH_MANIFEST.json` now lists the actual
+  `attack-main.ts` attack resolution exports and describes weapon Attack
+  discovery routing in `reducer-route.ts` as the inline
+  `isWeaponAttackSubject(act.subject)` branch instead of naming a nonexistent
+  helper.
+- `pnpm --filter @dnd/battle-runtime typecheck` passed after moving the route
+  driver to public route events, adding invalid-fill production route events,
+  and narrowing those invalid route events to the established ordering
+  invalid-fill messages. Revision round 5 rerun passed after tracking the
+  required source, evidence, and history files.
+- Focused deterministic non-ordering invalid-fill regression passed:
+  `pnpm --filter @dnd/battle-runtime exec vitest run src/battle-runtime-attack-rolls-and-damage.test.ts -t "attack replay rejects invalid natural d20 attack-roll results"` passed with 1 test and 20 skipped, asserting an invalid attackRoll fill for an invalid natural d20 has no `routeEvents`.
+  Revision round 5 rerun passed with the same result.
+- Focused plain and copied route connector MBT replay passed:
+  `START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=4 pnpm --filter @dnd/battle-runtime exec vitest run src/weapon-attack-ordering.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "weapon Attack ordering|weapon attack ordering" ) 2>&1 & pid=$!; wait "$pid"; status=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"` passed with 2 tests; revision round 3 rerun `TOTAL: 7s`.
+  Revision round 5 rerun passed with 2 tests; `TOTAL: 8s`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24
+  sampled inputs, including the revision round 5 rerun after tracking required
+  files.
+- `git diff --check` passed.
+- Requested broad verification passed: `pnpm quality`. App lint emitted the
+  existing 61 warnings and exited 0; all quality gates and typecheck passed,
+  including the revision round 5 rerun after tracking required files.
+- Reviewer-loop convergence round 1 verified RAW traceability,
+  ubiquitous-language/domain language, no duplicate durable state, no
+  authored-identity production dispatch, and localized route
+  subject/owner/fill connascence. Round 2 moved route replay to public
+  routeEvents. Round 3 fixed over-broad invalid-fill ownership by keying
+  hole-frontier route events to the two ordering invalid-fill messages and
+  verified a non-ordering invalid attackRoll fill has no routeEvents.
+
+Plan Impact:
+
+- Status: `none`
+- Affected tasks:
+  - Task 62 / `CRPI-BLOCK-033`: `unblocked`; copied `qRoute` replay is accepted.
+  - Route task `L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES`: `left unchanged`.
+- Observations:
+  - Weapon Attack ordering qRoute is observable through public start,
+    discovery, and resolution route events without adding durable BattleState
+    fields.
+  - Invalid out-of-order fills route to the existing hole-frontier owner only
+    for the two established ordering invalid-fill messages; accepted
+    target-choice, Attack Roll, and damage fills route to target selection,
+    attack-roll, and Hit Point owners respectively.
+  - Weapon/source identity remains a typed attack fact and is not a production
+    dispatch key.
+- Required plan edits: none.
+
 ## CRPI-BLOCK-018
 
 Status: `pass`
