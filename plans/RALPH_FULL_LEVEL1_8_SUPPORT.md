@@ -13,13 +13,13 @@
     {
       "number": 2,
       "id": "L18FOUND-02-LEVEL8-INVENTORY-ENABLEMENT",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Extend SRD inventory mining through character level 8"
     },
     {
       "number": 3,
       "id": "L18FOUND-03-LEVEL17-18-REPORT-GATE-SHAPE",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Add level-1-7 and level-1-8 full-support report plumbing"
     },
     {
@@ -327,8 +327,8 @@ Spell-level-4 unique identities currently in the level-7 mining audit:
 | # | Task | Status | Depends on | Notes |
 | --: | --- | --- | --- | --- |
 | 1 | L18FOUND-01-BASELINE-ACCOUNTING-SNAPSHOT - Capture the level-1-6 full and level-7 mining baseline | done | none | Baseline recorded in `plans/unit-profile-coverage/LEVEL1_8_BASELINE_2026-07-07.md`. |
-| 2 | L18FOUND-02-LEVEL8-INVENTORY-ENABLEMENT - Extend SRD inventory mining through character level 8 | ready-for-implementation | L18FOUND-01-BASELINE-ACCOUNTING-SNAPSHOT | Adds level-8 mining before any level-8 closure task can be trusted. |
-| 3 | L18FOUND-03-LEVEL17-18-REPORT-GATE-SHAPE - Add level-1-7 and level-1-8 full-support report plumbing | blocked | L18FOUND-02-LEVEL8-INVENTORY-ENABLEMENT | Creates strict full-support artifacts for both scopes. |
+| 2 | L18FOUND-02-LEVEL8-INVENTORY-ENABLEMENT - Extend SRD inventory mining through character level 8 | done | L18FOUND-01-BASELINE-ACCOUNTING-SNAPSHOT | Added generated `level1-8-mining-audit` artifacts and level-8 inventory rows. |
+| 3 | L18FOUND-03-LEVEL17-18-REPORT-GATE-SHAPE - Add level-1-7 and level-1-8 full-support report plumbing | ready-for-implementation | L18FOUND-02-LEVEL8-INVENTORY-ENABLEMENT | Creates strict full-support artifacts for both scopes. |
 | 4 | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION - Add checker protection against empty or vacuous higher-level scopes | blocked | L18FOUND-03-LEVEL17-18-REPORT-GATE-SHAPE | Prevents accidental pass from missing bands or empty denominators. |
 | 5 | L7FULL-01-CLASS-TABLE-SUMMARY-CLOSURE - Close the twelve level-7 class-table summary rows | blocked | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Table rows remain non-runtime but checker-visible. |
 | 6 | L7FULL-02-ROGUE-EVASION-EVIDENCE-PRESERVATION - Preserve existing Rogue Evasion support evidence | blocked | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Existing support must survive the new strict scope. |
@@ -453,7 +453,7 @@ Plan Impact:
 
 ### Task 2 - L18FOUND-02-LEVEL8-INVENTORY-ENABLEMENT
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on: `L18FOUND-01-BASELINE-ACCOUNTING-SNAPSHOT`
 
@@ -478,6 +478,26 @@ Output:
   repeated ASI rows, spell/resource progression deltas, and the Druid Wild Shape
   Fly Speed threshold.
 
+Completion Evidence:
+
+- Generated artifacts:
+  `plans/unit-profile-coverage/level1-8-mining-audit.json` and
+  `plans/unit-profile-coverage/LEVEL1_8_MINING_AUDIT.md`.
+- `plans/unit-profile-coverage/srd-unit-inventory.json` now contains 24
+  level-8 rows: 12 `class-table-summary` rows and 12
+  `class-feature-grant` repeated ASI rows.
+- Level-8 class-table rows carry source-linked `progressionDeltas` arrays;
+  empty arrays represent classes with no non-feature numeric/table delta from
+  level 7.
+- The Druid level-8 class-table row carries a source-linked
+  `druid-wild-shape-beast-shapes-threshold` fact with Fly Speed `Yes` from
+  `.references/srd-5.2.1/Classes/Druid.md:115`.
+- The existing level-1-7 mining audit remains scoped to max character level 7
+  and contains zero level-8 rows.
+- The class-progression follow-up disposition was generalized from the old
+  level-5-7 label to `class-progression-follow-up-required` so level-8 rows do
+  not reuse a level-7-specific status.
+
 Acceptance:
 
 - Level-8 mining has no missing mined level bands.
@@ -499,16 +519,13 @@ Verification:
 
 Plan Impact:
 
-- Update-required if generated row counts differ from this plan's expected
-  twelve table rows and twelve level-8 ASI rows.
+- Applied. Generated row counts match the expected twelve table rows and twelve
+  level-8 ASI rows. Downstream Tasks 20-22 should consume the generated
+  level-8 ASI, progression-delta, and Druid threshold facts.
 
 ### Task 3 - L18FOUND-03-LEVEL17-18-REPORT-GATE-SHAPE
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: waits for `L18FOUND-02-LEVEL8-INVENTORY-ENABLEMENT`.
+Status: `ready-for-implementation`
 
 Depends on: `L18FOUND-02-LEVEL8-INVENTORY-ENABLEMENT`
 
@@ -1285,7 +1302,9 @@ progression accounting.
 
 Starting Points:
 
-- Generated level-8 inventory from Task 2.
+- Generated level-8 inventory from Task 2:
+  `plans/unit-profile-coverage/level1-8-mining-audit.json` and
+  `plans/unit-profile-coverage/srd-unit-inventory.json`.
 - `.references/srd-5.2.1/Classes/*` level-8 table rows.
 
 Output:
@@ -1329,6 +1348,8 @@ Starting Points:
 
 - `.references/srd-5.2.1/Classes/*` Ability Score Improvement sections and
   level-8 table rows.
+- Generated level-8 repeated ASI rows in
+  `plans/unit-profile-coverage/level1-8-mining-audit.json`.
 - Existing level-4 ASI closure and Fighter level-6 ASI handling.
 - `UBIQUITOUS_LANGUAGE.md` ASI entry.
 
@@ -1373,7 +1394,9 @@ Close level-8 numeric progression deltas from SRD class tables.
 
 Starting Points:
 
-- Generated level-8 inventory.
+- Generated level-8 inventory, especially source-linked
+  `progressionDeltas` on class-table-summary rows in
+  `plans/unit-profile-coverage/level1-8-mining-audit.json`.
 - SRD class table columns for prepared spells, spell slots, Sorcery Points,
   Monk Focus Points, and other resource counters.
 
@@ -1420,6 +1443,9 @@ Starting Points:
 - `.references/srd-5.2.1/Classes/Druid.md:103`
 - `.references/srd-5.2.1/Classes/Druid.md:105`
 - `.references/srd-5.2.1/Classes/Druid.md:111`
+- Generated `druid-wild-shape-beast-shapes-threshold` fact on the Druid
+  level-8 class-table row in
+  `plans/unit-profile-coverage/level1-8-mining-audit.json`.
 - Existing Wild Shape selected-loadout and form eligibility accounting.
 
 Output:

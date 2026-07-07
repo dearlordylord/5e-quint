@@ -9,6 +9,7 @@
       "level-5": 0,
       "level-6": 0,
       "level-7": 0,
+      "level-8": 0,
       "spell-level-0": 0,
       "spell-level-1": 0,
       "spell-level-2": 0,
@@ -25,27 +26,27 @@
       "spell-level-3": 42,
       "spell-level-4": 34
     },
-    "minedDenominatorRows": 900,
+    "minedDenominatorRows": 924,
     "missingMinedLevelBands": [],
     "rowsByAxis": {
-      "character-level": 342,
+      "character-level": 366,
       "spell-level": 558
     },
     "rowsByBattleReadinessStatus": {
       "accepted": 485,
       "accepted-no-battle-effect": 257,
       "battle-runtime-required": 32,
-      "not-applicable": 77,
+      "not-applicable": 101,
       "owner-evidence-required": 49
     },
     "rowsByCatalogAdmission": {
-      "installed": 694,
-      "not-installed": 206
+      "installed": 706,
+      "not-installed": 218
     },
     "rowsByCategory": {
-      "character-creation or progression mechanic": 172,
+      "character-creation or progression mechanic": 184,
       "class container": 12,
-      "class feature": 117,
+      "class feature": 129,
       "equipment/weapon/armor pressure": 12,
       "mastery pressure": 5,
       "spell access/list pressure": 12,
@@ -56,9 +57,9 @@
       "catalog-authored-review-required": 49,
       "catalog-installed-owner-evidence-present": 502,
       "catalog-only/dead-for-now": 222,
-      "class-progression-follow-up-required": 11,
+      "class-progression-follow-up-required": 23,
       "missing-authored-record": 32,
-      "non-runtime": 84
+      "non-runtime": 96
     },
     "rowsByLevelBand": {
       "level-1": 156,
@@ -68,6 +69,7 @@
       "level-5": 28,
       "level-6": 25,
       "level-7": 24,
+      "level-8": 24,
       "spell-level-0": 66,
       "spell-level-1": 145,
       "spell-level-2": 156,
@@ -76,8 +78,8 @@
     },
     "rowsByRowKind": {
       "class-container": 12,
-      "class-feature-grant": 117,
-      "class-table-summary": 84,
+      "class-feature-grant": 129,
+      "class-table-summary": 96,
       "core-trait": 76,
       "equipment-pressure": 12,
       "mastery-pressure": 5,
@@ -88,10 +90,10 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 131,
+      "not-recorded": 143,
       "profile-subset-supported": 59,
       "supported-profile": 309,
-      "unsupported-profile": 401
+      "unsupported-profile": 413
     }
   },
   "rows": [
@@ -1413,6 +1415,90 @@
     },
     {
       "axis": "character-level",
+      "candidateUnitId": "barbarian_ability_score_improvement_l8",
+      "category": "class feature",
+      "className": "Barbarian",
+      "concept": "Barbarian Ability Score Improvement",
+      "levelBand": "level-8",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/barbarian:level-8:class-feature-grant:barbarian_ability_score_improvement",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/barbarian:level-8:class-feature-grant:barbarian_ability_score_improvement",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 42,
+        "lineStart": 42,
+        "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "not-installed",
+          "unitId": "barbarian_ability_score_improvement_l8"
+        },
+        "finalDisposition": "class-progression-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_barbarian",
+      "category": "character-creation or progression mechanic",
+      "className": "Barbarian",
+      "concept": "Barbarian level 8 feature table row",
+      "levelBand": "level-8",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/barbarian:level-8:class-table-summary:barbarian_level_8_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "progressionDeltas": [],
+      "rowId": "srd521:classes/barbarian:level-8:class-table-summary:barbarian_level_8_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 42,
+        "lineStart": 42,
+        "path": ".references/srd-5.2.1/Classes/Barbarian.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/class_barbarian.json",
+          "state": "authored-record-present",
+          "unitId": "class_barbarian"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "class_barbarian"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
       "candidateUnitId": "class_bard",
       "category": "class container",
       "className": "Bard",
@@ -2621,6 +2707,121 @@
       "source": {
         "lineEnd": 42,
         "lineStart": 42,
+        "path": ".references/srd-5.2.1/Classes/Bard.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/class_bard.json",
+          "state": "authored-record-present",
+          "unitId": "class_bard"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "class_bard"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "bard_ability_score_improvement_l8",
+      "category": "class feature",
+      "className": "Bard",
+      "concept": "Bard Ability Score Improvement",
+      "levelBand": "level-8",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/bard:level-8:class-feature-grant:bard_ability_score_improvement",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/bard:level-8:class-feature-grant:bard_ability_score_improvement",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 43,
+        "lineStart": 43,
+        "path": ".references/srd-5.2.1/Classes/Bard.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "not-installed",
+          "unitId": "bard_ability_score_improvement_l8"
+        },
+        "finalDisposition": "class-progression-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_bard",
+      "category": "character-creation or progression mechanic",
+      "className": "Bard",
+      "concept": "Bard level 8 feature table row",
+      "levelBand": "level-8",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/bard:level-8:class-table-summary:bard_level_8_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "progressionDeltas": [
+        {
+          "column": "Prepared Spells",
+          "currentSource": {
+            "lineEnd": 43,
+            "lineStart": 43,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          },
+          "currentValue": "12",
+          "previousSource": {
+            "lineEnd": 42,
+            "lineStart": 42,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          },
+          "previousValue": "11"
+        },
+        {
+          "column": "4",
+          "currentSource": {
+            "lineEnd": 43,
+            "lineStart": 43,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          },
+          "currentValue": "2",
+          "previousSource": {
+            "lineEnd": 42,
+            "lineStart": 42,
+            "path": ".references/srd-5.2.1/Classes/Bard.md"
+          },
+          "previousValue": "1"
+        }
+      ],
+      "rowId": "srd521:classes/bard:level-8:class-table-summary:bard_level_8_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 43,
+        "lineStart": 43,
         "path": ".references/srd-5.2.1/Classes/Bard.md"
       },
       "supportSnapshot": {
@@ -7563,6 +7764,121 @@
       }
     },
     {
+      "axis": "character-level",
+      "candidateUnitId": "cleric_ability_score_improvement_l8",
+      "category": "class feature",
+      "className": "Cleric",
+      "concept": "Cleric Ability Score Improvement",
+      "levelBand": "level-8",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/cleric:level-8:class-feature-grant:cleric_ability_score_improvement",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/cleric:level-8:class-feature-grant:cleric_ability_score_improvement",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 42,
+        "lineStart": 42,
+        "path": ".references/srd-5.2.1/Classes/Cleric.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "not-installed",
+          "unitId": "cleric_ability_score_improvement_l8"
+        },
+        "finalDisposition": "class-progression-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_cleric",
+      "category": "character-creation or progression mechanic",
+      "className": "Cleric",
+      "concept": "Cleric level 8 feature table row",
+      "levelBand": "level-8",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/cleric:level-8:class-table-summary:cleric_level_8_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "progressionDeltas": [
+        {
+          "column": "Prepared Spells",
+          "currentSource": {
+            "lineEnd": 42,
+            "lineStart": 42,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          },
+          "currentValue": "12",
+          "previousSource": {
+            "lineEnd": 41,
+            "lineStart": 41,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          },
+          "previousValue": "11"
+        },
+        {
+          "column": "4",
+          "currentSource": {
+            "lineEnd": 42,
+            "lineStart": 42,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          },
+          "currentValue": "2",
+          "previousSource": {
+            "lineEnd": 41,
+            "lineStart": 41,
+            "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          },
+          "previousValue": "1"
+        }
+      ],
+      "rowId": "srd521:classes/cleric:level-8:class-table-summary:cleric_level_8_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 42,
+        "lineStart": 42,
+        "path": ".references/srd-5.2.1/Classes/Cleric.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/class_cleric.json",
+          "state": "authored-record-present",
+          "unitId": "class_cleric"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "class_cleric"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
       "axis": "spell-level",
       "candidateUnitId": "guidance",
       "category": "spell Unit pressure",
@@ -11900,6 +12216,136 @@
           "state": "recorded"
         }
       }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "druid_ability_score_improvement_l8",
+      "category": "class feature",
+      "className": "Druid",
+      "concept": "Druid Ability Score Improvement",
+      "levelBand": "level-8",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/druid:level-8:class-feature-grant:druid_ability_score_improvement",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/druid:level-8:class-feature-grant:druid_ability_score_improvement",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 39,
+        "lineStart": 39,
+        "path": ".references/srd-5.2.1/Classes/Druid.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "not-installed",
+          "unitId": "druid_ability_score_improvement_l8"
+        },
+        "finalDisposition": "class-progression-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_druid",
+      "category": "character-creation or progression mechanic",
+      "className": "Druid",
+      "concept": "Druid level 8 feature table row",
+      "levelBand": "level-8",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/druid:level-8:class-table-summary:druid_level_8_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "progressionDeltas": [
+        {
+          "column": "Prepared Spells",
+          "currentSource": {
+            "lineEnd": 39,
+            "lineStart": 39,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          },
+          "currentValue": "12",
+          "previousSource": {
+            "lineEnd": 38,
+            "lineStart": 38,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          },
+          "previousValue": "11"
+        },
+        {
+          "column": "4",
+          "currentSource": {
+            "lineEnd": 39,
+            "lineStart": 39,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          },
+          "currentValue": "2",
+          "previousSource": {
+            "lineEnd": 38,
+            "lineStart": 38,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          },
+          "previousValue": "1"
+        }
+      ],
+      "rowId": "srd521:classes/druid:level-8:class-table-summary:druid_level_8_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 39,
+        "lineStart": 39,
+        "path": ".references/srd-5.2.1/Classes/Druid.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/class_druid.json",
+          "state": "authored-record-present",
+          "unitId": "class_druid"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "class_druid"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      },
+      "thresholdFacts": [
+        {
+          "candidateUnitId": "druid_wild_shape",
+          "flySpeed": "Yes",
+          "kind": "druid-wild-shape-beast-shapes-threshold",
+          "knownForms": "8",
+          "level": 8,
+          "maxCr": "1",
+          "source": {
+            "lineEnd": 115,
+            "lineStart": 115,
+            "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        }
+      ]
     },
     {
       "axis": "spell-level",
@@ -16824,6 +17270,90 @@
     },
     {
       "axis": "character-level",
+      "candidateUnitId": "fighter_ability_score_improvement_l8",
+      "category": "class feature",
+      "className": "Fighter",
+      "concept": "Fighter Ability Score Improvement",
+      "levelBand": "level-8",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/fighter:level-8:class-feature-grant:fighter_ability_score_improvement",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/fighter:level-8:class-feature-grant:fighter_ability_score_improvement",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 38,
+        "lineStart": 38,
+        "path": ".references/srd-5.2.1/Classes/Fighter.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "not-installed",
+          "unitId": "fighter_ability_score_improvement_l8"
+        },
+        "finalDisposition": "class-progression-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_fighter",
+      "category": "character-creation or progression mechanic",
+      "className": "Fighter",
+      "concept": "Fighter level 8 feature table row",
+      "levelBand": "level-8",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/fighter:level-8:class-table-summary:fighter_level_8_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "progressionDeltas": [],
+      "rowId": "srd521:classes/fighter:level-8:class-table-summary:fighter_level_8_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 38,
+        "lineStart": 38,
+        "path": ".references/srd-5.2.1/Classes/Fighter.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/class_fighter.json",
+          "state": "authored-record-present",
+          "unitId": "class_fighter"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "class_fighter"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
       "candidateUnitId": "class_monk",
       "category": "class container",
       "className": "Monk",
@@ -18233,6 +18763,106 @@
     },
     {
       "axis": "character-level",
+      "candidateUnitId": "monk_ability_score_improvement_l8",
+      "category": "class feature",
+      "className": "Monk",
+      "concept": "Monk Ability Score Improvement",
+      "levelBand": "level-8",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/monk:level-8:class-feature-grant:monk_ability_score_improvement",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/monk:level-8:class-feature-grant:monk_ability_score_improvement",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 39,
+        "lineStart": 39,
+        "path": ".references/srd-5.2.1/Classes/Monk.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "not-installed",
+          "unitId": "monk_ability_score_improvement_l8"
+        },
+        "finalDisposition": "class-progression-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_monk",
+      "category": "character-creation or progression mechanic",
+      "className": "Monk",
+      "concept": "Monk level 8 feature table row",
+      "levelBand": "level-8",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/monk:level-8:class-table-summary:monk_level_8_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "progressionDeltas": [
+        {
+          "column": "Focus Points",
+          "currentSource": {
+            "lineEnd": 39,
+            "lineStart": 39,
+            "path": ".references/srd-5.2.1/Classes/Monk.md"
+          },
+          "currentValue": "8",
+          "previousSource": {
+            "lineEnd": 38,
+            "lineStart": 38,
+            "path": ".references/srd-5.2.1/Classes/Monk.md"
+          },
+          "previousValue": "7"
+        }
+      ],
+      "rowId": "srd521:classes/monk:level-8:class-table-summary:monk_level_8_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 39,
+        "lineStart": 39,
+        "path": ".references/srd-5.2.1/Classes/Monk.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/class_monk.json",
+          "state": "authored-record-present",
+          "unitId": "class_monk"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "class_monk"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
       "candidateUnitId": "class_paladin",
       "category": "class container",
       "className": "Paladin",
@@ -19536,6 +20166,90 @@
       "source": {
         "lineEnd": 41,
         "lineStart": 41,
+        "path": ".references/srd-5.2.1/Classes/Paladin.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/class_paladin.json",
+          "state": "authored-record-present",
+          "unitId": "class_paladin"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "class_paladin"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "paladin_ability_score_improvement_l8",
+      "category": "class feature",
+      "className": "Paladin",
+      "concept": "Paladin Ability Score Improvement",
+      "levelBand": "level-8",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/paladin:level-8:class-feature-grant:paladin_ability_score_improvement",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/paladin:level-8:class-feature-grant:paladin_ability_score_improvement",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 42,
+        "lineStart": 42,
+        "path": ".references/srd-5.2.1/Classes/Paladin.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "not-installed",
+          "unitId": "paladin_ability_score_improvement_l8"
+        },
+        "finalDisposition": "class-progression-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_paladin",
+      "category": "character-creation or progression mechanic",
+      "className": "Paladin",
+      "concept": "Paladin level 8 feature table row",
+      "levelBand": "level-8",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/paladin:level-8:class-table-summary:paladin_level_8_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "progressionDeltas": [],
+      "rowId": "srd521:classes/paladin:level-8:class-table-summary:paladin_level_8_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 42,
+        "lineStart": 42,
         "path": ".references/srd-5.2.1/Classes/Paladin.md"
       },
       "supportSnapshot": {
@@ -21865,6 +22579,90 @@
       "source": {
         "lineEnd": 41,
         "lineStart": 41,
+        "path": ".references/srd-5.2.1/Classes/Ranger.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/class_ranger.json",
+          "state": "authored-record-present",
+          "unitId": "class_ranger"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "class_ranger"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "ranger_ability_score_improvement_l8",
+      "category": "class feature",
+      "className": "Ranger",
+      "concept": "Ranger Ability Score Improvement",
+      "levelBand": "level-8",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/ranger:level-8:class-feature-grant:ranger_ability_score_improvement",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/ranger:level-8:class-feature-grant:ranger_ability_score_improvement",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 42,
+        "lineStart": 42,
+        "path": ".references/srd-5.2.1/Classes/Ranger.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "not-installed",
+          "unitId": "ranger_ability_score_improvement_l8"
+        },
+        "finalDisposition": "class-progression-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_ranger",
+      "category": "character-creation or progression mechanic",
+      "className": "Ranger",
+      "concept": "Ranger level 8 feature table row",
+      "levelBand": "level-8",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/ranger:level-8:class-table-summary:ranger_level_8_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "progressionDeltas": [],
+      "rowId": "srd521:classes/ranger:level-8:class-table-summary:ranger_level_8_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 42,
+        "lineStart": 42,
         "path": ".references/srd-5.2.1/Classes/Ranger.md"
       },
       "supportSnapshot": {
@@ -24590,6 +25388,90 @@
     },
     {
       "axis": "character-level",
+      "candidateUnitId": "rogue_ability_score_improvement_l8",
+      "category": "class feature",
+      "className": "Rogue",
+      "concept": "Rogue Ability Score Improvement",
+      "levelBand": "level-8",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/rogue:level-8:class-feature-grant:rogue_ability_score_improvement",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/rogue:level-8:class-feature-grant:rogue_ability_score_improvement",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 43,
+        "lineStart": 43,
+        "path": ".references/srd-5.2.1/Classes/Rogue.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "not-installed",
+          "unitId": "rogue_ability_score_improvement_l8"
+        },
+        "finalDisposition": "class-progression-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_rogue",
+      "category": "character-creation or progression mechanic",
+      "className": "Rogue",
+      "concept": "Rogue level 8 feature table row",
+      "levelBand": "level-8",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/rogue:level-8:class-table-summary:rogue_level_8_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "progressionDeltas": [],
+      "rowId": "srd521:classes/rogue:level-8:class-table-summary:rogue_level_8_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 43,
+        "lineStart": 43,
+        "path": ".references/srd-5.2.1/Classes/Rogue.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/class_rogue.json",
+          "state": "authored-record-present",
+          "unitId": "class_rogue"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "class_rogue"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
       "candidateUnitId": "class_sorcerer",
       "category": "class container",
       "className": "Sorcerer",
@@ -25760,6 +26642,136 @@
       "source": {
         "lineEnd": 41,
         "lineStart": 41,
+        "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/class_sorcerer.json",
+          "state": "authored-record-present",
+          "unitId": "class_sorcerer"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "class_sorcerer"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "sorcerer_ability_score_improvement_l8",
+      "category": "class feature",
+      "className": "Sorcerer",
+      "concept": "Sorcerer Ability Score Improvement",
+      "levelBand": "level-8",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/sorcerer:level-8:class-feature-grant:sorcerer_ability_score_improvement",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/sorcerer:level-8:class-feature-grant:sorcerer_ability_score_improvement",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 42,
+        "lineStart": 42,
+        "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "not-installed",
+          "unitId": "sorcerer_ability_score_improvement_l8"
+        },
+        "finalDisposition": "class-progression-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_sorcerer",
+      "category": "character-creation or progression mechanic",
+      "className": "Sorcerer",
+      "concept": "Sorcerer level 8 feature table row",
+      "levelBand": "level-8",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/sorcerer:level-8:class-table-summary:sorcerer_level_8_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "progressionDeltas": [
+        {
+          "column": "Sorcery Points",
+          "currentSource": {
+            "lineEnd": 42,
+            "lineStart": 42,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          },
+          "currentValue": "8",
+          "previousSource": {
+            "lineEnd": 41,
+            "lineStart": 41,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          },
+          "previousValue": "7"
+        },
+        {
+          "column": "Prepared Spells",
+          "currentSource": {
+            "lineEnd": 42,
+            "lineStart": 42,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          },
+          "currentValue": "12",
+          "previousSource": {
+            "lineEnd": 41,
+            "lineStart": 41,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          },
+          "previousValue": "11"
+        },
+        {
+          "column": "4",
+          "currentSource": {
+            "lineEnd": 42,
+            "lineStart": 42,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          },
+          "currentValue": "2",
+          "previousSource": {
+            "lineEnd": 41,
+            "lineStart": 41,
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
+          },
+          "previousValue": "1"
+        }
+      ],
+      "rowId": "srd521:classes/sorcerer:level-8:class-table-summary:sorcerer_level_8_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 42,
+        "lineStart": 42,
         "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
       },
       "supportSnapshot": {
@@ -31213,6 +32225,106 @@
       }
     },
     {
+      "axis": "character-level",
+      "candidateUnitId": "warlock_ability_score_improvement_l8",
+      "category": "class feature",
+      "className": "Warlock",
+      "concept": "Warlock Ability Score Improvement",
+      "levelBand": "level-8",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/warlock:level-8:class-feature-grant:warlock_ability_score_improvement",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/warlock:level-8:class-feature-grant:warlock_ability_score_improvement",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 42,
+        "lineStart": 42,
+        "path": ".references/srd-5.2.1/Classes/Warlock.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "not-installed",
+          "unitId": "warlock_ability_score_improvement_l8"
+        },
+        "finalDisposition": "class-progression-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_warlock",
+      "category": "character-creation or progression mechanic",
+      "className": "Warlock",
+      "concept": "Warlock level 8 feature table row",
+      "levelBand": "level-8",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/warlock:level-8:class-table-summary:warlock_level_8_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "progressionDeltas": [
+        {
+          "column": "Prepared Spells",
+          "currentSource": {
+            "lineEnd": 42,
+            "lineStart": 42,
+            "path": ".references/srd-5.2.1/Classes/Warlock.md"
+          },
+          "currentValue": "9",
+          "previousSource": {
+            "lineEnd": 41,
+            "lineStart": 41,
+            "path": ".references/srd-5.2.1/Classes/Warlock.md"
+          },
+          "previousValue": "8"
+        }
+      ],
+      "rowId": "srd521:classes/warlock:level-8:class-table-summary:warlock_level_8_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 42,
+        "lineStart": 42,
+        "path": ".references/srd-5.2.1/Classes/Warlock.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/class_warlock.json",
+          "state": "authored-record-present",
+          "unitId": "class_warlock"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "class_warlock"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
       "axis": "spell-level",
       "candidateUnitId": "chill_touch",
       "category": "spell Unit pressure",
@@ -34387,6 +35499,121 @@
       "source": {
         "lineEnd": 41,
         "lineStart": 41,
+        "path": ".references/srd-5.2.1/Classes/Wizard.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/class_wizard.json",
+          "state": "authored-record-present",
+          "unitId": "class_wizard"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "class_wizard"
+        },
+        "finalDisposition": "non-runtime",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "wizard_ability_score_improvement_l8",
+      "category": "class feature",
+      "className": "Wizard",
+      "concept": "Wizard Ability Score Improvement",
+      "levelBand": "level-8",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/wizard:level-8:class-feature-grant:wizard_ability_score_improvement",
+        "state": "present"
+      },
+      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "rowId": "srd521:classes/wizard:level-8:class-feature-grant:wizard_ability_score_improvement",
+      "rowKind": "class-feature-grant",
+      "source": {
+        "lineEnd": 42,
+        "lineStart": 42,
+        "path": ".references/srd-5.2.1/Classes/Wizard.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "not-applicable"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "not-installed",
+          "unitId": "wizard_ability_score_improvement_l8"
+        },
+        "finalDisposition": "class-progression-follow-up-required",
+        "unitProfile": {
+          "state": "not-recorded"
+        }
+      }
+    },
+    {
+      "axis": "character-level",
+      "candidateUnitId": "class_wizard",
+      "category": "character-creation or progression mechanic",
+      "className": "Wizard",
+      "concept": "Wizard level 8 feature table row",
+      "levelBand": "level-8",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/wizard:level-8:class-table-summary:wizard_level_8_feature_table_row",
+        "state": "present"
+      },
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "progressionDeltas": [
+        {
+          "column": "Prepared Spells",
+          "currentSource": {
+            "lineEnd": 42,
+            "lineStart": 42,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          },
+          "currentValue": "12",
+          "previousSource": {
+            "lineEnd": 41,
+            "lineStart": 41,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          },
+          "previousValue": "11"
+        },
+        {
+          "column": "4",
+          "currentSource": {
+            "lineEnd": 42,
+            "lineStart": 42,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          },
+          "currentValue": "2",
+          "previousSource": {
+            "lineEnd": 41,
+            "lineStart": 41,
+            "path": ".references/srd-5.2.1/Classes/Wizard.md"
+          },
+          "previousValue": "1"
+        }
+      ],
+      "rowId": "srd521:classes/wizard:level-8:class-table-summary:wizard_level_8_feature_table_row",
+      "rowKind": "class-table-summary",
+      "source": {
+        "lineEnd": 42,
+        "lineStart": 42,
         "path": ".references/srd-5.2.1/Classes/Wizard.md"
       },
       "supportSnapshot": {
@@ -40527,7 +41754,7 @@
     }
   ],
   "scope": {
-    "axisRule": "Character level and spell level are separate axes. Character level 5 opens spell-level-3 pressure for full casters and Warlock Pact Magic; character level 7 opens spell-level-4 pressure for those same table-derived owners. Paladin and Ranger spell-level-3 and spell-level-4 list sections are not counted in this level-7 frontier because their SRD class tables do not grant matching slots by character level 7.",
+    "axisRule": "Character level and spell level are separate axes. Character level 5 opens spell-level-3 pressure for full casters and Warlock Pact Magic; character level 7 opens spell-level-4 pressure for those same table-derived owners. Paladin and Ranger spell-level-3 and spell-level-4 list sections are not counted in this level-8 frontier because their SRD class tables do not grant matching slots by character level 8.",
     "denominatorRule": "A row enters this audit only when a mined SRD inventory row exists for an included character-level or spell-level band.",
     "levelBands": [
       "level-1",
@@ -40537,15 +41764,16 @@
       "level-5",
       "level-6",
       "level-7",
+      "level-8",
       "spell-level-0",
       "spell-level-1",
       "spell-level-2",
       "spell-level-3",
       "spell-level-4"
     ],
-    "maxCharacterLevel": 7,
+    "maxCharacterLevel": 8,
     "supportGate": "non-blocking mining frontier; runtime admission and support snapshots are reported but do not pass or fail level 1-4 full-support gates",
-    "title": "Character Levels 1-7 Mining Audit"
+    "title": "Character Levels 1-8 Mining Audit"
   },
   "sourceAnchors": [
     ".references/srd-5.2.1/Classes/*.md",

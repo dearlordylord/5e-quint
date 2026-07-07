@@ -1,12 +1,19 @@
 const { characterLevelBands } = require("./level1-full-support-report.cjs");
 const { stable } = require("./unit-profile-coverage-report.cjs");
 
-const maxAuditCharacterLevel = 7;
+const maxLevelOneSevenAuditCharacterLevel = 7;
+const maxLevelOneEightAuditCharacterLevel = 8;
 const levelOneSevenMiningAuditLevelBands = characterLevelBands(
-  maxAuditCharacterLevel,
+  maxLevelOneSevenAuditCharacterLevel,
+);
+const levelOneEightMiningAuditLevelBands = characterLevelBands(
+  maxLevelOneEightAuditCharacterLevel,
 );
 const levelOneSevenMiningAuditLevelBandSet = new Set(
   levelOneSevenMiningAuditLevelBands,
+);
+const levelOneEightMiningAuditLevelBandSet = new Set(
+  levelOneEightMiningAuditLevelBands,
 );
 
 function countValues(values) {
@@ -20,9 +27,9 @@ function countValues(values) {
   );
 }
 
-function countByLevelBand(rows) {
+function countByLevelBand(rows, levelBands = levelOneSevenMiningAuditLevelBands) {
   const counts = new Map(
-    levelOneSevenMiningAuditLevelBands.map((band) => [band, 0]),
+    levelBands.map((band) => [band, 0]),
   );
   for (const row of rows) {
     counts.set(row.levelBand, (counts.get(row.levelBand) ?? 0) + 1);
@@ -95,6 +102,12 @@ function projectAuditRow(row) {
         row.battleReadinessClosure,
       ),
     },
+    ...(row.progressionDeltas === undefined
+      ? {}
+      : { progressionDeltas: row.progressionDeltas }),
+    ...(row.thresholdFacts === undefined
+      ? {}
+      : { thresholdFacts: row.thresholdFacts }),
     nextAction: row.nextAction,
   };
 }
@@ -179,14 +192,20 @@ function buildUniqueSpellIdentities(rows) {
     );
 }
 
-function buildLevelOneSevenMiningAudit(srdUnitInventory) {
+function buildMiningAudit({
+  srdUnitInventory,
+  maxCharacterLevel,
+  levelBands,
+  levelBandSet,
+  title,
+}) {
   const rows = srdUnitInventory.rows
-    .filter((row) => levelOneSevenMiningAuditLevelBandSet.has(row.levelBand))
+    .filter((row) => levelBandSet.has(row.levelBand))
     .map(projectAuditRow)
     .sort((left, right) => left.rowId.localeCompare(right.rowId));
   const uniqueSpellIdentities = buildUniqueSpellIdentities(rows);
-  const rowsByLevelBand = countByLevelBand(rows);
-  const missingMinedLevelBands = levelOneSevenMiningAuditLevelBands.filter(
+  const rowsByLevelBand = countByLevelBand(rows, levelBands);
+  const missingMinedLevelBands = levelBands.filter(
     (levelBand) => rowsByLevelBand[levelBand] === 0,
   );
   return stable({
@@ -199,15 +218,15 @@ function buildLevelOneSevenMiningAudit(srdUnitInventory) {
       ".references/srd-5.2.1/Spells/*.md",
     ],
     scope: {
-      title: "Character Levels 1-7 Mining Audit",
-      maxCharacterLevel: maxAuditCharacterLevel,
-      levelBands: levelOneSevenMiningAuditLevelBands,
+      title,
+      maxCharacterLevel,
+      levelBands,
       denominatorRule:
         "A row enters this audit only when a mined SRD inventory row exists for an included character-level or spell-level band.",
       supportGate:
         "non-blocking mining frontier; runtime admission and support snapshots are reported but do not pass or fail level 1-4 full-support gates",
       axisRule:
-        "Character level and spell level are separate axes. Character level 5 opens spell-level-3 pressure for full casters and Warlock Pact Magic; character level 7 opens spell-level-4 pressure for those same table-derived owners. Paladin and Ranger spell-level-3 and spell-level-4 list sections are not counted in this level-7 frontier because their SRD class tables do not grant matching slots by character level 7.",
+        `Character level and spell level are separate axes. Character level 5 opens spell-level-3 pressure for full casters and Warlock Pact Magic; character level 7 opens spell-level-4 pressure for those same table-derived owners. Paladin and Ranger spell-level-3 and spell-level-4 list sections are not counted in this level-${maxCharacterLevel} frontier because their SRD class tables do not grant matching slots by character level ${maxCharacterLevel}.`,
     },
     metrics: {
       minedDenominatorRows: rows.length,
@@ -238,6 +257,7 @@ function buildLevelOneSevenMiningAudit(srdUnitInventory) {
             row.rowKind === "spell-unit-pressure" &&
             auditedSpellPressureLevelBandSet.has(row.levelBand),
         ),
+        levelBands,
       ),
       auditedUniqueSpellIdentitiesByLevelBand: countValues(
         uniqueSpellIdentities.map((spell) => spell.levelBand),
@@ -253,6 +273,26 @@ function buildLevelOneSevenMiningAudit(srdUnitInventory) {
   });
 }
 
+function buildLevelOneSevenMiningAudit(srdUnitInventory) {
+  return buildMiningAudit({
+    srdUnitInventory,
+    maxCharacterLevel: maxLevelOneSevenAuditCharacterLevel,
+    levelBands: levelOneSevenMiningAuditLevelBands,
+    levelBandSet: levelOneSevenMiningAuditLevelBandSet,
+    title: "Character Levels 1-7 Mining Audit",
+  });
+}
+
+function buildLevelOneEightMiningAudit(srdUnitInventory) {
+  return buildMiningAudit({
+    srdUnitInventory,
+    maxCharacterLevel: maxLevelOneEightAuditCharacterLevel,
+    levelBands: levelOneEightMiningAuditLevelBands,
+    levelBandSet: levelOneEightMiningAuditLevelBandSet,
+    title: "Character Levels 1-8 Mining Audit",
+  });
+}
+
 function md(value) {
   return String(value ?? "")
     .replace(/\n/g, " ")
@@ -265,8 +305,8 @@ function renderKeyCountRows(counts) {
   return entries.map(([key, count]) => `| ${md(key)} | ${count} |`);
 }
 
-function renderLevelBandRows(rowsByLevelBand) {
-  return levelOneSevenMiningAuditLevelBands.map((levelBand) => {
+function renderLevelBandRows(rowsByLevelBand, levelBands) {
+  return levelBands.map((levelBand) => {
     const rowCount = rowsByLevelBand[levelBand] ?? 0;
     return `| ${levelBand} | ${auditAxis(levelBand)} | ${rowCount > 0 ? "present" : "not-yet-mined"} | ${rowCount} |`;
   });
@@ -285,15 +325,40 @@ function renderClassListRowRefs(classListRows) {
     .join("; ");
 }
 
+function renderProgressionDeltas(row) {
+  return (row.progressionDeltas ?? [])
+    .map(
+      (delta) =>
+        `${delta.column}: ${delta.previousValue} -> ${delta.currentValue} (${sourceRef(delta.previousSource)} -> ${sourceRef(delta.currentSource)})`,
+    )
+    .join("; ");
+}
+
+function renderThresholdFacts(row) {
+  return (row.thresholdFacts ?? [])
+    .map((fact) => {
+      if (fact.kind === "druid-wild-shape-beast-shapes-threshold") {
+        return `Druid Wild Shape Beast Shapes threshold: Known Forms ${fact.knownForms}, Max CR ${fact.maxCr}, Fly Speed ${fact.flySpeed} (${sourceRef(fact.source)})`;
+      }
+      return `${fact.kind} (${sourceRef(fact.source)})`;
+    })
+    .join("; ");
+}
+
 function renderLevelOneSevenMiningAudit(report) {
+  const rendersMinedFactColumns = report.rows.some(
+    (row) =>
+      (row.progressionDeltas ?? []).length > 0 ||
+      (row.thresholdFacts ?? []).length > 0,
+  );
   return `${[
-    "# Character Levels 1-7 Mining Audit",
+    `# ${report.scope.title}`,
     "",
     "Generated by `scripts/unit-profile-coverage-check.cjs` from `plans/unit-profile-coverage/srd-unit-inventory.json`.",
     "",
     "**This is a mining/audit frontier, not a full-support claim.** A `present` row means the SRD source row exists in the mined denominator. Runtime support, catalog admission, and battle-readiness columns are non-blocking snapshots and do not pass or fail the current level 1-4 gates.",
     "",
-    "Character level and spell level are separate axes. Character level 5 opens spell-level-3 pressure for full casters and Warlock Pact Magic; character level 7 opens spell-level-4 pressure for those same table-derived owners. Paladin and Ranger spell-level-3 and spell-level-4 list sections are not counted in this level-7 frontier because their SRD class tables do not grant matching slots by character level 7.",
+    report.scope.axisRule,
     "",
     "## Scope",
     "",
@@ -309,7 +374,10 @@ function renderLevelOneSevenMiningAudit(report) {
     "",
     "| Level band | Axis | Mining state | Rows |",
     "| --- | --- | --- | ---: |",
-    ...renderLevelBandRows(report.metrics.rowsByLevelBand),
+    ...renderLevelBandRows(
+      report.metrics.rowsByLevelBand,
+      report.scope.levelBands,
+    ),
     "",
     "## Non-Blocking Runtime Snapshot",
     "",
@@ -396,8 +464,12 @@ function renderLevelOneSevenMiningAudit(report) {
     "",
     "## Mined Rows",
     "",
-    "| Row | Level band | Axis | Category | Unit | Source | Mined denominator | Catalog | Unit profile | Final disposition | Battle readiness | Readiness closure | Next action |",
-    "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+    rendersMinedFactColumns
+      ? "| Row | Level band | Axis | Category | Unit | Source | Mined denominator | Progression deltas | Threshold facts | Catalog | Unit profile | Final disposition | Battle readiness | Readiness closure | Next action |"
+      : "| Row | Level band | Axis | Category | Unit | Source | Mined denominator | Catalog | Unit profile | Final disposition | Battle readiness | Readiness closure | Next action |",
+    rendersMinedFactColumns
+      ? "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"
+      : "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
     ...report.rows.map((row) => {
       const cells = [
         row.concept,
@@ -407,6 +479,9 @@ function renderLevelOneSevenMiningAudit(report) {
         `\`${row.candidateUnitId}\``,
         `\`${sourceRef(row.source)}\``,
         row.minedDenominator.state,
+        ...(rendersMinedFactColumns
+          ? [renderProgressionDeltas(row), renderThresholdFacts(row)]
+          : []),
         row.supportSnapshot.catalogAdmission.state,
         unitProfileSnapshotLabel(row.supportSnapshot.unitProfile),
         row.supportSnapshot.finalDisposition,
@@ -423,7 +498,9 @@ function renderLevelOneSevenMiningAudit(report) {
 }
 
 module.exports = {
+  buildLevelOneEightMiningAudit,
   buildLevelOneSevenMiningAudit,
+  levelOneEightMiningAuditLevelBands,
   levelOneSevenMiningAuditLevelBands,
   renderLevelOneSevenMiningAudit,
 };

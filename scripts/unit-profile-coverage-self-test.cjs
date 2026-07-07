@@ -51,6 +51,8 @@ const {
   buildFeatureProcedureMbtEvidenceGate,
 } = require("./feature-procedure-mbt-evidence-gate.cjs");
 const {
+  buildLevelOneEightMiningAudit,
+  levelOneEightMiningAuditLevelBands,
   buildLevelOneSevenMiningAudit,
   levelOneSevenMiningAuditLevelBands,
   renderLevelOneSevenMiningAudit,
@@ -687,6 +689,66 @@ function assertLevelOneSevenMiningAuditSeparatesRowPresenceFromSupport() {
     fail(
       `Self-test failed: expected level 1-7 mining audit bands ${JSON.stringify(expectedAuditBands)}, got ${JSON.stringify(levelOneSevenMiningAuditLevelBands)}`,
     );
+  }
+  const expectedLevelOneEightAuditBands = [
+    "level-1",
+    "level-2",
+    "level-3",
+    "level-4",
+    "level-5",
+    "level-6",
+    "level-7",
+    "level-8",
+    "spell-level-0",
+    "spell-level-1",
+    "spell-level-2",
+    "spell-level-3",
+    "spell-level-4",
+  ];
+  if (
+    JSON.stringify(levelOneEightMiningAuditLevelBands) !==
+    JSON.stringify(expectedLevelOneEightAuditBands)
+  ) {
+    fail(
+      `Self-test failed: expected level 1-8 mining audit bands ${JSON.stringify(expectedLevelOneEightAuditBands)}, got ${JSON.stringify(levelOneEightMiningAuditLevelBands)}`,
+    );
+  }
+  const levelOneEightReport = buildLevelOneEightMiningAudit({
+    rows: [
+      {
+        id: "fixture:level-8:feature",
+        levelBand: "level-8",
+        rowKind: "class-feature-grant",
+        category: "class feature",
+        className: "Fixture",
+        concept: "Fixture Level 8 Feature",
+        candidateUnitId: "fixture_level_8_feature",
+        source: {
+          path: ".references/srd-5.2.1/Classes/Fixture.md",
+          lineStart: 8,
+          lineEnd: 8,
+        },
+        authoredContent: { state: "missing-authored-record" },
+        catalogAdmission: { state: "not-installed" },
+        unitProfileDisposition: "unsupported-profile",
+        finalDisposition: "missing-authored-record",
+        nextAction: "Fixture level-8 follow-up.",
+      },
+    ],
+  });
+  const renderedLevelOneEight = renderLevelOneSevenMiningAudit(
+    levelOneEightReport,
+  );
+  for (const expectedText of [
+    "# Character Levels 1-8 Mining Audit",
+    "| level-8 | character-level | present | 1 |",
+    "| Fixture Level 8 Feature | level-8 | character-level | class feature | `fixture_level_8_feature` | `.references/srd-5.2.1/Classes/Fixture.md:8` | present | not-installed | unsupported-profile | missing-authored-record | not-applicable | not-recorded | Fixture level-8 follow-up. |",
+  ]) {
+    if (!renderedLevelOneEight.includes(expectedText)) {
+      fail(
+        `Self-test failed: expected level 1-8 mining audit report to include ${JSON.stringify(expectedText)}, got ${JSON.stringify(renderedLevelOneEight)}`,
+      );
+    }
   }
   const rendered = renderLevelOneSevenMiningAudit(report);
   for (const expectedText of [
