@@ -529,7 +529,7 @@
     {
       "number": 88,
       "id": "CRPI-BLOCK-045",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: character-creation-rogue-expertise-selected-identity"
     },
     {
@@ -740,7 +740,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRPI-BLOCK-042` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-043` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-044` | `done` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-045` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-045` | `done` | none | target replay evidence and owner implementation |
 | `CRP04-CCF-01` | `done` | none | target replay evidence and owner implementation |
 | `CRP04-CCF-02` | `done` | none | target replay evidence and owner implementation |
 | `CRP04-CCF-03` | `done` | none | target replay evidence and owner implementation |
@@ -5767,7 +5767,7 @@ Plan Impact:
 
 ### Task 88 - CRPI-BLOCK-045
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

@@ -1,86 +1,108 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-032",
+  "taskId": "CRPI-BLOCK-045",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/battle-runtime/battle-runtime-thaumaturgy-selected-identity.mbt.qnt",
+      "path": "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.mbt.qnt",
       "quarantinedWitnessNames": [
-        "qActionAvailable",
-        "qCasterEffectCount",
-        "qIntimidationRollMode",
-        "qPerceptionRollMode",
-        "qProtocol",
-        "qWisdomIntimidationRollMode"
+        "qState",
+        "doSelectLevelOneOwnedSkillExpertise"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-032.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-045.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt",
+      "path": "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.route.mbt.qnt",
       "quarantinedWitnessNames": [
-        "qRoute",
-        "qSurface"
+        "qRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-032.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-045.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/thaumaturgy-selected-identity.mbt.test.ts",
+      "path": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "observeThaumaturgyBoomingVoiceRoute",
-        "ThaumaturgyRouteProjection"
+        "rogueExpertiseRouteDriverSchema",
+        "createRogueExpertiseReducerRouteDriver",
+        "levelOneRogueExpertisePublicCreationReplay",
+        "retainLevelOneRogueExpertiseSelectedReferenceRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-032.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-045.json"
+      ]
+    },
+    {
+      "path": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
+      "quarantinedWitnessNames": [
+        "qState",
+        "doSelectDefenseFightingStyle",
+        "doSelectArcheryFightingStyle",
+        "doSelectGreatWeaponFightingStyle",
+        "doSelectTwoWeaponFightingStyle",
+        "doReplaceArcheryWithDefenseOnFighterLevelGain",
+        "doReplaceDefenseWithArcheryOnFighterLevelGain",
+        "doReplaceDefenseWithGreatWeaponFightingOnFighterLevelGain",
+        "doReplaceDefenseWithTwoWeaponFightingOnFighterLevelGain"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-044.json"
+      ]
+    },
+    {
+      "path": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.route.mbt.qnt",
+      "quarantinedWitnessNames": [
+        "qRoute"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-044.json"
+      ]
+    },
+    {
+      "path": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "quarantinedWitnessNames": [
+        "fighterFightingStyleRouteDriverSchema",
+        "createCompletedReducerRouteDriver",
+        "replaceFighterFightingStyleSelectedReferenceRoute",
+        "selectedReferenceRetentionRoute"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-044.json"
       ]
     }
   ],
   "productionModulesExtended": [
     {
-      "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "role": "runtime-projection",
-      "domainApis": [
-        "battleReducerRouteEventsForDiscoveredAct",
-        "battleReducerRouteForResolution",
-        "rollModifierRouteForDiscoveredAct",
-        "rollModifierRouteForResolution"
-      ],
-      "notes": "Task 60 reuses existing generic rollModifierEffect route projection. Thaumaturgy Booming Voice discovery and resolution are derived from typed actionSpell invocation procedure, public initial holes, the thaumaturgyActiveOneMinuteEffectCount fill, and BattleResolutionResult.routeEvents; no route-local or Thaumaturgy-specific ledger is stored."
+      "path": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts",
+      "notes": "Extends selected-reference counting to include existing CharacterBuild.proficiencyChoices entries whose subject is skill_expertise, so Rogue Expertise skill refs are retained by CreationSelectedReferenceOwner without adding duplicate selected-reference state."
     },
     {
-      "path": "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/thaumaturgy-booming-voice.ts",
-      "role": "domain-engine",
-      "domainApis": [
-        "thaumaturgyBoomingVoiceProfile"
-      ],
-      "notes": "Existing profile owns Booming Voice active-effect admission through public spell resolution. The active one-minute effect count remains caller boundary evidence supplied by fill, not BattleState state."
+      "path": "packages/character-creation-runtime/src/character-build-advancement.ts",
+      "notes": "Adds advanceCharacterBuildFightingStyleReplacementWithRoute, a public route wrapper around the existing typed Fighter Fighting Style replacement advancement reducer."
     },
     {
-      "path": "packages/battle-runtime/src/battle-reducer.ts",
-      "role": "domain-engine",
-      "domainApis": [
-        "discoverBattleActs",
-        "resolveBattleSubject",
-        "BattleCreatureState.activeEffects"
-      ],
-      "notes": "Existing BattleState owns the active Spell Effect in combatant activeEffects. Task 60 introduced no new durable BattleState field."
+      "path": "packages/character-creation-runtime/src/index.ts",
+      "notes": "Exports the Fighter Fighting Style replacement route wrapper and route event types through the package public surface."
     }
   ],
   "expectedNextReuse": [
     {
-      "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "notes": "Future selected roll-modifier active-effect tasks should reuse rollModifierEffect public route events derived from typed procedure/fill/result shape instead of branching on authored spell identity or connector action names."
+      "path": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts",
+      "notes": "Initial selected-reference branches continue to derive CreationSelectedReferenceOwner events from existing CharacterBuild selected refs, including selected class-choice refs and skill_expertise proficiency choices."
     },
     {
-      "path": "packages/battle-runtime/src/roll-modifier-active-effects.mbt.test.ts",
-      "notes": "The full copied roll-modifier active-effects route connector replay remains the broad qRoute parity lane for roll-modifier active-effect route subjects."
+      "path": "packages/character-creation-runtime/src/character-build-advancement.ts",
+      "notes": "Future CharacterBuild level-gain replacement route tasks should wrap the typed advancement reducer, start from fixture builds that satisfy current class-level choice preconditions, and then reuse selected-reference and build-projection route entrypoints."
+    },
+    {
+      "path": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts",
+      "notes": "Replacement branches reuse characterBuildProjectionWithRoute for CharacterBuildOwner build-projection events without storing a parallel projection state field."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 60 observes the copied Thaumaturgy selected-identity qRoute through public reducer route events: startBattle, rollModifierEffect discovery owned by battleActiveEffect, and rollModifierEffect resolution without fill owned by battleActiveEffect."
+    "notes": "Task 88 observes copied Rogue Expertise level-1 qRoute through an actual Rogue public creation replay and public selected-reference route entrypoints. No new durable CharacterBuild fields were added; final Expertise proficiency-level projection remains derived from existing build/proficiency facts."
   }
 }

@@ -1,82 +1,84 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-032",
+  "taskId": "CRPI-BLOCK-045",
   "durableFields": [
     {
-      "fieldPath": "AvailableBattleAct.routeEvents",
-      "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "AvailableBattleAct.initialHoles",
-        "boundary": "discoverBattleActs public reducer result"
-      },
-      "notes": "Existing discovery results carry rollModifierEffect route events derived from typed spell procedure and initial hole shape."
-    },
-    {
-      "fieldPath": "BattleResolutionResult.routeEvents",
-      "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleResolutionResult.tag",
-        "boundary": "resolveBattleSubject public reducer result"
-      },
-      "notes": "Existing resolution results carry rollModifierEffect route events derived from submitted fill and resolved active-effect admission."
-    },
-    {
-      "fieldPath": "BattleSubject.actionSpell.invocation.procedure=thaumaturgyBoomingVoice",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "fieldPath": "CharacterBuild.proficiencyChoices",
+      "owner": "character-build-proficiency-choice",
+      "introducedIn": "packages/character-creation-runtime/src/types.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing typed invocation procedure admits Booming Voice behavior without production dispatch on spell name or id."
+      "notes": "Existing skill_expertise proficiency choices retain the level-1 Rogue Expertise selected-reference boundary. Task 88 adds no duplicate selected-reference cache and does not model the out-of-denominator level-six additional Expertise branch."
     },
     {
-      "fieldPath": "BattleFill.kind=thaumaturgyActiveOneMinuteEffectCount",
-      "owner": "caller-boundary-evidence",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "fieldPath": "CharacterBuild proficiency projection",
+      "owner": "character-build-proficiency-projection",
+      "introducedIn": "packages/character-creation-runtime/src/types.ts",
+      "derivability": {
+        "tag": "runtime-projection"
+      },
+      "notes": "Final Expertise proficiency-level facts derive from CharacterBuild.proficiencyChoices and CharacterBuild proficiency projection rather than being stored as parallel durable skill state."
+    },
+    {
+      "fieldPath": "CharacterCreationRouteEvent.subject=selectedReference",
+      "owner": "character-creation-selected-reference-route-projection",
+      "introducedIn": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts",
+      "derivability": {
+        "tag": "runtime-projection"
+      },
+      "notes": "CreationSelectedReferenceOwner route events are emitted after reading retained CharacterBuild skill_expertise proficiency choices for the level-1 Rogue Expertise replay."
+    },
+    {
+      "fieldPath": "CharacterBuild.features",
+      "owner": "character-build",
+      "introducedIn": "packages/character-creation-runtime/src/types.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing fill carries the caller-supplied count of active one-minute Thaumaturgy effects. It is not copied into a reducer ledger."
+      "notes": "Existing selected class-choice refs retain the Fighter Fighting Style feat selected during creation and after Fighter level-gain replacement. The replacement replay also preserves the existing level-1 Fighter Weapon Mastery selected refs in CharacterBuild.features so the advancement reducer can check the current table count. Task 87 adds no duplicate selected-reference cache."
     },
     {
-      "fieldPath": "BattleCreatureState.activeEffects[].kind=thaumaturgyBoomingVoice",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "fieldPath": "CharacterBuild.progression.advancements",
+      "owner": "character-build",
+      "introducedIn": "packages/character-creation-runtime/src/types.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing activeEffects owns the active Spell Effect after public resolution."
+      "notes": "The Fighter level-gain replacement operation appends the existing class advancement entry through advanceCharacterBuildClassLevel; replacement route evidence reads this canonical progression instead of storing route-local level state."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=rollModifierEffect",
-      "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "fieldPath": "CharacterCreationRouteEvent.subject=selectedReference",
+      "owner": "character-creation-selected-reference-route-projection",
+      "introducedIn": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts",
       "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject.actionSpell.invocation.procedure",
-        "boundary": "battle reducer route event"
+        "tag": "runtime-projection"
       },
-      "notes": "Generic roll-modifier route subject is derived from typed spell procedure shape, including thaumaturgyBoomingVoice, not authored spell identity."
+      "notes": "CreationSelectedReferenceOwner route events are emitted after reading retained CharacterBuild selected refs."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.owner=battleActiveEffect",
-      "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "fieldPath": "CharacterCreationRouteEvent.kind=applyCreationFillBatch",
+      "owner": "character-build-fighting-style-replacement-route",
+      "introducedIn": "packages/character-creation-runtime/src/character-build-advancement.ts",
       "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleFill.kind=thaumaturgyActiveOneMinuteEffectCount",
-        "boundary": "battle reducer route event"
+        "tag": "runtime-projection"
       },
-      "notes": "Thaumaturgy Booming Voice active-effect admission is routed to the active-effect owner; the one-minute count remains fill evidence."
+      "notes": "The Fighter Fighting Style replacement route event records the CharacterBuildOwner replacement fill boundary around the existing typed advancement reducer."
+    },
+    {
+      "fieldPath": "CharacterCreationRouteEvent.subject=buildProjection",
+      "owner": "character-build-projection-route",
+      "introducedIn": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts",
+      "derivability": {
+        "tag": "runtime-projection"
+      },
+      "notes": "CharacterBuildOwner build-projection route events are emitted by characterBuildProjectionWithRoute without storing a parallel projection state field."
     }
   ],
   "notes": [
-    "Task 60 introduced no new durable BattleState fields.",
-    "The one-minute Thaumaturgy active-effect count remains caller boundary evidence on the fill.",
-    "Production route behavior branches on typed spell procedure, public hole/fill shape, and reducer result route events; it does not branch on authored spell id, name, QNT branch action names, witness field names, fixture labels, or connector filenames."
+    "Task 88 introduced no new durable CharacterBuild fields.",
+    "Level-1 Rogue Expertise selected refs remain existing CharacterBuild.proficiencyChoices skill_expertise facts.",
+    "Final Expertise proficiency-level facts derive from existing CharacterBuild proficiency projection and selected skill proficiency facts, not a duplicate durable skill-state store.",
+    "The level-six additional Rogue Expertise branch remains out of this task denominator."
   ]
 }

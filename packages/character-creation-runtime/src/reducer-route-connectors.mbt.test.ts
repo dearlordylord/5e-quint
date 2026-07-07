@@ -6,6 +6,7 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
+import type { Skill } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -42,11 +43,14 @@ import {
   WEAPON_MASTERY_OPTIONS_CHOICE_KEY,
   advanceCharacterBuildFightingStyleReplacementWithRoute,
   abilityScoreAssignment,
+  characterBuildProficiencies,
   characterBuildClassFeatureFactsProjectionWithRoute,
   characterBuildProjectionWithRoute,
   characterBuildSelectedReferenceCount,
   characterBuildSelectedReferencesWithRoute,
+  characterBuildUnitRefs,
   characterDraftId,
+  choiceCardinalityBounds,
   classUnitId,
   createCharacterDraft as createRuntimeCharacterDraft,
   creationChoiceOptionId,
@@ -68,12 +72,20 @@ import {
   type CharacterBuildSorcererMetamagicFacts,
   type CharacterDraft,
   type CreationBatchFillResult,
+  type CreationChoiceOptionId,
   type CreationFill,
   type CreationHole,
   type DraftRevision,
   type LoadoutSlot,
   type UnitChoiceKey,
 } from "./index.ts";
+import {
+  CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
+  PHASE1_WEAPON_DAGGER_UNIT_ID,
+  PHASE1_WEAPON_SHORTSWORD_UNIT_ID,
+  SRD_ROGUE_CLASS_UNIT_ID,
+} from "./phase1-manifest.ts";
+import { supportedHoleOptionIds } from "./support-gates.ts";
 
 const MBT_TEST_TIMEOUT_MS = 120_000;
 
@@ -112,6 +124,25 @@ const FIGHTER_LEVEL_ONE_WEAPON_MASTERY_UNIT_IDS =
     0,
     FIGHTER_LEVEL_ONE_WEAPON_MASTERY_SELECTION_COUNT,
   );
+const ROGUE_EXPERTISE_UNIT_ID = "rogue_expertise";
+const ROGUE_WEAPON_MASTERY_UNIT_ID = "rogue_weapon_mastery";
+const LEVEL_ONE_ROGUE_SKILL_PROFICIENCIES = [
+  "acrobatics",
+  "perception",
+  "sleight_of_hand",
+  "stealth",
+] as const satisfies ReadonlyArray<Skill>;
+const LEVEL_ONE_ROGUE_EXPERTISE_SKILLS = [
+  "sleight_of_hand",
+  "stealth",
+] as const satisfies ReadonlyArray<Skill>;
+const LEVEL_ONE_ROGUE_WEAPON_MASTERY_UNIT_IDS = [
+  PHASE1_WEAPON_DAGGER_UNIT_ID,
+  PHASE1_WEAPON_SHORTSWORD_UNIT_ID,
+] as const;
+const LEVEL_ONE_ROGUE_SELECTED_REFERENCE_COUNT =
+  LEVEL_ONE_ROGUE_EXPERTISE_SKILLS.length +
+  LEVEL_ONE_ROGUE_WEAPON_MASTERY_UNIT_IDS.length;
 
 const HOLE_BY_TAG = {
   CreationDraftStructureHoleFamily: "draftStructure",
@@ -583,13 +614,7 @@ describe("character creation reducer route connector MBT", () => {
     await runRouteMbt({
       specFileName:
         "character-creation-rogue-expertise-selected-identity.route.mbt.qnt",
-      driver: createCompletedReducerRouteDriver(
-        rogueExpertiseRouteDriverSchema,
-        "cc:route-rogue-expertise",
-        {
-          doSelectLevelOneOwnedSkillExpertise: retainSelectedReferenceRoute,
-        },
-      ),
+      driver: createRogueExpertiseReducerRouteDriver(),
       maxSteps: focusedMbtMaxSteps(1),
     });
   }, MBT_TEST_TIMEOUT_MS);
@@ -1224,6 +1249,104 @@ function manifestLoadoutFills(
   ];
 }
 
+function levelOneRogueExpertiseInitialManifestFills(
+  holes: readonly CreationHole[],
+): readonly CreationFill[] {
+  return [
+    choiceFill(choiceHoleByDraftPath(holes, "draft.progression.initial"), [
+      progressionOptionId({
+        startingClass: classUnitId(SRD_ROGUE_CLASS_UNIT_ID),
+        advancements: [],
+      }),
+    ]),
+    choiceFill(choiceHoleByDraftPath(holes, "draft.background"), [
+      PHASE1_BACKGROUND_SOLDIER_UNIT_ID,
+    ]),
+    choiceFill(choiceHoleByDraftPath(holes, "draft.species"), [
+      PHASE1_SPECIES_ORC_UNIT_ID,
+    ]),
+    standardArrayFill(holes, "draft.abilityScoreGeneration"),
+    choiceFill(choiceHoleByDraftPath(holes, "draft.languages"), [
+      "Dwarvish",
+      "Goblin",
+    ]),
+    choiceFill(choiceHoleByDraftPath(holes, "draft.alignment"), [
+      PHASE1_ALIGNMENT_OPTION_ID,
+    ]),
+  ];
+}
+
+function supportedRogueExpertiseFillForHole(hole: CreationHole): CreationFill {
+  if (hole.kind === "abilityScores") {
+    return standardArrayFill([hole], "draft.abilityScoreGeneration");
+  }
+  const preferredOptionIds = preferredRogueExpertiseOptionIds(hole);
+  const supportedOptionIds = supportedHoleOptionIds(hole);
+  if (supportedOptionIds === undefined) {
+    throw new Error(
+      `No support-profile options for Rogue Expertise route hole ${hole.holeId}.`,
+    );
+  }
+  const holeOptionIds = new Set(
+    hole.options.map((option) => option.optionId),
+  );
+  const supportedOptionIdSet = new Set(supportedOptionIds);
+  const optionIds = (
+    preferredOptionIds ?? hole.options.map((option) => option.optionId)
+  )
+    .filter((optionId) => holeOptionIds.has(optionId))
+    .filter((optionId) => supportedOptionIdSet.has(optionId))
+    .slice(0, choiceCardinalityBounds(hole.cardinality).max);
+  if (optionIds.length < choiceCardinalityBounds(hole.cardinality).max) {
+    throw new Error(
+      `Not enough supported options for Rogue Expertise route hole ${hole.holeId}.`,
+    );
+  }
+  return choiceFill(hole, optionIds);
+}
+
+function preferredRogueExpertiseOptionIds(
+  hole: Extract<CreationHole, { readonly kind: "choice" }>,
+): readonly CreationChoiceOptionId[] | undefined {
+  if (
+    hole.source.tag === "unitChoice" &&
+    hole.source.unitId === SRD_ROGUE_CLASS_UNIT_ID &&
+    hole.source.choiceKey === CLASS_SKILL_PROFICIENCY_CHOICE_KEY
+  ) {
+    return LEVEL_ONE_ROGUE_SKILL_PROFICIENCIES.map(creationChoiceOptionId);
+  }
+  if (
+    hole.source.tag === "unitChoice" &&
+    hole.source.unitId === ROGUE_EXPERTISE_UNIT_ID &&
+    hole.source.choiceKey === CLASS_FEATURE_PROFICIENCY_CHOICE_KEY
+  ) {
+    return LEVEL_ONE_ROGUE_EXPERTISE_SKILLS.map(creationChoiceOptionId);
+  }
+  if (
+    hole.source.tag === "unitChoice" &&
+    hole.source.unitId === ROGUE_WEAPON_MASTERY_UNIT_ID &&
+    hole.source.choiceKey === WEAPON_MASTERY_OPTIONS_CHOICE_KEY
+  ) {
+    return LEVEL_ONE_ROGUE_WEAPON_MASTERY_UNIT_IDS.map(
+      creationChoiceOptionId,
+    );
+  }
+  return undefined;
+}
+
+function levelOneRogueSkillProficiencyFill(
+  holes: readonly CreationHole[],
+): CreationFill {
+  return choiceFill(
+    choiceHoleByUnit(
+      holes,
+      SRD_ROGUE_CLASS_UNIT_ID,
+      CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
+    ),
+    LEVEL_ONE_ROGUE_SKILL_PROFICIENCIES.map(creationChoiceOptionId),
+  );
+}
+
 function choiceHoleByDraftPath(
   holes: readonly CreationHole[],
   path: Extract<CreationHole["source"], { readonly tag: "draft" }>["path"],
@@ -1651,6 +1774,108 @@ function selectedReferenceRetentionRoute(
   );
   if (!options.recordRetentionFact) return retained;
   return recordCharacterBuildSelectedReferenceRetentionWithRoute(retained);
+}
+
+function retainLevelOneRogueExpertiseSelectedReferenceRoute(): readonly CharacterCreationRouteEvent[] {
+  const replay = levelOneRogueExpertisePublicCreationReplay();
+  const proficiencies = requireRight(
+    characterBuildProficiencies(replay.build, unitLibrary),
+  );
+  const unitRefIds = characterBuildUnitRefs(replay.build, unitLibrary).map(
+    (ref) => ref.unitId,
+  );
+
+  expect(replay.build.progression).toEqual({
+    startingClass: classUnitId(SRD_ROGUE_CLASS_UNIT_ID),
+    advancements: [],
+  });
+  expect(proficiencies.expertise).toEqual(LEVEL_ONE_ROGUE_EXPERTISE_SKILLS);
+  for (const skill of LEVEL_ONE_ROGUE_EXPERTISE_SKILLS) {
+    expect(proficiencies.skills).toContain(skill);
+  }
+  expect(unitRefIds).toContain(ROGUE_EXPERTISE_UNIT_ID);
+  expect(characterBuildSelectedReferenceCount(replay.build)).toBe(
+    LEVEL_ONE_ROGUE_SELECTED_REFERENCE_COUNT,
+  );
+
+  return requireRight(
+    characterBuildSelectedReferencesWithRoute({
+      build: replay.build,
+      route: replay.route,
+    }),
+  ).route;
+}
+
+function createRogueExpertiseReducerRouteDriver() {
+  return defineDriver(rogueExpertiseRouteDriverSchema, () => {
+    let route = levelOneRogueExpertisePublicCreationReplay().route;
+    return {
+      init: () => {
+        route = levelOneRogueExpertisePublicCreationReplay().route;
+      },
+      doSelectLevelOneOwnedSkillExpertise: () => {
+        route = retainLevelOneRogueExpertiseSelectedReferenceRoute();
+      },
+      step: () => {},
+      getState: (): RouteProjection => ({ route }),
+    };
+  });
+}
+
+function levelOneRogueExpertisePublicCreationReplay(): {
+  readonly build: CharacterBuild;
+  readonly route: readonly CharacterCreationRouteEvent[];
+} {
+  const session = createRouteReducerSession("cc:route-rogue-expertise");
+  submitCreationFillBatch(session, {
+    fills: levelOneRogueExpertiseInitialManifestFills(session.holes),
+    owner: "characterDraft",
+  });
+  submitCreationFillBatch(session, {
+    fills: [levelOneRogueSkillProficiencyFill(session.holes)],
+    owner: "characterDraft",
+  });
+
+  for (const owner of [
+    "creationSupportProfileAdmission",
+    "creationSupportProfileAdmission",
+    "characterDraft",
+  ] as const satisfies readonly CharacterCreationRouteOwner[]) {
+    submitCreationFillBatch(session, {
+      fills: session.holes.map(supportedRogueExpertiseFillForHole),
+      owner,
+    });
+  }
+
+  const finalization = finalizeRuntimeCharacterDraft({
+    draft: session.draft,
+    unitLibrary,
+  });
+  if (finalization.tag !== "ready") {
+    throw new Error(
+      `Expected Rogue Expertise route draft to finalize, received ${finalization.tag}.`,
+    );
+  }
+  session.route = [
+    ...session.route,
+    projectCharacterBuildFacts({
+      subject: "buildProjection",
+      owner: "characterBuild",
+    }),
+    recordCreationFacts({
+      subject: "buildProjection",
+      facts: ["buildProjectionInput", "hitPointMaximumBuildInput"],
+      owner: "characterBuild",
+    }),
+    finalizeCharacterDraft({
+      subject: "finalization",
+      owner: "characterBuild",
+    }),
+  ];
+  return {
+    build: finalization.build,
+    route: session.route,
+  };
 }
 
 function selectedReferenceFixtureBuild(): CharacterBuild {
