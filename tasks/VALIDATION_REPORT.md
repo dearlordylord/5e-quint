@@ -1,5 +1,113 @@
 # Validation Report
 
+## CRPI-BLOCK-042
+
+Status: `pass`
+
+- Task: 85
+- Driver path: `packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt`
+- Route connector path: `packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt`
+- Route class: `reducer-routed`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-042.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Behavior implemented:
+
+Task 85 accepts Character Creation class-feature selected-identity route replay
+through public target entrypoints. The public creation reducer path creates a
+draft, discovers holes, fills supported initial choices, and finalizes a
+`CharacterBuild`. Selected-reference route events are emitted by
+`characterBuildSelectedReferencesWithRoute`, which derives selected-reference
+facts from existing `CharacterBuild` facts: selected class-choice Units,
+selected Eldritch Invocations, selected Sorcerer Metamagic options, and selected
+spell references retained in spellcasting sources. Projection branches then reuse
+`characterBuildClassFeatureFactsProjectionWithRoute` for `CharacterBuildOwner`
+build-projection events. The selected-reference count is a local derived fixture
+gate and is not stored in the public selected-reference route result. No
+duplicate selected Unit ref state was added.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doSelectBardExpertise` | `tasks/target-replay-evidence/CRPI-BLOCK-042.json#driver:packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doSelectBardExpertise#trace:public-route=completedReducerSurfaceRoute action=doSelectBardExpertise qRoute=class-feature-selected-reference-public-route` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doProjectClericChannelDivinity` | `tasks/target-replay-evidence/CRPI-BLOCK-042.json#driver:packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doProjectClericChannelDivinity#trace:public-route=completedReducerSurfaceRoute action=doProjectClericChannelDivinity qRoute=class-feature-selected-reference-public-route` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doProjectDruidWildShape` | `tasks/target-replay-evidence/CRPI-BLOCK-042.json#driver:packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doProjectDruidWildShape#trace:public-route=completedReducerSurfaceRoute action=doProjectDruidWildShape qRoute=class-feature-selected-reference-public-route` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doProjectDruidWildCompanion` | `tasks/target-replay-evidence/CRPI-BLOCK-042.json#driver:packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doProjectDruidWildCompanion#trace:public-route=completedReducerSurfaceRoute action=doProjectDruidWildCompanion qRoute=class-feature-selected-reference-public-route` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doProjectMonksFocus` | `tasks/target-replay-evidence/CRPI-BLOCK-042.json#driver:packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doProjectMonksFocus#trace:public-route=completedReducerSurfaceRoute action=doProjectMonksFocus qRoute=class-feature-selected-reference-public-route` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doProjectMonkUncannyMetabolism` | `tasks/target-replay-evidence/CRPI-BLOCK-042.json#driver:packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doProjectMonkUncannyMetabolism#trace:public-route=completedReducerSurfaceRoute action=doProjectMonkUncannyMetabolism qRoute=class-feature-selected-reference-public-route` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doSelectPaladinFightingStyle` | `tasks/target-replay-evidence/CRPI-BLOCK-042.json#driver:packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doSelectPaladinFightingStyle#trace:public-route=completedReducerSurfaceRoute action=doSelectPaladinFightingStyle qRoute=class-feature-selected-reference-public-route` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doSelectRangerDeftExplorer` | `tasks/target-replay-evidence/CRPI-BLOCK-042.json#driver:packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doSelectRangerDeftExplorer#trace:public-route=completedReducerSurfaceRoute action=doSelectRangerDeftExplorer qRoute=class-feature-selected-reference-public-route` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doSelectRangerFightingStyle` | `tasks/target-replay-evidence/CRPI-BLOCK-042.json#driver:packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doSelectRangerFightingStyle#trace:public-route=completedReducerSurfaceRoute action=doSelectRangerFightingStyle qRoute=class-feature-selected-reference-public-route` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doProjectWarlockPactMagic` | `tasks/target-replay-evidence/CRPI-BLOCK-042.json#driver:packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doProjectWarlockPactMagic#trace:public-route=completedReducerSurfaceRoute action=doProjectWarlockPactMagic qRoute=class-feature-selected-reference-public-route` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doSelectWizardScholar` | `tasks/target-replay-evidence/CRPI-BLOCK-042.json#driver:packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doSelectWizardScholar#trace:public-route=completedReducerSurfaceRoute action=doSelectWizardScholar qRoute=class-feature-selected-reference-public-route` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doSelectWizardEvocationSavant` | `tasks/target-replay-evidence/CRPI-BLOCK-042.json#driver:packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt#step:doSelectWizardEvocationSavant#trace:public-route=completedReducerSurfaceRoute action=doSelectWizardEvocationSavant qRoute=class-feature-selected-reference-public-route` | `_none_` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-042.json`
+- Reproduction trace family: `public-route=completedReducerSurfaceRoute qRoute=class-feature-selected-reference-public-route`
+- The copied connector projection source is `packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt#qRoute`; the observed projection source is the public Character Creation reducer sequence plus `characterBuildSelectedReferencesWithRoute` and, for projection branches, `characterBuildClassFeatureFactsProjectionWithRoute`.
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-042/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 85.
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Character-Creation.md#Record Class Features` says class features
+  can offer choices during character creation.
+- SRD 5.2.1 class passages checked: Bard Expertise, Cleric Channel Divinity,
+  Druid Wild Shape and Wild Companion, Monk's Focus and Uncanny Metabolism,
+  Paladin Fighting Style, Ranger Deft Explorer and Fighting Style, Warlock Pact
+  Magic, Wizard Scholar, and Wizard Evocation Savant.
+- `UBIQUITOUS_LANGUAGE.md` Expertise and character-creation runtime vocabulary
+  keep selected Unit refs, retained build facts, and projected execution facts
+  distinct.
+
+Verification results:
+
+- Base check passed: review-time base ref `master` resolved to
+  `8e00dabe9 Merge Ralph task 82`; prompt-declared integration ref
+  `ralph/cleanroom-owner-character-creation-20260706T213644Z/integration` and
+  `HEAD` both resolved to `59606a285 Mark Ralph task 84 done`; Base SHA
+  `59606a2854f931e31337fef879940e580e322d6e` is an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against the SRD 5.2.1 and vocabulary
+  passages listed above.
+- Character Creation runtime typecheck passed after the public-route,
+  no-duplicate-state, and selected-reference variant fixes:
+  `pnpm --filter @dnd/character-creation-runtime exec tsc --noEmit`.
+- Revision round 4 focused selected-reference route coverage passed:
+  `pnpm --filter @dnd/character-creation-runtime exec vitest run src/character-build-selected-reference-route.test.ts`
+  passed with 5 tests, covering selected class-choice, Eldritch Invocation,
+  Sorcerer Metamagic, selected spell references, and the no-reference rejection.
+- Focused semantic plus route MBT replay passed after projection branches were
+  routed through `characterBuildClassFeatureFactsProjectionWithRoute`:
+  `START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/character-creation-runtime exec vitest run src/class-feature-selected-identity.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "replays Character Creation class-feature selected identity parity|replays every advertised Character Creation class-feature branch|routes class-feature selected references" ) 2>&1 & pid=$!; wait "$pid"; status=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"` passed with 3 tests and 9 skipped; `TOTAL: 12s`.
+- The broad target-evidence diagnostic still fails on unrelated missing-evidence
+  baseline obligations outside Task 85; task-scoped validation passed with 12
+  Task 85 obligations covered.
+- Final broad verification and JSON validation are recorded in `tasks/RUN_LEDGER.json`.
+- Reviewer-loop convergence passed: RAW traceability, ubiquitous-language/domain
+  language, architecture/connascence, and code-review checks found no remaining
+  reasonable Task 85 findings after revision round 2 moved projection branches
+  through the public production projection, removed derived count state from the
+  public selected-reference route result, revision round 4 added the missing
+  selected Eldritch Invocation and Sorcerer Metamagic retained-reference variants,
+  and `qRoute` was rechecked against the copied route connector.
+
 ## CRPI-BLOCK-041
 
 Status: `pass`

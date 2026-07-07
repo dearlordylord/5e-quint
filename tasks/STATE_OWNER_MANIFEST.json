@@ -1,16 +1,7 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-041",
+  "taskId": "CRPI-BLOCK-042",
   "durableFields": [
-    {
-      "fieldPath": "CharacterBuild.progression",
-      "owner": "character-build",
-      "introducedIn": "packages/character-creation-runtime/src/types.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing finalized build progression is the retained class-level source fact used to derive class-feature resources."
-    },
     {
       "fieldPath": "CharacterBuild.features",
       "owner": "character-build",
@@ -18,30 +9,39 @@
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing selected class-feature and Metamagic option refs remain retained build facts; Task 84 adds no duplicate resource or source cache."
+      "notes": "Existing selected class-choice, Eldritch Invocation, and Metamagic option refs remain retained build facts. Task 85 adds no duplicate selected-reference cache."
     },
     {
-      "fieldPath": "CharacterCreationRouteEvent.subject=buildProjection",
-      "owner": "character-creation-reducer-route-projection",
-      "introducedIn": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts",
+      "fieldPath": "CharacterBuild.spellcasting.sources",
+      "owner": "character-build",
+      "introducedIn": "packages/character-creation-runtime/src/types.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing cantrip, spellbook, prepared-spell, and Book of Shadows selections are retained build facts used by selected-reference projection."
+    },
+    {
+      "fieldPath": "CharacterCreationRouteEvent.subject=selectedReference",
+      "owner": "character-creation-selected-reference-route-projection",
+      "introducedIn": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts",
       "derivability": {
         "tag": "runtime-projection"
       },
-      "notes": "Build projection route events are emitted by the public CharacterBuild class-feature projection-with-route entrypoint after it derives facts from retained build facts plus Unit catalog projections."
+      "notes": "Selected-reference route events are emitted by the public projection entrypoint after it reads retained CharacterBuild selected refs."
     },
     {
-      "fieldPath": "CharacterCreationRouteEvent.facts=buildProjectionInput",
-      "owner": "character-creation-reducer-route-projection",
-      "introducedIn": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts",
+      "fieldPath": "CharacterCreationRouteEvent.facts=selectedReferenceRetention",
+      "owner": "character-creation-selected-reference-route-projection",
+      "introducedIn": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts",
       "derivability": {
         "tag": "runtime-projection"
       },
-      "notes": "CreationBuildProjectionInputFact records the projection input boundary without storing authored identity or duplicate source facts."
+      "notes": "CreationSelectedReferenceRetentionFact records the selected-reference route boundary without storing a parallel selected Unit ref list."
     }
   ],
   "notes": [
-    "Task 84 introduced no new durable CharacterBuild fields.",
-    "Class-feature resource and source facts remain derived from CharacterBuild retained facts plus the Unit catalog.",
-    "Route evidence observes qRoute returned by the public CharacterBuild class-feature projection-with-route entrypoint; it is not adapter-local expected routes or production dispatch on class-feature authored identity."
+    "Task 85 introduced no new durable CharacterBuild fields.",
+    "Selected Unit refs remain existing CharacterBuild facts; selected-reference route evidence is projected at the reducer-route boundary.",
+    "Projection branches reuse the existing CharacterBuild class-feature projection route for CharacterBuildOwner build-projection events."
   ]
 }

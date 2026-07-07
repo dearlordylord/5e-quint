@@ -1,0 +1,926 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts Character Creation class-feature selected identity copied qRoute versus public creation reducer replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "acceptance": {
+    "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+    "connectorPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt",
+    "routeClass": "reducer-routed",
+    "durableOwner": "CreationSelectedReferenceOwner owns retained selected Unit refs; CharacterBuildOwner owns projected finalized build facts.",
+    "acceptedProjection": "qRoute"
+  },
+  "status": "pass",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "cd36d8c184109e92eb0e1b84f3b0585f760b0c6da5124731cff5222063f1c37c",
+      "routeConnectorSha256": "641425c91d8e985978589082c0e03f5e181c54c1e0d670f153ca59477192ddcb",
+      "branchFamily": "step",
+      "branchAction": "doSelectBardExpertise",
+      "observedActionTaken": "doSelectBardExpertise",
+      "harnessTestPath": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=completedReducerSurfaceRoute action=doSelectBardExpertise qRoute=class-feature-selected-reference-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doSelectBardExpertise",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#createCompletedReducerRouteDriver",
+        "routeSubject": "CreationSelectedReferenceRouteSubject",
+        "owners": [
+          "CreationSelectedReferenceOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "50cbb5d25630ba56548fc589a11944e8c6ea7f462d6d2e875fdf7550ae6f1046",
+        "observedProjectionSha256": "50cbb5d25630ba56548fc589a11944e8c6ea7f462d6d2e875fdf7550ae6f1046",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "CreationSelectedReferenceRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_draft",
+            "packages/character-creation-runtime/src/index.ts#createCharacterDraft",
+            "discover_creation_holes",
+            "packages/character-creation-runtime/src/index.ts#discoverCreationHoles",
+            "fill_creation_holes",
+            "packages/character-creation-runtime/src/index.ts#fillCreationHoles",
+            "finalize_character_draft",
+            "packages/character-creation-runtime/src/index.ts#finalizeCharacterDraft",
+            "retain_creation_selected_references",
+            "packages/character-creation-runtime/src/character-build-selected-reference-route.ts#characterBuildSelectedReferencesWithRoute",
+            "record_creation_selected_reference_retention",
+            "packages/character-creation-runtime/src/character-build-selected-reference-route.ts#recordCharacterBuildSelectedReferenceRetentionWithRoute",
+            "read_public_qRoute",
+            "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterCreationRouteQuintState"
+          ],
+          "routeEventSource": "The public CharacterBuild selected-reference route projection observes retained selected Unit refs from CharacterBuild and emits CreationSelectedReferenceOwner qRoute retention events copied by the route connector.",
+          "reducerPublicApiPath": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts#characterBuildSelectedReferencesWithRoute"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.features selected class-choice, Eldritch Invocation, and Sorcerer Metamagic refs plus CharacterBuild.spellcasting selected spell refs are read without duplicate selected-reference state",
+          "characterBuildSelectedReferenceCount(selectedReferenceFixtureBuild())=1 fixture gate without route-state duplication",
+          "CharacterCreationRouteEvent.kind=retainCreationSelectedReferences",
+          "CharacterCreationRouteEvent.subject=selectedReference",
+          "CharacterCreationRouteEvent.owner=creationSelectedReference",
+          "CharacterCreationRouteEvent.kind=recordCreationFacts",
+          "CharacterCreationRouteEvent.facts=selectedReferenceRetention"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "doSelectBardExpertise retains selected class-feature Unit refs through CreationSelectedReferenceOwner route events produced from existing CharacterBuild facts."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "cd36d8c184109e92eb0e1b84f3b0585f760b0c6da5124731cff5222063f1c37c",
+      "routeConnectorSha256": "641425c91d8e985978589082c0e03f5e181c54c1e0d670f153ca59477192ddcb",
+      "branchFamily": "step",
+      "branchAction": "doProjectClericChannelDivinity",
+      "observedActionTaken": "doProjectClericChannelDivinity",
+      "harnessTestPath": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=completedReducerSurfaceRoute action=doProjectClericChannelDivinity qRoute=class-feature-selected-reference-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doProjectClericChannelDivinity",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#createCompletedReducerRouteDriver",
+        "routeSubject": "CreationSelectedReferenceRouteSubject + CreationBuildProjectionRouteSubject",
+        "owners": [
+          "CreationSelectedReferenceOwner",
+          "CharacterBuildOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "bbe05db7022b3f6229d9aeacdb2b5ac15d69224c962fb5f9f72908df5ed001a5",
+        "observedProjectionSha256": "bbe05db7022b3f6229d9aeacdb2b5ac15d69224c962fb5f9f72908df5ed001a5",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "CreationSelectedReferenceRouteSubject",
+            "CreationBuildProjectionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_draft",
+            "packages/character-creation-runtime/src/index.ts#createCharacterDraft",
+            "discover_creation_holes",
+            "packages/character-creation-runtime/src/index.ts#discoverCreationHoles",
+            "fill_creation_holes",
+            "packages/character-creation-runtime/src/index.ts#fillCreationHoles",
+            "finalize_character_draft",
+            "packages/character-creation-runtime/src/index.ts#finalizeCharacterDraft",
+            "retain_creation_selected_references",
+            "packages/character-creation-runtime/src/character-build-selected-reference-route.ts#characterBuildSelectedReferencesWithRoute",
+            "project_character_build_class_feature_facts_with_route",
+            "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts#characterBuildClassFeatureFactsProjectionWithRoute",
+            "read_public_qRoute",
+            "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterCreationRouteQuintState"
+          ],
+          "routeEventSource": "The public CharacterBuild selected-reference route projection observes retained selected Unit refs before the CharacterBuild class-feature projection route emits CharacterBuildOwner build-projection qRoute events copied by the route connector.",
+          "reducerPublicApiPath": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts#characterBuildClassFeatureFactsProjectionWithRoute"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.features selected class-choice, Eldritch Invocation, and Sorcerer Metamagic refs plus CharacterBuild.spellcasting selected spell refs are read without duplicate selected-reference state",
+          "characterBuildSelectedReferenceCount(selectedReferenceFixtureBuild())=1 fixture gate without route-state duplication",
+          "CharacterCreationRouteEvent.kind=retainCreationSelectedReferences",
+          "CharacterCreationRouteEvent.subject=selectedReference",
+          "CharacterCreationRouteEvent.owner=creationSelectedReference",
+          "CharacterCreationRouteEvent.kind=projectCharacterBuildFacts",
+          "CharacterCreationRouteEvent.kind=recordCreationFacts",
+          "CharacterCreationRouteEvent.subject=buildProjection",
+          "CharacterCreationRouteEvent.facts=buildProjectionInput",
+          "CharacterCreationRouteEvent.owner=characterBuild"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "doProjectClericChannelDivinity retains selected class-feature Unit refs and projects finalized build facts through CreationSelectedReferenceOwner and CharacterBuildOwner route events."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "cd36d8c184109e92eb0e1b84f3b0585f760b0c6da5124731cff5222063f1c37c",
+      "routeConnectorSha256": "641425c91d8e985978589082c0e03f5e181c54c1e0d670f153ca59477192ddcb",
+      "branchFamily": "step",
+      "branchAction": "doProjectDruidWildShape",
+      "observedActionTaken": "doProjectDruidWildShape",
+      "harnessTestPath": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=completedReducerSurfaceRoute action=doProjectDruidWildShape qRoute=class-feature-selected-reference-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doProjectDruidWildShape",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#createCompletedReducerRouteDriver",
+        "routeSubject": "CreationSelectedReferenceRouteSubject + CreationBuildProjectionRouteSubject",
+        "owners": [
+          "CreationSelectedReferenceOwner",
+          "CharacterBuildOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "bbe05db7022b3f6229d9aeacdb2b5ac15d69224c962fb5f9f72908df5ed001a5",
+        "observedProjectionSha256": "bbe05db7022b3f6229d9aeacdb2b5ac15d69224c962fb5f9f72908df5ed001a5",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "CreationSelectedReferenceRouteSubject",
+            "CreationBuildProjectionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_draft",
+            "packages/character-creation-runtime/src/index.ts#createCharacterDraft",
+            "discover_creation_holes",
+            "packages/character-creation-runtime/src/index.ts#discoverCreationHoles",
+            "fill_creation_holes",
+            "packages/character-creation-runtime/src/index.ts#fillCreationHoles",
+            "finalize_character_draft",
+            "packages/character-creation-runtime/src/index.ts#finalizeCharacterDraft",
+            "retain_creation_selected_references",
+            "packages/character-creation-runtime/src/character-build-selected-reference-route.ts#characterBuildSelectedReferencesWithRoute",
+            "project_character_build_class_feature_facts_with_route",
+            "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts#characterBuildClassFeatureFactsProjectionWithRoute",
+            "read_public_qRoute",
+            "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterCreationRouteQuintState"
+          ],
+          "routeEventSource": "The public CharacterBuild selected-reference route projection observes retained selected Unit refs before the CharacterBuild class-feature projection route emits CharacterBuildOwner build-projection qRoute events copied by the route connector.",
+          "reducerPublicApiPath": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts#characterBuildClassFeatureFactsProjectionWithRoute"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.features selected class-choice, Eldritch Invocation, and Sorcerer Metamagic refs plus CharacterBuild.spellcasting selected spell refs are read without duplicate selected-reference state",
+          "characterBuildSelectedReferenceCount(selectedReferenceFixtureBuild())=1 fixture gate without route-state duplication",
+          "CharacterCreationRouteEvent.kind=retainCreationSelectedReferences",
+          "CharacterCreationRouteEvent.subject=selectedReference",
+          "CharacterCreationRouteEvent.owner=creationSelectedReference",
+          "CharacterCreationRouteEvent.kind=projectCharacterBuildFacts",
+          "CharacterCreationRouteEvent.kind=recordCreationFacts",
+          "CharacterCreationRouteEvent.subject=buildProjection",
+          "CharacterCreationRouteEvent.facts=buildProjectionInput",
+          "CharacterCreationRouteEvent.owner=characterBuild"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "doProjectDruidWildShape retains selected class-feature Unit refs and projects finalized build facts through CreationSelectedReferenceOwner and CharacterBuildOwner route events."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "cd36d8c184109e92eb0e1b84f3b0585f760b0c6da5124731cff5222063f1c37c",
+      "routeConnectorSha256": "641425c91d8e985978589082c0e03f5e181c54c1e0d670f153ca59477192ddcb",
+      "branchFamily": "step",
+      "branchAction": "doProjectDruidWildCompanion",
+      "observedActionTaken": "doProjectDruidWildCompanion",
+      "harnessTestPath": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=completedReducerSurfaceRoute action=doProjectDruidWildCompanion qRoute=class-feature-selected-reference-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doProjectDruidWildCompanion",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#createCompletedReducerRouteDriver",
+        "routeSubject": "CreationSelectedReferenceRouteSubject + CreationBuildProjectionRouteSubject",
+        "owners": [
+          "CreationSelectedReferenceOwner",
+          "CharacterBuildOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "bbe05db7022b3f6229d9aeacdb2b5ac15d69224c962fb5f9f72908df5ed001a5",
+        "observedProjectionSha256": "bbe05db7022b3f6229d9aeacdb2b5ac15d69224c962fb5f9f72908df5ed001a5",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "CreationSelectedReferenceRouteSubject",
+            "CreationBuildProjectionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_draft",
+            "packages/character-creation-runtime/src/index.ts#createCharacterDraft",
+            "discover_creation_holes",
+            "packages/character-creation-runtime/src/index.ts#discoverCreationHoles",
+            "fill_creation_holes",
+            "packages/character-creation-runtime/src/index.ts#fillCreationHoles",
+            "finalize_character_draft",
+            "packages/character-creation-runtime/src/index.ts#finalizeCharacterDraft",
+            "retain_creation_selected_references",
+            "packages/character-creation-runtime/src/character-build-selected-reference-route.ts#characterBuildSelectedReferencesWithRoute",
+            "project_character_build_class_feature_facts_with_route",
+            "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts#characterBuildClassFeatureFactsProjectionWithRoute",
+            "read_public_qRoute",
+            "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterCreationRouteQuintState"
+          ],
+          "routeEventSource": "The public CharacterBuild selected-reference route projection observes retained selected Unit refs before the CharacterBuild class-feature projection route emits CharacterBuildOwner build-projection qRoute events copied by the route connector.",
+          "reducerPublicApiPath": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts#characterBuildClassFeatureFactsProjectionWithRoute"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.features selected class-choice, Eldritch Invocation, and Sorcerer Metamagic refs plus CharacterBuild.spellcasting selected spell refs are read without duplicate selected-reference state",
+          "characterBuildSelectedReferenceCount(selectedReferenceFixtureBuild())=1 fixture gate without route-state duplication",
+          "CharacterCreationRouteEvent.kind=retainCreationSelectedReferences",
+          "CharacterCreationRouteEvent.subject=selectedReference",
+          "CharacterCreationRouteEvent.owner=creationSelectedReference",
+          "CharacterCreationRouteEvent.kind=projectCharacterBuildFacts",
+          "CharacterCreationRouteEvent.kind=recordCreationFacts",
+          "CharacterCreationRouteEvent.subject=buildProjection",
+          "CharacterCreationRouteEvent.facts=buildProjectionInput",
+          "CharacterCreationRouteEvent.owner=characterBuild"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "doProjectDruidWildCompanion retains selected class-feature Unit refs and projects finalized build facts through CreationSelectedReferenceOwner and CharacterBuildOwner route events."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "cd36d8c184109e92eb0e1b84f3b0585f760b0c6da5124731cff5222063f1c37c",
+      "routeConnectorSha256": "641425c91d8e985978589082c0e03f5e181c54c1e0d670f153ca59477192ddcb",
+      "branchFamily": "step",
+      "branchAction": "doProjectMonksFocus",
+      "observedActionTaken": "doProjectMonksFocus",
+      "harnessTestPath": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=completedReducerSurfaceRoute action=doProjectMonksFocus qRoute=class-feature-selected-reference-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doProjectMonksFocus",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#createCompletedReducerRouteDriver",
+        "routeSubject": "CreationSelectedReferenceRouteSubject + CreationBuildProjectionRouteSubject",
+        "owners": [
+          "CreationSelectedReferenceOwner",
+          "CharacterBuildOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "bbe05db7022b3f6229d9aeacdb2b5ac15d69224c962fb5f9f72908df5ed001a5",
+        "observedProjectionSha256": "bbe05db7022b3f6229d9aeacdb2b5ac15d69224c962fb5f9f72908df5ed001a5",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "CreationSelectedReferenceRouteSubject",
+            "CreationBuildProjectionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_draft",
+            "packages/character-creation-runtime/src/index.ts#createCharacterDraft",
+            "discover_creation_holes",
+            "packages/character-creation-runtime/src/index.ts#discoverCreationHoles",
+            "fill_creation_holes",
+            "packages/character-creation-runtime/src/index.ts#fillCreationHoles",
+            "finalize_character_draft",
+            "packages/character-creation-runtime/src/index.ts#finalizeCharacterDraft",
+            "retain_creation_selected_references",
+            "packages/character-creation-runtime/src/character-build-selected-reference-route.ts#characterBuildSelectedReferencesWithRoute",
+            "project_character_build_class_feature_facts_with_route",
+            "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts#characterBuildClassFeatureFactsProjectionWithRoute",
+            "read_public_qRoute",
+            "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterCreationRouteQuintState"
+          ],
+          "routeEventSource": "The public CharacterBuild selected-reference route projection observes retained selected Unit refs before the CharacterBuild class-feature projection route emits CharacterBuildOwner build-projection qRoute events copied by the route connector.",
+          "reducerPublicApiPath": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts#characterBuildClassFeatureFactsProjectionWithRoute"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.features selected class-choice, Eldritch Invocation, and Sorcerer Metamagic refs plus CharacterBuild.spellcasting selected spell refs are read without duplicate selected-reference state",
+          "characterBuildSelectedReferenceCount(selectedReferenceFixtureBuild())=1 fixture gate without route-state duplication",
+          "CharacterCreationRouteEvent.kind=retainCreationSelectedReferences",
+          "CharacterCreationRouteEvent.subject=selectedReference",
+          "CharacterCreationRouteEvent.owner=creationSelectedReference",
+          "CharacterCreationRouteEvent.kind=projectCharacterBuildFacts",
+          "CharacterCreationRouteEvent.kind=recordCreationFacts",
+          "CharacterCreationRouteEvent.subject=buildProjection",
+          "CharacterCreationRouteEvent.facts=buildProjectionInput",
+          "CharacterCreationRouteEvent.owner=characterBuild"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "doProjectMonksFocus retains selected class-feature Unit refs and projects finalized build facts through CreationSelectedReferenceOwner and CharacterBuildOwner route events."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "cd36d8c184109e92eb0e1b84f3b0585f760b0c6da5124731cff5222063f1c37c",
+      "routeConnectorSha256": "641425c91d8e985978589082c0e03f5e181c54c1e0d670f153ca59477192ddcb",
+      "branchFamily": "step",
+      "branchAction": "doProjectMonkUncannyMetabolism",
+      "observedActionTaken": "doProjectMonkUncannyMetabolism",
+      "harnessTestPath": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=completedReducerSurfaceRoute action=doProjectMonkUncannyMetabolism qRoute=class-feature-selected-reference-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doProjectMonkUncannyMetabolism",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#createCompletedReducerRouteDriver",
+        "routeSubject": "CreationSelectedReferenceRouteSubject + CreationBuildProjectionRouteSubject",
+        "owners": [
+          "CreationSelectedReferenceOwner",
+          "CharacterBuildOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "bbe05db7022b3f6229d9aeacdb2b5ac15d69224c962fb5f9f72908df5ed001a5",
+        "observedProjectionSha256": "bbe05db7022b3f6229d9aeacdb2b5ac15d69224c962fb5f9f72908df5ed001a5",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "CreationSelectedReferenceRouteSubject",
+            "CreationBuildProjectionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_draft",
+            "packages/character-creation-runtime/src/index.ts#createCharacterDraft",
+            "discover_creation_holes",
+            "packages/character-creation-runtime/src/index.ts#discoverCreationHoles",
+            "fill_creation_holes",
+            "packages/character-creation-runtime/src/index.ts#fillCreationHoles",
+            "finalize_character_draft",
+            "packages/character-creation-runtime/src/index.ts#finalizeCharacterDraft",
+            "retain_creation_selected_references",
+            "packages/character-creation-runtime/src/character-build-selected-reference-route.ts#characterBuildSelectedReferencesWithRoute",
+            "project_character_build_class_feature_facts_with_route",
+            "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts#characterBuildClassFeatureFactsProjectionWithRoute",
+            "read_public_qRoute",
+            "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterCreationRouteQuintState"
+          ],
+          "routeEventSource": "The public CharacterBuild selected-reference route projection observes retained selected Unit refs before the CharacterBuild class-feature projection route emits CharacterBuildOwner build-projection qRoute events copied by the route connector.",
+          "reducerPublicApiPath": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts#characterBuildClassFeatureFactsProjectionWithRoute"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.features selected class-choice, Eldritch Invocation, and Sorcerer Metamagic refs plus CharacterBuild.spellcasting selected spell refs are read without duplicate selected-reference state",
+          "characterBuildSelectedReferenceCount(selectedReferenceFixtureBuild())=1 fixture gate without route-state duplication",
+          "CharacterCreationRouteEvent.kind=retainCreationSelectedReferences",
+          "CharacterCreationRouteEvent.subject=selectedReference",
+          "CharacterCreationRouteEvent.owner=creationSelectedReference",
+          "CharacterCreationRouteEvent.kind=projectCharacterBuildFacts",
+          "CharacterCreationRouteEvent.kind=recordCreationFacts",
+          "CharacterCreationRouteEvent.subject=buildProjection",
+          "CharacterCreationRouteEvent.facts=buildProjectionInput",
+          "CharacterCreationRouteEvent.owner=characterBuild"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "doProjectMonkUncannyMetabolism retains selected class-feature Unit refs and projects finalized build facts through CreationSelectedReferenceOwner and CharacterBuildOwner route events."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "cd36d8c184109e92eb0e1b84f3b0585f760b0c6da5124731cff5222063f1c37c",
+      "routeConnectorSha256": "641425c91d8e985978589082c0e03f5e181c54c1e0d670f153ca59477192ddcb",
+      "branchFamily": "step",
+      "branchAction": "doSelectPaladinFightingStyle",
+      "observedActionTaken": "doSelectPaladinFightingStyle",
+      "harnessTestPath": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=completedReducerSurfaceRoute action=doSelectPaladinFightingStyle qRoute=class-feature-selected-reference-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doSelectPaladinFightingStyle",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#createCompletedReducerRouteDriver",
+        "routeSubject": "CreationSelectedReferenceRouteSubject",
+        "owners": [
+          "CreationSelectedReferenceOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "50cbb5d25630ba56548fc589a11944e8c6ea7f462d6d2e875fdf7550ae6f1046",
+        "observedProjectionSha256": "50cbb5d25630ba56548fc589a11944e8c6ea7f462d6d2e875fdf7550ae6f1046",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "CreationSelectedReferenceRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_draft",
+            "packages/character-creation-runtime/src/index.ts#createCharacterDraft",
+            "discover_creation_holes",
+            "packages/character-creation-runtime/src/index.ts#discoverCreationHoles",
+            "fill_creation_holes",
+            "packages/character-creation-runtime/src/index.ts#fillCreationHoles",
+            "finalize_character_draft",
+            "packages/character-creation-runtime/src/index.ts#finalizeCharacterDraft",
+            "retain_creation_selected_references",
+            "packages/character-creation-runtime/src/character-build-selected-reference-route.ts#characterBuildSelectedReferencesWithRoute",
+            "record_creation_selected_reference_retention",
+            "packages/character-creation-runtime/src/character-build-selected-reference-route.ts#recordCharacterBuildSelectedReferenceRetentionWithRoute",
+            "read_public_qRoute",
+            "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterCreationRouteQuintState"
+          ],
+          "routeEventSource": "The public CharacterBuild selected-reference route projection observes retained selected Unit refs from CharacterBuild and emits CreationSelectedReferenceOwner qRoute retention events copied by the route connector.",
+          "reducerPublicApiPath": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts#characterBuildSelectedReferencesWithRoute"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.features selected class-choice, Eldritch Invocation, and Sorcerer Metamagic refs plus CharacterBuild.spellcasting selected spell refs are read without duplicate selected-reference state",
+          "characterBuildSelectedReferenceCount(selectedReferenceFixtureBuild())=1 fixture gate without route-state duplication",
+          "CharacterCreationRouteEvent.kind=retainCreationSelectedReferences",
+          "CharacterCreationRouteEvent.subject=selectedReference",
+          "CharacterCreationRouteEvent.owner=creationSelectedReference",
+          "CharacterCreationRouteEvent.kind=recordCreationFacts",
+          "CharacterCreationRouteEvent.facts=selectedReferenceRetention"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "doSelectPaladinFightingStyle retains selected class-feature Unit refs through CreationSelectedReferenceOwner route events produced from existing CharacterBuild facts."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "cd36d8c184109e92eb0e1b84f3b0585f760b0c6da5124731cff5222063f1c37c",
+      "routeConnectorSha256": "641425c91d8e985978589082c0e03f5e181c54c1e0d670f153ca59477192ddcb",
+      "branchFamily": "step",
+      "branchAction": "doSelectRangerDeftExplorer",
+      "observedActionTaken": "doSelectRangerDeftExplorer",
+      "harnessTestPath": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=completedReducerSurfaceRoute action=doSelectRangerDeftExplorer qRoute=class-feature-selected-reference-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doSelectRangerDeftExplorer",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#createCompletedReducerRouteDriver",
+        "routeSubject": "CreationSelectedReferenceRouteSubject",
+        "owners": [
+          "CreationSelectedReferenceOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "50cbb5d25630ba56548fc589a11944e8c6ea7f462d6d2e875fdf7550ae6f1046",
+        "observedProjectionSha256": "50cbb5d25630ba56548fc589a11944e8c6ea7f462d6d2e875fdf7550ae6f1046",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "CreationSelectedReferenceRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_draft",
+            "packages/character-creation-runtime/src/index.ts#createCharacterDraft",
+            "discover_creation_holes",
+            "packages/character-creation-runtime/src/index.ts#discoverCreationHoles",
+            "fill_creation_holes",
+            "packages/character-creation-runtime/src/index.ts#fillCreationHoles",
+            "finalize_character_draft",
+            "packages/character-creation-runtime/src/index.ts#finalizeCharacterDraft",
+            "retain_creation_selected_references",
+            "packages/character-creation-runtime/src/character-build-selected-reference-route.ts#characterBuildSelectedReferencesWithRoute",
+            "record_creation_selected_reference_retention",
+            "packages/character-creation-runtime/src/character-build-selected-reference-route.ts#recordCharacterBuildSelectedReferenceRetentionWithRoute",
+            "read_public_qRoute",
+            "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterCreationRouteQuintState"
+          ],
+          "routeEventSource": "The public CharacterBuild selected-reference route projection observes retained selected Unit refs from CharacterBuild and emits CreationSelectedReferenceOwner qRoute retention events copied by the route connector.",
+          "reducerPublicApiPath": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts#characterBuildSelectedReferencesWithRoute"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.features selected class-choice, Eldritch Invocation, and Sorcerer Metamagic refs plus CharacterBuild.spellcasting selected spell refs are read without duplicate selected-reference state",
+          "characterBuildSelectedReferenceCount(selectedReferenceFixtureBuild())=1 fixture gate without route-state duplication",
+          "CharacterCreationRouteEvent.kind=retainCreationSelectedReferences",
+          "CharacterCreationRouteEvent.subject=selectedReference",
+          "CharacterCreationRouteEvent.owner=creationSelectedReference",
+          "CharacterCreationRouteEvent.kind=recordCreationFacts",
+          "CharacterCreationRouteEvent.facts=selectedReferenceRetention"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "doSelectRangerDeftExplorer retains selected class-feature Unit refs through CreationSelectedReferenceOwner route events produced from existing CharacterBuild facts."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "cd36d8c184109e92eb0e1b84f3b0585f760b0c6da5124731cff5222063f1c37c",
+      "routeConnectorSha256": "641425c91d8e985978589082c0e03f5e181c54c1e0d670f153ca59477192ddcb",
+      "branchFamily": "step",
+      "branchAction": "doSelectRangerFightingStyle",
+      "observedActionTaken": "doSelectRangerFightingStyle",
+      "harnessTestPath": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=completedReducerSurfaceRoute action=doSelectRangerFightingStyle qRoute=class-feature-selected-reference-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doSelectRangerFightingStyle",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#createCompletedReducerRouteDriver",
+        "routeSubject": "CreationSelectedReferenceRouteSubject",
+        "owners": [
+          "CreationSelectedReferenceOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "50cbb5d25630ba56548fc589a11944e8c6ea7f462d6d2e875fdf7550ae6f1046",
+        "observedProjectionSha256": "50cbb5d25630ba56548fc589a11944e8c6ea7f462d6d2e875fdf7550ae6f1046",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "CreationSelectedReferenceRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_draft",
+            "packages/character-creation-runtime/src/index.ts#createCharacterDraft",
+            "discover_creation_holes",
+            "packages/character-creation-runtime/src/index.ts#discoverCreationHoles",
+            "fill_creation_holes",
+            "packages/character-creation-runtime/src/index.ts#fillCreationHoles",
+            "finalize_character_draft",
+            "packages/character-creation-runtime/src/index.ts#finalizeCharacterDraft",
+            "retain_creation_selected_references",
+            "packages/character-creation-runtime/src/character-build-selected-reference-route.ts#characterBuildSelectedReferencesWithRoute",
+            "record_creation_selected_reference_retention",
+            "packages/character-creation-runtime/src/character-build-selected-reference-route.ts#recordCharacterBuildSelectedReferenceRetentionWithRoute",
+            "read_public_qRoute",
+            "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterCreationRouteQuintState"
+          ],
+          "routeEventSource": "The public CharacterBuild selected-reference route projection observes retained selected Unit refs from CharacterBuild and emits CreationSelectedReferenceOwner qRoute retention events copied by the route connector.",
+          "reducerPublicApiPath": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts#characterBuildSelectedReferencesWithRoute"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.features selected class-choice, Eldritch Invocation, and Sorcerer Metamagic refs plus CharacterBuild.spellcasting selected spell refs are read without duplicate selected-reference state",
+          "characterBuildSelectedReferenceCount(selectedReferenceFixtureBuild())=1 fixture gate without route-state duplication",
+          "CharacterCreationRouteEvent.kind=retainCreationSelectedReferences",
+          "CharacterCreationRouteEvent.subject=selectedReference",
+          "CharacterCreationRouteEvent.owner=creationSelectedReference",
+          "CharacterCreationRouteEvent.kind=recordCreationFacts",
+          "CharacterCreationRouteEvent.facts=selectedReferenceRetention"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "doSelectRangerFightingStyle retains selected class-feature Unit refs through CreationSelectedReferenceOwner route events produced from existing CharacterBuild facts."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "cd36d8c184109e92eb0e1b84f3b0585f760b0c6da5124731cff5222063f1c37c",
+      "routeConnectorSha256": "641425c91d8e985978589082c0e03f5e181c54c1e0d670f153ca59477192ddcb",
+      "branchFamily": "step",
+      "branchAction": "doProjectWarlockPactMagic",
+      "observedActionTaken": "doProjectWarlockPactMagic",
+      "harnessTestPath": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=completedReducerSurfaceRoute action=doProjectWarlockPactMagic qRoute=class-feature-selected-reference-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doProjectWarlockPactMagic",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#createCompletedReducerRouteDriver",
+        "routeSubject": "CreationSelectedReferenceRouteSubject + CreationBuildProjectionRouteSubject",
+        "owners": [
+          "CreationSelectedReferenceOwner",
+          "CharacterBuildOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "bbe05db7022b3f6229d9aeacdb2b5ac15d69224c962fb5f9f72908df5ed001a5",
+        "observedProjectionSha256": "bbe05db7022b3f6229d9aeacdb2b5ac15d69224c962fb5f9f72908df5ed001a5",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "CreationSelectedReferenceRouteSubject",
+            "CreationBuildProjectionRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_draft",
+            "packages/character-creation-runtime/src/index.ts#createCharacterDraft",
+            "discover_creation_holes",
+            "packages/character-creation-runtime/src/index.ts#discoverCreationHoles",
+            "fill_creation_holes",
+            "packages/character-creation-runtime/src/index.ts#fillCreationHoles",
+            "finalize_character_draft",
+            "packages/character-creation-runtime/src/index.ts#finalizeCharacterDraft",
+            "retain_creation_selected_references",
+            "packages/character-creation-runtime/src/character-build-selected-reference-route.ts#characterBuildSelectedReferencesWithRoute",
+            "project_character_build_class_feature_facts_with_route",
+            "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts#characterBuildClassFeatureFactsProjectionWithRoute",
+            "read_public_qRoute",
+            "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterCreationRouteQuintState"
+          ],
+          "routeEventSource": "The public CharacterBuild selected-reference route projection observes retained selected Unit refs before the CharacterBuild class-feature projection route emits CharacterBuildOwner build-projection qRoute events copied by the route connector.",
+          "reducerPublicApiPath": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts#characterBuildClassFeatureFactsProjectionWithRoute"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.features selected class-choice, Eldritch Invocation, and Sorcerer Metamagic refs plus CharacterBuild.spellcasting selected spell refs are read without duplicate selected-reference state",
+          "characterBuildSelectedReferenceCount(selectedReferenceFixtureBuild())=1 fixture gate without route-state duplication",
+          "CharacterCreationRouteEvent.kind=retainCreationSelectedReferences",
+          "CharacterCreationRouteEvent.subject=selectedReference",
+          "CharacterCreationRouteEvent.owner=creationSelectedReference",
+          "CharacterCreationRouteEvent.kind=projectCharacterBuildFacts",
+          "CharacterCreationRouteEvent.kind=recordCreationFacts",
+          "CharacterCreationRouteEvent.subject=buildProjection",
+          "CharacterCreationRouteEvent.facts=buildProjectionInput",
+          "CharacterCreationRouteEvent.owner=characterBuild"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "doProjectWarlockPactMagic retains selected class-feature Unit refs and projects finalized build facts through CreationSelectedReferenceOwner and CharacterBuildOwner route events."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "cd36d8c184109e92eb0e1b84f3b0585f760b0c6da5124731cff5222063f1c37c",
+      "routeConnectorSha256": "641425c91d8e985978589082c0e03f5e181c54c1e0d670f153ca59477192ddcb",
+      "branchFamily": "step",
+      "branchAction": "doSelectWizardScholar",
+      "observedActionTaken": "doSelectWizardScholar",
+      "harnessTestPath": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=completedReducerSurfaceRoute action=doSelectWizardScholar qRoute=class-feature-selected-reference-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doSelectWizardScholar",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#createCompletedReducerRouteDriver",
+        "routeSubject": "CreationSelectedReferenceRouteSubject",
+        "owners": [
+          "CreationSelectedReferenceOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "50cbb5d25630ba56548fc589a11944e8c6ea7f462d6d2e875fdf7550ae6f1046",
+        "observedProjectionSha256": "50cbb5d25630ba56548fc589a11944e8c6ea7f462d6d2e875fdf7550ae6f1046",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "CreationSelectedReferenceRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_draft",
+            "packages/character-creation-runtime/src/index.ts#createCharacterDraft",
+            "discover_creation_holes",
+            "packages/character-creation-runtime/src/index.ts#discoverCreationHoles",
+            "fill_creation_holes",
+            "packages/character-creation-runtime/src/index.ts#fillCreationHoles",
+            "finalize_character_draft",
+            "packages/character-creation-runtime/src/index.ts#finalizeCharacterDraft",
+            "retain_creation_selected_references",
+            "packages/character-creation-runtime/src/character-build-selected-reference-route.ts#characterBuildSelectedReferencesWithRoute",
+            "record_creation_selected_reference_retention",
+            "packages/character-creation-runtime/src/character-build-selected-reference-route.ts#recordCharacterBuildSelectedReferenceRetentionWithRoute",
+            "read_public_qRoute",
+            "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterCreationRouteQuintState"
+          ],
+          "routeEventSource": "The public CharacterBuild selected-reference route projection observes retained selected Unit refs from CharacterBuild and emits CreationSelectedReferenceOwner qRoute retention events copied by the route connector.",
+          "reducerPublicApiPath": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts#characterBuildSelectedReferencesWithRoute"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.features selected class-choice, Eldritch Invocation, and Sorcerer Metamagic refs plus CharacterBuild.spellcasting selected spell refs are read without duplicate selected-reference state",
+          "characterBuildSelectedReferenceCount(selectedReferenceFixtureBuild())=1 fixture gate without route-state duplication",
+          "CharacterCreationRouteEvent.kind=retainCreationSelectedReferences",
+          "CharacterCreationRouteEvent.subject=selectedReference",
+          "CharacterCreationRouteEvent.owner=creationSelectedReference",
+          "CharacterCreationRouteEvent.kind=recordCreationFacts",
+          "CharacterCreationRouteEvent.facts=selectedReferenceRetention"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "doSelectWizardScholar retains selected class-feature Unit refs through CreationSelectedReferenceOwner route events produced from existing CharacterBuild facts."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+      "routeConnectorPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt",
+      "qntFileSha256": "cd36d8c184109e92eb0e1b84f3b0585f760b0c6da5124731cff5222063f1c37c",
+      "routeConnectorSha256": "641425c91d8e985978589082c0e03f5e181c54c1e0d670f153ca59477192ddcb",
+      "branchFamily": "step",
+      "branchAction": "doSelectWizardEvocationSavant",
+      "observedActionTaken": "doSelectWizardEvocationSavant",
+      "harnessTestPath": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "traceId": "public-route=completedReducerSurfaceRoute action=doSelectWizardEvocationSavant qRoute=class-feature-selected-reference-public-route",
+      "sampledInputs": [],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doSelectWizardEvocationSavant",
+        "qntStateField": "qRoute",
+        "targetDriverFactory": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#createCompletedReducerRouteDriver",
+        "routeSubject": "CreationSelectedReferenceRouteSubject",
+        "owners": [
+          "CreationSelectedReferenceOwner"
+        ]
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "50cbb5d25630ba56548fc589a11944e8c6ea7f462d6d2e875fdf7550ae6f1046",
+        "observedProjectionSha256": "50cbb5d25630ba56548fc589a11944e8c6ea7f462d6d2e875fdf7550ae6f1046",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt",
+          "stepAction": "step",
+          "qntStateField": "qRoute",
+          "routeSubjects": [
+            "CreationSelectedReferenceRouteSubject"
+          ]
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "create_character_draft",
+            "packages/character-creation-runtime/src/index.ts#createCharacterDraft",
+            "discover_creation_holes",
+            "packages/character-creation-runtime/src/index.ts#discoverCreationHoles",
+            "fill_creation_holes",
+            "packages/character-creation-runtime/src/index.ts#fillCreationHoles",
+            "finalize_character_draft",
+            "packages/character-creation-runtime/src/index.ts#finalizeCharacterDraft",
+            "retain_creation_selected_references",
+            "packages/character-creation-runtime/src/character-build-selected-reference-route.ts#characterBuildSelectedReferencesWithRoute",
+            "record_creation_selected_reference_retention",
+            "packages/character-creation-runtime/src/character-build-selected-reference-route.ts#recordCharacterBuildSelectedReferenceRetentionWithRoute",
+            "read_public_qRoute",
+            "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts#normalizeCharacterCreationRouteQuintState"
+          ],
+          "routeEventSource": "The public CharacterBuild selected-reference route projection observes retained selected Unit refs from CharacterBuild and emits CreationSelectedReferenceOwner qRoute retention events copied by the route connector.",
+          "reducerPublicApiPath": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts#characterBuildSelectedReferencesWithRoute"
+        },
+        "checkedTargetStateFields": [
+          "CharacterBuild.features selected class-choice, Eldritch Invocation, and Sorcerer Metamagic refs plus CharacterBuild.spellcasting selected spell refs are read without duplicate selected-reference state",
+          "characterBuildSelectedReferenceCount(selectedReferenceFixtureBuild())=1 fixture gate without route-state duplication",
+          "CharacterCreationRouteEvent.kind=retainCreationSelectedReferences",
+          "CharacterCreationRouteEvent.subject=selectedReference",
+          "CharacterCreationRouteEvent.owner=creationSelectedReference",
+          "CharacterCreationRouteEvent.kind=recordCreationFacts",
+          "CharacterCreationRouteEvent.facts=selectedReferenceRetention"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "doSelectWizardEvocationSavant retains selected class-feature Unit refs through CreationSelectedReferenceOwner route events produced from existing CharacterBuild facts."
+      }
+    }
+  ]
+}
