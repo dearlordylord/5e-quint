@@ -11,6 +11,12 @@
 //   when the creator loses Concentration.
 // - UBIQUITOUS_LANGUAGE.md: Condition, Concentration, Boundary Crossing, Spell
 //   Effect, and Turn Structure.
+//
+// Route shape note:
+// - BattleTurnBoundaryOwner discovers the repeat-save frontier only while the
+//   Sleep pending-repeat-save Spell Effect exists. After Concentration cleanup
+//   removes that frontier, later turn-boundary surface transitions carry no
+//   RepeatSaveConditionEffectRouteSubject route event.
 module battleRuntimeSleepRepeatSaveRouteMbt {
   import battleRuntimeFillKinds.* from "./battle-runtime-fill-kinds"
   import battleRuntimeHoleKinds.* from "./battle-runtime-hole-kinds"
@@ -120,7 +126,7 @@ module battleRuntimeSleepRepeatSaveRouteMbt {
     qSurface == ConcentrationBrokenBeforeRepeatRouteSurface,
     recordSurface(
       CasterTurnEndedAfterConcentrationBreakRouteSurface,
-      qRoute.append(resolveRepeatSaveWithoutFill(BattleTurnBoundaryOwner)),
+      qRoute,
     ),
   }
 
@@ -128,7 +134,7 @@ module battleRuntimeSleepRepeatSaveRouteMbt {
     qSurface == CasterTurnEndedAfterConcentrationBreakRouteSurface,
     recordSurface(
       TargetTurnEndedAfterConcentrationBreakRouteSurface,
-      qRoute.append(resolveRepeatSaveWithoutFill(BattleTurnBoundaryOwner)),
+      qRoute,
     ),
   }
 

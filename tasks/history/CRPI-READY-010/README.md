@@ -43,3 +43,11 @@ Revision round 8 recorded the concrete required plan edits in
 `tasks/VALIDATION_REPORT.md`. The Ralph plan file itself is outside this task
 worktree's permitted edit root, so the decider must reclassify
 `CRPI-READY-010` from ready to blocked and add the source-QNT-corpus follow-up.
+
+Task 104 / `CRPI-SOURCE-001` refreshed the source route connector to hash
+`ec1f467e9088fec4d15fc2e4bdd22dc3303e8d76cb098e269409c222b2d06794`.
+The connector now preserves post-Concentration-cleanup surface transitions
+without appending repeat-save turn-boundary no-op route events after
+`sleepPendingRepeatSave` has been removed. The checked-in target evidence above
+still records the pre-refresh copied connector hash and should be replaced by a
+fresh Task 41 target replay against the refreshed `qRoute` shape.

@@ -1393,14 +1393,14 @@
             "discover_battle_acts",
             "resolve_battle_subject"
           ],
-          "durableStateOwner": "BattleState owns Sleep active-effect state, Concentration, condition lifecycle, and turn-boundary repeat-save frontier; no duplicate repeat-save or condition ledger is introduced.",
-          "acceptanceCondition": "Target replay evidence routes Sleep initial save, concentration break, turn-boundary repeat-save discovery, repeat-save cleanup, and Unconscious application through condition, active-effect, Concentration, and turn-boundary owners.",
+          "durableStateOwner": "BattleState owns Sleep active-effect state, Concentration, condition lifecycle, and the turn-boundary repeat-save frontier while sleepPendingRepeatSave exists; no duplicate repeat-save or condition ledger is introduced.",
+          "acceptanceCondition": "Target replay evidence routes Sleep initial save, concentration break, turn-boundary repeat-save discovery while sleepPendingRepeatSave exists, repeat-save cleanup, and Unconscious application through condition, active-effect, Concentration, and turn-boundary owners. Post-Concentration-cleanup turn-boundary surface transitions emit no repeat-save route events because no reducer-owned repeat-save frontier remains.",
           "branchObligations": 10,
           "currentOutOfScopeBranchObligations": 0,
           "derivability": {
             "qntFacts": [
               "packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt is present in source-branch-inventory.json with 8 branch obligation(s).",
-              "packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt exposes qRoute for RepeatSaveConditionEffectRouteSubject through spell-slot/action-economy, condition, active-effect, Concentration, and turn-boundary owners."
+              "packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt exposes qRoute for RepeatSaveConditionEffectRouteSubject through spell-slot/action-economy, condition, active-effect, Concentration, and turn-boundary owners, and excludes post-Concentration-cleanup turn-boundary no-op route events after sleepPendingRepeatSave has been removed."
             ],
             "rawDomainFacts": [
               ".references/srd-5.2.1/Spells/Descriptions-S-Z.md#Sleep defines initial save, pending repeat save, failed-repeat Unconscious condition, and cleanup when the spell ends.",
