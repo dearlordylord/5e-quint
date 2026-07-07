@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-024",
+  "taskId": "CRPI-BLOCK-025",
   "durableFields": [
     {
       "fieldPath": "AvailableBattleAct.routeEvents",
@@ -25,15 +25,15 @@
       "notes": "Projection is emitted at public reducer entrypoints from existing owner-local facts; it is not stored as a second BattleState copy."
     },
     {
-      "fieldPath": "BattleSubject.actionSpell.invocation.procedure",
+      "fieldPath": "BattleSubject.bonusActionSpell.invocation.procedure",
       "owner": "executable-boundary-projection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "typed BattleSubject.actionSpell invocation procedure",
+        "sourceField": "typed BattleSubject.bonusActionSpell invocation procedure",
         "boundary": "battle-runtime public reducer route event boundary"
       },
-      "notes": "Route projection reads typed procedure facts such as rollModifier, damageReduction, and scalarBuff; it does not branch on authored spell identity."
+      "notes": "Route projection reads the typed sanctuaryTargetingInterdiction procedure fact; it does not branch on authored spell identity."
     },
     {
       "fieldPath": "BattleCreatureState.activeEffects",
@@ -42,39 +42,28 @@
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Active spell effects remain the canonical battle-state source for roll modifiers, scalar buffs, and spell damage-reduction use."
+      "notes": "Active effects remain the canonical battle-state source for Sanctuary ward presence and removal."
     },
     {
-      "fieldPath": "BattleCreatureState.concentration",
+      "fieldPath": "BattleActiveEffect.kind=sanctuaryWard",
       "owner": "battle-state",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Concentration remains the canonical battle-state source for active concentration spell ownership."
+      "notes": "The sanctuaryWard active-effect variant is the canonical source for ward source and target interdiction state."
     },
     {
-      "fieldPath": "BattleActiveEffect.kind=spellDamageReduction",
+      "fieldPath": "BattleCreatureState.hp",
       "owner": "battle-state",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "The spellDamageReduction active-effect variant is the canonical source for damage type, source spell, source combatant, and per-turn use."
+      "notes": "Hit Points remain the canonical source for damage results observed by the damage-dealt early-end branch."
     },
     {
-      "fieldPath": "BattleDamageRollHole.spellDamageReduction",
-      "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "resolved damage roll holes plus matching spellDamageReduction active effects",
-        "boundary": "battle-runtime public reducer damage-adjustment boundary"
-      },
-      "notes": "The roll hole projects an available damage-reduction adjustment from battle state at the reducer boundary rather than duplicating the active effect."
-    },
-    {
-      "fieldPath": "BattleHole.kind",
+      "fieldPath": "BattleHole.kind=sanctuaryInterdictionOutcome",
       "owner": "executable-boundary-projection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
@@ -82,10 +71,10 @@
         "sourceField": "BattleResolutionResult holes",
         "boundary": "battle-runtime public reducer route event boundary"
       },
-      "notes": "Route holes are projected from public reducer hole kinds such as targetChoice, damageTypeChoice, and rolledDice."
+      "notes": "The Sanctuary interdiction outcome hole projects the public saving throw and replacement-target decision point."
     },
     {
-      "fieldPath": "BattleFill.kind",
+      "fieldPath": "BattleFill.kind=sanctuaryInterdictionOutcome",
       "owner": "executable-boundary-projection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
@@ -93,12 +82,12 @@
         "sourceField": "BattleResolutionInput fills",
         "boundary": "battle-runtime public reducer route event boundary"
       },
-      "notes": "Route fills are projected from public reducer fill kinds such as targetChoice, damageTypeChoice, and rolledDice."
+      "notes": "The Sanctuary interdiction outcome fill projects public failed-save loss, successful-save pass-through, and replacement target choices."
     }
   ],
   "notes": [
-    "Task 36 introduced no new durable BattleState or BattleCreatureState fields.",
+    "Task 37 introduced no new durable BattleState or BattleCreatureState fields.",
     "Selected spell identity remains at catalog/support-profile and selected replay boundaries; production route projection uses typed invocation procedure, active-effect, hole, fill, and reducer-result facts.",
-    "The spellDamageReduction route subject is an executable boundary projection derived from existing damage-reduction active effects, Concentration, and damage-roll holes."
+    "The wardedTargetInterdiction route subject is an executable boundary projection derived from existing Sanctuary ward active effects, target-selection holes, saving throw outcome fills, area-shape facts, attack roll and spell-cast resolution, and hit point damage."
   ]
 }

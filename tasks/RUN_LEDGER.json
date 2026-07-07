@@ -4,6 +4,104 @@
   "sourceBranchInventorySha256": "8c856409a423a320bf05e4b4a927e76b1902af823ba01f2b5a928f867a6a6be6",
   "entries": [
     {
+      "taskId": "CRPI-BLOCK-025",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "8c856409a423a320bf05e4b4a927e76b1902af823ba01f2b5a928f867a6a6be6",
+      "artifacts": {
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "d32bce2d340988cd01eac21534e83bba77e413d4dfbcdb40bcf243c443f1937c"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-BLOCK-025/README.md",
+          "sha256": "670750c53b96658426cc77c75542dabd546bd74dad1354f0b118388e7055d8ba"
+        },
+        "engineDepthManifest": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "8db35af4479fc353cf953154d9b9a4b893759366d6e72e59b7220b397b8eb6de"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "f5481ea27819a98e67724b44ff52cb134494999998b1cba6b2f53672c9bf0436"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-025.json",
+          "sha256": "840fcf346b708b7c809a9524448190701c6b6b29dec5aaf178a89ea8b0844c1d",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-025.json#publicQRouteCoverage:sanctuary-selected-identity"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-owner-battle-spell-20260706T213644Z/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor 09438b1c5c181271e9ee92649fd239858e583422 HEAD",
+          "status": "pass",
+          "detail": "Base ref and HEAD both resolved to 09438b1c5 Mark Ralph task 36 done; Base SHA is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language review: local SRD 5.2.1 Sanctuary, Rules Glossary Target and Area of Effect, Playing the Game Saving Throws and Attack Rolls, and UBIQUITOUS_LANGUAGE.md Saving Throw, Attack Roll, Spell Save DC, Spell Invocation, Spell Effect, and Area of Effect terms",
+          "status": "pass",
+          "detail": "Checked local SRD and ubiquitous-language terms. Route evidence is derived from typed sanctuaryTargetingInterdiction procedure facts, sanctuaryWard active effects, public holes/fills, area-shape facts, and reducer results; production code does not branch on selected spell ids or names."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec tsc --noEmit --pretty false",
+          "status": "pass",
+          "detail": "Battle runtime TypeScript check passed after adding warded-target interdiction route projection and after moving the damage-dealt early-end replay to the public resolveBattleSubject movable-zone ram path."
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Required MBT preflight matched only an unrelated Ralph monitor shell command text; no active Vitest runner or stale quint_evaluator was present before focused MBT runs."
+        },
+        {
+          "command": "START=$(date +%s); (while true; do sleep 60; echo \"PROGRESS: $(( $(date +%s) - START ))s\"; done) & PROGRESS_PID=$!; cd packages/battle-runtime && MBT_TRACES=1 MBT_STEPS=1 pnpm exec vitest run src/sanctuary-selected-identity.mbt.test.ts -t \"observes copied warded-target interdiction qRoute\" 2>&1; STATUS=$?; kill \"$PROGRESS_PID\" 2>/dev/null || true; wait \"$PROGRESS_PID\" 2>/dev/null || true; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$STATUS\"",
+          "status": "pass",
+          "detail": "Focused public qRoute replay passed after moving damage-dealt early-end evidence to resolveBattleSubject and admitting unresolved save-gated area discovery when affected targets are supplied by the later savingThrowOutcome fill: 1 file passed; 1 test passed, 1 skipped; TOTAL: 5s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "Cleanroom branch coverage passed with Task 37 evidence: 738 obligations, 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass",
+          "detail": "Whitespace check passed."
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "Full quality chain passed. Cleanroom branch coverage passed with 738 obligations and 24 sampled inputs; app lint reported 61 existing warnings and exited 0; turbo typecheck completed 9 successful tasks, 5 from cache."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-025",
+            "impact": "unblocked"
+          },
+          {
+            "taskId": "future Sanctuary, warded-target, and spell-protection selected-identity route tasks",
+            "impact": "left unchanged"
+          }
+        ],
+        "observations": [
+          "Sanctuary selected identity replay now observes public reducer qRoute events for ward creation, direct attack/spell interdiction, replacement target legality, area-effect exclusion, attack/spell early ward end, and damage-dealt early ward end through discoverBattleActs and resolveBattleSubject.",
+          "The public route projection is derived from typed sanctuaryTargetingInterdiction invocation procedure facts, sanctuaryInterdictionOutcome holes/fills, existing sanctuaryWard active effects, save-gated area-shape facts, attack rolls, spell casts, hit point damage, and reducer result deltas.",
+          "No durable BattleState field or authored spell-id production dispatch was added."
+        ],
+        "requiredPlanEdits": "none"
+      }
+    },
+    {
       "taskId": "CRPI-BLOCK-024",
       "assignmentId": "reducer-spine-diagnostic-battle",
       "laneId": "battle",
