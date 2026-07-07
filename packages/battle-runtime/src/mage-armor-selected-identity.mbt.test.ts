@@ -1,6 +1,7 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-MAGE-ARMOR mage_armor
 // UNIT-IDENTITY-REPLAY: L1H-MAGE-ARMOR mage_armor doDiscoverMageArmorUnarmoredSelfTarget doRejectMageArmorArmoredTarget doResolveMageArmorBaseArmorClassProjection doExpireMageArmorDuration
 import { Either } from "effect";
+import { describe, expect, it } from "vitest";
 
 import {
   abilityModifier as armorAbilityModifier,
@@ -23,14 +24,19 @@ import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import { activeEffectArmorClass } from "./battle-reducer/creature-state.ts";
 import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
+import {
+  mbtSpecPath,
+  spellBaseArmorClassEffectRouteProjection,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import {
   battleCombatantSide,
   battleId,
+  battleReducerStartRouteEvent,
   characterId,
   combatantId,
   discoverBattleActs,
+  endTurn,
   initiativeScore,
   resolveBattleSubject,
   snapshotBattle,
@@ -41,6 +47,7 @@ import {
   type BattleCreatureState,
   type BattleFill,
   type BattleHole,
+  type BattleReducerRouteEvent,
   type BattleResolutionResult,
   type BattleState,
   type BattleSubject,
@@ -164,6 +171,98 @@ defineSelectedIdentityReplayAndQntReplay({
     },
   ],
 });
+
+describe("Mage Armor selected identity public reducer route replay", () => {
+  it("observes spell base Armor Class qRoute through public reducer entrypoints", () => {
+    const projectionRoute = replayMageArmorBaseArmorClassProjectionRoute();
+    const admissionRoute = spellBaseArmorClassEffectRouteProjection(
+      "doRouteUnarmoredTargetAdmission",
+    );
+    expect(projectionRoute.slice(0, admissionRoute.length)).toEqual(
+      admissionRoute,
+    );
+    expect(replayMageArmorArmoredTargetRejectionRoute()).toEqual(
+      spellBaseArmorClassEffectRouteProjection(
+        "doRouteArmoredTargetRejection",
+      ),
+    );
+    expect(projectionRoute).toEqual(
+      spellBaseArmorClassEffectRouteProjection(
+        "doRouteBaseArmorClassProjection",
+      ),
+    );
+    expect(replayMageArmorDurationExpiryRoute()).toEqual(
+      spellBaseArmorClassEffectRouteProjection("doRouteDurationExpiry"),
+    );
+  });
+});
+
+function replayMageArmorBaseArmorClassProjectionRoute(): readonly BattleReducerRouteEvent[] {
+  const state = mageArmorBattle();
+  const act = mageArmorAct(state);
+  const target = targetChoiceHole(act.initialHoles);
+  const result = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [spellTargetChoiceFill(target, casterId)],
+  });
+  requireResolved(result);
+  return [
+    battleReducerStartRouteEvent(),
+    ...routeEventsOfSubject(act, "Mage Armor discovery"),
+    ...routeEventsOfSubject(result, "Mage Armor resolution"),
+  ];
+}
+
+function replayMageArmorArmoredTargetRejectionRoute(): readonly BattleReducerRouteEvent[] {
+  const state = mageArmorBattle({ includeArmoredTarget: true });
+  const act = mageArmorAct(state);
+  const target = targetChoiceHole(act.initialHoles);
+  const result = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [spellTargetChoiceFill(target, armoredTargetId)],
+  });
+  if (result.tag !== "invalid" || result.reason !== "invalidFill") {
+    throw new Error(
+      `Expected Mage Armor armored target rejection, got ${result.tag}.`,
+    );
+  }
+  return [
+    battleReducerStartRouteEvent(),
+    ...routeEventsOfSubject(act, "Mage Armor armored target discovery"),
+    ...routeEventsOfSubject(result, "Mage Armor armored target rejection"),
+  ];
+}
+
+function replayMageArmorDurationExpiryRoute(): readonly BattleReducerRouteEvent[] {
+  const nearlyExpired = mageArmorNearlyExpiredState(resolveMageArmorSelf());
+  const expired = endTurn({ state: nearlyExpired, actorId: casterId });
+  if (expired.tag !== "resolved") {
+    throw new Error(`Expected Mage Armor duration expiry, got ${expired.tag}.`);
+  }
+  return [
+    battleReducerStartRouteEvent(),
+    ...routeEventsOfSubject(expired, "Mage Armor duration expiry"),
+  ];
+}
+
+function routeEventsOfSubject(
+  source: { readonly routeEvents?: readonly BattleReducerRouteEvent[] },
+  label: string,
+): readonly BattleReducerRouteEvent[] {
+  const events = (source.routeEvents ?? []).filter(
+    (event): event is Exclude<BattleReducerRouteEvent, { kind: "startBattle" }> =>
+      event.kind !== "startBattle" &&
+      event.subject === "spellBaseArmorClassEffect",
+  );
+  if (events.length === 0) {
+    throw new Error(
+      `Expected spellBaseArmorClassEffect public reducer route events for ${label}.`,
+    );
+  }
+  return events;
+}
 
 function expectedProjection(
   overrides: Partial<MageArmorSelectedIdentityProjection> = {},

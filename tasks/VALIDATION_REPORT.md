@@ -1,5 +1,40 @@
 # Validation Report
 
+## CRPI-BLOCK-020
+
+Status: `pass`
+
+- Task: 28
+- Driver path: `packages/battle-runtime/battle-runtime-mage-armor-selected-identity.mbt.qnt`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-020.json`
+
+Task 28 records public reducer qRoute evidence for the Mage Armor selected-identity driver as a `reducer-routed` task. The selected replay binds SRD catalog spell identity at the replay/admission boundary; route evidence is observed from generic spell base Armor Class, target-selection, active-effect, Armor Class projection, turn-boundary cleanup, and spell-slot/action-economy owners.
+
+Current public qRoute coverage:
+
+- Covered: `battle-runtime-spell-base-armor-class-effect.route.mbt.qnt` through public Mage Armor discovery, target resolution, active Spell Effect admission, Armor Class projection, and End Turn duration cleanup in `packages/battle-runtime/src/mage-armor-selected-identity.mbt.test.ts`.
+- Remaining required public qRoute coverage: none.
+
+Task 28 fixed the production route projection needed for public evidence: `packages/battle-runtime/src/battle-reducer/reducer-route.ts` now includes the generic `spellBaseArmorClassEffect` route subject and emits it from typed `persistentArmorEffect` spell procedure discovery/resolution plus `spellBaseArmorClass` active-effect deltas. The selected replay compares against the shared connector-driver projection in `packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts`. No durable `BattleState` field was added.
+
+Verification results:
+
+- Task-base check passed: base ref and HEAD both resolved to `65b00711d Mark Ralph task 27 done`; Base SHA is an ancestor of HEAD.
+- RAW/ubiquitous-language review passed for local SRD 5.2.1 spell Targets and Duration, Rules Glossary Armor Class and Target, and Armor Class, Spell Effect, Target, Duration, and Boundary Crossing terms.
+- `pnpm --filter @dnd/battle-runtime typecheck` passed.
+- `pnpm --filter @dnd/battle-runtime exec vitest run src/mage-armor-selected-identity.mbt.test.ts -t "public reducer route replay"` passed: 1 passed, 1 skipped.
+- MBT preflight found no actual Vitest runner and no stale `quint_evaluator`; the required grep command matched only unrelated monitor shell command text.
+- Focused Task 28 MBT passed with selected replay and required route connector coverage: 2 files passed; 3 tests passed, 33 skipped; TOTAL: 6s.
+- `pnpm cleanroom-branch-coverage:check` passed with Task 28 evidence: 738 obligations, 24 sampled inputs.
+- `git diff --check` passed.
+- `pnpm quality` passed end to end; app lint reported existing warnings and exited 0; turbo typecheck completed 9 successful tasks, 5 from cache.
+
+Reviewer-loop status:
+
+- Round 1 fixed the missing public route subject/projection for spell base Armor Class effects. Review then moved the copied qRoute expectation from local test literals to the shared connector-driver projection. The task uses typed procedure shape and active-effect deltas, does not add authored-identity production dispatch, and does not duplicate Armor Class state.
+- Round 2 found no remaining RAW traceability, ubiquitous-language, architecture/connascence, or code-review findings in the Task 28 diff.
+
 ## CRPI-BLOCK-019
 
 Status: `pass`
