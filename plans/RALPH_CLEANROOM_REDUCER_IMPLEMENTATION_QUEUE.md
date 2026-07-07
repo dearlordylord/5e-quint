@@ -675,7 +675,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRPI-BLOCK-014` | `done` | none | target replay evidence and owner implementation |
 | `CRP07-DSR-03` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-READY-005` | `ready-for-research` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-015` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-015` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-016` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-017` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-018` | `ready-for-research` | none | target replay evidence and owner implementation |
@@ -2077,7 +2077,7 @@ Plan Impact:
 
 ### Task 23 - CRPI-BLOCK-015
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

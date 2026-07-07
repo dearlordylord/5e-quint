@@ -1,15 +1,17 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-005",
+  "taskId": "CRPI-BLOCK-015",
   "durableFields": [
     {
-      "fieldPath": "BattleCreatureState.conditions",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "fieldPath": "AvailableBattleAct.routeEvents",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
-        "tag": "canonical-source"
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleState plus AvailableBattleAct/BattleResolutionResult routeEvents",
+        "boundary": "battle-runtime public reducer route event boundary"
       },
-      "notes": "Existing condition lifecycle state owns Blinded, Restrained, Incapacitated, Prone, and Unconscious outcomes for save-gated and repeat-save condition spells."
+      "notes": "Projection is emitted at public reducer entrypoints from existing owner-local facts; it is not stored as a second BattleState copy."
     },
     {
       "fieldPath": "BattleCreatureState.activeEffects",
@@ -18,7 +20,7 @@
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing active effects own spell condition duration, Sleep pending repeat-save and Unconscious effects, and repeat-save cleanup state."
+      "notes": "Existing BattleState runtime state owns this spell effect, condition, Hit Point, Temporary Hit Point, Concentration, or pending after-hit rider fact; Task 23 adds no duplicate durable state for it."
     },
     {
       "fieldPath": "BattleCreatureState.concentration",
@@ -27,30 +29,158 @@
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing Concentration state owns concentrating caster cleanup when a repeat-save condition spell ends."
+      "notes": "Existing BattleState runtime state owns this spell effect, condition, Hit Point, Temporary Hit Point, Concentration, or pending after-hit rider fact; Task 23 adds no duplicate durable state for it."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=repeatSaveConditionEffect",
-      "owner": "battle-reducer-route-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "fieldPath": "BattleCreatureState.conditions",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
-        "tag": "runtime-projection"
+        "tag": "canonical-source"
       },
-      "notes": "Route events are derived from owner-local End Turn repeat-save hole ids and condition/active-effect/Concentration state deltas; no route event or pending-hole cache is stored in BattleState."
+      "notes": "Existing BattleState runtime state owns this spell effect, condition, Hit Point, Temporary Hit Point, Concentration, or pending after-hit rider fact; Task 23 adds no duplicate durable state for it."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=saveGatedSpell",
-      "owner": "battle-reducer-route-projection",
+      "fieldPath": "BattleCreatureState.hp",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing BattleState runtime state owns this spell effect, condition, Hit Point, Temporary Hit Point, Concentration, or pending after-hit rider fact; Task 23 adds no duplicate durable state for it."
+    },
+    {
+      "fieldPath": "BattleCreatureState.tempHp",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing BattleState runtime state owns this spell effect, condition, Hit Point, Temporary Hit Point, Concentration, or pending after-hit rider fact; Task 23 adds no duplicate durable state for it."
+    },
+    {
+      "fieldPath": "BattleDamageRollHole.spellMarkedDamageRiders",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleResolutionResult.holes derived from BattleState, typed spell procedures, and fills",
+        "boundary": "battle-runtime public reducer route event boundary"
+      },
+      "notes": "Projection is emitted at public reducer entrypoints from existing owner-local facts; it is not stored as a second BattleState copy."
+    },
+    {
+      "fieldPath": "BattleDamageRollHole.spellWeaponDamageRiders",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleResolutionResult.holes derived from BattleState, typed spell procedures, and fills",
+        "boundary": "battle-runtime public reducer route event boundary"
+      },
+      "notes": "Projection is emitted at public reducer entrypoints from existing owner-local facts; it is not stored as a second BattleState copy."
+    },
+    {
+      "fieldPath": "BattleInterruptStack.activeInterrupt.pendingAttackDamageAdditions",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing BattleState runtime state owns this spell effect, condition, Hit Point, Temporary Hit Point, Concentration, or pending after-hit rider fact; Task 23 adds no duplicate durable state for it."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.subject=afterHitDamageRider",
+      "owner": "executable-boundary-projection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
-        "tag": "runtime-projection"
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleState plus AvailableBattleAct/BattleResolutionResult routeEvents",
+        "boundary": "battle-runtime public reducer route event boundary"
       },
-      "notes": "Existing save-gated spell route projection owns action-economy discovery and Saving Throw outcome fill order for Color Spray and Entangle selected-identity branches."
+      "notes": "Projection is emitted at public reducer entrypoints from existing owner-local facts; it is not stored as a second BattleState copy."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.subject=conditionImmunityTemporaryHitPointEffect",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleState plus AvailableBattleAct/BattleResolutionResult routeEvents",
+        "boundary": "battle-runtime public reducer route event boundary"
+      },
+      "notes": "Projection is emitted at public reducer entrypoints from existing owner-local facts; it is not stored as a second BattleState copy."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.subject=heldWeaponActiveEffect",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleState plus AvailableBattleAct/BattleResolutionResult routeEvents",
+        "boundary": "battle-runtime public reducer route event boundary"
+      },
+      "notes": "Projection is emitted at public reducer entrypoints from existing owner-local facts; it is not stored as a second BattleState copy."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.subject=markedDamageRiderEffect",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleState plus AvailableBattleAct/BattleResolutionResult routeEvents",
+        "boundary": "battle-runtime public reducer route event boundary"
+      },
+      "notes": "Projection is emitted at public reducer entrypoints from existing owner-local facts; it is not stored as a second BattleState copy."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.subject=scalarBuffEffect",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleState plus AvailableBattleAct/BattleResolutionResult routeEvents",
+        "boundary": "battle-runtime public reducer route event boundary"
+      },
+      "notes": "Projection is emitted at public reducer entrypoints from existing owner-local facts; it is not stored as a second BattleState copy."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.subject=spellHostedWeaponAttack",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleState plus AvailableBattleAct/BattleResolutionResult routeEvents",
+        "boundary": "battle-runtime public reducer route event boundary"
+      },
+      "notes": "Projection is emitted at public reducer entrypoints from existing owner-local facts; it is not stored as a second BattleState copy."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.subject=weaponDamageRider",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleState plus AvailableBattleAct/BattleResolutionResult routeEvents",
+        "boundary": "battle-runtime public reducer route event boundary"
+      },
+      "notes": "Projection is emitted at public reducer entrypoints from existing owner-local facts; it is not stored as a second BattleState copy."
+    },
+    {
+      "fieldPath": "BattleResolutionResult.routeEvents",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleState plus AvailableBattleAct/BattleResolutionResult routeEvents",
+        "boundary": "battle-runtime public reducer route event boundary"
+      },
+      "notes": "Projection is emitted at public reducer entrypoints from existing owner-local facts; it is not stored as a second BattleState copy."
     }
   ],
   "notes": [
-    "Task 9 introduced no new durable BattleState or BattleCreatureState fields.",
-    "The new repeatSaveConditionEffect route projection is derived from existing owner hole-id projections and state deltas, not selected spell id, authored name, QNT action name, connector filename, or a duplicate route-local state cache.",
-    "Condition-choice catalog identity remains a support-profile admission/input boundary and is not stored as production reducer dispatch state."
+    "Task 23 introduced no new durable BattleState or BattleCreatureState fields.",
+    "Selected spell identity is retained only at catalog/support-profile and selected replay boundaries; production route dispatch uses typed invocation procedure, active-effect kind, damage-hole rider facts, fills, and BattleState deltas.",
+    "Route subjects are executable boundary projections derived from existing owner state and public reducer results, not a stored route ledger or duplicate active-effect state."
   ]
 }
