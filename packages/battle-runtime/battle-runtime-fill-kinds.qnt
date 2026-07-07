@@ -19,6 +19,7 @@ module battleRuntimeFillKinds {
     | CompanionReappearanceInitiativeFillKind
     | ConcentrationSavingThrowFillKind
     | ConditionChoiceFillKind
+    | CreatureAttackZeroDamageFillKind
     | DamageTypeChoiceFillKind
     | DeathSavingThrowFillKind
     | GrappleOutcomeFillKind

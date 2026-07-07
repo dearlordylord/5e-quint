@@ -1,3 +1,155 @@
+## CRPI-BLOCK-036
+
+Status: `pass`
+
+- Task: 67
+- Driver path: `packages/battle-runtime/creature-attack.mbt.qnt`
+- Route connector path: `packages/battle-runtime/creature-attack.route.mbt.qnt`
+- Route class: `reducer-routed`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-036.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Behavior accepted:
+
+Task 67 accepts minimal creature attack routing through public BattleState
+reducer entrypoints. The replay covers a hit route from Attack Roll to Rolled
+Dice to Hit Point ownership and a miss route that resolves at Attack Roll
+ownership. Production reducer behavior derives route subjects, owners, fills,
+and holes from typed `creatureAttack` subjects, public fills, result shape, and
+existing combatant facts, not authored monster identity, QNT action names,
+witness field names, fixture labels, or connector filenames.
+Discovery is limited to stat-block-origin creatures with no structured action
+section, the current actor, an actor that can take actions, and an available
+Attack action. This pilot does not add a generic attack to character turns,
+off-turn actors, incapacitated or terminal zero-HP actors, actors with no Attack
+action remaining, or already structured stat-block attacks. The replay fixture
+uses `synthetic-test` provenance rather than claiming SRD provenance.
+
+No duplicate durable state was added. The route uses existing
+`BattleState.combatants`, `BattleCreatureState.hp`, Armor Class projection,
+public Attack Roll fills, ordinary Rolled Dice fills for positive copied
+damage, the creature-attack-specific zero-damage fill, and
+`applyBattleHitPointDamage` for the durable Hit Point owner. The only introduced
+state shape is the typed public subject/hole frontier needed for the reducer
+boundary.
+The copied QNT damage domain remains the source `0..6` domain; copied
+`damage = 0` is represented at the public reducer boundary as a
+`creatureAttackZeroDamage` fill that projects to the connector's `rolledDice`
+route event, not as a fake positive `DieRollResult` or a global empty
+`rolledDice` fill.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Status |
+| --- | --- | --- |
+| `packages/battle-runtime/creature-attack.mbt.qnt#step:doAttackerAAttacks` | `tasks/target-replay-evidence/CRPI-BLOCK-036.json#driver:packages/battle-runtime/creature-attack.mbt.qnt#step:doAttackerAAttacks#trace:reducer-route=CreatureAttack action=doAttackerAAttacks qRoute=creature-attack-public-route-hit` | `covered` |
+| `packages/battle-runtime/creature-attack.mbt.qnt#step:doAttackerBAttacks` | `tasks/target-replay-evidence/CRPI-BLOCK-036.json#driver:packages/battle-runtime/creature-attack.mbt.qnt#step:doAttackerBAttacks#trace:reducer-route=CreatureAttack action=doAttackerBAttacks qRoute=creature-attack-public-route-miss` | `covered` |
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-036/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 67.
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Playing-the-Game.md#Attack Rolls` defines Attack Roll hit
+  determination against Armor Class.
+- SRD 5.2.1 `Rules-Glossary.md#Actions` and
+  `Rules-Glossary.md#Attack [Action]` define that a creature takes actions on
+  its turn and that the Attack action is the action used to make an attack.
+- SRD 5.2.1 `Rules-Glossary.md#Incapacitated [Condition]` defines that an
+  Incapacitated creature can't take actions; Unconscious includes
+  Incapacitated.
+- SRD 5.2.1 `Playing-the-Game.md#Damage Rolls` and `#Hit Points` define
+  damage subtraction from current Hit Points with a minimum of 0.
+- `UBIQUITOUS_LANGUAGE.md` defines Attack Roll, Hit Points, Creature, Damage,
+  Armor Class, Incapacitated, Unconscious, and the action-blocking condition
+  terms used by this route.
+
+Verification results:
+
+- Base check passed: declared base ref
+  `ralph/cleanroom-owner-battle-attack-20260706T213644Z/integration` and
+  `HEAD` both resolved to `ec0fa07aa Mark Ralph task 64 done`; Base SHA
+  `ec0fa07aaaa3eccab53d501092026a2237af644e` was an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against the local SRD passages listed
+  above and `UBIQUITOUS_LANGUAGE.md`.
+- `pnpm --filter @dnd/battle-runtime typecheck` passed.
+- `pnpm --dir packages/battle-runtime exec vitest run src/creature-attack.mbt.test.ts -t "creature-attack public reducer boundaries"`
+  passed with 9 tests and 2 skipped, covering miss plus stale damage-fill
+  rejection, zero-damage creature-attack fill construction, empty ordinary
+  rolled-dice rejection, omitted unsupported attack bonus, current-actor
+  discovery, Incapacitated and terminal zero-HP action-eligibility rejection,
+  forged off-turn subject rejection, forged non-pilot subject rejection, and
+  Attack action spending.
+- Focused creature attack MBT replay passed:
+  `START=$(date +%s); MBT_TRACES=1 MBT_STEPS=6 pnpm exec vitest run src/creature-attack.mbt.test.ts 2>&1; echo "TOTAL: $(( $(date +%s) - START ))s"`
+  passed with 11 tests; final rerun `TOTAL: 10s`.
+- `pnpm cleanroom-branch-coverage:check -- --write` refreshed generated
+  cleanroom source inventory/report after restoring the copied creature attack
+  damage domain and preserving public zero-damage replay with a
+  creature-attack-specific fill.
+- Task-scoped target replay evidence validation passed:
+  direct `scripts/cleanroom-branch-coverage-check.cjs#validateTargetReplayEvidence`
+  call with `requireAllObligations: false` covered 2 obligations in
+  `tasks/target-replay-evidence/CRPI-BLOCK-036.json`.
+- `pnpm rules-kernel-coverage:check -- --write` refreshed generated protocol
+  coverage artifacts after adding the `creatureAttack` subject and new public
+  creature attack hole families.
+- `pnpm rules-kernel-coverage:check` passed with 131 obligations.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24
+  sampled inputs.
+- `jq empty tasks/target-replay-evidence/CRPI-BLOCK-036.json tasks/ENGINE_DEPTH_MANIFEST.json tasks/STATE_OWNER_MANIFEST.json tasks/RUN_LEDGER.json`
+  passed.
+- `git diff --check` passed.
+- `pnpm quality` passed on the full diff; app lint emitted the existing 61
+  warnings and exited 0.
+- Reviewer-loop convergence passed: Round 1 found manual HP mutation and
+  moved the BattleState damage path to `applyBattleHitPointDamage`; Round 2
+  narrowed discovery to stat-block-origin creatures with no structured action
+  section; Round 3 found missing rules-kernel protocol frontier coverage and
+  added the `creatureAttack` subject/hole rows plus generated artifacts.
+  Revision round 2 rejected stale post-miss damage fills, moved the replay
+  fixture to synthetic-test provenance instead of synthetic SRD provenance.
+  Revision round 3 restored the copied QNT `0..6` damage domain, represented
+  copied zero damage without forging a positive die result, constrained
+  discovery and forged-subject resolution to current-actor Attack action
+  eligibility plus the narrow stat-block no-actions pilot, and used public
+  `endTurn` only to align copied actor turns in the replay harness. Revision
+  round 4 scoped copied zero damage to `creatureAttackZeroDamage` instead of
+  widening global `rolledDice` fills, and removed the unsupported `+0` attack
+  bonus from the creatureAttack attack-roll hole. Revision round 5 routed
+  discovery and forged-subject resolution through `combatantCanTakeActions`,
+  rejecting Incapacitated and terminal zero-HP pilot actors. The final
+  RAW/domain, architecture/connascence, and code-review pass found no remaining
+  reasonable Task 67 findings.
+
+Plan Impact:
+
+- Status: `none`
+- Affected task: Task 67 / `CRPI-BLOCK-036` is unblocked by accepted copied
+  `qRoute` replay evidence.
+- Dependent route task `L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES`
+  remains unchanged.
+- Observation: minimal creature attacks now expose a typed public
+  `creatureAttack` subject and route projection, limited to stat-block-origin
+  creatures with no structured action section, the current actor, an actor that
+  can take actions, and an available Attack action, that later stat-block attack
+  work can reuse or replace at the BattleState layer without a parallel route
+  ledger.
+- Required plan edits: none.
+
 ## CRPI-BLOCK-035
 
 Status: `pass`

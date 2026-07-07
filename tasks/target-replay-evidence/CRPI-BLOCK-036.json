@@ -1,0 +1,194 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/creature-attack.mbt.test.ts creature attack copied qRoute versus public reducer replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "acceptance": {
+    "driverPath": "packages/battle-runtime/creature-attack.mbt.qnt",
+    "connectorPath": "packages/battle-runtime/creature-attack.route.mbt.qnt",
+    "routeClass": "reducer-routed",
+    "durableOwner": "BattleState owns minimal creature attack hit and damage through Attack Roll and Hit Point owners. The narrow pilot admits the current actor only, requires an actor that can take actions plus an available Attack action, admits stat-block-origin creatures with no structured action section, and uses typed creatureAttack subjects plus public reducer route events only. The replay fixture is synthetic-test provenance, not SRD provenance.",
+    "acceptedProjection": "qRoute"
+  },
+  "status": "pass",
+  "runs": [
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/creature-attack.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/creature-attack.route.mbt.qnt",
+      "qntFileSha256": "8ac93028e7d3486795f932528dbe9cb90a3275fb50e2b095287f8102ac5a9437",
+      "routeConnectorSha256": "e3a64f173e6981cbd9a1acfb97ddc2e2497d63b379f3d23c8aeb40a68b554dc5",
+      "branchFamily": "step",
+      "branchAction": "doAttackerAAttacks",
+      "observedActionTaken": "doAttackerAAttacks",
+      "harnessTestPath": "packages/battle-runtime/src/creature-attack.mbt.test.ts",
+      "traceId": "reducer-route=CreatureAttack action=doAttackerAAttacks qRoute=creature-attack-public-route-hit",
+      "sampledInputs": [
+        {
+          "pickName": "damage",
+          "value": 0
+        },
+        {
+          "pickName": "hit",
+          "value": true
+        }
+      ],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doAttackerAAttacks",
+        "qntStateField": "qRoute",
+        "routeConnectorPath": "packages/battle-runtime/creature-attack.route.mbt.qnt",
+        "routeSubject": "CreatureAttackRouteSubject",
+        "owners": ["BattleActionEconomyOwner", "BattleAttackRollOwner", "BattleHitPointOwner"],
+        "targetDriverFactory": "packages/battle-runtime/src/creature-attack.mbt.test.ts#createCreatureAttackRouteDriver",
+        "targetRouteObservation": "Driver appends qRoute observations from public battleReducerStartRouteEvent, discoverBattleActs AvailableBattleAct.routeEvents, and resolveBattleSubject BattleResolutionResult.routeEvents. When the copied action names an actor that is not currently able to act, the harness first rotates turns through public endTurn but does not append those target-only turn-alignment events to the copied qRoute projection. It does not reconstruct route events from adapter-local expected routes."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "d772f8a54489fd4783aeca25c092ea029a2d12e0931ec115d734dbd06eb8b68f",
+        "observedProjectionSha256": "d772f8a54489fd4783aeca25c092ea029a2d12e0931ec115d734dbd06eb8b68f",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/creature-attack.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doAttackerAAttacks",
+          "qntStateField": "qRoute",
+          "routeSubject": "CreatureAttackRouteSubject"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "project_qRoute"
+          ],
+          "routeEventSource": "Public reducer route events from battleReducerStartRouteEvent, AvailableBattleAct.routeEvents, and BattleResolutionResult.routeEvents for hit creature attacks.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "AvailableBattleAct.routeEvents",
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.tag=creatureAttack",
+          "BattleSubject.actorId",
+          "BattleSubject.targetId",
+          "BattleCreatureState.origin.kind=statBlock",
+          "BattleCreatureState.origin.statBlock.provenance.kind=synthetic-test",
+          "BattleCreatureState.origin.statBlock.statBlock.actions=undefined",
+          "BattleState.currentTurnResources.actionResources",
+          "BattleHole.kind=attackRoll",
+          "BattleHole.kind=rolledDice",
+          "BattleFill.kind=creatureAttackZeroDamage for copied damage=0",
+          "BattleReducerRouteEvent.subject=creatureAttack",
+          "BattleReducerRouteEvent.owner=battleAttackRoll|battleHitPoint",
+          "BattleReducerRouteEvent.fill=attackRoll|rolledDice",
+          "BattleCreatureState.hp",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Hit creature attack discovers through the public reducer, routes Attack Roll to Rolled Dice, and represents copied zero damage with the creatureAttackZeroDamage fill while still resolving through the Hit Point owner."
+      }
+    },
+    {
+      "evidenceKind": "target-qnt-mbt-replay",
+      "driverPath": "packages/battle-runtime/creature-attack.mbt.qnt",
+      "routeConnectorPath": "packages/battle-runtime/creature-attack.route.mbt.qnt",
+      "qntFileSha256": "8ac93028e7d3486795f932528dbe9cb90a3275fb50e2b095287f8102ac5a9437",
+      "routeConnectorSha256": "e3a64f173e6981cbd9a1acfb97ddc2e2497d63b379f3d23c8aeb40a68b554dc5",
+      "branchFamily": "step",
+      "branchAction": "doAttackerBAttacks",
+      "observedActionTaken": "doAttackerBAttacks",
+      "harnessTestPath": "packages/battle-runtime/src/creature-attack.mbt.test.ts",
+      "traceId": "reducer-route=CreatureAttack action=doAttackerBAttacks qRoute=creature-attack-public-route-miss",
+      "sampledInputs": [
+        {
+          "pickName": "damage",
+          "value": 1
+        },
+        {
+          "pickName": "hit",
+          "value": false
+        }
+      ],
+      "routeConnectorReplay": {
+        "stepAction": "step",
+        "delegatedAction": "doAttackerBAttacks",
+        "qntStateField": "qRoute",
+        "routeConnectorPath": "packages/battle-runtime/creature-attack.route.mbt.qnt",
+        "routeSubject": "CreatureAttackRouteSubject",
+        "owners": ["BattleActionEconomyOwner", "BattleAttackRollOwner"],
+        "targetDriverFactory": "packages/battle-runtime/src/creature-attack.mbt.test.ts#createCreatureAttackRouteDriver",
+        "targetRouteObservation": "Driver appends qRoute observations from public battleReducerStartRouteEvent, discoverBattleActs AvailableBattleAct.routeEvents, and resolveBattleSubject BattleResolutionResult.routeEvents. When the copied action names an actor that is not currently able to act, the harness first rotates turns through public endTurn but does not append those target-only turn-alignment events to the copied qRoute projection. It does not reconstruct route events from adapter-local expected routes."
+      },
+      "stateCheck": {
+        "tag": "projection-match",
+        "projection": "qRoute",
+        "comparator": "route-event-list",
+        "expectedProjectionSha256": "036ffed8bd215ba14f10ed1ef7e60ac8a40798e1fa54be629a1ad18c14f62cd2",
+        "observedProjectionSha256": "036ffed8bd215ba14f10ed1ef7e60ac8a40798e1fa54be629a1ad18c14f62cd2",
+        "expectedProjectionSource": {
+          "tag": "copied-route-connector-qRoute",
+          "routeConnectorPath": "packages/battle-runtime/creature-attack.route.mbt.qnt",
+          "stepAction": "step",
+          "delegatedAction": "doAttackerBAttacks",
+          "qntStateField": "qRoute",
+          "routeSubject": "CreatureAttackRouteSubject"
+        },
+        "observedProjectionSource": {
+          "tag": "qRoute",
+          "targetEntrypointSequence": [
+            "start_battle",
+            "packages/battle-runtime/src/index.ts#battleReducerStartRouteEvent",
+            "end_turn",
+            "packages/battle-runtime/src/index.ts#endTurn",
+            "discover_battle_acts",
+            "packages/battle-runtime/src/index.ts#discoverBattleActs",
+            "resolve_battle_subject",
+            "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+            "project_qRoute"
+          ],
+          "routeEventSource": "Public reducer route events from battleReducerStartRouteEvent, AvailableBattleAct.routeEvents, and BattleResolutionResult.routeEvents for missed creature attacks.",
+          "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleSubject",
+          "routeEventPublicFields": [
+            "AvailableBattleAct.routeEvents",
+            "BattleResolutionResult.routeEvents"
+          ]
+        },
+        "checkedTargetStateFields": [
+          "BattleSubject.tag=creatureAttack",
+          "BattleSubject.actorId",
+          "BattleSubject.targetId",
+          "BattleCreatureState.origin.kind=statBlock",
+          "BattleCreatureState.origin.statBlock.provenance.kind=synthetic-test",
+          "BattleCreatureState.origin.statBlock.statBlock.actions=undefined",
+          "BattleState.currentTurnResources.actionResources",
+          "BattleHole.kind=attackRoll",
+          "BattleReducerRouteEvent.subject=creatureAttack",
+          "BattleReducerRouteEvent.owner=battleAttackRoll",
+          "BattleReducerRouteEvent.fill=attackRoll",
+          "BattleCreatureState.hp",
+          "BattleResolutionResult.routeEvents"
+        ]
+      },
+      "result": {
+        "tag": "pass",
+        "detail": "Missed creature attack discovers through the public reducer and resolves at the Attack Roll owner without requesting damage dice."
+      }
+    }
+  ]
+}

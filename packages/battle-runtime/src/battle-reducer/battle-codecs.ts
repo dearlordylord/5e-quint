@@ -1299,6 +1299,17 @@ export const BattleHoleSchema = Schema.Union(
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("attackRoll"),
+    rollMode: Schema.optionalWith(Schema.Literal(...ATTACK_ROLL_MODES), {
+      exact: true,
+    }),
+    creatureAttack: Schema.Struct({
+      actorId: CombatantId,
+      targetId: CombatantId,
+    }),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("attackRoll"),
     attack: SupportedAttackActionOptionSchema,
     attackBonus: AttackBonus,
     rollMode: Schema.optionalWith(Schema.Literal(...ATTACK_ROLL_MODES), {
@@ -1369,6 +1380,14 @@ export const BattleHoleSchema = Schema.Union(
       ),
       { exact: true },
     ),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("rolledDice"),
+    creatureAttack: Schema.Struct({
+      actorId: CombatantId,
+      targetId: CombatantId,
+    }),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -3081,6 +3100,14 @@ type BattleFillEncoded =
       readonly value: number;
     }
   | {
+      readonly kind: "creatureAttackZeroDamage";
+      readonly holeId: string;
+      readonly creatureAttack: {
+        readonly actorId: string;
+        readonly targetId: string;
+      };
+    }
+  | {
       readonly kind: "rolledDice";
       readonly holeId: string;
       readonly selectedAttackDamageRiderUnitIds?: readonly string[];
@@ -3951,6 +3978,14 @@ export const BattleFillSchema: Schema.Schema<
       kind: Schema.Literal("companionReappearanceInitiative"),
       holeId: BattleHoleIdSchema,
       value: InitiativeScoreSchema,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("creatureAttackZeroDamage"),
+      holeId: BattleHoleIdSchema,
+      creatureAttack: Schema.Struct({
+        actorId: CombatantId,
+        targetId: CombatantId,
+      }),
     }),
     Schema.Struct({
       kind: Schema.Literal("rolledDice"),

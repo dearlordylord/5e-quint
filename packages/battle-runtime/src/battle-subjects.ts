@@ -418,6 +418,11 @@ export const BattleSubjectSchema = Schema.Union(
     attackName: BattleSubjectTextSchema,
   }),
   Schema.Struct({
+    tag: Schema.Literal("creatureAttack"),
+    actorId: CombatantId,
+    targetId: CombatantId,
+  }),
+  Schema.Struct({
     tag: Schema.Literal("action"),
     actorId: CombatantId,
     action: Schema.Literal("dash"),
@@ -1141,6 +1146,17 @@ function battleSubjectKey(subject: BattleSubject): string {
       subject.weaponItemId,
     ]);
   }
+  if (subject.tag === "pactOfTheChainFamiliarAttack") {
+    return JSON.stringify([
+      subject.tag,
+      subject.actorId,
+      subject.familiarId,
+      subject.attackName,
+    ]);
+  }
+  if (subject.tag === "creatureAttack") {
+    return JSON.stringify([subject.tag, subject.actorId, subject.targetId]);
+  }
   return Match.value(subject).pipe(
     Match.when({ tag: "action", action: "attack" }, (attack) =>
       JSON.stringify([
@@ -1150,14 +1166,6 @@ function battleSubjectKey(subject: BattleSubject): string {
         attack.attackName,
         attack.statBlockSection ?? null,
         attack.statBlockDamageNotation ?? "rolled",
-      ]),
-    ),
-    Match.when({ tag: "pactOfTheChainFamiliarAttack" }, (attack) =>
-      JSON.stringify([
-        attack.tag,
-        attack.actorId,
-        attack.familiarId,
-        attack.attackName,
       ]),
     ),
     Match.when({ tag: "action", action: "dash" }, (action) =>

@@ -68,6 +68,7 @@ import {
   offHandAttackActionOptionsForActor,
   offHandAttackPrerequisiteMet,
 } from "./attack-damage-apply.ts";
+import { minimalCreatureAttackActs } from "./creature-attack.ts";
 
 import {
   helpAttackAllyChoices,
@@ -217,7 +218,7 @@ function discoverBattleActsWithoutRouteEvents(
     currentActorHasOpenStatBlockMultiattackDispatch(state);
   const acts: AvailableBattleAct[] = hasOpenStatBlockMultiattackDispatch
     ? []
-    : [...releaseGrappleActs(state)];
+    : [...minimalCreatureAttackActs(state), ...releaseGrappleActs(state)];
   if (!state.combatants.has(actorId)) {
     return acts;
   }

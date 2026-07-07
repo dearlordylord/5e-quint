@@ -1,83 +1,83 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-034",
+  "taskId": "CRPI-BLOCK-036",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt",
+      "path": "packages/battle-runtime/creature-attack.mbt.qnt",
       "quarantinedWitnessNames": [
-        "qActionAvailable",
-        "qMultiattackDispatchesAvailable",
-        "qProtocol",
         "qRoute",
-        "qSkeletonDead",
-        "qSkeletonHp",
-        "qSneakAttackUsedThisTurn"
+        "creatureAHp",
+        "creatureBHp"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-034.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-036.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt",
+      "path": "packages/battle-runtime/creature-attack.route.mbt.qnt",
       "quarantinedWitnessNames": [
-        "qActionAvailable",
-        "qMultiattackDispatchesAvailable",
-        "qProtocol",
         "qRoute",
-        "qSkeletonDead",
-        "qSkeletonHp",
-        "qSneakAttackUsedThisTurn"
+        "CreatureAttackRouteSubject",
+        "BattleAttackRollOwner",
+        "BattleHitPointOwner"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-034.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-036.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "path": "packages/battle-runtime/src/creature-attack.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "createBattleRuntimeRouteDriver",
-        "ReducerRoutedWeaponAttackSkeletonProjection",
-        "reducerRoutedWeaponAttackSkeletonStateCheck"
+        "createCreatureAttackRouteDriver",
+        "CreatureAttackRouteState",
+        "compareReducerRoutes"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-034.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-036.json"
       ]
     }
   ],
   "productionModulesExtended": [
     {
+      "path": "packages/battle-runtime/src/battle-subjects.ts",
+      "role": "domain-engine",
+      "domainApis": [
+        "BattleSubject.tag=creatureAttack",
+        "battleSubjectKey"
+      ],
+      "notes": "Task 67 adds a typed minimal creature attack subject with actor and target combatant ids. The subject is caller-boundary evidence, not authored identity."
+    },
+    {
       "path": "packages/battle-runtime/src/battle-reducer.ts",
       "role": "domain-engine",
       "domainApis": [
-        "startBattle",
-        "discoverBattleActs",
+        "BattleCreatureAttackRollHole",
+        "BattleCreatureAttackDamageRollHole",
+        "BattleHole"
+      ],
+      "notes": "Task 67 adds typed public holes for the minimal creature attack Attack Roll and Rolled Dice frontier. No new durable BattleState field is introduced."
+    },
+    {
+      "path": "packages/battle-runtime/src/battle-reducer/creature-attack.ts",
+      "role": "domain-engine",
+      "domainApis": [
+        "minimalCreatureAttackActs",
+        "creatureAttackRollHole",
+        "creatureAttackDamageHole",
+        "creatureAttackHit",
+        "battleStateAfterCreatureAttackDamage"
+      ],
+      "notes": "The minimal creature attack pilot is admitted only for the current actor when it can take actions, has an available Attack action, and is a stat-block-origin creature with no structured action section. It derives hit from public Attack Roll fills against target Armor Class, spends the Attack action on resolution, and applies damage through applyBattleHitPointDamage, the existing Hit Point owner. Task replay fixtures use synthetic-test provenance rather than claiming SRD provenance, and copied zero damage is represented as a creatureAttackZeroDamage fill rather than a positive die result or a global empty rolled-dice fill."
+    },
+    {
+      "path": "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+      "role": "domain-engine",
+      "domainApis": [
         "resolveBattleSubject",
-        "BattleState.combatants",
-        "BattleState.turn"
+        "BattleSubject.tag=creatureAttack"
       ],
-      "notes": "Existing public reducer entrypoints own the weapon Attack skeleton replay. Task 63 introduced no new durable BattleState field."
-    },
-    {
-      "path": "packages/battle-runtime/src/battle-reducer/attack-main.ts",
-      "role": "domain-engine",
-      "domainApis": [
-        "resolveAttack",
-        "resolveSelectedAttackProcedure",
-        "Attack Roll hole progression",
-        "Rolled Dice damage fill progression"
-      ],
-      "notes": "Existing weapon Attack resolution owns target choice, Attack Roll, hit/miss progression, Sneak Attack damage-rider use, and Hit Point damage application through typed fill order."
-    },
-    {
-      "path": "packages/battle-runtime/src/battle-reducer/statblock.ts",
-      "role": "domain-engine",
-      "domainApis": [
-        "statBlockAttackActionOptions",
-        "supportedStatBlockMultiattacks",
-        "statBlockMultiattack action resources"
-      ],
-      "notes": "Existing stat-block action dispatch owns Multiattack resolution and downstream stat-block attack dispatch resources without duplicating rule-core stat-block control evidence."
+      "notes": "Public subject resolution owns the current-actor/action-resource gate, no-fill Attack Roll frontier, miss resolution, hit damage frontier, Attack action spend, and final Hit Point damage application for the narrow creatureAttack pilot."
     },
     {
       "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
@@ -85,25 +85,23 @@
       "domainApis": [
         "battleReducerRouteEventsForDiscoveredAct",
         "battleReducerRouteForResolution",
-        "weaponAttackRouteForResolution",
-        "statBlockAction route projection",
-        "battleAction route projection"
+        "BattleReducerRouteEvent.subject=creatureAttack"
       ],
-      "notes": "Task 63 uses production route projection for weapon Attack, battle action, and stat-block action subjects. Subject, owner, fill, and frontier holes are derived from public action discovery, submitted fill kind, BattleResolutionResult shape, and turn action-resource facts."
+      "notes": "Task 67 projects public creatureAttack discovery and resolution to qRoute-compatible route events using subject, fill, result shape, and public holes. Route behavior does not branch on connector filenames or QNT action names."
     }
   ],
   "expectedNextReuse": [
     {
-      "path": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
-      "notes": "Future battle action, weapon Attack, or stat-block action route evidence should reuse createBattleRuntimeRouteDriver and public reducer route-event normalization instead of duplicating adapter-local route tables."
+      "path": "packages/battle-runtime/src/creature-attack.mbt.test.ts",
+      "notes": "Future minimal creature attack replay updates should continue observing qRoute through battleReducerStartRouteEvent, discoverBattleActs, and resolveBattleSubject routeEvents rather than adapter-local expected routes. If copied source actions name an actor that is not currently able to act, the harness may use public endTurn to align target turn state without appending those target-only events to the copied qRoute projection."
     },
     {
-      "path": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
-      "notes": "The copied weapon Attack skeleton route connector replay remains the focused qRoute parity lane for the BattleState weapon, battle action, and stat-block action owner chain."
+      "path": "packages/battle-runtime/src/battle-reducer/creature-attack.ts",
+      "notes": "Future stat-block attack work can reuse or replace this narrow typed creatureAttack pilot at the BattleState layer instead of adding a parallel route ledger; ordinary character attacks, off-turn actors, spent-action actors, and structured stat-block attacks are outside this pilot admission boundary."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 63 observes copied weapon Attack skeleton qRoute through public reducer route events: startBattle, AvailableBattleAct.routeEvents from discoverBattleActs, and BattleResolutionResult.routeEvents from resolveBattleSubject across weapon action, battle action, stat-block action, action economy, Attack Roll, Hit Point damage, and stat-block dispatch owners."
+    "notes": "Task 67 observes copied creature attack qRoute through public reducer route events for startBattle, discoverBattleActs, Attack Roll resolution, and Hit Point damage resolution."
   }
 }

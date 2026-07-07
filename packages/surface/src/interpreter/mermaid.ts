@@ -162,6 +162,8 @@ function get5etoolsSource(unit: UnitRecord): string | null {
     case "srd-5.2.1":
     case "xphb":
       return "XPHB";
+    case "synthetic-test":
+      return null;
     default: {
       const _exhaustive: never = unit.provenance.kind;
       return _exhaustive;

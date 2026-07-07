@@ -1,7 +1,47 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-034",
+  "taskId": "CRPI-BLOCK-036",
   "durableFields": [
+    {
+      "fieldPath": "BattleSubject.tag=creatureAttack",
+      "owner": "caller-boundary-evidence",
+      "introducedIn": "packages/battle-runtime/src/battle-subjects.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "The minimal creature attack subject stores actor and target combatant ids selected by the caller. Discovery admits this subject only for the current actor when it can take actions, has an available Attack action, and is a stat-block-origin creature with no structured action section; the subject does not encode authored monster, weapon, or fixture identity. Task replay fixtures use synthetic-test provenance rather than claiming SRD provenance."
+    },
+    {
+      "fieldPath": "BattleCreatureAttackRollHole.creatureAttack",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleSubject.tag=creatureAttack",
+        "boundary": "discoverBattleActs public reducer result"
+      },
+      "notes": "The Attack Roll hole carries only the actor and target ids needed to return the public fill to the typed creatureAttack subject."
+    },
+    {
+      "fieldPath": "BattleCreatureAttackDamageRollHole.creatureAttack",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleSubject.tag=creatureAttack + BattleFill.kind=attackRoll",
+        "boundary": "resolveBattleSubject public reducer result"
+      },
+      "notes": "The Rolled Dice hole is emitted only after a public Attack Roll fill hits the target Armor Class."
+    },
+    {
+      "fieldPath": "BattleCreatureState.hp",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing target Hit Points own the durable creature attack damage result. Task 67 applies damage through applyBattleHitPointDamage and does not introduce a parallel HP field."
+    },
     {
       "fieldPath": "AvailableBattleAct.routeEvents",
       "owner": "executable-boundary-projection",
@@ -11,7 +51,7 @@
         "sourceField": "AvailableBattleAct.initialHoles",
         "boundary": "discoverBattleActs public reducer result"
       },
-      "notes": "Existing discovery results carry weaponAttack and statBlockAction route events derived from typed subject shape and TargetChoice initial hole facts."
+      "notes": "Creature attack discovery route events are derived from the typed subject and Attack Roll initial hole."
     },
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
@@ -22,88 +62,34 @@
         "sourceField": "BattleResolutionResult.tag",
         "boundary": "resolveBattleSubject public reducer result"
       },
-      "notes": "Existing resolution results carry route events derived from submitted targetChoice, attackRoll, and rolledDice fills, no-fill battle actions, no-fill stat-block Multiattack actions, and resolved, needs-holes, or stale-subject result shape."
+      "notes": "Creature attack resolution route events are derived from submitted fill kind, hit/miss outcome, needed holes, Attack action eligibility, and resolved Hit Point damage."
     },
     {
-      "fieldPath": "BattleSubject.action=attack",
-      "owner": "caller-boundary-evidence",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing typed Attack action subjects feed weapon Attack and stat-block attack reducers; production route behavior does not dispatch on authored weapon, monster, or source identity."
-    },
-    {
-      "fieldPath": "BattleSubject.action=attack|multiattack; BattleSubject.runtimeCommand=endTurn",
-      "owner": "caller-boundary-evidence",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing typed subjects own End Turn, Multiattack, recursive Multiattack stale replay, and stat-block attack dispatch routing; reducer-route projects them to battleAction and statBlockAction route subjects while stale no-fill Attack replay remains a weaponAttack hole-frontier route."
-    },
-    {
-      "fieldPath": "BattleFill.kind=targetChoice|attackRoll|rolledDice",
-      "owner": "caller-boundary-evidence",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing fills drive weapon Attack and stat-block attack frontiers through target selection, Attack Roll, and Hit Point damage without adding a parallel route ledger."
-    },
-    {
-      "fieldPath": "BattleCreatureState.hp",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing target Hit Points own durable weapon damage results; Task 63 introduced no parallel damage or HP field."
-    },
-    {
-      "fieldPath": "BattleTurnState.actionResources",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing turn action resources own ordinary action availability and stat-block Multiattack dispatch resources."
-    },
-    {
-      "fieldPath": "BattleTurnState.attackDamageRidersUsedThisTurn",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing per-turn damage-rider usage records Sneak Attack use; route evidence does not duplicate this as a skeleton-specific flag."
-    },
-    {
-      "fieldPath": "BattleReducerRouteEvent.subject=weaponAttack|battleAction|statBlockAction",
+      "fieldPath": "BattleReducerRouteEvent.subject=creatureAttack",
       "owner": "executable-boundary-projection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject",
+        "sourceField": "BattleSubject.tag=creatureAttack",
         "boundary": "battle reducer route event"
       },
-      "notes": "Generic route subjects are derived from typed BattleSubject shape, not authored identity or connector filenames."
+      "notes": "The route subject is derived from typed BattleSubject shape, not from connector names or source action names."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.owner=battleActionEconomy|battleTargetSelection|battleAttackRoll|battleHoleFrontier|battleHitPoint|battleStatBlockAction",
+      "fieldPath": "BattleReducerRouteEvent.owner=battleAttackRoll|battleHitPoint",
       "owner": "executable-boundary-projection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleResolutionResult.tag",
+        "sourceField": "BattleFill.kind + BattleResolutionResult.tag",
         "boundary": "battle reducer route event"
       },
-      "notes": "Weapon Attack skeleton route owners are derived from public discovery, fill/result shape, no-fill battle actions, stat-block action dispatch, and Hit Point damage application."
+      "notes": "Attack Roll fills route through battleAttackRoll; hit damage fills route through battleHitPoint. The owner is derived from public fill/result shape."
     }
   ],
   "notes": [
-    "Task 63 introduced no new durable BattleState fields.",
-    "Weapon/source and stat-block identity remain typed facts selected at the boundary; production route behavior uses subject, fill, hole, result shape, turn action resources, and Hit Point facts.",
-    "Route evidence records executable-boundary projection state only; it does not duplicate target choice, Attack Roll, damage dice, HP, Sneak Attack, action-resource, or Multiattack dispatch state."
+    "Task 67 introduced no new durable BattleState fields.",
+    "The minimal creature attack pilot uses existing combatant ids, stat-block origin facts with synthetic-test fixture provenance in replay, current-turn action resources, Armor Class projection, BattleFill values, Hit Point state, and public routeEvents. Copied zero damage is represented as a creatureAttackZeroDamage fill, not as a forged positive die result or a global empty rolled-dice fill.",
+    "Route evidence records executable-boundary projection state only; it does not duplicate hit, damage, HP, target, or action state in a parallel ledger."
   ]
 }

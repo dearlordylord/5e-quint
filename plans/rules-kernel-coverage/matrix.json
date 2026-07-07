@@ -27,14 +27,14 @@
     "qntRegistry[]": "Derived from packages/**/*.qnt excluding .mbt.qnt drivers and *-tests.qnt files, qnt-owner-roles.jsonl, and checker-owned qntRegistryExemptions."
   },
   "battleHoleFrontierSummary": {
-    "total": 167,
+    "total": 171,
     "bySubject": {
-      "battle-hole-family": 82,
-      "battle-fill-kind": 48,
-      "battle-subject-kind": 37
+      "battle-hole-family": 84,
+      "battle-fill-kind": 49,
+      "battle-subject-kind": 38
     },
     "byClassification": {
-      "semantic-frontier": 136,
+      "semantic-frontier": 140,
       "deterministic-boundary-projection": 0,
       "table-owned-fact": 31,
       "unsupported-dead-branch": 0
@@ -6686,6 +6686,39 @@
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "attackRoll",
+      "id": "BattleCreatureAttackRollHole",
+      "reason": "Minimal creature Attack Roll holes are covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY as typed public reducer frontier vocabulary. Task 67 target replay covers the executable creatureAttack route through public discoverBattleActs and resolveBattleSubject route events.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "rolledDice",
+      "id": "BattleCreatureAttackDamageRollHole",
+      "reason": "Minimal creature damage Rolled Dice holes are covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY as typed public reducer frontier vocabulary. Task 67 target replay covers the executable creatureAttack hit path through the Battle Hit Point owner.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "fillKind": "creatureAttackZeroDamage",
+      "followUpTaskIds": [],
+      "id": "creatureAttackZeroDamage",
+      "reason": "The creatureAttackZeroDamage fill is narrow protocol vocabulary for copied minimal creature-attack zero-damage replay. It preserves the global non-empty Rolled Dice fill boundary while projecting to the connector's rolledDice route event for Task 67 qRoute evidence.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "followUpTaskIds": [],
@@ -6704,6 +6737,17 @@
       "id": "toolPossessionFacts",
       "reason": "Tool possession fills are caller/table inventory facts consumed by supported feature procedures such as Cunning Strike Poison; durable equipment ownership and on-person derivation remain outside reducer state.",
       "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
+      "id": "creatureAttack",
+      "reason": "The minimal creatureAttack subject kind is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY as public BattleSubject vocabulary. Task 67 target replay covers its executable reducer route through Attack Roll and Hit Point owners.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "creatureAttack"
     }
   ],
   "profileObligations": [
