@@ -253,7 +253,7 @@
     {
       "number": 42,
       "id": "CRPI-READY-011",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Implement route replay: battle-runtime-sorcerer-metamagic-careful-selected-identity"
     },
     {
@@ -631,7 +631,7 @@
     {
       "number": 105,
       "id": "CRPI-SOURCE-002",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Split source QNT connector: careful metamagic saving-throw protection"
     },
     {
@@ -712,7 +712,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRP07-DSR-06` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-009` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-010` | `ready-for-research` | none | target replay against refreshed Sleep repeat-save source connector |
-| `CRPI-READY-011` | `blocked` | `CRPI-SOURCE-002` | source connector split before implementation |
+| `CRPI-READY-011` | `ready-for-research` | none | source connector split completed; fresh target replay required |
 | `CRPI-READY-012` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-013` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-014` | `done` | none | target replay evidence and owner implementation |
@@ -775,7 +775,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRPI-BLOCK-054` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-055` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-SOURCE-001` | `done` | none | refreshed Sleep repeat-save source connector |
-| `CRPI-SOURCE-002` | `ready-for-research` | none | split Careful Metamagic source connector |
+| `CRPI-SOURCE-002` | `done` | none | split Careful Metamagic source connector |
 | `CRPI-SOURCE-003` | `deferred` | owner-directed later split | exact-damage residual branch follow-up tasks |
 
 ## Task Details
@@ -3188,11 +3188,13 @@ Plan Impact:
 
 ### Task 42 - CRPI-READY-011
 
-Status: `blocked`
+Status: `ready-for-research`
 
-Blocker Type: dependency
-
-Blocker Detail: Owner decision on 2026-07-07 chooses source connector refresh/split, not synthetic damage route events or duplicate replay-history state. This implementation row depends on `CRPI-SOURCE-002`, which must split or refresh `packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt#doRouteSavingThrowProtection` so Careful Burning Hands can start at protected-target `spellTargetList` and Careful Command/no-effect can route through `commandEffect` without a rolled-dice damage-adjustment frontier.
+Unblock Detail: `CRPI-SOURCE-002` split the copied source connector so Careful
+Burning Hands routes through protected-target `spellTargetList` before
+`savingThrowOutcome`, and Careful Command/no-effect routes through
+`commandEffect` without a rolled-dice damage-adjustment frontier. Task 42 should
+rerun target replay against the refreshed copied `qRoute`.
 
 Goal:
 
@@ -3243,7 +3245,8 @@ Verification:
 
 Plan Impact:
 
-`applied`: owner decision converted this from an owner-decision blocker into a dependency on `CRPI-SOURCE-002`.
+`applied`: `CRPI-SOURCE-002` refreshed the source connector; this task is
+unblocked for fresh target replay against the updated public `qRoute` shape.
 
 ### Task 43 - CRPI-READY-012
 
@@ -6831,7 +6834,7 @@ public `qRoute` shape.
 
 ### Task 105 - CRPI-SOURCE-002
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
@@ -6890,8 +6893,8 @@ Verification:
 
 Plan Impact:
 
-`update-required`: this task must either unblock Task 42 or leave it blocked
-with a concrete source-QNT reason that does not depend on an owner decision.
+`applied`: source connector split completed. Task 42 / `CRPI-READY-011` is
+unblocked for fresh target replay against the updated public `qRoute` shape.
 
 ### Task 106 - CRPI-SOURCE-003
 

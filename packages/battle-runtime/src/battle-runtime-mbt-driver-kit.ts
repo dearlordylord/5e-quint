@@ -2077,7 +2077,8 @@ const metamagicRouteDriverSchema = {
   doResolveQuickenedDirectCondition: {},
   doResolveQuickenedRollModifier: {},
   doResolveQuickenedAfterMagicActionSpent: {},
-  doRouteSavingThrowProtection: {},
+  doRouteSavingThrowProtectionSaveGatedDamage: {},
+  doRouteSavingThrowProtectionNoEffect: {},
   doRouteSavingThrowRollMode: {},
   doRouteDamageTypeSubstitution: {},
   doRouteEffectiveSpellLevel: {},
@@ -4020,6 +4021,8 @@ const METAMAGIC_BONUS_ACTION_CASTING_TIME_ROUTE_SUBJECT =
   "metamagicBonusActionCastingTime" satisfies ReducerRouteSubjectFamily;
 const METAMAGIC_SAVING_THROW_PROTECTION_ROUTE_SUBJECT =
   "metamagicSavingThrowProtection" satisfies ReducerRouteSubjectFamily;
+const METAMAGIC_COMMAND_EFFECT_ROUTE_SUBJECT =
+  "commandEffect" satisfies ReducerRouteSubjectFamily;
 const METAMAGIC_SAVING_THROW_ROLL_MODE_ROUTE_SUBJECT =
   "metamagicSavingThrowRollMode" satisfies ReducerRouteSubjectFamily;
 const METAMAGIC_DAMAGE_TYPE_SUBSTITUTION_ROUTE_SUBJECT =
@@ -4054,6 +4057,10 @@ const METAMAGIC_TARGET_CHOICE_HOLES = [
   "targetChoice",
 ] as const satisfies readonly ReducerRouteHole[];
 const METAMAGIC_TARGET_LIST_HOLES = [
+  "spellTargetList",
+] as const satisfies readonly ReducerRouteHole[];
+const METAMAGIC_COMMAND_OPTION_AND_TARGET_LIST_HOLES = [
+  "commandOptionChoice",
   "spellTargetList",
 ] as const satisfies readonly ReducerRouteHole[];
 
@@ -4304,11 +4311,17 @@ function metamagicQuickenedTargetListActiveEffectRoute(): readonly ReducerRouteE
   ];
 }
 
-function metamagicSavingThrowProtectionRoute(): readonly ReducerRouteEvent[] {
+function metamagicSavingThrowProtectionSaveGatedDamageRoute(): readonly ReducerRouteEvent[] {
   return [
     ...metamagicInitialRoute(),
     metamagicDiscoverRoute({
       subject: METAMAGIC_SAVING_THROW_PROTECTION_ROUTE_SUBJECT,
+      holes: METAMAGIC_TARGET_LIST_HOLES,
+      owner: "battleFeatureResource",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_SAVING_THROW_PROTECTION_ROUTE_SUBJECT,
+      fill: "spellTargetList",
       holes: METAMAGIC_SAVING_THROW_HOLES,
       owner: "battleFeatureResource",
     }),
@@ -4327,6 +4340,29 @@ function metamagicSavingThrowProtectionRoute(): readonly ReducerRouteEvent[] {
       subject: METAMAGIC_SAVING_THROW_PROTECTION_ROUTE_SUBJECT,
       holes: NO_METAMAGIC_ROUTE_HOLES,
       owner: "battleFeatureResource",
+    }),
+  ];
+}
+
+function metamagicSavingThrowProtectionNoEffectRoute(): readonly ReducerRouteEvent[] {
+  return [
+    ...metamagicInitialRoute(),
+    metamagicDiscoverRoute({
+      subject: METAMAGIC_COMMAND_EFFECT_ROUTE_SUBJECT,
+      holes: METAMAGIC_COMMAND_OPTION_AND_TARGET_LIST_HOLES,
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_COMMAND_EFFECT_ROUTE_SUBJECT,
+      fill: "commandOptionChoice",
+      holes: METAMAGIC_SAVING_THROW_HOLES,
+      owner: "battleHoleFrontier",
+    }),
+    metamagicResolveRoute({
+      subject: METAMAGIC_COMMAND_EFFECT_ROUTE_SUBJECT,
+      fill: "savingThrowOutcome",
+      holes: NO_METAMAGIC_ROUTE_HOLES,
+      owner: "battleActiveEffect",
     }),
   ];
 }
@@ -4568,8 +4604,11 @@ export function createMetamagicRouteDriver() {
       doResolveQuickenedAfterMagicActionSpent: () => {
         route = metamagicQuickenedRestorationRoute();
       },
-      doRouteSavingThrowProtection: () => {
-        route = metamagicSavingThrowProtectionRoute();
+      doRouteSavingThrowProtectionSaveGatedDamage: () => {
+        route = metamagicSavingThrowProtectionSaveGatedDamageRoute();
+      },
+      doRouteSavingThrowProtectionNoEffect: () => {
+        route = metamagicSavingThrowProtectionNoEffectRoute();
       },
       doRouteSavingThrowRollMode: () => {
         route = metamagicSavingThrowRollModeRoute();
