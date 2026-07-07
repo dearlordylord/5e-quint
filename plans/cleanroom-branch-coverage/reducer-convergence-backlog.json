@@ -1036,12 +1036,12 @@
         "packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt"
       ],
       "connectorBlockerId": null,
-      "durableOwner": "BattleState owns Sleep active-effect state, Concentration, condition lifecycle, and turn-boundary repeat-save frontier; no duplicate repeat-save or condition ledger is introduced.",
+      "durableOwner": "BattleState owns Sleep active-effect state, Concentration, condition lifecycle, and the turn-boundary repeat-save frontier while sleepPendingRepeatSave exists; after Concentration cleanup removes that frontier, the source route connector requires no post-cleanup turn-boundary no-op route events and introduces no duplicate repeat-save or condition ledger.",
       "ownerClassification": "durable-owner",
       "sourceTaskId": "CRPI-SOURCE-001",
       "targetTaskId": "CRPI-READY-010",
-      "status": "blocked",
-      "blockerId": "CRPI-SOURCE-001"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt",

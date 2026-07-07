@@ -247,7 +247,7 @@
     {
       "number": 41,
       "id": "CRPI-READY-010",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Implement route replay: battle-runtime-sleep-repeat-save"
     },
     {
@@ -625,7 +625,7 @@
     {
       "number": 104,
       "id": "CRPI-SOURCE-001",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Refresh source QNT connector: battle-runtime-sleep-repeat-save"
     },
     {
@@ -655,7 +655,7 @@ This is the executable follow-on Ralph queue produced by `CRP-09-CLOSEOUT-EXPAND
 - Generated queue tasks: 103.
 - Runnable tasks: 26.
 - Blocked tasks: 4.
-- Queue statuses: done 101, ready-for-research 2, blocked 2, deferred 1.
+- Queue statuses: done 102, ready-for-research 2, blocked 1, deferred 1.
 
 The final queue has more tasks than the provisional nine-task bootstrap because the provisional plan was a bootstrap program, not the implementation denominator. The 107 backlog rows map into 103 implementation Ralph tasks because the character-creation full vertical row intentionally splits into three fill-batch tasks while other related rows are grouped by owner/package task shape. Owner decisions on 2026-07-07 close two non-implementation rows and add three explicit source/follow-up tasks, bringing the active coordinator index to 106 tasks. The former `owner-todo` rows have been resolved into durable-owner runnable tasks where current route inventory and source evidence are sufficient; the remaining blocked implementation rows are dependency-blocked on explicit source-QNT connector refresh tasks.
 
@@ -711,7 +711,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRP07-DSR-02` | `done` | none | target replay evidence and owner implementation |
 | `CRP07-DSR-06` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-009` | `done` | none | target replay evidence and owner implementation |
-| `CRPI-READY-010` | `blocked` | `CRPI-SOURCE-001` | source connector refresh before implementation |
+| `CRPI-READY-010` | `ready-for-research` | none | target replay against refreshed Sleep repeat-save source connector |
 | `CRPI-READY-011` | `blocked` | `CRPI-SOURCE-002` | source connector split before implementation |
 | `CRPI-READY-012` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-013` | `done` | none | target replay evidence and owner implementation |
@@ -774,7 +774,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRP06-SRO-03` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-054` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-055` | `done` | none | target replay evidence and owner implementation |
-| `CRPI-SOURCE-001` | `ready-for-research` | none | refreshed Sleep repeat-save source connector |
+| `CRPI-SOURCE-001` | `done` | none | refreshed Sleep repeat-save source connector |
 | `CRPI-SOURCE-002` | `ready-for-research` | none | split Careful Metamagic source connector |
 | `CRPI-SOURCE-003` | `deferred` | owner-directed later split | exact-damage residual branch follow-up tasks |
 
@@ -3133,15 +3133,11 @@ Plan Impact:
 
 ### Task 41 - CRPI-READY-010
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: Owner decision on 2026-07-07 chooses source connector refresh/reclassification, not duplicate replay-history state or synthetic no-op route facts. This implementation row depends on `CRPI-SOURCE-001`, which must remove or reclassify the copied post-Concentration-cleanup `battleTurnBoundary` no-op obligation after no reducer-owned `sleepPendingRepeatSave` frontier remains.
+Status: `ready-for-research`
 
 Goal:
 
-After `CRPI-SOURCE-001` lands, implement target replay for `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt` as a `reducer-routed` reducer-convergence task.
+Implement target replay for `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt` as a `reducer-routed` reducer-convergence task against the refreshed source connector.
 
 Starting Points:
 
@@ -3166,7 +3162,7 @@ Acceptance:
 - Driver Path: `packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt`
 - Route Class: `reducer-routed`
 - Connector Path(s): `packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt`
-- Durable Owner: BattleState owns Sleep active-effect state, Concentration, condition lifecycle, and turn-boundary repeat-save frontier; no duplicate repeat-save or condition ledger is introduced.
+- Durable Owner: BattleState owns Sleep active-effect state, Concentration, condition lifecycle, and the turn-boundary repeat-save frontier while `sleepPendingRepeatSave` exists; after Concentration cleanup removes that frontier, the source route connector requires no post-cleanup turn-boundary no-op route events and introduces no duplicate repeat-save or condition ledger.
 - Accepted Projection: `qRoute`
 - Target replay evidence requirement: Target replay must observe `qRoute` from the copied route connector through public reducer entrypoints; for battle routes this means the shared `start_battle -> discover_battle_acts -> resolve_battle_subject` shape or the named interrupt/turn-advancement public surface when the connector requires it.
 - Pass/fail condition: the cleanroom target evidence file matches the copied connector projection and records target entrypoint sequence, observed projection source, reducer/public API path, source manifest SHA, and source branch inventory SHA.
@@ -3188,7 +3184,7 @@ Verification:
 
 Plan Impact:
 
-`applied`: owner decision converted this from an owner-decision blocker into a dependency on `CRPI-SOURCE-001`.
+`applied`: Task 104 refreshed the source connector so post-Concentration-cleanup turn-boundary surfaces no longer append repeat-save no-op route events after `sleepPendingRepeatSave` has been removed. This task is runnable and must replace the pre-refresh target evidence with a fresh copied-connector `qRoute` replay.
 
 ### Task 42 - CRPI-READY-011
 
@@ -6776,7 +6772,7 @@ Plan Impact:
 `applied`: owner-decision blocker resolved from route connector owners, route inventory derivability facts, and accepted Character Sheet owner-boundary evidence where cited; this task is now runnable. The task still must produce its own copied `qRoute` versus public target replay evidence.
 ### Task 104 - CRPI-SOURCE-001
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
@@ -6829,8 +6825,9 @@ Verification:
 
 Plan Impact:
 
-`update-required`: this task must either unblock Task 41 or leave it blocked
-with a concrete source-QNT reason that does not depend on an owner decision.
+`applied`: refreshed the source route connector and backlog/route inventory so
+`CRPI-READY-010` is unblocked for a fresh target replay against the updated
+public `qRoute` shape.
 
 ### Task 105 - CRPI-SOURCE-002
 
