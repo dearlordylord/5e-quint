@@ -777,12 +777,13 @@ RAW and ubiquitous-language review:
 
 Verification results:
 
-- Base check passed: prompt-declared integration ref
-  `ralph/cleanroom-owner-battle-attack-20260706T213644Z/integration` resolved
-  to `1271106eb Mark Ralph task 60 done`; review-time `master` resolved to
-  `406fb5a7c Merge Ralph task 25`; `HEAD` resolved to
-  `1271106eb Mark Ralph task 60 done`; Base SHA
-  `1271106ebfb65d2c1dcc6e85a19a5814cb6ed23a` was an ancestor of `HEAD`.
+- Base check passed: review-time declared base ref `master` resolved to
+  `769507547 plan: capture level 1-8 Ralph baseline`, which differs from the
+  task Base SHA. The task-provided integration ref
+  `ralph/cleanroom-task62-weapon-ordering-20260707T231735Z/integration` and
+  `HEAD` both resolved to `2e60d55ad Merge branch
+  'ralph/cleanroom-careful-replay-20260707T224746Z/integration'`; Base SHA
+  `2e60d55ade4eeca5108bd1b24ecc2cb9ff8410bd` was an ancestor of `HEAD`.
 - RAW/ubiquitous-language review passed against the local SRD passages listed
   above and `UBIQUITOUS_LANGUAGE.md`.
 - Task-scoped target evidence validation passed: direct
@@ -795,14 +796,20 @@ Verification results:
   files, again covering all 7 obligations.
 - Revision round 5 packaging check passed:
   `git ls-files packages/battle-runtime/src/battle-reducer/attack-ordering-messages.ts tasks/history/CRPI-BLOCK-033/README.md tasks/target-replay-evidence/CRPI-BLOCK-033.json`
-  lists all three required new paths, so the reviewed diff includes the
-  imported source module and required Task 62 evidence/history artifacts.
+  lists all three required paths as tracked. In the current Base-SHA diff,
+  `attack-ordering-messages.ts` and `tasks/target-replay-evidence/CRPI-BLOCK-033.json`
+  are prior tracked Task 62 artifacts; only the history README among those
+  paths changed, alongside rolling manifest/report/ledger metadata.
 - Revision round 6 generated-artifact honesty check passed:
   `tasks/ENGINE_DEPTH_MANIFEST.json` now lists the actual
   `attack-main.ts` attack resolution exports and describes weapon Attack
   discovery routing in `reducer-route.ts` as the inline
   `isWeaponAttackSubject(act.subject)` branch instead of naming a nonexistent
   helper.
+- Current manifest refresh passed: the rolling `tasks/ENGINE_DEPTH_MANIFEST.json`
+  and `tasks/STATE_OWNER_MANIFEST.json` now describe Task 62, including the
+  public route-event projections and the existing BattleState combatant owner;
+  no new canonical BattleState field is claimed.
 - `pnpm --filter @dnd/battle-runtime typecheck` passed after moving the route
   driver to public route events, adding invalid-fill production route events,
   and narrowing those invalid route events to the established ordering
@@ -813,10 +820,12 @@ Verification results:
   Revision round 5 rerun passed with the same result.
 - Focused plain and copied route connector MBT replay passed:
   `START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=4 pnpm --filter @dnd/battle-runtime exec vitest run src/weapon-attack-ordering.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "weapon Attack ordering|weapon attack ordering" ) 2>&1 & pid=$!; wait "$pid"; status=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"` passed with 2 tests; revision round 3 rerun `TOTAL: 7s`.
-  Revision round 5 rerun passed with 2 tests; `TOTAL: 8s`.
+  Revision round 5 rerun passed with 2 tests; `TOTAL: 8s`. Current rerun after
+  manifest refresh also passed with 2 tests; `TOTAL: 8s`.
 - `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24
   sampled inputs, including the revision round 5 rerun after tracking required
-  files.
+  files. Current rerun after manifest refresh also passed with the same
+  obligation and sampled-input counts.
 - `git diff --check` passed.
 - Requested broad verification passed: `pnpm quality`. App lint emitted the
   existing 61 warnings and exited 0; all quality gates and typecheck passed,
@@ -827,7 +836,10 @@ Verification results:
   subject/owner/fill connascence. Round 2 moved route replay to public
   routeEvents. Round 3 fixed over-broad invalid-fill ownership by keying
   hole-frontier route events to the two ordering invalid-fill messages and
-  verified a non-ordering invalid attackRoll fill has no routeEvents.
+  verified a non-ordering invalid attackRoll fill has no routeEvents. Current
+  round verified the manifest refresh is metadata-only, records no duplicate
+  durable state, keeps witness names quarantined to adapter modules, and leaves
+  the accepted public route evidence unchanged.
 
 Plan Impact:
 

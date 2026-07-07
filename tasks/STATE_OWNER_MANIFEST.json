@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-READY-010",
+  "taskId": "CRPI-BLOCK-033",
   "durableFields": [
     {
       "fieldPath": "AvailableBattleAct.routeEvents",
@@ -8,10 +8,10 @@
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleState plus AvailableBattleAct routeEvents",
-        "boundary": "battle-runtime public reducer route event boundary"
+        "sourceField": "BattleState plus AvailableBattleAct subject and initial holes",
+        "boundary": "battle-runtime public discoverBattleActs route event boundary"
       },
-      "notes": "Sleep spell discovery emits repeatSaveConditionEffect route evidence from public discovery results; this is not stored as BattleState replay history."
+      "notes": "Weapon Attack discovery route events are derived from typed attack acts and TargetChoice holes at the public discovery boundary; they are not stored as BattleState replay history."
     },
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
@@ -19,62 +19,46 @@
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleState plus BattleResolutionResult routeEvents",
-        "boundary": "battle-runtime public reducer route event boundary"
+        "sourceField": "BattleState plus BattleSubject, BattleFill, BattleHole, and BattleResolutionResult",
+        "boundary": "battle-runtime public resolveBattleSubject route event boundary"
       },
-      "notes": "Sleep repeat-save resolution, Concentration cleanup, active-effect cleanup, and turn-boundary discovery are emitted at public reducer entrypoints from existing owner-local facts."
+      "notes": "Weapon Attack target-choice, Attack Roll, invalid out-of-order fill, and rolled-damage route events are emitted from public resolution results and existing owner facts."
     },
     {
-      "fieldPath": "BattleCreatureState.activeEffects[kind=sleepPendingRepeatSave]",
+      "fieldPath": "BattleState.combatants",
       "owner": "battle-state",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "The pending Sleep repeat-save active effect is the canonical frontier for target end-turn repeat-save discovery."
+      "notes": "Existing combatant state remains the canonical owner for participants, target Hit Points, and damage application observed by the weapon Attack ordering replay."
     },
     {
-      "fieldPath": "BattleCreatureState.activeEffects[kind=sleepUnconscious]",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "The failed repeat-save Unconscious effect is condition state after the frontier is consumed; it is not a live repeat-save frontier."
-    },
-    {
-      "fieldPath": "BattleCreatureState.concentration",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Concentration remains the canonical source for Sleep spell-effect teardown."
-    },
-    {
-      "fieldPath": "BattleCreatureState.conditions",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Condition lifecycle state remains the canonical source for Incapacitated cleanup and Unconscious/Prone application."
-    },
-    {
-      "fieldPath": "BattleSubject.actionSpell.invocation.procedure",
+      "fieldPath": "BattleSubject.action[action=attack]",
       "owner": "executable-boundary-projection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "typed BattleSubject.actionSpell invocation procedure",
-        "boundary": "battle-runtime public reducer route event boundary"
+        "sourceField": "typed weapon Attack action facts supplied at the battle subject boundary",
+        "boundary": "battle-runtime public battle subject boundary"
       },
-      "notes": "Sleep target admission is selected at the public invocation boundary; production replay uses typed procedure facts and active-effect state, not authored spell-name dispatch."
+      "notes": "Weapon/source identity feeds typed attack facts at the subject boundary; production route behavior does not branch on authored identity, connector filenames, or QNT action names."
+    },
+    {
+      "fieldPath": "BattleHole.kind=targetChoice|attackRoll|rolledDice",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleState plus typed attack procedure frontier",
+        "boundary": "battle-runtime public hole frontier boundary"
+      },
+      "notes": "The weapon Attack ordering frontier is projected as typed holes from existing reducer state and fills; no duplicate durable hole ledger is introduced."
     }
   ],
   "notes": [
-    "Task 41 introduced no new durable BattleState or BattleCreatureState fields.",
-    "The target replay threads existing active-effect, Concentration, condition, and public route-event facts instead of adding a duplicate repeat-save or condition ledger.",
-    "The replay harness scopes observed public route events to the copied Sleep connector's startBattle and repeatSaveConditionEffect subject; unrelated generic battleAction route events remain public reducer facts but are outside this connector projection."
+    "Task 62 introduces no new canonical BattleState or BattleCreatureState field.",
+    "The target replay threads existing combatant, subject, fill, hole, and public route-event facts instead of adding a duplicate weapon Attack ordering ledger.",
+    "Route ownership is derived from public reducer entrypoints: action economy for discovery, target selection for target-choice fills, Attack Roll for hit or miss attack-roll fills, hole frontier for established out-of-order fill rejections, and Hit Points for rolled damage."
   ]
 }
