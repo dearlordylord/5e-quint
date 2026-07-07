@@ -94,13 +94,21 @@ module battleRuntimeSpellAttackOrderingRouteMbt {
       SpellAttackTargetChoiceStage,
       "needsHoles",
       "",
-      qRoute.append(
-        routeDiscoverBattleActs(
-          SpellAttackRouteSubject,
-          Set(TargetChoiceHoleKind),
-          BattleActionEconomyOwner,
+      qRoute
+        .append(
+          routeDiscoverBattleActs(
+            SpellAttackProcedureRouteSubject,
+            Set(TargetChoiceHoleKind),
+            BattleActionEconomyOwner,
+          )
         )
-      ),
+        .append(
+          routeDiscoverBattleActs(
+            SpellAttackProcedureRouteSubject,
+            Set(TargetChoiceHoleKind),
+            BattleObjectTargetBoundaryOwner,
+          )
+        ),
     ),
   }
 
@@ -114,7 +122,7 @@ module battleRuntimeSpellAttackOrderingRouteMbt {
       requestedEarlierLabel(result),
       qRoute.append(
         routeResolveBattleSubject(
-          SpellAttackRouteSubject,
+          SpellAttackProcedureRouteSubject,
           AttackRollFillKind,
           spellAttackHoleFrontier(stage),
           BattleHoleFrontierOwner,
@@ -133,7 +141,7 @@ module battleRuntimeSpellAttackOrderingRouteMbt {
       "",
       qRoute.append(
         routeResolveBattleSubject(
-          SpellAttackRouteSubject,
+          SpellAttackProcedureRouteSubject,
           TargetChoiceFillKind,
           spellAttackHoleFrontier(stage),
           BattleTargetSelectionOwner,
@@ -152,7 +160,7 @@ module battleRuntimeSpellAttackOrderingRouteMbt {
       requestedEarlierLabel(result),
       qRoute.append(
         routeResolveBattleSubject(
-          SpellAttackRouteSubject,
+          SpellAttackProcedureRouteSubject,
           RolledDiceFillKind,
           spellAttackHoleFrontier(stage),
           BattleHoleFrontierOwner,
@@ -171,7 +179,7 @@ module battleRuntimeSpellAttackOrderingRouteMbt {
       "",
       qRoute.append(
         routeResolveBattleSubject(
-          SpellAttackRouteSubject,
+          SpellAttackProcedureRouteSubject,
           AttackRollFillKind,
           spellAttackHoleFrontier(stage),
           BattleAttackRollOwner,
@@ -190,7 +198,7 @@ module battleRuntimeSpellAttackOrderingRouteMbt {
       "",
       qRoute.append(
         routeResolveBattleSubject(
-          SpellAttackRouteSubject,
+          SpellAttackProcedureRouteSubject,
           AttackRollFillKind,
           spellAttackHoleFrontier(stage),
           BattleAttackRollOwner,
@@ -209,7 +217,7 @@ module battleRuntimeSpellAttackOrderingRouteMbt {
       "",
       qRoute.append(
         routeResolveBattleSubject(
-          SpellAttackRouteSubject,
+          SpellAttackProcedureRouteSubject,
           RolledDiceFillKind,
           spellAttackHoleFrontier(stage),
           BattleHitPointOwner,
@@ -224,13 +232,21 @@ module battleRuntimeSpellAttackOrderingRouteMbt {
       SpellAttackDamageTypeAndTargetChoiceStage,
       "needsHoles",
       "",
-      qRoute.append(
-        routeDiscoverBattleActs(
-          SpellAttackRouteSubject,
-          Set(DamageTypeChoiceHoleKind, TargetChoiceHoleKind),
-          BattleActionEconomyOwner,
+      qRoute
+        .append(
+          routeDiscoverBattleActs(
+            SpellAttackProcedureRouteSubject,
+            Set(DamageTypeChoiceHoleKind, TargetChoiceHoleKind),
+            BattleActionEconomyOwner,
+          )
         )
-      ),
+        .append(
+          routeDiscoverBattleActs(
+            SpellAttackProcedureRouteSubject,
+            Set(TargetChoiceHoleKind),
+            BattleObjectTargetBoundaryOwner,
+          )
+        ),
     ),
   }
 
@@ -244,10 +260,10 @@ module battleRuntimeSpellAttackOrderingRouteMbt {
       "",
       qRoute.append(
         routeResolveBattleSubject(
-          SpellAttackRouteSubject,
+          SpellAttackProcedureRouteSubject,
           DamageTypeChoiceFillKind,
           spellAttackHoleFrontier(stage),
-          BattleHoleFrontierOwner,
+          BattleSpellAttackProcedureOwner,
         )
       ),
     ),
@@ -263,7 +279,7 @@ module battleRuntimeSpellAttackOrderingRouteMbt {
       "",
       qRoute.append(
         routeResolveBattleSubject(
-          SpellAttackRouteSubject,
+          SpellAttackProcedureRouteSubject,
           TargetChoiceFillKind,
           spellAttackHoleFrontier(stage),
           BattleTargetSelectionOwner,
@@ -282,10 +298,10 @@ module battleRuntimeSpellAttackOrderingRouteMbt {
       "",
       qRoute.append(
         routeResolveBattleSubject(
-          SpellAttackRouteSubject,
+          SpellAttackProcedureRouteSubject,
           DamageTypeChoiceFillKind,
           spellAttackHoleFrontier(stage),
-          BattleHoleFrontierOwner,
+          BattleSpellAttackProcedureOwner,
         )
       ),
     ),
@@ -301,7 +317,7 @@ module battleRuntimeSpellAttackOrderingRouteMbt {
       "",
       qRoute.append(
         routeResolveBattleSubject(
-          SpellAttackRouteSubject,
+          SpellAttackProcedureRouteSubject,
           TargetChoiceFillKind,
           spellAttackHoleFrontier(stage),
           BattleTargetSelectionOwner,

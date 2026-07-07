@@ -1,75 +1,76 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-040",
+  "taskId": "CRPI-BLOCK-027",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt",
       "quarantinedWitnessNames": [
-        "CharacterSheetFeatureResourcesOutcome",
-        "SheetFeatureResourceFacts",
-        "replayIndex"
+        "qProtocol",
+        "qStage",
+        "qLastOrderingError"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-040.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-027.json"
       ]
     },
     {
-      "path": "packages/character-battle-runtime/character-sheet-feature-resources.route.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt",
       "quarantinedWitnessNames": [
-        "FeatureResourceHandoffRouteState",
-        "qRoute"
+        "qRoute",
+        "qProtocol",
+        "qStage",
+        "qLastOrderingError"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-040.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-027.json"
       ]
     },
     {
-      "path": "packages/character-battle-runtime/src/character-sheet-feature-resources.mbt.test.ts",
+      "path": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
       "quarantinedWitnessNames": [
-        "FeatureResourceProjection",
-        "Character Sheet feature-resource deterministic QNT replay"
+        "reducerRoutedSpellAttackOrderingStateCheck",
+        "createSpellAttackOrderingRouteDriver"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-040.json"
-      ]
-    },
-    {
-      "path": "packages/character-battle-runtime/src/reducer-route-connectors.mbt.test.ts",
-      "quarantinedWitnessNames": [
-        "routes feature-resource handoff through sheet and battle owners"
-      ],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-040.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-027.json"
       ]
     }
   ],
   "productionModulesExtended": [
     {
-      "path": "packages/character-battle-runtime/src/character-battle-route.ts",
-      "exportedEntrypoints": [
-        "initialCharacterBattleFeatureResourceHandoffRoute",
-        "appendCharacterBattleFeatureResourceHandoffRoute"
+      "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "role": "runtime-projection",
+      "domainApis": [
+        "battleReducerStartRouteEvent",
+        "battleReducerRouteForAvailableAct",
+        "battleReducerRouteForResolution"
       ],
-      "notes": "Owns the production route projection for Character Sheet feature-resource public reducer-result handoff, source-exact Spell Slot resource projection, feature-resource rejection holes, and the Metamagic battle bridge. It does not export copied QNT branch action names or store route state as durable runtime state."
+      "notes": "Task 55 reuses the public reducer route projection for generic spell Attack ordering. Route events are derived from existing action spell invocation shape, public discovery holes, object-target-boundary projection, submitted fills, resolution holes, and Hit Point deltas; no new durable route state is stored."
     },
     {
-      "path": "packages/character-battle-runtime/src/index.ts",
-      "exportedEntrypoints": [
-        "initialCharacterBattleFeatureResourceHandoffRoute",
-        "appendCharacterBattleFeatureResourceHandoffRoute"
+      "path": "packages/battle-runtime/src/battle-reducer.ts",
+      "role": "domain-engine",
+      "domainApis": [
+        "resolveBattleSubject",
+        "discoverBattleActs",
+        "startBattle"
       ],
-      "notes": "Re-exports the Character Battle feature-resource public-result route projection for target replay and future handoff tasks."
+      "notes": "Existing BattleState owns the action economy, spell Attack subject resolution, target selection, Attack Roll result, damage dice frontier, and target Hit Point mutation observed by the Task 55 replay."
     }
   ],
   "expectedNextReuse": [
     {
-      "path": "packages/character-battle-runtime/src/character-battle-route.ts",
-      "notes": "Future Character Sheet feature-resource and resource-settlement route replays should reuse appendCharacterBattleFeatureResourceHandoffRoute with public reducer results rather than adding adapter-local qRoute tables."
+      "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "notes": "Future generic spell Attack route tasks should reuse the public spellAttackProcedure route subject and owner mapping instead of adapter-local expected routes or authored spell identity dispatch."
+    },
+    {
+      "path": "packages/battle-runtime/src/battle-reducer.ts",
+      "notes": "Future spell Attack ordering evidence should continue to enter through startBattle, discoverBattleActs, and resolveBattleSubject, threading existing BattleState facts rather than adding parallel state."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 83 observes copied qRoute for all Character Sheet feature-resource branches through public Character Sheet resource/rest entrypoints, Font of Magic conversion, Uncanny Metabolism recovery, and production Character Battle public-result route projection. No duplicate durable feature-resource, Spell Slot, or Metamagic resource ledger was introduced."
+    "notes": "Task 55 observes the copied spell Attack ordering qRoute through public reducer route events for single-target discovery, object-target-boundary discovery, typed damage-type, Attack Roll, earlier-frontier, and damage dice branches. No new durable BattleState fields were added."
   }
 }

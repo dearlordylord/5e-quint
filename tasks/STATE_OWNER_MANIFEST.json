@@ -1,58 +1,202 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-040",
+  "taskId": "CRPI-BLOCK-027",
   "durableFields": [
     {
-      "fieldPath": "CharacterSheet.resourceExpenditures",
-      "owner": "character-sheet",
-      "introducedIn": "packages/character-sheet-runtime/src/sheet-types.ts",
+      "fieldPath": "AvailableBattleAct.routeEvents",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "AvailableBattleAct.initialHoles",
+        "boundary": "discoverBattleActs public reducer result"
+      },
+      "notes": "Existing public discovery result carries route events derived from the action spell invocation and initial hole frontier."
+    },
+    {
+      "fieldPath": "AvailableBattleAct.initialHoles",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing Character Sheet resource expenditure state owns Lay On Hands, use-count, Monk Focus, and Sorcery Point point-pool spend facts. Task 83 adds no duplicate resource expenditure field."
+      "notes": "Existing discovery holes are the canonical action frontier for target choice and damage type choice."
     },
     {
-      "fieldPath": "CharacterSheet.spellSlotSourceState",
-      "owner": "character-sheet",
-      "introducedIn": "packages/character-sheet-runtime/src/sheet-types.ts",
+      "fieldPath": "BattleResolutionResult.routeEvents",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleResolutionResult.holes",
+        "boundary": "resolveBattleSubject public reducer result"
+      },
+      "notes": "Existing public resolution result carries route events derived from submitted fills, remaining holes, and reducer outcome."
+    },
+    {
+      "fieldPath": "BattleResolutionResult.holes",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing source-exact ordinary and created Spell Slot state owns Font of Magic conversion deltas. Pact Slot distinction remains separate and is not collapsed into this task's projection."
+      "notes": "Existing result holes are the canonical next frontier after target, damage type, Attack Roll, or damage dice fills."
     },
     {
-      "fieldPath": "CharacterSheet.restFeatureUses",
-      "owner": "character-sheet",
-      "introducedIn": "packages/character-sheet-runtime/src/sheet-types.ts",
+      "fieldPath": "BattleResolutionResult.tag=resolved",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing Long Rest use-state owns Uncanny Metabolism repeat-use gating. Short Rest preserves it; Long Rest clears it."
+      "notes": "Existing result tag distinguishes terminal miss and damage-resolution states from open-hole states."
     },
     {
-      "fieldPath": "BattleState.combatants[*].origin.resources",
-      "owner": "battle-runtime",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/model.ts",
+      "fieldPath": "BattleSubject.actionSpell.invocation.procedure=spellAttackDamage",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing battle combatant character resources own battle-time Sorcery Point spend used by the Metamagic bridge before settlement projects the delta back to Character Sheet state."
+      "notes": "Existing typed invocation procedure admits generic spell Attack damage behavior without dispatching on spell identity."
     },
     {
-      "fieldPath": "CharacterBattleRouteEvent",
-      "owner": "character-battle-route-projection",
-      "introducedIn": "packages/character-battle-runtime/src/character-battle-route.ts",
+      "fieldPath": "BattleFill.kind=targetChoice",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
-        "tag": "runtime-projection"
+        "tag": "canonical-source"
       },
-      "notes": "Route events project feature-resource handoff ownership, source-exact Spell Slot delta facts, rejection holes, and battle-runtime entry. They are not stored as a duplicate feature-resource state machine."
+      "notes": "Existing fill kind identifies target selection for spell Attack resolution."
+    },
+    {
+      "fieldPath": "BattleFill.kind=attackRoll",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing fill kind identifies the spell Attack Roll outcome."
+    },
+    {
+      "fieldPath": "BattleFill.kind=rolledDice",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing fill kind identifies hit-gated damage dice for spell Attack damage."
+    },
+    {
+      "fieldPath": "BattleFill.kind=damageTypeChoice",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing fill kind identifies the typed damage-type choice frontier for generic typed spell Attack damage."
+    },
+    {
+      "fieldPath": "BattleCreatureState.hp",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing creature state owns target Hit Point damage after a hit and damage dice fill."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.subject=spellAttackProcedure",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleSubject.actionSpell.invocation.procedure",
+        "boundary": "battle reducer route event"
+      },
+      "notes": "Route subject is derived from the typed spell Attack procedure, not selected spell identity."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.owner=battleActionEconomy",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "AvailableBattleAct.subject.invocation",
+        "boundary": "discoverBattleActs route event"
+      },
+      "notes": "Discovery owner is derived from action spell availability and current turn action economy."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.owner=battleObjectTargetBoundary",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "AvailableBattleAct.initialHoles.kind=objectTargetChoice",
+        "boundary": "discoverBattleActs route event"
+      },
+      "notes": "Object-target-boundary discovery is derived from the public act hole shape for spell Attacks that can target objects."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.owner=battleTargetSelection",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleFill.kind=targetChoice",
+        "boundary": "resolveBattleSubject route event"
+      },
+      "notes": "Target-choice fills route to the battle target-selection owner."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.owner=battleAttackRoll",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleFill.kind=attackRoll",
+        "boundary": "resolveBattleSubject route event"
+      },
+      "notes": "Attack Roll fills route to the battle Attack Roll owner."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.owner=battleSpellAttackProcedure",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleFill.kind=damageTypeChoice",
+        "boundary": "resolveBattleSubject route event"
+      },
+      "notes": "Damage-type choice fills route to the spell Attack procedure owner."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.owner=battleHitPoint",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleFill.kind=rolledDice",
+        "boundary": "resolveBattleSubject route event"
+      },
+      "notes": "Damage dice fills route to the Hit Point owner when damage is applied."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.owner=battleHoleFrontier",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleResolutionResult.holes",
+        "boundary": "resolveBattleSubject route event"
+      },
+      "notes": "Earlier-frontier requests route to the shared hole-frontier owner."
     }
   ],
   "notes": [
-    "Task 83 introduced no durable CharacterSheet, BattleState, or BattleCreatureState fields.",
-    "CharacterBattleSheetOwner remains the sheet point/use state owner.",
-    "CharacterBattleResourceProjectionOwner remains the boundary-delta and hole owner for feature and Spell Slot resource projection.",
-    "CharacterBattleRuntimeOwner remains the battle-time Metamagic and spell action state owner.",
-    "Ordinary, created, and Pact slot distinctions remain source-exact and are not collapsed into a single resource field."
+    "Task 55 introduced no new durable BattleState or BattleCreatureState fields.",
+    "Spell Attack ordering evidence is derived from existing action spell invocation, fill, hole frontier, route-event, and Hit Point state.",
+    "Production behavior does not branch on authored spell ids, names, QNT branch action names, fixture labels, or connector filenames."
   ]
 }
