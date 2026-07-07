@@ -4,6 +4,103 @@
   "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
   "entries": [
     {
+      "taskId": "CRPI-BLOCK-018",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
+      "artifacts": {
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "4b4bfaf227979ef05cce76885209b346b332ffa53f6e9e8e9ab72a190e06ac57"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-BLOCK-018/README.md",
+          "sha256": "f309a854be8476d30d60f776925f813b6fb65d084ce6424e0b50d924f2379682"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-018.json",
+          "sha256": "60799f3fbeb31e782801dd51d0247938ef084a87e9892dd8f4bff2175cf7a05e",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-018.json#publicQRouteCoverage:level2-damage-selected-concentration-hazard",
+            "tasks/target-replay-evidence/CRPI-BLOCK-018.json#publicQRouteCoverage:concentration-hazard-exact-damage",
+            "tasks/target-replay-evidence/CRPI-BLOCK-018.json#publicQRouteCoverage:spatial-effects"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-owner-battle-spell-20260706T213644Z/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor 42518503954aac86561a09f49806710ff1f923b4 HEAD",
+          "status": "pass",
+          "detail": "Base ref and HEAD both resolved to 425185039 Mark Ralph task 25 done; Base SHA is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language review: local SRD 5.2.1 Flaming Sphere, Moonbeam, Concentration, Saving Throws, Damage Rolls, Half Damage, Hit Points, Area of Effect, Dim Light, and UBIQUITOUS_LANGUAGE.md route-owner terms",
+          "status": "pass",
+          "detail": "Checked Flaming Sphere and Moonbeam SRD passages plus generic Concentration, Saving Throw, damage, Hit Points, Area of Effect, illumination, Movement, Spell Invocation, Spell Effect, and Table Decision terms."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime typecheck",
+          "status": "pass",
+          "detail": "Battle runtime TypeScript check passed after adding Task 26 route projection and public replay tests."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec vitest run src/level2-damage-spell-selected-identity.mbt.test.ts -t \"public reducer route replay\"",
+          "status": "pass",
+          "detail": "Focused public reducer qRoute replay passed: 2 passed, 1 skipped."
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Required MBT preflight found no active Vitest runner and no stale quint_evaluator before the focused MBT run."
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 pnpm --filter @dnd/battle-runtime exec vitest run src/level2-damage-spell-selected-identity.mbt.test.ts src/reducer-route-connectors.mbt.test.ts src/concentration-hazard-exact-damage-route.mbt.test.ts -t \"(Level 2 damage spell selected identity replay|public reducer route replay|routes selected concentration-backed hazards through generic spatial hazard surfaces|routes save-triggered concentration hazard damage to Hit Point ownership|routes spatial effects through light, sight, hazard, and table-witness owners)\" 2>&1; STATUS=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$STATUS\"",
+          "status": "pass",
+          "detail": "Focused Task 26 selected replay and required route connector MBT passed: 3 files passed; 6 tests passed, 32 skipped; TOTAL: 13s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "Cleanroom branch coverage passed with Task 26 evidence: 738 obligations, 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass",
+          "detail": "Whitespace check passed."
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "Full quality chain passed. App lint reported existing warnings and exited 0; turbo typecheck completed 9 successful tasks, 5 from cache."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-018",
+            "impact": "unblocked"
+          },
+          {
+            "taskId": "CRPI-BLOCK-019",
+            "impact": "left unchanged"
+          }
+        ],
+        "observations": [
+          "Level-2 damage selected identity replay now observes public reducer qRoute events for the in-scope Flaming Sphere and Moonbeam concentration-backed area hazard branches.",
+          "Production reducer-route projection needed to admit typed concentration-backed area hazard procedures and movable-zone save damage into the existing generic spatialEffect route subject.",
+          "No new durable BattleState field or authored spell id production dispatch was needed for Task 26."
+        ],
+        "requiredPlanEdits": "none"
+      }
+    },
+    {
       "taskId": "CRPI-BLOCK-017",
       "assignmentId": "reducer-spine-diagnostic-battle",
       "laneId": "battle",

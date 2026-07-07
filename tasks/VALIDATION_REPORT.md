@@ -1,5 +1,42 @@
 # Validation Report
 
+## CRPI-BLOCK-018
+
+Status: `pass`
+
+- Task: 26
+- Driver path: `packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-018.json`
+
+Task 26 records public reducer qRoute evidence for the level-2 damage spell selected-identity driver as a `reducer-routed` task. The selected replay binds SRD catalog spell identity at the replay/admission boundary; route evidence is observed from generic spatial-effect, Concentration, Saving Throw, light, area hazard, movement, and Hit Point owners.
+
+Current public qRoute coverage:
+
+- Covered: `battle-runtime-concentration-hazard-selected-route.route.mbt.qnt` through public Flaming Sphere and Moonbeam hazard admission replay in `packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts`.
+- Covered: `battle-runtime-concentration-hazard-exact-damage.route.mbt.qnt` through public end-turn hazard Saving Throw and rolled-damage replay for Flaming Sphere and Moonbeam.
+- Covered: `battle-runtime-spatial-effect-route-surfaces.qnt` through the shared `spatialEffect` route events emitted by the public reducer.
+- Covered: `battle-runtime-spatial-effects.route.mbt.qnt` through the generic spatial-effects connector MBT plus Task 26 public replay.
+- Remaining required public qRoute coverage: none.
+
+Task 26 fixed the production route projection needed for public evidence: `packages/battle-runtime/src/battle-reducer/reducer-route.ts` now admits typed Flaming Sphere and Moonbeam procedures into the generic spatial-effect route family and emits movable-zone save damage route events through Saving Throw and Hit Point owners. No durable `BattleState` field was added.
+
+Verification results:
+
+- Task-base check passed: base ref and HEAD both resolved to `425185039 Mark Ralph task 25 done`; Base SHA is an ancestor of HEAD.
+- RAW/ubiquitous-language review passed for Flaming Sphere, Moonbeam, Concentration, Saving Throw, damage, Hit Points, Area of Effect, Dim Light, Movement, Spell Invocation, Spell Effect, and Table Decision terms.
+- `pnpm --filter @dnd/battle-runtime typecheck` passed.
+- `pnpm --filter @dnd/battle-runtime exec vitest run src/level2-damage-spell-selected-identity.mbt.test.ts -t "public reducer route replay"` passed: 2 passed, 1 skipped.
+- MBT preflight found no active Vitest runner and no stale `quint_evaluator`.
+- Focused Task 26 MBT passed with selected replay and required route connector coverage: 3 files passed; 6 tests passed, 32 skipped; TOTAL: 13s.
+- `pnpm cleanroom-branch-coverage:check` passed with Task 26 evidence: 738 obligations, 24 sampled inputs.
+- `git diff --check` passed.
+- `pnpm quality` passed end to end; app lint reported existing warnings and exited 0; turbo typecheck completed 9 successful tasks, 5 from cache.
+
+Reviewer-loop status:
+
+- Round 1 fixed the generic spatial-effect projection gap for level-2 concentration-backed area hazards. The task uses typed public route owners, does not add authored-identity production dispatch, and does not duplicate route state.
+
 ## CRPI-BLOCK-017
 
 Status: `pass`
