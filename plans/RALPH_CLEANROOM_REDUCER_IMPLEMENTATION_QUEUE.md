@@ -553,7 +553,7 @@
     {
       "number": 92,
       "id": "CRPI-BLOCK-046",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: character-creation-warlock-eldritch-invocations-selected-identity"
     },
     {
@@ -6019,7 +6019,7 @@ Plan Impact:
 
 ### Task 92 - CRPI-BLOCK-046
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
