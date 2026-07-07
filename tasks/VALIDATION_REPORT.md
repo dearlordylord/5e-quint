@@ -1,3 +1,120 @@
+## CRPI-BLOCK-034
+
+Status: `pass`
+
+- Task: 63
+- Driver path: `packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt`
+- Route connector path: `packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt`
+- Route class: `reducer-routed`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-034.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Behavior accepted:
+
+Task 63 accepts weapon Attack skeleton routing through public BattleState reducer
+entrypoints. The focused route replay compares the copied skeleton route
+connector `qRoute` for 14 branch obligations to route events observed from
+public `AvailableBattleAct.routeEvents` and `BattleResolutionResult.routeEvents`
+after the `startBattle` route marker. The accepted route owner chain covers
+weapon action discovery, target selection, Attack Roll hit/miss progression,
+Hit Point damage, Sneak Attack damage-rider usage, stale weapon subject
+rejection, battle End Turn action economy, Skeleton Multiattack stat-block
+dispatch, recursive Multiattack stale rejection, and stat-block attack dispatch.
+Production reducer routes now include `battleAction` and `statBlockAction`
+subjects derived from typed runtime subjects and actor origin, not from the MBT
+adapter or authored identity.
+
+No duplicate durable state was added. The replay uses existing `BattleState`
+combatants, `BattleTurnState.actionResources`,
+`BattleTurnState.attackDamageRidersUsedThisTurn`, public hole/fill kinds, typed
+`BattleResolutionResult` facts, weapon/stat-block action subjects, and Hit
+Point fields. Stat-block control reuse remains separate in `CRPI-READY-034`;
+this task records downstream battle route replay evidence.
+
+Generated branch coverage:
+
+| Obligation                                                                                                        | Evidence                                                                                                                                                                                                                                                                                                  | Status    |
+| ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| `packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doDiscoverAttack`                     | `tasks/target-replay-evidence/CRPI-BLOCK-034.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doDiscoverAttack#trace:reducer-route=WeaponAttackSkeleton action=doDiscoverAttack qRoute=weapon-attack-skeleton-public-route`                                         | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doFillTarget`                         | `tasks/target-replay-evidence/CRPI-BLOCK-034.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doFillTarget#trace:reducer-route=WeaponAttackSkeleton action=doFillTarget qRoute=weapon-attack-skeleton-public-route`                                                 | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doRejectWrongTarget`                  | `tasks/target-replay-evidence/CRPI-BLOCK-034.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doRejectWrongTarget#trace:reducer-route=WeaponAttackSkeleton action=doRejectWrongTarget qRoute=weapon-attack-skeleton-public-route`                                   | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doFillAttackRollMiss`                 | `tasks/target-replay-evidence/CRPI-BLOCK-034.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doFillAttackRollMiss#trace:reducer-route=WeaponAttackSkeleton action=doFillAttackRollMiss qRoute=weapon-attack-skeleton-public-route`                                 | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doFillAttackRollHit`                  | `tasks/target-replay-evidence/CRPI-BLOCK-034.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doFillAttackRollHit#trace:reducer-route=WeaponAttackSkeleton action=doFillAttackRollHit qRoute=weapon-attack-skeleton-public-route`                                   | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doFillDamageLow`                      | `tasks/target-replay-evidence/CRPI-BLOCK-034.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doFillDamageLow#trace:reducer-route=WeaponAttackSkeleton action=doFillDamageLow qRoute=weapon-attack-skeleton-public-route`                                           | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doFillDamageHigh`                     | `tasks/target-replay-evidence/CRPI-BLOCK-034.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doFillDamageHigh#trace:reducer-route=WeaponAttackSkeleton action=doFillDamageHigh qRoute=weapon-attack-skeleton-public-route`                                         | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doFillDamageLowSneakAttack`           | `tasks/target-replay-evidence/CRPI-BLOCK-034.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doFillDamageLowSneakAttack#trace:reducer-route=WeaponAttackSkeleton action=doFillDamageLowSneakAttack qRoute=weapon-attack-skeleton-public-route`                     | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doFillDamageHighSneakAttack`          | `tasks/target-replay-evidence/CRPI-BLOCK-034.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doFillDamageHighSneakAttack#trace:reducer-route=WeaponAttackSkeleton action=doFillDamageHighSneakAttack qRoute=weapon-attack-skeleton-public-route`                   | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doRejectStaleAfterResolved`           | `tasks/target-replay-evidence/CRPI-BLOCK-034.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doRejectStaleAfterResolved#trace:reducer-route=WeaponAttackSkeleton action=doRejectStaleAfterResolved qRoute=weapon-attack-skeleton-public-route`                     | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doStartSkeletonTurn`                  | `tasks/target-replay-evidence/CRPI-BLOCK-034.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doStartSkeletonTurn#trace:reducer-route=WeaponAttackSkeleton action=doStartSkeletonTurn qRoute=weapon-attack-skeleton-public-route`                                   | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doResolveSkeletonMultiattack`         | `tasks/target-replay-evidence/CRPI-BLOCK-034.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doResolveSkeletonMultiattack#trace:reducer-route=WeaponAttackSkeleton action=doResolveSkeletonMultiattack qRoute=weapon-attack-skeleton-public-route`                 | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doRejectRecursiveSkeletonMultiattack` | `tasks/target-replay-evidence/CRPI-BLOCK-034.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doRejectRecursiveSkeletonMultiattack#trace:reducer-route=WeaponAttackSkeleton action=doRejectRecursiveSkeletonMultiattack qRoute=weapon-attack-skeleton-public-route` | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doSpendSkeletonMultiattackDispatch`   | `tasks/target-replay-evidence/CRPI-BLOCK-034.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt#step:doSpendSkeletonMultiattackDispatch#trace:reducer-route=WeaponAttackSkeleton action=doSpendSkeletonMultiattackDispatch qRoute=weapon-attack-skeleton-public-route`     | `covered` |
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-034/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 63.
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Playing-the-Game.md#Making an Attack` defines target choice,
+  Attack Roll, and hit/miss resolution.
+- SRD 5.2.1 `Playing-the-Game.md#Damage Rolls` defines weapon damage
+  application to Hit Points.
+- SRD 5.2.1 `Playing-the-Game.md#Hit Points` defines Hit Point loss from
+  damage.
+- SRD 5.2.1 `Rules-Glossary.md#Stat Block` defines stat-block Actions and
+  attack notation for monster action routing.
+- `UBIQUITOUS_LANGUAGE.md` defines Attack Roll, Damage, Hit Points, Stat
+  Block, and Multiattack terms used by this route.
+
+Verification results:
+
+- Base check passed: declared base ref
+  `ralph/cleanroom-owner-battle-attack-20260706T213644Z/integration` and
+  `HEAD` both resolved to `323cd5acc Mark Ralph task 62 done`; Base SHA
+  `323cd5acc560b8311a73b7d6a7556d6e0daa298d` was an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against the local SRD passages listed
+  above and `UBIQUITOUS_LANGUAGE.md`.
+- Target replay validation, focused MBT replay, cleanroom branch coverage,
+  `git diff --check`, and `pnpm quality` are recorded in the Task 63 run
+  ledger after command execution.
+- Reviewer-loop convergence passed: round 1 verified RAW traceability and found
+  a blocker in adapter-reconstructed route evidence; round 2 moved replay
+  collection to public route events, added production `battleAction` and
+  `statBlockAction` route subjects, rechecked connascence/architecture, and
+  decider replay fixed stale no-fill Attack routing so the copied connector's
+  weaponAttack hole-frontier route remains authoritative after stat-block
+  dispatch. No remaining reasonable Task 63 findings.
+
+Plan Impact:
+
+- Status: `none`
+- Affected tasks:
+  - Task 63 / `CRPI-BLOCK-034`: `unblocked`; copied `qRoute` replay is accepted.
+  - Route task `L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES`: `left unchanged`.
+- Observations:
+  - Weapon Attack skeleton `qRoute` is observable through public start,
+    discovery, and resolution route events without adding durable BattleState
+    fields or adapter-local expected route reconstruction.
+  - Stat-block control reuse remains upstream `CRPI-READY-034` evidence;
+    Task 63 separately records downstream battle action/stat-block action
+    routing through BattleState.
+  - Weapon/source and stat-block identity remain typed boundary facts and are
+    not production route dispatch keys.
+- Required plan edits: none.
+
 # Validation Report
 
 ## CRPI-BLOCK-014
@@ -6643,15 +6760,15 @@ authored identity.
 
 Generated branch coverage:
 
-| Obligation                                                                                                                     | Evidence                                                                                                                                                                                                                                                                                          | Status    |
-| ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
-| `packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doDiscoverAttack`                                  | `tasks/target-replay-evidence/CRPI-BLOCK-033.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doDiscoverAttack#trace:reducer-route=WeaponAttackRouteSubject action=doDiscoverAttack qRoute=weapon-attack-ordering-public-route`                                  | `covered` |
-| `packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doFillTargetChoice`                                | `tasks/target-replay-evidence/CRPI-BLOCK-033.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doFillTargetChoice#trace:reducer-route=WeaponAttackRouteSubject action=doFillTargetChoice qRoute=weapon-attack-ordering-public-route`                                | `covered` |
-| `packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doRejectAttackRollBeforeTargetChoice`              | `tasks/target-replay-evidence/CRPI-BLOCK-033.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doRejectAttackRollBeforeTargetChoice#trace:reducer-route=WeaponAttackRouteSubject action=doRejectAttackRollBeforeTargetChoice qRoute=weapon-attack-ordering-public-route` | `covered` |
-| `packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doRejectDamageBeforeAttackRoll`                    | `tasks/target-replay-evidence/CRPI-BLOCK-033.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doRejectDamageBeforeAttackRoll#trace:reducer-route=WeaponAttackRouteSubject action=doRejectDamageBeforeAttackRoll qRoute=weapon-attack-ordering-public-route`          | `covered` |
-| `packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doFillAttackRollMiss`                              | `tasks/target-replay-evidence/CRPI-BLOCK-033.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doFillAttackRollMiss#trace:reducer-route=WeaponAttackRouteSubject action=doFillAttackRollMiss qRoute=weapon-attack-ordering-public-route`                              | `covered` |
-| `packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doFillAttackRollHit`                               | `tasks/target-replay-evidence/CRPI-BLOCK-033.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doFillAttackRollHit#trace:reducer-route=WeaponAttackRouteSubject action=doFillAttackRollHit qRoute=weapon-attack-ordering-public-route`                                | `covered` |
-| `packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doFillDamageDice`                                  | `tasks/target-replay-evidence/CRPI-BLOCK-033.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doFillDamageDice#trace:reducer-route=WeaponAttackRouteSubject action=doFillDamageDice qRoute=weapon-attack-ordering-public-route`                                  | `covered` |
+| Obligation                                                                                                        | Evidence                                                                                                                                                                                                                                                                                                      | Status    |
+| ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| `packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doDiscoverAttack`                     | `tasks/target-replay-evidence/CRPI-BLOCK-033.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doDiscoverAttack#trace:reducer-route=WeaponAttackRouteSubject action=doDiscoverAttack qRoute=weapon-attack-ordering-public-route`                                         | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doFillTargetChoice`                   | `tasks/target-replay-evidence/CRPI-BLOCK-033.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doFillTargetChoice#trace:reducer-route=WeaponAttackRouteSubject action=doFillTargetChoice qRoute=weapon-attack-ordering-public-route`                                     | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doRejectAttackRollBeforeTargetChoice` | `tasks/target-replay-evidence/CRPI-BLOCK-033.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doRejectAttackRollBeforeTargetChoice#trace:reducer-route=WeaponAttackRouteSubject action=doRejectAttackRollBeforeTargetChoice qRoute=weapon-attack-ordering-public-route` | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doRejectDamageBeforeAttackRoll`       | `tasks/target-replay-evidence/CRPI-BLOCK-033.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doRejectDamageBeforeAttackRoll#trace:reducer-route=WeaponAttackRouteSubject action=doRejectDamageBeforeAttackRoll qRoute=weapon-attack-ordering-public-route`             | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doFillAttackRollMiss`                 | `tasks/target-replay-evidence/CRPI-BLOCK-033.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doFillAttackRollMiss#trace:reducer-route=WeaponAttackRouteSubject action=doFillAttackRollMiss qRoute=weapon-attack-ordering-public-route`                                 | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doFillAttackRollHit`                  | `tasks/target-replay-evidence/CRPI-BLOCK-033.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doFillAttackRollHit#trace:reducer-route=WeaponAttackRouteSubject action=doFillAttackRollHit qRoute=weapon-attack-ordering-public-route`                                   | `covered` |
+| `packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doFillDamageDice`                     | `tasks/target-replay-evidence/CRPI-BLOCK-033.json#driver:packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt#step:doFillDamageDice#trace:reducer-route=WeaponAttackRouteSubject action=doFillDamageDice qRoute=weapon-attack-ordering-public-route`                                         | `covered` |
 
 Harness artifacts:
 
@@ -6784,8 +6901,8 @@ shape plus public reducer route events rather than authored spell identity.
 
 Generated branch coverage:
 
-| Obligation                                                                                              | Evidence                                                                                                                                                                                                                                                                                  | Status    |
-| ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| Obligation                                                                                                           | Evidence                                                                                                                                                                                                                                                                                                        | Status    |
+| -------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
 | `packages/battle-runtime/battle-runtime-thaumaturgy-selected-identity.mbt.qnt#step:doResolveThaumaturgyBoomingVoice` | `tasks/target-replay-evidence/CRPI-BLOCK-032.json#driver:packages/battle-runtime/battle-runtime-thaumaturgy-selected-identity.mbt.qnt#step:doResolveThaumaturgyBoomingVoice#trace:MBT_TRACES=1 MBT_STEPS=1 action=doResolveThaumaturgyBoomingVoice qRoute=roll-modifier-thaumaturgy-active-effect-public-route` | `covered` |
 
 Harness artifacts:

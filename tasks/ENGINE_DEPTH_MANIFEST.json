@@ -1,40 +1,47 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-033",
+  "taskId": "CRPI-BLOCK-034",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt",
       "quarantinedWitnessNames": [
-        "qLastOrderingError",
+        "qActionAvailable",
+        "qMultiattackDispatchesAvailable",
         "qProtocol",
-        "qStage"
+        "qRoute",
+        "qSkeletonDead",
+        "qSkeletonHp",
+        "qSneakAttackUsedThisTurn"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-033.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-034.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.route.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt",
       "quarantinedWitnessNames": [
-        "qLastOrderingError",
+        "qActionAvailable",
+        "qMultiattackDispatchesAvailable",
         "qProtocol",
         "qRoute",
-        "qStage"
+        "qSkeletonDead",
+        "qSkeletonHp",
+        "qSneakAttackUsedThisTurn"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-033.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-034.json"
       ]
     },
     {
       "path": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
       "quarantinedWitnessNames": [
-        "createWeaponAttackOrderingRouteDriver",
-        "ReducerRoutedWeaponAttackOrderingProjection",
-        "reducerRoutedWeaponAttackOrderingStateCheck"
+        "createBattleRuntimeRouteDriver",
+        "ReducerRoutedWeaponAttackSkeletonProjection",
+        "reducerRoutedWeaponAttackSkeletonStateCheck"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-033.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-034.json"
       ]
     }
   ],
@@ -46,9 +53,10 @@
         "startBattle",
         "discoverBattleActs",
         "resolveBattleSubject",
-        "BattleState.combatants"
+        "BattleState.combatants",
+        "BattleState.turn"
       ],
-      "notes": "Existing public reducer entrypoints own the weapon Attack ordering replay. Task 62 introduced no new durable BattleState field."
+      "notes": "Existing public reducer entrypoints own the weapon Attack skeleton replay. Task 63 introduced no new durable BattleState field."
     },
     {
       "path": "packages/battle-runtime/src/battle-reducer/attack-main.ts",
@@ -56,19 +64,20 @@
       "domainApis": [
         "resolveAttack",
         "resolveSelectedAttackProcedure",
-        "ATTACK_TARGET_REQUIRED_BEFORE_ROLL_OR_DAMAGE_MESSAGE",
-        "ATTACK_ROLL_REQUIRED_BEFORE_DAMAGE_MESSAGE"
+        "Attack Roll hole progression",
+        "Rolled Dice damage fill progression"
       ],
-      "notes": "Existing weapon Attack resolution enforces target choice before Attack Roll and Attack Roll before damage dice through typed fill order and public invalid-fill results."
+      "notes": "Existing weapon Attack resolution owns target choice, Attack Roll, hit/miss progression, Sneak Attack damage-rider use, and Hit Point damage application through typed fill order."
     },
     {
-      "path": "packages/battle-runtime/src/battle-reducer/attack-ordering-messages.ts",
-      "role": "domain-vocabulary",
+      "path": "packages/battle-runtime/src/battle-reducer/statblock.ts",
+      "role": "domain-engine",
       "domainApis": [
-        "ATTACK_TARGET_REQUIRED_BEFORE_ROLL_OR_DAMAGE_MESSAGE",
-        "ATTACK_ROLL_REQUIRED_BEFORE_DAMAGE_MESSAGE"
+        "statBlockAttackActionOptions",
+        "supportedStatBlockMultiattacks",
+        "statBlockMultiattack action resources"
       ],
-      "notes": "Leaf constants keep the reducer's ordering invalid-fill messages shared between attack resolution and route projection without importing the attack reducer into the route surface."
+      "notes": "Existing stat-block action dispatch owns Multiattack resolution and downstream stat-block attack dispatch resources without duplicating rule-core stat-block control evidence."
     },
     {
       "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
@@ -76,24 +85,25 @@
       "domainApis": [
         "battleReducerRouteEventsForDiscoveredAct",
         "battleReducerRouteForResolution",
-        "battleReducerRouteEventsForDiscoveredAct inline isWeaponAttackSubject(act.subject) branch",
-        "weaponAttackRouteForResolution"
+        "weaponAttackRouteForResolution",
+        "statBlockAction route projection",
+        "battleAction route projection"
       ],
-      "notes": "Task 62 uses the production weaponAttack route projection for accepted fills and the two ordering invalid-fill results. Subject, owner, fill, and frontier holes are derived from public action discovery, submitted fill kind, BattleResolutionResult shape, and the established attack-ordering invalid messages."
+      "notes": "Task 63 uses production route projection for weapon Attack, battle action, and stat-block action subjects. Subject, owner, fill, and frontier holes are derived from public action discovery, submitted fill kind, BattleResolutionResult shape, and turn action-resource facts."
     }
   ],
   "expectedNextReuse": [
     {
       "path": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
-      "notes": "Future weapon Attack route evidence should reuse createWeaponAttackOrderingRouteDriver and public reducer route-event normalization instead of duplicating an adapter-local route table."
+      "notes": "Future battle action, weapon Attack, or stat-block action route evidence should reuse createBattleRuntimeRouteDriver and public reducer route-event normalization instead of duplicating adapter-local route tables."
     },
     {
       "path": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
-      "notes": "The copied weapon Attack ordering route connector replay remains the focused qRoute parity lane for WeaponAttackRouteSubject ordering."
+      "notes": "The copied weapon Attack skeleton route connector replay remains the focused qRoute parity lane for the BattleState weapon, battle action, and stat-block action owner chain."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 62 observes copied weapon Attack ordering qRoute through public reducer route events: startBattle, AvailableBattleAct.routeEvents from discoverBattleActs, and BattleResolutionResult.routeEvents from resolveBattleSubject across target-choice, Attack Roll, hole-frontier rejection, and Hit Point owners."
+    "notes": "Task 63 observes copied weapon Attack skeleton qRoute through public reducer route events: startBattle, AvailableBattleAct.routeEvents from discoverBattleActs, and BattleResolutionResult.routeEvents from resolveBattleSubject across weapon action, battle action, stat-block action, action economy, Attack Roll, Hit Point damage, and stat-block dispatch owners."
   }
 }
