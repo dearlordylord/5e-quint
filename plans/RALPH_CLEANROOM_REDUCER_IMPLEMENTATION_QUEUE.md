@@ -145,7 +145,7 @@
     {
       "number": 24,
       "id": "CRPI-BLOCK-016",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-level1-damage-spell-selected-identity"
     },
     {
@@ -2137,7 +2137,7 @@ Plan Impact:
 
 ### Task 24 - CRPI-BLOCK-016
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
