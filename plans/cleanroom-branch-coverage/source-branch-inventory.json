@@ -2253,7 +2253,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt#step:doOpenExtraAttackSlot",
-      "qntFileSha256": "c34949062ea281b6ac6be9dc3103228c97f1b5227d235bd0f8413d442432a4a6",
+      "qntFileSha256": "6a3418970a0ac6b1e490b2fde2626ba14eb3cf91f69cb0243c820438797ccda5",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -2272,7 +2272,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt#step:doRejectInvalidDamageRoll",
-      "qntFileSha256": "c34949062ea281b6ac6be9dc3103228c97f1b5227d235bd0f8413d442432a4a6",
+      "qntFileSha256": "6a3418970a0ac6b1e490b2fde2626ba14eb3cf91f69cb0243c820438797ccda5",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -2291,7 +2291,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt#step:doRejectMismatchedArea",
-      "qntFileSha256": "c34949062ea281b6ac6be9dc3103228c97f1b5227d235bd0f8413d442432a4a6",
+      "qntFileSha256": "6a3418970a0ac6b1e490b2fde2626ba14eb3cf91f69cb0243c820438797ccda5",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -2310,7 +2310,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt#step:doRejectMissingResource",
-      "qntFileSha256": "c34949062ea281b6ac6be9dc3103228c97f1b5227d235bd0f8413d442432a4a6",
+      "qntFileSha256": "6a3418970a0ac6b1e490b2fde2626ba14eb3cf91f69cb0243c820438797ccda5",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -2329,7 +2329,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt#step:doResolveBreathWeapon",
-      "qntFileSha256": "c34949062ea281b6ac6be9dc3103228c97f1b5227d235bd0f8413d442432a4a6",
+      "qntFileSha256": "6a3418970a0ac6b1e490b2fde2626ba14eb3cf91f69cb0243c820438797ccda5",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"

@@ -1,5 +1,42 @@
 # Validation Report
 
+## CRPI-BLOCK-016
+
+Status: `pass`
+
+- Task: 24
+- Driver path: `packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-016.json`
+
+Task 24 records public reducer qRoute evidence for the level-1 damage spell selected-identity driver as a `catalog-after-substrate` task. The selected replay binds SRD catalog spell identity at the replay/admission boundary; route evidence is observed from generic public battle reducer owners rather than authored spell ids.
+
+Current public qRoute coverage:
+
+- Covered: `battle-runtime-save-gated-spell-ordering.route.mbt.qnt` through `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#createSaveGatedSpellOrderingRouteDriver`.
+- Covered: `battle-runtime-spell-attack-ordering.route.mbt.qnt` through `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#createSpellAttackOrderingRouteDriver`.
+- Covered: `battle-runtime-chained-attack-sequence.route.mbt.qnt` through `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#createChainedAttackProcedureRouteDriver`.
+- Covered: `battle-runtime-mixed-target-outcomes.route.mbt.qnt` through `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#createMixedTargetOutcomeRouteDriver`.
+- Covered: `battle-runtime-starry-wisp-object.route.mbt.qnt` through `packages/battle-runtime/src/starry-wisp-object.mbt.test.ts#createStarryWispObjectRouteDriver`.
+- Covered: `battle-runtime-condition-riders.route.mbt.qnt` through `packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#createConditionRiderRouteDriver`.
+- Remaining required public qRoute coverage: none.
+
+Task 24 fixed one production route projection gap: chained spell Attack target-choice and damage fills now emit the generic spell Attack procedure owner event from `packages/battle-runtime/src/battle-reducer/reducer-route.ts`, matching `battle-runtime-chained-attack-sequence.route.mbt.qnt`. No durable BattleState field was added.
+
+Verification results:
+
+- Task-base check passed: base ref and HEAD both resolved to `314ce0f1d Mark Ralph task 23 done`; Base SHA is an ancestor of HEAD.
+- RAW/ubiquitous-language review passed for selected level-1 damage spell substrates and route-owner terms.
+- `git diff --check` passed.
+- Focused chained route MBT passed after the route-owner fix: 1 passed, 33 skipped, TOTAL: 8s.
+- Focused Task 24 MBT passed: selected replay plus required route connector subset, 3 files passed; 7 tests passed, 30 skipped; TOTAL: 32s.
+- `pnpm cleanroom-branch-coverage:check` passed with Task 24 evidence: 738 obligations, 24 sampled inputs.
+- `pnpm quality` passed end to end; app lint reported existing warnings and exited 0; turbo typecheck completed 9 successful tasks, 5 from cache.
+
+Reviewer-loop status:
+
+- Round 1 found and fixed the chained spell Attack procedure owner gap. The task uses generic public route owners, does not add authored-identity production dispatch, and does not duplicate route state.
+
 ## CRPI-BLOCK-043
 
 Status: `pass`

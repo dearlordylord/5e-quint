@@ -1,65 +1,166 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-043",
+  "taskId": "CRPI-BLOCK-016",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
       "quarantinedWitnessNames": [
+        "checkedTargetStateFields",
+        "cleanroomManifestSourceCommitSha",
+        "comparator",
+        "doResolveBurningHandsMixedConeSavingThrows",
+        "doResolveChromaticOrbDuplicateDamageLeap",
+        "doResolveIceKnifeHitAttackDamageAndBurstSavingThrows",
+        "doResolveIceKnifeMissBurstSavingThrows",
+        "doResolvePoisonSpraySpellAttackDamage",
+        "doResolveRayOfSicknessSpellAttackDamageAndPoisoned",
+        "doResolveSacredFlameDexteritySavingThrowRadiantDamage",
+        "doResolveSorcerousBurstSpellAttackDamage",
+        "doResolveStarryWispObjectSpellAttackDamageAndDimLight",
+        "doResolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage",
+        "expectedProjectionSha256",
+        "harnessTestPath",
+        "mbt::actionTaken",
+        "mbt::nondetPicks",
+        "observedActionTaken",
+        "observedProjectionSha256",
+        "observedProjectionSource",
+        "protocol",
+        "qRoute",
+        "qScenarioOutcome",
         "qState",
-        "doSelectClericProtectorOrder",
-        "doSelectClericThaumaturgeOrder",
-        "doSelectDruidMagicianOrder",
-        "doSelectDruidWardenOrder"
+        "qntFileSha256",
+        "reducerPublicApiPath",
+        "routeEventSource",
+        "semanticProjectionSource",
+        "sourceBranchInventorySha256",
+        "stateCheck",
+        "targetEntrypointSequence",
+        "targetProfile",
+        "targetProfileSha256",
+        "targetPublicApiPath",
+        "traceId"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-043.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-016.json"
       ]
     },
     {
-      "path": "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.route.mbt.qnt",
-      "quarantinedWitnessNames": [
-        "qRoute"
-      ],
+      "path": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
+      "coverageStatus": "covered-public-qRoute",
+      "quarantinedWitnessNames": ["qRoute"],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-043.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-016.json"
       ]
     },
     {
-      "path": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "path": "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt",
+      "coverageStatus": "covered-public-qRoute",
+      "quarantinedWitnessNames": ["qRoute"],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-016.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/battle-runtime-chained-attack-sequence.route.mbt.qnt",
+      "coverageStatus": "covered-public-qRoute",
+      "quarantinedWitnessNames": ["qRoute"],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-016.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/battle-runtime-mixed-target-outcomes.route.mbt.qnt",
+      "coverageStatus": "covered-public-qRoute",
+      "quarantinedWitnessNames": ["qRoute"],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-016.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/battle-runtime-starry-wisp-object.route.mbt.qnt",
+      "coverageStatus": "covered-public-qRoute",
+      "quarantinedWitnessNames": ["qRoute"],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-016.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/battle-runtime-condition-riders.route.mbt.qnt",
+      "coverageStatus": "covered-public-qRoute",
+      "quarantinedWitnessNames": ["qRoute"],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-016.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "clericDruidOrderRouteDriverSchema",
-        "createCompletedReducerRouteDriver",
-        "retainAndProjectSelectedReferenceRoute",
-        "selectedReferenceRetentionRoute"
+        "Level1DamageSpellSelectedIdentityAction",
+        "checkedTargetStateFields",
+        "cleanroomManifestSourceCommitSha",
+        "comparator",
+        "doResolveBurningHandsMixedConeSavingThrows",
+        "doResolveChromaticOrbDuplicateDamageLeap",
+        "doResolveIceKnifeHitAttackDamageAndBurstSavingThrows",
+        "doResolveIceKnifeMissBurstSavingThrows",
+        "doResolvePoisonSpraySpellAttackDamage",
+        "doResolveRayOfSicknessSpellAttackDamageAndPoisoned",
+        "doResolveSacredFlameDexteritySavingThrowRadiantDamage",
+        "doResolveSorcerousBurstSpellAttackDamage",
+        "doResolveStarryWispObjectSpellAttackDamageAndDimLight",
+        "doResolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage",
+        "expectedProjectionSha256",
+        "harnessTestPath",
+        "mbt::actionTaken",
+        "mbt::nondetPicks",
+        "observedActionTaken",
+        "observedProjectionSha256",
+        "observedProjectionSource",
+        "protocol",
+        "qRoute",
+        "qScenarioOutcome",
+        "qState",
+        "qntFileSha256",
+        "reducerPublicApiPath",
+        "routeEventSource",
+        "semanticProjectionSource",
+        "sourceBranchInventorySha256",
+        "stateCheck",
+        "targetEntrypointSequence",
+        "targetProfile",
+        "targetProfileSha256",
+        "targetPublicApiPath",
+        "traceId"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-043.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-016.json"
       ]
     }
   ],
   "productionModulesExtended": [
     {
-      "path": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts",
-      "notes": "Adds the public characterBuildProjectionWithRoute entrypoint, which emits the CharacterBuildOwner build-projection route event without requiring downstream class-feature fact recording."
-    },
-    {
-      "path": "packages/character-creation-runtime/src/index.ts",
-      "notes": "Exports characterBuildProjectionWithRoute and CharacterBuildProjectionRoute through the package public surface."
+      "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "role": "runtime-projection",
+      "domainApis": [
+        "battleReducerRouteForResolution",
+        "BattleReducerRouteEvent.subject=spellAttackProcedure",
+        "BattleReducerRouteEvent.owner=battleSpellAttackProcedure for chainedSpellAttackDamage target-choice and damage fills"
+      ],
+      "notes": "Extends the existing public reducer route projection for chained spell Attack procedures so target-choice and damage fills expose both local target/Hit Point ownership and the generic spell Attack procedure owner expected by the copied chained route connector. No authored spell id, name, slug, or connector filename dispatch is added."
     }
   ],
   "expectedNextReuse": [
     {
-      "path": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts",
-      "notes": "Selected-reference route tasks continue to use characterBuildSelectedReferencesWithRoute for CreationSelectedReferenceOwner retention events."
-    },
-    {
-      "path": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts",
-      "notes": "Future route connectors that need only the build-projection event can use characterBuildProjectionWithRoute; connectors that need projected class-feature facts should keep using characterBuildClassFeatureFactsProjectionWithRoute."
+      "driver": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
+      "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "api": "battleReducerRouteEventsForDiscoveredAct/battleReducerRouteForResolution",
+      "notes": "Future level-1 and level-2 selected damage spell replay tasks should reuse the generic save-gated spell, spell Attack, chained Attack, mixed target outcome, object-target boundary, condition rider, and Hit Point route subjects instead of adding selected-id adapters or duplicate BattleState fields."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 86 observes copied Cleric and Druid Order qRoute through public CharacterBuild selected-reference and build-projection route entrypoints. No new durable CharacterBuild fields were added."
+    "notes": "Task 24 observes copied qRoute substrates through existing public battle reducer route evidence for all required connector paths and fixes chained spell Attack procedure route ownership without adding production runtime dispatch on authored spell identity."
   }
 }

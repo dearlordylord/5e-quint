@@ -1314,6 +1314,7 @@ function spellAttackProcedureRouteForResolution(
   }
   const holes = spellAttackProcedureRouteHoles(input, result);
   const [firstOwner, ...remainingOwners] = spellAttackProcedureRouteOwners({
+    input,
     fill,
     result,
   });
@@ -6725,10 +6726,14 @@ function battleReducerRouteFill(
 }
 
 function spellAttackProcedureRouteOwners(input: {
+  input: BattleResolutionInput;
   fill: BattleFill;
   result: BattleResolutionResult;
 }): readonly BattleReducerRouteOwnerGroup[] {
   const kind = battleFillKind(input.fill);
+  const isChainedSpellAttack =
+    input.input.subject.tag === "actionSpell" &&
+    input.input.subject.invocation.procedure === "chainedSpellAttackDamage";
   if (kind === "attackRoll") {
     if (spellAttackResolutionRequestsHole(input.result, "targetChoice")) {
       return ["battleHoleFrontier"];
@@ -6740,15 +6745,21 @@ function spellAttackProcedureRouteOwners(input: {
     if (spellAttackResolutionRequestsHole(input.result, "attackRoll")) {
       return ["battleHoleFrontier"];
     }
-    return input.result.tag === "needsHoles" &&
+    const hitPointOwner =
+      input.result.tag === "needsHoles" &&
       input.result.holes.some(
         (hole) => hole.kind === "concentrationSavingThrow",
       )
-      ? ["battleHitPointAndZeroHpLifecycle"]
-      : ["battleHitPoint"];
+        ? "battleHitPointAndZeroHpLifecycle"
+        : "battleHitPoint";
+    return isChainedSpellAttack
+      ? [hitPointOwner, "battleSpellAttackProcedure"]
+      : [hitPointOwner];
   }
   if (kind === "targetChoice") {
-    return ["battleTargetSelection"];
+    return isChainedSpellAttack
+      ? ["battleTargetSelection", "battleSpellAttackProcedure"]
+      : ["battleTargetSelection"];
   }
   if (kind === "concentrationSavingThrow") return ["battleConcentration"];
   return [];
