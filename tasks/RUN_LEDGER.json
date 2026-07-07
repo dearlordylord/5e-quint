@@ -4,6 +4,105 @@
   "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
   "entries": [
     {
+      "taskId": "CRPI-BLOCK-016",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
+      "artifacts": {
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "1640fa45d64dcf6858aec7126d8f8b158337b62c70af607418d2f9ec1133ec7a"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-BLOCK-016/README.md",
+          "sha256": "f15182f80aa71f33474f394e0219e6f685164caabda39fd309bbabf12e88902b"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-016.json",
+          "sha256": "77d4038c67cb7163ad95b195e22a37590fe97de949bb143f49d847643fab437b",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-016.json#publicQRouteCoverage:save-gated-spell-ordering",
+            "tasks/target-replay-evidence/CRPI-BLOCK-016.json#publicQRouteCoverage:spell-attack-ordering",
+            "tasks/target-replay-evidence/CRPI-BLOCK-016.json#publicQRouteCoverage:chained-attack-sequence",
+            "tasks/target-replay-evidence/CRPI-BLOCK-016.json#publicQRouteCoverage:mixed-target-outcomes",
+            "tasks/target-replay-evidence/CRPI-BLOCK-016.json#publicQRouteCoverage:starry-wisp-object",
+            "tasks/target-replay-evidence/CRPI-BLOCK-016.json#publicQRouteCoverage:condition-riders"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-owner-battle-spell-20260706T213644Z/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor 314ce0f1d14cea376e8e511b99d477b8690f6c47 HEAD",
+          "status": "pass",
+          "detail": "Base ref and HEAD both resolved to 314ce0f1d Mark Ralph task 23 done; Base SHA is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language review: rg local SRD 5.2.1 spell, Attack Roll, Saving Throw, Damage Roll, Damage Type, Object, Dim Light, and Poisoned passages plus UBIQUITOUS_LANGUAGE.md route-owner terms",
+          "status": "pass",
+          "detail": "Checked local SRD 5.2.1 spell and generic rules passages for the selected level-1 damage spell substrates, plus UBIQUITOUS_LANGUAGE.md terms for Spell Invocation, Attack Roll, Saving Throw, Damage, Damage Type, Hit Points, Condition, Spell Effect, and Rider."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass",
+          "detail": "Whitespace check passed."
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Required MBT preflight found no active Vitest runner and no stale quint_evaluator before focused MBT runs."
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 pnpm --filter @dnd/battle-runtime exec vitest run src/reducer-route-connectors.mbt.test.ts -t \"routes chained spell Attack procedures through the shared reducer surface\" 2>&1; STATUS=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$STATUS\"",
+          "status": "pass",
+          "detail": "Reproduced the chained route mismatch, fixed reducer-route ownership, and reran the focused chained route MBT: 1 passed, 33 skipped, TOTAL: 8s."
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 pnpm --filter @dnd/battle-runtime exec vitest run src/level1-damage-spell-selected-identity.mbt.test.ts src/reducer-route-connectors.mbt.test.ts src/starry-wisp-object.mbt.test.ts -t \"(Level 1 damage spell selected identity replay|routes save-gated spell ordering|routes spell Attack ordering|routes chained spell Attack procedures|routes mixed target outcomes|routes condition and poison riders|routes object-target boundary facts)\" 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+          "status": "pass",
+          "detail": "Focused Task 24 MBT passed: 3 files passed; 7 tests passed, 30 skipped; TOTAL: 32s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "Cleanroom branch coverage passed with Task 24 evidence: 738 obligations, 24 sampled inputs."
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "Full quality chain passed. App lint reported existing warnings and exited 0; turbo typecheck completed 9 successful tasks, 5 from cache."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-016",
+            "impact": "unblocked"
+          },
+          {
+            "taskId": "CRPI-BLOCK-017",
+            "impact": "left unchanged"
+          },
+          {
+            "taskId": "CRPI-BLOCK-018",
+            "impact": "left unchanged"
+          }
+        ],
+        "observations": [
+          "Level-1 damage selected identity replay can reuse existing generic public qRoute connector owners for save-gated spells, spell Attack procedures, chained spell Attacks, mixed target outcomes, object-target boundaries, condition riders, and Hit Point effects.",
+          "The chained spell Attack route connector requires target-choice and damage fills to expose the generic spell Attack procedure owner in addition to target-selection or Hit Point ownership.",
+          "No new durable BattleState field or selected spell id production dispatch was needed for Task 24."
+        ],
+        "requiredPlanEdits": "none"
+      }
+    },
+    {
       "taskId": "CRPI-BLOCK-015",
       "assignmentId": "reducer-spine-diagnostic-battle",
       "laneId": "battle",
