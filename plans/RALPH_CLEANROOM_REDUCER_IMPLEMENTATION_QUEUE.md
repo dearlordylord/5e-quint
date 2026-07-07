@@ -337,7 +337,7 @@
     {
       "number": 56,
       "id": "CRPI-BLOCK-028",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-starry-wisp-object"
     },
     {
@@ -3942,7 +3942,7 @@ Plan Impact:
 
 ### Task 56 - CRPI-BLOCK-028
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
