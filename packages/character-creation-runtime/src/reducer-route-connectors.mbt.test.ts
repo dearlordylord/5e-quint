@@ -42,6 +42,7 @@ import {
   PHASE1_WEAPON_MASTERY_UNIT_IDS,
   WEAPON_MASTERY_OPTIONS_CHOICE_KEY,
   advanceCharacterBuildFightingStyleReplacementWithRoute,
+  applyCharacterBuildWarlockLevelGainWithRoute,
   abilityScoreAssignment,
   characterBuildProficiencies,
   characterBuildClassFeatureFactsProjectionWithRoute,
@@ -54,6 +55,7 @@ import {
   classUnitId,
   createCharacterDraft as createRuntimeCharacterDraft,
   creationChoiceOptionId,
+  eldritchInvocationId,
   creationHoleId,
   discoverCreationHoles as discoverRuntimeCreationHoles,
   draftRevision,
@@ -65,7 +67,12 @@ import {
   progressionOptionId,
   recordCharacterBuildSelectedReferenceRetentionWithRoute,
   sorcererMetamagicOptionId,
+  warlockLevelGain,
   type CharacterBuild,
+  type CharacterBuildEldritchInvocationSelection,
+  type CharacterBuildEldritchInvocationRepeatableChoice,
+  type CharacterBuildWarlockEldritchInvocationSelectionInput,
+  type CharacterBuildWarlockLevelGain,
   type CharacterBuildSelectedReferenceRoute,
   type CharacterBuildClassFeatureFactsProjectionRoute,
   type CharacterBuildResource,
@@ -143,6 +150,27 @@ const LEVEL_ONE_ROGUE_WEAPON_MASTERY_UNIT_IDS = [
 const LEVEL_ONE_ROGUE_SELECTED_REFERENCE_COUNT =
   LEVEL_ONE_ROGUE_EXPERTISE_SKILLS.length +
   LEVEL_ONE_ROGUE_WEAPON_MASTERY_UNIT_IDS.length;
+const WARLOCK_CLASS_UNIT_ID = "class_warlock";
+const WARLOCK_ELDRITCH_INVOCATIONS_UNIT_ID = "warlock_eldritch_invocations";
+const ARMOR_OF_SHADOWS_INVOCATION_ID = eldritchInvocationId("armor_of_shadows");
+const PACT_OF_THE_BLADE_INVOCATION_ID =
+  eldritchInvocationId("pact_of_the_blade");
+const PACT_OF_THE_CHAIN_INVOCATION_ID =
+  eldritchInvocationId("pact_of_the_chain");
+const DEVILS_SIGHT_INVOCATION_ID = eldritchInvocationId("devils_sight");
+const ELDRITCH_MIND_INVOCATION_ID = eldritchInvocationId("eldritch_mind");
+const THIRSTING_BLADE_INVOCATION_ID = eldritchInvocationId("thirsting_blade");
+const REPELLING_BLAST_INVOCATION_ID = eldritchInvocationId("repelling_blast");
+const ELDRITCH_BLAST_CANTRIP_UNIT_ID = "eldritch_blast";
+const POISON_SPRAY_CANTRIP_UNIT_ID = "poison_spray";
+const ELDRITCH_BLAST_CHOICE = {
+  kind: "knownWarlockCantrip",
+  cantripId: ELDRITCH_BLAST_CANTRIP_UNIT_ID,
+} as const satisfies CharacterBuildEldritchInvocationRepeatableChoice;
+const POISON_SPRAY_CHOICE = {
+  kind: "knownWarlockCantrip",
+  cantripId: POISON_SPRAY_CANTRIP_UNIT_ID,
+} as const satisfies CharacterBuildEldritchInvocationRepeatableChoice;
 
 const HOLE_BY_TAG = {
   CreationDraftStructureHoleFamily: "draftStructure",
@@ -627,14 +655,25 @@ describe("character creation reducer route connector MBT", () => {
         warlockInvocationRouteDriverSchema,
         "cc:route-warlock-invocations",
         {
-          doSelectLevelOneArmorOfShadows: retainAndProjectSelectedReferenceRoute,
-          doGainLevelTwoInvocations: replaceSelectedReferenceRoute,
+          doSelectLevelOneArmorOfShadows:
+            retainAndProjectWarlockLevelOneInvocationRoute,
+          doGainLevelTwoInvocations: warlockLevelGainSelectedReferenceRoute(
+            levelTwoInvocationGain(),
+          ),
           doReplaceArmorWithEldritchMindOnWarlockLevelGain:
-            replaceSelectedReferenceRoute,
-          doReplaceRepeatableInvocationByChoice: replaceSelectedReferenceRoute,
+            warlockLevelGainSelectedReferenceRoute(
+              levelThreeNonRepeatableInvocationReplacement(),
+              levelTwoNonRepeatableInvocationBuild(),
+            ),
+          doReplaceRepeatableInvocationByChoice:
+            warlockLevelGainSelectedReferenceRoute(
+              levelThreeRepeatableInvocationReplacement(),
+              levelTwoRepeatableInvocationBuild(),
+            ),
           doRejectPrerequisiteRetainedInvocationReplacement:
-            rejectedInvocationSelectionRoute,
-          doRejectDuplicateInvocationSelections: rejectedInvocationSelectionRoute,
+            rejectedPrerequisiteRetainedInvocationReplacementRoute,
+          doRejectDuplicateInvocationSelections:
+            rejectedDuplicateInvocationSelectionsRoute,
         },
       ),
       maxSteps: focusedMbtMaxSteps(1),
@@ -1998,40 +2037,383 @@ function replaceFighterFightingStyleSelectedReferenceRoute(input: {
   };
 }
 
-function replaceSelectedReferenceRoute(
+function retainAndProjectWarlockLevelOneInvocationRoute(
   route: readonly CharacterCreationRouteEvent[],
 ): readonly CharacterCreationRouteEvent[] {
-  return [
-    ...route,
-    applyCreationFillBatch({
-      subject: "selectedReference",
-      fills: ["choiceSet"],
-      holes: [],
-      owner: "characterBuild",
+  const build = warlockLevelOneInvocationBuild();
+  expect(selectedWarlockInvocationCount(build)).toBe(1);
+  expect(characterBuildSelectedReferenceCount(build)).toBe(5);
+  const retained = requireRight(
+    characterBuildSelectedReferencesWithRoute({
+      build,
+      route,
     }),
-    retainCreationSelectedReferences({
-      subject: "selectedReference",
-      owner: "creationSelectedReference",
-    }),
-    projectCharacterBuildFacts({
-      subject: "buildProjection",
-      owner: "characterBuild",
-    }),
-  ];
+  );
+  return characterBuildProjectionWithRoute(retained).route;
 }
 
-function rejectedInvocationSelectionRoute(
+function warlockLevelGainSelectedReferenceRoute(
+  levelGain: CharacterBuildWarlockLevelGain,
+  build: CharacterBuild = warlockLevelOneInvocationBuild(),
+): (
+  route: readonly CharacterCreationRouteEvent[],
+) => readonly CharacterCreationRouteEvent[] {
+  return (route) => {
+    const advanced = requireRight(
+      applyCharacterBuildWarlockLevelGainWithRoute({
+        build,
+        unitLibrary,
+        levelGain,
+        route,
+      }),
+    );
+    if (advanced.tag !== "accepted") {
+      throw new Error(
+        `Expected accepted Warlock level gain route, received ${advanced.issue.code}.`,
+      );
+    }
+    const retained = requireRight(
+      characterBuildSelectedReferencesWithRoute({
+        build: advanced.build,
+        route: advanced.route,
+      }),
+    );
+    expect(selectedWarlockInvocationCount(advanced.build)).toBe(3);
+    return characterBuildProjectionWithRoute(retained).route;
+  };
+}
+
+function rejectedPrerequisiteRetainedInvocationReplacementRoute(
   route: readonly CharacterCreationRouteEvent[],
 ): readonly CharacterCreationRouteEvent[] {
-  return [
-    ...route,
-    applyCreationFillBatch({
-      subject: "selectedReference",
-      fills: ["choiceSet"],
-      holes: ["unitChoice"],
-      owner: "creationSupportProfileAdmission",
+  const rejected = requireRight(
+    applyCharacterBuildWarlockLevelGainWithRoute({
+      build: warlockLevelFiveThirstingBladeBuild(),
+      unitLibrary,
+      levelGain: levelSixLockedInvocationReplacement(),
+      route,
     }),
-  ];
+  );
+  if (rejected.tag !== "rejected") {
+    throw new Error("Expected locked Eldritch Invocation replacement rejection.");
+  }
+  expect(rejected.issue.code).toBe("lockedEldritchInvocationReplacement");
+  expect(selectedWarlockInvocationCount(rejected.build)).toBe(5);
+  return rejected.route;
+}
+
+function rejectedDuplicateInvocationSelectionsRoute(
+  route: readonly CharacterCreationRouteEvent[],
+): readonly CharacterCreationRouteEvent[] {
+  const build = warlockLevelOneInvocationBuild({
+    cantrips: [ELDRITCH_BLAST_CANTRIP_UNIT_ID, POISON_SPRAY_CANTRIP_UNIT_ID],
+  });
+  const duplicateNonRepeatable = requireRight(
+    applyCharacterBuildWarlockLevelGainWithRoute({
+      build,
+      unitLibrary,
+      levelGain: levelTwoDuplicateNonRepeatableInvocations(),
+      route,
+    }),
+  );
+  if (duplicateNonRepeatable.tag !== "rejected") {
+    throw new Error("Expected duplicate non-repeatable invocation rejection.");
+  }
+  expect(duplicateNonRepeatable.issue.code).toBe(
+    "duplicateEldritchInvocationSelection",
+  );
+
+  const duplicateRepeatable = requireRight(
+    applyCharacterBuildWarlockLevelGainWithRoute({
+      build,
+      unitLibrary,
+      levelGain: levelTwoDuplicateRepeatableInvocations(),
+      route,
+    }),
+  );
+  if (duplicateRepeatable.tag !== "rejected") {
+    throw new Error("Expected duplicate repeatable invocation rejection.");
+  }
+  expect(duplicateRepeatable.issue.code).toBe(
+    "duplicateEldritchInvocationSelection",
+  );
+  expect(selectedWarlockInvocationCount(duplicateRepeatable.build)).toBe(1);
+  return duplicateRepeatable.route;
+}
+
+function warlockLevelOneInvocationBuild(
+  input: {
+    readonly cantrips?: readonly string[];
+    readonly preparedSpells?: readonly string[];
+  } = {},
+): CharacterBuild {
+  return warlockBuild({
+    totalLevel: 1,
+    invocations: [nonRepeatableInvocation(ARMOR_OF_SHADOWS_INVOCATION_ID)],
+    cantrips: input.cantrips ?? [
+      ELDRITCH_BLAST_CANTRIP_UNIT_ID,
+      "prestidigitation",
+    ],
+    preparedSpells: input.preparedSpells ?? ["charm_person", "hex"],
+    pactSlotCount: 1,
+    pactSlotLevel: 1,
+  });
+}
+
+function levelTwoNonRepeatableInvocationBuild(): CharacterBuild {
+  return acceptedWarlockLevelGainBuild({
+    build: warlockLevelOneInvocationBuild(),
+    levelGain: levelTwoInvocationGain(),
+  });
+}
+
+function levelTwoRepeatableInvocationBuild(): CharacterBuild {
+  return acceptedWarlockLevelGainBuild({
+    build: warlockLevelOneInvocationBuild({
+      cantrips: [ELDRITCH_BLAST_CANTRIP_UNIT_ID, POISON_SPRAY_CANTRIP_UNIT_ID],
+    }),
+    levelGain: levelTwoRepeatableInvocationGain(),
+  });
+}
+
+function warlockLevelFiveThirstingBladeBuild(): CharacterBuild {
+  return warlockBuild({
+    totalLevel: 5,
+    invocations: [
+      nonRepeatableInvocation(ARMOR_OF_SHADOWS_INVOCATION_ID),
+      nonRepeatableInvocation(PACT_OF_THE_BLADE_INVOCATION_ID),
+      nonRepeatableInvocation(DEVILS_SIGHT_INVOCATION_ID),
+      nonRepeatableInvocation(ELDRITCH_MIND_INVOCATION_ID),
+      nonRepeatableInvocation(THIRSTING_BLADE_INVOCATION_ID),
+    ],
+    cantrips: [
+      ELDRITCH_BLAST_CANTRIP_UNIT_ID,
+      "prestidigitation",
+      POISON_SPRAY_CANTRIP_UNIT_ID,
+    ],
+    preparedSpells: [
+      "charm_person",
+      "hex",
+      "bane",
+      "mirror_image",
+      "detect_magic",
+      "expeditious_retreat",
+    ],
+    pactSlotCount: 2,
+    pactSlotLevel: 3,
+  });
+}
+
+function acceptedWarlockLevelGainBuild(input: {
+  readonly build: CharacterBuild;
+  readonly levelGain: CharacterBuildWarlockLevelGain;
+}): CharacterBuild {
+  const advanced = requireRight(
+    applyCharacterBuildWarlockLevelGainWithRoute({
+      build: input.build,
+      unitLibrary,
+      levelGain: input.levelGain,
+      route: [],
+    }),
+  );
+  if (advanced.tag !== "accepted") {
+    throw new Error(
+      `Expected accepted Warlock level gain fixture, received ${advanced.issue.code}.`,
+    );
+  }
+  return advanced.build;
+}
+
+function warlockBuild(input: {
+  readonly totalLevel: 1 | 2 | 5;
+  readonly invocations: readonly CharacterBuildWarlockEldritchInvocationSelectionInput[];
+  readonly cantrips: readonly string[];
+  readonly preparedSpells: readonly string[];
+  readonly pactSlotCount: number;
+  readonly pactSlotLevel: number;
+}): CharacterBuild {
+  return {
+    ...classFeatureProjectionBuild({
+      startingClass: WARLOCK_CLASS_UNIT_ID,
+      totalLevel: 1,
+      features: input.invocations.map((selection) => ({
+        kind: "selectedEldritchInvocation",
+        selectedFromUnitId: WARLOCK_ELDRITCH_INVOCATIONS_UNIT_ID,
+        selection: parseWarlockInvocationSelection(selection),
+      })),
+    }),
+    progression: {
+      startingClass: classUnitId(WARLOCK_CLASS_UNIT_ID),
+      advancements: Array.from({ length: input.totalLevel - 1 }, () => ({
+        classUnitId: classUnitId(WARLOCK_CLASS_UNIT_ID),
+        hitPointRule: { tag: "fixedHigherLevelGain" as const },
+      })),
+    },
+    spellcasting: {
+      sources: [
+        {
+          sourceUnitId: WARLOCK_CLASS_UNIT_ID,
+          spellcastingAbility: "cha",
+          cantrips: input.cantrips,
+          spellbook: [],
+          preparedSpells: input.preparedSpells,
+          spellcastingFocuses: ["arcane_focus"],
+        },
+      ],
+      slotPools: {
+        pactMagic: {
+          kind: "pactMagic",
+          count: input.pactSlotCount,
+          slotLevel: input.pactSlotLevel,
+        },
+      },
+    },
+  };
+}
+
+function levelTwoInvocationGain(): CharacterBuildWarlockLevelGain {
+  return parsedWarlockLevelGain({
+    gainedPreparedSpells: ["hellish_rebuke"],
+    gainedInvocations: [
+      nonRepeatableInvocation(PACT_OF_THE_BLADE_INVOCATION_ID),
+      nonRepeatableInvocation(DEVILS_SIGHT_INVOCATION_ID),
+    ],
+  });
+}
+
+function levelTwoRepeatableInvocationGain(): CharacterBuildWarlockLevelGain {
+  return parsedWarlockLevelGain({
+    gainedPreparedSpells: ["hellish_rebuke"],
+    gainedInvocations: [
+      repeatableInvocation(REPELLING_BLAST_INVOCATION_ID, ELDRITCH_BLAST_CHOICE),
+      repeatableInvocation(REPELLING_BLAST_INVOCATION_ID, POISON_SPRAY_CHOICE),
+    ],
+  });
+}
+
+function levelThreeNonRepeatableInvocationReplacement(): CharacterBuildWarlockLevelGain {
+  return parsedWarlockLevelGain({
+    gainedPreparedSpells: ["mirror_image"],
+    gainedInvocations: [],
+    replacement: {
+      replaceInvocation: nonRepeatableInvocation(ARMOR_OF_SHADOWS_INVOCATION_ID),
+      selectedInvocation: nonRepeatableInvocation(ELDRITCH_MIND_INVOCATION_ID),
+    },
+  });
+}
+
+function levelThreeRepeatableInvocationReplacement(): CharacterBuildWarlockLevelGain {
+  return parsedWarlockLevelGain({
+    gainedPreparedSpells: ["mirror_image"],
+    gainedInvocations: [],
+    replacement: {
+      replaceInvocation: repeatableInvocation(
+        REPELLING_BLAST_INVOCATION_ID,
+        ELDRITCH_BLAST_CHOICE,
+      ),
+      selectedInvocation: nonRepeatableInvocation(DEVILS_SIGHT_INVOCATION_ID),
+    },
+  });
+}
+
+function levelSixLockedInvocationReplacement(): CharacterBuildWarlockLevelGain {
+  return parsedWarlockLevelGain({
+    gainedPreparedSpells: ["hideous_laughter"],
+    gainedInvocations: [],
+    replacement: {
+      replaceInvocation: nonRepeatableInvocation(PACT_OF_THE_BLADE_INVOCATION_ID),
+      selectedInvocation: nonRepeatableInvocation(PACT_OF_THE_CHAIN_INVOCATION_ID),
+    },
+  });
+}
+
+function levelTwoDuplicateNonRepeatableInvocations(): CharacterBuildWarlockLevelGain {
+  return parsedWarlockLevelGain({
+    gainedPreparedSpells: ["hellish_rebuke"],
+    gainedInvocations: [
+      nonRepeatableInvocation(ARMOR_OF_SHADOWS_INVOCATION_ID),
+      nonRepeatableInvocation(DEVILS_SIGHT_INVOCATION_ID),
+    ],
+  });
+}
+
+function levelTwoDuplicateRepeatableInvocations(): CharacterBuildWarlockLevelGain {
+  return parsedWarlockLevelGain({
+    gainedPreparedSpells: ["hellish_rebuke"],
+    gainedInvocations: [
+      repeatableInvocation(REPELLING_BLAST_INVOCATION_ID, ELDRITCH_BLAST_CHOICE),
+      repeatableInvocation(REPELLING_BLAST_INVOCATION_ID, ELDRITCH_BLAST_CHOICE),
+    ],
+  });
+}
+
+function parsedWarlockLevelGain(input: {
+  readonly gainedPreparedSpells: readonly string[];
+  readonly gainedInvocations: readonly CharacterBuildWarlockEldritchInvocationSelectionInput[];
+  readonly replacement?: {
+    readonly replaceInvocation: CharacterBuildWarlockEldritchInvocationSelectionInput;
+    readonly selectedInvocation: CharacterBuildWarlockEldritchInvocationSelectionInput;
+  };
+}): CharacterBuildWarlockLevelGain {
+  return requireRight(
+    warlockLevelGain({
+      unitLibrary,
+      classUnitId: classUnitId(WARLOCK_CLASS_UNIT_ID),
+      hitPointRule: { tag: "fixedHigherLevelGain" },
+      pactMagic: {
+        gainedCantrips: [],
+        gainedPreparedSpells: input.gainedPreparedSpells,
+      },
+      gainedInvocations: input.gainedInvocations,
+      ...(input.replacement === undefined
+        ? {}
+        : { replacement: input.replacement }),
+    }),
+  );
+}
+
+function nonRepeatableInvocation(
+  invocationId: ReturnType<typeof eldritchInvocationId>,
+): CharacterBuildWarlockEldritchInvocationSelectionInput {
+  return {
+    kind: "nonRepeatable",
+    invocationId,
+  };
+}
+
+function repeatableInvocation(
+  invocationId: ReturnType<typeof eldritchInvocationId>,
+  repeatableChoice: CharacterBuildEldritchInvocationRepeatableChoice,
+): CharacterBuildWarlockEldritchInvocationSelectionInput {
+  return {
+    kind: "repeatable",
+    invocationId,
+    repeatableChoice,
+  };
+}
+
+function parseWarlockInvocationSelection(
+  selection: CharacterBuildWarlockEldritchInvocationSelectionInput,
+): CharacterBuildEldritchInvocationSelection {
+  if (selection.kind === "nonRepeatable") {
+    return {
+      kind: "nonRepeatable",
+      invocationId: eldritchInvocationId(String(selection.invocationId)),
+    };
+  }
+  return {
+    kind: "repeatable",
+    invocationId: eldritchInvocationId(String(selection.invocationId)),
+    repeatableChoice: selection.repeatableChoice,
+  };
+}
+
+function selectedWarlockInvocationCount(build: CharacterBuild): number {
+  return build.features.filter(
+    (feature) =>
+      feature.kind === "selectedEldritchInvocation" &&
+      feature.selectedFromUnitId === WARLOCK_ELDRITCH_INVOCATIONS_UNIT_ID,
+  ).length;
 }
 
 function createCharacterDraft(

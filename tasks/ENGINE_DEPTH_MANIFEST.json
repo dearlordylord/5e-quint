@@ -1,8 +1,45 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-045",
+  "taskId": "CRPI-BLOCK-046",
   "accumulatorGrowth": [],
   "adapterModules": [
+    {
+      "path": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",
+      "quarantinedWitnessNames": [
+        "qState",
+        "doSelectLevelOneArmorOfShadows",
+        "doGainLevelTwoInvocations",
+        "doReplaceArmorWithEldritchMindOnWarlockLevelGain",
+        "doReplaceRepeatableInvocationByChoice",
+        "doRejectPrerequisiteRetainedInvocationReplacement",
+        "doRejectDuplicateInvocationSelections"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-046.json"
+      ]
+    },
+    {
+      "path": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.route.mbt.qnt",
+      "quarantinedWitnessNames": [
+        "qRoute"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-046.json"
+      ]
+    },
+    {
+      "path": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "quarantinedWitnessNames": [
+        "warlockInvocationRouteDriverSchema",
+        "retainAndProjectWarlockLevelOneInvocationRoute",
+        "warlockLevelGainSelectedReferenceRoute",
+        "rejectedPrerequisiteRetainedInvocationReplacementRoute",
+        "rejectedDuplicateInvocationSelectionsRoute"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-046.json"
+      ]
+    },
     {
       "path": "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.mbt.qnt",
       "quarantinedWitnessNames": [
@@ -75,6 +112,14 @@
   ],
   "productionModulesExtended": [
     {
+      "path": "packages/character-creation-runtime/src/character-build-advancement.ts",
+      "notes": "Adds applyCharacterBuildWarlockLevelGainWithRoute, a public route wrapper around the existing typed Warlock level-gain reducer. Accepted level gains emit CharacterBuildOwner selected-reference fill routing; duplicate/prerequisite invocation rejections emit CreationSupportProfileAdmissionOwner routing without adding durable state."
+    },
+    {
+      "path": "packages/character-creation-runtime/src/index.ts",
+      "notes": "Exports the Warlock level-gain route wrapper and route event/result types through the package public surface."
+    },
+    {
       "path": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts",
       "notes": "Extends selected-reference counting to include existing CharacterBuild.proficiencyChoices entries whose subject is skill_expertise, so Rogue Expertise skill refs are retained by CreationSelectedReferenceOwner without adding duplicate selected-reference state."
     },
@@ -88,6 +133,10 @@
     }
   ],
   "expectedNextReuse": [
+    {
+      "path": "packages/character-creation-runtime/src/character-build-advancement.ts",
+      "notes": "Future Warlock character-creation route tasks should use applyCharacterBuildWarlockLevelGainWithRoute for accepted level gains and support-profile invocation rejections, then reuse selected-reference and build-projection route entrypoints."
+    },
     {
       "path": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts",
       "notes": "Initial selected-reference branches continue to derive CreationSelectedReferenceOwner events from existing CharacterBuild selected refs, including selected class-choice refs and skill_expertise proficiency choices."
@@ -103,6 +152,6 @@
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 88 observes copied Rogue Expertise level-1 qRoute through an actual Rogue public creation replay and public selected-reference route entrypoints. No new durable CharacterBuild fields were added; final Expertise proficiency-level projection remains derived from existing build/proficiency facts."
+    "notes": "Task 92 observes copied Warlock Eldritch Invocations qRoute through public Warlock level-gain, selected-reference, and CharacterBuild projection route entrypoints. No new durable CharacterBuild fields were added; selected invocation choices and Pact Magic remain existing CharacterBuild facts, and duplicate/prerequisite failures remain typed advancement issues plus route evidence."
   }
 }

@@ -316,6 +316,7 @@ export {
 } from "./character-progression-types.ts";
 export {
   advanceCharacterBuildClassLevel,
+  applyCharacterBuildWarlockLevelGainWithRoute,
   advanceCharacterBuildFightingStyleReplacementWithRoute,
   classLevelGainWithFightingStyleCantripReplacement,
   fighterClassUnitId,
@@ -341,6 +342,14 @@ export {
   type CharacterBuildListPreparedSpellcastingLevelGain,
   type CharacterBuildPlainClassLevelGain,
   type CharacterBuildSorcererMetamagicLevelGain,
+  type CharacterBuildWarlockInvocationRouteRejectionIssue,
+  type CharacterBuildWarlockLevelGainAcceptedRouteEvent,
+  type CharacterBuildWarlockLevelGainAcceptedRouteOwner,
+  type CharacterBuildWarlockLevelGainRejectedRouteEvent,
+  type CharacterBuildWarlockLevelGainRejectedRouteOwner,
+  type CharacterBuildWarlockLevelGainRoute,
+  type CharacterBuildWarlockLevelGainRouteFill,
+  type CharacterBuildWarlockLevelGainRouteSubject,
   type CharacterBuildWeaponMasteryLevelGain,
   type CharacterBuildWarlockEldritchInvocationSelectionInput,
   type CharacterBuildWarlockLevelGain,

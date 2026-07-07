@@ -4,6 +4,121 @@
   "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
   "entries": [
     {
+      "taskId": "CRPI-BLOCK-046",
+      "assignmentId": "reducer-spine-diagnostic-character-creation",
+      "laneId": "character-creation",
+      "selectedDrivers": [
+        "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
+      "artifacts": {
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "97b3af60616812bdd8b6734b55b334f2d1117f85f93e5ada29e3cfcc1921dce5"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-BLOCK-046/README.md",
+          "sha256": "cc5821a1b4ccd9b31186107bea59c4d5c2f7298b625641aa77a7b93efc1d5f86"
+        },
+        "engineDepthManifest": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "89412f3391730ff1d9d4eac4482a299bdc0a2cbd2dd976e6aa5a93c167fdc3ad"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "47ce15829a54feb86c3efefe37332d3240ae7c2c790974a71876f6c83ad30a49"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-046.json",
+          "sha256": "2f3bbee6a2d7371dad7f0eccdfdad7de0340e31beba4c6ef41bc2aa5cebbd553",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-046.json#driver:packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt#step:doSelectLevelOneArmorOfShadows#trace:public-route=completedReducerSurfaceRoute action=doSelectLevelOneArmorOfShadows qRoute=warlock-invocation-level-one-retain-project-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-046.json#driver:packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt#step:doGainLevelTwoInvocations#trace:public-route=completedReducerSurfaceRoute action=doGainLevelTwoInvocations qRoute=warlock-invocation-level-gain-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-046.json#driver:packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt#step:doRejectDuplicateInvocationSelections#trace:public-route=completedReducerSurfaceRoute action=doRejectDuplicateInvocationSelections qRoute=warlock-invocation-rejection-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-046.json#driver:packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt#step:doRejectPrerequisiteRetainedInvocationReplacement#trace:public-route=completedReducerSurfaceRoute action=doRejectPrerequisiteRetainedInvocationReplacement qRoute=warlock-invocation-rejection-route scope=level-5-prerequisite",
+            "tasks/target-replay-evidence/CRPI-BLOCK-046.json#driver:packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt#step:doReplaceArmorWithEldritchMindOnWarlockLevelGain#trace:public-route=completedReducerSurfaceRoute action=doReplaceArmorWithEldritchMindOnWarlockLevelGain qRoute=warlock-invocation-level-gain-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-046.json#driver:packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt#step:doReplaceRepeatableInvocationByChoice#trace:public-route=completedReducerSurfaceRoute action=doReplaceRepeatableInvocationByChoice qRoute=warlock-invocation-level-gain-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-owner-character-creation-20260706T213644Z/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor 27d7101a03706ca330addbc1e69c69c892cdb8a0 HEAD",
+          "status": "pass",
+          "detail": "Declared integration ref and HEAD both resolved to 27d7101a0 Mark Ralph task 88 done; Base SHA is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language check for Warlock Eldritch Invocations and Pact Magic selected-reference route replay",
+          "status": "pass",
+          "detail": "Checked .references/srd-5.2.1/Classes/Warlock.md#Level 1: Eldritch Invocations, #Level 1: Pact Magic, and UBIQUITOUS_LANGUAGE.md before modeling route behavior."
+        },
+        {
+          "command": "pnpm --filter @dnd/character-creation-runtime exec tsc --noEmit --pretty false",
+          "status": "pass",
+          "detail": "Character Creation runtime TypeScript check passed after adding the public Warlock level-gain route wrapper."
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Pre-MBT process check reported only a Ralph monitoring shell whose command text contained those words; no actual Vitest runner or Quint evaluator was active."
+        },
+        {
+          "command": "START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/character-creation-runtime exec vitest run src/warlock-eldritch-invocations-selected-identity.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"replays Character Creation Warlock Eldritch Invocations selected identity parity|routes Warlock invocation selections\" ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "status": "pass",
+          "detail": "Focused Warlock Eldritch Invocations selected-identity semantic replay and qRoute connector replay passed through public Warlock level-gain, selected-reference, and build-projection route entrypoints; 2 tests passed, 9 skipped; TOTAL: 4s."
+        },
+        {
+          "command": "node scripts/cleanroom-branch-coverage-check.cjs --target-replay-evidence tasks/target-replay-evidence/CRPI-BLOCK-046.json",
+          "status": "fail",
+          "detail": "Diagnostic target-only command failed on unrelated broad missing-evidence baseline across the full corpus; the checker log contained no CRPI-BLOCK-046, Warlock target-driver, or Task 92 target-evidence metadata errors after the evidence metadata fix."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "Cleanroom branch coverage passed with 738 obligations and 24 sampled inputs."
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "All quality gates passed; app lint emitted 61 warnings and exited 0."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass",
+          "detail": "Whitespace check passed."
+        },
+        {
+          "command": "node JSON parse check for tasks/target-replay-evidence/CRPI-BLOCK-046.json, tasks/ENGINE_DEPTH_MANIFEST.json, tasks/STATE_OWNER_MANIFEST.json, and tasks/RUN_LEDGER.json",
+          "status": "pass",
+          "detail": "All updated machine-readable Task 92 artifacts parsed as valid JSON."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Confirmed Task 92 keeps selected Eldritch Invocation choices in existing CharacterBuild.features, Pact Magic in existing CharacterBuild.spellcasting, and duplicate/prerequisite rejection as typed advancement issues plus route evidence; no duplicate durable state or authored-identity production dispatch was added."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-046",
+            "impact": "unblocked"
+          }
+        ],
+        "observations": [
+          "Warlock accepted level-gain qRoute is accepted through applyCharacterBuildWarlockLevelGainWithRoute plus selected-reference and CharacterBuild projection route helpers.",
+          "Duplicate and prerequisite-retained invocation rejections are observed as CreationSupportProfileAdmissionOwner route events from the same public Warlock wrapper.",
+          "The level-5 prerequisite-retained replacement branch is covered in evidence and remains explicitly tracked as out-of-scope in the source branch inventory.",
+          "No new durable CharacterBuild fields were added; selected invocation and Pact Magic facts reuse existing build state."
+        ],
+        "requiredPlanEdits": "none"
+      }
+    },
+    {
       "taskId": "CRPI-BLOCK-045",
       "assignmentId": "reducer-spine-diagnostic-character-creation",
       "laneId": "character-creation",
