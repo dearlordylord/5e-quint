@@ -33,7 +33,8 @@ module battleRuntimeSorcererMetamagicRouteMbt {
     | QuickenedDirectConditionRouted
     | QuickenedRollModifierRouted
     | QuickenedAfterMagicActionSpentRouted
-    | SavingThrowProtectionRouted
+    | SavingThrowProtectionSaveGatedDamageRouted
+    | SavingThrowProtectionSaveGatedNoEffectRouted
     | SavingThrowRollModeRouted
     | DamageTypeSubstitutionRouted
     | EffectiveSpellLevelRouted
@@ -57,6 +58,8 @@ module battleRuntimeSorcererMetamagicRouteMbt {
     Set(TargetChoiceHoleKind)
   pure val targetListHoles: Set[BattleHoleFamilyKind] =
     Set(SpellTargetListHoleKind)
+  pure val commandOptionAndTargetListHoles: Set[BattleHoleFamilyKind] =
+    Set(CommandOptionChoiceHoleKind, SpellTargetListHoleKind)
 
   pure def discoverRoute(
     subject: ReducerRouteSubjectFamily,
@@ -522,14 +525,22 @@ module battleRuntimeSorcererMetamagicRouteMbt {
     ),
   }
 
-  action doRouteSavingThrowProtection = all {
+  action doRouteSavingThrowProtectionSaveGatedDamage = all {
     qStage == Init,
     recordStage(
-      SavingThrowProtectionRouted,
+      SavingThrowProtectionSaveGatedDamageRouted,
       initialRoute
         .append(
           discoverRoute(
             MetamagicSavingThrowProtectionRouteSubject,
+            targetListHoles,
+            BattleFeatureResourceOwner,
+          )
+        )
+        .append(
+          resolveRoute(
+            MetamagicSavingThrowProtectionRouteSubject,
+            SpellTargetListFillKind,
             savingThrowHoles,
             BattleFeatureResourceOwner,
           )
@@ -554,6 +565,37 @@ module battleRuntimeSorcererMetamagicRouteMbt {
             MetamagicSavingThrowProtectionRouteSubject,
             noHoles,
             BattleFeatureResourceOwner,
+          )
+        ),
+    ),
+  }
+
+  action doRouteSavingThrowProtectionNoEffect = all {
+    qStage == Init,
+    recordStage(
+      SavingThrowProtectionSaveGatedNoEffectRouted,
+      initialRoute
+        .append(
+          discoverRoute(
+            CommandEffectRouteSubject,
+            commandOptionAndTargetListHoles,
+            BattleSpellSlotAndActionEconomyOwner,
+          )
+        )
+        .append(
+          resolveRoute(
+            CommandEffectRouteSubject,
+            CommandOptionChoiceFillKind,
+            savingThrowHoles,
+            BattleHoleFrontierOwner,
+          )
+        )
+        .append(
+          resolveRoute(
+            CommandEffectRouteSubject,
+            SavingThrowOutcomeFillKind,
+            noHoles,
+            BattleActiveEffectOwner,
           )
         ),
     ),
@@ -873,7 +915,8 @@ module battleRuntimeSorcererMetamagicRouteMbt {
     doResolveQuickenedDirectCondition,
     doResolveQuickenedRollModifier,
     doResolveQuickenedAfterMagicActionSpent,
-    doRouteSavingThrowProtection,
+    doRouteSavingThrowProtectionSaveGatedDamage,
+    doRouteSavingThrowProtectionNoEffect,
     doRouteSavingThrowRollMode,
     doRouteDamageTypeSubstitution,
     doRouteEffectiveSpellLevel,

@@ -1055,8 +1055,8 @@
       "ownerClassification": "durable-owner",
       "sourceTaskId": "CRPI-SOURCE-002",
       "targetTaskId": "CRPI-READY-011",
-      "status": "blocked",
-      "blockerId": "CRPI-SOURCE-002"
+      "status": "ready",
+      "blockerId": null
     },
     {
       "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-distant-selected-identity.mbt.qnt",
