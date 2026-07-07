@@ -1,65 +1,73 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-043",
+  "taskId": "CRPI-BLOCK-044",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt",
+      "path": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
       "quarantinedWitnessNames": [
         "qState",
-        "doSelectClericProtectorOrder",
-        "doSelectClericThaumaturgeOrder",
-        "doSelectDruidMagicianOrder",
-        "doSelectDruidWardenOrder"
+        "doSelectDefenseFightingStyle",
+        "doSelectArcheryFightingStyle",
+        "doSelectGreatWeaponFightingStyle",
+        "doSelectTwoWeaponFightingStyle",
+        "doReplaceArcheryWithDefenseOnFighterLevelGain",
+        "doReplaceDefenseWithArcheryOnFighterLevelGain",
+        "doReplaceDefenseWithGreatWeaponFightingOnFighterLevelGain",
+        "doReplaceDefenseWithTwoWeaponFightingOnFighterLevelGain"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-043.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-044.json"
       ]
     },
     {
-      "path": "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.route.mbt.qnt",
+      "path": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.route.mbt.qnt",
       "quarantinedWitnessNames": [
         "qRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-043.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-044.json"
       ]
     },
     {
       "path": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "clericDruidOrderRouteDriverSchema",
+        "fighterFightingStyleRouteDriverSchema",
         "createCompletedReducerRouteDriver",
-        "retainAndProjectSelectedReferenceRoute",
+        "replaceFighterFightingStyleSelectedReferenceRoute",
         "selectedReferenceRetentionRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-043.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-044.json"
       ]
     }
   ],
   "productionModulesExtended": [
     {
-      "path": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts",
-      "notes": "Adds the public characterBuildProjectionWithRoute entrypoint, which emits the CharacterBuildOwner build-projection route event without requiring downstream class-feature fact recording."
+      "path": "packages/character-creation-runtime/src/character-build-advancement.ts",
+      "notes": "Adds advanceCharacterBuildFightingStyleReplacementWithRoute, a public route wrapper around the existing typed Fighter Fighting Style replacement advancement reducer."
     },
     {
       "path": "packages/character-creation-runtime/src/index.ts",
-      "notes": "Exports characterBuildProjectionWithRoute and CharacterBuildProjectionRoute through the package public surface."
+      "notes": "Exports the Fighter Fighting Style replacement route wrapper and route event types through the package public surface."
     }
   ],
   "expectedNextReuse": [
     {
       "path": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts",
-      "notes": "Selected-reference route tasks continue to use characterBuildSelectedReferencesWithRoute for CreationSelectedReferenceOwner retention events."
+      "notes": "Initial selected-reference branches continue to derive CreationSelectedReferenceOwner events from existing CharacterBuild selected refs."
+    },
+    {
+      "path": "packages/character-creation-runtime/src/character-build-advancement.ts",
+      "notes": "Future CharacterBuild level-gain replacement route tasks should wrap the typed advancement reducer, start from fixture builds that satisfy current class-level choice preconditions, and then reuse selected-reference and build-projection route entrypoints."
     },
     {
       "path": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts",
-      "notes": "Future route connectors that need only the build-projection event can use characterBuildProjectionWithRoute; connectors that need projected class-feature facts should keep using characterBuildClassFeatureFactsProjectionWithRoute."
+      "notes": "Replacement branches reuse characterBuildProjectionWithRoute for CharacterBuildOwner build-projection events without storing a parallel projection state field."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 86 observes copied Cleric and Druid Order qRoute through public CharacterBuild selected-reference and build-projection route entrypoints. No new durable CharacterBuild fields were added."
+    "notes": "Task 87 observes copied Fighter Fighting Style qRoute through public selected-reference, CharacterBuild level-gain replacement, and build-projection route entrypoints. No new durable CharacterBuild fields were added."
   }
 }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-043",
+  "taskId": "CRPI-BLOCK-044",
   "durableFields": [
     {
       "fieldPath": "CharacterBuild.features",
@@ -9,7 +9,16 @@
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing selected class-choice refs remain retained build facts. Task 86 adds no duplicate Divine/Primal Order selected-reference cache."
+      "notes": "Existing selected class-choice refs retain the Fighter Fighting Style feat selected during creation and after Fighter level-gain replacement. The replacement replay also preserves the existing level-1 Fighter Weapon Mastery selected refs in CharacterBuild.features so the advancement reducer can check the current table count. Task 87 adds no duplicate selected-reference cache."
+    },
+    {
+      "fieldPath": "CharacterBuild.progression.advancements",
+      "owner": "character-build",
+      "introducedIn": "packages/character-creation-runtime/src/types.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "The Fighter level-gain replacement operation appends the existing class advancement entry through advanceCharacterBuildClassLevel; replacement route evidence reads this canonical progression instead of storing route-local level state."
     },
     {
       "fieldPath": "CharacterCreationRouteEvent.subject=selectedReference",
@@ -21,6 +30,15 @@
       "notes": "CreationSelectedReferenceOwner route events are emitted after reading retained CharacterBuild selected refs."
     },
     {
+      "fieldPath": "CharacterCreationRouteEvent.kind=applyCreationFillBatch",
+      "owner": "character-build-fighting-style-replacement-route",
+      "introducedIn": "packages/character-creation-runtime/src/character-build-advancement.ts",
+      "derivability": {
+        "tag": "runtime-projection"
+      },
+      "notes": "The Fighter Fighting Style replacement route event records the CharacterBuildOwner replacement fill boundary around the existing typed advancement reducer."
+    },
+    {
       "fieldPath": "CharacterCreationRouteEvent.subject=buildProjection",
       "owner": "character-build-projection-route",
       "introducedIn": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts",
@@ -28,20 +46,12 @@
         "tag": "runtime-projection"
       },
       "notes": "CharacterBuildOwner build-projection route events are emitted by characterBuildProjectionWithRoute without storing a parallel projection state field."
-    },
-    {
-      "fieldPath": "CharacterCreationRouteEvent.kind=projectCharacterBuildFacts",
-      "owner": "character-build-projection-route",
-      "introducedIn": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts",
-      "derivability": {
-        "tag": "runtime-projection"
-      },
-      "notes": "The qRoute projection event records the build-projection boundary; class-feature fact details remain derived from CharacterBuild and Unit catalog when requested by the facts projection entrypoint."
     }
   ],
   "notes": [
-    "Task 86 introduced no new durable CharacterBuild fields.",
-    "Selected Divine/Primal Order option refs remain existing CharacterBuild selected class-choice facts.",
-    "Build-projection qRoute evidence is projected at the reducer-route boundary through characterBuildProjectionWithRoute."
+    "Task 87 introduced no new durable CharacterBuild fields.",
+    "Initial and replacement Fighter Fighting Style selected refs remain existing CharacterBuild selected class-choice facts.",
+    "Replacement replay fixtures include the current level-1 Fighter Weapon Mastery selected refs as existing CharacterBuild selected class-choice facts rather than storing a parallel route-local state.",
+    "Replacement qRoute evidence is projected at the reducer-route boundary through advanceCharacterBuildFightingStyleReplacementWithRoute, characterBuildSelectedReferencesWithRoute, and characterBuildProjectionWithRoute."
   ]
 }

@@ -1,5 +1,87 @@
 # Validation Report
 
+## CRPI-BLOCK-044
+
+Status: `pass`
+
+- Task: 87
+- Driver path: `packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt`
+- Route connector path: `packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.route.mbt.qnt`
+- Route class: `reducer-routed`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-044.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Behavior implemented:
+
+Task 87 accepts Character Creation Fighter Fighting Style selected-identity
+route replay through public target entrypoints. Initial Fighting Style branches
+derive selected-reference route events from existing `CharacterBuild.features`
+selected-class-choice facts. Fighter level-gain replacement branches now use
+`advanceCharacterBuildFightingStyleReplacementWithRoute`, a public route wrapper
+around the existing typed `advanceCharacterBuildClassLevel` reducer path, then
+reuse `characterBuildSelectedReferencesWithRoute` and
+`characterBuildProjectionWithRoute`. The replacement replay starts from a
+domain-valid level-1 Fighter build with the three current Weapon Mastery
+selected-class-choice refs required by the Fighter table before applying the
+Fighting Style replacement. No duplicate selected-reference state or
+authored-identity production dispatch was added.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt#step:doSelectDefenseFightingStyle` | `tasks/target-replay-evidence/CRPI-BLOCK-044.json#driver:packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt#step:doSelectDefenseFightingStyle#trace:public-route=completedReducerSurfaceRoute action=doSelectDefenseFightingStyle qRoute=fighter-fighting-style-retain-selected-reference-route` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt#step:doSelectArcheryFightingStyle` | `tasks/target-replay-evidence/CRPI-BLOCK-044.json#driver:packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt#step:doSelectArcheryFightingStyle#trace:public-route=completedReducerSurfaceRoute action=doSelectArcheryFightingStyle qRoute=fighter-fighting-style-retain-selected-reference-route` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt#step:doSelectGreatWeaponFightingStyle` | `tasks/target-replay-evidence/CRPI-BLOCK-044.json#driver:packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt#step:doSelectGreatWeaponFightingStyle#trace:public-route=completedReducerSurfaceRoute action=doSelectGreatWeaponFightingStyle qRoute=fighter-fighting-style-retain-selected-reference-route` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt#step:doSelectTwoWeaponFightingStyle` | `tasks/target-replay-evidence/CRPI-BLOCK-044.json#driver:packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt#step:doSelectTwoWeaponFightingStyle#trace:public-route=completedReducerSurfaceRoute action=doSelectTwoWeaponFightingStyle qRoute=fighter-fighting-style-retain-selected-reference-route` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt#step:doReplaceArcheryWithDefenseOnFighterLevelGain` | `tasks/target-replay-evidence/CRPI-BLOCK-044.json#driver:packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt#step:doReplaceArcheryWithDefenseOnFighterLevelGain#trace:public-route=completedReducerSurfaceRoute action=doReplaceArcheryWithDefenseOnFighterLevelGain qRoute=fighter-fighting-style-level-gain-replacement-route` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt#step:doReplaceDefenseWithArcheryOnFighterLevelGain` | `tasks/target-replay-evidence/CRPI-BLOCK-044.json#driver:packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt#step:doReplaceDefenseWithArcheryOnFighterLevelGain#trace:public-route=completedReducerSurfaceRoute action=doReplaceDefenseWithArcheryOnFighterLevelGain qRoute=fighter-fighting-style-level-gain-replacement-route` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt#step:doReplaceDefenseWithGreatWeaponFightingOnFighterLevelGain` | `tasks/target-replay-evidence/CRPI-BLOCK-044.json#driver:packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt#step:doReplaceDefenseWithGreatWeaponFightingOnFighterLevelGain#trace:public-route=completedReducerSurfaceRoute action=doReplaceDefenseWithGreatWeaponFightingOnFighterLevelGain qRoute=fighter-fighting-style-level-gain-replacement-route` | `_none_` | `covered` |
+| `packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt#step:doReplaceDefenseWithTwoWeaponFightingOnFighterLevelGain` | `tasks/target-replay-evidence/CRPI-BLOCK-044.json#driver:packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt#step:doReplaceDefenseWithTwoWeaponFightingOnFighterLevelGain#trace:public-route=completedReducerSurfaceRoute action=doReplaceDefenseWithTwoWeaponFightingOnFighterLevelGain qRoute=fighter-fighting-style-level-gain-replacement-route` | `_none_` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-044.json`
+- Reproduction trace family: `public-route=completedReducerSurfaceRoute qRoute=fighter-fighting-style-retain-selected-reference-route` and `public-route=completedReducerSurfaceRoute qRoute=fighter-fighting-style-level-gain-replacement-route`
+- The copied connector projection source is `packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.route.mbt.qnt#qRoute`; observed projections are produced by the public Character Creation reducer sequence plus `characterBuildSelectedReferencesWithRoute`, `advanceCharacterBuildFightingStyleReplacementWithRoute`, and `characterBuildProjectionWithRoute`.
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-044/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 87.
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Classes/Fighter.md#Level 1: Fighting Style` says a Fighter gains a chosen Fighting Style feat and can replace it whenever they gain a Fighter level.
+- SRD 5.2.1 `Classes/Fighter.md#Fighter Features` and `#Level 1: Weapon Mastery` say a level-1 Fighter has three Weapon Mastery choices; the replacement fixture preserves those current selections before level gain.
+- `packages/character-creation-runtime/VOCABULARY.md` defines Character Build Class Level Gain as the post-finalization operation that owns Fighter Fighting Style replacement.
+- `UBIQUITOUS_LANGUAGE.md` was checked for Class, Ability Score Improvement, and surrounding replacement terminology; no additional modeled battle rule was introduced.
+
+Verification results:
+
+- Base check passed: declared integration ref and `HEAD` both resolved to `6c5bc2d76 Accept Ralph task 86`; Base SHA `6c5bc2d7689f7cd2652b5adf131d05ef6edb8eaa` is an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against the SRD and vocabulary passages listed above.
+- Character Creation runtime typecheck passed: `pnpm --filter @dnd/character-creation-runtime typecheck`.
+- Revision round 2 focused semantic plus route MBT replay passed after adding the current level-1 Fighter Weapon Mastery selected refs to the replacement fixture: `START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/character-creation-runtime exec vitest run src/fighter-fighting-style-selected-identity.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t "replays Character Creation Fighter Fighting Style selected identity parity|replays selected Unit identities deterministically|routes Fighter Fighting Style selections" ) 2>&1 & pid=$!; wait "$pid"; status=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"` passed with 3 tests and 8 skipped; `TOTAL: 3s`.
+- Task-scoped target replay evidence validation passed with 8 Task 87 obligations covered.
+- `pnpm cleanroom-branch-coverage:check --target-replay-evidence tasks/target-replay-evidence/CRPI-BLOCK-044.json` failed on unrelated broad missing-evidence baseline obligations outside Task 87; task-scoped validation found no Task 87 evidence issues.
+- JSON parse check passed for `tasks/target-replay-evidence/CRPI-BLOCK-044.json`, `tasks/ENGINE_DEPTH_MANIFEST.json`, `tasks/STATE_OWNER_MANIFEST.json`, and `tasks/RUN_LEDGER.json`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24 sampled inputs.
+- `git diff --check` passed.
+- `pnpm quality` passed end to end; app lint reported 61 warnings and exited 0.
+- Reviewer-loop convergence passed: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks found no remaining reasonable Task 87 findings after routing Fighter level-gain replacement through the public CharacterBuild advancement wrapper and making the replacement replay fixture preserve the current Fighter Weapon Mastery selections required by the advancement reducer.
+
 ## CRPI-BLOCK-043
 
 Status: `pass`

@@ -316,6 +316,7 @@ export {
 } from "./character-progression-types.ts";
 export {
   advanceCharacterBuildClassLevel,
+  advanceCharacterBuildFightingStyleReplacementWithRoute,
   classLevelGainWithFightingStyleCantripReplacement,
   fighterClassUnitId,
   fighterLevelGainWithFightingStyleReplacement,
@@ -331,6 +332,11 @@ export {
   type CharacterBuildAdvancementIssue,
   type CharacterBuildClassLevelGain,
   type CharacterBuildFighterFightingStyleReplacementLevelGain,
+  type CharacterBuildFightingStyleReplacementRoute,
+  type CharacterBuildFightingStyleReplacementRouteEvent,
+  type CharacterBuildFightingStyleReplacementRouteFill,
+  type CharacterBuildFightingStyleReplacementRouteOwner,
+  type CharacterBuildFightingStyleReplacementRouteSubject,
   type CharacterBuildFightingStyleCantripReplacementLevelGain,
   type CharacterBuildListPreparedSpellcastingLevelGain,
   type CharacterBuildPlainClassLevelGain,
