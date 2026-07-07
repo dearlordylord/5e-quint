@@ -331,7 +331,7 @@
     {
       "number": 55,
       "id": "CRPI-BLOCK-027",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-spell-attack-ordering"
     },
     {
@@ -3887,7 +3887,7 @@ Plan Impact:
 
 ### Task 55 - CRPI-BLOCK-027
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
