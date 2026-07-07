@@ -151,7 +151,7 @@
     {
       "number": 25,
       "id": "CRPI-BLOCK-017",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-level1-spatial-witness-selected-identity"
     },
     {
@@ -2197,7 +2197,7 @@ Plan Impact:
 
 ### Task 25 - CRPI-BLOCK-017
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
