@@ -1,109 +1,84 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-034",
+  "taskId": "CRPI-BLOCK-021",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt",
       "quarantinedWitnessNames": [
-        "qActionAvailable",
-        "qMultiattackDispatchesAvailable",
-        "qProtocol",
-        "qRoute",
-        "qSkeletonDead",
-        "qSkeletonHp",
-        "qSneakAttackUsedThisTurn"
+        "protocol",
+        "qCasterSpeedFeet",
+        "qCasterRemainingFeet",
+        "qCasterDashBonusFeet",
+        "qCasterBonusActionAvailable",
+        "qCasterConcentrating",
+        "qSpellSlotSpentThisTurn",
+        "qLevel1SlotsRemaining",
+        "qSpellDashBonusActionEffectCount",
+        "qTargetHp",
+        "qTargetReactionAvailable",
+        "qDissonantMovementFillRequired",
+        "qTargetMovementSpentFeet",
+        "qCommandMovementFillRequired",
+        "qCommandPendingEffectObserved",
+        "qCommandPendingEffectCount",
+        "qClimbSpeedFeet",
+        "qSwimSpeedFeet",
+        "qScenarioOutcome",
+        "qState"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-034.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-021.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt",
-      "quarantinedWitnessNames": [
-        "qActionAvailable",
-        "qMultiattackDispatchesAvailable",
-        "qProtocol",
-        "qRoute",
-        "qSkeletonDead",
-        "qSkeletonHp",
-        "qSneakAttackUsedThisTurn"
-      ],
+      "path": "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.route.mbt.qnt",
+      "coverageStatus": "covered-public-qRoute",
+      "quarantinedWitnessNames": ["qRoute", "qStage"],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-034.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-021.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "path": "packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts",
+      "coverageStatus": "covered-public-qRoute",
       "quarantinedWitnessNames": [
-        "createBattleRuntimeRouteDriver",
-        "ReducerRoutedWeaponAttackSkeletonProjection",
-        "reducerRoutedWeaponAttackSkeletonStateCheck"
+        "qRoute",
+        "movementForcedMovementRouteProjection",
+        "routeEventsOfMovementSubstrate"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-034.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-021.json"
       ]
     }
   ],
   "productionModulesExtended": [
     {
-      "path": "packages/battle-runtime/src/battle-reducer.ts",
-      "role": "domain-engine",
-      "domainApis": [
-        "startBattle",
-        "discoverBattleActs",
-        "resolveBattleSubject",
-        "BattleState.combatants",
-        "BattleState.turn"
-      ],
-      "notes": "Existing public reducer entrypoints own the weapon Attack skeleton replay. Task 63 introduced no new durable BattleState field."
-    },
-    {
-      "path": "packages/battle-runtime/src/battle-reducer/attack-main.ts",
-      "role": "domain-engine",
-      "domainApis": [
-        "resolveAttack",
-        "resolveSelectedAttackProcedure",
-        "Attack Roll hole progression",
-        "Rolled Dice damage fill progression"
-      ],
-      "notes": "Existing weapon Attack resolution owns target choice, Attack Roll, hit/miss progression, Sneak Attack damage-rider use, and Hit Point damage application through typed fill order."
-    },
-    {
-      "path": "packages/battle-runtime/src/battle-reducer/statblock.ts",
-      "role": "domain-engine",
-      "domainApis": [
-        "statBlockAttackActionOptions",
-        "supportedStatBlockMultiattacks",
-        "statBlockMultiattack action resources"
-      ],
-      "notes": "Existing stat-block action dispatch owns Multiattack resolution and downstream stat-block attack dispatch resources without duplicating rule-core stat-block control evidence."
-    },
-    {
       "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "role": "runtime-projection",
+      "role": "runtime-projection-vocabulary",
       "domainApis": [
-        "battleReducerRouteEventsForDiscoveredAct",
-        "battleReducerRouteForResolution",
-        "weaponAttackRouteForResolution",
-        "statBlockAction route projection",
-        "battleAction route projection"
+        "BattleReducerRouteSubjectFamily.forcedMovement",
+        "BattleReducerRouteSubjectFamily.movementResource",
+        "BattleReducerRouteSubjectFamily.specialSpeedProjection",
+        "BattleReducerRouteOwnerGroup.battleMovementResource",
+        "BattleReducerRouteOwnerGroup.battleCreatureState",
+        "BattleReducerRouteOwnerGroup.battleActiveEffect",
+        "BattleReducerRouteOwnerGroup.battleInterruptStack",
+        "BattleReducerRouteOwnerGroup.battleTurnBoundary"
       ],
-      "notes": "Task 63 uses production route projection for weapon Attack, battle action, and stat-block action subjects. Subject, owner, fill, and frontier holes are derived from public action discovery, submitted fill kind, BattleResolutionResult shape, and turn action-resource facts."
+      "notes": "Extends production route projection to cover typed forced-reaction movement riders, Command Flee movement fills, spell-granted Dash, passive Dash, and represented special-speed movement through generic movement substrate route subjects. No new reducer state, authored identity dispatch, or duplicate Speed/Movement state is added."
     }
   ],
   "expectedNextReuse": [
     {
-      "path": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
-      "notes": "Future battle action, weapon Attack, or stat-block action route evidence should reuse createBattleRuntimeRouteDriver and public reducer route-event normalization instead of duplicating adapter-local route tables."
-    },
-    {
-      "path": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
-      "notes": "The copied weapon Attack skeleton route connector replay remains the focused qRoute parity lane for the BattleState weapon, battle action, and stat-block action owner chain."
+      "driver": "future forced movement, Dash, and special-speed selected-identity drivers",
+      "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "api": "BattleReducerRouteEvent.subject=forcedMovement|movementResource|specialSpeedProjection",
+      "notes": "Future movement substrate route tasks should reuse these generic route subjects and owner terms for movement budget, special speed, active effect, reaction/interrupt, and turn-boundary evidence."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 63 observes copied weapon Attack skeleton qRoute through public reducer route events: startBattle, AvailableBattleAct.routeEvents from discoverBattleActs, and BattleResolutionResult.routeEvents from resolveBattleSubject across weapon action, battle action, stat-block action, action economy, Attack Roll, Hit Point damage, and stat-block dispatch owners."
+    "notes": "Task 30 observes selected movement substrate qRoute evidence through public battle reducer entrypoints without adding durable duplicate movement state."
   }
 }

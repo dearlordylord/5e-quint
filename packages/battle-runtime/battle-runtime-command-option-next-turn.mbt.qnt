@@ -69,6 +69,22 @@ module battleRuntimeCommandOptionNextTurnMbt {
       owner,
     )
 
+  pure def forcedMovementResolveRoute(
+    fill: BattleFillKind,
+    holes: Set[BattleHoleFamilyKind],
+    owner: ReducerRouteOwnerGroup,
+  ): ReducerRouteEvent =
+    routeResolveBattleSubject(ForcedMovementRouteSubject, fill, holes, owner)
+
+  pure def forcedMovementResolveWithoutFillRoute(
+    owner: ReducerRouteOwnerGroup,
+  ): ReducerRouteEvent =
+    routeResolveBattleSubjectWithoutFill(
+      ForcedMovementRouteSubject,
+      noRouteHoles,
+      owner,
+    )
+
   action recordProjection(
     scenario: CommandOptionNextTurnScenario,
     protocol: WitnessProtocol[str],
@@ -355,6 +371,23 @@ module battleRuntimeCommandOptionNextTurnMbt {
           MovementFillKind,
           noRouteHoles,
           BattleMovementResourceOwner,
+        ),
+        forcedMovementResolveRoute(
+          MovementFillKind,
+          noRouteHoles,
+          BattleMovementResourceOwner,
+        ),
+        forcedMovementResolveWithoutFillRoute(
+          BattleActionEconomyOwner,
+        ),
+        forcedMovementResolveWithoutFillRoute(
+          BattleInterruptStackOwner,
+        ),
+        forcedMovementResolveWithoutFillRoute(
+          BattleActiveEffectOwner,
+        ),
+        forcedMovementResolveWithoutFillRoute(
+          BattleTurnBoundaryOwner,
         ),
       )),
     ),

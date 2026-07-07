@@ -1,8 +1,122 @@
 {
   "schemaVersion": 1,
   "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
-  "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
+  "sourceBranchInventorySha256": "8c856409a423a320bf05e4b4a927e76b1902af823ba01f2b5a928f867a6a6be6",
   "entries": [
+    {
+      "taskId": "CRPI-BLOCK-021",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "8c856409a423a320bf05e4b4a927e76b1902af823ba01f2b5a928f867a6a6be6",
+      "artifacts": {
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "af5611df7f00953964de213516980b1fb6dc9afac07b05aca05ffe1dce6c54d9"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-BLOCK-021/README.md",
+          "sha256": "04e5324e694be1a098c79a51e1cd99d7000bd67d2068d3772ea452de07b8cc27"
+        },
+        "engineDepthManifest": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "971d4c807c2f60aca7f308309fa1a8aca85f7708811b2c39936d7c5d06897b5e"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "ffc26fa654c8e5605221a192f48400f92a4a74778adb9a6b22fc2a9dce31149b"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-021.json",
+          "sha256": "3ba40ba9e9972afa6c56f38a69600b621e923a0e7f051e1487fb0f68f3d71f0f",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-021.json#publicQRouteCoverage:movement-forced-movement-selected-identity"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-owner-battle-spell-20260706T213644Z/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor d70a64bbf630207254f0af1a141a38e28c5f315e HEAD",
+          "status": "pass",
+          "detail": "Base ref and HEAD both resolved to d70a64bbf Mark Ralph task 28 done; Base SHA is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language review: local SRD 5.2.1 Playing the Game Movement and Position, Actions/Dash/Bonus Actions/Reactions, Rules Glossary Speed/Climb Speed/Swim Speed/Dash/Reaction, Command, Dissonant Whispers, Expeditious Retreat, and UBIQUITOUS_LANGUAGE.md Speed, Movement, Bonus Action, Reaction, Spell Effect, and Boundary Crossing terms",
+          "status": "pass",
+          "detail": "Checked local SRD and ubiquitous-language terms. Route evidence is derived from typed procedure/effect/runtime facts and keeps Speed source facts distinct from Movement budget consumption."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime typecheck",
+          "status": "pass",
+          "detail": "Battle runtime TypeScript check passed after adding Task 30 route projection and public replay tests."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec vitest run src/movement-forced-movement-selected-identity.mbt.test.ts -t \"public reducer route replay\"",
+          "status": "pass",
+          "detail": "Focused public reducer qRoute replay passed: 1 passed, 3 skipped."
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Required MBT preflight showed only an unrelated Ralph monitor shell whose command text contained vitest and quint_evaluator; no active Vitest runner or stale quint_evaluator was present."
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/battle-runtime exec vitest run src/movement-forced-movement-selected-identity.mbt.test.ts -t \"(Movement and forced movement selected identity replay|routes movement, forced movement, and special-speed substrates)\" 2>&1; STATUS=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$STATUS\"",
+          "status": "pass",
+          "detail": "Focused Task 30 selected replay and required route connector MBT passed on final revision: 1 file passed; 2 tests passed, 2 skipped; TOTAL: 8s."
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 MBT_STEPS=15 pnpm --filter @dnd/battle-runtime exec vitest run src/command-option-next-turn.mbt.test.ts -t \"Command option and next-turn MBT\" 2>&1; STATUS=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$STATUS\"",
+          "status": "pass",
+          "detail": "Revision round 2 affected existing Command route parity check passed: 1 file passed; 1 test passed; TOTAL: 19s."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec vitest run src/sorcerer-metamagic-careful-selected-identity.mbt.test.ts -t \"Careful Command no-effect route\"",
+          "status": "pass",
+          "detail": "Adjacent exact public Command route assertion passed: 1 passed, 2 skipped."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "Cleanroom branch coverage passed with Task 30 evidence after refreshing source-branch inventory/report for the Command route witness update: 738 obligations, 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass",
+          "detail": "Whitespace check passed."
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "Full quality chain passed. App lint reported existing warnings and exited 0; turbo typecheck completed 9 successful tasks, 5 from cache."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-021",
+            "impact": "unblocked"
+          },
+          {
+            "taskId": "future forced movement, Dash, and special-speed selected-identity tasks",
+            "impact": "left unchanged"
+          }
+        ],
+        "observations": [
+          "Movement and forced movement selected identity replay now observes public reducer qRoute events for forced reaction movement, Command Flee movement, spell-granted Dash, passive Dash, and special-speed movement.",
+          "Production reducer-route projection needed generic forcedMovement, movementResource, and specialSpeedProjection subjects derived from typed runtime facts; no durable BattleState field or authored identity production dispatch was needed.",
+          "Command Flee forced-movement discovery is gated by the selected flee option, preserving existing Command no-effect route assertions.",
+          "Revision round 2 updated the existing Command option route witness so successful Flee movement intentionally includes the public forcedMovement substrate events added by Task 30."
+        ],
+        "requiredPlanEdits": "none"
+      }
+    },
     {
       "taskId": "CRPI-BLOCK-034",
       "assignmentId": "reducer-spine-diagnostic-battle",

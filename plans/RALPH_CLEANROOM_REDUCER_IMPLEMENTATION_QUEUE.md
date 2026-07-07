@@ -181,7 +181,7 @@
     {
       "number": 30,
       "id": "CRPI-BLOCK-021",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-movement-forced-movement-selected-identity"
     },
     {
@@ -682,7 +682,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRPI-BLOCK-019` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-020` | `done` | none | target replay evidence and owner implementation |
 | `CRP07-DSR-01` | `done` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-021` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-021` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-006` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-007` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-022` | `ready-for-research` | none | target replay evidence and owner implementation |
@@ -2490,7 +2490,7 @@ Plan Impact:
 
 ### Task 30 - CRPI-BLOCK-021
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

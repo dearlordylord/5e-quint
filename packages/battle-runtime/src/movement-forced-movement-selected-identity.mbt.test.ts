@@ -26,6 +26,7 @@ import {
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import {
+  battleReducerStartRouteEvent,
   battleCombatantSide,
   battleId,
   battleUnitRefWithSupportProfiles,
@@ -42,6 +43,7 @@ import {
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
+  type BattleReducerRouteEvent,
   type BattleResolutionResult,
   type BattleRolledDiceFill,
   type BattleState,
@@ -134,6 +136,12 @@ type RuntimeCommandFleeAct = AvailableBattleAct & {
   readonly subject: Extract<
     BattleSubject,
     { readonly tag: "runtimeCommand"; readonly command: "commandFlee" }
+  >;
+};
+type DashAct = AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "dash" }
   >;
 };
 
@@ -380,6 +388,285 @@ describe("Movement and forced movement substrate route MBT", () => {
     MBT_TEST_TIMEOUT_MS,
   );
 });
+
+describe("Movement and forced movement public reducer route replay", () => {
+  it("observes copied movement substrate qRoute through public reducer entrypoints", () => {
+    expect(replayDissonantWhispersForcedReactionMovementRoute()).toEqual(
+      movementForcedMovementRouteProjection(
+        "doDissonantWhispersForcedReactionMovement",
+      ),
+    );
+    expect(replayCommandFleeTargetTurnRoute()).toEqual(
+      movementForcedMovementRouteProjection("doCommandFleeTargetTurn"),
+    );
+    expect(replayExpeditiousRetreatImmediateDashRoute()).toEqual(
+      movementForcedMovementRouteProjection("doExpeditiousRetreatImmediateDash"),
+    );
+    expect(replayRangerRovingSpecialSpeedMovementRoute()).toEqual(
+      movementForcedMovementRouteProjection("doRangerRovingClimbSwimMovement"),
+    );
+    expect(replayBarbarianFastMovementDashRoute()).toEqual(
+      movementForcedMovementRouteProjection("doBarbarianFastMovementDash"),
+    );
+    expect(replayMonkUnarmoredMovementDashRoute()).toEqual(
+      movementForcedMovementRouteProjection("doMonkUnarmoredMovementDash"),
+    );
+  });
+});
+
+type MovementForcedMovementRouteAction = Exclude<
+  keyof typeof movementForcedMovementRouteDriverSchema,
+  "init" | "step"
+>;
+
+function movementForcedMovementRouteProjection(
+  actionName: MovementForcedMovementRouteAction,
+): readonly ReducerRouteEvent[] {
+  const driver = createMovementForcedMovementRouteDriver()();
+  driver.actions.init.handler({});
+  driver.actions[actionName].handler({});
+  if (driver.getState === undefined) {
+    throw new Error("Expected movement forced movement route driver state.");
+  }
+  return driver.getState().route;
+}
+
+function replayDissonantWhispersForcedReactionMovementRoute(): readonly BattleReducerRouteEvent[] {
+  const state = movementForcedMovementSpellBattle({
+    sourceClassName: "bard",
+    preparedSpells: [spellRecord("dissonant_whispers")],
+    targetHp: 30,
+    targetMaxHp: 30,
+  });
+  const act = actionSpellAct(state, "dissonant_whispers");
+  const target = requireHole(act.initialHoles, "targetChoice");
+  const targetFill = spellTargetFill(target, "dissonant_whispers");
+  const savingThrow = requireResultHole(
+    resolveBattleSubject({ state, subject: act.subject, fills: [targetFill] }),
+    "savingThrowOutcome",
+  );
+  const saveFill = savingThrowOutcomeFill(savingThrow, [
+    { targetId, succeeded: false },
+  ]);
+  const damageRoll = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill, saveFill],
+    }),
+    "rolledDice",
+  );
+  const damageFill = damageRollFillWithGroups(damageRoll, [[3, 4, 5]]);
+  const movement = requireResultHole(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill, saveFill, damageFill],
+    }),
+    "movement",
+  );
+  const moved = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [
+      targetFill,
+      saveFill,
+      damageFill,
+      movementFill(movement, {
+        movementCostFeet: 30,
+        provokedOpportunityAttacks: [],
+      }),
+    ],
+  });
+  requireResolvedRouteResult(moved, "Dissonant Whispers forced movement");
+  return [
+    battleReducerStartRouteEvent(),
+    ...routeEventsOfMovementSubstrate(act, "Dissonant Whispers discovery"),
+    ...routeEventsOfMovementSubstrate(moved, "Dissonant Whispers movement"),
+  ];
+}
+
+function replayCommandFleeTargetTurnRoute(): readonly BattleReducerRouteEvent[] {
+  const state = movementForcedMovementSpellBattle({
+    sourceClassName: "cleric",
+    preparedSpells: [spellRecord("command")],
+  });
+  const act = actionSpellAct(state, "command");
+  const target = requireHole(act.initialHoles, "spellTargetList");
+  const commandOption = requireHole(act.initialHoles, "commandOptionChoice");
+  const targetFill = spellTargetListFill(target, "command", [targetId]);
+  const optionFill: Extract<
+    BattleFill,
+    { readonly kind: "commandOptionChoice" }
+  > = {
+    kind: "commandOptionChoice",
+    holeId: commandOption.holeId,
+    value: "flee",
+  };
+  const awaitingSave = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [targetFill, optionFill],
+  });
+  const savingThrow = requireResultHole(awaitingSave, "savingThrowOutcome");
+  const cast = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [
+      targetFill,
+      optionFill,
+      savingThrowOutcomeFill(savingThrow, [{ targetId, succeeded: false }]),
+    ],
+  });
+  requireResolvedRouteResult(cast, "Command cast");
+  const targetTurn = endTurn({ state: cast.state, actorId: casterId });
+  requireResolvedRouteResult(targetTurn, "Command caster End Turn");
+  const flee = commandFleeAct(targetTurn.state);
+  const movement = requireHole(flee.initialHoles, "movement");
+  const moved = resolveBattleSubject({
+    state: targetTurn.state,
+    subject: flee.subject,
+    fills: [
+      commandFleeMovementFill(movement, {
+        movementCostFeet: 30,
+        provokedOpportunityAttacks: [],
+      }),
+    ],
+  });
+  requireResolvedRouteResult(moved, "Command Flee movement");
+  return [
+    battleReducerStartRouteEvent(),
+    ...routeEventsOfMovementSubstrate(awaitingSave, "Command Flee discovery"),
+    ...routeEventsOfMovementSubstrate(moved, "Command Flee movement"),
+  ];
+}
+
+function replayExpeditiousRetreatImmediateDashRoute(): readonly BattleReducerRouteEvent[] {
+  const state = movementForcedMovementSpellBattle({
+    sourceClassName: "wizard",
+    preparedSpells: [spellRecord("expeditious_retreat")],
+  });
+  const act = bonusActionDashSpellAct(state, "expeditious_retreat");
+  const resolved = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [],
+  });
+  requireResolvedRouteResult(resolved, "Expeditious Retreat Dash");
+  return [
+    battleReducerStartRouteEvent(),
+    ...routeEventsOfMovementSubstrate(
+      act,
+      "Expeditious Retreat discovery",
+    ),
+    ...routeEventsOfMovementSubstrate(
+      resolved,
+      "Expeditious Retreat resolution",
+    ),
+  ];
+}
+
+function replayRangerRovingSpecialSpeedMovementRoute(): readonly BattleReducerRouteEvent[] {
+  const state = rovingBattle();
+  const act = moveAct(state);
+  const movement = requireHole(act.initialHoles, "movement");
+  const resolved = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [
+      movementFill(movement, {
+        speedKind: "climb",
+        movementCostFeet: 15,
+        provokedOpportunityAttacks: [],
+      }),
+    ],
+  });
+  requireResolvedRouteResult(resolved, "Roving special-speed movement");
+  return [
+    battleReducerStartRouteEvent(),
+    ...routeEventsOfMovementSubstrate(act, "Roving movement discovery"),
+    ...routeEventsOfMovementSubstrate(resolved, "Roving movement resolution"),
+  ];
+}
+
+function replayBarbarianFastMovementDashRoute(): readonly BattleReducerRouteEvent[] {
+  return replayPassiveSpeedDashRoute(fastMovementBattle(), "Barbarian Dash");
+}
+
+function replayMonkUnarmoredMovementDashRoute(): readonly BattleReducerRouteEvent[] {
+  return replayPassiveSpeedDashRoute(
+    monkUnarmoredMovementBattle(),
+    "Monk Unarmored Movement Dash",
+  );
+}
+
+function replayPassiveSpeedDashRoute(
+  state: BattleState,
+  label: string,
+): readonly BattleReducerRouteEvent[] {
+  const act = dashAct(state);
+  const resolved = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [],
+  });
+  requireResolvedRouteResult(resolved, label);
+  return [
+    battleReducerStartRouteEvent(),
+    ...routeEventsOfMovementSubstrate(act, `${label} discovery`),
+    ...routeEventsOfMovementSubstrate(resolved, `${label} resolution`),
+  ];
+}
+
+type BattleReducerRouteSubject = Exclude<
+  BattleReducerRouteEvent,
+  { readonly kind: "startBattle" }
+>["subject"];
+const MOVEMENT_SUBSTRATE_ROUTE_SUBJECTS = [
+  "forcedMovement",
+  "movementResource",
+  "specialSpeedProjection",
+] as const satisfies ReadonlyArray<BattleReducerRouteSubject>;
+type MovementSubstrateRouteSubject =
+  (typeof MOVEMENT_SUBSTRATE_ROUTE_SUBJECTS)[number];
+
+function routeEventsOfMovementSubstrate(
+  source: { readonly routeEvents?: readonly BattleReducerRouteEvent[] },
+  label: string,
+): readonly BattleReducerRouteEvent[] {
+  const events = (source.routeEvents ?? []).filter(
+    (
+      event,
+    ): event is BattleReducerRouteEvent & {
+      readonly subject: MovementSubstrateRouteSubject;
+    } =>
+      event.kind !== "startBattle" &&
+      isMovementSubstrateRouteSubject(event.subject),
+  );
+  if (events.length === 0) {
+    throw new Error(`Expected movement substrate route events for ${label}.`);
+  }
+  return events;
+}
+
+function isMovementSubstrateRouteSubject(
+  subject: BattleReducerRouteSubject,
+): subject is MovementSubstrateRouteSubject {
+  return MOVEMENT_SUBSTRATE_ROUTE_SUBJECTS.some(
+    (candidate) => candidate === subject,
+  );
+}
+
+function requireResolvedRouteResult(
+  result: BattleResolutionResult,
+  label: string,
+): asserts result is BattleResolutionResult & {
+  readonly tag: "resolved";
+} {
+  if (result.tag !== "resolved") {
+    throw new Error(`Expected ${label} to resolve, got ${result.tag}.`);
+  }
+}
 
 function createMovementForcedMovementRouteDriver() {
   return defineDriver<
@@ -1501,6 +1788,19 @@ function moveAct(state: BattleState): RuntimeMoveAct {
   );
   if (act === undefined) {
     throw new Error("Expected runtime Movement command.");
+  }
+  return act;
+}
+
+function dashAct(state: BattleState): DashAct {
+  const act = discoverBattleActs(state).find(
+    (candidate): candidate is DashAct =>
+      candidate.subject.tag === "action" &&
+      candidate.subject.actorId === casterId &&
+      candidate.subject.action === "dash",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Dash action.");
   }
   return act;
 }

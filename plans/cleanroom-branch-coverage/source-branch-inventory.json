@@ -1103,7 +1103,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doApproachContinues",
-      "qntFileSha256": "2d26a14afd5d84248983228624e908ee29522cba54718e030c2f9a614849e657",
+      "qntFileSha256": "70f51174d00c85d6d126431420e28692dc5548e2efbd18935983431f34c30195",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -1122,7 +1122,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doApproachMovementRejected",
-      "qntFileSha256": "2d26a14afd5d84248983228624e908ee29522cba54718e030c2f9a614849e657",
+      "qntFileSha256": "70f51174d00c85d6d126431420e28692dc5548e2efbd18935983431f34c30195",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -1141,7 +1141,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doApproachNoMovementCleanup",
-      "qntFileSha256": "2d26a14afd5d84248983228624e908ee29522cba54718e030c2f9a614849e657",
+      "qntFileSha256": "70f51174d00c85d6d126431420e28692dc5548e2efbd18935983431f34c30195",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -1160,7 +1160,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doApproachWithinFiveEndsTurn",
-      "qntFileSha256": "2d26a14afd5d84248983228624e908ee29522cba54718e030c2f9a614849e657",
+      "qntFileSha256": "70f51174d00c85d6d126431420e28692dc5548e2efbd18935983431f34c30195",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -1179,7 +1179,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doComplete",
-      "qntFileSha256": "2d26a14afd5d84248983228624e908ee29522cba54718e030c2f9a614849e657",
+      "qntFileSha256": "70f51174d00c85d6d126431420e28692dc5548e2efbd18935983431f34c30195",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -1198,7 +1198,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doFailedSaveRecordsPending",
-      "qntFileSha256": "2d26a14afd5d84248983228624e908ee29522cba54718e030c2f9a614849e657",
+      "qntFileSha256": "70f51174d00c85d6d126431420e28692dc5548e2efbd18935983431f34c30195",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -1217,7 +1217,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doFleeFullMovementEndsTurn",
-      "qntFileSha256": "2d26a14afd5d84248983228624e908ee29522cba54718e030c2f9a614849e657",
+      "qntFileSha256": "70f51174d00c85d6d126431420e28692dc5548e2efbd18935983431f34c30195",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -1236,7 +1236,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doFleeNoMovementCleanup",
-      "qntFileSha256": "2d26a14afd5d84248983228624e908ee29522cba54718e030c2f9a614849e657",
+      "qntFileSha256": "70f51174d00c85d6d126431420e28692dc5548e2efbd18935983431f34c30195",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -1255,7 +1255,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doFleeOpportunityAttackDeclinedContinuation",
-      "qntFileSha256": "2d26a14afd5d84248983228624e908ee29522cba54718e030c2f9a614849e657",
+      "qntFileSha256": "70f51174d00c85d6d126431420e28692dc5548e2efbd18935983431f34c30195",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -1274,7 +1274,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doFleeOpportunityAttackWindow",
-      "qntFileSha256": "2d26a14afd5d84248983228624e908ee29522cba54718e030c2f9a614849e657",
+      "qntFileSha256": "70f51174d00c85d6d126431420e28692dc5548e2efbd18935983431f34c30195",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -1293,7 +1293,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doFleePartialMovementRejected",
-      "qntFileSha256": "2d26a14afd5d84248983228624e908ee29522cba54718e030c2f9a614849e657",
+      "qntFileSha256": "70f51174d00c85d6d126431420e28692dc5548e2efbd18935983431f34c30195",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -1312,7 +1312,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doFollowDrop",
-      "qntFileSha256": "2d26a14afd5d84248983228624e908ee29522cba54718e030c2f9a614849e657",
+      "qntFileSha256": "70f51174d00c85d6d126431420e28692dc5548e2efbd18935983431f34c30195",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -1331,7 +1331,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doFollowGrovel",
-      "qntFileSha256": "2d26a14afd5d84248983228624e908ee29522cba54718e030c2f9a614849e657",
+      "qntFileSha256": "70f51174d00c85d6d126431420e28692dc5548e2efbd18935983431f34c30195",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -1350,7 +1350,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doHaltEndTurnCleanup",
-      "qntFileSha256": "2d26a14afd5d84248983228624e908ee29522cba54718e030c2f9a614849e657",
+      "qntFileSha256": "70f51174d00c85d6d126431420e28692dc5548e2efbd18935983431f34c30195",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -1369,7 +1369,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt#step:doHaltSuppresses",
-      "qntFileSha256": "2d26a14afd5d84248983228624e908ee29522cba54718e030c2f9a614849e657",
+      "qntFileSha256": "70f51174d00c85d6d126431420e28692dc5548e2efbd18935983431f34c30195",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
