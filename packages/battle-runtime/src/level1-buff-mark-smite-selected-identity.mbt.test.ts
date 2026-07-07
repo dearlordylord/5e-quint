@@ -22,6 +22,7 @@
 // UNIT-IDENTITY-REPLAY: L1E-SHILLELAGH shillelagh doShillelaghWeaponAttackOverride
 // UNIT-IDENTITY-REPLAY: L1E-TRUE-STRIKE true_strike doTrueStrikeSpellHostedWeaponAttack
 import { Either } from "effect";
+import { describe, expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
@@ -30,6 +31,7 @@ import {
   Hp,
   abilityModifier,
   attackBonus,
+  difficultyClass,
   movementFeet,
   proficiencyBonus,
   type Condition,
@@ -51,6 +53,7 @@ import type {
 import {
   battleCombatantSide,
   battleId,
+  battleReducerStartRouteEvent,
   characterId,
   combatantId,
   discoverBattleActs,
@@ -67,6 +70,7 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleInterruptProcedureChoice,
+  type BattleReducerRouteEvent,
   type BattleResolutionResult,
   type BattleRolledDiceFill,
   type BattleSpellHealingRollHole,
@@ -89,12 +93,20 @@ import { requiredAbilityCheckRollMode } from "./battle-reducer/hole-helpers.ts";
 import {
   assertWitnessProtocolConsistentWithScenario,
   booleanField,
+  decodeReducerRoute,
   decodeWitnessProtocolState,
+  focusedMbtMaxSteps,
+  MBT_TEST_TIMEOUT_MS,
   mbtSpecPath,
+  mbtTraceCount,
   numberFromQuintInt,
+  quintField,
   quintRecordField,
   quintStateRecord,
   quintVariantTag,
+  reducerRoutedLevel1WeaponHostedSelectedRouteStateCheck,
+  run,
+  stateCheck,
 } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 import { damageTypeChoiceFill } from "./unit-profile-admission-spell-fill-support.ts";
@@ -850,6 +862,714 @@ defineSelectedIdentityReplayAndQntReplay({
   })),
 });
 
+describe("Level 1 buff mark smite copied qRoute connector replay", () => {
+  it(
+    "matches copied weapon-hosted qRoute through public reducer entrypoints",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-level1-weapon-hosted-selected-identity.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createPublicLevel1WeaponHostedSelectedRouteDriver,
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(2),
+        stateCheck: reducerRoutedLevel1WeaponHostedSelectedRouteStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+  it(
+    "matches copied marked/immunity qRoute through public reducer entrypoints",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-marked-damage-immunity-active-effects.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createPublicMarkedDamageImmunityRouteDriver,
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(5),
+        stateCheck: reducerRoutedMarkedDamageImmunityPublicRouteStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
+});
+
+function createPublicLevel1WeaponHostedSelectedRouteDriver() {
+  let route: readonly BattleReducerRouteEvent[] = [
+    battleReducerStartRouteEvent(),
+  ];
+  const replay = (
+    actionName: Extract<
+      Level1BuffMarkSmiteSelectedIdentityAction,
+      | "doDivineFavorWeaponDamageRider"
+      | "doShillelaghWeaponAttackOverride"
+      | "doTrueStrikeSpellHostedWeaponAttack"
+    >,
+  ): void => {
+    const runtime = createLevel1BuffMarkSmiteSelectedIdentityRuntime();
+    runtime[actionName]();
+    route = publicConnectorRouteProjection(runtime.getRoute());
+  };
+  return {
+    actions: {
+      init: {
+        picks: {},
+        handler: () => {
+          route = [battleReducerStartRouteEvent()];
+        },
+      },
+      doDivineFavorWeaponDamageRider: {
+        picks: {},
+        handler: () => replay("doDivineFavorWeaponDamageRider"),
+      },
+      doShillelaghWeaponAttackOverride: {
+        picks: {},
+        handler: () => replay("doShillelaghWeaponAttackOverride"),
+      },
+      doTrueStrikeSpellHostedWeaponAttack: {
+        picks: {},
+        handler: () => replay("doTrueStrikeSpellHostedWeaponAttack"),
+      },
+      doStutterAfterTerminalSurface: {
+        picks: {},
+        handler: () => {},
+      },
+      step: { picks: {}, handler: () => {} },
+    },
+    getState: () => ({ route }),
+  };
+}
+
+type PublicReducerRouteProjection = {
+  readonly route: readonly unknown[];
+};
+
+const reducerRoutedMarkedDamageImmunityPublicRouteStateCheck = stateCheck(
+  (raw: unknown): PublicReducerRouteProjection => {
+    if (isPublicReducerRouteProjection(raw)) {
+      return raw;
+    }
+    const state = quintStateRecord(raw);
+    return {
+      route: decodeReducerRoute(quintField(state, "qRoute")),
+    };
+  },
+  (spec: PublicReducerRouteProjection, impl: PublicReducerRouteProjection) => {
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+
+function isPublicReducerRouteProjection(
+  raw: unknown,
+): raw is PublicReducerRouteProjection {
+  return (
+    typeof raw === "object" &&
+    raw !== null &&
+    "route" in raw &&
+    Array.isArray(raw.route)
+  );
+}
+
+type MarkedDamageImmunityRouteAction =
+  | "doAdmitMarkedDamageRider"
+  | "doProjectMarkedDamageRiderOnHit"
+  | "doOpenMarkedDamageRiderTransferAfterTargetDrop"
+  | "doTransferMarkedDamageRiderSameTurn"
+  | "doTransferMarkedDamageRiderLaterTurn"
+  | "doAdmitTargetedAbilityCheckMarkedDamageRider"
+  | "doProjectTargetedAbilityCheckRollMode"
+  | "doCleanupTargetedAbilityCheckRollMode"
+  | "doAdmitConditionImmunityTemporaryHitPoints"
+  | "doProjectConditionImmunity"
+  | "doGrantTurnStartTemporaryHitPoints"
+  | "doCleanupConditionImmunityTemporaryHitPoints";
+
+function createPublicMarkedDamageImmunityRouteDriver() {
+  let route: readonly BattleReducerRouteEvent[] = [
+    battleReducerStartRouteEvent(),
+  ];
+  const segments = createPublicMarkedDamageImmunityRouteSegments();
+  const appendSegment = (action: MarkedDamageImmunityRouteAction): void => {
+    route = [...route, ...segments[action]];
+  };
+  return {
+    actions: {
+      init: {
+        picks: {},
+        handler: () => {
+          route = [battleReducerStartRouteEvent()];
+        },
+      },
+      doAdmitMarkedDamageRider: {
+        picks: {},
+        handler: () => appendSegment("doAdmitMarkedDamageRider"),
+      },
+      doProjectMarkedDamageRiderOnHit: {
+        picks: {},
+        handler: () => appendSegment("doProjectMarkedDamageRiderOnHit"),
+      },
+      doOpenMarkedDamageRiderTransferAfterTargetDrop: {
+        picks: {},
+        handler: () =>
+          appendSegment("doOpenMarkedDamageRiderTransferAfterTargetDrop"),
+      },
+      doTransferMarkedDamageRiderSameTurn: {
+        picks: {},
+        handler: () => appendSegment("doTransferMarkedDamageRiderSameTurn"),
+      },
+      doTransferMarkedDamageRiderLaterTurn: {
+        picks: {},
+        handler: () => appendSegment("doTransferMarkedDamageRiderLaterTurn"),
+      },
+      doAdmitTargetedAbilityCheckMarkedDamageRider: {
+        picks: {},
+        handler: () =>
+          appendSegment("doAdmitTargetedAbilityCheckMarkedDamageRider"),
+      },
+      doProjectTargetedAbilityCheckRollMode: {
+        picks: {},
+        handler: () => appendSegment("doProjectTargetedAbilityCheckRollMode"),
+      },
+      doCleanupTargetedAbilityCheckRollMode: {
+        picks: {},
+        handler: () => appendSegment("doCleanupTargetedAbilityCheckRollMode"),
+      },
+      doAdmitConditionImmunityTemporaryHitPoints: {
+        picks: {},
+        handler: () =>
+          appendSegment("doAdmitConditionImmunityTemporaryHitPoints"),
+      },
+      doProjectConditionImmunity: {
+        picks: {},
+        handler: () => appendSegment("doProjectConditionImmunity"),
+      },
+      doGrantTurnStartTemporaryHitPoints: {
+        picks: {},
+        handler: () => appendSegment("doGrantTurnStartTemporaryHitPoints"),
+      },
+      doCleanupConditionImmunityTemporaryHitPoints: {
+        picks: {},
+        handler: () =>
+          appendSegment("doCleanupConditionImmunityTemporaryHitPoints"),
+      },
+      doStutterAfterTerminalSurface: {
+        picks: {},
+        handler: () => {},
+      },
+      step: { picks: {}, handler: () => {} },
+    },
+    getState: () => ({ route }),
+  };
+}
+
+function createPublicMarkedDamageImmunityRouteSegments(): Record<
+  MarkedDamageImmunityRouteAction,
+  readonly BattleReducerRouteEvent[]
+> {
+  return {
+    doAdmitMarkedDamageRider: observeMarkedRiderAdmissionRoute(),
+    doProjectMarkedDamageRiderOnHit: observeMarkedRiderAttackHitRoute(),
+    doOpenMarkedDamageRiderTransferAfterTargetDrop:
+      observeMarkedRiderTransferAvailabilityRoute(),
+    doTransferMarkedDamageRiderSameTurn:
+      observeMarkedRiderSameTurnTransferRoute(),
+    doTransferMarkedDamageRiderLaterTurn:
+      observeMarkedRiderLaterTurnTransferRoute(),
+    doAdmitTargetedAbilityCheckMarkedDamageRider:
+      observeTargetedAbilityCheckMarkedRiderAdmissionRoute(),
+    doProjectTargetedAbilityCheckRollMode:
+      observeTargetedAbilityCheckRollModeProjectionRoute(),
+    doCleanupTargetedAbilityCheckRollMode:
+      observeTargetedAbilityCheckRollModeCleanupRoute(),
+    doAdmitConditionImmunityTemporaryHitPoints:
+      observeConditionImmunityTemporaryHitPointAdmissionRoute(),
+    doProjectConditionImmunity: observeConditionImmunityProjectionRoute(),
+    doGrantTurnStartTemporaryHitPoints:
+      observeTurnStartTemporaryHitPointRoute(),
+    doCleanupConditionImmunityTemporaryHitPoints:
+      observeConditionImmunityTemporaryHitPointCleanupRoute(),
+  };
+}
+
+function observeMarkedRiderAdmissionRoute(): readonly BattleReducerRouteEvent[] {
+  return castHuntersMarkForRoute().routeEvents;
+}
+
+function observeMarkedRiderAttackHitRoute(): readonly BattleReducerRouteEvent[] {
+  const cast = castHuntersMarkForRoute();
+  const state = advanceMarkedDamageRoundToCasterTurn(cast.state);
+  return markedDamageRiderRouteEvents(
+    resolveMarkedDamageRiderAttack({
+      state,
+      damageGroups: [[4], [1]],
+    }),
+  ).filter(
+    (event) =>
+      event.kind !== "resolveBattleSubjectWithoutFill" &&
+      event.owner !== "battleHitPointAndZeroHpLifecycle",
+  );
+}
+
+function observeMarkedRiderTransferAvailabilityRoute(): readonly BattleReducerRouteEvent[] {
+  const cast = castHuntersMarkForRoute();
+  const state = advanceMarkedDamageRoundToCasterTurn(cast.state);
+  return markedDamageRiderRouteEvents(
+    resolveMarkedDamageRiderAttack({
+      state,
+      damageGroups: [[8], [6]],
+    }),
+  ).filter((event) => event.kind === "resolveBattleSubjectWithoutFill");
+}
+
+function observeMarkedRiderSameTurnTransferRoute(): readonly BattleReducerRouteEvent[] {
+  const cast = castHuntersMarkForRoute();
+  const state = advanceMarkedDamageRoundToCasterTurn(cast.state);
+  const damaged = resolveMarkedDamageRiderAttack({
+    state,
+    damageGroups: [[8], [6]],
+  });
+  const transferAct = markedDamageTransferAct(damaged.state, huntersMarkUnitId);
+  const transferTarget = requireHole(transferAct.initialHoles, "targetChoice");
+  const transferred = resolveBattleSubject({
+    state: damaged.state,
+    subject: transferAct.subject,
+    fills: [
+      spellTargetFill(
+        transferTarget,
+        huntersMarkUnitId,
+        casterId,
+        markedDamageTransferTargetId,
+      ),
+    ],
+  });
+  return markedDamageRiderRouteEvents(transferAct, transferred);
+}
+
+function observeMarkedRiderLaterTurnTransferRoute(): readonly BattleReducerRouteEvent[] {
+  const cast = castHexForRoute();
+  const state = advanceMarkedDamageRoundToCasterTurn(cast.state);
+  const damaged = resolveMarkedDamageRiderAttack({
+    state,
+    damageGroups: [[8], [6]],
+  });
+  const advanced = advanceMarkedDamageRoundToCasterTurnWithRoute(damaged.state);
+  const transferAct = markedDamageTransferAct(advanced.state, hexUnitId);
+  const transferTarget = requireHole(transferAct.initialHoles, "targetChoice");
+  const transferred = resolveBattleSubject({
+    state: advanced.state,
+    subject: transferAct.subject,
+    fills: [
+      spellTargetFill(
+        transferTarget,
+        hexUnitId,
+        casterId,
+        markedDamageTransferTargetId,
+      ),
+    ],
+  });
+  return [
+    ...advanced.routeEvents.filter(
+      (event) =>
+        event.kind === "resolveBattleSubjectWithoutFill" &&
+        event.owner === "battleTurnBoundary",
+    ),
+    ...markedDamageRiderRouteEvents(transferAct, transferred),
+  ];
+}
+
+function observeTargetedAbilityCheckMarkedRiderAdmissionRoute(): readonly BattleReducerRouteEvent[] {
+  return castHexForRoute().routeEvents;
+}
+
+function observeTargetedAbilityCheckRollModeProjectionRoute(): readonly BattleReducerRouteEvent[] {
+  const cast = castHexForRoute();
+  const state = withHiddenCasterForSearch(
+    requireResolvedResult(
+      endTurn({ state: cast.state, actorId: casterId }),
+      "Expected caster turn to end before Hex target Search.",
+    ).state,
+  );
+  const searchAct = searchActForActor(state, targetId);
+  const target = requireHole(searchAct.initialHoles, "targetChoice");
+  const targetFill = targetChoiceFill(target, casterId);
+  const awaitingCheck = resolveBattleSubject({
+    state,
+    subject: searchAct.subject,
+    fills: [targetFill],
+  });
+  const check = requireResultHole(awaitingCheck, "abilityCheck");
+  const resolved = resolveBattleSubject({
+    state,
+    subject: searchAct.subject,
+    fills: [targetFill, abilityCheckFill(check, 12)],
+  });
+  return routeEventsFrom(searchAct, awaitingCheck, resolved);
+}
+
+function observeTargetedAbilityCheckRollModeCleanupRoute(): readonly BattleReducerRouteEvent[] {
+  const cast = castHexForRoute();
+  const endConcentration = endConcentrationAct(cast.state);
+  const ended = resolveBattleSubject({
+    state: cast.state,
+    subject: endConcentration.subject,
+    fills: [],
+  });
+  return markedDamageRiderRouteEvents(ended);
+}
+
+function observeConditionImmunityTemporaryHitPointAdmissionRoute(): readonly BattleReducerRouteEvent[] {
+  return castHeroismForRoute({ frightenedBeforeCast: false }).routeEvents;
+}
+
+function observeConditionImmunityProjectionRoute(): readonly BattleReducerRouteEvent[] {
+  const cast = castHeroismForRoute({ frightenedBeforeCast: true });
+  const routeEvents = conditionImmunityTemporaryHitPointRouteEvents(
+    ...cast.sources,
+  );
+  const conditionLifecycleIndex = routeEvents.findIndex(
+    (event) =>
+      event.kind === "resolveBattleSubjectWithoutFill" &&
+      event.owner === "battleConditionLifecycle",
+  );
+  return conditionLifecycleIndex === -1
+    ? []
+    : routeEvents.slice(conditionLifecycleIndex);
+}
+
+function observeTurnStartTemporaryHitPointRoute(): readonly BattleReducerRouteEvent[] {
+  const cast = castHeroismForRoute({ frightenedBeforeCast: false });
+  const targetTurn = endTurn({
+    state: cast.state,
+    actorId: casterId,
+  });
+  const refreshed = endTurn({
+    state: requireResolvedResult(
+      targetTurn,
+      "Expected Heroism caster turn to end before target turn.",
+    ).state,
+    actorId: targetId,
+  });
+  return conditionImmunityTemporaryHitPointRouteEvents(refreshed);
+}
+
+function observeConditionImmunityTemporaryHitPointCleanupRoute(): readonly BattleReducerRouteEvent[] {
+  const cast = castHeroismForRoute({ frightenedBeforeCast: false });
+  const endConcentration = endConcentrationAct(cast.state);
+  const ended = resolveBattleSubject({
+    state: cast.state,
+    subject: endConcentration.subject,
+    fills: [],
+  });
+  return conditionImmunityTemporaryHitPointRouteEvents(ended);
+}
+
+function castHuntersMarkForRoute(): {
+  readonly state: BattleState;
+  readonly routeEvents: readonly BattleReducerRouteEvent[];
+} {
+  const state = level1BuffMarkSmiteBattle({
+    preparedSpells: [spellRecord(huntersMarkUnitId)],
+    sourceClassName: "ranger",
+    targetKind: "statBlock",
+    includeMarkedDamageTransferTarget: true,
+  });
+  const act = bonusActionSpellAct(state, huntersMarkUnitId);
+  const target = requireHole(act.initialHoles, "targetChoice");
+  const cast = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [spellTargetFill(target, huntersMarkUnitId, casterId, targetId)],
+  });
+  return {
+    state: requireResolvedResult(
+      cast,
+      "Expected Hunter's Mark public cast route to resolve.",
+    ).state,
+    routeEvents: markedDamageRiderRouteEvents(act, cast),
+  };
+}
+
+function castHexForRoute(): {
+  readonly state: BattleState;
+  readonly routeEvents: readonly BattleReducerRouteEvent[];
+} {
+  const state = level1BuffMarkSmiteBattle({
+    preparedSpells: [spellRecord(hexUnitId)],
+    sourceClassName: "warlock",
+    targetKind: "statBlock",
+    includeMarkedDamageTransferTarget: true,
+  });
+  const act = bonusActionSpellAct(state, hexUnitId);
+  const target = requireHole(act.initialHoles, "targetChoice");
+  const targetFill = spellTargetFill(target, hexUnitId, casterId, targetId);
+  const awaitingAbility = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [targetFill],
+  });
+  const ability = requireResultHole(awaitingAbility, "abilityChoice");
+  const cast = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [targetFill, abilityChoiceFill(ability, "wis")],
+  });
+  return {
+    state: requireResolvedResult(
+      cast,
+      "Expected Hex public cast route to resolve.",
+    ).state,
+    routeEvents: markedDamageRiderRouteEvents(act, awaitingAbility, cast),
+  };
+}
+
+function castHeroismForRoute(input: {
+  readonly frightenedBeforeCast: boolean;
+}): {
+  readonly state: BattleState;
+  readonly sources: readonly RouteEventSource[];
+  readonly routeEvents: readonly BattleReducerRouteEvent[];
+} {
+  const initial = level1BuffMarkSmiteBattle({
+    preparedSpells: [spellRecord(heroismUnitId)],
+  });
+  const state = input.frightenedBeforeCast
+    ? withFrightenedCaster(initial)
+    : initial;
+  const act = actionSpellAct(state, heroismUnitId);
+  const target = requireHole(act.initialHoles, "targetChoice");
+  const cast = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [spellTargetFill(target, heroismUnitId, casterId, casterId)],
+  });
+  const sources = [act, cast] as const;
+  return {
+    state: requireResolvedResult(
+      cast,
+      "Expected Heroism public cast route to resolve.",
+    ).state,
+    sources,
+    routeEvents: conditionImmunityTemporaryHitPointRouteEvents(...sources),
+  };
+}
+
+function resolveMarkedDamageRiderAttack(input: {
+  readonly state: BattleState;
+  readonly damageGroups: readonly (readonly number[])[];
+}): {
+  readonly state: BattleState;
+  readonly routeEvents: readonly BattleReducerRouteEvent[];
+} {
+  const hit = resolveLongswordHitWithAttackRoll({ state: input.state });
+  const damage = requireDamageRollHole(requireNeedsHoles(hit.afterAttackRoll));
+  const damageFill = damageRollFillWithGroups(damage, input.damageGroups);
+  const baseFills = [hit.targetFill, hit.attackFill, damageFill] as const;
+  let damaged = resolveBattleSubject({
+    state: input.state,
+    subject: hit.subject,
+    fills: baseFills,
+  });
+  const routeEvents = [...hit.routeEvents, ...(damaged.routeEvents ?? [])];
+  if (damaged.tag === "needsHoles") {
+    const disposition = damaged.holes.find(
+      (
+        hole,
+      ): hole is Extract<
+        BattleHole,
+        { readonly kind: "attackDamageDisposition" }
+      > => hole.kind === "attackDamageDisposition",
+    );
+    if (disposition !== undefined) {
+      damaged = resolveBattleSubject({
+        state: input.state,
+        subject: hit.subject,
+        fills: [
+          ...baseFills,
+          attackDamageDispositionFill(disposition, { kind: "ordinaryDamage" }),
+        ],
+      });
+      routeEvents.push(...(damaged.routeEvents ?? []));
+    }
+  }
+  return {
+    state: requireResolvedResult(
+      damaged,
+      "Expected marked damage rider attack route to resolve.",
+    ).state,
+    routeEvents,
+  };
+}
+
+function advanceMarkedDamageRoundToCasterTurnWithRoute(state: BattleState): {
+  readonly state: BattleState;
+  readonly routeEvents: readonly BattleReducerRouteEvent[];
+} {
+  const targetTurn = endTurn({ state, actorId: casterId });
+  const transferTargetTurn = endTurn({
+    state: requireResolvedResult(
+      targetTurn,
+      "Expected marked damage caster turn to end.",
+    ).state,
+    actorId: targetId,
+  });
+  const casterTurn = endTurn({
+    state: requireResolvedResult(
+      transferTargetTurn,
+      "Expected marked damage target turn to end.",
+    ).state,
+    actorId: markedDamageTransferTargetId,
+  });
+  return {
+    state: requireResolvedResult(
+      casterTurn,
+      "Expected marked damage transfer target turn to end.",
+    ).state,
+    routeEvents: markedDamageRiderRouteEvents(
+      targetTurn,
+      transferTargetTurn,
+      casterTurn,
+    ),
+  };
+}
+
+function withFrightenedCaster(state: BattleState): BattleState {
+  const caster = state.combatants.get(casterId);
+  if (caster === undefined) {
+    throw new Error("Expected Heroism caster.");
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(casterId, {
+      ...caster,
+      conditions: KnockedOutConditionState(
+        applyCondition(caster.conditions, "frightened"),
+      ),
+    }),
+  };
+}
+
+function withHiddenCasterForSearch(state: BattleState): BattleState {
+  const caster = state.combatants.get(casterId);
+  if (caster === undefined) {
+    throw new Error("Expected hidden Search target caster.");
+  }
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(casterId, {
+      ...caster,
+      hidden: { discoveryDc: difficultyClass(15) },
+    }),
+  };
+}
+
+function searchActForActor(state: BattleState, actorId: CombatantId) {
+  const act = discoverBattleActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "action" &&
+      candidate.subject.action === "search" &&
+      candidate.subject.actorId === actorId,
+  );
+  if (act === undefined) {
+    throw new Error("Expected public Search act for Hex ability-check route.");
+  }
+  return act;
+}
+
+function targetChoiceFill(
+  hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
+  value: CombatantId,
+): Extract<BattleFill, { readonly kind: "targetChoice" }> {
+  return {
+    kind: "targetChoice",
+    holeId: hole.holeId,
+    value,
+  };
+}
+
+function attackDamageDispositionFill(
+  hole: Extract<BattleHole, { readonly kind: "attackDamageDisposition" }>,
+  value: Extract<
+    BattleFill,
+    { readonly kind: "attackDamageDisposition" }
+  >["value"],
+): Extract<BattleFill, { readonly kind: "attackDamageDisposition" }> {
+  return {
+    kind: "attackDamageDisposition",
+    holeId: hole.holeId,
+    value,
+  };
+}
+
+const publicConnectorRouteSubjects = [
+  "afterHitDamageRider",
+  "scalarBuffEffect",
+  "weaponDamageRider",
+  "spellHostedWeaponAttack",
+  "heldWeaponActiveEffect",
+  "markedDamageRiderEffect",
+  "conditionImmunityTemporaryHitPointEffect",
+] as const satisfies ReadonlyArray<
+  Extract<BattleReducerRouteEvent, { readonly subject: string }>["subject"]
+>;
+
+function publicConnectorRouteProjection(
+  route: readonly BattleReducerRouteEvent[],
+): readonly BattleReducerRouteEvent[] {
+  return route.filter(
+    (event) =>
+      event.kind === "startBattle" ||
+      publicConnectorRouteSubjects.some(
+        (subject) =>
+          "subject" in event &&
+          event.subject === subject &&
+          (event.subject !== "heldWeaponActiveEffect" ||
+            !(
+              event.kind === "resolveBattleSubject" &&
+              event.fill === "targetChoice"
+            )),
+      ),
+  );
+}
+
+type RouteEventSource = {
+  readonly routeEvents?: readonly BattleReducerRouteEvent[];
+};
+
+function markedDamageRiderRouteEvents(
+  ...sources: readonly RouteEventSource[]
+): readonly BattleReducerRouteEvent[] {
+  return routeEventsFrom(...sources).filter(
+    (event) =>
+      "subject" in event && event.subject === "markedDamageRiderEffect",
+  );
+}
+
+function conditionImmunityTemporaryHitPointRouteEvents(
+  ...sources: readonly RouteEventSource[]
+): readonly BattleReducerRouteEvent[] {
+  return routeEventsFrom(...sources).filter(
+    (event) =>
+      "subject" in event &&
+      event.subject === "conditionImmunityTemporaryHitPointEffect",
+  );
+}
+
+function routeEventsFrom(
+  ...sources: readonly RouteEventSource[]
+): readonly BattleReducerRouteEvent[] {
+  return sources.flatMap((source) => source.routeEvents ?? []);
+}
+
 function singleReplayAction(
   unitId: Level1BuffMarkSmiteSpellId,
   sequenceName: string,
@@ -873,6 +1593,9 @@ function replayLevel1BuffMarkSmiteAction(
 
 function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
   let state = level1BuffMarkSmiteBattle();
+  let route: readonly BattleReducerRouteEvent[] = [
+    battleReducerStartRouteEvent(),
+  ];
   let damageRider:
     | NonNullable<BattleDamageRollHole["spellWeaponDamageRiders"]>[number]
     | undefined;
@@ -921,8 +1644,20 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
 
   function reset(): void {
     state = level1BuffMarkSmiteBattle();
+    route = [battleReducerStartRouteEvent()];
     resetProcedureProjections();
     lastResult = "init";
+  }
+
+  function recordRouteEvents(
+    ...sources: readonly {
+      readonly routeEvents?: readonly BattleReducerRouteEvent[];
+    }[]
+  ): void {
+    route = [
+      ...route,
+      ...sources.flatMap((source) => source.routeEvents ?? []),
+    ];
   }
 
   function resolveHeroismThroughCasterStartTurn(): void {
@@ -968,6 +1703,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
       state: targetTurn.state,
       actorId: targetId,
     });
+    recordRouteEvents(act, cast, targetTurn, refreshed);
     recordResolvedResult(refreshed, "heroism");
     heroismEffects = heroismEffectsProjection(state);
   }
@@ -996,9 +1732,10 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
       });
       resetProcedureProjections();
 
+      const act = bonusActionSpellAct(state, divineFavorUnitId);
       const cast = resolveBattleSubject({
         state,
-        subject: bonusActionSpellAct(state, divineFavorUnitId).subject,
+        subject: act.subject,
         fills: [],
       });
       if (cast.tag !== "resolved") {
@@ -1008,6 +1745,7 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
 
       const attack = resolveLongswordHit({ state });
       damageRider = attack.damageRider;
+      recordRouteEvents(act, cast, attack);
       recordResolvedResult(attack.result, "divineFavor");
     },
     doDivineSmiteAfterHitDamage: () => {
@@ -1040,18 +1778,17 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
       const afterSmiteDamage = requireNeedsHoles(afterSmite);
       const damage = requireDamageRollHole(afterSmiteDamage);
       damageRider = spellWeaponDamageRider(damage, divineSmiteUnitId);
-      recordResolvedResult(
-        resolveBattleSubject({
-          state: afterSmiteDamage.state,
-          subject: hit.subject,
-          fills: [
-            hit.targetFill,
-            hit.attackFill,
-            damageRollFillWithGroups(damage, [[4], [3, 4]]),
-          ],
-        }),
-        "divineSmite",
-      );
+      const resolved = resolveBattleSubject({
+        state: afterSmiteDamage.state,
+        subject: hit.subject,
+        fills: [
+          hit.targetFill,
+          hit.attackFill,
+          damageRollFillWithGroups(damage, [[4], [3, 4]]),
+        ],
+      });
+      recordRouteEvents(hit, afterSmite, resolved);
+      recordResolvedResult(resolved, "divineSmite");
     },
     doEnsnaringStrikeAfterHitRestraintTurnStartDamageAndEscape: () => {
       state = level1BuffMarkSmiteBattle({
@@ -1130,14 +1867,21 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
 
       const escapeAct = spellRestraintEscapeAct(targetTurn.state);
       const escapeCheck = requireHole(escapeAct.initialHoles, "abilityCheck");
-      recordResolvedResult(
-        resolveBattleSubject({
-          state: targetTurn.state,
-          subject: escapeAct.subject,
-          fills: [abilityCheckFill(escapeCheck, 13)],
-        }),
-        "ensnaringStrike",
+      const escaped = resolveBattleSubject({
+        state: targetTurn.state,
+        subject: escapeAct.subject,
+        fills: [abilityCheckFill(escapeCheck, 13)],
+      });
+      recordRouteEvents(
+        hit,
+        afterEnsnaring,
+        afterWeaponDamage,
+        awaitingTurnStartDamage,
+        targetTurn,
+        escapeAct,
+        escaped,
       );
+      recordResolvedResult(escaped, "ensnaringStrike");
       ensnaringStrikeLifecycle = {
         ensnaringStrikeRestrainedBeforeEscape: restrainedBeforeEscape,
         ensnaringStrikeSaveSourceSpellId:
@@ -1173,21 +1917,27 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
       falseLifeTemporaryHitPoints = falseLifeTemporaryHitPointsProjection(
         temporaryHitPointsRoll,
       );
-      recordResolvedResult(
-        resolveBattleSubject({
-          state,
-          subject: act.subject,
-          fills: [damageRollFillWithGroups(temporaryHitPointsRoll, [[4, 3]])],
-        }),
-        "falseLife",
-      );
+      const resolved = resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [damageRollFillWithGroups(temporaryHitPointsRoll, [[4, 3]])],
+      });
+      recordRouteEvents(act, resolved);
+      recordResolvedResult(resolved, "falseLife");
     },
     doHeroismFrightenedImmunityTurnStartTemporaryHitPoints: () => {
       resolveHeroismThroughCasterStartTurn();
     },
     doHeroismFrightenedImmunityTurnStartTemporaryHitPointsCleanup: () => {
       resolveHeroismThroughCasterStartTurn();
-      state = breakBattleConcentration(state, casterId);
+      const endConcentration = endConcentrationAct(state);
+      const ended = resolveBattleSubject({
+        state,
+        subject: endConcentration.subject,
+        fills: [],
+      });
+      recordRouteEvents(endConcentration, ended);
+      recordResolvedResult(ended, "heroism");
       heroismEffects = heroismEffectsProjection(state);
     },
     doHuntersMarkMarkedDamageRiderConcentrationAndSameTurnTransfer: () => {
@@ -1261,21 +2011,20 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
         transferAct.initialHoles,
         "targetChoice",
       );
-      recordResolvedResult(
-        resolveBattleSubject({
-          state,
-          subject: transferAct.subject,
-          fills: [
-            spellTargetFill(
-              transferTarget,
-              huntersMarkUnitId,
-              casterId,
-              markedDamageTransferTargetId,
-            ),
-          ],
-        }),
-        "huntersMark",
-      );
+      const transferred = resolveBattleSubject({
+        state,
+        subject: transferAct.subject,
+        fills: [
+          spellTargetFill(
+            transferTarget,
+            huntersMarkUnitId,
+            casterId,
+            markedDamageTransferTargetId,
+          ),
+        ],
+      });
+      recordRouteEvents(castAct, cast, hit, damaged, transferAct, transferred);
+      recordResolvedResult(transferred, "huntersMark");
     },
     doHexMarkedDamageRiderAndLaterTurnTransfer: () => {
       state = level1BuffMarkSmiteBattle({
@@ -1346,21 +2095,20 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
         transferAct.initialHoles,
         "targetChoice",
       );
-      recordResolvedResult(
-        resolveBattleSubject({
-          state,
-          subject: transferAct.subject,
-          fills: [
-            spellTargetFill(
-              transferTarget,
-              hexUnitId,
-              casterId,
-              markedDamageTransferTargetId,
-            ),
-          ],
-        }),
-        "hex",
-      );
+      const transferred = resolveBattleSubject({
+        state,
+        subject: transferAct.subject,
+        fills: [
+          spellTargetFill(
+            transferTarget,
+            hexUnitId,
+            casterId,
+            markedDamageTransferTargetId,
+          ),
+        ],
+      });
+      recordRouteEvents(castAct, cast, hit, damaged, transferAct, transferred);
+      recordResolvedResult(transferred, "hex");
       hexAfterCleanupAbilityRollMode = hexAbilityCheckRollModeFor(
         breakBattleConcentration(state, casterId),
         markedDamageTransferTargetId,
@@ -1376,16 +2124,13 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
 
       const act = actionSpellAct(state, longstriderUnitId);
       const target = requireHole(act.initialHoles, "targetChoice");
-      recordResolvedResult(
-        resolveBattleSubject({
-          state,
-          subject: act.subject,
-          fills: [
-            spellTargetFill(target, longstriderUnitId, casterId, targetId),
-          ],
-        }),
-        "longstrider",
-      );
+      const resolved = resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [spellTargetFill(target, longstriderUnitId, casterId, targetId)],
+      });
+      recordRouteEvents(act, resolved);
+      recordResolvedResult(resolved, "longstrider");
     },
     doSearingSmiteAfterHitTimedDamageAndSaveCleanup: () => {
       state = level1BuffMarkSmiteBattle({
@@ -1445,19 +2190,24 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
         requireSpellTurnStartDamageRollHole(awaitingTurnStart);
       const turnStartSave =
         requireSpellTurnStartSavingThrowOutcomeHole(awaitingTurnStart);
-      recordResolvedResult(
-        endTurn({
-          state: afterWeaponDamage.state,
-          actorId: casterId,
-          fills: [
-            damageRollFillWithGroups(turnStartDamage, [[4]]),
-            savingThrowOutcomeFill(turnStartSave, [
-              { targetId, succeeded: true },
-            ]),
-          ],
-        }),
-        "searingSmite",
+      const successfulSave = endTurn({
+        state: afterWeaponDamage.state,
+        actorId: casterId,
+        fills: [
+          damageRollFillWithGroups(turnStartDamage, [[4]]),
+          savingThrowOutcomeFill(turnStartSave, [
+            { targetId, succeeded: true },
+          ]),
+        ],
+      });
+      recordRouteEvents(
+        hit,
+        afterSearingSmite,
+        afterWeaponDamage,
+        awaitingTurnStart,
+        successfulSave,
       );
+      recordResolvedResult(successfulSave, "searingSmite");
       searingSmiteLifecycle = searingSmiteLifecycleProjection({
         immediateDamage,
         activeBeforeSuccessfulSave,
@@ -1474,9 +2224,10 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
       });
       resetProcedureProjections();
 
+      const act = bonusActionSpellAct(state, shillelaghUnitId);
       const cast = resolveBattleSubject({
         state,
-        subject: bonusActionSpellAct(state, shillelaghUnitId).subject,
+        subject: act.subject,
         fills: [],
       });
       if (cast.tag !== "resolved") {
@@ -1498,18 +2249,17 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
           damage,
         },
       );
-      recordResolvedResult(
-        resolveBattleSubject({
-          state,
-          subject: hit.subject,
-          fills: [
-            hit.targetFill,
-            hit.attackFill,
-            damageRollFillWithGroups(damage, [[4]]),
-          ],
-        }),
-        "shillelagh",
-      );
+      const resolved = resolveBattleSubject({
+        state,
+        subject: hit.subject,
+        fills: [
+          hit.targetFill,
+          hit.attackFill,
+          damageRollFillWithGroups(damage, [[4]]),
+        ],
+      });
+      recordRouteEvents(act, cast, hit, resolved);
+      recordResolvedResult(resolved, "shillelagh");
     },
     doTrueStrikeSpellHostedWeaponAttack: () => {
       state = level1BuffMarkSmiteBattle({
@@ -1525,29 +2275,29 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
       const target = requireHole(act.initialHoles, "targetChoice");
       const damageTypeFill = damageTypeChoiceFill(damageType, "radiant");
       const targetFill = attackTargetFill(target, trueStrikeDaggerAttackName);
+      const awaitingTargetChoice = resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [damageTypeFill],
+      });
+      const awaitingAttackRoll = resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [damageTypeFill, targetFill],
+      });
       const attackRoll = requireBattleAttackRollHole(
-        requireResultHole(
-          resolveBattleSubject({
-            state,
-            subject: act.subject,
-            fills: [damageTypeFill, targetFill],
-          }),
-          "attackRoll",
-        ),
+        requireResultHole(awaitingAttackRoll, "attackRoll"),
       );
       const attackFill = attackRollFill(attackRoll, {
         total: 15,
         naturalD20: 10,
       });
-      const damage = requireDamageRollHole(
-        requireNeedsHoles(
-          resolveBattleSubject({
-            state,
-            subject: act.subject,
-            fills: [damageTypeFill, targetFill, attackFill],
-          }),
-        ),
-      );
+      const awaitingDamage = resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [damageTypeFill, targetFill, attackFill],
+      });
+      const damage = requireDamageRollHole(requireNeedsHoles(awaitingDamage));
       trueStrikeSpellHostedWeaponAttack =
         trueStrikeSpellHostedWeaponAttackProjection({
           state,
@@ -1555,21 +2305,27 @@ function createLevel1BuffMarkSmiteSelectedIdentityRuntime() {
           attackRoll,
           damage,
         });
-      recordResolvedResult(
-        resolveBattleSubject({
-          state,
-          subject: act.subject,
-          fills: [
-            damageTypeFill,
-            targetFill,
-            attackFill,
-            damageRollFillWithGroups(damage, [[4]]),
-          ],
-        }),
-        "trueStrike",
+      const resolved = resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          damageTypeFill,
+          targetFill,
+          attackFill,
+          damageRollFillWithGroups(damage, [[4]]),
+        ],
+      });
+      recordRouteEvents(
+        act,
+        awaitingTargetChoice,
+        awaitingAttackRoll,
+        awaitingDamage,
+        resolved,
       );
+      recordResolvedResult(resolved, "trueStrike");
     },
     step: () => {},
+    getRoute: () => route,
     getState: () =>
       projectLevel1BuffMarkSmiteSelectedIdentityState(
         state,
@@ -1936,21 +2692,24 @@ function resolveLongswordHit(input: { readonly state: BattleState }): {
     BattleDamageRollHole["spellWeaponDamageRiders"]
   >[number];
   readonly result: BattleResolutionResult;
+  readonly routeEvents: readonly BattleReducerRouteEvent[];
 } {
   const hit = resolveLongswordHitWithAttackRoll(input);
   const damage = requireDamageRollHole(requireNeedsHoles(hit.afterAttackRoll));
   const damageRider = spellWeaponDamageRider(damage, divineFavorUnitId);
+  const result = resolveBattleSubject({
+    state: input.state,
+    subject: hit.subject,
+    fills: [
+      hit.targetFill,
+      hit.attackFill,
+      damageRollFillWithGroups(damage, [[4], [3]]),
+    ],
+  });
   return {
     damageRider,
-    result: resolveBattleSubject({
-      state: input.state,
-      subject: hit.subject,
-      fills: [
-        hit.targetFill,
-        hit.attackFill,
-        damageRollFillWithGroups(damage, [[4], [3]]),
-      ],
-    }),
+    result,
+    routeEvents: [...hit.routeEvents, ...(result.routeEvents ?? [])],
   };
 }
 
@@ -1977,37 +2736,51 @@ function resolveWeaponHitWithAttackRoll(input: {
   readonly attackFill: Extract<BattleFill, { readonly kind: "attackRoll" }>;
   readonly attackRoll: BattleAttackRollHole;
   readonly afterAttackRoll: BattleResolutionResult;
+  readonly routeEvents: readonly BattleReducerRouteEvent[];
 } {
   const subject = weaponAttackSubject(input.attackName);
-  const target = requireResultHole(
-    resolveBattleSubject({ state: input.state, subject, fills: [] }),
-    "targetChoice",
+  const act = discoverBattleActs(input.state).find(
+    (candidate) =>
+      candidate.subject.tag === "action" &&
+      candidate.subject.action === "attack" &&
+      candidate.subject.attackName === input.attackName,
   );
+  const awaitingTarget = resolveBattleSubject({
+    state: input.state,
+    subject,
+    fills: [],
+  });
+  const target = requireResultHole(awaitingTarget, "targetChoice");
   const targetFill = attackTargetFill(target, input.attackName);
+  const awaitingAttackRoll = resolveBattleSubject({
+    state: input.state,
+    subject,
+    fills: [targetFill],
+  });
   const attack = requireBattleAttackRollHole(
-    requireResultHole(
-      resolveBattleSubject({
-        state: input.state,
-        subject,
-        fills: [targetFill],
-      }),
-      "attackRoll",
-    ),
+    requireResultHole(awaitingAttackRoll, "attackRoll"),
   );
   const attackFill = attackRollFill(attack, {
     total: 15,
     naturalD20: 10,
+  });
+  const afterAttackRoll = resolveBattleSubject({
+    state: input.state,
+    subject,
+    fills: [targetFill, attackFill],
   });
   return {
     subject,
     targetFill,
     attackFill,
     attackRoll: attack,
-    afterAttackRoll: resolveBattleSubject({
-      state: input.state,
-      subject,
-      fills: [targetFill, attackFill],
-    }),
+    afterAttackRoll,
+    routeEvents: [
+      ...(act?.routeEvents ?? []),
+      ...(awaitingTarget.routeEvents ?? []),
+      ...(awaitingAttackRoll.routeEvents ?? []),
+      ...(afterAttackRoll.routeEvents ?? []),
+    ],
   };
 }
 
@@ -2335,7 +3108,11 @@ function requireResolvedResult(
   message: string,
 ): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
   if (result.tag !== "resolved") {
-    throw new Error(`${message} Got ${result.tag}.`);
+    const detail =
+      result.tag === "invalid"
+        ? ` ${result.reason}: ${result.message}`
+        : ` holes=${result.holes.map((hole) => `${hole.kind}:${hole.label}`).join(", ")}`;
+    throw new Error(`${message} Got ${result.tag}.${detail}`);
   }
   return result;
 }
@@ -2419,6 +3196,31 @@ function spellRestraintEscapeAct(state: BattleState): AvailableBattleAct & {
   );
   if (act === undefined) {
     throw new Error("Expected Ensnaring Strike spell restraint escape act.");
+  }
+  return act;
+}
+
+function endConcentrationAct(state: BattleState): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "runtimeCommand"; readonly command: "endConcentration" }
+  >;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        BattleSubject,
+        { readonly tag: "runtimeCommand"; readonly command: "endConcentration" }
+      >;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "endConcentration" &&
+      candidate.subject.actorId === casterId,
+  );
+  if (act === undefined) {
+    throw new Error("Expected public Heroism End Concentration act.");
   }
   return act;
 }

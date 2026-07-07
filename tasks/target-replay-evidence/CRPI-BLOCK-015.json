@@ -1,0 +1,140 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts public reducer qRoute replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "acceptance": {
+    "driverPath": "packages/battle-runtime/battle-runtime-level1-buff-mark-smite-selected-identity.mbt.qnt",
+    "routeClass": "catalog-after-substrate",
+    "acceptedProjection": "qRoute",
+    "requiredConnectorPaths": [
+      "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt",
+      "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt",
+      "packages/battle-runtime/battle-runtime-weapon-damage-rider.route.mbt.qnt",
+      "packages/battle-runtime/battle-runtime-spell-hosted-weapon-attack.route.mbt.qnt",
+      "packages/battle-runtime/battle-runtime-held-weapon-active-effect.route.mbt.qnt",
+      "packages/battle-runtime/battle-runtime-marked-damage-immunity-active-effects.route.mbt.qnt"
+    ]
+  },
+  "status": "pass",
+  "revisionRound": 7,
+  "publicQRouteCoverage": [
+    {
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt"
+      ],
+      "qRouteSource": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt#qRoute",
+      "observedProjectionSource": "Public after-hit route observations emitted by discoverBattleActs, resolveBattleInterrupt, resolveBattleSubject, and turn-advancement entrypoints in packages/battle-runtime/src/after-hit-damage-riders.mbt.test.ts#createAfterHitDamageRidersRouteDriver.",
+      "result": "pass"
+    },
+    {
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt"
+      ],
+      "qRouteSource": "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt#qRoute",
+      "observedProjectionSource": "Public scalar-buff routeEvents emitted by discoverBattleActs and resolveBattleSubject in packages/battle-runtime/src/scalar-buff-active-effects.mbt.test.ts#createScalarBuffActiveEffectsRouteDriver.",
+      "result": "pass"
+    },
+    {
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-weapon-damage-rider.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-held-weapon-active-effect.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-spell-hosted-weapon-attack.route.mbt.qnt"
+      ],
+      "qRouteSource": "packages/battle-runtime/battle-runtime-level1-weapon-hosted-selected-identity.route.mbt.qnt#qRoute",
+      "observedProjectionSource": "Public selected replay routeEvents emitted by startBattle, discoverBattleActs, and resolveBattleSubject in packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts#createPublicLevel1WeaponHostedSelectedRouteDriver.",
+      "result": "pass"
+    },
+    {
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-marked-damage-immunity-active-effects.route.mbt.qnt"
+      ],
+      "qRouteSource": "packages/battle-runtime/battle-runtime-marked-damage-immunity-active-effects.route.mbt.qnt#qRoute",
+      "observedProjectionSource": "Public marked-damage/immunity routeEvents emitted by startBattle, discoverBattleActs, resolveBattleSubject, runtimeCommand:endConcentration, and endTurn in packages/battle-runtime/src/level1-buff-mark-smite-selected-identity.mbt.test.ts#createPublicMarkedDamageImmunityRouteDriver. Targeted ability-check projection includes the full public Search discovery, target-fill resolution, and ability-check resolution route stream.",
+      "result": "pass"
+    }
+  ],
+  "remainingRequiredPublicQRouteCoverage": [],
+  "reviewerFindingsAddressed": [
+    {
+      "finding": "Adapter-local qRoute drivers were used as implementation observations.",
+      "resolution": "Removed direct adapter route-driver calls from the selected test. The remaining qRoute check uses a public reducer driver that executes selected runtime actions and returns emitted routeEvents."
+    },
+    {
+      "finding": "Weapon-hosted production route projection missed weaponDamageRider damage and emitted held target-choice as held qRoute.",
+      "resolution": "Production route projection now emits weaponDamageRider discovery after attack roll and weaponDamageRider rolledDice resolution after damage; held target-choice is not projected as a held-weapon resolve event."
+    },
+    {
+      "finding": "Evidence overclaimed all required connector paths.",
+      "resolution": "This artifact now records public qRoute coverage for all required connector paths, including after-hit, scalar-buff, weapon-hosted, and marked/immunity active-effect route connectors."
+    },
+    {
+      "finding": "Generated manifests overclaimed accepted completion despite partial evidence.",
+      "resolution": "The engine-depth manifest completion now matches the accepted evidence, and every required connector entry is marked covered-public-qRoute."
+    },
+    {
+      "finding": "Reviewer reported missing marked-damage/immunity public qRoute replay.",
+      "resolution": "Added createPublicMarkedDamageImmunityRouteDriver, which compares the copied marked-damage/immunity connector qRoute against route events emitted by public reducer entrypoints for marked rider admission, damage projection, same-turn and later transfer, targeted ability-check roll mode, Heroism condition immunity, turn-start Temporary Hit Points, and public concentration cleanup."
+    },
+    {
+      "finding": "Targeted ability-check roll-mode replay dropped Search discovery route events and production emitted the same markedDamageRiderEffect route at both discovery and resolution.",
+      "resolution": "Removed the targeted ability-check roll-mode projection from discoverBattleActs; it now emits only at resolveBattleSubjectWithoutFill, matching the copied connector. The replay now includes Search act routeEvents, target-fill resolution routeEvents, and ability-check resolution routeEvents so extra public-entrypoint emissions cannot be hidden."
+    }
+  ],
+  "verification": [
+    {
+      "command": "git log --oneline -1 ralph/cleanroom-owner-battle-spell-20260706T213644Z/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor fb3fcddac57b6b34e16c41d09fe4794066faa104 HEAD",
+      "status": "pass",
+      "detail": "Base ref and HEAD both resolved to fb3fcddac Unblock owner-decision Ralph tasks; Base SHA is an ancestor of HEAD."
+    },
+    {
+      "command": "pnpm --filter @dnd/battle-runtime typecheck",
+      "status": "pass",
+      "detail": "Battle runtime TypeScript check passed."
+    },
+    {
+      "command": "RAW/ubiquitous-language review: rg local SRD 5.2.1 spell, damage, Temporary Hit Points, Concentration, Immunity, Ability Check, and Disadvantage passages plus UBIQUITOUS_LANGUAGE.md route-owner terms",
+      "status": "pass",
+      "detail": "Checked .references/srd-5.2.1/Spells/Descriptions-E-L.md for Heroism, Hex, and Hunter's Mark; .references/srd-5.2.1/Playing-the-Game.md and Rules-Glossary.md for Ability Checks, Advantage/Disadvantage, Concentration, Immunity, Damage Rolls, and Temporary Hit Points; and UBIQUITOUS_LANGUAGE.md for Rider, Attack Damage Rider, Temporary Hit Points, Damage, Condition Immunity, Concentration, Spell Effect, Ability Check, and Disadvantage."
+    },
+    {
+      "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+      "status": "pass",
+      "detail": "Required MBT preflight found no active Vitest runner and no stale quint_evaluator process before the round-7 focused MBT run."
+    },
+    {
+      "command": "START=$(date +%s); MBT_TRACES=24 MBT_STEPS=5 pnpm --filter @dnd/battle-runtime exec vitest run src/level1-buff-mark-smite-selected-identity.mbt.test.ts -t \"Level 1 buff mark smite copied qRoute connector replay\" 2>&1; echo \"TOTAL: $(( $(date +%s) - START ))s\"",
+      "status": "pass",
+      "detail": "Round-7 timed focused MBT passed after including the full public targeted Search route stream: 2 tests passed, 1 skipped, TOTAL: 13s."
+    },
+    {
+      "command": "MBT_TRACES=1 pnpm --filter @dnd/battle-runtime exec vitest run src/level1-buff-mark-smite-selected-identity.mbt.test.ts",
+      "status": "pass",
+      "detail": "Focused selected replay and public weapon-hosted qRoute MBT passed: 2 tests passed, TOTAL: 13s."
+    },
+    {
+      "command": "MBT_TRACES=1 pnpm --filter @dnd/battle-runtime exec vitest run src/scalar-buff-active-effects.mbt.test.ts src/after-hit-damage-riders.mbt.test.ts -t \"(observes scalar buff active-effect qRoute|routes after-hit rider owner surfaces)\"",
+      "status": "pass",
+      "detail": "Existing public scalar-buff and after-hit qRoute MBT checks passed: 2 tests passed, 3 skipped, TOTAL: 15s."
+    },
+    {
+      "command": "git diff --check",
+      "status": "pass",
+      "detail": "Whitespace check passed after round-7 updates."
+    },
+    {
+      "command": "pnpm cleanroom-branch-coverage:check",
+      "status": "pass",
+      "detail": "Cleanroom branch coverage passed with Task 23 public qRoute evidence: 738 obligations, 24 sampled inputs."
+    },
+    {
+      "command": "pnpm quality",
+      "status": "pass",
+      "detail": "Full quality chain passed after round-7 changes; app lint reported existing warnings and exited 0; turbo typecheck completed 9 successful tasks."
+    }
+  ]
+}
