@@ -2905,6 +2905,32 @@ function concentrationRouteForResolution(
             ),
           ]
         : [];
+      const spatialHazardCleanupRoutes =
+        battleCombatantHasActiveEffectKind(
+          input.state,
+          input.subject.actorId,
+          "spikeGrowthHazard",
+        ) ||
+        battleCombatantHasActiveEffectKind(
+          input.state,
+          input.subject.actorId,
+          "webRestraintHazard",
+        )
+          ? [
+              spatialCompositionResolveWithoutFill(
+                "spatialEffect",
+                "battleConcentration",
+              ),
+              spatialCompositionResolveWithoutFill(
+                "spatialEffect",
+                "battleAreaHazard",
+              ),
+              spatialCompositionResolveWithoutFill(
+                "spatialEffect",
+                "battleActiveEffect",
+              ),
+            ]
+          : [];
       return [
         {
           kind: "resolveBattleSubjectWithoutFill",
@@ -2921,6 +2947,7 @@ function concentrationRouteForResolution(
         ...afterHitRoutes,
         ...conditionImmunityRoutes,
         ...markedDamageRiderRoutes,
+        ...spatialHazardCleanupRoutes,
       ];
     }
     return undefined;
@@ -3283,7 +3310,7 @@ function spatialEffectCompositionRuntimeRouteForDiscoveredAct(
   }
   if (
     act.subject.command === "move" &&
-    battleHasActiveGreaseGroundHazard(state)
+    battleHasActiveAreaDifficultTerrainHazard(state)
   ) {
     return spatialCompositionDiscover(
       "spatialEffect",
@@ -3299,6 +3326,13 @@ function spatialEffectCompositionRuntimeRouteForDiscoveredAct(
     );
   }
   if (act.subject.command === "movableZoneSave") {
+    return spatialCompositionDiscover(
+      "spatialEffect",
+      ["savingThrowOutcome"],
+      "battleAreaHazard",
+    );
+  }
+  if (act.subject.command === "webRestraintSave") {
     return spatialCompositionDiscover(
       "spatialEffect",
       ["savingThrowOutcome"],
@@ -3449,7 +3483,12 @@ function spatialEffectCompositionRouteForResolution(
       ),
     ];
   }
-  if (procedure === "flamingSphere" || procedure === "moonbeam") {
+  if (
+    procedure === "flamingSphere" ||
+    procedure === "moonbeam" ||
+    procedure === "spikeGrowthMovementHazard" ||
+    procedure === "webRestraintHazard"
+  ) {
     return [
       spatialCompositionResolve(
         "spatialEffect",
@@ -3481,6 +3520,18 @@ function spatialEffectCompositionRouteForResolution(
         "spatialEffect",
         "battleCreatureSpaceMovement",
       ),
+      ...(procedure === "webRestraintHazard"
+        ? [
+            spatialCompositionResolveWithoutFill(
+              "spatialEffect",
+              "battleObscurementProjection",
+            ),
+            spatialCompositionResolveWithoutFill(
+              "spatialEffect",
+              "battleSightProjection",
+            ),
+          ]
+        : []),
     ];
   }
   if (procedure === "objectLight") {
@@ -3602,9 +3653,45 @@ function spatialEffectCompositionRuntimeRouteForResolution(
   if (input.subject.command === "move") {
     const fill = input.fills.at(-1);
     if (
-      fill === undefined ||
-      fill.kind !== "movement" ||
-      !fill.value.areaDifficultTerrain?.sources.some(
+      fill?.kind === "rolledDice" &&
+      input.fills.some(isSpikeGrowthHazardMovementFill) &&
+      result.tag === "resolved"
+    ) {
+      return [
+        spatialCompositionResolve(
+          "spatialEffect",
+          "rolledDice",
+          [],
+          "battleHitPoint",
+        ),
+      ];
+    }
+    if (fill === undefined || fill.kind !== "movement") {
+      return undefined;
+    }
+    const areaDifficultTerrain = fill.value.areaDifficultTerrain;
+    if (
+      areaDifficultTerrain === undefined ||
+      areaDifficultTerrain === null
+    ) {
+      return undefined;
+    }
+    if (
+      areaDifficultTerrain.sources.some(
+        (source) => source.kind === "spikeGrowthHazard",
+      )
+    ) {
+      return [
+        spatialCompositionResolve(
+          "spatialEffect",
+          "movement",
+          result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [],
+          "battleMovementResource",
+        ),
+      ];
+    }
+    if (
+      !areaDifficultTerrain.sources.some(
         (source) => source.kind === "greaseGroundHazard",
       )
     ) {
@@ -3631,7 +3718,10 @@ function spatialEffectCompositionRuntimeRouteForResolution(
       ),
     ];
   }
-  if (input.subject.command === "greaseGroundHazardSave") {
+  if (
+    input.subject.command === "greaseGroundHazardSave" ||
+    input.subject.command === "webRestraintSave"
+  ) {
     const fill = input.fills.at(-1);
     if (fill === undefined || battleReducerRouteFill(fill) !== "savingThrowOutcome") {
       return undefined;
@@ -3755,7 +3845,9 @@ function isSpatialEffectCompositionDiscoverySubject(
     procedure === "fogCloudObscurement" ||
     procedure === "greaseGroundHazard" ||
     procedure === "flamingSphere" ||
-    procedure === "moonbeam"
+    procedure === "moonbeam" ||
+    procedure === "spikeGrowthMovementHazard" ||
+    procedure === "webRestraintHazard"
   );
 }
 
@@ -3774,11 +3866,25 @@ function isThunderwavePostSaveAreaEffect(
   );
 }
 
-function battleHasActiveGreaseGroundHazard(state: BattleState): boolean {
+function battleHasActiveAreaDifficultTerrainHazard(state: BattleState): boolean {
   return [...state.combatants.values()].some((combatant) =>
     combatant.activeEffects.some(
-      (effect) => effect.kind === "greaseGroundHazard",
+      (effect) =>
+        effect.kind === "greaseGroundHazard" ||
+        effect.kind === "spikeGrowthHazard" ||
+        effect.kind === "webRestraintHazard",
     ),
+  );
+}
+
+function isSpikeGrowthHazardMovementFill(
+  fill: BattleFill,
+): fill is Extract<BattleFill, { readonly kind: "movement" }> {
+  return (
+    fill.kind === "movement" &&
+    fill.value.areaDifficultTerrain?.sources.some(
+      (source) => source.kind === "spikeGrowthHazard",
+    ) === true
   );
 }
 

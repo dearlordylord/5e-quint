@@ -9,12 +9,26 @@
 // UNIT-IDENTITY-REPLAY: B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH see_invisibility doDiscoverSeeInvisibilityObserverSight
 // UNIT-IDENTITY-REPLAY: B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH spike_growth doDiscoverSpikeGrowthMovementHazard
 // UNIT-IDENTITY-REPLAY: B10-LEVEL2-CONTROL-SPELL-IDENTITY-BATCH web doDiscoverWebRestraintHazard
+import { movementFeet } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import { expect } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
-import type { BattleState } from "./index.ts";
+import {
+  battleReducerStartRouteEvent,
+  discoverBattleActs,
+  endTurn,
+  resolveBattleSubject,
+  type AvailableBattleAct,
+  type BattleFill,
+  type BattleHole,
+  type BattleReducerRouteEvent,
+  type BattleReducerRouteOwnerGroup,
+  type BattleReducerRouteSubjectFamily,
+  type BattleState,
+  type BattleSubject,
+} from "./index.ts";
 import {
   calmEmotionsUnitId,
   charmPersonUnitId,
@@ -24,12 +38,25 @@ import {
   invisibilityUnitId,
   levitateUnitId,
   seeInvisibilityUnitId,
+  spikeGrowthAreaId,
   spellCasterId,
+  spellTargetId,
   spikeGrowthUnitId,
   webUnitId,
 } from "./unit-profile-admission-catalog-support.ts";
+import {
+  damageRollFillWithGroups,
+  movementFill,
+  requireHole,
+} from "./unit-profile-admission-creature-fixture-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
-import { spellAct } from "./unit-profile-admission-spell-fill-support.ts";
+import {
+  singleTargetSavingThrowOutcomeFill,
+  spellAct,
+  spikeGrowthAreaFill,
+  webAreaFill,
+  webRestraintSaveAct,
+} from "./unit-profile-admission-spell-fill-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record-support.ts";
 import { spellSlotInvocationRef } from "./unit-profile-admission-test-support.ts";
 
@@ -213,6 +240,338 @@ defineSelectedIdentityReplayAndQntReplay({
     },
   ],
 });
+
+describe("Level 2 control spell public reducer route replay", () => {
+  it("observes selected concentration hazard qRoute through public reducer entrypoints", () => {
+    expect(replaySpikeGrowthMovementHazardRoute()).toEqual(
+      expectedSpikeGrowthMovementHazardRoute(),
+    );
+    expect(replayWebRestraintHazardRoute()).toEqual(
+      expectedWebRestraintHazardRoute(),
+    );
+  });
+});
+
+type RouteDiscoverEvent = Extract<
+  BattleReducerRouteEvent,
+  { readonly kind: "discoverBattleActs" }
+>;
+type RouteResolveEvent = Extract<
+  BattleReducerRouteEvent,
+  { readonly kind: "resolveBattleSubject" }
+>;
+type RouteHoles = RouteDiscoverEvent["holes"];
+type HazardCastReplay = {
+  readonly route: readonly BattleReducerRouteEvent[];
+  readonly state: BattleState;
+};
+
+function replaySpikeGrowthMovementHazardRoute():
+  readonly BattleReducerRouteEvent[] {
+  const cast = spikeGrowthHazardCastReplay();
+  const route = [...cast.route];
+  const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
+  if (targetTurn.tag !== "resolved") {
+    throw new Error("Expected Spike Growth caster End Turn to resolve.");
+  }
+  const move = moveAct(targetTurn.state);
+  route.push(...routeEventsOfSubject(move, "Spike Growth movement discovery"));
+  const movement = requireHole(move.initialHoles, "movement");
+  const needsDamage = resolveBattleSubject({
+    state: targetTurn.state,
+    subject: move.subject,
+    fills: [spikeGrowthMovementFill(movement)],
+  });
+  route.push(...routeEventsOfSubject(needsDamage, "Spike Growth movement"));
+  if (needsDamage.tag !== "needsHoles") {
+    throw new Error("Expected Spike Growth movement to request damage.");
+  }
+  const damage = requireHole(needsDamage.holes, "rolledDice");
+  const damaged = resolveBattleSubject({
+    state: targetTurn.state,
+    subject: move.subject,
+    fills: [
+      spikeGrowthMovementFill(movement),
+      damageRollFillWithGroups(damage, [[3, 4]]),
+    ],
+  });
+  route.push(...routeEventsOfSubject(damaged, "Spike Growth damage"));
+  if (damaged.tag !== "resolved") {
+    throw new Error("Expected Spike Growth damage to resolve.");
+  }
+  const casterTurn = endTurn({ state: damaged.state, actorId: spellTargetId });
+  if (casterTurn.tag !== "resolved") {
+    throw new Error("Expected target End Turn after Spike Growth damage.");
+  }
+  route.push(
+    ...endConcentrationSpatialRoute(
+      casterTurn.state,
+      "Spike Growth concentration cleanup",
+    ),
+  );
+  return route;
+}
+
+function replayWebRestraintHazardRoute(): readonly BattleReducerRouteEvent[] {
+  const cast = webHazardCastReplay();
+  const route = [...cast.route];
+  const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
+  if (targetTurn.tag !== "resolved") {
+    throw new Error("Expected Web caster End Turn to resolve.");
+  }
+  const saveAct = webRestraintSaveAct(
+    targetTurn.state,
+    spellTargetId,
+    "entersArea",
+  );
+  route.push(...routeEventsOfSubject(saveAct, "Web save discovery"));
+  const save = requireHole(saveAct.initialHoles, "savingThrowOutcome");
+  const saved = resolveBattleSubject({
+    state: targetTurn.state,
+    subject: saveAct.subject,
+    fills: [singleTargetSavingThrowOutcomeFill(save, spellTargetId, false)],
+  });
+  route.push(...routeEventsOfSubject(saved, "Web save"));
+  if (saved.tag !== "resolved") {
+    throw new Error("Expected Web save to resolve.");
+  }
+  const casterTurn = endTurn({ state: saved.state, actorId: spellTargetId });
+  if (casterTurn.tag !== "resolved") {
+    throw new Error("Expected target End Turn after Web save.");
+  }
+  route.push(
+    ...endConcentrationSpatialRoute(
+      casterTurn.state,
+      "Web concentration cleanup",
+    ),
+  );
+  return route;
+}
+
+function spikeGrowthHazardCastReplay(): HazardCastReplay {
+  const route: BattleReducerRouteEvent[] = [startRoute()];
+  const state = selectedSpellBattle(spellRecord(spikeGrowthUnitId), 2);
+  const act = spellAct({ state, spellId: spikeGrowthUnitId, slotLevel: 2 });
+  route.push(...routeEventsOfSubject(act, "Spike Growth discovery"));
+  const area = requireHole(act.initialHoles, "spellAreaChoice");
+  const cast = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [spikeGrowthAreaFill(area)],
+  });
+  route.push(...routeEventsOfSubject(cast, "Spike Growth cast"));
+  if (cast.tag !== "resolved") {
+    throw new Error("Expected Spike Growth cast to resolve.");
+  }
+  return { route, state: cast.state };
+}
+
+function webHazardCastReplay(): HazardCastReplay {
+  const route: BattleReducerRouteEvent[] = [startRoute()];
+  const state = selectedSpellBattle(spellRecord(webUnitId), 2);
+  const act = spellAct({ state, spellId: webUnitId, slotLevel: 2 });
+  route.push(...routeEventsOfSubject(act, "Web discovery"));
+  const area = requireHole(act.initialHoles, "spellAreaChoice");
+  const cast = resolveBattleSubject({
+    state,
+    subject: act.subject,
+    fills: [webAreaFill(area)],
+  });
+  route.push(...routeEventsOfSubject(cast, "Web cast"));
+  if (cast.tag !== "resolved") {
+    throw new Error("Expected Web cast to resolve.");
+  }
+  return { route, state: cast.state };
+}
+
+function endConcentrationSpatialRoute(
+  state: BattleState,
+  label: string,
+): readonly BattleReducerRouteEvent[] {
+  const subject = {
+    tag: "runtimeCommand",
+    actorId: spellCasterId,
+    command: "endConcentration",
+  } as const satisfies Extract<
+    BattleSubject,
+    { readonly tag: "runtimeCommand"; readonly command: "endConcentration" }
+  >;
+  const ended = resolveBattleSubject({
+    state,
+    subject,
+    fills: [],
+  });
+  if (ended.tag !== "resolved") {
+    throw new Error(
+      `Expected ${label} to resolve, got ${ended.tag}${
+        ended.tag === "invalid" ? `: ${ended.message}` : ""
+      }.`,
+    );
+  }
+  return routeEventsOfSubject(ended, label);
+}
+
+function moveAct(state: BattleState): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    { readonly tag: "runtimeCommand"; readonly command: "move" }
+  >;
+} {
+  const act = discoverBattleActs(state).find(
+    (
+      candidate,
+    ): candidate is AvailableBattleAct & {
+      readonly subject: Extract<
+        BattleSubject,
+        { readonly tag: "runtimeCommand"; readonly command: "move" }
+      >;
+    } =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "move",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Move act.");
+  }
+  return act;
+}
+
+function spikeGrowthMovementFill(
+  hole: Extract<BattleHole, { readonly kind: "movement" }>,
+): Extract<BattleFill, { readonly kind: "movement" }> {
+  return movementFill(hole, {
+    movementCostFeet: 15,
+    provokedOpportunityAttacks: [],
+    areaDifficultTerrain: {
+      kind: "areaDifficultTerrain",
+      sources: [
+        {
+          kind: "spikeGrowthHazard",
+          sourceCombatantId: spellCasterId,
+          sourceSpellId: spikeGrowthUnitId,
+          areaId: spikeGrowthAreaId,
+          damageDistanceFeet: movementFeet(5),
+        },
+      ],
+      totalDistanceFeet: movementFeet(10),
+      difficultTerrainDistanceFeet: movementFeet(5),
+    },
+  });
+}
+
+function expectedSpikeGrowthMovementHazardRoute():
+  readonly BattleReducerRouteEvent[] {
+  return [
+    ...expectedConcentrationBackedAreaHazardAdmissionRoute(),
+    ...hazardMovementDamageRoute(),
+    ...concentrationBreakHazardCleanupRoute(),
+  ];
+}
+
+function expectedWebRestraintHazardRoute(): readonly BattleReducerRouteEvent[] {
+  return [
+    ...expectedConcentrationBackedAreaHazardAdmissionRoute(),
+    spatialResolveWithoutFill("battleObscurementProjection"),
+    spatialResolveWithoutFill("battleSightProjection"),
+    ...hazardSavingThrowRoute(),
+    ...concentrationBreakHazardCleanupRoute(),
+  ];
+}
+
+function expectedConcentrationBackedAreaHazardAdmissionRoute():
+  readonly BattleReducerRouteEvent[] {
+  return [
+    startRoute(),
+    spatialDiscover(["targetChoice"], "battleSpellSlotAndActionEconomy"),
+    spatialResolve("targetChoice", [], "battleAreaShape"),
+    spatialResolveWithoutFill("battleActiveEffect"),
+    spatialResolveWithoutFill("battleConcentration"),
+    spatialResolveWithoutFill("battleAreaHazard"),
+    spatialResolveWithoutFill("battleCreatureSpaceMovement"),
+  ];
+}
+
+function hazardSavingThrowRoute(): readonly BattleReducerRouteEvent[] {
+  return [
+    spatialDiscover(["savingThrowOutcome"], "battleAreaHazard"),
+    spatialResolve("savingThrowOutcome", [], "battleSavingThrowOutcome"),
+    spatialResolveWithoutFill("battleConditionLifecycle"),
+  ];
+}
+
+function hazardMovementDamageRoute(): readonly BattleReducerRouteEvent[] {
+  return [
+    spatialDiscover(["movement"], "battleAreaHazard"),
+    spatialResolve("movement", ["rolledDice"], "battleMovementResource"),
+    spatialResolve("rolledDice", [], "battleHitPoint"),
+  ];
+}
+
+function concentrationBreakHazardCleanupRoute():
+  readonly BattleReducerRouteEvent[] {
+  return [
+    spatialResolveWithoutFill("battleConcentration"),
+    spatialResolveWithoutFill("battleAreaHazard"),
+    spatialResolveWithoutFill("battleActiveEffect"),
+  ];
+}
+
+function startRoute(): BattleReducerRouteEvent {
+  return battleReducerStartRouteEvent();
+}
+
+function spatialDiscover(
+  holes: RouteHoles,
+  owner: BattleReducerRouteOwnerGroup,
+): BattleReducerRouteEvent {
+  return {
+    kind: "discoverBattleActs",
+    subject: "spatialEffect",
+    holes,
+    owner,
+  };
+}
+
+function spatialResolve(
+  fill: RouteResolveEvent["fill"],
+  holes: RouteHoles,
+  owner: BattleReducerRouteOwnerGroup,
+): BattleReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubject",
+    subject: "spatialEffect",
+    fill,
+    holes,
+    owner,
+  };
+}
+
+function spatialResolveWithoutFill(
+  owner: BattleReducerRouteOwnerGroup,
+): BattleReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubjectWithoutFill",
+    subject: "spatialEffect",
+    holes: [],
+    owner,
+  };
+}
+
+function routeEventsOfSubject(
+  source: { readonly routeEvents?: readonly BattleReducerRouteEvent[] },
+  label: string,
+  subject: BattleReducerRouteSubjectFamily = "spatialEffect",
+): readonly BattleReducerRouteEvent[] {
+  const events = (source.routeEvents ?? []).filter(
+    (event): event is Exclude<BattleReducerRouteEvent, { kind: "startBattle" }> =>
+      event.kind !== "startBattle" && event.subject === subject,
+  );
+  if (events.length === 0) {
+    throw new Error(
+      `Expected ${subject} public reducer route events for ${label}.`,
+    );
+  }
+  return events;
+}
 
 function selectedSpellProcedure(
   actionName: `do${string}`,

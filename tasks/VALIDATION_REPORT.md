@@ -1,5 +1,42 @@
 # Validation Report
 
+## CRPI-BLOCK-019
+
+Status: `pass`
+
+- Task: 27
+- Driver path: `packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-019.json`
+
+Task 27 records public reducer qRoute evidence for the level-2 control spell selected-identity driver as a `reducer-routed` task. The selected replay binds SRD catalog spell identity at the replay/admission boundary; route evidence is observed from generic spatial-effect, Concentration, Saving Throw/condition lifecycle, obscurement, movement, Hit Point, area hazard, active-effect, and cleanup owners.
+
+Current public qRoute coverage:
+
+- Covered: `battle-runtime-concentration-hazard-selected-route.route.mbt.qnt` through public Spike Growth movement hazard and Web restraint hazard replay in `packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts`.
+- Covered: `battle-runtime-spatial-effect-route-surfaces.qnt` through the shared `spatialEffect` route events emitted by the public reducer.
+- Covered: `battle-runtime-spatial-effects.route.mbt.qnt` through the generic spatial-effects connector MBT plus Task 27 public replay.
+- Remaining required public qRoute coverage: none.
+
+Task 27 fixed the production route projection needed for public evidence: `packages/battle-runtime/src/battle-reducer/reducer-route.ts` now admits typed Spike Growth and Web procedures into the generic spatial-effect route family, emits runtime Spike Growth movement damage route events through Movement and Hit Point owners, emits Web Saving Throw and condition lifecycle events, and emits Concentration/area-hazard/active-effect spatial cleanup events from the public End Concentration path. No durable `BattleState` field was added.
+
+Verification results:
+
+- Task-base check passed: base ref and HEAD both resolved to `b4ab336dd Mark Ralph task 26 done`; Base SHA is an ancestor of HEAD.
+- RAW/ubiquitous-language review passed for Spike Growth, Web, Concentration, Difficult Terrain, Saving Throw, Restrained, Lightly Obscured, Area of Effect, Movement, Spell Effect, Obscurement, and Table Decision terms.
+- `pnpm --filter @dnd/battle-runtime typecheck` passed.
+- `pnpm --filter @dnd/battle-runtime exec vitest run src/level2-control-spell-selected-identity.mbt.test.ts -t "public reducer route replay"` passed: 1 passed, 1 skipped.
+- MBT preflight found no active Vitest runner and no stale `quint_evaluator`.
+- Focused Task 27 MBT passed with selected replay and required route connector coverage: 2 files passed; 4 tests passed, 32 skipped; TOTAL: 12s.
+- `pnpm cleanroom-branch-coverage:check` passed with Task 27 evidence: 738 obligations, 24 sampled inputs.
+- `git diff --check` passed.
+- `pnpm quality` passed end to end; app lint reported existing warnings and exited 0; turbo typecheck completed 9 successful tasks, all from cache.
+
+Reviewer-loop status:
+
+- Round 1 fixed the public spatial-effect projection gaps for Spike Growth movement damage, Web Saving Throw condition lifecycle, and concentration-backed cleanup. The task uses typed public route owners, does not add authored-identity production dispatch, and does not duplicate route state.
+- Round 2 found no remaining RAW traceability, ubiquitous-language, architecture/connascence, or code-review findings in the Task 27 diff.
+
 ## CRPI-BLOCK-018
 
 Status: `pass`

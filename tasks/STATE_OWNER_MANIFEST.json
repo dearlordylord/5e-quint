@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-018",
+  "taskId": "CRPI-BLOCK-019",
   "durableFields": [
     {
       "fieldPath": "AvailableBattleAct.routeEvents",
@@ -31,7 +31,7 @@
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing BattleState runtime state owns Flaming Sphere and Moonbeam active effects, area ids, Concentration-backed expiration, damage facts, and light projection facts reached by Task 26."
+      "notes": "Existing BattleState runtime state owns Spike Growth and Web active effects, area ids, Concentration-backed expiration, movement-damage facts, Web save ledgers, and Web obscurement facts reached by Task 27."
     },
     {
       "fieldPath": "BattleCreatureState.concentration",
@@ -49,7 +49,7 @@
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing BattleState runtime state owns Hit Point loss from Flaming Sphere and Moonbeam save-triggered damage."
+      "notes": "Existing BattleState runtime state owns Hit Point loss from Spike Growth movement damage."
     },
     {
       "fieldPath": "BattleReducerRouteEvent.subject=spatialEffect",
@@ -57,14 +57,14 @@
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleState plus spatial active effects, area witnesses, light projection, saving throw outcomes, and Hit Point damage results",
+        "sourceField": "BattleState plus spatial active effects, area witnesses, movement facts, saving throw outcomes, condition lifecycle, Hit Point damage results, and concentration cleanup",
         "boundary": "battle-runtime public reducer route event boundary"
       },
-      "notes": "Projection is derived from generic spatial owner facts for concentration-backed area hazard admission and exact save-triggered damage."
+      "notes": "Projection is derived from generic spatial owner facts for concentration-backed area hazard admission, Spike Growth movement damage, Web Saving Throw condition lifecycle, and cleanup."
     }
   ],
   "notes": [
-    "Task 26 introduced no new durable BattleState or BattleCreatureState fields.",
+    "Task 27 introduced no new durable BattleState or BattleCreatureState fields.",
     "Selected spell identity remains at catalog/support-profile and selected replay boundaries; production route projection uses typed spell procedure and runtime command shape.",
     "Route subjects are executable boundary projections derived from existing owner state and public reducer results, not a stored route ledger or duplicate active-effect state."
   ]

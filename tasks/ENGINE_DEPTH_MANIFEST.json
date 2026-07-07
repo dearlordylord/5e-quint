@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-018",
+  "taskId": "CRPI-BLOCK-019",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt",
       "quarantinedWitnessNames": [
         "cleanroomManifestSourceCommitSha",
         "comparator",
@@ -31,7 +31,7 @@
         "traceId"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-018.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-019.json"
       ]
     },
     {
@@ -39,15 +39,7 @@
       "coverageStatus": "covered-public-qRoute",
       "quarantinedWitnessNames": ["qRoute"],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-018.json"
-      ]
-    },
-    {
-      "path": "packages/battle-runtime/battle-runtime-concentration-hazard-exact-damage.route.mbt.qnt",
-      "coverageStatus": "covered-public-qRoute",
-      "quarantinedWitnessNames": ["qRoute"],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-018.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-019.json"
       ]
     },
     {
@@ -55,7 +47,7 @@
       "coverageStatus": "covered-public-qRoute",
       "quarantinedWitnessNames": ["qRoute"],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-018.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-019.json"
       ]
     },
     {
@@ -63,11 +55,11 @@
       "coverageStatus": "covered-public-qRoute",
       "quarantinedWitnessNames": ["qRoute"],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-018.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-019.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/level2-damage-spell-selected-identity.mbt.test.ts",
+      "path": "packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts",
       "quarantinedWitnessNames": [
         "cleanroomManifestSourceCommitSha",
         "comparator",
@@ -94,7 +86,7 @@
         "traceId"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-018.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-019.json"
       ]
     }
   ],
@@ -112,21 +104,25 @@
         "BattleReducerRouteOwnerGroup.battleAreaHazard",
         "BattleReducerRouteOwnerGroup.battleCreatureSpaceMovement",
         "BattleReducerRouteOwnerGroup.battleSavingThrowOutcome",
-        "BattleReducerRouteOwnerGroup.battleHitPoint"
+        "BattleReducerRouteOwnerGroup.battleConditionLifecycle",
+        "BattleReducerRouteOwnerGroup.battleMovementResource",
+        "BattleReducerRouteOwnerGroup.battleHitPoint",
+        "BattleReducerRouteOwnerGroup.battleObscurementProjection",
+        "BattleReducerRouteOwnerGroup.battleSightProjection"
       ],
-      "notes": "Extends production route projection to cover typed concentration-backed area hazard spell procedures and movable-zone save damage through the existing spatialEffect route subject. No new reducer state, authored spell identity dispatch, or duplicate route ledger is added."
+      "notes": "Extends production route projection to cover typed Spike Growth and Web concentration-backed area hazard spell procedures, movement damage, Web Saving Throw condition lifecycle, and public concentration-break cleanup through the existing spatialEffect route subject. No new reducer state, authored spell identity dispatch, or duplicate route ledger is added."
     }
   ],
   "expectedNextReuse": [
     {
-      "driver": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt",
+      "driver": "future concentration-backed spatial hazard selected-identity drivers",
       "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "api": "BattleReducerRouteEvent",
-      "notes": "Future concentration-backed control hazard tasks should reuse the generic spatialEffect route subject and owner terms for admission, hazard trigger, movement, condition, and cleanup evidence."
+      "notes": "Future concentration-backed spatial hazard tasks should reuse the generic spatialEffect route subject and owner terms for admission, hazard trigger, movement, condition, and cleanup evidence."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 26 observes selected Flaming Sphere and Moonbeam hazard admission plus exact save-triggered damage qRoute evidence through public battle reducer entrypoints without adding durable duplicate state."
+    "notes": "Task 27 observes selected Spike Growth and Web concentration-backed hazard qRoute evidence through public battle reducer entrypoints without adding durable duplicate state."
   }
 }
