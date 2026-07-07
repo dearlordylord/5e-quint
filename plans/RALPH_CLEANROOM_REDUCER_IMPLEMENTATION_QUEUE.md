@@ -385,7 +385,7 @@
     {
       "number": 64,
       "id": "CRPI-BLOCK-035",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-weapon-hosted-attack-and-riders"
     },
     {
@@ -716,7 +716,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRPI-READY-023` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-033` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-034` | `done` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-035` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-035` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-024` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-025` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-036` | `ready-for-research` | none | target replay evidence and owner implementation |
@@ -2655,7 +2655,7 @@ Plan Impact:
 
 ### Task 33 - CRPI-BLOCK-022
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
