@@ -523,7 +523,7 @@
     {
       "number": 87,
       "id": "CRPI-BLOCK-044",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: character-creation-fighter-fighting-style-selected-identity"
     },
     {
@@ -5712,7 +5712,7 @@ Plan Impact:
 
 ### Task 87 - CRPI-BLOCK-044
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 
