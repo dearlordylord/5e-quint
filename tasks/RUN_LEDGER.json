@@ -4,6 +4,102 @@
   "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
   "entries": [
     {
+      "taskId": "CRPI-BLOCK-019",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
+      "artifacts": {
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "91d7286d6be6db4deb9b97761caeec001016cc55680d0d3f3834eff10e0249dc"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-BLOCK-019/README.md",
+          "sha256": "10ec705280cc0d3f0842f2942af0a388ee7fec8dd515b63edca7c3e119307006"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-019.json",
+          "sha256": "eb647a1f4ae191dae21f5f5a9b68683b80b233179949fe700c99d448a8e1471e",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-019.json#publicQRouteCoverage:level2-control-selected-concentration-hazard",
+            "tasks/target-replay-evidence/CRPI-BLOCK-019.json#publicQRouteCoverage:spatial-effects"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-owner-battle-spell-20260706T213644Z/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor b4ab336dd59853e4fb4cb7bb21b4e7a3b881c01a HEAD",
+          "status": "pass",
+          "detail": "Base ref and HEAD both resolved to b4ab336dd Mark Ralph task 26 done; Base SHA is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language review: local SRD 5.2.1 Spike Growth, Web, Concentration, Difficult Terrain, Saving Throw, Restrained, Lightly Obscured, Area of Effect, and UBIQUITOUS_LANGUAGE.md route-owner terms",
+          "status": "pass",
+          "detail": "Checked Spike Growth and Web SRD passages plus generic Concentration, Difficult Terrain, Saving Throw, Restrained, Lightly Obscured, Movement, Spell Effect, Area of Effect, Obscurement, and Table Decision terms."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime typecheck",
+          "status": "pass",
+          "detail": "Battle runtime TypeScript check passed after adding Task 27 route projection and public replay tests."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec vitest run src/level2-control-spell-selected-identity.mbt.test.ts -t \"public reducer route replay\"",
+          "status": "pass",
+          "detail": "Focused public reducer qRoute replay passed: 1 passed, 1 skipped."
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Required MBT preflight found no active Vitest runner and no stale quint_evaluator before the focused MBT run."
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 pnpm --filter @dnd/battle-runtime exec vitest run src/level2-control-spell-selected-identity.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"(Level 2 control spell selected identity replay|public reducer route replay|routes selected concentration-backed hazards through generic spatial hazard surfaces|routes spatial effects through light, sight, hazard, and table-witness owners)\" 2>&1; STATUS=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$STATUS\"",
+          "status": "pass",
+          "detail": "Focused Task 27 selected replay and required route connector MBT passed: 2 files passed; 4 tests passed, 32 skipped; TOTAL: 12s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "Cleanroom branch coverage passed with Task 27 evidence: 738 obligations, 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass",
+          "detail": "Whitespace check passed."
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "Full quality chain passed. App lint reported existing warnings and exited 0; turbo typecheck completed 9 successful tasks, all from cache."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-019",
+            "impact": "unblocked"
+          },
+          {
+            "taskId": "future concentration-backed spatial hazard selected-identity tasks",
+            "impact": "left unchanged"
+          }
+        ],
+        "observations": [
+          "Level-2 control selected identity replay now observes public reducer qRoute events for the in-scope Spike Growth movement hazard and Web restraint hazard branches.",
+          "Production reducer-route projection needed to admit typed Spike Growth and Web procedures, runtime movement/save hazard events, and public End Concentration cleanup into the existing generic spatialEffect route subject.",
+          "No new durable BattleState field or authored spell id production dispatch was needed for Task 27."
+        ],
+        "requiredPlanEdits": "none"
+      }
+    },
+    {
       "taskId": "CRPI-BLOCK-033",
       "assignmentId": "reducer-spine-diagnostic-battle",
       "laneId": "battle",

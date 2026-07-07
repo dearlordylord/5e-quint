@@ -1,0 +1,119 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts public reducer concentration hazard qRoute replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "acceptance": {
+    "driverPath": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt",
+    "routeClass": "reducer-routed",
+    "acceptedProjection": "qRoute",
+    "requiredConnectorPaths": [
+      "packages/battle-runtime/battle-runtime-concentration-hazard-selected-route.route.mbt.qnt",
+      "packages/battle-runtime/battle-runtime-spatial-effect-route-surfaces.qnt",
+      "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt"
+    ]
+  },
+  "status": "pass",
+  "revisionRound": 1,
+  "driverQntFileSha256": "13117ad980d4f1389a7fbf8f5a79ac84d52e5da4248d10ddda54dce369169b3a",
+  "connectorSha256": {
+    "packages/battle-runtime/battle-runtime-concentration-hazard-selected-route.route.mbt.qnt": "80582785a18c81155376c73d6e08b7d03dbefdcf558fdde2ef78087b5e4ba2c6",
+    "packages/battle-runtime/battle-runtime-spatial-effect-route-surfaces.qnt": "b22af9ce93cdb23ba71c1f9f541db41e11b16212abd03fef4f26babcfdc148ce",
+    "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt": "776dec45864e04257a50b406ab36a7292aea8681b18b345cbfd2615124c07995"
+  },
+  "publicQRouteCoverage": [
+    {
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-concentration-hazard-selected-route.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-spatial-effect-route-surfaces.qnt"
+      ],
+      "qRouteSource": "packages/battle-runtime/battle-runtime-concentration-hazard-selected-route.route.mbt.qnt#qRoute",
+      "observedProjectionSource": "packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts#Level 2 control spell public reducer route replay observes Spike Growth movement hazard and Web restraint hazard qRoute events from public spell discovery, spell resolution, runtime movement/Saving Throw subjects, Hit Point/condition resolution, and public End Concentration cleanup.",
+      "targetEntrypointSequence": [
+        "start_battle",
+        "discover_battle_acts",
+        "resolve_battle_subject",
+        "end_turn",
+        "discover_battle_acts",
+        "resolve_battle_subject",
+        "end_turn",
+        "resolve_battle_subject"
+      ],
+      "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#startBattle/discoverBattleActs/resolveBattleSubject/endTurn",
+      "result": "pass"
+    },
+    {
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt"
+      ],
+      "qRouteSource": "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt#qRoute",
+      "observedProjectionSource": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts#routes spatial effects through light, sight, hazard, and table-witness owners; packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts#Level 2 control spell public reducer route replay",
+      "targetEntrypointSequence": [
+        "start_battle",
+        "discover_battle_acts",
+        "resolve_battle_subject"
+      ],
+      "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#startBattle/discoverBattleActs/resolveBattleSubject",
+      "result": "pass"
+    }
+  ],
+  "remainingRequiredPublicQRouteCoverage": [],
+  "reviewerFindingsAddressed": [
+    {
+      "finding": "The public reducer route projection admitted prior spatial hazards but did not emit selected-control qRoute events for Spike Growth movement damage, Web restraint saves, or concentration-backed area hazard cleanup through the spatialEffect route subject.",
+      "resolution": "Extended the existing generic spatialEffect route projection by typed spell procedure and runtime command shape. The route now emits Spike Growth movement damage, Web Saving Throw/condition lifecycle, and Concentration/area-hazard/active-effect cleanup owner events without authored spell id production dispatch or new durable state."
+    }
+  ],
+  "verification": [
+    {
+      "command": "git log --oneline -1 ralph/cleanroom-owner-battle-spell-20260706T213644Z/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor b4ab336dd59853e4fb4cb7bb21b4e7a3b881c01a HEAD",
+      "status": "pass",
+      "detail": "Base ref and HEAD both resolved to b4ab336dd Mark Ralph task 26 done; Base SHA is an ancestor of HEAD."
+    },
+    {
+      "command": "RAW/ubiquitous-language review: local SRD 5.2.1 Spike Growth, Web, Concentration, Difficult Terrain, Saving Throw, Restrained, Lightly Obscured, Area of Effect, and UBIQUITOUS_LANGUAGE.md route-owner terms",
+      "status": "pass",
+      "detail": "Checked Spike Growth and Web SRD passages plus generic Concentration, Difficult Terrain, Saving Throw, Restrained, Lightly Obscured, Movement, Spell Effect, Area of Effect, Obscurement, and Table Decision terms."
+    },
+    {
+      "command": "pnpm --filter @dnd/battle-runtime typecheck",
+      "status": "pass",
+      "detail": "Battle runtime TypeScript check passed after adding Task 27 route projection and public replay tests."
+    },
+    {
+      "command": "pnpm --filter @dnd/battle-runtime exec vitest run src/level2-control-spell-selected-identity.mbt.test.ts -t \"public reducer route replay\"",
+      "status": "pass",
+      "detail": "Focused public reducer qRoute replay passed: 1 passed, 1 skipped."
+    },
+    {
+      "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+      "status": "pass",
+      "detail": "Required MBT preflight found no active Vitest runner and no stale quint_evaluator before the focused MBT run."
+    },
+    {
+      "command": "START=$(date +%s); MBT_TRACES=1 pnpm --filter @dnd/battle-runtime exec vitest run src/level2-control-spell-selected-identity.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"(Level 2 control spell selected identity replay|public reducer route replay|routes selected concentration-backed hazards through generic spatial hazard surfaces|routes spatial effects through light, sight, hazard, and table-witness owners)\" 2>&1; STATUS=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$STATUS\"",
+      "status": "pass",
+      "detail": "Focused Task 27 selected replay and required route connector MBT passed: 2 files passed; 4 tests passed, 32 skipped; TOTAL: 12s."
+    },
+    {
+      "command": "pnpm cleanroom-branch-coverage:check",
+      "status": "pass",
+      "detail": "Cleanroom branch coverage passed with Task 27 evidence: 738 obligations, 24 sampled inputs."
+    },
+    {
+      "command": "git diff --check",
+      "status": "pass",
+      "detail": "Whitespace check passed."
+    },
+    {
+      "command": "pnpm quality",
+      "status": "pass",
+      "detail": "Full quality chain passed. App lint reported existing warnings and exited 0; turbo typecheck completed 9 successful tasks, all from cache."
+    }
+  ]
+}
