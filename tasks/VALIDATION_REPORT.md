@@ -1,5 +1,45 @@
 # Validation Report
 
+## CRPI-BLOCK-017
+
+Status: `pass`
+
+- Task: 25
+- Driver path: `packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-017.json`
+
+Task 25 records public reducer qRoute evidence for the level-1 spatial witness selected-identity driver as a `reducer-routed` task. The selected replay binds SRD catalog spell identity at the replay/admission boundary; route evidence is observed from generic battle reducer owners rather than authored spell ids.
+
+Current public qRoute coverage:
+
+- Covered: `battle-runtime-level1-spatial-witness-selected-identity.route.mbt.qnt` through `packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts` public reducer route replay.
+- Covered: `battle-runtime-save-gated-spell-ordering.route.mbt.qnt` through the supporting connector public replay for Thunderwave save-gated routing.
+- Covered: `battle-runtime-reaction-casting-time.route.mbt.qnt` through the supporting connector public replay for generic Feather Fall Reaction casting-time route events from `openCreatureFallsInterruptWindow` and `resolveBattleInterrupt`.
+- Covered: `battle-runtime-reaction-interrupt-payload-taxonomy.route.mbt.qnt` through the supporting connector public replay for the Feather Fall fall-mitigation payload and landing route surface.
+- Covered: `battle-runtime-object-light-riders.route.mbt.qnt` through the supporting connector public replay for Light and Produce Flame route events.
+- Covered: `battle-runtime-spatial-effects.route.mbt.qnt` through the supporting connector public replay for Dancing Lights, Faerie Fire, Fog Cloud, and Grease spatial-effect route events.
+- Covered: `battle-runtime-movement-presentation.route.mbt.qnt` through the supporting connector public replay for Jump and Thunderwave movement-presentation route events.
+- Remaining required public qRoute coverage: none.
+
+Task 25 fixed the production route projection needed for public evidence: `packages/battle-runtime/src/battle-reducer/reducer-route.ts` now emits the save-gated, generic Reaction, spatial, object-light, movement-presentation, reaction-fall-mitigation, reaction payload, and table/light/sight/obscurement/hazard subject and owner terms already present in the copied QNT route connectors and MBT decoding vocabulary. No durable `BattleState` field was added.
+
+Verification results:
+
+- Task-base check passed: base ref and HEAD both resolved to `a4eadb62b Mark Ralph task 24 done`; Base SHA is an ancestor of HEAD.
+- RAW/ubiquitous-language review passed for selected level-1 spatial witness spell substrates and route-owner terms.
+- MBT preflight found no active Vitest runner and no stale `quint_evaluator`.
+- `pnpm --filter @dnd/battle-runtime typecheck` passed.
+- `pnpm --filter @dnd/battle-runtime exec vitest run src/level1-spatial-witness-selected-identity.mbt.test.ts -t "public reducer route replay"` passed; copied Task 25 aggregate and supporting connector qRoute literals matched route events returned by public reducer calls.
+- Focused Task 25 MBT passed with the aggregate and supporting connector public reducer route replay included: selected replay plus required route connector subset, 4 files passed; 10 tests passed, 36 skipped; TOTAL: 22s.
+- `pnpm cleanroom-branch-coverage:check` passed with Task 25 evidence: 738 obligations, 24 sampled inputs.
+- `git diff --check` passed.
+- `pnpm quality` passed end to end; app lint reported existing warnings and exited 0; turbo typecheck completed 9 successful tasks, 5 from cache.
+
+Reviewer-loop status:
+
+- Round 2 fixed the aggregate public-entrypoint evidence gap from implementation review. Round 5 added explicit supporting-connector public qRoute replay for save-gated ordering, Reaction casting time, Reaction payload taxonomy, object-light riders, spatial effects, and movement presentation. The task uses generic public route owners, does not add authored-identity production dispatch, and does not duplicate route state.
+
 ## CRPI-BLOCK-016
 
 Status: `pass`

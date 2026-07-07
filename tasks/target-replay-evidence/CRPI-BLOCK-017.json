@@ -1,0 +1,200 @@
+{
+  "generatedBy": {
+    "tag": "target-harness",
+    "name": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts public reducer and supporting connector qRoute replay"
+  },
+  "cleanroomManifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+  "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
+  "targetProfile": "typescript-source-worktree",
+  "targetProfileSha256": "95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4",
+  "acceptance": {
+    "driverPath": "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt",
+    "routeClass": "reducer-routed",
+    "acceptedProjection": "qRoute",
+    "requiredConnectorPaths": [
+      "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.route.mbt.qnt",
+      "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
+      "packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt",
+      "packages/battle-runtime/battle-runtime-reaction-interrupt-payload-taxonomy.route.mbt.qnt",
+      "packages/battle-runtime/battle-runtime-object-light-riders.route.mbt.qnt",
+      "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt",
+      "packages/battle-runtime/battle-runtime-movement-presentation.route.mbt.qnt"
+    ]
+  },
+  "status": "pass",
+  "revisionRound": 5,
+  "driverQntFileSha256": "504f8ac40de6c810f172f58c61849a40313ad39eb0d400948e567d0900e7cda3",
+  "connectorSha256": {
+    "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.route.mbt.qnt": "4eb0a8bcaead7498072a1065bf17177a9782d6d85174bda0a3007406951af082",
+    "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt": "53158acbee365d467cab341ed75609aab7fc2d3092f8d5904a717298e21b25e3",
+    "packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt": "b53a97320fec767ecb40626008b68576c6af29767fb2b7760cf4b9650813755d",
+    "packages/battle-runtime/battle-runtime-reaction-interrupt-payload-taxonomy.route.mbt.qnt": "db1a7a19e5e7bdfa19d63acee6b49af6bed7cb56b73ca7d6326ff2796cb2c679",
+    "packages/battle-runtime/battle-runtime-object-light-riders.route.mbt.qnt": "ed95f7dce66871b84d36ea918d267737150e9fad7253dceb494bddf3b0b06baa",
+    "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt": "776dec45864e04257a50b406ab36a7292aea8681b18b345cbfd2615124c07995",
+    "packages/battle-runtime/battle-runtime-movement-presentation.route.mbt.qnt": "68e1cba43b61a040212a4db11b1de25d9a3df66d2f5ebe7892917727513d6a64"
+  },
+  "publicQRouteCoverage": [
+    {
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.route.mbt.qnt"
+      ],
+      "qRouteSource": "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.route.mbt.qnt#qRoute",
+      "observedProjectionSource": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts#Level 1 spatial witness public reducer route replay compares copied qRoute literals for movable multi-emitter light, outline/sight advantage, fall mitigation, area obscurement cleanup, area hazard save, area hazard movement, movement replacement, object light emitter, held light emitter, and save/push presentation against routeEvents returned by public reducer calls.",
+      "targetEntrypointSequence": [
+        "start_battle",
+        "discover_battle_acts",
+        "resolve_battle_subject",
+        "resolve_battle_interrupt",
+        "resolve_feather_fall_landing"
+      ],
+      "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#startBattle/discoverBattleActs/resolveBattleSubject/resolveBattleInterrupt/openCreatureFallsInterruptWindow/resolveFeatherFallLanding",
+      "result": "pass"
+    },
+    {
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt"
+      ],
+      "qRouteSource": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt#qRoute",
+      "observedProjectionSource": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts#observes every Task 25 supporting connector qRoute through public reducer entrypoints; #replaySaveGatedSpellOrderingRoute observes the copied save-gated qRoute from public discoverBattleActs and resolveBattleSubject calls for Thunderwave.",
+      "targetEntrypointSequence": [
+        "start_battle",
+        "discover_battle_acts",
+        "resolve_battle_subject"
+      ],
+      "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#startBattle/discoverBattleActs/resolveBattleSubject",
+      "result": "pass"
+    },
+    {
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt"
+      ],
+      "qRouteSource": "packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt#qRoute",
+      "observedProjectionSource": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts#observes every Task 25 supporting connector qRoute through public reducer entrypoints; #replayReactionCastingTimeRoute observes the copied generic reaction-casting qRoute from public openCreatureFallsInterruptWindow and resolveBattleInterrupt calls for Feather Fall.",
+      "targetEntrypointSequence": [
+        "start_battle",
+        "open_creature_falls_interrupt_window",
+        "resolve_battle_interrupt"
+      ],
+      "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#openCreatureFallsInterruptWindow/resolveBattleInterrupt",
+      "result": "pass"
+    },
+    {
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-reaction-interrupt-payload-taxonomy.route.mbt.qnt"
+      ],
+      "qRouteSource": "packages/battle-runtime/battle-runtime-reaction-interrupt-payload-taxonomy.route.mbt.qnt#qRoute",
+      "observedProjectionSource": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts#observes every Task 25 supporting connector qRoute through public reducer entrypoints; #replayFallMitigationRoute observes the copied fall-mitigation payload qRoute through public openCreatureFallsInterruptWindow, resolveBattleInterrupt, and resolveFeatherFallLanding calls.",
+      "targetEntrypointSequence": [
+        "start_battle",
+        "open_creature_falls_interrupt_window",
+        "resolve_battle_interrupt"
+      ],
+      "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#openCreatureFallsInterruptWindow/resolveBattleInterrupt/resolveFeatherFallLanding",
+      "result": "pass"
+    },
+    {
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-object-light-riders.route.mbt.qnt"
+      ],
+      "qRouteSource": "packages/battle-runtime/battle-runtime-object-light-riders.route.mbt.qnt#qRoute",
+      "observedProjectionSource": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts#observes every Task 25 supporting connector qRoute through public reducer entrypoints; #replayObjectLightEmitterRoute and #replayHeldLightEmitterRoute observe copied object-light qRoute from public discoverBattleActs and resolveBattleSubject calls for Light and Produce Flame.",
+      "targetEntrypointSequence": [
+        "start_battle",
+        "discover_battle_acts",
+        "resolve_battle_subject"
+      ],
+      "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#startBattle/discoverBattleActs/resolveBattleSubject",
+      "result": "pass"
+    },
+    {
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt"
+      ],
+      "qRouteSource": "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt#qRoute",
+      "observedProjectionSource": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts#observes every Task 25 supporting connector qRoute through public reducer entrypoints; #replayMovableMultiEmitterLightRoute, #replayOutlineSightAdvantageRoute, #replayAreaObscurementCleanupRoute, #replayAreaHazardSaveRoute, and #replayAreaHazardMovementRoute observe copied spatial-effect qRoute from public discoverBattleActs and resolveBattleSubject calls for Dancing Lights, Faerie Fire, Fog Cloud, and Grease.",
+      "targetEntrypointSequence": [
+        "start_battle",
+        "discover_battle_acts",
+        "resolve_battle_subject"
+      ],
+      "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#startBattle/discoverBattleActs/resolveBattleSubject",
+      "result": "pass"
+    },
+    {
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-movement-presentation.route.mbt.qnt"
+      ],
+      "qRouteSource": "packages/battle-runtime/battle-runtime-movement-presentation.route.mbt.qnt#qRoute",
+      "observedProjectionSource": "packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts#observes every Task 25 supporting connector qRoute through public reducer entrypoints; #replayMovementReplacementRoute and #replaySavePushPresentationRoute observe copied movement-presentation qRoute from public discoverBattleActs and resolveBattleSubject calls for Jump and Thunderwave.",
+      "targetEntrypointSequence": [
+        "start_battle",
+        "discover_battle_acts",
+        "resolve_battle_subject"
+      ],
+      "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#startBattle/discoverBattleActs/resolveBattleSubject",
+      "result": "pass"
+    }
+  ],
+  "remainingRequiredPublicQRouteCoverage": [],
+  "reviewerFindingsAddressed": [
+    {
+      "finding": "Production BattleReducerRouteEvent vocabulary did not expose the spatial, object-light, movement-presentation, reaction-fall-mitigation, reaction payload, and table/light/sight/obscurement/hazard owner terms already present in copied QNT route connectors and the MBT decoding vocabulary.",
+      "resolution": "Extended packages/battle-runtime/src/battle-reducer/reducer-route.ts route subject and owner union types to include the Task 25 reducer-routed vocabulary without adding duplicate BattleState fields or authored-identity dispatch."
+    },
+    {
+      "finding": "Round 1 evidence cited route-driver-only connector MBT rather than observing qRoute from public reducer entrypoints.",
+      "resolution": "Added packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts public reducer route replay. It executes startBattle setup plus public discoverBattleActs, resolveBattleSubject, openCreatureFallsInterruptWindow, resolveBattleInterrupt, and resolveFeatherFallLanding surfaces, then compares emitted routeEvents to copied qRoute literals for every Task 25 spatial composition surface."
+    },
+    {
+      "finding": "Round 4 review found that six supporting connector paths were still overclaimed because only the aggregate level-1 route had public-entrypoint comparison.",
+      "resolution": "Added a supporting-connector public reducer replay in packages/battle-runtime/src/level1-spatial-witness-selected-identity.mbt.test.ts and composed production routeEvents so saveGatedSpell and reactionSpell qRoutes are emitted alongside the spatial, movement, object-light, and reaction-fall-mitigation qRoutes observed from public reducer entrypoints."
+    }
+  ],
+  "verification": [
+    {
+      "command": "git log --oneline -1 ralph/cleanroom-owner-battle-spell-20260706T213644Z/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor a4eadb62b47429f2bdfc1b450f3bdd5df4abfe86 HEAD",
+      "status": "pass",
+      "detail": "Base ref and HEAD both resolved to a4eadb62b Mark Ralph task 24 done; Base SHA is an ancestor of HEAD."
+    },
+    {
+      "command": "RAW/ubiquitous-language review: rg local SRD 5.2.1 spell, movement, vision/light, difficult terrain, Reaction, Area of Effect, Cover, Dim Light, Heavily Obscured, and Long Jump passages plus UBIQUITOUS_LANGUAGE.md route-owner terms",
+      "status": "pass",
+      "detail": "Checked local SRD 5.2.1 spell and generic rules passages for Dancing Lights, Faerie Fire, Feather Fall, Fog Cloud, Grease, Jump, Light, Produce Flame, Thunderwave, movement, vision/light, object, area, cover, and reaction vocabulary; checked UBIQUITOUS_LANGUAGE.md terms for Reaction, Area of Effect, Cover, Difficult Terrain, Long Jump, Illumination, Obscurement, Movement, Speed, Spell Invocation, Spell Effect, Boundary Crossing, and Table Decision."
+    },
+    {
+      "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+      "status": "pass",
+      "detail": "Required MBT preflight found no active Vitest runner and no stale quint_evaluator before focused MBT runs."
+    },
+    {
+      "command": "pnpm --filter @dnd/battle-runtime typecheck",
+      "status": "pass",
+      "detail": "Battle runtime TypeScript check passed after adding public route projection for Task 25 spatial composition surfaces."
+    },
+    {
+      "command": "pnpm --filter @dnd/battle-runtime exec vitest run src/level1-spatial-witness-selected-identity.mbt.test.ts -t \"public reducer route replay\"",
+      "status": "pass",
+      "detail": "Focused public reducer qRoute replay passed: copied Task 25 aggregate and supporting connector qRoute literals matched routeEvents returned by public reducer calls; 2 passed, 1 skipped."
+    },
+    {
+      "command": "START=$(date +%s); MBT_TRACES=1 pnpm --filter @dnd/battle-runtime exec vitest run src/level1-spatial-witness-selected-identity.mbt.test.ts src/reducer-route-connectors.mbt.test.ts src/reaction-interrupt-routes.mbt.test.ts src/movement-forced-movement-selected-identity.mbt.test.ts -t \"(Level 1 spatial witness selected identity replay|public reducer route replay|routes the grouped level-1 spatial witness through composed generic reducer surfaces|routes save-gated spell ordering through the shared reducer surface|routes Reaction casting time through explicit battle owners|routes reaction payload taxonomy through generic trigger families and owners|routes object and light riders through object boundary, active-effect, projection, and table-witness owners|routes spatial effects through light, sight, hazard, and table-witness owners|routes movement replacement, forced movement, and object-push presentation through generic facts)\" 2>&1; STATUS=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$STATUS\"",
+      "status": "pass",
+      "detail": "Focused Task 25 MBT passed with the aggregate and supporting connector public reducer route replay included: 4 files passed; 10 tests passed, 36 skipped; TOTAL: 22s."
+    },
+    {
+      "command": "pnpm cleanroom-branch-coverage:check",
+      "status": "pass",
+      "detail": "Cleanroom branch coverage passed with Task 25 evidence: 738 obligations, 24 sampled inputs."
+    },
+    {
+      "command": "git diff --check",
+      "status": "pass",
+      "detail": "Whitespace check passed."
+    },
+    {
+      "command": "pnpm quality",
+      "status": "pass",
+      "detail": "Full quality chain passed. App lint reported existing warnings and exited 0; turbo typecheck completed 9 successful tasks, 5 from cache."
+    }
+  ]
+}

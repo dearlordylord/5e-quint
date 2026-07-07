@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-016",
+  "taskId": "CRPI-BLOCK-017",
   "durableFields": [
     {
       "fieldPath": "AvailableBattleAct.routeEvents",
@@ -20,7 +20,7 @@
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing BattleState runtime state owns spell condition, next Attack Roll mode, object-light, and other active effects reached by Task 24 selected damage spells; Task 24 adds no duplicate durable state."
+      "notes": "Existing BattleState runtime state owns spell light emitters, obscurement zones, ground hazards, jump replacement, Feather Fall mitigation, and other active effects reached by Task 25 selected spatial witness spells."
     },
     {
       "fieldPath": "BattleCreatureState.conditions",
@@ -29,7 +29,7 @@
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing BattleState runtime state owns applied conditions such as Poisoned; Task 24 adds no duplicate durable state."
+      "notes": "Existing BattleState runtime state owns applied conditions such as Prone and sight-dependent attack-roll mode effects reached by Grease, Jump landing, and Faerie Fire substrates."
     },
     {
       "fieldPath": "BattleCreatureState.hp",
@@ -38,51 +38,51 @@
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing BattleState runtime state owns Hit Point effects; Task 24 adds no duplicate durable state."
+      "notes": "Existing BattleState runtime state owns Hit Point effects for Thunderwave damage and Produce Flame hurl damage; Task 25 adds no duplicate durable state."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=saveGatedSpell",
+      "fieldPath": "BattleReducerRouteEvent.subject=reactionFallMitigation",
       "owner": "executable-boundary-projection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleState plus AvailableBattleAct/BattleResolutionResult routeEvents",
+        "sourceField": "BattleState interrupt stack plus BattleResolutionResult routeEvents",
         "boundary": "battle-runtime public reducer route event boundary"
       },
-      "notes": "Projection is derived from typed save-gated spell procedure and public reducer holes/fills."
+      "notes": "Projection is derived from typed falling-trigger Reaction and Feather Fall mitigation facts."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=spellAttackProcedure",
+      "fieldPath": "BattleReducerRouteEvent.subject=movementPresentation",
       "owner": "executable-boundary-projection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleState plus AvailableBattleAct/BattleResolutionResult routeEvents",
+        "sourceField": "BattleState plus movement, forced movement, landing, and object-push facts",
         "boundary": "battle-runtime public reducer route event boundary"
       },
-      "notes": "Projection is derived from typed spell Attack procedure and public reducer holes/fills."
+      "notes": "Projection is derived from movement fills, landing witnesses, forced movement facts, object-push facts, and table presentation facts."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=spellAttackProcedure(chained)",
+      "fieldPath": "BattleReducerRouteEvent.subject=objectLightRider",
       "owner": "executable-boundary-projection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleState plus AvailableBattleAct/BattleResolutionResult routeEvents",
+        "sourceField": "BattleState plus object-light active effects and target spatial facts",
         "boundary": "battle-runtime public reducer route event boundary"
       },
-      "notes": "Chromatic Orb duplicate-damage leap reuses the existing chained spell Attack route projection; no selected spell id dispatch is added."
+      "notes": "Projection is derived from object target boundary, active-effect, light projection, cleanup, and table-witness facts."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=objectTargetSpellAttack",
+      "fieldPath": "BattleReducerRouteEvent.subject=spatialEffect",
       "owner": "executable-boundary-projection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleState plus object-target spell Attack holes/fills",
+        "sourceField": "BattleState plus spatial active effects, area witnesses, light/sight/obscurement projections, and hazard facts",
         "boundary": "battle-runtime public reducer route event boundary"
       },
-      "notes": "Starry Wisp object-target boundary evidence is projected from existing object target and light-emitter facts."
+      "notes": "Projection is derived from generic spatial owner facts for multi-emitter lights, outlines, area obscurement, area hazards, and table spatial witnesses."
     },
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
@@ -97,8 +97,8 @@
     }
   ],
   "notes": [
-    "Task 24 introduced no new durable BattleState or BattleCreatureState fields.",
-    "Selected spell identity is retained only at catalog/support-profile and selected replay boundaries; production route dispatch uses typed invocation procedure, target fills, object-target facts, condition rider facts, and BattleState deltas.",
+    "Task 25 introduced no new durable BattleState or BattleCreatureState fields.",
+    "Selected spell identity is retained only at catalog/support-profile and selected replay boundaries; production route vocabulary uses typed reaction, movement, object-light, spatial-effect, save-gated, projection, hazard, and table witness subjects.",
     "Route subjects are executable boundary projections derived from existing owner state and public reducer results, not a stored route ledger or duplicate active-effect state."
   ]
 }
