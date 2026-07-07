@@ -156,6 +156,7 @@ describe("battle runtime: attack rolls and damage", () => {
         },
       },
     });
+    expect(result).not.toHaveProperty("routeEvents");
   });
 
   test("attack replay rejects damage fills on a miss", () => {

@@ -57,6 +57,10 @@ import {
   currentActorId,
   zeroHpLifecycleIsTerminal,
 } from "./creature-state-leaves.ts";
+import {
+  ATTACK_ROLL_REQUIRED_BEFORE_DAMAGE_MESSAGE,
+  ATTACK_TARGET_REQUIRED_BEFORE_ROLL_OR_DAMAGE_MESSAGE,
+} from "./attack-ordering-messages.ts";
 
 type AfterHitDamageRiderChoice = Extract<
   BattleInterruptCheckpoint["choices"][number],
@@ -5341,9 +5345,6 @@ function weaponAttackRouteForResolution(
   if (!isWeaponAttackSubject(input.subject)) {
     return undefined;
   }
-  if (result.tag === "invalid") {
-    return undefined;
-  }
 
   const fill = input.fills.at(-1);
   if (fill === undefined) {
@@ -5352,6 +5353,9 @@ function weaponAttackRouteForResolution(
   const routeFill = battleReducerRouteFill(fill);
   if (routeFill === undefined) {
     return undefined;
+  }
+  if (result.tag === "invalid") {
+    return weaponAttackInvalidFillRoute(result, routeFill);
   }
   const holes =
     result.tag === "needsHoles" ? battleReducerRouteHoles(result.holes) : [];
@@ -5421,6 +5425,46 @@ function weaponAttackRouteForResolution(
     });
   }
   return [weaponDamageRoute, ...routeTail];
+}
+
+function weaponAttackInvalidFillRoute(
+  result: Extract<BattleResolutionResult, { readonly tag: "invalid" }>,
+  routeFill: BattleReducerRouteFill,
+): BattleReducerRouteEvents | undefined {
+  const holes = weaponAttackOrderingInvalidHoles(result, routeFill);
+  if (holes === undefined) {
+    return undefined;
+  }
+  return [
+    {
+      kind: "resolveBattleSubject",
+      subject: "weaponAttack",
+      fill: routeFill,
+      holes,
+      owner: "battleHoleFrontier",
+    },
+  ];
+}
+
+function weaponAttackOrderingInvalidHoles(
+  result: Extract<BattleResolutionResult, { readonly tag: "invalid" }>,
+  routeFill: BattleReducerRouteFill,
+): readonly ["targetChoice"] | readonly ["attackRoll"] | undefined {
+  if (
+    result.reason === "invalidFill" &&
+    result.message === ATTACK_TARGET_REQUIRED_BEFORE_ROLL_OR_DAMAGE_MESSAGE &&
+    routeFill === "attackRoll"
+  ) {
+    return ["targetChoice"] as const;
+  }
+  if (
+    result.reason === "invalidFill" &&
+    result.message === ATTACK_ROLL_REQUIRED_BEFORE_DAMAGE_MESSAGE &&
+    routeFill === "rolledDice"
+  ) {
+    return ["attackRoll"] as const;
+  }
+  return undefined;
 }
 
 function protectionCharmAttackRollModeRouteForResolution(

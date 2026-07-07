@@ -3453,40 +3453,24 @@ export function createWeaponAttackOrderingRouteDriver() {
       state = fighterVsSkeletonBattle();
       fills = [];
       holes = [];
-      route = [reducerRouteStartBattle("battleActionEconomy")];
+      route = [battleReducerStartRouteEvent()];
       stage = "actSelection";
       lastResult = "init";
       orderingError = "";
     }
 
-    function routeHolesAfter(
-      result: BattleResolutionResult,
-    ): readonly BattleHole[] {
-      if (result.tag === "resolved") return [];
-      if (result.tag === "needsHoles") return result.holes;
-      return holes;
-    }
-
     function recordAccepted(
       result: BattleResolutionResult,
       nextStage: WeaponAttackOrderingProjection["stage"],
-      fill: ReducerRouteFill,
-      owner: ReducerRouteOwnerGroup,
     ): void {
       lastResult = result.tag;
-      const nextRouteHoles = routeHolesAfter(result);
       if (result.tag === "resolved") {
         state = result.state;
         holes = [];
-        route = [
-          ...route,
-          reducerRouteResolveBattleSubject({
-            subject: "weaponAttack",
-            fill,
-            holes: nextRouteHoles,
-            owner,
-          }),
-        ];
+        route = appendPublicRouteEvents(
+          route,
+          requireWeaponAttackOrderingRouteEvents(result),
+        );
         stage = nextStage;
         orderingError = "";
         return;
@@ -3494,15 +3478,10 @@ export function createWeaponAttackOrderingRouteDriver() {
       if (result.tag === "needsHoles") {
         state = result.state;
         holes = result.holes;
-        route = [
-          ...route,
-          reducerRouteResolveBattleSubject({
-            subject: "weaponAttack",
-            fill,
-            holes: nextRouteHoles,
-            owner,
-          }),
-        ];
+        route = appendPublicRouteEvents(
+          route,
+          requireWeaponAttackOrderingRouteEvents(result),
+        );
         stage = nextStage;
         orderingError = "";
         return;
@@ -3517,7 +3496,6 @@ export function createWeaponAttackOrderingRouteDriver() {
         ""
       >,
       expectedMessage: string,
-      fill: ReducerRouteFill,
     ): void {
       if (
         result.tag !== "invalid" ||
@@ -3528,15 +3506,10 @@ export function createWeaponAttackOrderingRouteDriver() {
           `Expected weapon attack ordering fill rejection: ${expectedMessage}`,
         );
       }
-      route = [
-        ...route,
-        reducerRouteResolveBattleSubject({
-          subject: "weaponAttack",
-          fill,
-          holes,
-          owner: "battleHoleFrontier",
-        }),
-      ];
+      route = appendPublicRouteEvents(
+        route,
+        requireWeaponAttackOrderingRouteEvents(result),
+      );
       lastResult = result.tag;
       orderingError = expectedOrderingError;
     }
@@ -3546,15 +3519,12 @@ export function createWeaponAttackOrderingRouteDriver() {
     return {
       init: reset,
       doDiscoverAttack: () => {
-        holes = discoverAttackHoles(state, subject);
-        route = [
-          ...route,
-          reducerRouteDiscoverBattleActs({
-            subject: "weaponAttack",
-            holes,
-            owner: "battleActionEconomy",
-          }),
-        ];
+        const act = discoverAttackAct(state, subject);
+        holes = act.initialHoles;
+        route = appendPublicRouteEvents(
+          route,
+          requireWeaponAttackOrderingActRouteEvents(act),
+        );
         stage = "targetChoice";
         lastResult = "needsHoles";
         orderingError = "";
@@ -3573,7 +3543,6 @@ export function createWeaponAttackOrderingRouteDriver() {
           }),
           "targetChoiceRequired",
           ATTACK_TARGET_REQUIRED_BEFORE_ROLL_OR_DAMAGE_MESSAGE,
-          "attackRoll",
         );
       },
       doFillTargetChoice: () => {
@@ -3582,8 +3551,6 @@ export function createWeaponAttackOrderingRouteDriver() {
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
           "attackRoll",
-          "targetChoice",
-          "battleTargetSelection",
         );
       },
       doRejectDamageBeforeAttackRoll: () => {
@@ -3603,7 +3570,6 @@ export function createWeaponAttackOrderingRouteDriver() {
           }),
           "attackRollRequired",
           ATTACK_ROLL_REQUIRED_BEFORE_DAMAGE_MESSAGE,
-          "rolledDice",
         );
       },
       doFillAttackRollMiss: () => {
@@ -3615,8 +3581,6 @@ export function createWeaponAttackOrderingRouteDriver() {
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
           "resolved",
-          "attackRoll",
-          "battleAttackRoll",
         );
       },
       doFillAttackRollHit: () => {
@@ -3628,8 +3592,6 @@ export function createWeaponAttackOrderingRouteDriver() {
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
           "damageDice",
-          "attackRoll",
-          "battleAttackRoll",
         );
       },
       doFillDamageDice: () => {
@@ -3638,8 +3600,6 @@ export function createWeaponAttackOrderingRouteDriver() {
         recordAccepted(
           resolveBattleSubject({ state, subject, fills }),
           "resolved",
-          "rolledDice",
-          "battleHitPoint",
         );
       },
       step: () => {},
@@ -15731,6 +15691,16 @@ function discoverAttackHoles(
     { readonly tag: "action"; readonly action: "attack" }
   >,
 ): readonly BattleHole[] {
+  return discoverAttackAct(state, subject).initialHoles;
+}
+
+function discoverAttackAct(
+  state: BattleState,
+  subject: Extract<
+    BattleSubject,
+    { readonly tag: "action"; readonly action: "attack" }
+  >,
+): AvailableBattleAct {
   const act = discoverBattleActs(state).find(
     (candidate) =>
       candidate.subject.tag === "action" &&
@@ -15741,7 +15711,7 @@ function discoverAttackHoles(
     throw new Error(`Expected ${subject.attackName} attack act.`);
   }
 
-  return act.initialHoles;
+  return act;
 }
 
 function discoverLongstriderAct(
@@ -16261,6 +16231,28 @@ function requireHitPointRestorationOrderingRouteEvents(
   }
   throw new Error(
     "Expected public reducer route events on Hit Point restoration resolution.",
+  );
+}
+
+function requireWeaponAttackOrderingActRouteEvents(
+  act: AvailableBattleAct,
+): readonly ReducerRouteEvent[] {
+  if (act.routeEvents !== undefined && act.routeEvents.length > 0) {
+    return act.routeEvents;
+  }
+  throw new Error(
+    "Expected public reducer route events on weapon Attack ordering act.",
+  );
+}
+
+function requireWeaponAttackOrderingRouteEvents(
+  result: BattleResolutionResult,
+): readonly ReducerRouteEvent[] {
+  if (result.routeEvents !== undefined && result.routeEvents.length > 0) {
+    return result.routeEvents;
+  }
+  throw new Error(
+    "Expected public reducer route events on weapon Attack ordering resolution.",
   );
 }
 

@@ -1,86 +1,99 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-032",
+  "taskId": "CRPI-BLOCK-033",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/battle-runtime/battle-runtime-thaumaturgy-selected-identity.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt",
       "quarantinedWitnessNames": [
-        "qActionAvailable",
-        "qCasterEffectCount",
-        "qIntimidationRollMode",
-        "qPerceptionRollMode",
+        "qLastOrderingError",
         "qProtocol",
-        "qWisdomIntimidationRollMode"
+        "qStage"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-032.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-033.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.route.mbt.qnt",
       "quarantinedWitnessNames": [
+        "qLastOrderingError",
+        "qProtocol",
         "qRoute",
-        "qSurface"
+        "qStage"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-032.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-033.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/thaumaturgy-selected-identity.mbt.test.ts",
+      "path": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
       "quarantinedWitnessNames": [
-        "observeThaumaturgyBoomingVoiceRoute",
-        "ThaumaturgyRouteProjection"
+        "createWeaponAttackOrderingRouteDriver",
+        "ReducerRoutedWeaponAttackOrderingProjection",
+        "reducerRoutedWeaponAttackOrderingStateCheck"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-032.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-033.json"
       ]
     }
   ],
   "productionModulesExtended": [
+    {
+      "path": "packages/battle-runtime/src/battle-reducer.ts",
+      "role": "domain-engine",
+      "domainApis": [
+        "startBattle",
+        "discoverBattleActs",
+        "resolveBattleSubject",
+        "BattleState.combatants"
+      ],
+      "notes": "Existing public reducer entrypoints own the weapon Attack ordering replay. Task 62 introduced no new durable BattleState field."
+    },
+    {
+      "path": "packages/battle-runtime/src/battle-reducer/attack-main.ts",
+      "role": "domain-engine",
+      "domainApis": [
+        "resolveAttack",
+        "resolveSelectedAttackProcedure",
+        "ATTACK_TARGET_REQUIRED_BEFORE_ROLL_OR_DAMAGE_MESSAGE",
+        "ATTACK_ROLL_REQUIRED_BEFORE_DAMAGE_MESSAGE"
+      ],
+      "notes": "Existing weapon Attack resolution enforces target choice before Attack Roll and Attack Roll before damage dice through typed fill order and public invalid-fill results."
+    },
+    {
+      "path": "packages/battle-runtime/src/battle-reducer/attack-ordering-messages.ts",
+      "role": "domain-vocabulary",
+      "domainApis": [
+        "ATTACK_TARGET_REQUIRED_BEFORE_ROLL_OR_DAMAGE_MESSAGE",
+        "ATTACK_ROLL_REQUIRED_BEFORE_DAMAGE_MESSAGE"
+      ],
+      "notes": "Leaf constants keep the reducer's ordering invalid-fill messages shared between attack resolution and route projection without importing the attack reducer into the route surface."
+    },
     {
       "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "role": "runtime-projection",
       "domainApis": [
         "battleReducerRouteEventsForDiscoveredAct",
         "battleReducerRouteForResolution",
-        "rollModifierRouteForDiscoveredAct",
-        "rollModifierRouteForResolution"
+        "battleReducerRouteEventsForDiscoveredAct inline isWeaponAttackSubject(act.subject) branch",
+        "weaponAttackRouteForResolution"
       ],
-      "notes": "Task 60 reuses existing generic rollModifierEffect route projection. Thaumaturgy Booming Voice discovery and resolution are derived from typed actionSpell invocation procedure, public initial holes, the thaumaturgyActiveOneMinuteEffectCount fill, and BattleResolutionResult.routeEvents; no route-local or Thaumaturgy-specific ledger is stored."
-    },
-    {
-      "path": "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/thaumaturgy-booming-voice.ts",
-      "role": "domain-engine",
-      "domainApis": [
-        "thaumaturgyBoomingVoiceProfile"
-      ],
-      "notes": "Existing profile owns Booming Voice active-effect admission through public spell resolution. The active one-minute effect count remains caller boundary evidence supplied by fill, not BattleState state."
-    },
-    {
-      "path": "packages/battle-runtime/src/battle-reducer.ts",
-      "role": "domain-engine",
-      "domainApis": [
-        "discoverBattleActs",
-        "resolveBattleSubject",
-        "BattleCreatureState.activeEffects"
-      ],
-      "notes": "Existing BattleState owns the active Spell Effect in combatant activeEffects. Task 60 introduced no new durable BattleState field."
+      "notes": "Task 62 uses the production weaponAttack route projection for accepted fills and the two ordering invalid-fill results. Subject, owner, fill, and frontier holes are derived from public action discovery, submitted fill kind, BattleResolutionResult shape, and the established attack-ordering invalid messages."
     }
   ],
   "expectedNextReuse": [
     {
-      "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "notes": "Future selected roll-modifier active-effect tasks should reuse rollModifierEffect public route events derived from typed procedure/fill/result shape instead of branching on authored spell identity or connector action names."
+      "path": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "notes": "Future weapon Attack route evidence should reuse createWeaponAttackOrderingRouteDriver and public reducer route-event normalization instead of duplicating an adapter-local route table."
     },
     {
-      "path": "packages/battle-runtime/src/roll-modifier-active-effects.mbt.test.ts",
-      "notes": "The full copied roll-modifier active-effects route connector replay remains the broad qRoute parity lane for roll-modifier active-effect route subjects."
+      "path": "packages/battle-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "notes": "The copied weapon Attack ordering route connector replay remains the focused qRoute parity lane for WeaponAttackRouteSubject ordering."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 60 observes the copied Thaumaturgy selected-identity qRoute through public reducer route events: startBattle, rollModifierEffect discovery owned by battleActiveEffect, and rollModifierEffect resolution without fill owned by battleActiveEffect."
+    "notes": "Task 62 observes copied weapon Attack ordering qRoute through public reducer route events: startBattle, AvailableBattleAct.routeEvents from discoverBattleActs, and BattleResolutionResult.routeEvents from resolveBattleSubject across target-choice, Attack Roll, hole-frontier rejection, and Hit Point owners."
   }
 }

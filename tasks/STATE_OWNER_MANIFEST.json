@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-032",
+  "taskId": "CRPI-BLOCK-033",
   "durableFields": [
     {
       "fieldPath": "AvailableBattleAct.routeEvents",
@@ -11,7 +11,7 @@
         "sourceField": "AvailableBattleAct.initialHoles",
         "boundary": "discoverBattleActs public reducer result"
       },
-      "notes": "Existing discovery results carry rollModifierEffect route events derived from typed spell procedure and initial hole shape."
+      "notes": "Existing discovery results carry weaponAttack route events derived from typed weapon Attack subject shape and TargetChoice initial hole facts."
     },
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
@@ -22,61 +22,88 @@
         "sourceField": "BattleResolutionResult.tag",
         "boundary": "resolveBattleSubject public reducer result"
       },
-      "notes": "Existing resolution results carry rollModifierEffect route events derived from submitted fill and resolved active-effect admission."
+      "notes": "Existing resolution results carry weaponAttack route events derived from submitted targetChoice, attackRoll, and rolledDice fills plus resolved or needs-holes result shape. Invalid route events are limited to the two established weapon Attack ordering invalid-fill messages."
     },
     {
-      "fieldPath": "BattleSubject.actionSpell.invocation.procedure=thaumaturgyBoomingVoice",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing typed invocation procedure admits Booming Voice behavior without production dispatch on spell name or id."
-    },
-    {
-      "fieldPath": "BattleFill.kind=thaumaturgyActiveOneMinuteEffectCount",
+      "fieldPath": "BattleSubject.action=attack",
       "owner": "caller-boundary-evidence",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing fill carries the caller-supplied count of active one-minute Thaumaturgy effects. It is not copied into a reducer ledger."
+      "notes": "Existing typed Attack action subject facts feed the reducer; production route behavior does not dispatch on authored weapon or source identity."
     },
     {
-      "fieldPath": "BattleCreatureState.activeEffects[].kind=thaumaturgyBoomingVoice",
+      "fieldPath": "BattleFill.kind=targetChoice",
+      "owner": "caller-boundary-evidence",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing targetChoice fills satisfy the first weapon Attack ordering frontier and advance to Attack Roll holes."
+    },
+    {
+      "fieldPath": "BattleFill.kind=attackRoll",
+      "owner": "caller-boundary-evidence",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing Attack Roll fills route through the attack-roll owner and either resolve a miss or expose rolledDice holes on a hit."
+    },
+    {
+      "fieldPath": "BattleFill.kind=rolledDice",
+      "owner": "caller-boundary-evidence",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing rolledDice fills route hit damage through the Hit Point owner after Attack Roll success."
+    },
+    {
+      "fieldPath": "BattleCreatureState.hp",
       "owner": "battle-state",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing activeEffects owns the active Spell Effect after public resolution."
+      "notes": "Existing target Hit Points own durable damage results; Task 62 introduced no parallel damage or HP ledger."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=rollModifierEffect",
+      "fieldPath": "BattleCreatureState.tempHp",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing Temporary Hit Points remain part of Hit Point damage application and are not copied into route evidence state."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.subject=weaponAttack",
       "owner": "executable-boundary-projection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleSubject.actionSpell.invocation.procedure",
+        "sourceField": "BattleSubject.action=attack",
         "boundary": "battle reducer route event"
       },
-      "notes": "Generic roll-modifier route subject is derived from typed spell procedure shape, including thaumaturgyBoomingVoice, not authored spell identity."
+      "notes": "Generic weaponAttack route subject is derived from typed BattleSubject shape, not authored identity or connector filenames."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.owner=battleActiveEffect",
+      "fieldPath": "BattleReducerRouteEvent.owner=battleActionEconomy|battleTargetSelection|battleAttackRoll|battleHoleFrontier|battleHitPoint",
       "owner": "executable-boundary-projection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleFill.kind=thaumaturgyActiveOneMinuteEffectCount",
+        "sourceField": "BattleResolutionResult.tag",
         "boundary": "battle reducer route event"
       },
-      "notes": "Thaumaturgy Booming Voice active-effect admission is routed to the active-effect owner; the one-minute count remains fill evidence."
+      "notes": "Weapon Attack ordering route owners are derived from public discovery and fill/result shape: action economy for discovery, target selection for targetChoice, attack-roll owner for Attack Roll, hole frontier only for the two ordering invalid-fill messages, and Hit Point owner for damage. Invalid out-of-order route events preserve the still-open targetChoice or attackRoll frontier rather than storing a separate ordering ledger."
     }
   ],
   "notes": [
-    "Task 60 introduced no new durable BattleState fields.",
-    "The one-minute Thaumaturgy active-effect count remains caller boundary evidence on the fill.",
-    "Production route behavior branches on typed spell procedure, public hole/fill shape, and reducer result route events; it does not branch on authored spell id, name, QNT branch action names, witness field names, fixture labels, or connector filenames."
+    "Task 62 introduced no new durable BattleState fields.",
+    "Weapon/source identity remains a typed attack fact selected at the boundary; production route behavior uses subject, fill, hole, result shape, and established ordering invalid-fill messages.",
+    "Route evidence records executable-boundary projection state only; it does not duplicate target choice, Attack Roll, damage dice, HP, or invalid-fill state."
   ]
 }
