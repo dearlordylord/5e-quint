@@ -1,47 +1,47 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-039",
+  "taskId": "CRPI-BLOCK-042",
   "durableFields": [
     {
-      "fieldPath": "CharacterBuild",
+      "fieldPath": "CharacterBuild.features",
       "owner": "character-build",
       "introducedIn": "packages/character-creation-runtime/src/types.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing finalized CharacterBuild is the source for build-owned combat projection facts. Task 82 does not add lifecycle state to CharacterBuild."
+      "notes": "Existing selected class-choice, Eldritch Invocation, and Metamagic option refs remain retained build facts. Task 85 adds no duplicate selected-reference cache."
     },
     {
-      "fieldPath": "CharacterSheet.currentHp",
-      "owner": "character-sheet",
-      "introducedIn": "packages/character-sheet-runtime/src/sheet-types.ts",
+      "fieldPath": "CharacterBuild.spellcasting.sources",
+      "owner": "character-build",
+      "introducedIn": "packages/character-creation-runtime/src/types.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing Character Sheet current Hit Points are the persistent pre-battle and post-settlement character-owned Hit Point fact."
+      "notes": "Existing cantrip, spellbook, prepared-spell, and Book of Shadows selections are retained build facts used by selected-reference projection."
     },
     {
-      "fieldPath": "BattleState.combatants[*].hp",
-      "owner": "battle-runtime",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/model.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing BattleState combatant Hit Points are the battle-owned mutation source during runtime."
-    },
-    {
-      "fieldPath": "CharacterBattleRouteEvent",
-      "owner": "character-battle-route-projection",
-      "introducedIn": "packages/character-battle-runtime/src/character-battle-route.ts",
+      "fieldPath": "CharacterCreationRouteEvent.subject=selectedReference",
+      "owner": "character-creation-selected-reference-route-projection",
+      "introducedIn": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts",
       "derivability": {
         "tag": "runtime-projection"
       },
-      "notes": "Route events project existing layer handoff boundaries and owners; they are not stored as a duplicate lifecycle state machine."
+      "notes": "Selected-reference route events are emitted by the public projection entrypoint after it reads retained CharacterBuild selected refs."
+    },
+    {
+      "fieldPath": "CharacterCreationRouteEvent.facts=selectedReferenceRetention",
+      "owner": "character-creation-selected-reference-route-projection",
+      "introducedIn": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts",
+      "derivability": {
+        "tag": "runtime-projection"
+      },
+      "notes": "CreationSelectedReferenceRetentionFact records the selected-reference route boundary without storing a parallel selected Unit ref list."
     }
   ],
   "notes": [
-    "Task 82 introduced no new durable CharacterBuild, CharacterSheet, BattleState, or BattleCreatureState fields.",
-    "The lifecycle replay keeps Draft, Build, Sheet, BattleInitProjection, BattleRuntime, and Settlement as separate domain layers.",
-    "CharacterBattleBuildProjectionOwner, CharacterBattleSheetOwner, CharacterBattleInitProjectionOwner, CharacterBattleRuntimeOwner, and CharacterBattleSettlementOwner remain the durable owner vocabulary."
+    "Task 85 introduced no new durable CharacterBuild fields.",
+    "Selected Unit refs remain existing CharacterBuild facts; selected-reference route evidence is projected at the reducer-route boundary.",
+    "Projection branches reuse the existing CharacterBuild class-feature projection route for CharacterBuildOwner build-projection events."
   ]
 }

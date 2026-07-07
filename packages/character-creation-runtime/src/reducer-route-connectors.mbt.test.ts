@@ -39,6 +39,8 @@ import {
   WEAPON_MASTERY_OPTIONS_CHOICE_KEY,
   abilityScoreAssignment,
   characterBuildClassFeatureFactsProjectionWithRoute,
+  characterBuildSelectedReferenceCount,
+  characterBuildSelectedReferencesWithRoute,
   characterDraftId,
   classUnitId,
   createCharacterDraft as createRuntimeCharacterDraft,
@@ -51,8 +53,10 @@ import {
   loadoutEquipmentUnitId,
   loadoutSourceHoleIdText,
   progressionOptionId,
+  recordCharacterBuildSelectedReferenceRetentionWithRoute,
   sorcererMetamagicOptionId,
   type CharacterBuild,
+  type CharacterBuildSelectedReferenceRoute,
   type CharacterBuildClassFeatureFactsProjectionRoute,
   type CharacterBuildResource,
   type CharacterBuildSorcererMetamagicFacts,
@@ -1563,26 +1567,15 @@ function requiredKnownMetamagicOption(
 function retainSelectedReferenceRoute(
   route: readonly CharacterCreationRouteEvent[],
 ): readonly CharacterCreationRouteEvent[] {
-  return [
-    ...route,
-    retainCreationSelectedReferences({
-      subject: "selectedReference",
-      owner: "creationSelectedReference",
-    }),
-  ];
+  return selectedReferenceRetentionRoute(route).route;
 }
 
 function retainSelectedReferenceWithFactsRoute(
   route: readonly CharacterCreationRouteEvent[],
 ): readonly CharacterCreationRouteEvent[] {
-  return [
-    ...retainSelectedReferenceRoute(route),
-    recordCreationFacts({
-      subject: "selectedReference",
-      facts: ["selectedReferenceRetention"],
-      owner: "creationSelectedReference",
-    }),
-  ];
+  return selectedReferenceRetentionRoute(route, {
+    recordRetentionFact: true,
+  }).route;
 }
 
 function retainAndProjectSelectedReferenceRoute(
@@ -1604,30 +1597,52 @@ function retainAndProjectSelectedReferenceRoute(
 function projectSelectedReferenceRoute(
   route: readonly CharacterCreationRouteEvent[],
 ): readonly CharacterCreationRouteEvent[] {
-  return [
-    ...route,
-    retainCreationSelectedReferences({
-      subject: "selectedReference",
-      owner: "creationSelectedReference",
+  const projection = requireRight(
+    characterBuildClassFeatureFactsProjectionWithRoute({
+      build: selectedReferenceFixtureBuild(),
+      unitLibrary,
+      route: retainSelectedReferenceRoute(route),
     }),
-    projectCharacterBuildFacts({
-      subject: "buildProjection",
-      owner: "characterBuild",
+  );
+  return projection.route;
+}
+
+function selectedReferenceRetentionRoute(
+  route: readonly CharacterCreationRouteEvent[],
+  options: { readonly recordRetentionFact: boolean } = {
+    recordRetentionFact: false,
+  },
+): CharacterBuildSelectedReferenceRoute<CharacterCreationRouteEvent> {
+  const build = selectedReferenceFixtureBuild();
+  expect(characterBuildSelectedReferenceCount(build)).toBe(1);
+  const retained = requireRight(
+    characterBuildSelectedReferencesWithRoute({
+      build,
+      route,
     }),
-  ];
+  );
+  if (!options.recordRetentionFact) return retained;
+  return recordCharacterBuildSelectedReferenceRetentionWithRoute(retained);
+}
+
+function selectedReferenceFixtureBuild(): CharacterBuild {
+  return classFeatureProjectionBuild({
+    startingClass: "class_fighter",
+    totalLevel: 1,
+    features: [
+      {
+        kind: "selectedClassChoice",
+        selectedFromUnitId: "fighter_fighting_style",
+        unitId: "defense",
+      },
+    ],
+  });
 }
 
 function projectSelectedReferenceWithFactsRoute(
   route: readonly CharacterCreationRouteEvent[],
 ): readonly CharacterCreationRouteEvent[] {
-  return [
-    ...projectSelectedReferenceRoute(route),
-    recordCreationFacts({
-      subject: "buildProjection",
-      facts: ["buildProjectionInput"],
-      owner: "characterBuild",
-    }),
-  ];
+  return projectSelectedReferenceRoute(route);
 }
 
 function replaceSelectedReferenceRoute(

@@ -1,58 +1,74 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-039",
+  "taskId": "CRPI-BLOCK-042",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt",
+      "path": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
       "quarantinedWitnessNames": [
-        "CharacterLifecycleLayer",
-        "CharacterLifecycleFacts",
-        "qReplayIndex"
+        "qState",
+        "doSelectBardExpertise",
+        "doProjectClericChannelDivinity",
+        "doProjectDruidWildShape",
+        "doProjectDruidWildCompanion",
+        "doProjectMonksFocus",
+        "doProjectMonkUncannyMetabolism",
+        "doSelectPaladinFightingStyle",
+        "doSelectRangerDeftExplorer",
+        "doSelectRangerFightingStyle",
+        "doProjectWarlockPactMagic",
+        "doSelectWizardScholar",
+        "doSelectWizardEvocationSavant"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-039.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-042.json"
       ]
     },
     {
-      "path": "packages/character-battle-runtime/character-layer-projection-lifecycle.route.mbt.qnt",
+      "path": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt",
       "quarantinedWitnessNames": [
-        "qRoute",
-        "CharacterLayerLifecycleRouteState"
+        "qRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-039.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-042.json"
       ]
     },
     {
-      "path": "packages/character-battle-runtime/src/character-layer-projection-lifecycle.mbt.test.ts",
+      "path": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "CharacterLifecycleProjection",
-        "replays Draft to Build to Sheet to battle runtime to settlement"
+        "classFeatureSelectedIdentityRouteDriverSchema",
+        "createCompletedReducerRouteDriver",
+        "selectedReferenceRetentionRoute",
+        "retainSelectedReferenceWithFactsRoute",
+        "projectSelectedReferenceWithFactsRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-039.json"
-      ]
-    },
-    {
-      "path": "packages/character-battle-runtime/src/reducer-route-connectors.mbt.test.ts",
-      "quarantinedWitnessNames": [
-        "routes character layer projection boundaries through existing owners"
-      ],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-039.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-042.json"
       ]
     }
   ],
-  "productionModulesExtended": [],
+  "productionModulesExtended": [
+    {
+      "path": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts",
+      "notes": "Adds the public CharacterBuild selected-reference route projection. It derives selected-reference count from existing CharacterBuild facts and emits CreationSelectedReferenceOwner route events without storing duplicate selected Unit refs."
+    },
+    {
+      "path": "packages/character-creation-runtime/src/index.ts",
+      "notes": "Exports the CharacterBuild selected-reference route projection and route event types through the package public surface."
+    }
+  ],
   "expectedNextReuse": [
     {
-      "path": "packages/character-battle-runtime/src/index.ts",
-      "notes": "Future character lifecycle handoff replays should keep using the existing public Character Battle init, Battle Runtime reducer, and settlement entrypoints rather than adding a monolithic lifecycle owner."
+      "path": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts",
+      "notes": "Future Character Creation selected-identity route tasks should use characterBuildSelectedReferencesWithRoute when copied connectors require CreationSelectedReferenceOwner retention events."
+    },
+    {
+      "path": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts",
+      "notes": "Projection branches continue to use characterBuildClassFeatureFactsProjectionWithRoute for CharacterBuildOwner build-projection route events."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 82 observes copied qRoute for the Draft to Build to Sheet to BattleInitProjection to BattleRuntime to Settlement lifecycle through existing layered owner route events. No new durable CharacterBuild, CharacterSheet, BattleState, or BattleCreatureState fields were added."
+    "notes": "Task 85 observes qRoute through public CharacterBuild selected-reference and class-feature projection route entrypoints. No new durable CharacterBuild fields were added."
   }
 }

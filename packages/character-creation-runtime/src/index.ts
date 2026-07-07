@@ -213,6 +213,17 @@ export {
   type CharacterCreationBuildProjectionRouteEvent,
 } from "./character-build-class-feature-projection-route.ts";
 export {
+  characterBuildSelectedReferenceCount,
+  characterBuildSelectedReferencesWithRoute,
+  recordCharacterBuildSelectedReferenceRetentionWithRoute,
+  type CharacterBuildSelectedReferenceRoute,
+  type CharacterBuildSelectedReferenceRouteIssue,
+  type CharacterBuildSelectedReferenceRouteFact,
+  type CharacterBuildSelectedReferenceRouteOwner,
+  type CharacterBuildSelectedReferenceRouteSubject,
+  type CharacterCreationSelectedReferenceRouteEvent,
+} from "./character-build-selected-reference-route.ts";
+export {
   characterBuildGnomishLineageTraitProjection,
   type CharacterBuildGnomishLineageOption,
   type CharacterBuildGnomishLineageTraitProjection,
