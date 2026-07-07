@@ -108,6 +108,9 @@ function projectAuditRow(row) {
     ...(row.thresholdFacts === undefined
       ? {}
       : { thresholdFacts: row.thresholdFacts }),
+    ...(row.relatedSources === undefined
+      ? {}
+      : { relatedSources: row.relatedSources }),
     nextAction: row.nextAction,
   };
 }
@@ -325,11 +328,21 @@ function renderClassListRowRefs(classListRows) {
     .join("; ");
 }
 
+function renderDeltaKind(delta) {
+  if (delta.kind === "spell-slot-count") {
+    return `Spell slot level ${delta.spellLevel}`;
+  }
+  if (delta.kind === "class-table-column") {
+    return delta.column;
+  }
+  return delta.kind;
+}
+
 function renderProgressionDeltas(row) {
   return (row.progressionDeltas ?? [])
     .map(
       (delta) =>
-        `${delta.column}: ${delta.previousValue} -> ${delta.currentValue} (${sourceRef(delta.previousSource)} -> ${sourceRef(delta.currentSource)})`,
+        `${renderDeltaKind(delta)}: ${delta.previousValue} -> ${delta.currentValue} (${sourceRef(delta.previousSource)} -> ${sourceRef(delta.currentSource)})`,
     )
     .join("; ");
 }
@@ -345,11 +358,20 @@ function renderThresholdFacts(row) {
     .join("; ");
 }
 
+function renderRelatedSources(row) {
+  return (row.relatedSources ?? [])
+    .map((related) => `${related.kind}: ${sourceRef(related.source)}`)
+    .join("; ");
+}
+
 function renderLevelOneSevenMiningAudit(report) {
   const rendersMinedFactColumns = report.rows.some(
     (row) =>
       (row.progressionDeltas ?? []).length > 0 ||
       (row.thresholdFacts ?? []).length > 0,
+  );
+  const rendersRelatedSourceColumn = report.rows.some(
+    (row) => (row.relatedSources ?? []).length > 0,
   );
   return `${[
     `# ${report.scope.title}`,
@@ -465,11 +487,11 @@ function renderLevelOneSevenMiningAudit(report) {
     "## Mined Rows",
     "",
     rendersMinedFactColumns
-      ? "| Row | Level band | Axis | Category | Unit | Source | Mined denominator | Progression deltas | Threshold facts | Catalog | Unit profile | Final disposition | Battle readiness | Readiness closure | Next action |"
-      : "| Row | Level band | Axis | Category | Unit | Source | Mined denominator | Catalog | Unit profile | Final disposition | Battle readiness | Readiness closure | Next action |",
+      ? `| Row | Level band | Axis | Category | Unit | Source |${rendersRelatedSourceColumn ? " Related sources |" : ""} Mined denominator | Progression deltas | Threshold facts | Catalog | Unit profile | Final disposition | Battle readiness | Readiness closure | Next action |`
+      : `| Row | Level band | Axis | Category | Unit | Source |${rendersRelatedSourceColumn ? " Related sources |" : ""} Mined denominator | Catalog | Unit profile | Final disposition | Battle readiness | Readiness closure | Next action |`,
     rendersMinedFactColumns
-      ? "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"
-      : "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+      ? `| --- | --- | --- | --- | --- | --- |${rendersRelatedSourceColumn ? " --- |" : ""} --- | --- | --- | --- | --- | --- | --- | --- | --- |`
+      : `| --- | --- | --- | --- | --- | --- |${rendersRelatedSourceColumn ? " --- |" : ""} --- | --- | --- | --- | --- | --- | --- |`,
     ...report.rows.map((row) => {
       const cells = [
         row.concept,
@@ -478,6 +500,7 @@ function renderLevelOneSevenMiningAudit(report) {
         row.category,
         `\`${row.candidateUnitId}\``,
         `\`${sourceRef(row.source)}\``,
+        ...(rendersRelatedSourceColumn ? [renderRelatedSources(row)] : []),
         row.minedDenominator.state,
         ...(rendersMinedFactColumns
           ? [renderProgressionDeltas(row), renderThresholdFacts(row)]

@@ -1963,7 +1963,16 @@ function makeRow(input) {
     ...(input.thresholdFacts === undefined
       ? {}
       : { thresholdFacts: input.thresholdFacts }),
+    ...(input.relatedSources === undefined
+      ? {}
+      : { relatedSources: input.relatedSources }),
   };
+}
+
+function classTableDeltaKind(columnName) {
+  return /^\d+$/.test(columnName)
+    ? { kind: "spell-slot-count", spellLevel: Number(columnName) }
+    : { kind: "class-table-column", column: columnName };
 }
 
 function classTableProgressionDeltas({
@@ -1987,7 +1996,7 @@ function classTableProgressionDeltas({
         return undefined;
       }
       return {
-        column: columnName,
+        ...classTableDeltaKind(columnName),
         previousValue,
         currentValue,
         previousSource: sourceReference(
@@ -2049,6 +2058,7 @@ function classRows(root, className) {
     ]),
   );
   const previouslyMinedFeatureNames = new Set();
+  const featureSourceByIdentity = new Map();
 
   rows.push(
     makeRow({
@@ -2146,6 +2156,7 @@ function classRows(root, className) {
           continue;
         }
         const featureKind = classifyFeature(featureName);
+        const featureSource = featureSourceByIdentity.get(featureName);
         rows.push(
           makeRow({
             sourcePath,
@@ -2158,6 +2169,15 @@ function classRows(root, className) {
             concept: `${className} ${featureName}`,
             detail: `Level ${level} table-derived repeated class feature; the feature's dedicated rule text appears at an earlier level.`,
             lineStart: featureTable.row.line,
+            relatedSources:
+              featureSource === undefined
+                ? undefined
+                : [
+                    {
+                      kind: "dedicated-rule-text",
+                      source: featureSource,
+                    },
+                  ],
             candidateUnitId: candidateUnitIdForFeature(
               classSlug,
               featureName,
@@ -2205,7 +2225,18 @@ function classRows(root, className) {
       );
     }
     for (const feature of featureHeadings) {
-      previouslyMinedFeatureNames.add(featureIdentity(feature.name));
+      const identity = featureIdentity(feature.name);
+      previouslyMinedFeatureNames.add(identity);
+      if (!featureSourceByIdentity.has(identity)) {
+        featureSourceByIdentity.set(
+          identity,
+          sourceReference(
+            sourcePath,
+            feature.lineNumber,
+            sectionRange(lines, feature.lineNumber).endLine,
+          ),
+        );
+      }
     }
   }
 
@@ -5152,7 +5183,8 @@ function validateSrdUnitInventory(report) {
     }
   }
   const levelEightRowsWithProgressionDeltas = levelEightTableRows.filter(
-    (row) => row.progressionDeltas.length > 0,
+    (row) =>
+      Array.isArray(row.progressionDeltas) && row.progressionDeltas.length > 0,
   );
   if (levelEightRowsWithProgressionDeltas.length === 0) {
     issues.push("Level-8 mining inventory has no non-empty progression deltas.");
@@ -5197,9 +5229,21 @@ function validateSrdUnitInventory(report) {
     ["level-8", "wizard_ability_score_improvement_l8"],
   ]) {
     const repeatedFeatureKey = `${levelBand}:${candidateUnitId}`;
-    if (!classProgressionFeatureCandidateIds.has(repeatedFeatureKey)) {
+    const row = classProgressionFeatureCandidateIds.get(repeatedFeatureKey);
+    if (row === undefined) {
       issues.push(
         `${levelBand} table-derived repeated class-feature inventory lacks candidate Unit ${candidateUnitId}.`,
+      );
+      continue;
+    }
+    if (
+      levelBand === "level-8" &&
+      !row.relatedSources?.some(
+        (source) => source.kind === "dedicated-rule-text",
+      )
+    ) {
+      issues.push(
+        `${levelBand} table-derived repeated class-feature inventory row ${candidateUnitId} lacks a dedicated rule-text related source.`,
       );
     }
   }
