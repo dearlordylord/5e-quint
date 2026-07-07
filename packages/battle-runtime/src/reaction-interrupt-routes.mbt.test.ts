@@ -361,10 +361,33 @@ function counterspellAllowedSpellCastResumeRouteState(): RouteState<"counterspel
 
 function hellishRebukeAfterDamageRouteState(): RouteState<"hellishRebukeAfterDamage"> {
   return routeState("hellishRebukeAfterDamage", [
-    ...pendingReactionDecisionRoute(),
-    reactionSpellInterrupt(routeHoles(), "battleInterruptStack"),
-    reactionSpellInterrupt(routeHoles(), "battleSpellSlotAndActionEconomy"),
-    reactionSpellInterrupt(routeHoles(), "battleHitPoint"),
+    ...pendingReactionPayloadRoute(
+      REACTION_AFTER_DAMAGE_EFFECT_ROUTE_SUBJECT,
+      routeHoles("interruptDecision"),
+    ),
+    reactionPayloadInterrupt({
+      subject: REACTION_AFTER_DAMAGE_EFFECT_ROUTE_SUBJECT,
+      fill: "interruptDecision",
+      holes: routeHoles("rolledDice", "savingThrowOutcome"),
+      owner: "battleInterruptStack",
+    }),
+    reactionPayloadResolve({
+      subject: REACTION_AFTER_DAMAGE_EFFECT_ROUTE_SUBJECT,
+      fill: "savingThrowOutcome",
+      holes: routeHoles("rolledDice"),
+      owner: "battleSavingThrowOutcome",
+    }),
+    reactionPayloadResolve({
+      subject: REACTION_AFTER_DAMAGE_EFFECT_ROUTE_SUBJECT,
+      fill: "rolledDice",
+      holes: routeHoles(),
+      owner: "battleHitPoint",
+    }),
+    reactionPayloadResolveWithoutFill({
+      subject: REACTION_AFTER_DAMAGE_EFFECT_ROUTE_SUBJECT,
+      holes: routeHoles(),
+      owner: "battleSpellSlotAndActionEconomy",
+    }),
   ]);
 }
 

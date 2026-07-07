@@ -73,6 +73,49 @@ module battleRuntimeReactionCastingTimeRouteMbt {
       owner,
     )
 
+  pure def discoverReactionAfterDamageEffect(
+    holes: Set[BattleHoleFamilyKind],
+    owner: ReducerRouteOwnerGroup,
+  ): ReducerRouteEvent =
+    routeDiscoverBattleActs(
+      ReactionAfterDamageEffectRouteSubject,
+      holes,
+      owner,
+    )
+
+  pure def resolveReactionAfterDamageInterrupt(
+    holes: Set[BattleHoleFamilyKind],
+    owner: ReducerRouteOwnerGroup,
+  ): ReducerRouteEvent =
+    routeResolveBattleInterrupt(
+      ReactionAfterDamageEffectRouteSubject,
+      InterruptDecisionFillKind,
+      holes,
+      owner,
+    )
+
+  pure def resolveReactionAfterDamageSubject(
+    fill: BattleFillKind,
+    holes: Set[BattleHoleFamilyKind],
+    owner: ReducerRouteOwnerGroup,
+  ): ReducerRouteEvent =
+    routeResolveBattleSubject(
+      ReactionAfterDamageEffectRouteSubject,
+      fill,
+      holes,
+      owner,
+    )
+
+  pure def resolveReactionAfterDamageWithoutFill(
+    holes: Set[BattleHoleFamilyKind],
+    owner: ReducerRouteOwnerGroup,
+  ): ReducerRouteEvent =
+    routeResolveBattleSubjectWithoutFill(
+      ReactionAfterDamageEffectRouteSubject,
+      holes,
+      owner,
+    )
+
   pure def pendingReactionDecisionRoute: List[ReducerRouteEvent] =
     List(
       startRoute,
@@ -145,15 +188,39 @@ module battleRuntimeReactionCastingTimeRouteMbt {
     qSurface == FreshRouteSurface,
     recordRoute(
       HellishRebukeAfterDamageRouteSurface,
-      pendingReactionDecisionRoute
-        .append(resolveReactionInterrupt(noHoles, BattleInterruptStackOwner))
+      List(
+        startRoute,
+        discoverReactionAfterDamageEffect(
+          interruptDecisionHoles,
+          BattleInterruptStackOwner,
+        ),
+      )
         .append(
-          resolveReactionInterrupt(
+          resolveReactionAfterDamageInterrupt(
+            Set(RolledDiceHoleKind, SavingThrowOutcomeHoleKind),
+            BattleInterruptStackOwner,
+          )
+        )
+        .append(
+          resolveReactionAfterDamageSubject(
+            SavingThrowOutcomeFillKind,
+            Set(RolledDiceHoleKind),
+            BattleSavingThrowOutcomeOwner,
+          )
+        )
+        .append(
+          resolveReactionAfterDamageSubject(
+            RolledDiceFillKind,
+            noHoles,
+            BattleHitPointOwner,
+          )
+        )
+        .append(
+          resolveReactionAfterDamageWithoutFill(
             noHoles,
             BattleSpellSlotAndActionEconomyOwner,
           )
-        )
-        .append(resolveReactionInterrupt(noHoles, BattleHitPointOwner)),
+        ),
     ),
   }
 

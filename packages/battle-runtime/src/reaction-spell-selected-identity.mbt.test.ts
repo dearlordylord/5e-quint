@@ -18,8 +18,10 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import type { SpellRecord } from "@dnd/surface/surface/types";
+import { expect, it } from "vitest";
 
 import {
+  battleReducerStartRouteEvent,
   battleCombatantSide,
   battleId,
   characterId,
@@ -37,12 +39,26 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleInterruptProcedureChoice,
+  type BattleReducerRouteEvent,
+  type BattleResolutionResult,
   type BattleState,
   type BattleSubject,
   type CombatantId,
 } from "./index.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
+import {
+  decodeReducerRoute,
+  defineDriver,
+  focusedMbtMaxSteps,
+  MBT_TEST_TIMEOUT_MS,
+  mbtSpecPath,
+  quintField,
+  quintStateRecord,
+  quintVariantMappedValue,
+  run,
+  stateCheck,
+  type ReducerRouteEvent,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
 
 type ReactionSpellProjection = {
@@ -55,6 +71,16 @@ type ReactionSpellProjection = {
   readonly secondLevelSlotsExpended: number;
   readonly thirdLevelSlotsExpended: number;
   readonly lastResult: "init" | "resolved";
+};
+type NeedsHolesResult = Extract<
+  BattleResolutionResult,
+  { readonly tag: "needsHoles" }
+>;
+type StartedMagicMissile = NeedsHolesResult & {
+  readonly targetAllocationFill: Extract<
+    BattleFill,
+    { readonly kind: "spellTargetAllocation" }
+  >;
 };
 
 type ReactionSpellUnitId = "shield" | "hellish_rebuke" | "counterspell";
@@ -77,7 +103,44 @@ const counterspellUnitId = "counterspell";
 const magicMissileUnitId = "magic_missile";
 const counterspellSlotLevel = 3;
 const magicMissileSlotLevel = 1;
+const higherLevelMagicMissileSlotLevel = 4;
 const magicMissileDartCount = 3;
+const higherLevelMagicMissileDartCount = 6;
+
+const reactionPayloadRouteReplayDriverSchema = {
+  init: {},
+  doRouteReactionArmorClassEffect: {},
+  doRouteAfterDamageSaveDamage: {},
+  doRouteSpellInterruptionEnded: {},
+  doRouteSpellInterruptionResumed: {},
+  step: {},
+} as const;
+
+type ReactionInterruptPayloadRouteSurface =
+  | "fresh"
+  | "reactionArmorClassEffect"
+  | "afterDamageSaveDamage"
+  | "spellInterruptionEnded"
+  | "spellInterruptionResumed";
+type ReplayableReactionInterruptPayloadRouteSurface = Exclude<
+  ReactionInterruptPayloadRouteSurface,
+  "fresh"
+>;
+
+type ReactionPayloadRouteProjection = {
+  readonly surface: ReactionInterruptPayloadRouteSurface;
+  readonly route: readonly ReducerRouteEvent[];
+};
+
+const reactionPayloadRouteSurfaceByQuintTag = {
+  FreshRouteSurface: "fresh",
+  ReactionArmorClassEffectRouteSurface: "reactionArmorClassEffect",
+  AfterDamageSaveDamageRouteSurface: "afterDamageSaveDamage",
+  SpellInterruptionEndedRouteSurface: "spellInterruptionEnded",
+  SpellInterruptionResumedRouteSurface: "spellInterruptionResumed",
+} as const satisfies Readonly<
+  Record<string, ReactionInterruptPayloadRouteSurface>
+>;
 
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -145,6 +208,69 @@ defineSelectedIdentityReplayAndQntReplay({
   ],
 });
 
+it(
+  "compares reaction payload public reducer routes to copied qRoute",
+  async () => {
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-reaction-interrupt-payload-taxonomy.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "doRouteReactionArmorClassEffect",
+      driver: createReactionPayloadRouteReplayDriver(
+        "reactionArmorClassEffect",
+      ),
+      backend: "typescript",
+      nTraces: 1,
+      maxSteps: focusedMbtMaxSteps(1),
+      stateCheck: reactionPayloadRouteStateCheck,
+    });
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-reaction-interrupt-payload-taxonomy.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "doRouteAfterDamageSaveDamage",
+      driver: createReactionPayloadRouteReplayDriver("afterDamageSaveDamage"),
+      backend: "typescript",
+      nTraces: 1,
+      maxSteps: focusedMbtMaxSteps(1),
+      stateCheck: reactionPayloadRouteStateCheck,
+    });
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-reaction-interrupt-payload-taxonomy.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "doRouteSpellInterruptionEnded",
+      driver: createReactionPayloadRouteReplayDriver("spellInterruptionEnded"),
+      backend: "typescript",
+      nTraces: 1,
+      maxSteps: focusedMbtMaxSteps(1),
+      stateCheck: reactionPayloadRouteStateCheck,
+    });
+    await run({
+      spec: mbtSpecPath(
+        import.meta.dirname,
+        "battle-runtime-reaction-interrupt-payload-taxonomy.route.mbt.qnt",
+      ),
+      init: "init",
+      step: "doRouteSpellInterruptionResumed",
+      driver: createReactionPayloadRouteReplayDriver(
+        "spellInterruptionResumed",
+      ),
+      backend: "typescript",
+      nTraces: 1,
+      maxSteps: focusedMbtMaxSteps(1),
+      stateCheck: reactionPayloadRouteStateCheck,
+    });
+  },
+  MBT_TEST_TIMEOUT_MS,
+);
+
 function resolveShieldReactionSpellHit(): ReactionSpellProjection {
   const state = reactionSpellBattle(srdSpellRecord("shield"));
   const awaitingReaction = resolveAttackRollOnly({
@@ -156,6 +282,27 @@ function resolveShieldReactionSpellHit(): ReactionSpellProjection {
     throw new Error("Expected Shield attack hit Reaction window.");
   }
   return projectResolvedReaction(resolveShieldReactionChoice(awaitingReaction));
+}
+
+function resolveShieldReactionSpellHitRoute(): readonly BattleReducerRouteEvent[] {
+  const state = reactionSpellBattle(srdSpellRecord("shield"));
+  const awaitingReaction = resolveAttackRollOnly({
+    state,
+    attackRollTotal: 14,
+    includeHellishRebukeTriggerFact: false,
+  });
+  if (awaitingReaction.tag !== "needsHoles") {
+    throw new Error("Expected Shield attack hit Reaction window.");
+  }
+  const resolved = resolveShieldReactionChoice(awaitingReaction);
+  if (resolved.tag !== "resolved") {
+    throw new Error("Expected Shield Reaction spell to resolve.");
+  }
+  return routeFromPublicReducerResults(
+    "Shield Reaction spell",
+    awaitingReaction,
+    resolved,
+  );
 }
 
 function resolveHellishRebukeFailedSavingThrow(): ReactionSpellProjection {
@@ -195,9 +342,52 @@ function resolveHellishRebukeFailedSavingThrow(): ReactionSpellProjection {
   );
 }
 
+function resolveHellishRebukeFailedSavingThrowRoute(): readonly BattleReducerRouteEvent[] {
+  const state = reactionSpellBattle(srdSpellRecord("hellish_rebuke"));
+  const awaitingReaction = resolveAttackRollOnly({
+    state,
+    attackRollTotal: 15,
+    includeHellishRebukeTriggerFact: true,
+  });
+  if (awaitingReaction.tag !== "needsHoles") {
+    throw new Error("Expected Hellish Rebuke after-damage Reaction window.");
+  }
+  const choice = requireHellishRebukeChoice(awaitingReaction);
+  const save = requireHole(choice.initialHoles, "savingThrowOutcome");
+  const damage = requireHole(choice.initialHoles, "rolledDice");
+  const resolved = resolveBattleInterrupt({
+    state: awaitingReaction.state,
+    fill: interruptDecisionFill(
+      requireHole(awaitingReaction.holes, "interruptDecision"),
+      {
+        kind: "resolve",
+        responderId: reactorId,
+        choice: {
+          kind: "castTriggeredReactionSpell",
+          invocation: choice.invocation,
+          fills: [
+            savingThrowOutcomeFill(save, [
+              { targetId: triggerCreatureId, succeeded: false },
+            ]),
+            damageRollFillWithGroups(damage, [[1, 1, 1]]),
+          ],
+        },
+      },
+    ),
+  });
+  if (resolved.tag !== "resolved") {
+    throw new Error("Expected Hellish Rebuke Reaction spell to resolve.");
+  }
+  return routeFromPublicReducerResults(
+    "Hellish Rebuke Reaction spell",
+    awaitingReaction,
+    resolved,
+  );
+}
+
 function resolveCounterspellMagicMissileCast(): ReactionSpellProjection {
   const state = counterspellBattle();
-  const awaitingReaction = startMagicMissileWithCounterspell(state);
+  const awaitingReaction = startMagicMissileWithCounterspell({ state });
   const choice = requireCounterspellChoice(awaitingReaction);
   return projectResolvedReaction(
     resolveBattleInterrupt({
@@ -216,6 +406,199 @@ function resolveCounterspellMagicMissileCast(): ReactionSpellProjection {
       ),
     }),
   );
+}
+
+function resolveCounterspellHigherLevelMagicMissileEndedRoute(): readonly ReducerRouteEvent[] {
+  const state = counterspellBattle({
+    magicMissileSlotLevel: higherLevelMagicMissileSlotLevel,
+  });
+  const awaitingReaction = startMagicMissileWithCounterspell({
+    state,
+    slotLevel: higherLevelMagicMissileSlotLevel,
+    dartCount: higherLevelMagicMissileDartCount,
+  });
+  const choice = requireCounterspellChoice(awaitingReaction);
+  const save = requireHole(choice.initialHoles, "savingThrowOutcome");
+  const resolved = resolveBattleInterrupt({
+    state: awaitingReaction.state,
+    fill: interruptDecisionFill(
+      requireHole(awaitingReaction.holes, "interruptDecision"),
+      {
+        kind: "resolve",
+        responderId: reactorId,
+        choice: {
+          kind: "castTriggeredReactionSpell",
+          invocation: choice.invocation,
+          fills: [
+            savingThrowOutcomeFill(save, [
+              { targetId: triggerCreatureId, succeeded: false },
+            ]),
+          ],
+        },
+      },
+    ),
+  });
+  if (resolved.tag !== "resolved") {
+    throw new Error("Expected Counterspell failed save to end the spell cast.");
+  }
+  return routeFromPublicReducerResults(
+    "Counterspell ended spell",
+    awaitingReaction,
+    resolved,
+  );
+}
+
+function resolveCounterspellHigherLevelMagicMissileResumedRoute(): readonly ReducerRouteEvent[] {
+  const state = counterspellBattle({
+    magicMissileSlotLevel: higherLevelMagicMissileSlotLevel,
+  });
+  const awaitingReaction = startMagicMissileWithCounterspell({
+    state,
+    slotLevel: higherLevelMagicMissileSlotLevel,
+    dartCount: higherLevelMagicMissileDartCount,
+  });
+  const choice = requireCounterspellChoice(awaitingReaction);
+  const save = requireHole(choice.initialHoles, "savingThrowOutcome");
+  const resumed = resolveBattleInterrupt({
+    state: awaitingReaction.state,
+    fill: interruptDecisionFill(
+      requireHole(awaitingReaction.holes, "interruptDecision"),
+      {
+        kind: "resolve",
+        responderId: reactorId,
+        choice: {
+          kind: "castTriggeredReactionSpell",
+          invocation: choice.invocation,
+          fills: [
+            savingThrowOutcomeFill(save, [
+              { targetId: triggerCreatureId, succeeded: true },
+            ]),
+          ],
+        },
+      },
+    ),
+  });
+  if (resumed.tag !== "needsHoles") {
+    throw new Error("Expected Counterspell save success to resume spell cast.");
+  }
+  const damage = requireHole(resumed.holes, "rolledDice");
+  const resolved = finishMagicMissile({
+    state: resumed.state,
+    slotLevel: higherLevelMagicMissileSlotLevel,
+    targetAllocationFill: awaitingReaction.targetAllocationFill,
+    damage,
+    dartCount: higherLevelMagicMissileDartCount,
+  });
+  if (resolved.tag !== "resolved") {
+    throw new Error("Expected resumed Magic Missile to resolve.");
+  }
+  return routeFromPublicReducerResults(
+    "Counterspell resumed spell",
+    awaitingReaction,
+    resumed,
+    resolved,
+  );
+}
+
+function routeFromPublicReducerResults(
+  label: string,
+  ...results: readonly BattleResolutionResult[]
+): readonly BattleReducerRouteEvent[] {
+  return [
+    battleReducerStartRouteEvent(),
+    ...results.flatMap((result) => requireRouteEvents(result, label)),
+  ];
+}
+
+function requireRouteEvents(
+  result: BattleResolutionResult,
+  label: string,
+): readonly BattleReducerRouteEvent[] {
+  if (result.routeEvents === undefined || result.routeEvents.length === 0) {
+    throw new Error(`Expected public route events for ${label}.`);
+  }
+  return result.routeEvents;
+}
+
+const reactionPayloadRouteBySurface = {
+  reactionArmorClassEffect: resolveShieldReactionSpellHitRoute,
+  afterDamageSaveDamage: resolveHellishRebukeFailedSavingThrowRoute,
+  spellInterruptionEnded: resolveCounterspellHigherLevelMagicMissileEndedRoute,
+  spellInterruptionResumed: resolveCounterspellHigherLevelMagicMissileResumedRoute,
+} as const satisfies Record<
+  ReplayableReactionInterruptPayloadRouteSurface,
+  () => readonly ReducerRouteEvent[]
+>;
+
+function createReactionPayloadRouteReplayDriver(
+  surface: ReplayableReactionInterruptPayloadRouteSurface,
+) {
+  return defineDriver<
+    typeof reactionPayloadRouteReplayDriverSchema,
+    ReactionPayloadRouteProjection
+  >(reactionPayloadRouteReplayDriverSchema, () => {
+    const routeProjection = (
+      nextSurface: ReplayableReactionInterruptPayloadRouteSurface,
+    ): ReactionPayloadRouteProjection => ({
+      surface: nextSurface,
+      route: reactionPayloadRouteBySurface[nextSurface](),
+    });
+    const recordSurface =
+      (
+        nextSurface: ReplayableReactionInterruptPayloadRouteSurface,
+      ): (() => void) =>
+      (): void => {
+        projection = routeProjection(nextSurface);
+      };
+    const selectedProjection = (): ReactionPayloadRouteProjection =>
+      routeProjection(surface);
+    let projection: ReactionPayloadRouteProjection = selectedProjection();
+
+    const reset = (): void => {
+      projection = selectedProjection();
+    };
+
+    return {
+      init: reset,
+      doRouteReactionArmorClassEffect: recordSurface(
+        "reactionArmorClassEffect",
+      ),
+      doRouteAfterDamageSaveDamage: recordSurface("afterDamageSaveDamage"),
+      doRouteSpellInterruptionEnded: recordSurface("spellInterruptionEnded"),
+      doRouteSpellInterruptionResumed: recordSurface("spellInterruptionResumed"),
+      step: recordSurface(surface),
+      getState: () => projection,
+    };
+  });
+}
+
+const reactionPayloadRouteStateCheck = stateCheck(
+  normalizeReactionPayloadRouteQuintState,
+  (
+    spec: ReactionPayloadRouteProjection,
+    impl: ReactionPayloadRouteProjection,
+  ): boolean => {
+    if (spec.surface === "fresh") {
+      return true;
+    }
+    expect(impl).toEqual(spec);
+    return true;
+  },
+);
+
+function normalizeReactionPayloadRouteQuintState(
+  raw: unknown,
+): ReactionPayloadRouteProjection {
+  const state = quintStateRecord(raw);
+  return {
+    surface: quintVariantMappedValue(
+      quintField(state, "qSurface"),
+      "qSurface",
+      reactionPayloadRouteSurfaceByQuintTag,
+      "reaction payload route surface",
+    ),
+    route: decodeReducerRoute(quintField(state, "qRoute")),
+  };
 }
 
 function projectResolvedReaction(
@@ -274,7 +657,11 @@ function reactionSpellBattle(spell: SpellRecord): BattleState {
   return result.right;
 }
 
-function counterspellBattle(): BattleState {
+function counterspellBattle(input: {
+  readonly magicMissileSlotLevel?: number | undefined;
+} = {}): BattleState {
+  const triggerSpellSlotLevel =
+    input.magicMissileSlotLevel ?? magicMissileSlotLevel;
   const result = startBattle({
     battleId: battleId("reaction-spell-selected-identity-counterspell"),
     combatants: [
@@ -293,7 +680,7 @@ function counterspellBattle(): BattleState {
           featurePreparedSpells: [],
           invocationSpellAccesses: [],
           spellbookRitualSpellAccesses: [],
-          spellSlots: [{ spellLevel: 1, count: 1 }],
+          spellSlots: [{ spellLevel: triggerSpellSlotLevel, count: 1 }],
         },
       }),
       reactionSpellCreature({
@@ -372,24 +759,16 @@ function reactionSpellCreature(input: {
   };
 }
 
-function startMagicMissileWithCounterspell(
-  state: BattleState,
-): Extract<
-  ReturnType<typeof resolveBattleSubject>,
-  { readonly tag: "needsHoles" }
-> {
-  const subject: BattleSubject = {
-    tag: "actionSpell",
-    actorId: triggerCreatureId,
-    invocation: spellSlotInvocationRef(
-      magicMissileUnitId,
-      magicMissileSlotLevel,
-      "repeatedDamageAllocation",
-    ),
-    mode: { tag: "cast" },
-  };
+function startMagicMissileWithCounterspell(input: {
+  readonly state: BattleState;
+  readonly slotLevel?: number | undefined;
+  readonly dartCount?: number | undefined;
+}): StartedMagicMissile {
+  const slotLevel = input.slotLevel ?? magicMissileSlotLevel;
+  const dartCount = input.dartCount ?? magicMissileDartCount;
+  const subject = magicMissileSubject(slotLevel);
   const targetAllocationResult = resolveBattleSubject({
-    state,
+    state: input.state,
     subject,
     fills: [],
   });
@@ -400,25 +779,15 @@ function startMagicMissileWithCounterspell(
     targetAllocationResult.holes,
     "spellTargetAllocation",
   );
+  const targetAllocationFill = magicMissileTargetAllocationFill({
+    hole: allocation,
+    dartCount,
+  });
   const result = resolveBattleSubject({
-    state,
+    state: input.state,
     subject,
     fills: [
-      {
-        kind: "spellTargetAllocation",
-        holeId: allocation.holeId,
-        value: {
-          allocations: [{ targetId: reactorId, count: magicMissileDartCount }],
-        },
-        spatialFacts: [
-          {
-            kind: "spellTarget",
-            casterId: triggerCreatureId,
-            targetId: reactorId,
-            spellId: magicMissileUnitId,
-          },
-        ],
-      },
+      targetAllocationFill,
       {
         kind: "targetSpatialFacts",
         holeId: SPELL_CAST_REACTION_FACTS_HOLE_ID,
@@ -437,7 +806,66 @@ function startMagicMissileWithCounterspell(
   if (result.tag !== "needsHoles") {
     throw new Error("Expected Counterspell Reaction window.");
   }
-  return result;
+  return { ...result, targetAllocationFill };
+}
+
+function finishMagicMissile(input: {
+  readonly state: BattleState;
+  readonly slotLevel: number;
+  readonly targetAllocationFill: Extract<
+    BattleFill,
+    { readonly kind: "spellTargetAllocation" }
+  >;
+  readonly damage: Extract<BattleHole, { readonly kind: "rolledDice" }>;
+  readonly dartCount: number;
+}): ReturnType<typeof resolveBattleSubject> {
+  return resolveBattleSubject({
+    state: input.state,
+    subject: magicMissileSubject(input.slotLevel),
+    fills: [
+      input.targetAllocationFill,
+      damageRollFillWithGroups(input.damage, [
+        Array.from({ length: input.dartCount }, () => 1),
+      ]),
+    ],
+  });
+}
+
+function magicMissileSubject(slotLevel: number): BattleSubject {
+  return {
+    tag: "actionSpell",
+    actorId: triggerCreatureId,
+    invocation: spellSlotInvocationRef(
+      magicMissileUnitId,
+      slotLevel,
+      "repeatedDamageAllocation",
+    ),
+    mode: { tag: "cast" },
+  };
+}
+
+function magicMissileTargetAllocationFill(input: {
+  readonly hole: Extract<
+    BattleHole,
+    { readonly kind: "spellTargetAllocation" }
+  >;
+  readonly dartCount: number;
+}): Extract<BattleFill, { readonly kind: "spellTargetAllocation" }> {
+  return {
+    kind: "spellTargetAllocation",
+    holeId: input.hole.holeId,
+    value: {
+      allocations: [{ targetId: reactorId, count: input.dartCount }],
+    },
+    spatialFacts: [
+      {
+        kind: "spellTarget",
+        casterId: triggerCreatureId,
+        targetId: reactorId,
+        spellId: magicMissileUnitId,
+      },
+    ],
+  };
 }
 
 function resolveAttackRollOnly(input: {

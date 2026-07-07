@@ -1,54 +1,44 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-021",
+  "taskId": "CRPI-BLOCK-022",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-reaction-spell-selected-identity.mbt.qnt",
       "quarantinedWitnessNames": [
         "protocol",
-        "qCasterSpeedFeet",
-        "qCasterRemainingFeet",
-        "qCasterDashBonusFeet",
-        "qCasterBonusActionAvailable",
-        "qCasterConcentrating",
-        "qSpellSlotSpentThisTurn",
-        "qLevel1SlotsRemaining",
-        "qSpellDashBonusActionEffectCount",
-        "qTargetHp",
-        "qTargetReactionAvailable",
-        "qDissonantMovementFillRequired",
-        "qTargetMovementSpentFeet",
-        "qCommandMovementFillRequired",
-        "qCommandPendingEffectObserved",
-        "qCommandPendingEffectCount",
-        "qClimbSpeedFeet",
-        "qSwimSpeedFeet",
+        "qReactorHp",
+        "qTriggerCreatureHp",
+        "qReactorArmorClass",
+        "qReactorReactionAvailable",
+        "qTriggerCreatureFirstLevelSlotsExpended",
+        "qFirstLevelSlotsExpended",
+        "qSecondLevelSlotsExpended",
+        "qThirdLevelSlotsExpended",
         "qScenarioOutcome",
         "qState"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-021.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-022.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.route.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-reaction-interrupt-payload-taxonomy.route.mbt.qnt",
       "coverageStatus": "covered-public-qRoute",
-      "quarantinedWitnessNames": ["qRoute", "qStage"],
+      "quarantinedWitnessNames": ["qSurface", "qFacts", "qRoute"],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-021.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-022.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/src/movement-forced-movement-selected-identity.mbt.test.ts",
+      "path": "packages/battle-runtime/src/reaction-spell-selected-identity.mbt.test.ts",
       "coverageStatus": "covered-public-qRoute",
       "quarantinedWitnessNames": [
-        "qRoute",
-        "movementForcedMovementRouteProjection",
-        "routeEventsOfMovementSubstrate"
+        "Reaction spell selected identity projection",
+        "reaction payload qRoute expected route literals"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-021.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-022.json"
       ]
     }
   ],
@@ -57,28 +47,29 @@
       "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "role": "runtime-projection-vocabulary",
       "domainApis": [
-        "BattleReducerRouteSubjectFamily.forcedMovement",
-        "BattleReducerRouteSubjectFamily.movementResource",
-        "BattleReducerRouteSubjectFamily.specialSpeedProjection",
-        "BattleReducerRouteOwnerGroup.battleMovementResource",
-        "BattleReducerRouteOwnerGroup.battleCreatureState",
-        "BattleReducerRouteOwnerGroup.battleActiveEffect",
+        "BattleReducerRouteSubjectFamily.reactionArmorClassEffect",
+        "BattleReducerRouteSubjectFamily.reactionAfterDamageEffect",
+        "BattleReducerRouteSubjectFamily.reactionSpellInterruption",
         "BattleReducerRouteOwnerGroup.battleInterruptStack",
-        "BattleReducerRouteOwnerGroup.battleTurnBoundary"
+        "BattleReducerRouteOwnerGroup.battleSpellSlotAndActionEconomy",
+        "BattleReducerRouteOwnerGroup.battleActiveEffect",
+        "BattleReducerRouteOwnerGroup.battleArmorClass",
+        "BattleReducerRouteOwnerGroup.battleSavingThrowOutcome",
+        "BattleReducerRouteOwnerGroup.battleHitPoint"
       ],
-      "notes": "Extends production route projection to cover typed forced-reaction movement riders, Command Flee movement fills, spell-granted Dash, passive Dash, and represented special-speed movement through generic movement substrate route subjects. No new reducer state, authored identity dispatch, or duplicate Speed/Movement state is added."
+      "notes": "Extends production route projection to classify selected Reaction spell payload routes from typed interrupt trigger and invocation procedure facts. No new reducer state, authored identity dispatch, or duplicate payload state is added."
     }
   ],
   "expectedNextReuse": [
     {
-      "driver": "future forced movement, Dash, and special-speed selected-identity drivers",
+      "driver": "future Reaction payload selected-identity or interruption tasks",
       "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "api": "BattleReducerRouteEvent.subject=forcedMovement|movementResource|specialSpeedProjection",
-      "notes": "Future movement substrate route tasks should reuse these generic route subjects and owner terms for movement budget, special speed, active effect, reaction/interrupt, and turn-boundary evidence."
+      "api": "BattleReducerRouteEvent.subject=reactionArmorClassEffect|reactionAfterDamageEffect|reactionSpellInterruption",
+      "notes": "Future Reaction payload route tasks should reuse these generic subjects and existing owner terms for interrupt-stack, reaction spend, active-effect, Armor Class, Saving Throw, and Hit Point evidence."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 30 observes selected movement substrate qRoute evidence through public battle reducer entrypoints without adding durable duplicate movement state."
+    "notes": "Task 33 observes selected Reaction spell payload qRoute evidence through public battle reducer entrypoints without adding durable duplicate Reaction payload state."
   }
 }

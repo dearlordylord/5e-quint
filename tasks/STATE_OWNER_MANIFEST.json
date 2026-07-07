@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-021",
+  "taskId": "CRPI-BLOCK-022",
   "durableFields": [
     {
       "fieldPath": "AvailableBattleAct.routeEvents",
@@ -25,42 +25,42 @@
       "notes": "Projection is emitted at public reducer entrypoints from existing owner-local facts; it is not stored as a second BattleState copy."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=forcedMovement",
+      "fieldPath": "BattleReducerRouteEvent.subject=reactionArmorClassEffect",
       "owner": "executable-boundary-projection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "typed forcedReactionMovement spell rider, Command Flee movement fill, target Reaction state, interrupt-stack result, active Command effect, and turn-boundary cleanup",
+        "sourceField": "BattleInterruptCheckpoint trigger, selected Reaction invocation procedure, BattleCreatureState.activeEffects, Armor Class projection, reaction availability, and spell-slot spend",
         "boundary": "battle-runtime public reducer route event boundary"
       },
-      "notes": "Projection is derived from typed runtime facts and public reducer results; production behavior does not branch on authored spell or feature identity."
+      "notes": "Projection is derived from typed Shield attack-hit Reaction armor-class payload facts and public reducer results; production behavior does not branch on selected spell identity."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=movementResource",
+      "fieldPath": "BattleReducerRouteEvent.subject=reactionAfterDamageEffect",
       "owner": "executable-boundary-projection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleState.currentTurnResources, BattleCreatureState.movementSpentFeet, Dash resolution, and movement fills",
+        "sourceField": "BattleInterruptCheckpoint afterDamage trigger, selected Reaction invocation procedure, nested Saving Throw and rolled-dice fills, Hit Point state, reaction availability, and spell-slot spend",
         "boundary": "battle-runtime public reducer route event boundary"
       },
-      "notes": "Projection keeps Speed source facts distinct from Movement budget consumption and derives route evidence from the existing movement budget owner."
+      "notes": "Projection is derived from typed after-damage save/damage payload facts and public reducer results; production behavior does not branch on selected spell identity."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=specialSpeedProjection",
+      "fieldPath": "BattleReducerRouteEvent.subject=reactionSpellInterruption",
       "owner": "executable-boundary-projection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleCreatureState origin speed facts, passive speed-kind grants, active specialSpeedGrant effects, and representedMovementSpeedKinds projection",
+        "sourceField": "BattleInterruptCheckpoint spellCast trigger, selected Reaction invocation procedure, interrupt-stack continuation state, reaction availability, reaction spell-slot spend, and triggering spell slot spend or non-spend",
         "boundary": "battle-runtime public reducer route event boundary"
       },
-      "notes": "Projection derives special-speed evidence from canonical creature-state speed facts and active effects; no duplicate special-speed state is added."
+      "notes": "Projection is derived from typed spell-interruption payload facts and public reducer results; production behavior does not branch on selected spell identity."
     }
   ],
   "notes": [
-    "Task 30 introduced no new durable BattleState or BattleCreatureState fields.",
-    "Selected spell/feature identity remains at catalog/support-profile and selected replay boundaries; production route projection uses typed spell procedure, effect, movement, and creature-state facts.",
-    "Route subjects are executable boundary projections derived from existing owner state and public reducer results, not a stored route ledger or duplicate Speed/Movement state."
+    "Task 33 introduced no new durable BattleState or BattleCreatureState fields.",
+    "Selected spell identity remains at catalog/support-profile and selected replay boundaries; production route projection uses typed trigger, invocation procedure, payload, and reducer-result facts.",
+    "Route subjects are executable boundary projections derived from existing owner state and public reducer results, not a stored route ledger or duplicate Reaction payload state."
   ]
 }

@@ -42,7 +42,10 @@ import {
   conditionApplicationPreventedByCreatureTypeProtection,
   resolveBattlePossessionAttempt,
 } from "./spell-condition-effects-helpers.ts";
-import { supportedSpellInvocationMatchesRef } from "./spells-invocation-ref.ts";
+import {
+  sameSpellInvocationRef,
+  supportedSpellInvocationMatchesRef,
+} from "./spells-invocation-ref.ts";
 import { supportedSpellActs } from "./spells-profiles.ts";
 import {
   conditionSpellEndTurnRepeatSaveHoleIds,
@@ -88,6 +91,20 @@ type BattleSpellResolutionSubject = Extract<
 type WeaponAttackResolutionSubject = Extract<
   BattleResolutionInput["subject"],
   { readonly tag: "action"; readonly action: "attack" }
+>;
+type TriggeredReactionSpellChoice = Extract<
+  BattleInterruptCheckpoint["choices"][number],
+  { readonly kind: "castTriggeredReactionSpell" }
+>;
+type TriggeredReactionSpellSelection = Extract<
+  BattleInterruptProcedureSelection,
+  { readonly kind: "castTriggeredReactionSpell" }
+>;
+type ReactionInterruptPayloadRouteSubject = Extract<
+  BattleReducerRouteSubjectFamily,
+  | "reactionArmorClassEffect"
+  | "reactionAfterDamageEffect"
+  | "reactionSpellInterruption"
 >;
 
 export type BattleReducerRouteSubjectFamily =
@@ -1079,7 +1096,7 @@ export function battleReducerRouteForResolution(
   const slotSpellRoute = slotSpellRouteForResolution(input, result);
   if (slotSpellRoute !== undefined) {
     return composeWithActiveFormLifecycleTerminalRoute(
-      [slotSpellRoute],
+      nonEmptyRouteEvents(slotSpellRoute),
       activeFormLifecycleTerminalRoute,
     );
   }
@@ -3051,6 +3068,29 @@ function reactionSpellRouteForInterrupt(input: {
   if (frame === undefined || !isReactionSpellCastingTimeFrame(frame)) {
     return undefined;
   }
+  const selectedChoice = selectedTriggeredReactionSpellChoice({
+    frame,
+    responderId: input.fill.value.responderId,
+    selection: input.fill.value.choice,
+  });
+  if (selectedChoice !== undefined) {
+    const payloadSubject = reactionInterruptPayloadRouteSubjectForChoice(
+      frame,
+      selectedChoice,
+    );
+    if (payloadSubject !== undefined) {
+      const payloadRoute = reactionInterruptPayloadRouteForInterrupt({
+        subject: payloadSubject,
+        choice: selectedChoice,
+        selection: input.fill.value.choice,
+        holes: input.holes,
+        result: input.result,
+      });
+      if (payloadRoute !== undefined) {
+        return payloadRoute;
+      }
+    }
+  }
 
   const eventForOwner = (
     subject: BattleReducerRouteSubjectFamily,
@@ -3088,6 +3128,178 @@ function reactionSpellRouteForInterrupt(input: {
     ];
   }
   return undefined;
+}
+
+function selectedTriggeredReactionSpellChoice(input: {
+  readonly frame: BattleInterruptCheckpoint;
+  readonly responderId: CombatantId;
+  readonly selection: TriggeredReactionSpellSelection;
+}): TriggeredReactionSpellChoice | undefined {
+  return input.frame.choices.find(
+    (choice): choice is TriggeredReactionSpellChoice =>
+      choice.kind === "castTriggeredReactionSpell" &&
+      choice.reactorId === input.responderId &&
+      sameSpellInvocationRef(choice.invocation, input.selection.invocation),
+  );
+}
+
+function reactionInterruptPayloadRouteSubjectForChoice(
+  frame: BattleInterruptCheckpoint,
+  choice: TriggeredReactionSpellChoice,
+): ReactionInterruptPayloadRouteSubject | undefined {
+  if (choice.invocation.procedure === "shieldReaction") {
+    return "reactionArmorClassEffect";
+  }
+  if (
+    frame.trigger === "afterDamage" &&
+    choice.invocation.procedure === "saveGatedDamage"
+  ) {
+    return "reactionAfterDamageEffect";
+  }
+  if (
+    frame.trigger === "spellCast" &&
+    choice.invocation.procedure === "counterspell"
+  ) {
+    return "reactionSpellInterruption";
+  }
+  return undefined;
+}
+
+function reactionInterruptPayloadRouteForInterrupt(input: {
+  readonly subject: ReactionInterruptPayloadRouteSubject;
+  readonly choice: TriggeredReactionSpellChoice;
+  readonly selection: TriggeredReactionSpellSelection;
+  readonly holes: readonly BattleReducerRouteHole[];
+  readonly result: BattleResolutionResult;
+}): BattleReducerRouteEvents | undefined {
+  const initialHoles = battleReducerRouteHoles(input.choice.initialHoles);
+  const interruptEvent = (
+    holes: readonly BattleReducerRouteHole[],
+    owner: BattleReducerRouteOwnerGroup,
+  ): BattleReducerRouteEvent => ({
+    kind: "resolveBattleInterrupt",
+    subject: input.subject,
+    fill: "interruptDecision",
+    holes,
+    owner,
+  });
+  const subjectEvent = (
+    fill: BattleReducerRouteFill,
+    holes: readonly BattleReducerRouteHole[],
+    owner: BattleReducerRouteOwnerGroup,
+    subject: BattleReducerRouteSubjectFamily = input.subject,
+  ): BattleReducerRouteEvent => ({
+    kind: "resolveBattleSubject",
+    subject,
+    fill,
+    holes,
+    owner,
+  });
+  const subjectWithoutFillEvent = (
+    owner: BattleReducerRouteOwnerGroup,
+  ): BattleReducerRouteEvent => ({
+    kind: "resolveBattleSubjectWithoutFill",
+    subject: input.subject,
+    holes: input.holes,
+    owner,
+  });
+
+  if (
+    input.subject === "reactionArmorClassEffect" &&
+    input.result.tag === "resolved"
+  ) {
+    return [
+      interruptEvent(input.holes, "battleSpellSlotAndActionEconomy"),
+      interruptEvent(input.holes, "battleActiveEffect"),
+      subjectWithoutFillEvent("battleArmorClass"),
+      subjectWithoutFillEvent("battleInterruptStack"),
+    ];
+  }
+
+  if (
+    input.subject === "reactionAfterDamageEffect" &&
+    input.result.tag === "resolved"
+  ) {
+    return [
+      interruptEvent(initialHoles, "battleInterruptStack"),
+      ...reactionPayloadNestedFillRoute({
+        subjectEvent,
+        fills: input.selection.fills,
+        initialHoles,
+      }),
+      subjectWithoutFillEvent("battleSpellSlotAndActionEconomy"),
+    ];
+  }
+
+  if (input.subject === "reactionSpellInterruption") {
+    const nestedFillRoute = reactionPayloadNestedFillRoute({
+      subjectEvent,
+      fills: input.selection.fills,
+      initialHoles,
+      savingThrowOwner: "battleSpellSlotAndActionEconomy",
+      savingThrowRemainingHoles:
+        input.result.tag === "needsHoles"
+          ? battleReducerRouteHoles(input.result.holes)
+          : undefined,
+      rolledDiceSubject: "slotSpell",
+    });
+    return [
+      interruptEvent(initialHoles, "battleInterruptStack"),
+      ...(nestedFillRoute.length === 0
+        ? [interruptEvent(input.holes, "battleSpellSlotAndActionEconomy")]
+        : nestedFillRoute),
+      ...(input.result.tag === "resolved"
+        ? [subjectWithoutFillEvent("battleInterruptStack")]
+        : []),
+    ];
+  }
+
+  return undefined;
+}
+
+function reactionPayloadNestedFillRoute(input: {
+  readonly subjectEvent: (
+    fill: BattleReducerRouteFill,
+    holes: readonly BattleReducerRouteHole[],
+    owner: BattleReducerRouteOwnerGroup,
+    subject?: BattleReducerRouteSubjectFamily,
+  ) => BattleReducerRouteEvent;
+  readonly fills: readonly BattleFill[];
+  readonly initialHoles: readonly BattleReducerRouteHole[];
+  readonly savingThrowOwner?: BattleReducerRouteOwnerGroup | undefined;
+  readonly savingThrowRemainingHoles?:
+    | readonly BattleReducerRouteHole[]
+    | undefined;
+  readonly rolledDiceSubject?: BattleReducerRouteSubjectFamily | undefined;
+}): readonly BattleReducerRouteEvent[] {
+  const events: BattleReducerRouteEvent[] = [];
+  let remainingHoles = input.initialHoles;
+  for (const fill of input.fills) {
+    const routeFill = battleReducerRouteFill(fill);
+    if (routeFill === undefined) {
+      continue;
+    }
+    remainingHoles = remainingHoles.filter((hole) => hole !== routeFill);
+    if (routeFill === "savingThrowOutcome") {
+      events.push(
+        input.subjectEvent(
+          routeFill,
+          input.savingThrowRemainingHoles ?? remainingHoles,
+          input.savingThrowOwner ?? "battleSavingThrowOutcome",
+        ),
+      );
+    } else if (routeFill === "rolledDice") {
+      events.push(
+        input.subjectEvent(
+          routeFill,
+          remainingHoles,
+          "battleHitPoint",
+          input.rolledDiceSubject,
+        ),
+      );
+    }
+  }
+  return events;
 }
 
 function metamagicRouteForResolution(
@@ -4231,7 +4443,7 @@ function hitPointRestorationRouteOwner(
 function slotSpellRouteForResolution(
   input: BattleResolutionInput,
   result: BattleResolutionResult,
-): BattleReducerRouteEvent | undefined {
+): readonly BattleReducerRouteEvent[] | undefined {
   if (!isSlotSpellResolutionSubject(input.subject)) {
     return undefined;
   }
@@ -4249,7 +4461,7 @@ function slotSpellRouteForResolution(
     return undefined;
   }
 
-  return {
+  const routeEvent: BattleReducerRouteEvent = {
     kind: "resolveBattleSubject",
     subject: "slotSpell",
     fill: routeFill,
@@ -4260,6 +4472,21 @@ function slotSpellRouteForResolution(
         ? "battleHitPoint"
         : "battleHoleFrontier",
   };
+  return [
+    routeEvent,
+    ...(input.state.interruptStack.at(-1)?.kind === "replayContinuation" &&
+    routeFill === "rolledDice" &&
+    result.tag === "resolved"
+      ? [
+          {
+            kind: "resolveBattleSubjectWithoutFill" as const,
+            subject: "reactionSpellInterruption" as const,
+            holes: [],
+            owner: "battleInterruptStack" as const,
+          },
+        ]
+      : []),
+  ];
 }
 
 function commandRouteForResolution(
@@ -5211,9 +5438,8 @@ function interruptStackResumeDiscoveryRouteForResolution(
   const subject =
     discoversInterruptDecision &&
     frame !== undefined &&
-    isReactionSpellCastingTimeFrame(frame) &&
-    frame.choices.some((choice) => choice.kind === "castTriggeredReactionSpell")
-      ? "reactionSpell"
+    isReactionSpellCastingTimeFrame(frame)
+      ? reactionInterruptPayloadRouteSubjectForFrame(frame) ?? "reactionSpell"
       : "interruptStackResume";
   return {
     kind: "discoverBattleActs",
@@ -5221,6 +5447,21 @@ function interruptStackResumeDiscoveryRouteForResolution(
     holes,
     owner: "battleInterruptStack",
   };
+}
+
+function reactionInterruptPayloadRouteSubjectForFrame(
+  frame: BattleInterruptCheckpoint,
+): ReactionInterruptPayloadRouteSubject | undefined {
+  const subjects = new Set(
+    frame.choices.flatMap((choice): readonly ReactionInterruptPayloadRouteSubject[] => {
+      if (choice.kind !== "castTriggeredReactionSpell") {
+        return [];
+      }
+      const subject = reactionInterruptPayloadRouteSubjectForChoice(frame, choice);
+      return subject === undefined ? [] : [subject];
+    }),
+  );
+  return subjects.size === 1 ? [...subjects][0] : undefined;
 }
 
 function currentInterruptCheckpoint(
@@ -5234,9 +5475,16 @@ function isReactionSpellCastingTimeFrame(
   frame: BattleInterruptCheckpoint,
 ): frame is Extract<
   BattleInterruptCheckpoint,
-  { readonly trigger: "afterDamage" | "creatureFalls" | "spellCast" }
+  {
+    readonly trigger:
+      | "attackHit"
+      | "afterDamage"
+      | "creatureFalls"
+      | "spellCast";
+  }
 > {
   return (
+    frame.trigger === "attackHit" ||
     frame.trigger === "afterDamage" ||
     frame.trigger === "creatureFalls" ||
     frame.trigger === "spellCast"

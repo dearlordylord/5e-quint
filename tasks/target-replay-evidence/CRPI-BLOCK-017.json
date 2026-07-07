@@ -27,7 +27,7 @@
   "connectorSha256": {
     "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.route.mbt.qnt": "4eb0a8bcaead7498072a1065bf17177a9782d6d85174bda0a3007406951af082",
     "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt": "53158acbee365d467cab341ed75609aab7fc2d3092f8d5904a717298e21b25e3",
-    "packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt": "b53a97320fec767ecb40626008b68576c6af29767fb2b7760cf4b9650813755d",
+    "packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt": "ecea41e2ef6c137af617ba634b64965a21d28bf84358383d6fbcc450ac1282fa",
     "packages/battle-runtime/battle-runtime-reaction-interrupt-payload-taxonomy.route.mbt.qnt": "db1a7a19e5e7bdfa19d63acee6b49af6bed7cb56b73ca7d6326ff2796cb2c679",
     "packages/battle-runtime/battle-runtime-object-light-riders.route.mbt.qnt": "ed95f7dce66871b84d36ea918d267737150e9fad7253dceb494bddf3b0b06baa",
     "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt": "776dec45864e04257a50b406ab36a7292aea8681b18b345cbfd2615124c07995",

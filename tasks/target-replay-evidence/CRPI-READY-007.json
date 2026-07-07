@@ -13,7 +13,7 @@
       "driverPath": "packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt",
       "routeConnectorPath": "packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt",
       "qntFileSha256": "382a5ae24ea6bda7cb5838b263ed9f139d2c4b40f35d1c4f39bd2f4beb87d388",
-      "routeConnectorSha256": "b53a97320fec767ecb40626008b68576c6af29767fb2b7760cf4b9650813755d",
+      "routeConnectorSha256": "ecea41e2ef6c137af617ba634b64965a21d28bf84358383d6fbcc450ac1282fa",
       "branchFamily": "step",
       "branchAction": "doHellishRebukeAfterDamage",
       "observedActionTaken": "doHellishRebukeAfterDamage",
@@ -24,8 +24,8 @@
         "tag": "state-match",
         "projection": "qRoute",
         "comparator": "route-event-list",
-        "expectedProjectionSha256": "46c5cd021e8e9bc11d1e975e851fe528f058d6de4bfcf7336d5be0650fb9f2ab",
-        "observedProjectionSha256": "46c5cd021e8e9bc11d1e975e851fe528f058d6de4bfcf7336d5be0650fb9f2ab",
+        "expectedProjectionSha256": "50f195639cc9dfb4d0120cbe9a021d60c03adc5fa099d4e3d0b43e45a2594c7a",
+        "observedProjectionSha256": "50f195639cc9dfb4d0120cbe9a021d60c03adc5fa099d4e3d0b43e45a2594c7a",
         "observedProjectionSource": {
           "tag": "qRoute",
           "targetEntrypointSequence": [
@@ -37,7 +37,7 @@
             "resolve_battle_interrupt",
             "packages/battle-runtime/src/index.ts#resolveBattleInterrupt"
           ],
-          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), BattleResolutionResult.routeEvents from resolveBattleSubject opening the after-damage Reaction window, and BattleResolutionResult.routeEvents from resolveBattleInterrupt resolving the triggered Reaction spell",
+          "routeEventSource": "public reducer route events from battleReducerStartRouteEvent(startBattle result), BattleResolutionResult.routeEvents from resolveBattleSubject opening the after-damage Reaction window, and BattleResolutionResult.routeEvents from resolveBattleInterrupt resolving the triggered Reaction spell through the reactionAfterDamageEffect payload-taxonomy route",
           "reducerPublicApiPath": "packages/battle-runtime/src/index.ts#resolveBattleInterrupt"
         },
         "checkedTargetStateFields": [
