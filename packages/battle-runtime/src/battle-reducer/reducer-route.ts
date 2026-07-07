@@ -122,6 +122,7 @@ export type BattleReducerRouteSubjectFamily =
   | "repeatSaveConditionEffect"
   | "turnBoundaryEffectLifecycle"
   | "zeroHitPointSpellEffectTeardown"
+  | "spellBaseArmorClassEffect"
   | "afterHitDamageRider"
   | "markedDamageRiderEffect"
   | "conditionImmunityTemporaryHitPointEffect"
@@ -706,6 +707,11 @@ export function battleReducerRouteEventsForDiscoveredAct(
       },
     ];
   }
+  const spellBaseArmorClassRoute =
+    spellBaseArmorClassEffectRouteForDiscoveredAct(act);
+  if (spellBaseArmorClassRoute !== undefined) {
+    return [spellBaseArmorClassRoute];
+  }
   const spatialEffectCompositionRoute =
     spatialEffectCompositionRouteForDiscoveredAct(state, act);
   const runtimeSpatialRoute =
@@ -901,6 +907,8 @@ export function battleReducerRouteForResolution(
     afterHitDamageRiderTurnBoundaryRouteForResolution(input, result);
   const markedDamageRiderTurnBoundaryRoute =
     markedDamageRiderTurnBoundaryRouteForResolution(input, result);
+  const spellBaseArmorClassTurnBoundaryRoute =
+    spellBaseArmorClassEffectTurnBoundaryRouteForResolution(input, result);
   if (
     sleepRepeatSaveRoute !== undefined ||
     repeatSaveConditionEffectRoute !== undefined ||
@@ -909,7 +917,8 @@ export function battleReducerRouteForResolution(
     conditionImmunityTemporaryHitPointTurnBoundaryRoute !== undefined ||
     activeFormLifecycleTurnBoundaryRoute !== undefined ||
     afterHitTurnBoundaryRoute !== undefined ||
-    markedDamageRiderTurnBoundaryRoute !== undefined
+    markedDamageRiderTurnBoundaryRoute !== undefined ||
+    spellBaseArmorClassTurnBoundaryRoute !== undefined
   ) {
     return nonEmptyRouteEvents([
       ...(sleepRepeatSaveRoute ?? []),
@@ -920,6 +929,7 @@ export function battleReducerRouteForResolution(
       ...(activeFormLifecycleTurnBoundaryRoute ?? []),
       ...(afterHitTurnBoundaryRoute ?? []),
       ...(markedDamageRiderTurnBoundaryRoute ?? []),
+      ...(spellBaseArmorClassTurnBoundaryRoute ?? []),
     ]);
   }
   const metamagicSpellDurationProjectionRoute =
@@ -983,6 +993,16 @@ export function battleReducerRouteForResolution(
   if (zeroHitPointStabilizationRoute !== undefined) {
     return composeWithActiveFormLifecycleTerminalRoute(
       [zeroHitPointStabilizationRoute],
+      activeFormLifecycleTerminalRoute,
+    );
+  }
+  const spellBaseArmorClassRoute = spellBaseArmorClassEffectRouteForResolution(
+    input,
+    result,
+  );
+  if (spellBaseArmorClassRoute !== undefined) {
+    return composeWithActiveFormLifecycleTerminalRoute(
+      spellBaseArmorClassRoute,
       activeFormLifecycleTerminalRoute,
     );
   }
@@ -1327,6 +1347,111 @@ function zeroHitPointStabilizationRouteForResolution(
     holes: [],
     owner: "battleHitPointAndZeroHpLifecycle",
   };
+}
+
+function isSpellBaseArmorClassEffectSubject(
+  subject: BattleResolutionInput["subject"] | AvailableBattleAct["subject"],
+): boolean {
+  return (
+    subject.tag === "actionSpell" &&
+    subject.invocation.procedure === "persistentArmorEffect"
+  );
+}
+
+function spellBaseArmorClassEffectRouteForDiscoveredAct(
+  act: AvailableBattleAct,
+): BattleReducerRouteEvent | undefined {
+  if (!isSpellBaseArmorClassEffectSubject(act.subject)) {
+    return undefined;
+  }
+  return {
+    kind: "discoverBattleActs",
+    subject: "spellBaseArmorClassEffect",
+    holes: battleReducerRouteHoles(act.initialHoles),
+    owner: "battleSpellSlotAndActionEconomy",
+  };
+}
+
+function spellBaseArmorClassEffectRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  if (!isSpellBaseArmorClassEffectSubject(input.subject)) {
+    return undefined;
+  }
+  const fill = input.fills.at(-1);
+  if (fill === undefined || battleReducerRouteFill(fill) !== "targetChoice") {
+    return undefined;
+  }
+  const holes: readonly BattleReducerRouteHole[] =
+    result.tag === "invalid" && result.reason === "invalidFill"
+      ? ["targetChoice"]
+      : result.tag === "needsHoles"
+        ? battleReducerRouteHoles(result.holes)
+        : [];
+  const targetSelectionRoute: BattleReducerRouteEvent = {
+    kind: "resolveBattleSubject",
+    subject: "spellBaseArmorClassEffect",
+    fill: "targetChoice",
+    holes,
+    owner: "battleTargetSelection",
+  };
+  if (
+    result.tag !== "resolved" ||
+    !spellBaseArmorClassEffectWasAdded(input.state, result.state)
+  ) {
+    return [targetSelectionRoute];
+  }
+  return [
+    targetSelectionRoute,
+    spellBaseArmorClassEffectResolveWithoutFill("battleActiveEffect"),
+    spellBaseArmorClassEffectResolveWithoutFill("battleArmorClass"),
+  ];
+}
+
+function spellBaseArmorClassEffectResolveWithoutFill(
+  owner: BattleReducerRouteOwnerGroup,
+): BattleReducerRouteEvent {
+  return {
+    kind: "resolveBattleSubjectWithoutFill",
+    subject: "spellBaseArmorClassEffect",
+    holes: [],
+    owner,
+  };
+}
+
+function spellBaseArmorClassEffectWasAdded(
+  before: BattleState,
+  after: BattleState,
+): boolean {
+  return [...after.combatants.values()].some(
+    (combatant) =>
+      spellBaseArmorClassEffectCount(combatant.activeEffects) >
+      spellBaseArmorClassEffectCount(
+        before.combatants.get(combatant.combatantId)?.activeEffects ?? [],
+      ),
+  );
+}
+
+function spellBaseArmorClassEffectExpired(
+  before: BattleState,
+  after: BattleState,
+): boolean {
+  return [...before.combatants.values()].some(
+    (combatant) =>
+      spellBaseArmorClassEffectCount(combatant.activeEffects) >
+      spellBaseArmorClassEffectCount(
+        after.combatants.get(combatant.combatantId)?.activeEffects ?? [],
+      ),
+  );
+}
+
+function spellBaseArmorClassEffectCount(
+  activeEffects: readonly BattleActiveEffect[],
+): number {
+  return activeEffects.filter(
+    (effect) => effect.kind === "spellBaseArmorClass",
+  ).length;
 }
 
 function spellAttackProcedureRouteForResolution(
@@ -6736,6 +6861,31 @@ function turnBoundaryEffectLifecycleResolveWithoutFill(
     holes: [],
     owner,
   };
+}
+
+function spellBaseArmorClassEffectTurnBoundaryRouteForResolution(
+  input: BattleResolutionInput,
+  result: BattleResolutionResult,
+): BattleReducerRouteEvents | undefined {
+  if (
+    !isEndTurnSubject(input.subject) ||
+    input.fills.length !== 0 ||
+    result.tag !== "resolved" ||
+    !spellBaseArmorClassEffectExpired(input.state, result.state)
+  ) {
+    return undefined;
+  }
+  return [
+    {
+      kind: "discoverBattleActs",
+      subject: "spellBaseArmorClassEffect",
+      holes: [],
+      owner: "battleActiveEffect",
+    },
+    spellBaseArmorClassEffectResolveWithoutFill("battleTurnBoundary"),
+    spellBaseArmorClassEffectResolveWithoutFill("battleActiveEffect"),
+    spellBaseArmorClassEffectResolveWithoutFill("battleArmorClass"),
+  ];
 }
 
 function battleHasTurnBoundaryLifecycleEffects(state: BattleState): boolean {

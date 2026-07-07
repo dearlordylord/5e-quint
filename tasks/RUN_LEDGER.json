@@ -4,6 +4,101 @@
   "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
   "entries": [
     {
+      "taskId": "CRPI-BLOCK-020",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-mage-armor-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
+      "artifacts": {
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "8a0c52dbcc5b9def72300060f59f2e185c439868bb27b68318e89b21eb02f956"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-BLOCK-020/README.md",
+          "sha256": "b5c7f64fe0dcc0c7d62f4065d4ea59aba85ad5da8de9f00bb1b61ffaf43d12bd"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-020.json",
+          "sha256": "2d2e4a92263d9f7b805772131770085db50587c9e4bbd8a6ed8ad13752b803ca",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-020.json#publicQRouteCoverage:spell-base-armor-class-effect"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-owner-battle-spell-20260706T213644Z/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor 65b00711d35777eeb20890f388d3bc1a3c813c2b HEAD",
+          "status": "pass",
+          "detail": "Base ref and HEAD both resolved to 65b00711d Mark Ralph task 27 done; Base SHA is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language review: local SRD 5.2.1 Gaining-and-Casting Targets and Duration, Rules Glossary Armor Class and Target, and UBIQUITOUS_LANGUAGE.md Armor Class, Spell Effect, Target, Duration, and Boundary Crossing terms",
+          "status": "pass",
+          "detail": "Checked the local SRD passages named by the route inventory. The SRD 5.2.1 corpus lacks a Mage Armor spell-name passage, so production route evidence remains generic and typed by spell procedure/effect shape rather than spell identity."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime typecheck",
+          "status": "pass",
+          "detail": "Battle runtime TypeScript check passed after adding Task 28 route projection and public replay tests."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec vitest run src/mage-armor-selected-identity.mbt.test.ts -t \"public reducer route replay\"",
+          "status": "pass",
+          "detail": "Focused public reducer qRoute replay passed: 1 passed, 1 skipped."
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Required MBT preflight showed only an unrelated monitor shell whose command text contained the words vitest and quint_evaluator; process-name checking found no active Vitest runner and no stale quint_evaluator before the focused MBT run."
+        },
+        {
+          "command": "START=$(date +%s); MBT_TRACES=1 pnpm --filter @dnd/battle-runtime exec vitest run src/mage-armor-selected-identity.mbt.test.ts src/reducer-route-connectors.mbt.test.ts -t \"(Mage Armor selected identity replay|public reducer route replay|routes spell base Armor Class effects through the shared reducer surface)\" 2>&1; STATUS=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$STATUS\"",
+          "status": "pass",
+          "detail": "Focused Task 28 selected replay and required route connector MBT passed: 2 files passed; 3 tests passed, 33 skipped; TOTAL: 6s."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "Cleanroom branch coverage passed with Task 28 evidence: 738 obligations, 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass",
+          "detail": "Whitespace check passed."
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "Full quality chain passed. App lint reported existing warnings and exited 0; turbo typecheck completed 9 successful tasks, 5 from cache."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-020",
+            "impact": "unblocked"
+          },
+          {
+            "taskId": "future spell base Armor Class selected-identity or invocation-access drivers",
+            "impact": "left unchanged"
+          }
+        ],
+        "observations": [
+          "Mage Armor selected identity replay now observes public reducer qRoute events for target admission, armored-target rejection, active Spell Effect admission, Armor Class projection, and duration expiry cleanup.",
+          "Production reducer-route projection needed the generic spellBaseArmorClassEffect route subject plus typed persistentArmorEffect procedure and spellBaseArmorClass active-effect delta detection; selected replay now compares against the shared connector-driver projection instead of local expected route literals.",
+          "No new durable BattleState field or authored spell id production dispatch was needed for Task 28."
+        ],
+        "requiredPlanEdits": "none"
+      }
+    },
+    {
       "taskId": "CRPI-BLOCK-019",
       "assignmentId": "reducer-spine-diagnostic-battle",
       "laneId": "battle",

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-019",
+  "taskId": "CRPI-BLOCK-020",
   "durableFields": [
     {
       "fieldPath": "AvailableBattleAct.routeEvents",
@@ -31,41 +31,32 @@
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing BattleState runtime state owns Spike Growth and Web active effects, area ids, Concentration-backed expiration, movement-damage facts, Web save ledgers, and Web obscurement facts reached by Task 27."
+      "notes": "Existing BattleState runtime state owns the spellBaseArmorClass Spell Effect reached by Task 28."
     },
     {
-      "fieldPath": "BattleCreatureState.concentration",
+      "fieldPath": "BattleCreatureState.armorClass",
       "owner": "battle-state",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing BattleState runtime state owns the caster Concentration fact for concentration-backed area hazards."
+      "notes": "Existing stored armor/loadout state remains the canonical base character Armor Class state. Mage Armor projection is derived from activeEffects by activeEffectArmorClass rather than stored beside this field."
     },
     {
-      "fieldPath": "BattleCreatureState.hp",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing BattleState runtime state owns Hit Point loss from Spike Growth movement damage."
-    },
-    {
-      "fieldPath": "BattleReducerRouteEvent.subject=spatialEffect",
+      "fieldPath": "BattleReducerRouteEvent.subject=spellBaseArmorClassEffect",
       "owner": "executable-boundary-projection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleState plus spatial active effects, area witnesses, movement facts, saving throw outcomes, condition lifecycle, Hit Point damage results, and concentration cleanup",
+        "sourceField": "BattleState plus typed persistentArmorEffect procedure, target fills, spellBaseArmorClass active effects, derived Armor Class projection, and duration expiry deltas",
         "boundary": "battle-runtime public reducer route event boundary"
       },
-      "notes": "Projection is derived from generic spatial owner facts for concentration-backed area hazard admission, Spike Growth movement damage, Web Saving Throw condition lifecycle, and cleanup."
+      "notes": "Projection is derived from generic procedure/effect facts for target admission, active-effect admission, Armor Class projection, and duration cleanup."
     }
   ],
   "notes": [
-    "Task 27 introduced no new durable BattleState or BattleCreatureState fields.",
-    "Selected spell identity remains at catalog/support-profile and selected replay boundaries; production route projection uses typed spell procedure and runtime command shape.",
-    "Route subjects are executable boundary projections derived from existing owner state and public reducer results, not a stored route ledger or duplicate active-effect state."
+    "Task 28 introduced no new durable BattleState or BattleCreatureState fields.",
+    "Selected spell identity remains at catalog/support-profile and selected replay boundaries; production route projection uses typed spell procedure shape and active-effect deltas.",
+    "Route subjects are executable boundary projections derived from existing owner state and public reducer results, not a stored route ledger or duplicate Armor Class state."
   ]
 }

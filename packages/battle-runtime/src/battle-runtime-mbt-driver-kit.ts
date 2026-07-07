@@ -5261,6 +5261,28 @@ function spellBaseArmorClassDurationExpiryRoute(): readonly ReducerRouteEvent[] 
   ];
 }
 
+export type SpellBaseArmorClassEffectRouteAction =
+  | "doRouteUnarmoredTargetAdmission"
+  | "doRouteArmoredTargetRejection"
+  | "doRouteBaseArmorClassProjection"
+  | "doRouteDurationExpiry";
+
+const SPELL_BASE_ARMOR_CLASS_EFFECT_ROUTE_PROJECTIONS = {
+  doRouteUnarmoredTargetAdmission: spellBaseArmorClassTargetAdmissionRoute,
+  doRouteArmoredTargetRejection: spellBaseArmorClassTargetRejectionRoute,
+  doRouteBaseArmorClassProjection: spellBaseArmorClassProjectionRoute,
+  doRouteDurationExpiry: spellBaseArmorClassDurationExpiryRoute,
+} as const satisfies Record<
+  SpellBaseArmorClassEffectRouteAction,
+  () => readonly ReducerRouteEvent[]
+>;
+
+export function spellBaseArmorClassEffectRouteProjection(
+  action: SpellBaseArmorClassEffectRouteAction,
+): readonly ReducerRouteEvent[] {
+  return SPELL_BASE_ARMOR_CLASS_EFFECT_ROUTE_PROJECTIONS[action]();
+}
+
 export function createSpellBaseArmorClassEffectRouteDriver() {
   return defineDriver(spellBaseArmorClassEffectRouteDriverSchema, () => {
     let route: readonly ReducerRouteEvent[] = spellBaseArmorClassInitialRoute();

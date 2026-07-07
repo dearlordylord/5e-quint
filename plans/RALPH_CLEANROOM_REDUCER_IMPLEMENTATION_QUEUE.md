@@ -169,7 +169,7 @@
     {
       "number": 28,
       "id": "CRPI-BLOCK-020",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-mage-armor-selected-identity"
     },
     {
@@ -2373,7 +2373,7 @@ Plan Impact:
 
 ### Task 28 - CRPI-BLOCK-020
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

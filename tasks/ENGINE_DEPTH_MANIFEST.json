@@ -1,10 +1,63 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-019",
+  "taskId": "CRPI-BLOCK-020",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-mage-armor-selected-identity.mbt.qnt",
+      "quarantinedWitnessNames": [
+        "cleanroomManifestSourceCommitSha",
+        "comparator",
+        "expectedProjectionSha256",
+        "harnessTestPath",
+        "mbt::actionTaken",
+        "mbt::nondetPicks",
+        "observedActionTaken",
+        "observedProjectionSha256",
+        "observedProjectionSource",
+        "protocol",
+        "qArmorClass",
+        "qMageArmorDurationTicks",
+        "qProjectedBaseIsMageArmor",
+        "qRoute",
+        "qScenarioOutcome",
+        "qState",
+        "qntFileSha256",
+        "reducerPublicApiPath",
+        "routeEventSource",
+        "sourceBranchInventorySha256",
+        "stateCheck",
+        "targetEntrypointSequence",
+        "targetProfile",
+        "targetProfileSha256",
+        "targetPublicApiPath",
+        "traceId"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-020.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/battle-runtime-spell-base-armor-class-effect.route.mbt.qnt",
+      "coverageStatus": "covered-public-qRoute",
+      "quarantinedWitnessNames": ["qRoute"],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-020.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/src/battle-runtime-mbt-driver-kit.ts",
+      "coverageStatus": "covered-public-qRoute",
+      "quarantinedWitnessNames": [
+        "qRoute",
+        "spellBaseArmorClassEffectRouteProjection"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-020.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/src/mage-armor-selected-identity.mbt.test.ts",
       "quarantinedWitnessNames": [
         "cleanroomManifestSourceCommitSha",
         "comparator",
@@ -31,62 +84,7 @@
         "traceId"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-019.json"
-      ]
-    },
-    {
-      "path": "packages/battle-runtime/battle-runtime-concentration-hazard-selected-route.route.mbt.qnt",
-      "coverageStatus": "covered-public-qRoute",
-      "quarantinedWitnessNames": ["qRoute"],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-019.json"
-      ]
-    },
-    {
-      "path": "packages/battle-runtime/battle-runtime-spatial-effect-route-surfaces.qnt",
-      "coverageStatus": "covered-public-qRoute",
-      "quarantinedWitnessNames": ["qRoute"],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-019.json"
-      ]
-    },
-    {
-      "path": "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt",
-      "coverageStatus": "covered-public-qRoute",
-      "quarantinedWitnessNames": ["qRoute"],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-019.json"
-      ]
-    },
-    {
-      "path": "packages/battle-runtime/src/level2-control-spell-selected-identity.mbt.test.ts",
-      "quarantinedWitnessNames": [
-        "cleanroomManifestSourceCommitSha",
-        "comparator",
-        "expectedProjectionSha256",
-        "harnessTestPath",
-        "mbt::actionTaken",
-        "mbt::nondetPicks",
-        "observedActionTaken",
-        "observedProjectionSha256",
-        "observedProjectionSource",
-        "protocol",
-        "qRoute",
-        "qScenarioOutcome",
-        "qState",
-        "qntFileSha256",
-        "reducerPublicApiPath",
-        "routeEventSource",
-        "sourceBranchInventorySha256",
-        "stateCheck",
-        "targetEntrypointSequence",
-        "targetProfile",
-        "targetProfileSha256",
-        "targetPublicApiPath",
-        "traceId"
-      ],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-019.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-020.json"
       ]
     }
   ],
@@ -95,34 +93,26 @@
       "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "role": "runtime-projection-vocabulary",
       "domainApis": [
-        "BattleReducerRouteSubjectFamily.spatialEffect",
+        "BattleReducerRouteSubjectFamily.spellBaseArmorClassEffect",
         "BattleReducerRouteOwnerGroup.battleSpellSlotAndActionEconomy",
-        "BattleReducerRouteOwnerGroup.battleAreaShape",
+        "BattleReducerRouteOwnerGroup.battleTargetSelection",
         "BattleReducerRouteOwnerGroup.battleActiveEffect",
-        "BattleReducerRouteOwnerGroup.battleConcentration",
-        "BattleReducerRouteOwnerGroup.battleLightProjection",
-        "BattleReducerRouteOwnerGroup.battleAreaHazard",
-        "BattleReducerRouteOwnerGroup.battleCreatureSpaceMovement",
-        "BattleReducerRouteOwnerGroup.battleSavingThrowOutcome",
-        "BattleReducerRouteOwnerGroup.battleConditionLifecycle",
-        "BattleReducerRouteOwnerGroup.battleMovementResource",
-        "BattleReducerRouteOwnerGroup.battleHitPoint",
-        "BattleReducerRouteOwnerGroup.battleObscurementProjection",
-        "BattleReducerRouteOwnerGroup.battleSightProjection"
+        "BattleReducerRouteOwnerGroup.battleArmorClass",
+        "BattleReducerRouteOwnerGroup.battleTurnBoundary"
       ],
-      "notes": "Extends production route projection to cover typed Spike Growth and Web concentration-backed area hazard spell procedures, movement damage, Web Saving Throw condition lifecycle, and public concentration-break cleanup through the existing spatialEffect route subject. No new reducer state, authored spell identity dispatch, or duplicate route ledger is added."
+      "notes": "Extends production route projection to cover typed persistentArmorEffect spell procedures, target admission/rejection, spellBaseArmorClass active-effect admission, derived Armor Class projection, and duration expiry cleanup through the generic spellBaseArmorClassEffect route subject. No new reducer state, authored spell identity dispatch, or duplicate Armor Class state is added."
     }
   ],
   "expectedNextReuse": [
     {
-      "driver": "future concentration-backed spatial hazard selected-identity drivers",
+      "driver": "future spell base Armor Class selected-identity or invocation-access drivers",
       "module": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "api": "BattleReducerRouteEvent",
-      "notes": "Future concentration-backed spatial hazard tasks should reuse the generic spatialEffect route subject and owner terms for admission, hazard trigger, movement, condition, and cleanup evidence."
+      "api": "BattleReducerRouteEvent.subject=spellBaseArmorClassEffect",
+      "notes": "Future base Armor Class spell-effect tasks should reuse the generic spellBaseArmorClassEffect route subject and owner terms for admission, active-effect projection, Armor Class projection, and duration cleanup evidence."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 27 observes selected Spike Growth and Web concentration-backed hazard qRoute evidence through public battle reducer entrypoints without adding durable duplicate state."
+    "notes": "Task 28 observes selected Mage Armor qRoute evidence through public battle reducer entrypoints without adding durable duplicate Armor Class state."
   }
 }
