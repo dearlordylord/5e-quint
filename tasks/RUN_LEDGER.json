@@ -6953,6 +6953,116 @@
         ],
         "requiredPlanEdits": "none"
       }
+    },
+    {
+      "taskId": "CRPI-BLOCK-032",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-thaumaturgy-selected-identity.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "6c90186b6775f99a089a0b939e07a7e8c5fe966470b72235951e103227594451"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "6a635dd6135fe2d3af7cf490278af9ed2c8c8fc3683f242af6d8434cba6994fe"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "6a4432bb471ccd2a7ed44449bd57056c3356bc5df717b3e6c9c38612264ae1bb"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-BLOCK-032/README.md",
+          "sha256": "5ad79c11e767e1b7143dd6f8b150d9f710b555ad8a436469fc9178a380b2ded6"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-032.json",
+          "sha256": "44fa2fd4b4db7057e87f2003e7f2336d4cf1ca7a5c4fe4141d49c5a002908cb1",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-032.json#driver:packages/battle-runtime/battle-runtime-thaumaturgy-selected-identity.mbt.qnt#step:doResolveThaumaturgyBoomingVoice#trace:MBT_TRACES=1 MBT_STEPS=1 action=doResolveThaumaturgyBoomingVoice qRoute=roll-modifier-thaumaturgy-active-effect-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-owner-battle-attack-20260706T213644Z/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor 827648e09ad907c96487632baf35257fadc4b22e HEAD",
+          "status": "pass",
+          "detail": "Base ref and HEAD both resolved to 827648e09 Mark Ralph task 56 done; Base SHA is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language check for Thaumaturgy Booming Voice, Advantage/Disadvantage, Concentration, D20 Rolls, Spell Invocation, and Spell Effect",
+          "status": "pass",
+          "detail": "Checked .references/srd-5.2.1/Spells/Descriptions-S-Z.md#Thaumaturgy, .references/srd-5.2.1/Playing-the-Game.md#Advantage/Disadvantage, .references/srd-5.2.1/Rules-Glossary.md#Concentration, and UBIQUITOUS_LANGUAGE.md before route evidence changes."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime typecheck",
+          "status": "pass",
+          "detail": "Battle runtime TypeScript check passed after adding the focused public route assertion for Thaumaturgy selected identity."
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Pre-MBT process checks found no active Vitest runner or Quint evaluator; observed matches were Ralph monitor command text only."
+        },
+        {
+          "command": "START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=1 pnpm --filter @dnd/battle-runtime exec vitest run src/thaumaturgy-selected-identity.mbt.test.ts ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "status": "pass",
+          "detail": "Focused Thaumaturgy selected-identity QNT replay and deterministic public route assertion passed with 2 tests; TOTAL: 5s."
+        },
+        {
+          "command": "START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=16 pnpm --filter @dnd/battle-runtime exec vitest run src/roll-modifier-active-effects.mbt.test.ts -t \"replays roll-modifier active-effect qRoute through public reducer entrypoints\" ) 2>&1 & pid=$!; wait \"$pid\"; status=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "status": "pass",
+          "detail": "Focused copied roll-modifier active-effects route connector replay passed with 1 test; TOTAL: 13s."
+        },
+        {
+          "command": "node task-scoped validateTargetReplayEvidence for packages/battle-runtime/battle-runtime-thaumaturgy-selected-identity.mbt.qnt",
+          "status": "pass",
+          "detail": "Validated tasks/target-replay-evidence/CRPI-BLOCK-032.json with scripts/cleanroom-branch-coverage-check.cjs#validateTargetReplayEvidence and current source inventory SHA; 1 obligation covered."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass"
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass"
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 verified RAW traceability, no duplicate durable state, no authored-identity production dispatch, and localized route subject/owner/fill connascence. Round 2 found no remaining reasonable Task 60 findings after evidence, manifest, report, and ledger updates."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-032",
+            "impact": "unblocked"
+          },
+          {
+            "taskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+            "impact": "left unchanged"
+          }
+        ],
+        "observations": [
+          "Thaumaturgy Booming Voice selected identity reuses the generic rollModifierEffect route subject and battleActiveEffect owner.",
+          "The active one-minute effect count remains boundary fill evidence; no Thaumaturgy-specific BattleState counter is needed.",
+          "The copied route connector action is doCastThaumaturgyBoomingVoice while the selected source branch remains doResolveThaumaturgyBoomingVoice."
+        ],
+        "requiredPlanEdits": "none"
+      }
     }
   ]
 }

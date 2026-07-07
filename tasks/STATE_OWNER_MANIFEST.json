@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-028",
+  "taskId": "CRPI-BLOCK-032",
   "durableFields": [
     {
       "fieldPath": "AvailableBattleAct.routeEvents",
@@ -11,7 +11,7 @@
         "sourceField": "AvailableBattleAct.initialHoles",
         "boundary": "discoverBattleActs public reducer result"
       },
-      "notes": "Existing discovery results carry route events derived from action spell availability and object-target-boundary hole shape."
+      "notes": "Existing discovery results carry rollModifierEffect route events derived from typed spell procedure and initial hole shape."
     },
     {
       "fieldPath": "BattleResolutionResult.routeEvents",
@@ -19,96 +19,48 @@
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleResolutionResult.holes",
+        "sourceField": "BattleResolutionResult.tag",
         "boundary": "resolveBattleSubject public reducer result"
       },
-      "notes": "Existing resolution results carry route events derived from submitted fills, remaining holes, object damage, light-emitter admission, and invalid stale-subject outcomes."
+      "notes": "Existing resolution results carry rollModifierEffect route events derived from submitted fill and resolved active-effect admission."
     },
     {
-      "fieldPath": "BattleSubject.actionSpell.invocation.procedure=spellAttackDamage",
+      "fieldPath": "BattleSubject.actionSpell.invocation.procedure=thaumaturgyBoomingVoice",
       "owner": "battle-state",
       "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": { "tag": "canonical-source" },
-      "notes": "Existing typed invocation procedure admits spell Attack behavior without production dispatch on spell name or id."
-    },
-    {
-      "fieldPath": "BattleFill.kind=objectTargetChoice",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": { "tag": "canonical-source" },
-      "notes": "Existing object-target fill carries the table-supplied range, Armor Class, Hit Point, and spatial facts at the object boundary."
-    },
-    {
-      "fieldPath": "BattleFill.kind=attackRoll",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": { "tag": "canonical-source" },
-      "notes": "Existing Attack Roll fill owns object-target spell Attack hit or miss progression."
-    },
-    {
-      "fieldPath": "BattleFill.kind=rolledDice",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": { "tag": "canonical-source" },
-      "notes": "Existing rolled-dice fill owns hit-gated object damage input."
-    },
-    {
-      "fieldPath": "BattleResolutionResult.objectDamages",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": { "tag": "canonical-source" },
-      "notes": "Existing object damage outcomes own prior/next object Hit Points, effective damage, and destroyed status."
-    },
-    {
-      "fieldPath": "BattleState light emitters",
-      "owner": "battle-state",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
-      "derivability": { "tag": "canonical-source" },
-      "notes": "Existing light-emitter state owns Starry Wisp object reveal Dim Light and Invisible-benefit denial projection."
-    },
-    {
-      "fieldPath": "AvailableBattleAct.routeEvents.subject=spellAttackProcedure",
-      "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "AvailableBattleAct.initialHoles",
-        "boundary": "discoverBattleActs public reducer result"
+        "tag": "canonical-source"
       },
-      "notes": "Spell attack discovery route subject is derived from typed spell Attack procedure availability and public initial holes; object-target discovery remains on this existing public subject."
+      "notes": "Existing typed invocation procedure admits Booming Voice behavior without production dispatch on spell name or id."
     },
     {
-      "fieldPath": "BattleReducerRouteEvent.subject=objectTargetSpellAttack",
+      "fieldPath": "BattleFill.kind=thaumaturgyActiveOneMinuteEffectCount",
+      "owner": "caller-boundary-evidence",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing fill carries the caller-supplied count of active one-minute Thaumaturgy effects. It is not copied into a reducer ledger."
+    },
+    {
+      "fieldPath": "BattleCreatureState.activeEffects[].kind=thaumaturgyBoomingVoice",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing activeEffects owns the active Spell Effect after public resolution."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.subject=rollModifierEffect",
       "owner": "executable-boundary-projection",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleFill.kind=objectTargetChoice",
+        "sourceField": "BattleSubject.actionSpell.invocation.procedure",
         "boundary": "battle reducer route event"
       },
-      "notes": "Resolution route subject is derived from object-target spell attack fill shape, not authored spell identity."
-    },
-    {
-      "fieldPath": "BattleReducerRouteEvent.owner=battleObjectTargetBoundary",
-      "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleFill.kind=objectTargetChoice | BattleFill.kind=rolledDice",
-        "boundary": "battle reducer route event"
-      },
-      "notes": "Object-target boundary ownership is derived from object-target admission and object damage frontier facts."
-    },
-    {
-      "fieldPath": "BattleReducerRouteEvent.owner=battleAttackRoll",
-      "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleFill.kind=attackRoll",
-        "boundary": "battle reducer route event"
-      },
-      "notes": "Attack Roll ownership is derived from the submitted Attack Roll fill."
+      "notes": "Generic roll-modifier route subject is derived from typed spell procedure shape, including thaumaturgyBoomingVoice, not authored spell identity."
     },
     {
       "fieldPath": "BattleReducerRouteEvent.owner=battleActiveEffect",
@@ -116,26 +68,15 @@
       "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
         "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleState light emitters",
+        "sourceField": "BattleFill.kind=thaumaturgyActiveOneMinuteEffectCount",
         "boundary": "battle reducer route event"
       },
-      "notes": "Reveal-light admission ownership is derived from an added objectInvisibleRevealLightEmitter state delta."
-    },
-    {
-      "fieldPath": "BattleReducerRouteEvent.owner=battleHoleFrontier",
-      "owner": "executable-boundary-projection",
-      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "derivability": {
-        "tag": "stored-executable-boundary-projection",
-        "sourceField": "BattleResolutionResult.reason=staleSubject",
-        "boundary": "battle reducer route event"
-      },
-      "notes": "Stale replay rejection is derived from the public invalid stale-subject result."
+      "notes": "Thaumaturgy Booming Voice active-effect admission is routed to the active-effect owner; the one-minute count remains fill evidence."
     }
   ],
   "notes": [
-    "Task 56 introduced no new durable BattleState fields.",
-    "Object facts remain table-supplied boundary facts carried by objectTargetChoice fills.",
-    "Production route behavior branches on typed spell Attack procedure shape, object-target spell attack fill kind, route result, and light-emitter deltas; it does not branch on authored spell id, name, QNT action names, fixture labels, or connector filenames."
+    "Task 60 introduced no new durable BattleState fields.",
+    "The one-minute Thaumaturgy active-effect count remains caller boundary evidence on the fill.",
+    "Production route behavior branches on typed spell procedure, public hole/fill shape, and reducer result route events; it does not branch on authored spell id, name, QNT branch action names, witness field names, fixture labels, or connector filenames."
   ]
 }

@@ -1,35 +1,40 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-028",
+  "taskId": "CRPI-BLOCK-032",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-thaumaturgy-selected-identity.mbt.qnt",
       "quarantinedWitnessNames": [
+        "qActionAvailable",
+        "qCasterEffectCount",
+        "qIntimidationRollMode",
+        "qPerceptionRollMode",
         "qProtocol",
-        "qObjectDamage",
-        "qLightEmitters"
+        "qWisdomIntimidationRollMode"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-028.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-032.json"
       ]
     },
     {
-      "path": "packages/battle-runtime/battle-runtime-starry-wisp-object.route.mbt.qnt",
-      "quarantinedWitnessNames": ["qRoute", "qSurface"],
-      "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-028.json"
-      ]
-    },
-    {
-      "path": "packages/battle-runtime/src/starry-wisp-object.mbt.test.ts",
+      "path": "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt",
       "quarantinedWitnessNames": [
-        "createStarryWispObjectDriver",
-        "createStarryWispObjectRouteDriver",
-        "starryWispObjectRouteStateCheck"
+        "qRoute",
+        "qSurface"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-028.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-032.json"
+      ]
+    },
+    {
+      "path": "packages/battle-runtime/src/thaumaturgy-selected-identity.mbt.test.ts",
+      "quarantinedWitnessNames": [
+        "observeThaumaturgyBoomingVoiceRoute",
+        "ThaumaturgyRouteProjection"
+      ],
+      "targetReplayEvidence": [
+        "tasks/target-replay-evidence/CRPI-BLOCK-032.json"
       ]
     }
   ],
@@ -38,10 +43,20 @@
       "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "role": "runtime-projection",
       "domainApis": [
+        "battleReducerRouteEventsForDiscoveredAct",
         "battleReducerRouteForResolution",
-        "objectTargetSpellAttackRouteForResolution"
+        "rollModifierRouteForDiscoveredAct",
+        "rollModifierRouteForResolution"
       ],
-      "notes": "Task 56 adds the objectTargetSpellAttack resolution route subject to the public reducer route projection. Public discovery remains on spellAttackProcedure; resolution route events are derived from object-target fills, Attack Roll fills, rolled damage fills, object reveal light-emitter deltas, and stale-subject invalid results; no route-local state is stored."
+      "notes": "Task 60 reuses existing generic rollModifierEffect route projection. Thaumaturgy Booming Voice discovery and resolution are derived from typed actionSpell invocation procedure, public initial holes, the thaumaturgyActiveOneMinuteEffectCount fill, and BattleResolutionResult.routeEvents; no route-local or Thaumaturgy-specific ledger is stored."
+    },
+    {
+      "path": "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/thaumaturgy-booming-voice.ts",
+      "role": "domain-engine",
+      "domainApis": [
+        "thaumaturgyBoomingVoiceProfile"
+      ],
+      "notes": "Existing profile owns Booming Voice active-effect admission through public spell resolution. The active one-minute effect count remains caller boundary evidence supplied by fill, not BattleState state."
     },
     {
       "path": "packages/battle-runtime/src/battle-reducer.ts",
@@ -49,23 +64,23 @@
       "domainApis": [
         "discoverBattleActs",
         "resolveBattleSubject",
-        "battleReducerStartRouteEvent"
+        "BattleCreatureState.activeEffects"
       ],
-      "notes": "Existing BattleState owns the object-target spell attack lifecycle observed by Task 56: object boundary facts, Attack Roll progression, object damage outcomes, light emitters, and stale-subject rejection."
+      "notes": "Existing BattleState owns the active Spell Effect in combatant activeEffects. Task 60 introduced no new durable BattleState field."
     }
   ],
   "expectedNextReuse": [
     {
       "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
-      "notes": "Future object-target spell attack tasks should reuse public spellAttackProcedure discovery events and objectTargetSpellAttack resolution events derived from public fills/results instead of branching on spell identity or connector action labels."
+      "notes": "Future selected roll-modifier active-effect tasks should reuse rollModifierEffect public route events derived from typed procedure/fill/result shape instead of branching on authored spell identity or connector action names."
     },
     {
-      "path": "packages/battle-runtime/src/starry-wisp-object.mbt.test.ts",
-      "notes": "Future Starry Wisp object route checks can reuse the public route projection helpers for object-boundary, Attack Roll, object damage/light, and stale replay branches."
+      "path": "packages/battle-runtime/src/roll-modifier-active-effects.mbt.test.ts",
+      "notes": "The full copied roll-modifier active-effects route connector replay remains the broad qRoute parity lane for roll-modifier active-effect route subjects."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 56 observes the copied Starry Wisp object qRoute through exact public reducer route events: spellAttackProcedure discovery, object-target boundary acceptance/rejection, Attack Roll hit/miss, object damage with reveal-light admission, and stale hole-frontier rejection."
+    "notes": "Task 60 observes the copied Thaumaturgy selected-identity qRoute through public reducer route events: startBattle, rollModifierEffect discovery owned by battleActiveEffect, and rollModifierEffect resolution without fill owned by battleActiveEffect."
   }
 }

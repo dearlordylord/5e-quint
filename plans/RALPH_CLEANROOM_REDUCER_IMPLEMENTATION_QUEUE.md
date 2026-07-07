@@ -361,7 +361,7 @@
     {
       "number": 60,
       "id": "CRPI-BLOCK-032",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-thaumaturgy-selected-identity"
     },
     {
@@ -712,7 +712,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRPI-BLOCK-029` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-030` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-031` | `done` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-032` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-032` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-READY-023` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-033` | `ready-for-research` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-034` | `ready-for-research` | none | target replay evidence and owner implementation |
@@ -4177,7 +4177,7 @@ Plan Impact:
 
 ### Task 60 - CRPI-BLOCK-032
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

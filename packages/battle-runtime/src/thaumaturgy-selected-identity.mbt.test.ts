@@ -1,6 +1,12 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1D2-THAUMATURGY-BOOMING-VOICE thaumaturgy
 // UNIT-IDENTITY-REPLAY: L1D2-THAUMATURGY-BOOMING-VOICE thaumaturgy doResolveThaumaturgyBoomingVoice
-import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.ts";
+import { describe, expect, it } from "vitest";
+
+import {
+  mbtSpecPath,
+  reducerRouteStartBattle,
+  type ReducerRouteEvent,
+} from "./battle-runtime-mbt-driver-kit.ts";
 import type { SpellRecord } from "@dnd/surface/surface/types";
 
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.ts";
@@ -95,6 +101,55 @@ defineSelectedIdentityReplayAndQntReplay({
     },
   ],
 });
+
+type ThaumaturgyRouteProjection = {
+  readonly route: readonly ReducerRouteEvent[];
+};
+
+describe("Thaumaturgy selected identity route replay", () => {
+  it("observes Booming Voice qRoute through public reducer events", () => {
+    expect(observeThaumaturgyBoomingVoiceRoute()).toEqual({
+      route: [
+        reducerRouteStartBattle("battleActionEconomy"),
+        {
+          kind: "discoverBattleActs",
+          subject: "rollModifierEffect",
+          holes: [],
+          owner: "battleActiveEffect",
+        },
+        {
+          kind: "resolveBattleSubjectWithoutFill",
+          subject: "rollModifierEffect",
+          holes: [],
+          owner: "battleActiveEffect",
+        },
+      ],
+    } satisfies ThaumaturgyRouteProjection);
+  });
+});
+
+function initialThaumaturgyRouteProjection(): ThaumaturgyRouteProjection {
+  return { route: [reducerRouteStartBattle("battleActionEconomy")] };
+}
+
+function observeThaumaturgyBoomingVoiceRoute(): ThaumaturgyRouteProjection {
+  const state = battleWithThaumaturgy();
+  const act = findAct(state, thaumaturgySubject);
+  const resolved = requireResolved(
+    resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [thaumaturgyCountFill(state, 0)],
+    }),
+  );
+  return {
+    route: [
+      ...initialThaumaturgyRouteProjection().route,
+      ...(act.routeEvents ?? []),
+      ...(resolved.routeEvents ?? []),
+    ],
+  };
+}
 
 function battleWithThaumaturgy(): BattleState {
   return startBattleRight({
