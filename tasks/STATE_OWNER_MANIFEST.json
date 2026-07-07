@@ -1,33 +1,42 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-039",
+  "taskId": "CRPI-BLOCK-040",
   "durableFields": [
     {
-      "fieldPath": "CharacterBuild",
-      "owner": "character-build",
-      "introducedIn": "packages/character-creation-runtime/src/types.ts",
-      "derivability": {
-        "tag": "canonical-source"
-      },
-      "notes": "Existing finalized CharacterBuild is the source for build-owned combat projection facts. Task 82 does not add lifecycle state to CharacterBuild."
-    },
-    {
-      "fieldPath": "CharacterSheet.currentHp",
+      "fieldPath": "CharacterSheet.resourceExpenditures",
       "owner": "character-sheet",
       "introducedIn": "packages/character-sheet-runtime/src/sheet-types.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing Character Sheet current Hit Points are the persistent pre-battle and post-settlement character-owned Hit Point fact."
+      "notes": "Existing Character Sheet resource expenditure state owns Lay On Hands, use-count, Monk Focus, and Sorcery Point point-pool spend facts. Task 83 adds no duplicate resource expenditure field."
     },
     {
-      "fieldPath": "BattleState.combatants[*].hp",
+      "fieldPath": "CharacterSheet.spellSlotSourceState",
+      "owner": "character-sheet",
+      "introducedIn": "packages/character-sheet-runtime/src/sheet-types.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing source-exact ordinary and created Spell Slot state owns Font of Magic conversion deltas. Pact Slot distinction remains separate and is not collapsed into this task's projection."
+    },
+    {
+      "fieldPath": "CharacterSheet.restFeatureUses",
+      "owner": "character-sheet",
+      "introducedIn": "packages/character-sheet-runtime/src/sheet-types.ts",
+      "derivability": {
+        "tag": "canonical-source"
+      },
+      "notes": "Existing Long Rest use-state owns Uncanny Metabolism repeat-use gating. Short Rest preserves it; Long Rest clears it."
+    },
+    {
+      "fieldPath": "BattleState.combatants[*].origin.resources",
       "owner": "battle-runtime",
       "introducedIn": "packages/battle-runtime/src/battle-reducer/model.ts",
       "derivability": {
         "tag": "canonical-source"
       },
-      "notes": "Existing BattleState combatant Hit Points are the battle-owned mutation source during runtime."
+      "notes": "Existing battle combatant character resources own battle-time Sorcery Point spend used by the Metamagic bridge before settlement projects the delta back to Character Sheet state."
     },
     {
       "fieldPath": "CharacterBattleRouteEvent",
@@ -36,12 +45,14 @@
       "derivability": {
         "tag": "runtime-projection"
       },
-      "notes": "Route events project existing layer handoff boundaries and owners; they are not stored as a duplicate lifecycle state machine."
+      "notes": "Route events project feature-resource handoff ownership, source-exact Spell Slot delta facts, rejection holes, and battle-runtime entry. They are not stored as a duplicate feature-resource state machine."
     }
   ],
   "notes": [
-    "Task 82 introduced no new durable CharacterBuild, CharacterSheet, BattleState, or BattleCreatureState fields.",
-    "The lifecycle replay keeps Draft, Build, Sheet, BattleInitProjection, BattleRuntime, and Settlement as separate domain layers.",
-    "CharacterBattleBuildProjectionOwner, CharacterBattleSheetOwner, CharacterBattleInitProjectionOwner, CharacterBattleRuntimeOwner, and CharacterBattleSettlementOwner remain the durable owner vocabulary."
+    "Task 83 introduced no durable CharacterSheet, BattleState, or BattleCreatureState fields.",
+    "CharacterBattleSheetOwner remains the sheet point/use state owner.",
+    "CharacterBattleResourceProjectionOwner remains the boundary-delta and hole owner for feature and Spell Slot resource projection.",
+    "CharacterBattleRuntimeOwner remains the battle-time Metamagic and spell action state owner.",
+    "Ordinary, created, and Pact slot distinctions remain source-exact and are not collapsed into a single resource field."
   ]
 }

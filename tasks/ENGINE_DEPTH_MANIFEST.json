@@ -1,58 +1,75 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-039",
+  "taskId": "CRPI-BLOCK-040",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt",
+      "path": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
       "quarantinedWitnessNames": [
-        "CharacterLifecycleLayer",
-        "CharacterLifecycleFacts",
-        "qReplayIndex"
+        "CharacterSheetFeatureResourcesOutcome",
+        "SheetFeatureResourceFacts",
+        "replayIndex"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-039.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-040.json"
       ]
     },
     {
-      "path": "packages/character-battle-runtime/character-layer-projection-lifecycle.route.mbt.qnt",
+      "path": "packages/character-battle-runtime/character-sheet-feature-resources.route.mbt.qnt",
       "quarantinedWitnessNames": [
-        "qRoute",
-        "CharacterLayerLifecycleRouteState"
+        "FeatureResourceHandoffRouteState",
+        "qRoute"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-039.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-040.json"
       ]
     },
     {
-      "path": "packages/character-battle-runtime/src/character-layer-projection-lifecycle.mbt.test.ts",
+      "path": "packages/character-battle-runtime/src/character-sheet-feature-resources.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "CharacterLifecycleProjection",
-        "replays Draft to Build to Sheet to battle runtime to settlement"
+        "FeatureResourceProjection",
+        "Character Sheet feature-resource deterministic QNT replay"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-039.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-040.json"
       ]
     },
     {
       "path": "packages/character-battle-runtime/src/reducer-route-connectors.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "routes character layer projection boundaries through existing owners"
+        "routes feature-resource handoff through sheet and battle owners"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-039.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-040.json"
       ]
     }
   ],
-  "productionModulesExtended": [],
-  "expectedNextReuse": [
+  "productionModulesExtended": [
+    {
+      "path": "packages/character-battle-runtime/src/character-battle-route.ts",
+      "exportedEntrypoints": [
+        "initialCharacterBattleFeatureResourceHandoffRoute",
+        "appendCharacterBattleFeatureResourceHandoffRoute"
+      ],
+      "notes": "Owns the production route projection for Character Sheet feature-resource public reducer-result handoff, source-exact Spell Slot resource projection, feature-resource rejection holes, and the Metamagic battle bridge. It does not export copied QNT branch action names or store route state as durable runtime state."
+    },
     {
       "path": "packages/character-battle-runtime/src/index.ts",
-      "notes": "Future character lifecycle handoff replays should keep using the existing public Character Battle init, Battle Runtime reducer, and settlement entrypoints rather than adding a monolithic lifecycle owner."
+      "exportedEntrypoints": [
+        "initialCharacterBattleFeatureResourceHandoffRoute",
+        "appendCharacterBattleFeatureResourceHandoffRoute"
+      ],
+      "notes": "Re-exports the Character Battle feature-resource public-result route projection for target replay and future handoff tasks."
+    }
+  ],
+  "expectedNextReuse": [
+    {
+      "path": "packages/character-battle-runtime/src/character-battle-route.ts",
+      "notes": "Future Character Sheet feature-resource and resource-settlement route replays should reuse appendCharacterBattleFeatureResourceHandoffRoute with public reducer results rather than adding adapter-local qRoute tables."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 82 observes copied qRoute for the Draft to Build to Sheet to BattleInitProjection to BattleRuntime to Settlement lifecycle through existing layered owner route events. No new durable CharacterBuild, CharacterSheet, BattleState, or BattleCreatureState fields were added."
+    "notes": "Task 83 observes copied qRoute for all Character Sheet feature-resource branches through public Character Sheet resource/rest entrypoints, Font of Magic conversion, Uncanny Metabolism recovery, and production Character Battle public-result route projection. No duplicate durable feature-resource, Spell Slot, or Metamagic resource ledger was introduced."
   }
 }

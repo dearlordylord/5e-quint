@@ -1,5 +1,83 @@
 # Validation Report
 
+## CRPI-BLOCK-040
+
+Status: `pass`
+
+- Task: 83
+- Driver path: `packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt`
+- Route connector path: `packages/character-battle-runtime/character-sheet-feature-resources.route.mbt.qnt`
+- Route class: `reducer-routed`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-040.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Behavior implemented:
+
+Task 83 accepts Character Sheet feature-resource route replay through existing
+Character Sheet resource/rest entrypoints, Font of Magic conversion entrypoints,
+Uncanny Metabolism Initiative recovery, Character Battle public-result route projection, and
+the existing Battle Runtime resource settlement bridge. The feature-resource
+route projection now takes actual public reducer/runtime `Either` results in
+`packages/character-battle-runtime/src/character-battle-route.ts` through
+`appendCharacterBattleFeatureResourceHandoffRoute`; production code does not
+export or branch on copied QNT branch action names. No durable Character Sheet,
+BattleState, BattleCreatureState, Spell Slot, or Metamagic resource field was
+added.
+
+Generated branch coverage:
+
+| Obligation | Evidence | Sampled inputs | Status |
+| --- | --- | --- | --- |
+| `packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doLayOnHandsRestoresHpAndRemovesPoisoned` | `tasks/target-replay-evidence/CRPI-BLOCK-040.json#driver:packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doLayOnHandsRestoresHpAndRemovesPoisoned#trace:public-route=characterSheetFeatureResources action=doLayOnHandsRestoresHpAndRemovesPoisoned qRoute=feature-resource-handoff-route` | `_none_` | `covered` |
+| `packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doRejectLayOnHandsOverspend` | `tasks/target-replay-evidence/CRPI-BLOCK-040.json#driver:packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doRejectLayOnHandsOverspend#trace:public-route=characterSheetFeatureResources action=doRejectLayOnHandsOverspend qRoute=feature-resource-rejection-route` | `_none_` | `covered` |
+| `packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doLongRestClearsLayOnHandsPool` | `tasks/target-replay-evidence/CRPI-BLOCK-040.json#driver:packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doLongRestClearsLayOnHandsPool#trace:public-route=characterSheetFeatureResources action=doLongRestClearsLayOnHandsPool qRoute=feature-resource-rest-route` | `_none_` | `covered` |
+| `packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doShortRestRecoversUseCountPools` | `tasks/target-replay-evidence/CRPI-BLOCK-040.json#driver:packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doShortRestRecoversUseCountPools#trace:public-route=characterSheetFeatureResources action=doShortRestRecoversUseCountPools qRoute=feature-resource-short-rest-route` | `_none_` | `covered` |
+| `packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doLongRestClearsPointPoolAndUseState` | `tasks/target-replay-evidence/CRPI-BLOCK-040.json#driver:packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doLongRestClearsPointPoolAndUseState#trace:public-route=characterSheetFeatureResources action=doLongRestClearsPointPoolAndUseState qRoute=feature-resource-long-rest-route` | `_none_` | `covered` |
+| `packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doFontOfMagicSlotToPoints` | `tasks/target-replay-evidence/CRPI-BLOCK-040.json#driver:packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doFontOfMagicSlotToPoints#trace:public-route=characterSheetFeatureResources action=doFontOfMagicSlotToPoints qRoute=source-exact-spell-resource-route` | `_none_` | `covered` |
+| `packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doRejectFontOfMagicAmbiguousSlotSource` | `tasks/target-replay-evidence/CRPI-BLOCK-040.json#driver:packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doRejectFontOfMagicAmbiguousSlotSource#trace:public-route=characterSheetFeatureResources action=doRejectFontOfMagicAmbiguousSlotSource qRoute=source-exact-spell-resource-rejection-route` | `_none_` | `covered` |
+| `packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doFontOfMagicPointsToSlot` | `tasks/target-replay-evidence/CRPI-BLOCK-040.json#driver:packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doFontOfMagicPointsToSlot#trace:public-route=characterSheetFeatureResources action=doFontOfMagicPointsToSlot qRoute=source-exact-spell-resource-created-slot-route` | `_none_` | `covered` |
+| `packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doRejectFontOfMagicInsufficientPoints` | `tasks/target-replay-evidence/CRPI-BLOCK-040.json#driver:packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doRejectFontOfMagicInsufficientPoints#trace:public-route=characterSheetFeatureResources action=doRejectFontOfMagicInsufficientPoints qRoute=feature-resource-insufficient-points-rejection-route` | `_none_` | `covered` |
+| `packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doShortRestPreservesUncannyUseState` | `tasks/target-replay-evidence/CRPI-BLOCK-040.json#driver:packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doShortRestPreservesUncannyUseState#trace:public-route=characterSheetFeatureResources action=doShortRestPreservesUncannyUseState qRoute=uncanny-short-rest-route` | `_none_` | `covered` |
+| `packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doLongRestClearsUncannyUseState` | `tasks/target-replay-evidence/CRPI-BLOCK-040.json#driver:packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doLongRestClearsUncannyUseState#trace:public-route=characterSheetFeatureResources action=doLongRestClearsUncannyUseState qRoute=uncanny-long-rest-route` | `_none_` | `covered` |
+| `packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doUncannyMetabolismRecoversFocusAndHeals` | `tasks/target-replay-evidence/CRPI-BLOCK-040.json#driver:packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doUncannyMetabolismRecoversFocusAndHeals#trace:public-route=characterSheetFeatureResources action=doUncannyMetabolismRecoversFocusAndHeals qRoute=uncanny-initiative-route` | `_none_` | `covered` |
+| `packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doRejectUncannyMetabolismRepeatUse` | `tasks/target-replay-evidence/CRPI-BLOCK-040.json#driver:packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doRejectUncannyMetabolismRepeatUse#trace:public-route=characterSheetFeatureResources action=doRejectUncannyMetabolismRepeatUse qRoute=uncanny-repeat-rejection-route` | `_none_` | `covered` |
+| `packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doMetamagicBridgeUsesSharedPointPool` | `tasks/target-replay-evidence/CRPI-BLOCK-040.json#driver:packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt#step:doMetamagicBridgeUsesSharedPointPool#trace:public-route=characterSheetFeatureResources action=doMetamagicBridgeUsesSharedPointPool qRoute=metamagic-shared-point-pool-battle-bridge-route` | `_none_` | `covered` |
+
+Target replay evidence:
+
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-040.json`
+- Reproduction trace family: `MBT_TRACES=1 MBT_STEPS=14 action=<branchAction> qRoute=character-sheet-feature-resource-route`
+- The copied connector projection source is `packages/character-battle-runtime/character-sheet-feature-resources.route.mbt.qnt#qRoute`; the observed projection source is public Character Sheet resource/rest entrypoints, Font of Magic conversion entrypoints, public Battle Runtime `startBattle`/`discoverBattleActs`/`resolveBattleSubject` Metamagic spell-action resolution, settlement, and production Character Battle public-result route projections exercised by `packages/character-battle-runtime/src/character-sheet-feature-resources.mbt.test.ts` and `packages/character-battle-runtime/src/reducer-route-connectors.mbt.test.ts`.
+- All 14 driver route obligations are recorded in `tasks/target-replay-evidence/CRPI-BLOCK-040.json`.
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-040/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Classes/Paladin.md#Level 1: Lay On Hands` defines the healing pool and condition-removal spend.
+- SRD 5.2.1 `Rules-Glossary.md#Short Rest` and `#Long Rest` define the rest boundaries and special-feature recharge hooks.
+- SRD 5.2.1 `Classes/Monk.md#Level 2: Uncanny Metabolism` defines Initiative-triggered Focus Point recovery and healing with a Long Rest use gate.
+- SRD 5.2.1 `Classes/Sorcerer.md#Level 2: Font of Magic` and `#Level 2: Metamagic` define Sorcery Points, created slots, and shared Metamagic point spend.
+- `UBIQUITOUS_LANGUAGE.md` keeps Hit Points, Temporary Hit Points, Spell Slot, Pact Slot, Short Rest, and Long Rest terminology distinct.
+
+Verification results:
+
+- Task-base check passed: base ref `ralph/cleanroom-owner-character-battle-20260706T213644Z/integration` and `HEAD` both resolved to `8ad285698 Mark Ralph task 82 done`; Base SHA `8ad285698b3ea1bbd921033fb08c981c6a0bd4af` is an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against the SRD 5.2.1 and `UBIQUITOUS_LANGUAGE.md` passages listed above.
+- TypeScript passed: `pnpm --filter @dnd/character-battle-runtime typecheck`.
+- Focused replay and broad verification results are recorded in `tasks/RUN_LEDGER.json`.
+- Reviewer-loop convergence passed: RAW traceability, ubiquitous-language/domain language, architecture/connascence, and code-review checks found no remaining reasonable Task 83 findings after replacing QNT-action production dispatch with public-result route projections, preserving source-exact Spell Slot distinctions, and avoiding duplicate durable state.
+
 ## CRPI-BLOCK-039
 
 Status: `pass`
