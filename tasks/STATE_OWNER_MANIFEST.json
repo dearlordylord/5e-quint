@@ -1,57 +1,141 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-044",
+  "taskId": "CRPI-BLOCK-028",
   "durableFields": [
     {
-      "fieldPath": "CharacterBuild.features",
-      "owner": "character-build",
-      "introducedIn": "packages/character-creation-runtime/src/types.ts",
+      "fieldPath": "AvailableBattleAct.routeEvents",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
-        "tag": "canonical-source"
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "AvailableBattleAct.initialHoles",
+        "boundary": "discoverBattleActs public reducer result"
       },
-      "notes": "Existing selected class-choice refs retain the Fighter Fighting Style feat selected during creation and after Fighter level-gain replacement. The replacement replay also preserves the existing level-1 Fighter Weapon Mastery selected refs in CharacterBuild.features so the advancement reducer can check the current table count. Task 87 adds no duplicate selected-reference cache."
+      "notes": "Existing discovery results carry route events derived from action spell availability and object-target-boundary hole shape."
     },
     {
-      "fieldPath": "CharacterBuild.progression.advancements",
-      "owner": "character-build",
-      "introducedIn": "packages/character-creation-runtime/src/types.ts",
+      "fieldPath": "BattleResolutionResult.routeEvents",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
       "derivability": {
-        "tag": "canonical-source"
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleResolutionResult.holes",
+        "boundary": "resolveBattleSubject public reducer result"
       },
-      "notes": "The Fighter level-gain replacement operation appends the existing class advancement entry through advanceCharacterBuildClassLevel; replacement route evidence reads this canonical progression instead of storing route-local level state."
+      "notes": "Existing resolution results carry route events derived from submitted fills, remaining holes, object damage, light-emitter admission, and invalid stale-subject outcomes."
     },
     {
-      "fieldPath": "CharacterCreationRouteEvent.subject=selectedReference",
-      "owner": "character-creation-selected-reference-route-projection",
-      "introducedIn": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts",
-      "derivability": {
-        "tag": "runtime-projection"
-      },
-      "notes": "CreationSelectedReferenceOwner route events are emitted after reading retained CharacterBuild selected refs."
+      "fieldPath": "BattleSubject.actionSpell.invocation.procedure=spellAttackDamage",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": { "tag": "canonical-source" },
+      "notes": "Existing typed invocation procedure admits spell Attack behavior without production dispatch on spell name or id."
     },
     {
-      "fieldPath": "CharacterCreationRouteEvent.kind=applyCreationFillBatch",
-      "owner": "character-build-fighting-style-replacement-route",
-      "introducedIn": "packages/character-creation-runtime/src/character-build-advancement.ts",
-      "derivability": {
-        "tag": "runtime-projection"
-      },
-      "notes": "The Fighter Fighting Style replacement route event records the CharacterBuildOwner replacement fill boundary around the existing typed advancement reducer."
+      "fieldPath": "BattleFill.kind=objectTargetChoice",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": { "tag": "canonical-source" },
+      "notes": "Existing object-target fill carries the table-supplied range, Armor Class, Hit Point, and spatial facts at the object boundary."
     },
     {
-      "fieldPath": "CharacterCreationRouteEvent.subject=buildProjection",
-      "owner": "character-build-projection-route",
-      "introducedIn": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts",
+      "fieldPath": "BattleFill.kind=attackRoll",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": { "tag": "canonical-source" },
+      "notes": "Existing Attack Roll fill owns object-target spell Attack hit or miss progression."
+    },
+    {
+      "fieldPath": "BattleFill.kind=rolledDice",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": { "tag": "canonical-source" },
+      "notes": "Existing rolled-dice fill owns hit-gated object damage input."
+    },
+    {
+      "fieldPath": "BattleResolutionResult.objectDamages",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": { "tag": "canonical-source" },
+      "notes": "Existing object damage outcomes own prior/next object Hit Points, effective damage, and destroyed status."
+    },
+    {
+      "fieldPath": "BattleState light emitters",
+      "owner": "battle-state",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer.ts",
+      "derivability": { "tag": "canonical-source" },
+      "notes": "Existing light-emitter state owns Starry Wisp object reveal Dim Light and Invisible-benefit denial projection."
+    },
+    {
+      "fieldPath": "AvailableBattleAct.routeEvents.subject=spellAttackProcedure",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
       "derivability": {
-        "tag": "runtime-projection"
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "AvailableBattleAct.initialHoles",
+        "boundary": "discoverBattleActs public reducer result"
       },
-      "notes": "CharacterBuildOwner build-projection route events are emitted by characterBuildProjectionWithRoute without storing a parallel projection state field."
+      "notes": "Spell attack discovery route subject is derived from typed spell Attack procedure availability and public initial holes; object-target discovery remains on this existing public subject."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.subject=objectTargetSpellAttack",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleFill.kind=objectTargetChoice",
+        "boundary": "battle reducer route event"
+      },
+      "notes": "Resolution route subject is derived from object-target spell attack fill shape, not authored spell identity."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.owner=battleObjectTargetBoundary",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleFill.kind=objectTargetChoice | BattleFill.kind=rolledDice",
+        "boundary": "battle reducer route event"
+      },
+      "notes": "Object-target boundary ownership is derived from object-target admission and object damage frontier facts."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.owner=battleAttackRoll",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleFill.kind=attackRoll",
+        "boundary": "battle reducer route event"
+      },
+      "notes": "Attack Roll ownership is derived from the submitted Attack Roll fill."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.owner=battleActiveEffect",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleState light emitters",
+        "boundary": "battle reducer route event"
+      },
+      "notes": "Reveal-light admission ownership is derived from an added objectInvisibleRevealLightEmitter state delta."
+    },
+    {
+      "fieldPath": "BattleReducerRouteEvent.owner=battleHoleFrontier",
+      "owner": "executable-boundary-projection",
+      "introducedIn": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "derivability": {
+        "tag": "stored-executable-boundary-projection",
+        "sourceField": "BattleResolutionResult.reason=staleSubject",
+        "boundary": "battle reducer route event"
+      },
+      "notes": "Stale replay rejection is derived from the public invalid stale-subject result."
     }
   ],
   "notes": [
-    "Task 87 introduced no new durable CharacterBuild fields.",
-    "Initial and replacement Fighter Fighting Style selected refs remain existing CharacterBuild selected class-choice facts.",
-    "Replacement replay fixtures include the current level-1 Fighter Weapon Mastery selected refs as existing CharacterBuild selected class-choice facts rather than storing a parallel route-local state.",
-    "Replacement qRoute evidence is projected at the reducer-route boundary through advanceCharacterBuildFightingStyleReplacementWithRoute, characterBuildSelectedReferencesWithRoute, and characterBuildProjectionWithRoute."
+    "Task 56 introduced no new durable BattleState fields.",
+    "Object facts remain table-supplied boundary facts carried by objectTargetChoice fills.",
+    "Production route behavior branches on typed spell Attack procedure shape, object-target spell attack fill kind, route result, and light-emitter deltas; it does not branch on authored spell id, name, QNT action names, fixture labels, or connector filenames."
   ]
 }

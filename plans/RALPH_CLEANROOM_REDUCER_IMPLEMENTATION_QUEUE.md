@@ -337,7 +337,7 @@
     {
       "number": 56,
       "id": "CRPI-BLOCK-028",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Implement route replay: battle-runtime-starry-wisp-object"
     },
     {
@@ -708,7 +708,7 @@ The final queue has more tasks than the provisional nine-task bootstrap because 
 | `CRPI-READY-022` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-026` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-027` | `done` | none | target replay evidence and owner implementation |
-| `CRPI-BLOCK-028` | `ready-for-research` | none | target replay evidence and owner implementation |
+| `CRPI-BLOCK-028` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-029` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-030` | `done` | none | target replay evidence and owner implementation |
 | `CRPI-BLOCK-031` | `done` | none | target replay evidence and owner implementation |
@@ -3942,7 +3942,7 @@ Plan Impact:
 
 ### Task 56 - CRPI-BLOCK-028
 
-Status: `ready-for-research`
+Status: `done`
 
 Goal:
 

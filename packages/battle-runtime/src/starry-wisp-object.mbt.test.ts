@@ -14,10 +14,6 @@ import {
   quintStateRecord,
   quintVariantTag,
   quintVariantValue,
-  reducerRouteDiscoverBattleActs,
-  reducerRouteResolveBattleSubject,
-  reducerRouteResolveBattleSubjectWithoutFill,
-  reducerRouteStartBattle,
   run,
   stateCheck,
   type ReducerRouteEvent,
@@ -50,6 +46,7 @@ import {
 import {
   battleId,
   battleObjectId,
+  battleReducerStartRouteEvent,
   cantripSpellInvocationRef,
   characterId,
   discoverBattleActs,
@@ -57,6 +54,7 @@ import {
   objectInvisibleBenefitDenied,
   resolveBattleSubject,
   snapshotBattle,
+  type AvailableBattleAct,
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
@@ -321,16 +319,14 @@ type StarryWispObjectRouteState = {
   readonly route: readonly ReducerRouteEvent[];
 };
 
-const starryWispObjectRouteStart = reducerRouteStartBattle(
-  "battleActionEconomy",
-);
+const starryWispObjectRouteStart = battleReducerStartRouteEvent();
 
 function createStarryWispObjectRouteDriver() {
   return defineDriver(starryWispObjectRouteDriverSchema, () => {
-    let route: readonly ReducerRouteEvent[] = [starryWispObjectRouteStart];
+    let route: readonly ReducerRouteEvent[] = [battleReducerStartRouteEvent()];
     return {
       init: () => {
-        route = [starryWispObjectRouteStart];
+        route = [battleReducerStartRouteEvent()];
       },
       doRouteObjectTargetBoundary: () => {
         route = routeObjectTargetBoundary();
@@ -392,157 +388,247 @@ describe("Starry Wisp object MBT parity", () => {
     });
   }, 120_000);
 
-  it("routes object-target boundary facts and hit light effects through battle owners", async () => {
-    await run({
-      spec: mbtSpecPath(
-        import.meta.dirname,
-        "battle-runtime-starry-wisp-object.route.mbt.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createStarryWispObjectRouteDriver(),
-      backend: "typescript",
-      nTraces: mbtTraceCount(),
-      maxSteps: focusedMbtMaxSteps(1),
-      stateCheck: starryWispObjectRouteStateCheck,
-    });
-  }, MBT_TEST_TIMEOUT_MS);
+  it(
+    "routes object-target boundary facts and hit light effects through battle owners",
+    async () => {
+      await run({
+        spec: mbtSpecPath(
+          import.meta.dirname,
+          "battle-runtime-starry-wisp-object.route.mbt.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driver: createStarryWispObjectRouteDriver(),
+        backend: "typescript",
+        nTraces: mbtTraceCount(),
+        maxSteps: focusedMbtMaxSteps(1),
+        stateCheck: starryWispObjectRouteStateCheck,
+      });
+    },
+    MBT_TEST_TIMEOUT_MS,
+  );
 });
 
 function routeObjectTargetBoundary(): readonly ReducerRouteEvent[] {
-  return [
-    starryWispObjectRouteStart,
-    reducerRouteDiscoverBattleActs({
-      subject: "objectTargetSpellAttack",
-      holes: [],
-      owner: "battleObjectTargetBoundary",
-    }),
-    reducerRouteResolveBattleSubjectWithoutFill({
-      subject: "objectTargetSpellAttack",
-      holes: [{ kind: "attackRoll" }],
-      owner: "battleObjectTargetBoundary",
-    }),
-  ];
+  const boundary = publicObjectTargetBoundaryRoute({ spatialFacts: "present" });
+  return publicRoute(
+    requirePublicRouteEvents(
+      boundary.act.routeEvents,
+      "Starry Wisp public discovery",
+    ),
+    requirePublicRouteEvents(
+      boundary.result.routeEvents,
+      "object target boundary resolution",
+    ),
+  );
 }
 
 function routeRejectObjectWithoutBoundaryFact(): readonly ReducerRouteEvent[] {
-  return [
-    starryWispObjectRouteStart,
-    reducerRouteDiscoverBattleActs({
-      subject: "objectTargetSpellAttack",
-      holes: [],
-      owner: "battleObjectTargetBoundary",
-    }),
-    reducerRouteResolveBattleSubjectWithoutFill({
-      subject: "objectTargetSpellAttack",
-      holes: [],
-      owner: "battleObjectTargetBoundary",
-    }),
-  ];
+  const boundary = publicObjectTargetBoundaryRoute({ spatialFacts: "missing" });
+  return publicRoute(
+    requirePublicRouteEvents(
+      boundary.act.routeEvents,
+      "Starry Wisp public discovery",
+    ),
+    requirePublicRouteEvents(
+      boundary.result.routeEvents,
+      "missing object target boundary resolution",
+    ),
+  );
 }
 
 function routeObjectAttackMiss(): readonly ReducerRouteEvent[] {
-  return [
-    starryWispObjectRouteStart,
-    reducerRouteDiscoverBattleActs({
-      subject: "objectTargetSpellAttack",
-      holes: [{ kind: "attackRoll" }],
-      owner: "battleAttackRoll",
-    }),
-    reducerRouteResolveBattleSubject({
-      subject: "objectTargetSpellAttack",
-      fill: "attackRoll",
-      holes: [],
-      owner: "battleAttackRoll",
-    }),
-  ];
+  const attack = publicObjectAttackRollRoute({ total: 12, naturalD20: 7 });
+  return publicRoute(
+    requirePublicRouteEvents(
+      attack.boundary.act.routeEvents,
+      "Starry Wisp public discovery",
+    ),
+    requirePublicRouteEvents(
+      attack.boundary.result.routeEvents,
+      "object target boundary resolution",
+    ),
+    requirePublicRouteEvents(
+      attack.result.routeEvents,
+      "object attack miss resolution",
+    ),
+  );
 }
 
 function routeObjectAttackHit(): readonly ReducerRouteEvent[] {
-  return [
-    starryWispObjectRouteStart,
-    reducerRouteDiscoverBattleActs({
-      subject: "objectTargetSpellAttack",
-      holes: [{ kind: "attackRoll" }],
-      owner: "battleAttackRoll",
-    }),
-    reducerRouteResolveBattleSubject({
-      subject: "objectTargetSpellAttack",
-      fill: "attackRoll",
-      holes: [{ kind: "rolledDice" }],
-      owner: "battleAttackRoll",
-    }),
-  ];
+  const attack = publicObjectAttackRollRoute({ total: 18, naturalD20: 12 });
+  return publicRoute(
+    requirePublicRouteEvents(
+      attack.boundary.act.routeEvents,
+      "Starry Wisp public discovery",
+    ),
+    requirePublicRouteEvents(
+      attack.boundary.result.routeEvents,
+      "object target boundary resolution",
+    ),
+    requirePublicRouteEvents(
+      attack.result.routeEvents,
+      "object attack hit resolution",
+    ),
+  );
 }
 
 function routeObjectDamageAndLight(): readonly ReducerRouteEvent[] {
-  return [
-    starryWispObjectRouteStart,
-    reducerRouteDiscoverBattleActs({
-      subject: "objectTargetSpellAttack",
-      holes: [{ kind: "rolledDice" }],
-      owner: "battleObjectTargetBoundary",
-    }),
-    reducerRouteResolveBattleSubject({
-      subject: "objectTargetSpellAttack",
-      fill: "rolledDice",
-      holes: [],
-      owner: "battleObjectTargetBoundary",
-    }),
-    reducerRouteResolveBattleSubjectWithoutFill({
-      subject: "objectTargetSpellAttack",
-      holes: [],
-      owner: "battleActiveEffect",
-    }),
-  ];
+  const damage = publicObjectDamageAndLightRoute([[2, 2]]);
+  return publicRoute(
+    requirePublicRouteEvents(
+      damage.attack.boundary.act.routeEvents,
+      "Starry Wisp public discovery",
+    ),
+    requirePublicRouteEvents(
+      damage.attack.boundary.result.routeEvents,
+      "object target boundary resolution",
+    ),
+    requirePublicRouteEvents(
+      damage.attack.result.routeEvents,
+      "object attack hit resolution",
+    ),
+    requirePublicRouteEvents(
+      damage.result.routeEvents,
+      "object damage and light resolution",
+    ),
+  );
 }
 
 function routeRejectStaleAfterResolved(): readonly ReducerRouteEvent[] {
-  return [
-    starryWispObjectRouteStart,
-    reducerRouteDiscoverBattleActs({
-      subject: "objectTargetSpellAttack",
-      holes: [],
-      owner: "battleObjectTargetBoundary",
-    }),
-    reducerRouteResolveBattleSubjectWithoutFill({
-      subject: "objectTargetSpellAttack",
-      holes: [{ kind: "attackRoll" }],
-      owner: "battleObjectTargetBoundary",
-    }),
-    reducerRouteDiscoverBattleActs({
-      subject: "objectTargetSpellAttack",
-      holes: [{ kind: "attackRoll" }],
-      owner: "battleAttackRoll",
-    }),
-    reducerRouteResolveBattleSubject({
-      subject: "objectTargetSpellAttack",
-      fill: "attackRoll",
-      holes: [{ kind: "rolledDice" }],
-      owner: "battleAttackRoll",
-    }),
-    reducerRouteDiscoverBattleActs({
-      subject: "objectTargetSpellAttack",
-      holes: [{ kind: "rolledDice" }],
-      owner: "battleObjectTargetBoundary",
-    }),
-    reducerRouteResolveBattleSubject({
-      subject: "objectTargetSpellAttack",
-      fill: "rolledDice",
-      holes: [],
-      owner: "battleObjectTargetBoundary",
-    }),
-    reducerRouteResolveBattleSubjectWithoutFill({
-      subject: "objectTargetSpellAttack",
-      holes: [],
-      owner: "battleActiveEffect",
-    }),
-    reducerRouteResolveBattleSubjectWithoutFill({
-      subject: "objectTargetSpellAttack",
-      holes: [],
-      owner: "battleHoleFrontier",
+  const damage = publicObjectDamageAndLightRoute([[3, 3]]);
+  const stale = resolveBattleSubject({
+    state: damage.state,
+    subject: starryWispSubject(),
+    fills: damage.fills,
+  });
+  return publicRoute(
+    requirePublicRouteEvents(
+      damage.attack.boundary.act.routeEvents,
+      "Starry Wisp public discovery",
+    ),
+    requirePublicRouteEvents(
+      damage.attack.boundary.result.routeEvents,
+      "object target boundary resolution",
+    ),
+    requirePublicRouteEvents(
+      damage.attack.result.routeEvents,
+      "object attack hit resolution",
+    ),
+    requirePublicRouteEvents(
+      damage.result.routeEvents,
+      "object damage and light resolution",
+    ),
+    requirePublicRouteEvents(stale.routeEvents, "stale replay rejection"),
+  );
+}
+
+function publicRoute(
+  ...routeEventGroups: readonly (readonly ReducerRouteEvent[])[]
+): readonly ReducerRouteEvent[] {
+  return [starryWispObjectRouteStart, ...routeEventGroups.flat()];
+}
+
+function requirePublicRouteEvents(
+  routeEvents: readonly ReducerRouteEvent[] | undefined,
+  context: string,
+): readonly ReducerRouteEvent[] {
+  if (routeEvents === undefined || routeEvents.length === 0) {
+    throw new Error(`Expected public route events for ${context}.`);
+  }
+  return routeEvents;
+}
+
+function publicObjectTargetBoundaryRoute(input: {
+  readonly spatialFacts: "present" | "missing";
+}): {
+  readonly act: AvailableBattleAct;
+  readonly result: BattleResolutionResult;
+  readonly fills: readonly BattleFill[];
+} {
+  const state = starryWispObjectBattle();
+  const subject = starryWispSubject();
+  const act = discoverStarryWispAct(state, subject);
+  const objectTarget = requireStarryWispObjectHole(
+    act.initialHoles,
+    "objectTargetChoice",
+  );
+  const fills = [
+    starryWispObjectTargetFill(
+      objectTarget,
+      input.spatialFacts === "missing" ? { spatialFacts: [] } : {},
+    ),
+  ];
+  const result = resolveBattleSubject({ state, subject, fills });
+  if (input.spatialFacts === "present" && result.tag !== "needsHoles") {
+    throw new Error("Expected object target boundary to open Attack Roll.");
+  }
+  if (input.spatialFacts === "missing" && result.tag !== "invalid") {
+    throw new Error("Expected missing object boundary fact to be invalid.");
+  }
+  return { act, result, fills };
+}
+
+function publicObjectAttackRollRoute(input: {
+  readonly total: number;
+  readonly naturalD20: number;
+}): {
+  readonly boundary: ReturnType<typeof publicObjectTargetBoundaryRoute>;
+  readonly result: BattleResolutionResult;
+  readonly fills: readonly BattleFill[];
+} {
+  const boundary = publicObjectTargetBoundaryRoute({ spatialFacts: "present" });
+  if (boundary.result.tag !== "needsHoles") {
+    throw new Error("Expected object boundary result to need holes.");
+  }
+  const attackRoll = requireStarryWispObjectHole(
+    boundary.result.holes,
+    "attackRoll",
+  );
+  const fills = [
+    ...boundary.fills,
+    attackRollFill(attackRoll, {
+      total: input.total,
+      naturalD20: input.naturalD20,
     }),
   ];
+  const result = resolveBattleSubject({
+    state: boundary.result.state,
+    subject: starryWispSubject(),
+    fills,
+  });
+  if (result.tag !== "resolved" && result.tag !== "needsHoles") {
+    throw new Error("Expected object Attack Roll to resolve or open damage.");
+  }
+  return { boundary, result, fills };
+}
+
+function publicObjectDamageAndLightRoute(
+  damageRollGroups: readonly (readonly number[])[],
+): {
+  readonly attack: ReturnType<typeof publicObjectAttackRollRoute>;
+  readonly result: BattleResolutionResult;
+  readonly state: BattleState;
+  readonly fills: readonly BattleFill[];
+} {
+  const attack = publicObjectAttackRollRoute({ total: 18, naturalD20: 12 });
+  if (attack.result.tag !== "needsHoles") {
+    throw new Error("Expected hit object Attack Roll to open damage dice.");
+  }
+  const damage = requireStarryWispObjectHole(attack.result.holes, "rolledDice");
+  const fills = [
+    ...attack.fills,
+    damageRollFillWithGroups(damage, damageRollGroups),
+  ];
+  const result = resolveBattleSubject({
+    state: attack.result.state,
+    subject: starryWispSubject(),
+    fills,
+  });
+  if (result.tag !== "resolved") {
+    throw new Error("Expected object damage and light to resolve.");
+  }
+  return { attack, result, state: result.state, fills };
 }
 
 function normalizeStarryWispObjectQuintState(
@@ -694,6 +780,13 @@ function discoverStarryWispHoles(
   state: BattleState,
   subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
 ): readonly BattleHole[] {
+  return discoverStarryWispAct(state, subject).initialHoles;
+}
+
+function discoverStarryWispAct(
+  state: BattleState,
+  subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>,
+): AvailableBattleAct {
   const act = discoverBattleActs(state).find(
     (candidate) =>
       candidate.subject.tag === "actionSpell" &&
@@ -704,7 +797,7 @@ function discoverStarryWispHoles(
     throw new Error("Expected Starry Wisp spell act.");
   }
 
-  return act.initialHoles;
+  return act;
 }
 
 type ObjectTargetChoiceFill = Extract<

@@ -4,6 +4,121 @@
   "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
   "entries": [
     {
+      "taskId": "CRPI-BLOCK-028",
+      "assignmentId": "reducer-spine-diagnostic-battle",
+      "laneId": "battle",
+      "selectedDrivers": [
+        "packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt"
+      ],
+      "manifestSourceCommitSha": "895539634f9595f8e4650d3c95aaee7084afe8b5",
+      "sourceBranchInventorySha256": "4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da",
+      "artifacts": {
+        "engineDepth": {
+          "path": "tasks/ENGINE_DEPTH_MANIFEST.json",
+          "sha256": "4080359978fbff3fb64d06f5cd2f976b8f18f3674fcd713bcb3e627d81b0cf12"
+        },
+        "stateOwnerManifest": {
+          "path": "tasks/STATE_OWNER_MANIFEST.json",
+          "sha256": "52ef2e5b9b99c1e2a61a8c533ae495885b9788a3161aab377b6e3a64d2b438e4"
+        },
+        "validationReport": {
+          "path": "tasks/VALIDATION_REPORT.md",
+          "sha256": "22d0c0d969baa8ed46f7a0732a3186f5764e94f4155b29fc51e66c47fb55041a"
+        },
+        "history": {
+          "path": "tasks/history/CRPI-BLOCK-028/README.md",
+          "sha256": "75cad95179341852ea8a5d9d3782b8420a0e5e48f4a9c721e2ae7e0d9b405620"
+        }
+      },
+      "targetReplayEvidence": [
+        {
+          "path": "tasks/target-replay-evidence/CRPI-BLOCK-028.json",
+          "sha256": "a4bca47b1637d23b0f28445744097714fb4d19ccf65ca5ceb77fe391a2420777",
+          "evidenceRefs": [
+            "tasks/target-replay-evidence/CRPI-BLOCK-028.json#driver:packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt#step:doFillObjectTarget#trace:MBT_TRACES=1 MBT_STEPS=4 action=doFillObjectTarget qRoute=starry-wisp-object-target-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-028.json#driver:packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt#step:doRejectObjectWithoutFact#trace:MBT_TRACES=1 MBT_STEPS=4 action=doRejectObjectWithoutFact qRoute=starry-wisp-object-target-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-028.json#driver:packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt#step:doFillObjectAttackRollMiss#trace:MBT_TRACES=1 MBT_STEPS=4 action=doFillObjectAttackRollMiss qRoute=starry-wisp-object-attack-miss-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-028.json#driver:packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt#step:doFillObjectAttackRollHit#trace:MBT_TRACES=1 MBT_STEPS=4 action=doFillObjectAttackRollHit qRoute=starry-wisp-object-attack-hit-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-028.json#driver:packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt#step:doFillObjectDamageLow#trace:MBT_TRACES=1 MBT_STEPS=4 action=doFillObjectDamageLow qRoute=starry-wisp-object-damage-light-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-028.json#driver:packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt#step:doFillObjectDamageHigh#trace:MBT_TRACES=1 MBT_STEPS=4 action=doFillObjectDamageHigh qRoute=starry-wisp-object-damage-light-public-route",
+            "tasks/target-replay-evidence/CRPI-BLOCK-028.json#driver:packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt#step:doRejectStaleAfterResolved#trace:MBT_TRACES=1 MBT_STEPS=4 action=doRejectStaleAfterResolved qRoute=starry-wisp-object-stale-public-route"
+          ]
+        }
+      ],
+      "commandResults": [
+        {
+          "command": "git log --oneline -1 ralph/cleanroom-owner-battle-attack-20260706T213644Z/integration; git log --oneline -1 HEAD; git merge-base --is-ancestor abbafd51d6f1c928294e44d666a99b4835081056 HEAD",
+          "status": "pass",
+          "detail": "Base ref and HEAD both resolved to abbafd51d Mark Ralph task 55 done; Base SHA is an ancestor of HEAD."
+        },
+        {
+          "command": "RAW/ubiquitous-language check for Starry Wisp, Making an Attack, Breaking Objects, Table Decision, Attack Roll, Damage, Spell Invocation, Spell Effect, and Hit Points",
+          "status": "pass",
+          "detail": "Checked .references/srd-5.2.1/Spells/Descriptions-S-Z.md, .references/srd-5.2.1/Playing-the-Game.md, .references/srd-5.2.1/Rules-Glossary.md, and UBIQUITOUS_LANGUAGE.md before route/runtime changes."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec tsc --noEmit --pretty false",
+          "status": "pass",
+          "detail": "Battle runtime TypeScript check passed after adding objectTargetSpellAttack route projection and public route harness changes."
+        },
+        {
+          "command": "ps aux | grep vitest | grep -v grep; ps aux | grep quint_evaluator | grep -v grep",
+          "status": "pass",
+          "detail": "Pre-MBT process check found no active Vitest runner or Quint evaluator."
+        },
+        {
+          "command": "pnpm --filter @dnd/battle-runtime exec quint typecheck battle-runtime-starry-wisp-object.route.mbt.qnt",
+          "status": "pass",
+          "detail": "Route connector typecheck passed after aligning qRoute discovery with exact public spellAttackProcedure route events."
+        },
+        {
+          "command": "START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=4 pnpm --filter @dnd/battle-runtime exec vitest run src/starry-wisp-object.mbt.test.ts ) 2>&1; status=$?; echo \"TOTAL: $(( $(date +%s) - START ))s\"; exit \"$status\"",
+          "status": "pass",
+          "detail": "Focused Starry Wisp semantic and exact public route replay passed with 2 tests; TOTAL: 8s. Revision round 2 removed adapter-synthesized discovery events before this passing run."
+        },
+        {
+          "command": "node task-scoped validateTargetReplayEvidence for packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt",
+          "status": "pass",
+          "detail": "Validated tasks/target-replay-evidence/CRPI-BLOCK-028.json with scripts/cleanroom-branch-coverage-check.cjs#validateTargetReplayEvidence and current source inventory SHA; 7 obligations covered."
+        },
+        {
+          "command": "pnpm cleanroom-branch-coverage:check",
+          "status": "pass",
+          "detail": "Cleanroom branch coverage passed with 738 obligations and 24 sampled inputs."
+        },
+        {
+          "command": "git diff --check",
+          "status": "pass"
+        },
+        {
+          "command": "pnpm quality",
+          "status": "pass",
+          "detail": "All quality gates passed; app lint emitted the existing 61 warnings and exited 0."
+        },
+        {
+          "command": "reviewer-loop convergence: RAW traceability, ubiquitous-language/domain language, architecture/connascence, code review",
+          "status": "pass",
+          "detail": "Round 1 verified SRD traceability, no duplicate durable object state, no authored-identity production dispatch, and localized route subject/owner/fill connascence. Round 2 fixed the rejected adapter-synthesized qRoute replay by appending exact public route events and aligning the connector to public spellAttackProcedure discovery plus objectTargetSpellAttack resolution; no remaining reasonable Task 56 findings."
+        }
+      ],
+      "planImpact": {
+        "status": "none",
+        "affectedTasks": [
+          {
+            "taskId": "CRPI-BLOCK-028",
+            "impact": "unblocked"
+          }
+        ],
+        "observations": [
+          "Starry Wisp object-target qRoute is accepted through exact public reducer route events for all 7 source obligations.",
+          "Public discovery remains spellAttackProcedure; object-target resolution uses objectTargetSpellAttack for boundary, Attack Roll, damage/light, and stale replay owner evidence.",
+          "Object facts remain table-supplied objectTargetChoice fill facts; object damage remains BattleResolutionResult.objectDamages; reveal Dim Light remains existing light-emitter state.",
+          "The objectTargetSpellAttack resolution route subject is derived from object-target spell attack fill/result shape and light-emitter deltas, not authored spell identity."
+        ],
+        "requiredPlanEdits": "none"
+      }
+    },
+    {
       "taskId": "CRPI-BLOCK-044",
       "assignmentId": "reducer-spine-diagnostic-character-creation",
       "laneId": "character-creation",

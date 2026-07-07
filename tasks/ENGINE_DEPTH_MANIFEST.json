@@ -1,73 +1,71 @@
 {
   "schemaVersion": 1,
-  "taskId": "CRPI-BLOCK-044",
+  "taskId": "CRPI-BLOCK-028",
   "accumulatorGrowth": [],
   "adapterModules": [
     {
-      "path": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
+      "path": "packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt",
       "quarantinedWitnessNames": [
-        "qState",
-        "doSelectDefenseFightingStyle",
-        "doSelectArcheryFightingStyle",
-        "doSelectGreatWeaponFightingStyle",
-        "doSelectTwoWeaponFightingStyle",
-        "doReplaceArcheryWithDefenseOnFighterLevelGain",
-        "doReplaceDefenseWithArcheryOnFighterLevelGain",
-        "doReplaceDefenseWithGreatWeaponFightingOnFighterLevelGain",
-        "doReplaceDefenseWithTwoWeaponFightingOnFighterLevelGain"
+        "qProtocol",
+        "qObjectDamage",
+        "qLightEmitters"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-044.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-028.json"
       ]
     },
     {
-      "path": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.route.mbt.qnt",
-      "quarantinedWitnessNames": [
-        "qRoute"
-      ],
+      "path": "packages/battle-runtime/battle-runtime-starry-wisp-object.route.mbt.qnt",
+      "quarantinedWitnessNames": ["qRoute", "qSurface"],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-044.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-028.json"
       ]
     },
     {
-      "path": "packages/character-creation-runtime/src/reducer-route-connectors.mbt.test.ts",
+      "path": "packages/battle-runtime/src/starry-wisp-object.mbt.test.ts",
       "quarantinedWitnessNames": [
-        "fighterFightingStyleRouteDriverSchema",
-        "createCompletedReducerRouteDriver",
-        "replaceFighterFightingStyleSelectedReferenceRoute",
-        "selectedReferenceRetentionRoute"
+        "createStarryWispObjectDriver",
+        "createStarryWispObjectRouteDriver",
+        "starryWispObjectRouteStateCheck"
       ],
       "targetReplayEvidence": [
-        "tasks/target-replay-evidence/CRPI-BLOCK-044.json"
+        "tasks/target-replay-evidence/CRPI-BLOCK-028.json"
       ]
     }
   ],
   "productionModulesExtended": [
     {
-      "path": "packages/character-creation-runtime/src/character-build-advancement.ts",
-      "notes": "Adds advanceCharacterBuildFightingStyleReplacementWithRoute, a public route wrapper around the existing typed Fighter Fighting Style replacement advancement reducer."
+      "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "role": "runtime-projection",
+      "domainApis": [
+        "battleReducerRouteForResolution",
+        "objectTargetSpellAttackRouteForResolution"
+      ],
+      "notes": "Task 56 adds the objectTargetSpellAttack resolution route subject to the public reducer route projection. Public discovery remains on spellAttackProcedure; resolution route events are derived from object-target fills, Attack Roll fills, rolled damage fills, object reveal light-emitter deltas, and stale-subject invalid results; no route-local state is stored."
     },
     {
-      "path": "packages/character-creation-runtime/src/index.ts",
-      "notes": "Exports the Fighter Fighting Style replacement route wrapper and route event types through the package public surface."
+      "path": "packages/battle-runtime/src/battle-reducer.ts",
+      "role": "domain-engine",
+      "domainApis": [
+        "discoverBattleActs",
+        "resolveBattleSubject",
+        "battleReducerStartRouteEvent"
+      ],
+      "notes": "Existing BattleState owns the object-target spell attack lifecycle observed by Task 56: object boundary facts, Attack Roll progression, object damage outcomes, light emitters, and stale-subject rejection."
     }
   ],
   "expectedNextReuse": [
     {
-      "path": "packages/character-creation-runtime/src/character-build-selected-reference-route.ts",
-      "notes": "Initial selected-reference branches continue to derive CreationSelectedReferenceOwner events from existing CharacterBuild selected refs."
+      "path": "packages/battle-runtime/src/battle-reducer/reducer-route.ts",
+      "notes": "Future object-target spell attack tasks should reuse public spellAttackProcedure discovery events and objectTargetSpellAttack resolution events derived from public fills/results instead of branching on spell identity or connector action labels."
     },
     {
-      "path": "packages/character-creation-runtime/src/character-build-advancement.ts",
-      "notes": "Future CharacterBuild level-gain replacement route tasks should wrap the typed advancement reducer, start from fixture builds that satisfy current class-level choice preconditions, and then reuse selected-reference and build-projection route entrypoints."
-    },
-    {
-      "path": "packages/character-creation-runtime/src/character-build-class-feature-projection-route.ts",
-      "notes": "Replacement branches reuse characterBuildProjectionWithRoute for CharacterBuildOwner build-projection events without storing a parallel projection state field."
+      "path": "packages/battle-runtime/src/starry-wisp-object.mbt.test.ts",
+      "notes": "Future Starry Wisp object route checks can reuse the public route projection helpers for object-boundary, Attack Roll, object damage/light, and stale replay branches."
     }
   ],
   "completion": {
     "tag": "accepted",
-    "notes": "Task 87 observes copied Fighter Fighting Style qRoute through public selected-reference, CharacterBuild level-gain replacement, and build-projection route entrypoints. No new durable CharacterBuild fields were added."
+    "notes": "Task 56 observes the copied Starry Wisp object qRoute through exact public reducer route events: spellAttackProcedure discovery, object-target boundary acceptance/rejection, Attack Roll hit/miss, object damage with reveal-light admission, and stale hole-frontier rejection."
   }
 }

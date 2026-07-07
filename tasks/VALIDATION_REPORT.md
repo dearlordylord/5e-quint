@@ -1,5 +1,122 @@
 # Validation Report
 
+## CRPI-BLOCK-028
+
+Status: `pass`
+
+- Task: 56
+- Driver path: `packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt`
+- Route connector path: `packages/battle-runtime/battle-runtime-starry-wisp-object.route.mbt.qnt`
+- Route class: `reducer-routed`
+- Accepted projection: `qRoute`
+- Evidence file: `tasks/target-replay-evidence/CRPI-BLOCK-028.json`
+- Target profile: `typescript-source-worktree`
+- Target profile SHA-256: `95ef7088c72e343baee560bdac17ab88d4c6e85dcde18be380a6026db4c8a4e4`
+- Manifest source commit SHA: `895539634f9595f8e4650d3c95aaee7084afe8b5`
+- Source branch inventory SHA: `4d27347eda58a4569b7e0ddfef50c67069814fb07d4bd62c9bf55b3bc636b2da`
+- Machine-readable run ledger: `tasks/RUN_LEDGER.json`
+
+Behavior accepted:
+
+Task 56 accepts Starry Wisp object-target spell Attack routing through exact
+public battle reducer route events. The focused route harness compares the
+copied `qRoute` projection to route events observed from
+`battleReducerStartRouteEvent`, `AvailableBattleAct.routeEvents` from
+`discoverBattleActs`, and `BattleResolutionResult.routeEvents` from
+`resolveBattleSubject`. Public discovery keeps the existing
+`spellAttackProcedure` route subject for action-economy and object-target
+boundary discovery. Object-target boundary acceptance, missing object-fact
+rejection, Attack Roll hit and miss, object damage with reveal Dim Light, and
+post-resolution stale replay use the `objectTargetSpellAttack` route subject
+for resolution events with the object-boundary, Attack Roll, active-effect, and
+hole-frontier owners.
+
+No parallel object ledger was added. Object range, Armor Class, Hit Point, and
+spatial facts remain table-supplied `objectTargetChoice` fill facts. Object
+damage remains `BattleResolutionResult.objectDamages`; reveal Dim Light remains
+existing light-emitter state; stale replay remains the public invalid
+`staleSubject` result. Production route behavior derives from typed object-target
+fill/result shape and light-emitter deltas, not authored spell identity.
+
+Generated branch coverage:
+
+| Obligation                                                                                          | Evidence                                                                                                                                                                                                                                                                        | Status    |
+| --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| `packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt#step:doFillObjectTarget`         | `tasks/target-replay-evidence/CRPI-BLOCK-028.json#driver:packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt#step:doFillObjectTarget#trace:MBT_TRACES=1 MBT_STEPS=4 action=doFillObjectTarget qRoute=starry-wisp-object-target-public-route`                      | `covered` |
+| `packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt#step:doRejectObjectWithoutFact`  | `tasks/target-replay-evidence/CRPI-BLOCK-028.json#driver:packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt#step:doRejectObjectWithoutFact#trace:MBT_TRACES=1 MBT_STEPS=4 action=doRejectObjectWithoutFact qRoute=starry-wisp-object-target-public-route`        | `covered` |
+| `packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt#step:doFillObjectAttackRollMiss` | `tasks/target-replay-evidence/CRPI-BLOCK-028.json#driver:packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt#step:doFillObjectAttackRollMiss#trace:MBT_TRACES=1 MBT_STEPS=4 action=doFillObjectAttackRollMiss qRoute=starry-wisp-object-attack-miss-public-route` | `covered` |
+| `packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt#step:doFillObjectAttackRollHit`  | `tasks/target-replay-evidence/CRPI-BLOCK-028.json#driver:packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt#step:doFillObjectAttackRollHit#trace:MBT_TRACES=1 MBT_STEPS=4 action=doFillObjectAttackRollHit qRoute=starry-wisp-object-attack-hit-public-route`    | `covered` |
+| `packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt#step:doFillObjectDamageLow`      | `tasks/target-replay-evidence/CRPI-BLOCK-028.json#driver:packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt#step:doFillObjectDamageLow#trace:MBT_TRACES=1 MBT_STEPS=4 action=doFillObjectDamageLow qRoute=starry-wisp-object-damage-light-public-route`          | `covered` |
+| `packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt#step:doFillObjectDamageHigh`     | `tasks/target-replay-evidence/CRPI-BLOCK-028.json#driver:packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt#step:doFillObjectDamageHigh#trace:MBT_TRACES=1 MBT_STEPS=4 action=doFillObjectDamageHigh qRoute=starry-wisp-object-damage-light-public-route`        | `covered` |
+| `packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt#step:doRejectStaleAfterResolved` | `tasks/target-replay-evidence/CRPI-BLOCK-028.json#driver:packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt#step:doRejectStaleAfterResolved#trace:MBT_TRACES=1 MBT_STEPS=4 action=doRejectStaleAfterResolved qRoute=starry-wisp-object-stale-public-route`       | `covered` |
+
+Harness artifacts:
+
+- Engine depth: `tasks/ENGINE_DEPTH_MANIFEST.json`
+- State ownership: `tasks/STATE_OWNER_MANIFEST.json`
+- Immutable history: `tasks/history/CRPI-BLOCK-028/`
+- Run ledger: `tasks/RUN_LEDGER.json`
+
+Remaining gaps:
+
+- None for Task 56.
+
+RAW and ubiquitous-language review:
+
+- SRD 5.2.1 `Spells/Descriptions-S-Z.md#Starry Wisp` defines the creature-or-object target, ranged spell Attack, Radiant damage, Dim Light, and Invisible-benefit denial.
+- SRD 5.2.1 `Playing-the-Game.md#Making an Attack` defines target choice, Attack Roll, and hit-damage order.
+- SRD 5.2.1 `Rules-Glossary.md#Breaking Objects` defines object Armor Class and Hit Point facts as table/object facts.
+- `UBIQUITOUS_LANGUAGE.md` defines Table Decision, Attack Roll, Damage, Spell Invocation, Hit Points, and Spell Effect terms used by this route.
+
+Verification results:
+
+- Base check passed: declared base ref
+  `ralph/cleanroom-owner-battle-attack-20260706T213644Z/integration` and
+  `HEAD` both resolved to `abbafd51d Mark Ralph task 55 done`; Base SHA
+  `abbafd51d6f1c928294e44d666a99b4835081056` was an ancestor of `HEAD`.
+- RAW/ubiquitous-language review passed against the local SRD passages listed
+  above and `UBIQUITOUS_LANGUAGE.md`.
+- Focused Starry Wisp MBT initially failed on the route harness deriving Attack
+  Roll discovery from the prior boundary result. The harness was corrected to
+  derive discovery projection from the corresponding public Attack Roll or
+  damage result route event.
+- Revision round 2 removed adapter-synthesized discovery events from the route
+  harness, aligned the copied route connector with exact public
+  `spellAttackProcedure` discovery events plus `objectTargetSpellAttack`
+  resolution events, and rechecked the route connector with
+  `pnpm --filter @dnd/battle-runtime exec quint typecheck battle-runtime-starry-wisp-object.route.mbt.qnt`.
+- Focused Starry Wisp MBT passed:
+  `START=$(date +%s); ( MBT_TRACES=1 MBT_STEPS=4 pnpm --filter @dnd/battle-runtime exec vitest run src/starry-wisp-object.mbt.test.ts ) 2>&1; status=$?; echo "TOTAL: $(( $(date +%s) - START ))s"; exit "$status"` passed with 2 tests; `TOTAL: 8s`.
+- Task-scoped target evidence validation passed with 7 covered obligations for
+  `packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt`.
+- `pnpm cleanroom-branch-coverage:check` passed with 738 obligations and 24
+  sampled inputs.
+- `git diff --check` passed.
+- `pnpm --filter @dnd/battle-runtime exec tsc --noEmit --pretty false` passed.
+- `pnpm quality` passed. The app lint phase emitted the existing 61 warnings
+  and exited 0.
+- Reviewer-loop convergence passed: round 1 verified RAW traceability,
+  ubiquitous-language/domain language, no duplicate durable state, no
+  authored-identity production dispatch, and route subject/owner/fill
+  connascence. Round 2 addressed the rejected adapter-synthesized qRoute replay
+  by appending exact public route events and found no remaining reasonable Task
+  56 findings.
+
+Plan Impact:
+
+- Status: `none`
+- Affected tasks:
+  - Task 56 / `CRPI-BLOCK-028`: `unblocked`; copied `qRoute` replay is accepted.
+  - Downstream object/light route tasks: `left unchanged`; they can reuse the
+    object-target spell Attack route subject if their copied connectors require
+    object-boundary spell Attack ownership.
+- Observations:
+  - Object-target spell Attack routing is observable through public
+    `resolveBattleSubject` results without adding durable BattleState fields.
+  - Object facts remain table/boundary facts on `objectTargetChoice` fills; the
+    route subject is derived from fill shape and result state, not spell id.
+- Required plan edits: none.
+
 ## CRPI-BLOCK-044
 
 Status: `pass`
