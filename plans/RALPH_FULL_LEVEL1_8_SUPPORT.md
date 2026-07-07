@@ -7,13 +7,13 @@
     {
       "number": 1,
       "id": "L18FOUND-01-BASELINE-ACCOUNTING-SNAPSHOT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Capture the level-1-6 full and level-7 mining baseline"
     },
     {
       "number": 2,
       "id": "L18FOUND-02-LEVEL8-INVENTORY-ENABLEMENT",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Extend SRD inventory mining through character level 8"
     },
     {
@@ -326,8 +326,8 @@ Spell-level-4 unique identities currently in the level-7 mining audit:
 
 | # | Task | Status | Depends on | Notes |
 | --: | --- | --- | --- | --- |
-| 1 | L18FOUND-01-BASELINE-ACCOUNTING-SNAPSHOT - Capture the level-1-6 full and level-7 mining baseline | ready-for-research | none | Establishes the denominator and current gate state before checker edits. |
-| 2 | L18FOUND-02-LEVEL8-INVENTORY-ENABLEMENT - Extend SRD inventory mining through character level 8 | blocked | L18FOUND-01-BASELINE-ACCOUNTING-SNAPSHOT | Adds level-8 mining before any level-8 closure task can be trusted. |
+| 1 | L18FOUND-01-BASELINE-ACCOUNTING-SNAPSHOT - Capture the level-1-6 full and level-7 mining baseline | done | none | Baseline recorded in `plans/unit-profile-coverage/LEVEL1_8_BASELINE_2026-07-07.md`. |
+| 2 | L18FOUND-02-LEVEL8-INVENTORY-ENABLEMENT - Extend SRD inventory mining through character level 8 | ready-for-implementation | L18FOUND-01-BASELINE-ACCOUNTING-SNAPSHOT | Adds level-8 mining before any level-8 closure task can be trusted. |
 | 3 | L18FOUND-03-LEVEL17-18-REPORT-GATE-SHAPE - Add level-1-7 and level-1-8 full-support report plumbing | blocked | L18FOUND-02-LEVEL8-INVENTORY-ENABLEMENT | Creates strict full-support artifacts for both scopes. |
 | 4 | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION - Add checker protection against empty or vacuous higher-level scopes | blocked | L18FOUND-03-LEVEL17-18-REPORT-GATE-SHAPE | Prevents accidental pass from missing bands or empty denominators. |
 | 5 | L7FULL-01-CLASS-TABLE-SUMMARY-CLOSURE - Close the twelve level-7 class-table summary rows | blocked | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Table rows remain non-runtime but checker-visible. |
@@ -389,7 +389,7 @@ Spell-level-4 unique identities currently in the level-7 mining audit:
 
 ### Task 1 - L18FOUND-01-BASELINE-ACCOUNTING-SNAPSHOT
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: none
 
@@ -416,6 +416,18 @@ Output:
 - No runtime or checker behavior change unless a generated artifact is stale and
   the task explicitly regenerates it.
 
+Completion Evidence:
+
+- Baseline note: `plans/unit-profile-coverage/LEVEL1_8_BASELINE_2026-07-07.md`.
+- Verified current level-1-6 claim gate pass with zero strict, selected-identity,
+  and SRD-authored readiness blockers.
+- Verified level-7 mining denominator: 24 level-7 character rows, 12
+  class-table-summary rows, 12 class-feature-grant rows, 81 spell-level-4
+  class-list rows, and 34 spell-level-4 unique identities.
+- Verified level-1-7 and level-1-8 full-support artifacts were absent at
+  baseline.
+- Passed baseline commands recorded in the note.
+
 Acceptance:
 
 - The baseline identifies level-7 character rows, spell-level-4 unique
@@ -441,11 +453,7 @@ Plan Impact:
 
 ### Task 2 - L18FOUND-02-LEVEL8-INVENTORY-ENABLEMENT
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: waits for `L18FOUND-01-BASELINE-ACCOUNTING-SNAPSHOT`.
+Status: `ready-for-implementation`
 
 Depends on: `L18FOUND-01-BASELINE-ACCOUNTING-SNAPSHOT`
 
