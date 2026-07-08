@@ -123,6 +123,39 @@ const classProgressionFrontierLevelBands = new Set([
   "level-8",
 ]);
 const classTableSummaryClosureLevelBands = new Set(["level-7", "level-8"]);
+const expectedLevelEightProgressionDeltaSignatures = new Map([
+  ["Barbarian", []],
+  [
+    "Bard",
+    ["class-table-column:Prepared Spells:11->12", "spell-slot-count:4:1->2"],
+  ],
+  [
+    "Cleric",
+    ["class-table-column:Prepared Spells:11->12", "spell-slot-count:4:1->2"],
+  ],
+  [
+    "Druid",
+    ["class-table-column:Prepared Spells:11->12", "spell-slot-count:4:1->2"],
+  ],
+  ["Fighter", []],
+  ["Monk", ["class-table-column:Focus Points:7->8"]],
+  ["Paladin", []],
+  ["Ranger", []],
+  ["Rogue", []],
+  [
+    "Sorcerer",
+    [
+      "class-table-column:Prepared Spells:11->12",
+      "class-table-column:Sorcery Points:7->8",
+      "spell-slot-count:4:1->2",
+    ],
+  ],
+  ["Warlock", ["class-table-column:Prepared Spells:8->9"]],
+  [
+    "Wizard",
+    ["class-table-column:Prepared Spells:11->12", "spell-slot-count:4:1->2"],
+  ],
+]);
 const subclassSpellAccessFeatureNames = new Set([
   "Circle of the Land Spells",
   "Draconic Spells",
@@ -2166,6 +2199,14 @@ function classTableProgressionDeltas({
       };
     })
     .filter(Boolean);
+}
+
+function progressionDeltaSignature(delta) {
+  const label =
+    delta.kind === "spell-slot-count"
+      ? `${delta.kind}:${delta.spellLevel}`
+      : `${delta.kind}:${delta.column}`;
+  return `${label}:${delta.previousValue}->${delta.currentValue}`;
 }
 
 function druidWildShapeThresholdFacts({ className, lines, level, sourcePath }) {
@@ -5416,6 +5457,28 @@ function validateSrdUnitInventory(report) {
   );
   if (levelEightRowsWithProgressionDeltas.length === 0) {
     issues.push("Level-8 mining inventory has no non-empty progression deltas.");
+  }
+  for (const row of levelEightTableRows) {
+    const expectedSignatures =
+      expectedLevelEightProgressionDeltaSignatures.get(row.className);
+    if (expectedSignatures === undefined) {
+      issues.push(
+        `Level-8 progression delta validation has no expected signatures for ${row.className}.`,
+      );
+      continue;
+    }
+    const actualSignatures = (row.progressionDeltas ?? [])
+      .map(progressionDeltaSignature)
+      .sort();
+    const sortedExpectedSignatures = [...expectedSignatures].sort();
+    if (
+      JSON.stringify(actualSignatures) !==
+      JSON.stringify(sortedExpectedSignatures)
+    ) {
+      issues.push(
+        `${row.id} has unexpected level-8 progression deltas: expected ${sortedExpectedSignatures.join(", ")}; got ${actualSignatures.join(", ")}.`,
+      );
+    }
   }
   const druidLevelEightTableRow = levelEightTableRows.find(
     (row) => row.className === "Druid",

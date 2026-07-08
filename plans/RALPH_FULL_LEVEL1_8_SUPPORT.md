@@ -346,7 +346,7 @@ Spell-level-4 unique identities currently in the level-7 mining audit:
 | 18 | L7FULL-14-SPELL-LEVEL4-STRICT-CLOSURE - Classify and close spell-level-4 pressure for level 7 | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Strict denominator closure for 34 unique identities and 81 class-list rows. |
 | 19 | L8FULL-01-CLASS-TABLE-SUMMARY-CLOSURE - Close the twelve level-8 class-table summary rows | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Requires generated level-8 inventory rows. |
 | 20 | L8FULL-02-REPEATED-ASI-GRANT-OCCURRENCES - Close the twelve level-8 repeated Ability Score Improvement rows | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Repeated ASI occurrence closure across all SRD classes. |
-| 21 | L8FULL-03-NUMERIC-PROGRESSION-DELTAS - Close level-8 class numeric progression deltas | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Prepared spells, spell slots, points/resources, and table counters. |
+| 21 | L8FULL-03-NUMERIC-PROGRESSION-DELTAS - Close level-8 class numeric progression deltas | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Prepared spells, spell slots, points/resources, and table counters. |
 | 22 | L8FULL-04-DRUID-WILD-SHAPE-FLY-SPEED-THRESHOLD - Audit Druid Wild Shape Fly Speed threshold at level 8 | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Level-8 threshold changes form eligibility, not active-form persistence. |
 | 23 | L8FULL-05-SPELL-LEVEL4-CARRY-FORWARD - Carry spell-level-4 closure into the level-8 claim | blocked | L7FULL-14-SPELL-LEVEL4-STRICT-CLOSURE, L8FULL-03-NUMERIC-PROGRESSION-DELTAS | Ensures level 8 does not reopen spell-level-4 pressure. |
 | 24 | L18GATE-01-LEVEL17-FULL-SUPPORT-ARTIFACTS - Refresh and verify level-1-7 full-support artifacts | ready-for-implementation | L7FULL-01-CLASS-TABLE-SUMMARY-CLOSURE, L7FULL-03-MONK-EVASION-REUSE-ADMISSION, L7FULL-04-FIGHTER-ADDITIONAL-FIGHTING-STYLE, L7FULL-05-CLERIC-BLESSED-STRIKES, L7FULL-06-DRUID-ELEMENTAL-FURY, L7FULL-07-BARBARIAN-INSTINCTIVE-POUNCE, L7FULL-08-SORCERER-SORCERY-INCARNATE, L7FULL-09-BARBARIAN-FERAL-INSTINCT, L7FULL-10-BARD-COUNTERCHARM, L7FULL-11-PALADIN-AURA-OF-DEVOTION, L7FULL-12-RANGER-DEFENSIVE-TACTICS, L7FULL-13-ROGUE-RELIABLE-TALENT, L7FULL-14-SPELL-LEVEL4-STRICT-CLOSURE | Serializes generated level-1-7 artifacts after all row closures. |
@@ -1631,7 +1631,7 @@ Plan Impact:
 
 ### Task 21 - L8FULL-03-NUMERIC-PROGRESSION-DELTAS
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on: `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`
 
@@ -1669,7 +1669,18 @@ Verification:
 
 Plan Impact:
 
-- Update-required if numeric deltas expose a missing generic progression owner.
+- `applied`: level-8 numeric progression deltas remain source-linked
+  `progressionDeltas` on class-table-summary rows and are closed by
+  class-progression accounting, not duplicated into battle runtime state.
+- Added checker validation for the exact SRD 5.2.1 level-8 delta signatures:
+  Prepared Spells increases for Bard, Cleric, Druid, Sorcerer, Warlock, and
+  Wizard; fourth-level Spell Slot count increases for Bard, Cleric, Druid,
+  Sorcerer, and Wizard; Monk Focus Points 7 -> 8; Sorcery Points 7 -> 8.
+- RAW/ubiquitous-language pass checked level-7 to level-8 table columns for all
+  twelve classes and terminology for Spell Slot, Pact Slot, Proficiency Bonus,
+  Weapon Mastery, and character-sheet progression.
+- Verification: `pnpm unit-profile-coverage:check --write`,
+  `pnpm unit-profile-coverage:check`, `git diff --check`.
 
 ### Task 22 - L8FULL-04-DRUID-WILD-SHAPE-FLY-SPEED-THRESHOLD
 
