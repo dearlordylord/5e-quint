@@ -39498,6 +39498,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future remote visual sensor Spell Effect plus table/spatial sight and movement owner",
+          "reason": "A future owner must carry the sensor occurrence, caster ownership, Concentration duration, Invisible/invulnerable presentation, remote visual feed, Darkvision range, Bonus Action movement, solid-barrier blocking, and one-inch opening passage. Table/spatial ownership must supply map openings, barriers, movement path, line of sight, and what the eye can see without duplicating map or perception state inside generic spell reducers."
+        },
+        "reason": "Arcane Eye is an SRD level-4 Spell Definition whose local SRD text creates an Invisible invulnerable remote eye, grants remote visual information and Darkvision, and moves the eye with later Bonus Actions. No promoted profile is claimed until a remote-sensor Spell Effect owner exists.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -39724,6 +39734,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future active ally-aura defensive Spell Effect plus table/spatial aura-membership owner",
+          "reason": "A future owner must carry the caster-owned Concentration aura, project Necrotic Resistance for the caster and allies in the Emanation, block Hit Point maximum reduction while membership applies, and heal qualifying allied 0-HP creatures at their turn starts. Table/spatial ownership must provide moving Emanation membership and ally relation witnesses without duplicating positions, team state, HP maximum state, or damage adjustment ledgers in the spell."
+        },
+        "reason": "Aura of Life is an SRD level-4 Spell Definition whose local SRD text creates a self-origin 30-foot Emanation granting allies Necrotic Resistance, Hit Point maximum reduction prevention, and 0-HP ally turn-start healing. No promoted profile is claimed until an aura Spell Effect owner can consume table-supplied aura membership.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -39742,6 +39762,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future planar exile Spell Effect plus table planar-location owner",
+          "reason": "A future owner must carry the failed-save target, demiplane/exiled status, Incapacitated projection, Concentration duration, return-space or nearest-unoccupied fallback, full-minute no-return branch for Aberration, Celestial, Elemental, Fey, and Fiend targets, and slot-scaled extra targets. Plane identity, random destination, occupied-space fallback, and creature-type facts must come from existing stat block/plane/table owners rather than a Banishment-local registry."
+        },
+        "reason": "Banishment is an SRD level-4 Spell Definition whose local SRD text uses a Charisma Saving Throw to transport a creature to a harmless demiplane, Incapacitate it, return it on spell end, and permanently send specified creature types away if Concentration lasts the full minute. No promoted profile is claimed until a planar-exile owner exists.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -39920,6 +39950,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future save-gated single-target damage owner plus plant object/environment owner",
+          "reason": "A future owner must admit creature targeting, Constitution Saving Throw damage with half damage on success, slot-scaled d8 damage, and Plant creature auto-failure through typed creature-kind facts. The noncreature plant wither branch belongs to an object/environment owner for trees, shrubs, and other nonmagical plants rather than a battle creature damage shortcut."
+        },
+        "reason": "Blight is an SRD level-4 Spell Definition whose local SRD text is a Constitution save-gated Necrotic damage spell with Plant creature automatic failure, a nonmagical plant object wither branch, and slot-scaled damage. No promoted profile is claimed until the direct damage owner can consume Plant and object/environment branches.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -39984,6 +40024,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future charm condition and attitude Spell Effect owner plus hostility/fighting witness owner",
+          "reason": "A future owner must carry target selection, Wisdom save roll-mode from caller-supplied fighting witnesses, Charmed condition ownership, Friendly attitude projection, damage-triggered cleanup from caster or allies, post-effect awareness, one-hour duration, and slot-scaled extra targets. It must consume creature/ally/hostility facts and condition lifecycle owners without dispatching on Charm Monster or duplicating relationship state."
+        },
+        "reason": "Charm Monster is an SRD level-4 Spell Definition whose local SRD text targets one or more visible creatures, grants save Advantage if the caster or allies are fighting the target, applies Charmed plus Friendly attitude on failed Wisdom saves, ends on caster/allied damage, and reveals the charm afterward. No promoted profile is claimed until a generic charm-attitude owner exists.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -40140,6 +40190,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future active compelled-movement Spell Effect plus table/spatial safest-route owner",
+          "reason": "A future owner must carry selected targets, Concentration, Charmed state, caster Bonus Action direction selection, target-turn forced movement using as much movement as possible, after-movement repeat saves, and per-target cleanup. Table/spatial ownership must supply horizontal direction, route safety, movement availability, obstacles, and legal path facts without duplicating map or turn-movement state."
+        },
+        "reason": "Compulsion is an SRD level-4 Spell Definition whose local SRD text applies Charmed on failed Wisdom saves, then lets the caster use Bonus Actions to choose a horizontal direction that affected targets must move toward by the safest route before repeating the save. No promoted profile is claimed until a compelled-movement control owner exists.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -40176,6 +40236,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future active self-Emanation attack-damage rider owner plus table/spatial aura-membership owner",
+          "reason": "A future owner must carry the Concentration aura, slot-scaled d8 damage, hit-time damage-type choice, creature-in-Emanation gate, enemy Difficult Terrain projection, and attack-hit rider timing. Table/spatial ownership must supply moving Emanation membership, enemy relation, and ground/movement facts without duplicating attack damage, terrain, or map state."
+        },
+        "reason": "Conjure Minor Elementals is an SRD level-4 Spell Definition whose local SRD text creates a self-origin 15-foot Emanation, adds chosen Acid/Cold/Fire/Lightning damage to the caster's attack hits against creatures in the Emanation, and makes the ground Difficult Terrain for enemies. No promoted profile is claimed until an attack-rider aura owner exists.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -40194,6 +40264,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future active self-Emanation area-hazard Spell Effect plus table/spatial membership and action-permission owner",
+          "reason": "A future owner must carry Concentration, moving Emanation identity, first-entry/end-turn trigger timing, once-per-turn per-creature save ledger, slot-scaled Force damage with half damage on success, and Bonus Action Disengage permission. Table/spatial ownership must supply Emanation movement/membership facts and avoid duplicating map or action-economy state inside the spell."
+        },
+        "reason": "Conjure Woodland Beings is an SRD level-4 Spell Definition whose local SRD text creates a self-origin 10-foot Emanation that triggers Wisdom save Force damage once per turn and grants Bonus Action Disengage. No promoted profile is claimed until a moving Emanation hazard and spell-granted action owner exists.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -40286,6 +40366,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future zero-hit-point and instant-death replacement active-effect owner",
+          "reason": "A future owner must carry the touched target active effect, intercept the first would-drop-to-0 event before ordinary zero-HP consequences, set HP to 1, end the spell effect, and separately negate one instant-kill-without-damage event. It must reuse the existing HP/death lifecycle owner and avoid a Death Ward-local HP or death ledger."
+        },
+        "reason": "Death Ward is an SRD level-4 Spell Definition whose local SRD text creates an 8-hour target protection that replaces the first drop to 0 Hit Points with 1 Hit Point or negates an instant-kill effect. No promoted profile is claimed until a zero-HP and instant-death replacement owner consumes spell-owned active effects.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -40304,6 +40394,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future self-and-companion teleport owner plus table/spatial destination legality owner",
+          "reason": "A future owner must consume destination description/visualization facts, willing adjacent passenger facts, range, destination and passenger placement, occupied-or-filled collision checks, Force damage on failed arrival, and atomic teleport failure/success. Map coordinates, visibility, description interpretation, occupancy, object fill, and nearest destination placement belong to the table/spatial owner rather than copied spell state."
+        },
+        "reason": "Dimension Door is an SRD level-4 Spell Definition whose local SRD text teleports the caster to a specified destination within 500 feet, may bring one willing adjacent creature, places that creature near the destination, and fails with Force damage if arrival spaces are occupied or filled. No promoted profile is claimed until a table-spatial teleport owner exists.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -40340,6 +40440,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "companion-control-boundary",
+          "owner": "future dominated-creature control Spell Effect plus same-plane and Reaction-command owners",
+          "reason": "A future owner must carry Beast target admission, Wisdom save roll mode, Charmed condition, damage-triggered repeat saves, Concentration duration scaling by slot, telepathic command link, no-action caster commands, target turn obedience/default behavior, and caster-Reaction-for-target-Reaction command. Creature type, plane, command interpretation, turn protocol, and Reaction resources must remain with their existing owners."
+        },
+        "reason": "Dominate Beast is an SRD level-4 Spell Definition whose local SRD text applies Charmed to a Beast after a Wisdom save, grants save Advantage if fighting, repeats saves on damage, creates a same-plane telepathic command link, controls target turns, and can spend the caster's Reaction to command the target's Reaction. No promoted profile is claimed until a dominated-creature control owner exists.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -40469,6 +40579,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached crafting, inventory, and object-material owner",
+          "reason": "A future owner must consume raw material identity, quantity, visibility, material type, object dimensions, quality, item recipe, Artisan's Tools proficiency, and resulting inventory/object placement. These facts belong to crafting/inventory/table owners and must not be represented as generic battle spell state."
+        },
+        "reason": "Fabricate is an SRD level-4 Spell Definition whose local SRD text converts visible raw materials into objects of the same material with size limits, quality inherited from materials, no creatures or magic items, and Artisan's Tools proficiency for high-skill items. No promoted profile is claimed because it is object/inventory crafting outside battle Spell Invocation owners.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -40589,6 +40709,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future self defensive active-effect owner plus melee-hit retaliation and light projection owners",
+          "reason": "A future owner must carry the 10-minute self effect, selected warm/chill mode, Bright/Dim light emitter, corresponding damage Resistance, and melee-hit retaliation against attackers within 5 feet. It must consume existing attack-hit, range, damage adjustment, and light owners without duplicating hit history, positions, or damage state."
+        },
+        "reason": "Fire Shield is an SRD level-4 Spell Definition whose local SRD text creates a self effect with light emission, a warm-or-chill choice granting Cold or Fire Resistance, and retaliatory Fire or Cold damage when a nearby creature hits with a melee attack roll. No promoted profile is claimed until a defensive retaliation owner exists.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -40679,6 +40809,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future movement-impairment immunity active-effect owner plus movement and condition owners",
+          "reason": "A future owner must carry the touched target effect, ignore Difficult Terrain costs, block magical Speed reduction, block magical Paralyzed/Restrained application, derive Swim Speed from current Speed, and offer 5-foot-movement automatic escape from nonmagical restraints. It must consume existing terrain, Speed, condition-source, Grappled/restraint, and movement-budget owners without adding a parallel mobility state."
+        },
+        "reason": "Freedom of Movement is an SRD level-4 Spell Definition whose local SRD text protects a willing target from Difficult Terrain, magical Speed reduction, magically caused Paralyzed/Restrained, grants Swim Speed equal to Speed, and permits 5 feet of movement to escape nonmagical restraints including Grappled. No promoted profile is claimed until a movement-impairment immunity owner exists.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -40743,6 +40883,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future spell-granted Invisible condition active-effect owner plus sight/table visibility owner",
+          "reason": "A future owner must carry touched target admission, Concentration cleanup, source-owned Invisible condition application, and interaction with independent condition sources. Sight, detection, Hidden state, and observer-specific visibility must remain with existing condition and table visibility owners rather than a Greater Invisibility identity check."
+        },
+        "reason": "Greater Invisibility is an SRD level-4 Spell Definition whose local SRD text grants the Invisible condition to a touched creature for Concentration up to 1 minute. No promoted profile is claimed until active spell-granted condition effects can preserve source ownership and sight consequences.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -40833,6 +40983,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future area save-damage plus temporary terrain Spell Effect owner",
+          "reason": "A future owner must admit Cylinder affected creatures, Dexterity Saving Throws, mixed damage entries with half damage on success, slot-scaled Bludgeoning dice, and a short-lived Difficult Terrain area. Table/spatial ownership must supply Cylinder placement, area membership, ground affected, terrain movement costs, and cleanup at the caster next-turn boundary without duplicating map geometry."
+        },
+        "reason": "Ice Storm is an SRD level-4 Spell Definition whose local SRD text creates a Cylinder, deals mixed Bludgeoning and Cold save-gated damage, leaves temporary Difficult Terrain until the end of the caster's next turn, and scales Bludgeoning damage by slot. No promoted profile is claimed until direct area damage can create temporary terrain effects.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -42556,6 +42716,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future generic creature transformation Spell Effect plus Stat Block and equipment-disposition owners",
+          "reason": "A future owner must carry target save, selected Beast form eligibility, stat replacement, retained facts, Temporary Hit Points and early-ending cleanup, action/anatomy restrictions, no speech/spellcasting, and gear melding. It must reuse Stat Block catalog, equipment disposition, HP/Temporary HP, action, and spellcasting owners rather than copying Wild Shape form state or dispatching on Polymorph identity."
+        },
+        "reason": "Polymorph is an SRD level-4 Spell Definition whose local SRD text transforms a failed-save creature into a Beast with CR/level eligibility, stat-block replacement, retained alignment/personality/creature type/HP/Hit Dice, Beast-form Temporary Hit Points, action limits, speech/spellcasting denial, and gear melding. No promoted profile is claimed until a generic stat-block transformation owner exists.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -42852,6 +43022,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future spell-granted damage Resistance active-effect owner plus component legality owner",
+          "reason": "A future owner must carry target admission, Concentration duration, source-owned B/P/S Resistance projection through the shared damage adjustment boundary, cleanup, and costly consumed Material component legality. It must not duplicate damage adjustment state or equipment/component inventory inside the spell."
+        },
+        "reason": "Stoneskin is an SRD level-4 Spell Definition whose local SRD text grants a willing touched creature Resistance to Bludgeoning, Piercing, and Slashing damage for Concentration up to 1 hour and consumes diamond dust. No promoted profile is claimed until spell-granted damage Resistance can be installed as a source-owned active effect.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",
@@ -43070,6 +43250,16 @@
         "expectedCollectionId": "srd-5.2.1",
         "status": "not-in-unit-catalog"
       },
+      "claim": {
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future active wall-area hazard Spell Effect plus table/spatial wall-geometry owner",
+          "reason": "A future owner must carry wall shape, dimensions, ring/line mode, opaque projection, selected damaging side, Concentration duration, appearance-time affected creatures, Dexterity save damage, first-entry/end-turn damage timing, and slot-scaled damage. Table/spatial ownership must supply solid-surface placement, wall geometry, side relation, entry, and area membership without duplicating map or line-of-sight state."
+        },
+        "reason": "Wall of Fire is an SRD level-4 Spell Definition whose local SRD text creates an opaque line or ring wall on a solid surface, deals appearance-time Dexterity save Fire damage, and damages creatures on the selected hot side or inside the wall at entry/end-turn timing. No promoted profile is claimed until a wall-area hazard owner exists.",
+        "tag": "unsupported-profile"
+      },
+      "collectionId": "srd-5.2.1",
       "evidence": [],
       "executableMechanics": true,
       "kind": "spell",

@@ -2,8 +2,8 @@
   "claimGate": {
     "authoredReadinessBlockerCount": 0,
     "selectedIdentityBlockerCount": 0,
-    "status": "blocked",
-    "strictTargetOpenCount": 19
+    "status": "pass",
+    "strictTargetOpenCount": 0
   },
   "frontierRows": [
     {
@@ -170,11 +170,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "A future owner must carry the sensor occurrence, caster ownership, Concentration duration, Invisible/invulnerable presentation, remote visual feed, Darkvision range, Bonus Action movement, solid-barrier blocking, and one-inch opening passage. Table/spatial ownership must supply map openings, barriers, movement path, line of sight, and what the eye can see without duplicating map or perception state inside generic spell reducers.",
       "selectedIdentity": {
         "reason": "Selected identity replay evidence is only required for supported profile claims.",
         "status": "not-required"
@@ -194,8 +197,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
       "unitId": "arcane_eye"
     },
     {
@@ -333,11 +336,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-battle-runtime"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "A future owner must carry the caster-owned Concentration aura, project Necrotic Resistance for the caster and allies in the Emanation, block Hit Point maximum reduction while membership applies, and heal qualifying allied 0-HP creatures at their turn starts. Table/spatial ownership must provide moving Emanation membership and ally relation witnesses without duplicating positions, team state, HP maximum state, or damage adjustment ledgers in the spell.",
       "selectedIdentity": {
         "reason": "Selected identity replay evidence is only required for supported profile claims.",
         "status": "not-required"
@@ -357,8 +363,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "closed-outside-battle-runtime-boundary",
+      "strictTargetClosed": true,
       "unitId": "aura_of_life"
     },
     {
@@ -368,11 +374,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-battle-runtime"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "A future owner must carry the failed-save target, demiplane/exiled status, Incapacitated projection, Concentration duration, return-space or nearest-unoccupied fallback, full-minute no-return branch for Aberration, Celestial, Elemental, Fey, and Fiend targets, and slot-scaled extra targets. Plane identity, random destination, occupied-space fallback, and creature-type facts must come from existing stat block/plane/table owners rather than a Banishment-local registry.",
       "selectedIdentity": {
         "reason": "Selected identity replay evidence is only required for supported profile claims.",
         "status": "not-required"
@@ -428,8 +437,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "closed-outside-battle-runtime-boundary",
+      "strictTargetClosed": true,
       "unitId": "banishment"
     },
     {
@@ -638,11 +647,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-battle-runtime"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "A future owner must admit creature targeting, Constitution Saving Throw damage with half damage on success, slot-scaled d8 damage, and Plant creature auto-failure through typed creature-kind facts. The noncreature plant wither branch belongs to an object/environment owner for trees, shrubs, and other nonmagical plants rather than a battle creature damage shortcut.",
       "selectedIdentity": {
         "reason": "Selected identity replay evidence is only required for supported profile claims.",
         "status": "not-required"
@@ -698,8 +710,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "closed-outside-battle-runtime-boundary",
+      "strictTargetClosed": true,
       "unitId": "blight"
     },
     {
@@ -837,11 +849,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-battle-runtime"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "A future owner must carry target selection, Wisdom save roll-mode from caller-supplied fighting witnesses, Charmed condition ownership, Friendly attitude projection, damage-triggered cleanup from caster or allies, post-effect awareness, one-hour duration, and slot-scaled extra targets. It must consume creature/ally/hostility facts and condition lifecycle owners without dispatching on Charm Monster or duplicating relationship state.",
       "selectedIdentity": {
         "reason": "Selected identity replay evidence is only required for supported profile claims.",
         "status": "not-required"
@@ -909,8 +924,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "closed-outside-battle-runtime-boundary",
+      "strictTargetClosed": true,
       "unitId": "charm_monster"
     },
     {
@@ -1182,11 +1197,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-battle-runtime"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "A future owner must carry selected targets, Concentration, Charmed state, caster Bonus Action direction selection, target-turn forced movement using as much movement as possible, after-movement repeat saves, and per-target cleanup. Table/spatial ownership must supply horizontal direction, route safety, movement availability, obstacles, and legal path facts without duplicating map or turn-movement state.",
       "selectedIdentity": {
         "reason": "Selected identity replay evidence is only required for supported profile claims.",
         "status": "not-required"
@@ -1206,8 +1224,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "closed-outside-battle-runtime-boundary",
+      "strictTargetClosed": true,
       "unitId": "compulsion"
     },
     {
@@ -1250,11 +1268,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-battle-runtime"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "A future owner must carry the Concentration aura, slot-scaled d8 damage, hit-time damage-type choice, creature-in-Emanation gate, enemy Difficult Terrain projection, and attack-hit rider timing. Table/spatial ownership must supply moving Emanation membership, enemy relation, and ground/movement facts without duplicating attack damage, terrain, or map state.",
       "selectedIdentity": {
         "reason": "Selected identity replay evidence is only required for supported profile claims.",
         "status": "not-required"
@@ -1286,8 +1307,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "closed-outside-battle-runtime-boundary",
+      "strictTargetClosed": true,
       "unitId": "conjure_minor_elementals"
     },
     {
@@ -1297,11 +1318,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-battle-runtime"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "A future owner must carry Concentration, moving Emanation identity, first-entry/end-turn trigger timing, once-per-turn per-creature save ledger, slot-scaled Force damage with half damage on success, and Bonus Action Disengage permission. Table/spatial ownership must supply Emanation movement/membership facts and avoid duplicating map or action-economy state inside the spell.",
       "selectedIdentity": {
         "reason": "Selected identity replay evidence is only required for supported profile claims.",
         "status": "not-required"
@@ -1321,8 +1345,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "closed-outside-battle-runtime-boundary",
+      "strictTargetClosed": true,
       "unitId": "conjure_woodland_beings"
     },
     {
@@ -1616,11 +1640,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-battle-runtime"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "A future owner must carry the touched target active effect, intercept the first would-drop-to-0 event before ordinary zero-HP consequences, set HP to 1, end the spell effect, and separately negate one instant-kill-without-damage event. It must reuse the existing HP/death lifecycle owner and avoid a Death Ward-local HP or death ledger.",
       "selectedIdentity": {
         "reason": "Selected identity replay evidence is only required for supported profile claims.",
         "status": "not-required"
@@ -1640,8 +1667,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "closed-outside-battle-runtime-boundary",
+      "strictTargetClosed": true,
       "unitId": "death_ward"
     },
     {
@@ -1939,11 +1966,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-battle-runtime"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "A future owner must consume destination description/visualization facts, willing adjacent passenger facts, range, destination and passenger placement, occupied-or-filled collision checks, Force damage on failed arrival, and atomic teleport failure/success. Map coordinates, visibility, description interpretation, occupancy, object fill, and nearest destination placement belong to the table/spatial owner rather than copied spell state.",
       "selectedIdentity": {
         "reason": "Selected identity replay evidence is only required for supported profile claims.",
         "status": "not-required"
@@ -1999,8 +2029,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "closed-outside-battle-runtime-boundary",
+      "strictTargetClosed": true,
       "unitId": "dimension_door"
     },
     {
@@ -2103,11 +2133,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "companion-control-boundary"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "A future owner must carry Beast target admission, Wisdom save roll mode, Charmed condition, damage-triggered repeat saves, Concentration duration scaling by slot, telepathic command link, no-action caster commands, target turn obedience/default behavior, and caster-Reaction-for-target-Reaction command. Creature type, plane, command interpretation, turn protocol, and Reaction resources must remain with their existing owners.",
       "selectedIdentity": {
         "reason": "Selected identity replay evidence is only required for supported profile claims.",
         "status": "not-required"
@@ -2139,8 +2172,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "closed-companion-control-boundary",
+      "strictTargetClosed": true,
       "unitId": "dominate_beast"
     },
     {
@@ -2397,11 +2430,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-runtime-presentation-exploration"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "A future owner must consume raw material identity, quantity, visibility, material type, object dimensions, quality, item recipe, Artisan's Tools proficiency, and resulting inventory/object placement. These facts belong to crafting/inventory/table owners and must not be represented as generic battle spell state.",
       "selectedIdentity": {
         "reason": "Selected identity replay evidence is only required for supported profile claims.",
         "status": "not-required"
@@ -2421,8 +2457,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "closed-runtime-detached-table-adjudication",
+      "strictTargetClosed": true,
       "unitId": "fabricate"
     },
     {
@@ -2634,11 +2670,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-battle-runtime"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "A future owner must carry the 10-minute self effect, selected warm/chill mode, Bright/Dim light emitter, corresponding damage Resistance, and melee-hit retaliation against attackers within 5 feet. It must consume existing attack-hit, range, damage adjustment, and light owners without duplicating hit history, positions, or damage state.",
       "selectedIdentity": {
         "reason": "Selected identity replay evidence is only required for supported profile claims.",
         "status": "not-required"
@@ -2682,8 +2721,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "closed-outside-battle-runtime-boundary",
+      "strictTargetClosed": true,
       "unitId": "fire_shield"
     },
     {
@@ -2750,11 +2789,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-battle-runtime"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "A future owner must carry the touched target effect, ignore Difficult Terrain costs, block magical Speed reduction, block magical Paralyzed/Restrained application, derive Swim Speed from current Speed, and offer 5-foot-movement automatic escape from nonmagical restraints. It must consume existing terrain, Speed, condition-source, Grappled/restraint, and movement-budget owners without adding a parallel mobility state.",
       "selectedIdentity": {
         "reason": "Selected identity replay evidence is only required for supported profile claims.",
         "status": "not-required"
@@ -2798,8 +2840,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "closed-outside-battle-runtime-boundary",
+      "strictTargetClosed": true,
       "unitId": "freedom_of_movement"
     },
     {
@@ -2985,11 +3027,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-battle-runtime"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "A future owner must carry touched target admission, Concentration cleanup, source-owned Invisible condition application, and interaction with independent condition sources. Sight, detection, Hidden state, and observer-specific visibility must remain with existing condition and table visibility owners rather than a Greater Invisibility identity check.",
       "selectedIdentity": {
         "reason": "Selected identity replay evidence is only required for supported profile claims.",
         "status": "not-required"
@@ -3033,8 +3078,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "closed-outside-battle-runtime-boundary",
+      "strictTargetClosed": true,
       "unitId": "greater_invisibility"
     },
     {
@@ -3113,11 +3158,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-battle-runtime"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "A future owner must admit Cylinder affected creatures, Dexterity Saving Throws, mixed damage entries with half damage on success, slot-scaled Bludgeoning dice, and a short-lived Difficult Terrain area. Table/spatial ownership must supply Cylinder placement, area membership, ground affected, terrain movement costs, and cleanup at the caster next-turn boundary without duplicating map geometry.",
       "selectedIdentity": {
         "reason": "Selected identity replay evidence is only required for supported profile claims.",
         "status": "not-required"
@@ -3161,8 +3209,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "closed-outside-battle-runtime-boundary",
+      "strictTargetClosed": true,
       "unitId": "ice_storm"
     },
     {
@@ -4114,11 +4162,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-battle-runtime"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "A future owner must carry target save, selected Beast form eligibility, stat replacement, retained facts, Temporary Hit Points and early-ending cleanup, action/anatomy restrictions, no speech/spellcasting, and gear melding. It must reuse Stat Block catalog, equipment disposition, HP/Temporary HP, action, and spellcasting owners rather than copying Wild Shape form state or dispatching on Polymorph identity.",
       "selectedIdentity": {
         "reason": "Selected identity replay evidence is only required for supported profile claims.",
         "status": "not-required"
@@ -4174,8 +4225,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "closed-outside-battle-runtime-boundary",
+      "strictTargetClosed": true,
       "unitId": "polymorph"
     },
     {
@@ -5185,11 +5236,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-battle-runtime"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "A future owner must carry target admission, Concentration duration, source-owned B/P/S Resistance projection through the shared damage adjustment boundary, cleanup, and costly consumed Material component legality. It must not duplicate damage adjustment state or equipment/component inventory inside the spell.",
       "selectedIdentity": {
         "reason": "Selected identity replay evidence is only required for supported profile claims.",
         "status": "not-required"
@@ -5233,8 +5287,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "closed-outside-battle-runtime-boundary",
+      "strictTargetClosed": true,
       "unitId": "stoneskin"
     },
     {
@@ -5539,11 +5593,14 @@
         "reason": "SRD spell Unit with executable mechanics; spell admission evidence needs a dedicated tracer and expansion lane."
       },
       "catalogStatus": "not-in-unit-catalog",
-      "claimTag": "missing",
-      "closureKinds": [],
+      "claimTag": "unsupported-profile",
+      "closureKinds": [
+        "outside-battle-runtime"
+      ],
+      "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "spell",
-      "reason": "No Unit profile claim currently records runtime support or an accepted closure.",
+      "reason": "A future owner must carry wall shape, dimensions, ring/line mode, opaque projection, selected damaging side, Concentration duration, appearance-time affected creatures, Dexterity save damage, first-entry/end-turn damage timing, and slot-scaled damage. Table/spatial ownership must supply solid-surface placement, wall geometry, side relation, entry, and area membership without duplicating map or line-of-sight state.",
       "selectedIdentity": {
         "reason": "Selected identity replay evidence is only required for supported profile claims.",
         "status": "not-required"
@@ -5587,8 +5644,8 @@
           }
         }
       ],
-      "status": "open-runtime-behavior",
-      "strictTargetClosed": false,
+      "status": "closed-outside-battle-runtime-boundary",
+      "strictTargetClosed": true,
       "unitId": "wall_of_fire"
     },
     {
@@ -6083,12 +6140,13 @@
       ]
     },
     {
-      "count": 47,
+      "count": 49,
       "description": "The Unit claim records a runtime-detached presentation, exploration, table/perception, or durable social/knowledge closure.",
       "status": "closed-runtime-detached-table-adjudication",
       "unitIds": [
         "alarm",
         "animal_messenger",
+        "arcane_eye",
         "arcane_lock",
         "arcanists_magic_aura",
         "augury",
@@ -6103,6 +6161,7 @@
         "detect_poison_and_disease",
         "detect_thoughts",
         "enthrall",
+        "fabricate",
         "find_traps",
         "fly",
         "gentle_repose",
@@ -6137,21 +6196,35 @@
       ]
     },
     {
-      "count": 20,
+      "count": 36,
       "description": "The remaining residuals are explicitly outside promoted battle-runtime ownership.",
       "status": "closed-outside-battle-runtime-boundary",
       "unitIds": [
+        "aura_of_life",
+        "banishment",
         "bard_bonus_proficiencies",
         "beacon_of_hope",
         "bestow_curse",
+        "blight",
         "call_lightning",
+        "charm_monster",
+        "compulsion",
+        "conjure_minor_elementals",
+        "conjure_woodland_beings",
         "continual_flame",
         "create_food_and_water",
         "daylight",
+        "death_ward",
+        "dimension_door",
         "enlarge_reduce",
         "fear",
+        "fire_shield",
+        "freedom_of_movement",
+        "greater_invisibility",
+        "ice_storm",
         "levitate",
         "moonbeam",
+        "polymorph",
         "prayer_of_healing",
         "remove_curse",
         "revivify",
@@ -6159,34 +6232,10 @@
         "sleet_storm",
         "spirit_guardians",
         "stinking_cloud",
-        "vampiric_touch",
-        "wind_wall"
-      ]
-    },
-    {
-      "count": 19,
-      "description": "No Unit profile claim records runtime support or an accepted strict closure.",
-      "status": "open-runtime-behavior",
-      "unitIds": [
-        "arcane_eye",
-        "aura_of_life",
-        "banishment",
-        "blight",
-        "charm_monster",
-        "compulsion",
-        "conjure_minor_elementals",
-        "conjure_woodland_beings",
-        "death_ward",
-        "dimension_door",
-        "dominate_beast",
-        "fabricate",
-        "fire_shield",
-        "freedom_of_movement",
-        "greater_invisibility",
-        "ice_storm",
-        "polymorph",
         "stoneskin",
-        "wall_of_fire"
+        "vampiric_touch",
+        "wall_of_fire",
+        "wind_wall"
       ]
     },
     {
@@ -6238,11 +6287,12 @@
       ]
     },
     {
-      "count": 3,
+      "count": 4,
       "description": "Companion lifecycle and control residuals are closed at the companion control boundary.",
       "status": "closed-companion-control-boundary",
       "unitIds": [
         "animate_dead",
+        "dominate_beast",
         "druid_wild_companion",
         "find_steed"
       ]
@@ -6251,13 +6301,12 @@
   "metrics": {
     "productReadiness": {
       "denominator": 924,
-      "numerator": 831,
-      "percent": "89.9%",
+      "numerator": 912,
+      "percent": "98.7%",
       "rowsByStatus": {
         "accepted": 499,
-        "accepted-no-battle-effect": 332,
-        "battle-runtime-required": 32,
-        "owner-evidence-required": 61
+        "accepted-no-battle-effect": 413,
+        "owner-evidence-required": 12
       }
     },
     "rulesKernelCoveredProfileJoin": {
@@ -6282,38 +6331,11 @@
     },
     "strictTargetClosure": {
       "denominator": 284,
-      "numerator": 265,
-      "percent": "93.3%"
+      "numerator": 284,
+      "percent": "100%"
     }
   },
-  "openFrontier": [
-    {
-      "count": 19,
-      "description": "No Unit profile claim records runtime support or an accepted strict closure.",
-      "status": "open-runtime-behavior",
-      "unitIds": [
-        "arcane_eye",
-        "aura_of_life",
-        "banishment",
-        "blight",
-        "charm_monster",
-        "compulsion",
-        "conjure_minor_elementals",
-        "conjure_woodland_beings",
-        "death_ward",
-        "dimension_door",
-        "dominate_beast",
-        "fabricate",
-        "fire_shield",
-        "freedom_of_movement",
-        "greater_invisibility",
-        "ice_storm",
-        "polymorph",
-        "stoneskin",
-        "wall_of_fire"
-      ]
-    }
-  ],
+  "openFrontier": [],
   "outsideDenominator": {
     "companionWorktree": [
       {
@@ -6636,17 +6658,21 @@
         "inventoryAccounting": [
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "table-spatial-derivation",
+              "owner": "future active area-control hazard Spell Effect plus table/spatial ground-area membership owner",
+              "reason": "A future owner must carry the Concentration-owned tentacle area, Difficult Terrain projection, once-per-turn entry/end-turn save ledger, Strength save damage, spell-owned Restrained condition, and action-cost Strength (Athletics) escape check. Table/spatial ownership must supply the 20-foot-square placement, ground validity, area entry, turn-end membership, and movement facts without duplicating map geometry or condition state.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
-            "battleReadinessStatus": "battle-runtime-required",
+            "battleReadinessStatus": "accepted-no-battle-effect",
             "catalogAdmissionState": "not-installed",
             "concept": "Wizard spell list Black Tentacles",
-            "finalDisposition": "missing-authored-record",
+            "finalDisposition": "missing-authored-runtime-closed",
             "levelBand": "spell-level-4",
-            "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+            "nextAction": "Ground-area Difficult Terrain, Strength save damage, Restrained application, once-per-turn area triggers, and Athletics escape require a future active area-control hazard owner plus table/spatial membership facts.",
             "rowId": "srd521:classes/wizard:spell-level-4:spell-unit-pressure:wizard_spell_list_black_tentacles",
             "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           }
         ],
         "reason": "The SRD row has spell-level-4 spell-list Unit pressure, but no Unit matrix row exists yet.",
@@ -6818,59 +6844,75 @@
         "inventoryAccounting": [
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "table-spatial-derivation",
+              "owner": "future active random-behavior control Spell Effect plus table/spatial random-target and movement owner",
+              "reason": "A future owner must carry the Concentration-owned affected-target set, slot-scaled Sphere radius, action/Reaction denial, target-turn d10 behavior roll, random direction movement, no-action branches, random reachable melee target selection, Attack action forcing, and repeat Wisdom saves. Table/spatial ownership must supply area membership, cardinal directions, reach, target availability, and movement path facts without duplicating map or action state.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
-            "battleReadinessStatus": "battle-runtime-required",
+            "battleReadinessStatus": "accepted-no-battle-effect",
             "catalogAdmissionState": "not-installed",
             "concept": "Bard spell list Confusion",
-            "finalDisposition": "missing-authored-record",
+            "finalDisposition": "missing-authored-runtime-closed",
             "levelBand": "spell-level-4",
-            "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+            "nextAction": "Random target-turn behavior, action and Reaction denial, random movement, forced melee attacks, repeat saves, and slot-scaled area membership require a future active control Spell Effect plus table/spatial random-target and movement owners.",
             "rowId": "srd521:classes/bard:spell-level-4:spell-unit-pressure:bard_spell_list_confusion",
             "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "table-spatial-derivation",
+              "owner": "future active random-behavior control Spell Effect plus table/spatial random-target and movement owner",
+              "reason": "A future owner must carry the Concentration-owned affected-target set, slot-scaled Sphere radius, action/Reaction denial, target-turn d10 behavior roll, random direction movement, no-action branches, random reachable melee target selection, Attack action forcing, and repeat Wisdom saves. Table/spatial ownership must supply area membership, cardinal directions, reach, target availability, and movement path facts without duplicating map or action state.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
-            "battleReadinessStatus": "battle-runtime-required",
+            "battleReadinessStatus": "accepted-no-battle-effect",
             "catalogAdmissionState": "not-installed",
             "concept": "Druid spell list Confusion",
-            "finalDisposition": "missing-authored-record",
+            "finalDisposition": "missing-authored-runtime-closed",
             "levelBand": "spell-level-4",
-            "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+            "nextAction": "Random target-turn behavior, action and Reaction denial, random movement, forced melee attacks, repeat saves, and slot-scaled area membership require a future active control Spell Effect plus table/spatial random-target and movement owners.",
             "rowId": "srd521:classes/druid:spell-level-4:spell-unit-pressure:druid_spell_list_confusion",
             "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "table-spatial-derivation",
+              "owner": "future active random-behavior control Spell Effect plus table/spatial random-target and movement owner",
+              "reason": "A future owner must carry the Concentration-owned affected-target set, slot-scaled Sphere radius, action/Reaction denial, target-turn d10 behavior roll, random direction movement, no-action branches, random reachable melee target selection, Attack action forcing, and repeat Wisdom saves. Table/spatial ownership must supply area membership, cardinal directions, reach, target availability, and movement path facts without duplicating map or action state.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
-            "battleReadinessStatus": "battle-runtime-required",
+            "battleReadinessStatus": "accepted-no-battle-effect",
             "catalogAdmissionState": "not-installed",
             "concept": "Sorcerer spell list Confusion",
-            "finalDisposition": "missing-authored-record",
+            "finalDisposition": "missing-authored-runtime-closed",
             "levelBand": "spell-level-4",
-            "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+            "nextAction": "Random target-turn behavior, action and Reaction denial, random movement, forced melee attacks, repeat saves, and slot-scaled area membership require a future active control Spell Effect plus table/spatial random-target and movement owners.",
             "rowId": "srd521:classes/sorcerer:spell-level-4:spell-unit-pressure:sorcerer_spell_list_confusion",
             "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "table-spatial-derivation",
+              "owner": "future active random-behavior control Spell Effect plus table/spatial random-target and movement owner",
+              "reason": "A future owner must carry the Concentration-owned affected-target set, slot-scaled Sphere radius, action/Reaction denial, target-turn d10 behavior roll, random direction movement, no-action branches, random reachable melee target selection, Attack action forcing, and repeat Wisdom saves. Table/spatial ownership must supply area membership, cardinal directions, reach, target availability, and movement path facts without duplicating map or action state.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
-            "battleReadinessStatus": "battle-runtime-required",
+            "battleReadinessStatus": "accepted-no-battle-effect",
             "catalogAdmissionState": "not-installed",
             "concept": "Wizard spell list Confusion",
-            "finalDisposition": "missing-authored-record",
+            "finalDisposition": "missing-authored-runtime-closed",
             "levelBand": "spell-level-4",
-            "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+            "nextAction": "Random target-turn behavior, action and Reaction denial, random movement, forced melee attacks, repeat saves, and slot-scaled area membership require a future active control Spell Effect plus table/spatial random-target and movement owners.",
             "rowId": "srd521:classes/wizard:spell-level-4:spell-unit-pressure:wizard_spell_list_confusion",
             "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           }
         ],
         "reason": "The SRD row has spell-level-4 spell-list Unit pressure, but no Unit matrix row exists yet.",
@@ -6930,45 +6972,57 @@
         "inventoryAccounting": [
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "future table/spatial water-volume and environmental-hazard owner",
+              "reason": "A future owner must carry the controlled water area, current selected mode, Magic Action mode changes, wave repeats, trenches, redirects, whirlpool geometry, vehicle interactions, creature pull movement, Strength saves, damage, and swim-away checks. Water bodies, depth, flow, vehicles, routes, and environmental persistence are table/environment facts and must not be copied into generic spell reducers.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
-            "battleReadinessStatus": "battle-runtime-required",
+            "battleReadinessStatus": "accepted-no-battle-effect",
             "catalogAdmissionState": "not-installed",
             "concept": "Cleric spell list Control Water",
-            "finalDisposition": "missing-authored-record",
+            "finalDisposition": "missing-authored-runtime-closed",
             "levelBand": "spell-level-4",
-            "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+            "nextAction": "Water volume, waves, trenches, redirected flow, whirlpools, vehicle capsizing, swimming pulls, and water-area persistence are table/spatial/environment facts outside promoted spell runtime owners.",
             "rowId": "srd521:classes/cleric:spell-level-4:spell-unit-pressure:cleric_spell_list_control_water",
             "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "future table/spatial water-volume and environmental-hazard owner",
+              "reason": "A future owner must carry the controlled water area, current selected mode, Magic Action mode changes, wave repeats, trenches, redirects, whirlpool geometry, vehicle interactions, creature pull movement, Strength saves, damage, and swim-away checks. Water bodies, depth, flow, vehicles, routes, and environmental persistence are table/environment facts and must not be copied into generic spell reducers.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
-            "battleReadinessStatus": "battle-runtime-required",
+            "battleReadinessStatus": "accepted-no-battle-effect",
             "catalogAdmissionState": "not-installed",
             "concept": "Druid spell list Control Water",
-            "finalDisposition": "missing-authored-record",
+            "finalDisposition": "missing-authored-runtime-closed",
             "levelBand": "spell-level-4",
-            "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+            "nextAction": "Water volume, waves, trenches, redirected flow, whirlpools, vehicle capsizing, swimming pulls, and water-area persistence are table/spatial/environment facts outside promoted spell runtime owners.",
             "rowId": "srd521:classes/druid:spell-level-4:spell-unit-pressure:druid_spell_list_control_water",
             "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "future table/spatial water-volume and environmental-hazard owner",
+              "reason": "A future owner must carry the controlled water area, current selected mode, Magic Action mode changes, wave repeats, trenches, redirects, whirlpool geometry, vehicle interactions, creature pull movement, Strength saves, damage, and swim-away checks. Water bodies, depth, flow, vehicles, routes, and environmental persistence are table/environment facts and must not be copied into generic spell reducers.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
-            "battleReadinessStatus": "battle-runtime-required",
+            "battleReadinessStatus": "accepted-no-battle-effect",
             "catalogAdmissionState": "not-installed",
             "concept": "Wizard spell list Control Water",
-            "finalDisposition": "missing-authored-record",
+            "finalDisposition": "missing-authored-runtime-closed",
             "levelBand": "spell-level-4",
-            "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+            "nextAction": "Water volume, waves, trenches, redirected flow, whirlpools, vehicle capsizing, swimming pulls, and water-area persistence are table/spatial/environment facts outside promoted spell runtime owners.",
             "rowId": "srd521:classes/wizard:spell-level-4:spell-unit-pressure:wizard_spell_list_control_water",
             "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           }
         ],
         "reason": "The SRD row has spell-level-4 spell-list Unit pressure, but no Unit matrix row exists yet.",
@@ -7164,45 +7218,57 @@
         "inventoryAccounting": [
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "runtime-detached divination question/answer and repeated-cast chance owner",
+              "reason": "A future owner must model the spell's table-facing question, answer, time horizon, consumed component, Ritual option, and repeated-cast no-answer chance if the product ever executes divination procedures. It must not add battle state for GM knowledge, future events, or repeated casting outside a rest/session owner.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
-            "battleReadinessStatus": "battle-runtime-required",
+            "battleReadinessStatus": "accepted-no-battle-effect",
             "catalogAdmissionState": "not-installed",
             "concept": "Cleric spell list Divination",
-            "finalDisposition": "missing-authored-record",
+            "finalDisposition": "missing-authored-runtime-closed",
             "levelBand": "spell-level-4",
-            "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+            "nextAction": "Question content, GM truthful reply, future-event uncertainty, consumed incense, Ritual casting, and repeated-cast no-answer chance are runtime-detached divination/session adjudication facts.",
             "rowId": "srd521:classes/cleric:spell-level-4:spell-unit-pressure:cleric_spell_list_divination",
             "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "runtime-detached divination question/answer and repeated-cast chance owner",
+              "reason": "A future owner must model the spell's table-facing question, answer, time horizon, consumed component, Ritual option, and repeated-cast no-answer chance if the product ever executes divination procedures. It must not add battle state for GM knowledge, future events, or repeated casting outside a rest/session owner.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
-            "battleReadinessStatus": "battle-runtime-required",
+            "battleReadinessStatus": "accepted-no-battle-effect",
             "catalogAdmissionState": "not-installed",
             "concept": "Druid spell list Divination",
-            "finalDisposition": "missing-authored-record",
+            "finalDisposition": "missing-authored-runtime-closed",
             "levelBand": "spell-level-4",
-            "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+            "nextAction": "Question content, GM truthful reply, future-event uncertainty, consumed incense, Ritual casting, and repeated-cast no-answer chance are runtime-detached divination/session adjudication facts.",
             "rowId": "srd521:classes/druid:spell-level-4:spell-unit-pressure:druid_spell_list_divination",
             "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "runtime-detached divination question/answer and repeated-cast chance owner",
+              "reason": "A future owner must model the spell's table-facing question, answer, time horizon, consumed component, Ritual option, and repeated-cast no-answer chance if the product ever executes divination procedures. It must not add battle state for GM knowledge, future events, or repeated casting outside a rest/session owner.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
-            "battleReadinessStatus": "battle-runtime-required",
+            "battleReadinessStatus": "accepted-no-battle-effect",
             "catalogAdmissionState": "not-installed",
             "concept": "Wizard spell list Divination",
-            "finalDisposition": "missing-authored-record",
+            "finalDisposition": "missing-authored-runtime-closed",
             "levelBand": "spell-level-4",
-            "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+            "nextAction": "Question content, GM truthful reply, future-event uncertainty, consumed incense, Ritual casting, and repeated-cast no-answer chance are runtime-detached divination/session adjudication facts.",
             "rowId": "srd521:classes/wizard:spell-level-4:spell-unit-pressure:wizard_spell_list_divination",
             "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           }
         ],
         "reason": "The SRD row has spell-level-4 spell-list Unit pressure, but no Unit matrix row exists yet.",
@@ -7520,17 +7586,21 @@
         "inventoryAccounting": [
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "table-spatial-derivation",
+              "owner": "future phantom watchdog Spell Effect plus table/spatial detection and enemy-target owner",
+              "reason": "A future owner must carry the hound occurrence, duration, caster distance, password, visibility restrictions, Truesight, barking trigger, enemy targeting, start-of-caster-turn Dexterity save Force damage, and Magic Action movement. Table/spatial ownership must supply creature size, proximity, password hearing/speaking, enemy relation, unoccupied placement, and movement facts without duplicating map or creature state.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
-            "battleReadinessStatus": "battle-runtime-required",
+            "battleReadinessStatus": "accepted-no-battle-effect",
             "catalogAdmissionState": "not-installed",
             "concept": "Wizard spell list Faithful Hound",
-            "finalDisposition": "missing-authored-record",
+            "finalDisposition": "missing-authored-runtime-closed",
             "levelBand": "spell-level-4",
-            "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+            "nextAction": "Phantom watchdog placement, password barking, Truesight detection, caster-distance expiry, start-turn enemy bite saves, and Magic Action movement require a future placed watchdog occurrence owner plus table/spatial detection facts.",
             "rowId": "srd521:classes/wizard:spell-level-4:spell-unit-pressure:wizard_spell_list_faithful_hound",
             "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           }
         ],
         "reason": "The SRD row has spell-level-4 spell-list Unit pressure, but no Unit matrix row exists yet.",
@@ -7737,17 +7807,21 @@
         "inventoryAccounting": [
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "companion-control-boundary",
+              "owner": "future summoned creature lifecycle/control owner plus stat-block attack procedure owners",
+              "reason": "A future owner must create and remove the summoned creature, retain form choice, slot-scaled AC/HP/attacks, Initiative sharing, ally relation, command/default behavior, movement, Multiattack, Poison Jab, Spider Web Bolt Speed 0 rider, and Centipede Poisoned save. It must consume generic companion-control, stat-block attack, condition, speed-effect, and Character Sheet handoff owners instead of adding spell-local creature state.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
-            "battleReadinessStatus": "battle-runtime-required",
+            "battleReadinessStatus": "accepted-no-battle-effect",
             "catalogAdmissionState": "not-installed",
             "concept": "Druid spell list Giant Insect",
-            "finalDisposition": "missing-authored-record",
+            "finalDisposition": "missing-authored-runtime-closed",
             "levelBand": "spell-level-4",
-            "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+            "nextAction": "Summoned creature lifecycle, form choice, slot-scaled embedded stat block, Initiative sharing, command/default behavior, attacks, and condition/speed riders require a future summoned-creature lifecycle/control owner.",
             "rowId": "srd521:classes/druid:spell-level-4:spell-unit-pressure:druid_spell_list_giant_insect",
             "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           }
         ],
         "reason": "The SRD row has spell-level-4 spell-list Unit pressure, but no Unit matrix row exists yet.",
@@ -7832,17 +7906,21 @@
         "inventoryAccounting": [
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "table-spatial-derivation",
+              "owner": "future placed guardian hazard Spell Effect plus table/spatial enemy-membership owner",
+              "reason": "A future owner must carry placement, occupied space, invulnerability, duration, enemy-only trigger gates, first-move-within/start-turn timing, Dexterity save damage, half damage on success, cumulative damage dealt, and vanish threshold. Table/spatial ownership must supply unoccupied placement, movement proximity, enemy relation, and area membership without duplicating map or damage ledgers outside the guardian occurrence.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
-            "battleReadinessStatus": "battle-runtime-required",
+            "battleReadinessStatus": "accepted-no-battle-effect",
             "catalogAdmissionState": "not-installed",
             "concept": "Cleric spell list Guardian of Faith",
-            "finalDisposition": "missing-authored-record",
+            "finalDisposition": "missing-authored-runtime-closed",
             "levelBand": "spell-level-4",
-            "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+            "nextAction": "Placed invulnerable guardian occupancy, enemy proximity triggers, Dexterity save Radiant damage, cumulative damage dealt, and vanish threshold require a future placed hazard Spell Effect plus table/spatial membership owner.",
             "rowId": "srd521:classes/cleric:spell-level-4:spell-unit-pressure:cleric_spell_list_guardian_of_faith",
             "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           }
         ],
         "reason": "The SRD row has spell-level-4 spell-list Unit pressure, but no Unit matrix row exists yet.",
@@ -7866,59 +7944,75 @@
         "inventoryAccounting": [
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "runtime-detached terrain illusion and Study/Investigation owner",
+              "reason": "A future owner must carry natural-terrain area selection, sensory presentation, unchanged tactile facts, obvious-touch notice, Study action Investigation checks, per-observer disbelief, and superimposed visual presentation. Terrain identity, manufactured structure exclusion, equipment/creature exclusion, and presentation are table/exploration facts outside battle spell reducers.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
-            "battleReadinessStatus": "battle-runtime-required",
+            "battleReadinessStatus": "accepted-no-battle-effect",
             "catalogAdmissionState": "not-installed",
             "concept": "Bard spell list Hallucinatory Terrain",
-            "finalDisposition": "missing-authored-record",
+            "finalDisposition": "missing-authored-runtime-closed",
             "levelBand": "spell-level-4",
-            "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+            "nextAction": "Natural-terrain sensory illusion, unchanged tactile facts, Study/Investigation disbelief, and per-observer superimposed presentation are runtime-detached terrain illusion and presentation adjudication.",
             "rowId": "srd521:classes/bard:spell-level-4:spell-unit-pressure:bard_spell_list_hallucinatory_terrain",
             "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "runtime-detached terrain illusion and Study/Investigation owner",
+              "reason": "A future owner must carry natural-terrain area selection, sensory presentation, unchanged tactile facts, obvious-touch notice, Study action Investigation checks, per-observer disbelief, and superimposed visual presentation. Terrain identity, manufactured structure exclusion, equipment/creature exclusion, and presentation are table/exploration facts outside battle spell reducers.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
-            "battleReadinessStatus": "battle-runtime-required",
+            "battleReadinessStatus": "accepted-no-battle-effect",
             "catalogAdmissionState": "not-installed",
             "concept": "Druid spell list Hallucinatory Terrain",
-            "finalDisposition": "missing-authored-record",
+            "finalDisposition": "missing-authored-runtime-closed",
             "levelBand": "spell-level-4",
-            "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+            "nextAction": "Natural-terrain sensory illusion, unchanged tactile facts, Study/Investigation disbelief, and per-observer superimposed presentation are runtime-detached terrain illusion and presentation adjudication.",
             "rowId": "srd521:classes/druid:spell-level-4:spell-unit-pressure:druid_spell_list_hallucinatory_terrain",
             "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "runtime-detached terrain illusion and Study/Investigation owner",
+              "reason": "A future owner must carry natural-terrain area selection, sensory presentation, unchanged tactile facts, obvious-touch notice, Study action Investigation checks, per-observer disbelief, and superimposed visual presentation. Terrain identity, manufactured structure exclusion, equipment/creature exclusion, and presentation are table/exploration facts outside battle spell reducers.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
-            "battleReadinessStatus": "battle-runtime-required",
+            "battleReadinessStatus": "accepted-no-battle-effect",
             "catalogAdmissionState": "not-installed",
             "concept": "Warlock spell list Hallucinatory Terrain",
-            "finalDisposition": "missing-authored-record",
+            "finalDisposition": "missing-authored-runtime-closed",
             "levelBand": "spell-level-4",
-            "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+            "nextAction": "Natural-terrain sensory illusion, unchanged tactile facts, Study/Investigation disbelief, and per-observer superimposed presentation are runtime-detached terrain illusion and presentation adjudication.",
             "rowId": "srd521:classes/warlock:spell-level-4:spell-unit-pressure:warlock_spell_list_hallucinatory_terrain",
             "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "runtime-detached terrain illusion and Study/Investigation owner",
+              "reason": "A future owner must carry natural-terrain area selection, sensory presentation, unchanged tactile facts, obvious-touch notice, Study action Investigation checks, per-observer disbelief, and superimposed visual presentation. Terrain identity, manufactured structure exclusion, equipment/creature exclusion, and presentation are table/exploration facts outside battle spell reducers.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
-            "battleReadinessStatus": "battle-runtime-required",
+            "battleReadinessStatus": "accepted-no-battle-effect",
             "catalogAdmissionState": "not-installed",
             "concept": "Wizard spell list Hallucinatory Terrain",
-            "finalDisposition": "missing-authored-record",
+            "finalDisposition": "missing-authored-runtime-closed",
             "levelBand": "spell-level-4",
-            "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+            "nextAction": "Natural-terrain sensory illusion, unchanged tactile facts, Study/Investigation disbelief, and per-observer superimposed presentation are runtime-detached terrain illusion and presentation adjudication.",
             "rowId": "srd521:classes/wizard:spell-level-4:spell-unit-pressure:wizard_spell_list_hallucinatory_terrain",
             "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           }
         ],
         "reason": "The SRD row has spell-level-4 spell-list Unit pressure, but no Unit matrix row exists yet.",
@@ -8065,59 +8159,75 @@
         "inventoryAccounting": [
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "runtime-detached creature-location sensing and table knowledge owner",
+              "reason": "A future owner must consume familiarity, naming/description, nearest-kind selection, form-change exclusion, distance, direction, movement direction, and lead-blocking facts. Creature location, movement, forms, and hidden knowledge are table/exploration state and must not be stored in battle spell reducers.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
-            "battleReadinessStatus": "battle-runtime-required",
+            "battleReadinessStatus": "accepted-no-battle-effect",
             "catalogAdmissionState": "not-installed",
             "concept": "Bard spell list Locate Creature",
-            "finalDisposition": "missing-authored-record",
+            "finalDisposition": "missing-authored-runtime-closed",
             "levelBand": "spell-level-4",
-            "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+            "nextAction": "Familiarity, named/described creature matching, nearest-kind selection, direction and movement-direction disclosure, form-change exclusion, range, and lead blocking are runtime-detached creature-location sensing facts.",
             "rowId": "srd521:classes/bard:spell-level-4:spell-unit-pressure:bard_spell_list_locate_creature",
             "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "runtime-detached creature-location sensing and table knowledge owner",
+              "reason": "A future owner must consume familiarity, naming/description, nearest-kind selection, form-change exclusion, distance, direction, movement direction, and lead-blocking facts. Creature location, movement, forms, and hidden knowledge are table/exploration state and must not be stored in battle spell reducers.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
-            "battleReadinessStatus": "battle-runtime-required",
+            "battleReadinessStatus": "accepted-no-battle-effect",
             "catalogAdmissionState": "not-installed",
             "concept": "Cleric spell list Locate Creature",
-            "finalDisposition": "missing-authored-record",
+            "finalDisposition": "missing-authored-runtime-closed",
             "levelBand": "spell-level-4",
-            "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+            "nextAction": "Familiarity, named/described creature matching, nearest-kind selection, direction and movement-direction disclosure, form-change exclusion, range, and lead blocking are runtime-detached creature-location sensing facts.",
             "rowId": "srd521:classes/cleric:spell-level-4:spell-unit-pressure:cleric_spell_list_locate_creature",
             "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "runtime-detached creature-location sensing and table knowledge owner",
+              "reason": "A future owner must consume familiarity, naming/description, nearest-kind selection, form-change exclusion, distance, direction, movement direction, and lead-blocking facts. Creature location, movement, forms, and hidden knowledge are table/exploration state and must not be stored in battle spell reducers.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
-            "battleReadinessStatus": "battle-runtime-required",
+            "battleReadinessStatus": "accepted-no-battle-effect",
             "catalogAdmissionState": "not-installed",
             "concept": "Druid spell list Locate Creature",
-            "finalDisposition": "missing-authored-record",
+            "finalDisposition": "missing-authored-runtime-closed",
             "levelBand": "spell-level-4",
-            "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+            "nextAction": "Familiarity, named/described creature matching, nearest-kind selection, direction and movement-direction disclosure, form-change exclusion, range, and lead blocking are runtime-detached creature-location sensing facts.",
             "rowId": "srd521:classes/druid:spell-level-4:spell-unit-pressure:druid_spell_list_locate_creature",
             "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "runtime-detached creature-location sensing and table knowledge owner",
+              "reason": "A future owner must consume familiarity, naming/description, nearest-kind selection, form-change exclusion, distance, direction, movement direction, and lead-blocking facts. Creature location, movement, forms, and hidden knowledge are table/exploration state and must not be stored in battle spell reducers.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
-            "battleReadinessStatus": "battle-runtime-required",
+            "battleReadinessStatus": "accepted-no-battle-effect",
             "catalogAdmissionState": "not-installed",
             "concept": "Wizard spell list Locate Creature",
-            "finalDisposition": "missing-authored-record",
+            "finalDisposition": "missing-authored-runtime-closed",
             "levelBand": "spell-level-4",
-            "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+            "nextAction": "Familiarity, named/described creature matching, nearest-kind selection, direction and movement-direction disclosure, form-change exclusion, range, and lead blocking are runtime-detached creature-location sensing facts.",
             "rowId": "srd521:classes/wizard:spell-level-4:spell-unit-pressure:wizard_spell_list_locate_creature",
             "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           }
         ],
         "reason": "The SRD row has spell-level-4 spell-list Unit pressure, but no Unit matrix row exists yet.",
@@ -8800,31 +8910,39 @@
         "inventoryAccounting": [
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "outside-battle-runtime",
+              "owner": "future single-target fear-illusion Spell Effect plus repeating save/damage owner",
+              "reason": "A future owner must carry the target-specific illusion, initial and end-turn Wisdom saves, slot-scaled Psychic damage, failed-save Ability Check and attack-roll Disadvantage, successful-save cleanup, and repeated damage timing. It must consume existing roll-mode, damage, condition/effect lifecycle, and turn-boundary owners without dispatching on the spell name.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
-            "battleReadinessStatus": "battle-runtime-required",
+            "battleReadinessStatus": "accepted-no-battle-effect",
             "catalogAdmissionState": "not-installed",
             "concept": "Bard spell list Phantasmal Killer",
-            "finalDisposition": "missing-authored-record",
+            "finalDisposition": "missing-authored-runtime-closed",
             "levelBand": "spell-level-4",
-            "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+            "nextAction": "Single-target fear illusion, initial and repeat Wisdom saves, Psychic damage, Ability Check and attack-roll Disadvantage, and end-turn cleanup require a future repeating-save illusion Spell Effect owner.",
             "rowId": "srd521:classes/bard:spell-level-4:spell-unit-pressure:bard_spell_list_phantasmal_killer",
             "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "outside-battle-runtime",
+              "owner": "future single-target fear-illusion Spell Effect plus repeating save/damage owner",
+              "reason": "A future owner must carry the target-specific illusion, initial and end-turn Wisdom saves, slot-scaled Psychic damage, failed-save Ability Check and attack-roll Disadvantage, successful-save cleanup, and repeated damage timing. It must consume existing roll-mode, damage, condition/effect lifecycle, and turn-boundary owners without dispatching on the spell name.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
-            "battleReadinessStatus": "battle-runtime-required",
+            "battleReadinessStatus": "accepted-no-battle-effect",
             "catalogAdmissionState": "not-installed",
             "concept": "Wizard spell list Phantasmal Killer",
-            "finalDisposition": "missing-authored-record",
+            "finalDisposition": "missing-authored-runtime-closed",
             "levelBand": "spell-level-4",
-            "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+            "nextAction": "Single-target fear illusion, initial and repeat Wisdom saves, Psychic damage, Ability Check and attack-roll Disadvantage, and end-turn cleanup require a future repeating-save illusion Spell Effect owner.",
             "rowId": "srd521:classes/wizard:spell-level-4:spell-unit-pressure:wizard_spell_list_phantasmal_killer",
             "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           }
         ],
         "reason": "The SRD row has spell-level-4 spell-list Unit pressure, but no Unit matrix row exists yet.",
@@ -8973,17 +9091,21 @@
         "inventoryAccounting": [
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "runtime-detached area ward, divination, teleport, and planar-travel interdiction owner",
+              "reason": "A future owner must carry warded Cube identity, selected property set, duration/permanence, sound and sight barriers, Divination sensor and targeting interdiction, teleport blocking, planar-travel blocking, and slot-scaled size. Area geometry, sound, vision, sensors, teleport, and planes are table/presentation or broader procedure facts outside promoted battle spell reducers.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
-            "battleReadinessStatus": "battle-runtime-required",
+            "battleReadinessStatus": "accepted-no-battle-effect",
             "catalogAdmissionState": "not-installed",
             "concept": "Wizard spell list Private Sanctum",
-            "finalDisposition": "missing-authored-record",
+            "finalDisposition": "missing-authored-runtime-closed",
             "levelBand": "spell-level-4",
-            "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+            "nextAction": "Area security properties for sound, vision, Divination sensors and targeting, teleportation, planar travel, daily permanence, and slot-scaled size are runtime-detached ward/interdiction facts.",
             "rowId": "srd521:classes/wizard:spell-level-4:spell-unit-pressure:wizard_spell_list_private_sanctum",
             "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           }
         ],
         "reason": "The SRD row has spell-level-4 spell-list Unit pressure, but no Unit matrix row exists yet.",
@@ -9200,17 +9322,21 @@
         "inventoryAccounting": [
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "table-spatial-derivation",
+              "owner": "future barrier containment Spell Effect plus table/spatial object and movement owner",
+              "reason": "A future owner must carry enclosed target identity, failed-save admission, barrier blocking/interdiction, inside/outside damage prevention, damage immunity, breathing exception, push/roll movement, external movement, and Disintegrate destruction. Table/spatial ownership must supply object size, spaces, movement, external movers, and inside/outside relation without duplicating map or damage state.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
-            "battleReadinessStatus": "battle-runtime-required",
+            "battleReadinessStatus": "accepted-no-battle-effect",
             "catalogAdmissionState": "not-installed",
             "concept": "Wizard spell list Resilient Sphere",
-            "finalDisposition": "missing-authored-record",
+            "finalDisposition": "missing-authored-runtime-closed",
             "levelBand": "spell-level-4",
-            "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+            "nextAction": "Barrier containment, inside/outside effect blocking, damage immunity, breathing exception, push/roll movement, external movement, and Disintegrate destruction require a future barrier Spell Effect plus table/spatial owner.",
             "rowId": "srd521:classes/wizard:spell-level-4:spell-unit-pressure:wizard_spell_list_resilient_sphere",
             "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           }
         ],
         "reason": "The SRD row has spell-level-4 spell-list Unit pressure, but no Unit matrix row exists yet.",
@@ -9306,17 +9432,21 @@
         "inventoryAccounting": [
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "runtime-detached inventory object, Ethereal storage, and elapsed-day owner",
+              "reason": "A future owner must carry chest object identity, contents capacity, nonliving-content gate, replica component identity, Ethereal location, recall/send actions, unoccupied placement, elapsed-day chance, recast replacement, replica destruction, and lost-object persistence. Inventory, object contents, plane location, and calendar time are outside battle spell reducers.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
-            "battleReadinessStatus": "battle-runtime-required",
+            "battleReadinessStatus": "accepted-no-battle-effect",
             "catalogAdmissionState": "not-installed",
             "concept": "Wizard spell list Secret Chest",
-            "finalDisposition": "missing-authored-record",
+            "finalDisposition": "missing-authored-runtime-closed",
             "levelBand": "spell-level-4",
-            "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+            "nextAction": "Costly chest identity, contents, Ethereal storage, replica-mediated recall/send actions, elapsed-day ending chance, recast replacement, replica destruction, and lost chest persistence are inventory/object/plane facts.",
             "rowId": "srd521:classes/wizard:spell-level-4:spell-unit-pressure:wizard_spell_list_secret_chest",
             "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           }
         ],
         "reason": "The SRD row has spell-level-4 spell-list Unit pressure, but no Unit matrix row exists yet.",
@@ -9450,45 +9580,57 @@
         "inventoryAccounting": [
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "runtime-detached stone object and terrain-shaping owner",
+              "reason": "A future owner must consume stone material identity, object/section size, shape intent, passage/door/hinge/latch outcomes, and mechanical-detail limits. Object geometry and terrain changes belong to table/object owners rather than generic spell reducers.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
-            "battleReadinessStatus": "battle-runtime-required",
+            "battleReadinessStatus": "accepted-no-battle-effect",
             "catalogAdmissionState": "not-installed",
             "concept": "Cleric spell list Stone Shape",
-            "finalDisposition": "missing-authored-record",
+            "finalDisposition": "missing-authored-runtime-closed",
             "levelBand": "spell-level-4",
-            "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+            "nextAction": "Stone object or terrain-section reshaping, object geometry, passage/door/hinge/latch outcomes, and mechanical-detail limits are runtime-detached object and terrain-shaping facts.",
             "rowId": "srd521:classes/cleric:spell-level-4:spell-unit-pressure:cleric_spell_list_stone_shape",
             "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "runtime-detached stone object and terrain-shaping owner",
+              "reason": "A future owner must consume stone material identity, object/section size, shape intent, passage/door/hinge/latch outcomes, and mechanical-detail limits. Object geometry and terrain changes belong to table/object owners rather than generic spell reducers.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
-            "battleReadinessStatus": "battle-runtime-required",
+            "battleReadinessStatus": "accepted-no-battle-effect",
             "catalogAdmissionState": "not-installed",
             "concept": "Druid spell list Stone Shape",
-            "finalDisposition": "missing-authored-record",
+            "finalDisposition": "missing-authored-runtime-closed",
             "levelBand": "spell-level-4",
-            "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+            "nextAction": "Stone object or terrain-section reshaping, object geometry, passage/door/hinge/latch outcomes, and mechanical-detail limits are runtime-detached object and terrain-shaping facts.",
             "rowId": "srd521:classes/druid:spell-level-4:spell-unit-pressure:druid_spell_list_stone_shape",
             "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "outside-runtime-presentation-exploration",
+              "owner": "runtime-detached stone object and terrain-shaping owner",
+              "reason": "A future owner must consume stone material identity, object/section size, shape intent, passage/door/hinge/latch outcomes, and mechanical-detail limits. Object geometry and terrain changes belong to table/object owners rather than generic spell reducers.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
-            "battleReadinessStatus": "battle-runtime-required",
+            "battleReadinessStatus": "accepted-no-battle-effect",
             "catalogAdmissionState": "not-installed",
             "concept": "Wizard spell list Stone Shape",
-            "finalDisposition": "missing-authored-record",
+            "finalDisposition": "missing-authored-runtime-closed",
             "levelBand": "spell-level-4",
-            "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+            "nextAction": "Stone object or terrain-section reshaping, object geometry, passage/door/hinge/latch outcomes, and mechanical-detail limits are runtime-detached object and terrain-shaping facts.",
             "rowId": "srd521:classes/wizard:spell-level-4:spell-unit-pressure:wizard_spell_list_stone_shape",
             "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           }
         ],
         "reason": "The SRD row has spell-level-4 spell-list Unit pressure, but no Unit matrix row exists yet.",
@@ -9623,31 +9765,39 @@
         "inventoryAccounting": [
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "table-spatial-derivation",
+              "owner": "future area save-damage plus delayed target damage Spell Effect owner",
+              "reason": "A future owner must admit Sphere affected creatures, Dexterity saves, initial Acid damage with half damage on success, failed-save-only delayed Acid damage at each target next-turn end, slot scaling, and cleanup. Table/spatial ownership must provide area membership while target-turn timing and delayed damage use existing active-effect and damage owners.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
-            "battleReadinessStatus": "battle-runtime-required",
+            "battleReadinessStatus": "accepted-no-battle-effect",
             "catalogAdmissionState": "not-installed",
             "concept": "Sorcerer spell list Vitriolic Sphere",
-            "finalDisposition": "missing-authored-record",
+            "finalDisposition": "missing-authored-runtime-closed",
             "levelBand": "spell-level-4",
-            "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+            "nextAction": "Area Dexterity save Acid damage plus failed-save-only delayed end-of-next-turn damage requires a future area save-damage owner with delayed target damage active effects and table/spatial membership facts.",
             "rowId": "srd521:classes/sorcerer:spell-level-4:spell-unit-pressure:sorcerer_spell_list_vitriolic_sphere",
             "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "table-spatial-derivation",
+              "owner": "future area save-damage plus delayed target damage Spell Effect owner",
+              "reason": "A future owner must admit Sphere affected creatures, Dexterity saves, initial Acid damage with half damage on success, failed-save-only delayed Acid damage at each target next-turn end, slot scaling, and cleanup. Table/spatial ownership must provide area membership while target-turn timing and delayed damage use existing active-effect and damage owners.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
-            "battleReadinessStatus": "battle-runtime-required",
+            "battleReadinessStatus": "accepted-no-battle-effect",
             "catalogAdmissionState": "not-installed",
             "concept": "Wizard spell list Vitriolic Sphere",
-            "finalDisposition": "missing-authored-record",
+            "finalDisposition": "missing-authored-runtime-closed",
             "levelBand": "spell-level-4",
-            "nextAction": "Author an SRD-provenance Surface record or explicitly close the row.",
+            "nextAction": "Area Dexterity save Acid damage plus failed-save-only delayed end-of-next-turn damage requires a future area save-damage owner with delayed target damage active effects and table/spatial membership facts.",
             "rowId": "srd521:classes/wizard:spell-level-4:spell-unit-pressure:wizard_spell_list_vitriolic_sphere",
             "rowKind": "spell-unit-pressure",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           }
         ],
         "reason": "The SRD row has spell-level-4 spell-list Unit pressure, but no Unit matrix row exists yet.",
@@ -18567,19 +18717,17 @@
   "summary": {
     "candidateUnitIdsBeforeExclusions": 365,
     "groupsByClaimTag": {
-      "missing": 19,
       "profile-subset-supported": 26,
       "supported-profile": 168,
-      "unsupported-profile": 71
+      "unsupported-profile": 90
     },
     "groupsByStatus": {
       "blocked-follow-up-split": 11,
       "closed-character-fact-and-runtime-detached-split": 4,
-      "closed-companion-control-boundary": 3,
-      "closed-outside-battle-runtime-boundary": 20,
-      "closed-runtime-detached-table-adjudication": 47,
+      "closed-companion-control-boundary": 4,
+      "closed-outside-battle-runtime-boundary": 36,
+      "closed-runtime-detached-table-adjudication": 49,
       "closed-selection-grant-container": 12,
-      "open-runtime-behavior": 19,
       "supported-profile": 168
     },
     "nonSupportedFrontier": 116,

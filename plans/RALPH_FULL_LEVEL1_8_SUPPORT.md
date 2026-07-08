@@ -341,15 +341,15 @@ Spell-level-4 unique identities currently in the level-7 mining audit:
 | 13 | L7FULL-09-BARBARIAN-FERAL-INSTINCT - Close Barbarian Feral Instinct at the Initiative boundary | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Future generic start-battle Initiative roll-mode owner required. |
 | 14 | L7FULL-10-BARD-COUNTERCHARM - Close Bard Countercharm with explicit reaction/save-reroll ownership | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Future class-feature triggered-Reaction save reroll owner required. |
 | 15 | L7FULL-11-PALADIN-AURA-OF-DEVOTION - Close Paladin Aura of Devotion with explicit aura ownership | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Depends on future Aura of Protection membership plus Charmed immunity/suppression owner. |
-| 16 | L7FULL-12-RANGER-DEFENSIVE-TACTICS - Close Ranger Defensive Tactics with explicit check/save ownership | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Multi-option subclass defensive facts must not become vague unsupported rows. |
-| 17 | L7FULL-13-ROGUE-RELIABLE-TALENT - Close Rogue Reliable Talent with explicit Ability Check ownership | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Ability Check floor is not attack/save runtime unless a generic check owner exists. |
-| 18 | L7FULL-14-SPELL-LEVEL4-STRICT-CLOSURE - Classify and close spell-level-4 pressure for level 7 | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Strict denominator closure for 34 unique identities and 81 class-list rows. |
+| 16 | L7FULL-12-RANGER-DEFENSIVE-TACTICS - Close Ranger Defensive Tactics with explicit check/save ownership | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Multi-option subclass defensive facts must not become vague unsupported rows. |
+| 17 | L7FULL-13-ROGUE-RELIABLE-TALENT - Close Rogue Reliable Talent with explicit Ability Check ownership | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Ability Check floor is not attack/save runtime unless a generic check owner exists. |
+| 18 | L7FULL-14-SPELL-LEVEL4-STRICT-CLOSURE - Classify and close spell-level-4 pressure for level 7 | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Strict denominator closure for 34 unique identities and 81 class-list rows. |
 | 19 | L8FULL-01-CLASS-TABLE-SUMMARY-CLOSURE - Close the twelve level-8 class-table summary rows | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Requires generated level-8 inventory rows. |
 | 20 | L8FULL-02-REPEATED-ASI-GRANT-OCCURRENCES - Close the twelve level-8 repeated Ability Score Improvement rows | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Repeated ASI occurrence closure across all SRD classes. |
 | 21 | L8FULL-03-NUMERIC-PROGRESSION-DELTAS - Close level-8 class numeric progression deltas | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Prepared spells, spell slots, points/resources, and table counters. |
 | 22 | L8FULL-04-DRUID-WILD-SHAPE-FLY-SPEED-THRESHOLD - Audit Druid Wild Shape Fly Speed threshold at level 8 | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Level-8 threshold changes form eligibility, not active-form persistence. |
 | 23 | L8FULL-05-SPELL-LEVEL4-CARRY-FORWARD - Carry spell-level-4 closure into the level-8 claim | blocked | L7FULL-14-SPELL-LEVEL4-STRICT-CLOSURE, L8FULL-03-NUMERIC-PROGRESSION-DELTAS | Ensures level 8 does not reopen spell-level-4 pressure. |
-| 24 | L18GATE-01-LEVEL17-FULL-SUPPORT-ARTIFACTS - Refresh and verify level-1-7 full-support artifacts | blocked | L7FULL-01-CLASS-TABLE-SUMMARY-CLOSURE, L7FULL-03-MONK-EVASION-REUSE-ADMISSION, L7FULL-04-FIGHTER-ADDITIONAL-FIGHTING-STYLE, L7FULL-05-CLERIC-BLESSED-STRIKES, L7FULL-06-DRUID-ELEMENTAL-FURY, L7FULL-07-BARBARIAN-INSTINCTIVE-POUNCE, L7FULL-08-SORCERER-SORCERY-INCARNATE, L7FULL-09-BARBARIAN-FERAL-INSTINCT, L7FULL-10-BARD-COUNTERCHARM, L7FULL-11-PALADIN-AURA-OF-DEVOTION, L7FULL-12-RANGER-DEFENSIVE-TACTICS, L7FULL-13-ROGUE-RELIABLE-TALENT, L7FULL-14-SPELL-LEVEL4-STRICT-CLOSURE | Serializes generated level-1-7 artifacts after all row closures. |
+| 24 | L18GATE-01-LEVEL17-FULL-SUPPORT-ARTIFACTS - Refresh and verify level-1-7 full-support artifacts | ready-for-implementation | L7FULL-01-CLASS-TABLE-SUMMARY-CLOSURE, L7FULL-03-MONK-EVASION-REUSE-ADMISSION, L7FULL-04-FIGHTER-ADDITIONAL-FIGHTING-STYLE, L7FULL-05-CLERIC-BLESSED-STRIKES, L7FULL-06-DRUID-ELEMENTAL-FURY, L7FULL-07-BARBARIAN-INSTINCTIVE-POUNCE, L7FULL-08-SORCERER-SORCERY-INCARNATE, L7FULL-09-BARBARIAN-FERAL-INSTINCT, L7FULL-10-BARD-COUNTERCHARM, L7FULL-11-PALADIN-AURA-OF-DEVOTION, L7FULL-12-RANGER-DEFENSIVE-TACTICS, L7FULL-13-ROGUE-RELIABLE-TALENT, L7FULL-14-SPELL-LEVEL4-STRICT-CLOSURE | Serializes generated level-1-7 artifacts after all row closures. |
 | 25 | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS - Refresh and verify level-1-8 full-support artifacts | blocked | L18GATE-01-LEVEL17-FULL-SUPPORT-ARTIFACTS, L8FULL-01-CLASS-TABLE-SUMMARY-CLOSURE, L8FULL-02-REPEATED-ASI-GRANT-OCCURRENCES, L8FULL-03-NUMERIC-PROGRESSION-DELTAS, L8FULL-04-DRUID-WILD-SHAPE-FLY-SPEED-THRESHOLD, L8FULL-05-SPELL-LEVEL4-CARRY-FORWARD | Serializes generated level-1-8 artifacts. |
 | 26 | L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION - Extend ultra-golden scope through level 8 | blocked | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS | Adds level-1-7 and level-1-8 to the aggregate without weakening prior scopes. |
 | 27 | L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS - Validate MCP evidence and required flows for level 7-8 scope | blocked | L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION | Adds or classifies MCP vertical evidence only after support artifacts exist. |
@@ -1457,7 +1457,7 @@ Plan Impact:
 
 ### Task 18 - L7FULL-14-SPELL-LEVEL4-STRICT-CLOSURE
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on: `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`
 
@@ -1503,8 +1503,28 @@ Verification:
 
 Plan Impact:
 
-- Update-required if the 34-identity list changes or if promoted spell behavior
-  needs separate task splits.
+- `applied`: added explicit unsupported-profile closures for all 34 SRD
+  spell-level-4 identities in `unit-claims.jsonl`, preserving all 81 class-list
+  rows in the generated audit. Authored not-installed rows close as
+  `catalog-only/dead-for-now`; missing authored Surface rows close through the
+  checker-enforced `missing-authored-runtime-closed` disposition.
+- Added checker policy for missing authored Spell Unit runtime closures so the
+  missing-record state is not collapsed into authored catalog-only closure.
+- RAW/ubiquitous-language pass read the local SRD 5.2.1 class spell-list rows
+  and spell descriptions for the 34 identities, plus spell, area, saving throw,
+  damage, condition, movement, terrain, ritual, and Spell Definition/Access/
+  Invocation/Effect terminology in `UBIQUITOUS_LANGUAGE.md`.
+- Generated result: spell-level-4 strict denominator is 34 identities / 81 rows;
+  49 rows are authored-record-present catalog closures, 32 rows are
+  missing-authored-runtime-closed, and all 81 rows are
+  `accepted-no-battle-effect`.
+- Full-support impact: generated level-1-7 and level-1-8 full-support reports
+  now pass their strict claim gates with strict target closure at 284/284
+  (100%).
+- Verification: `pnpm unit-profile-coverage:check --write`,
+  `pnpm unit-profile-coverage:check`, `git diff --check`, targeted
+  spell-level-4 blocker scan. No runtime/QNT/MBT tests were run because no
+  spell behavior was promoted.
 
 ### Task 19 - L8FULL-01-CLASS-TABLE-SUMMARY-CLOSURE
 

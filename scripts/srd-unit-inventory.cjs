@@ -101,6 +101,10 @@ const characterCreationOwnerEvidenceKinds = [
 const characterSheetOwnerEvidenceKinds = ["runtimeProjection", "tests"];
 const catalogAuthoredReviewRequiredDisposition =
   "catalog-authored-review-required";
+const missingAuthoredRuntimeClosureKind =
+  "missing-authored-runtime-closure";
+const missingAuthoredRuntimeClosedDisposition =
+  "missing-authored-runtime-closed";
 const levelThreeFollowUpRequiredDisposition = "level-3-follow-up-required";
 const levelFourFollowUpRequiredDisposition = "level-4-follow-up-required";
 const classProgressionFollowUpRequiredDisposition =
@@ -485,6 +489,126 @@ const spellUnitMissingClassifications = new Map([
       kind: "catalog-only-closure",
       reason:
         "Minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners.",
+    },
+  ],
+  [
+    "black_tentacles",
+    {
+      kind: missingAuthoredRuntimeClosureKind,
+      reason:
+        "Ground-area Difficult Terrain, Strength save damage, Restrained application, once-per-turn area triggers, and Athletics escape require a future active area-control hazard owner plus table/spatial membership facts.",
+    },
+  ],
+  [
+    "confusion",
+    {
+      kind: missingAuthoredRuntimeClosureKind,
+      reason:
+        "Random target-turn behavior, action and Reaction denial, random movement, forced melee attacks, repeat saves, and slot-scaled area membership require a future active control Spell Effect plus table/spatial random-target and movement owners.",
+    },
+  ],
+  [
+    "control_water",
+    {
+      kind: missingAuthoredRuntimeClosureKind,
+      reason:
+        "Water volume, waves, trenches, redirected flow, whirlpools, vehicle capsizing, swimming pulls, and water-area persistence are table/spatial/environment facts outside promoted spell runtime owners.",
+    },
+  ],
+  [
+    "divination",
+    {
+      kind: missingAuthoredRuntimeClosureKind,
+      reason:
+        "Question content, GM truthful reply, future-event uncertainty, consumed incense, Ritual casting, and repeated-cast no-answer chance are runtime-detached divination/session adjudication facts.",
+    },
+  ],
+  [
+    "faithful_hound",
+    {
+      kind: missingAuthoredRuntimeClosureKind,
+      reason:
+        "Phantom watchdog placement, password barking, Truesight detection, caster-distance expiry, start-turn enemy bite saves, and Magic Action movement require a future placed watchdog occurrence owner plus table/spatial detection facts.",
+    },
+  ],
+  [
+    "giant_insect",
+    {
+      kind: missingAuthoredRuntimeClosureKind,
+      reason:
+        "Summoned creature lifecycle, form choice, slot-scaled embedded stat block, Initiative sharing, command/default behavior, attacks, and condition/speed riders require a future summoned-creature lifecycle/control owner.",
+    },
+  ],
+  [
+    "guardian_of_faith",
+    {
+      kind: missingAuthoredRuntimeClosureKind,
+      reason:
+        "Placed invulnerable guardian occupancy, enemy proximity triggers, Dexterity save Radiant damage, cumulative damage dealt, and vanish threshold require a future placed hazard Spell Effect plus table/spatial membership owner.",
+    },
+  ],
+  [
+    "hallucinatory_terrain",
+    {
+      kind: missingAuthoredRuntimeClosureKind,
+      reason:
+        "Natural-terrain sensory illusion, unchanged tactile facts, Study/Investigation disbelief, and per-observer superimposed presentation are runtime-detached terrain illusion and presentation adjudication.",
+    },
+  ],
+  [
+    "locate_creature",
+    {
+      kind: missingAuthoredRuntimeClosureKind,
+      reason:
+        "Familiarity, named/described creature matching, nearest-kind selection, direction and movement-direction disclosure, form-change exclusion, range, and lead blocking are runtime-detached creature-location sensing facts.",
+    },
+  ],
+  [
+    "phantasmal_killer",
+    {
+      kind: missingAuthoredRuntimeClosureKind,
+      reason:
+        "Single-target fear illusion, initial and repeat Wisdom saves, Psychic damage, Ability Check and attack-roll Disadvantage, and end-turn cleanup require a future repeating-save illusion Spell Effect owner.",
+    },
+  ],
+  [
+    "private_sanctum",
+    {
+      kind: missingAuthoredRuntimeClosureKind,
+      reason:
+        "Area security properties for sound, vision, Divination sensors and targeting, teleportation, planar travel, daily permanence, and slot-scaled size are runtime-detached ward/interdiction facts.",
+    },
+  ],
+  [
+    "resilient_sphere",
+    {
+      kind: missingAuthoredRuntimeClosureKind,
+      reason:
+        "Barrier containment, inside/outside effect blocking, damage immunity, breathing exception, push/roll movement, external movement, and Disintegrate destruction require a future barrier Spell Effect plus table/spatial owner.",
+    },
+  ],
+  [
+    "secret_chest",
+    {
+      kind: missingAuthoredRuntimeClosureKind,
+      reason:
+        "Costly chest identity, contents, Ethereal storage, replica-mediated recall/send actions, elapsed-day ending chance, recast replacement, replica destruction, and lost chest persistence are inventory/object/plane facts.",
+    },
+  ],
+  [
+    "stone_shape",
+    {
+      kind: missingAuthoredRuntimeClosureKind,
+      reason:
+        "Stone object or terrain-section reshaping, object geometry, passage/door/hinge/latch outcomes, and mechanical-detail limits are runtime-detached object and terrain-shaping facts.",
+    },
+  ],
+  [
+    "vitriolic_sphere",
+    {
+      kind: missingAuthoredRuntimeClosureKind,
+      reason:
+        "Area Dexterity save Acid damage plus failed-save-only delayed end-of-next-turn damage requires a future area save-damage owner with delayed target damage active effects and table/spatial membership facts.",
     },
   ],
   [
@@ -986,7 +1110,10 @@ function surfaceGate(row, ownerEvidenceSources, installedIds) {
       missingConstruct: spellUnitClassification.missingConstruct,
     };
   }
-  if (spellUnitClassification?.kind === "catalog-only-closure") {
+  if (
+    spellUnitClassification?.kind === "catalog-only-closure" ||
+    spellUnitClassification?.kind === missingAuthoredRuntimeClosureKind
+  ) {
     return {
       state: "outside-surface-runtime-mechanics",
       missingConstruct: undefined,
@@ -1066,7 +1193,16 @@ function finalDisposition(row, authored, installedIds, ownerEvidenceSources) {
     row.candidateUnitId,
   );
   if (spellUnitClassification?.kind === "catalog-only-closure") {
+    if (hasMissingAuthoredRuntimeClosure(row, authored, ownerEvidenceSources)) {
+      return missingAuthoredRuntimeClosedDisposition;
+    }
     return "catalog-only/dead-for-now";
+  }
+  if (spellUnitClassification?.kind === missingAuthoredRuntimeClosureKind) {
+    if (hasMissingAuthoredRuntimeClosure(row, authored, ownerEvidenceSources)) {
+      return missingAuthoredRuntimeClosedDisposition;
+    }
+    return "missing-authored-record";
   }
   if (!row.candidateUnitId) return "needs-surface-widening";
   if (authoredUnitForRow(row, authored) === undefined) {
@@ -1135,6 +1271,15 @@ function finalDisposition(row, authored, installedIds, ownerEvidenceSources) {
   return "catalog-installed-needs-owner-evidence";
 }
 
+function hasMissingAuthoredRuntimeClosure(row, authored, ownerEvidenceSources) {
+  if (row.rowKind !== "spell-unit-pressure") return false;
+  if (authoredUnitForRow(row, authored) !== undefined) return false;
+  const claim = row.candidateUnitId
+    ? ownerEvidenceSources.unitClaims.get(row.candidateUnitId)?.claim
+    : undefined;
+  return battleReadinessClosureFromUnitClaim(claim) !== undefined;
+}
+
 function nextAction(
   row,
   disposition,
@@ -1181,6 +1326,15 @@ function nextAction(
   }
   if (disposition === catalogAuthoredReviewRequiredDisposition) {
     return "Record a checker-visible runtime-detached closure or split a precise executable follow-up before counting this later-frontier spell row as accepted.";
+  }
+  if (disposition === missingAuthoredRuntimeClosedDisposition) {
+    const spellUnitClassification = spellUnitMissingClassifications.get(
+      row.candidateUnitId,
+    );
+    return (
+      spellUnitClassification?.reason ??
+      "Missing authored Surface record is explicitly closed outside current battle-runtime support."
+    );
   }
   if (
     disposition === "catalog-only/dead-for-now" &&
@@ -3268,7 +3422,8 @@ function isBattleRuntimeRelevantFeatureRow(row) {
 function isAcceptedNoBattleEffectSpellRow(row) {
   return (
     row.rowKind === "spell-unit-pressure" &&
-    row.finalDisposition === "catalog-only/dead-for-now"
+    (row.finalDisposition === "catalog-only/dead-for-now" ||
+      row.finalDisposition === missingAuthoredRuntimeClosedDisposition)
   );
 }
 
@@ -3331,6 +3486,9 @@ function battleReadinessStatus(
     return "accepted";
   }
   if (row.finalDisposition === "catalog-only/dead-for-now") {
+    return "accepted-no-battle-effect";
+  }
+  if (row.finalDisposition === missingAuthoredRuntimeClosedDisposition) {
     return "accepted-no-battle-effect";
   }
   if (row.finalDisposition === "needs-surface-widening") {
@@ -4900,6 +5058,20 @@ function validateSrdUnitInventory(report) {
     seen.add(row.id);
     if (!row.category) issues.push(`${row.id} is unclassified.`);
     if (!row.finalDisposition) issues.push(`${row.id} lacks finalDisposition.`);
+    if (
+      row.finalDisposition === missingAuthoredRuntimeClosedDisposition &&
+      !(
+        row.rowKind === "spell-unit-pressure" &&
+        row.authoredContent.state === "missing-authored-record" &&
+        row.catalogAdmission.state === "not-installed" &&
+        row.unitProfileDisposition === "unsupported-profile" &&
+        row.battleReadinessClosure !== undefined
+      )
+    ) {
+      issues.push(
+        `${row.id} uses ${missingAuthoredRuntimeClosedDisposition} without a missing authored Spell Unit runtime closure.`,
+      );
+    }
     if (
       row.finalDisposition === "needs-surface-widening" &&
       !row.surface.missingConstruct
