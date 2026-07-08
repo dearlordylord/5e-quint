@@ -169,7 +169,7 @@
     {
       "number": 28,
       "id": "L18GATE-05-CLEANROOM-SOURCE-QNT-READINESS",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Refresh cleanroom and source-QNT readiness evidence"
     },
     {
@@ -353,7 +353,7 @@ Spell-level-4 unique identities currently in the level-7 mining audit:
 | 25 | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS - Refresh and verify level-1-8 full-support artifacts | done | L18GATE-01-LEVEL17-FULL-SUPPORT-ARTIFACTS, L8FULL-01-CLASS-TABLE-SUMMARY-CLOSURE, L8FULL-02-REPEATED-ASI-GRANT-OCCURRENCES, L8FULL-03-NUMERIC-PROGRESSION-DELTAS, L8FULL-04-DRUID-WILD-SHAPE-FLY-SPEED-THRESHOLD, L8FULL-05-SPELL-LEVEL4-CARRY-FORWARD | Serializes generated level-1-8 artifacts. |
 | 26 | L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION - Extend ultra-golden scope through level 8 | done | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS | Adds level-1-7 and level-1-8 to the aggregate without weakening prior scopes. |
 | 27 | L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS - Validate MCP evidence and required flows for level 7-8 scope | done | L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION | Adds or classifies MCP vertical evidence only after support artifacts exist. |
-| 28 | L18GATE-05-CLEANROOM-SOURCE-QNT-READINESS - Refresh cleanroom and source-QNT readiness evidence | ready-for-implementation | L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION | Source/accounting obligation only; no target replay claim unless actually run. |
+| 28 | L18GATE-05-CLEANROOM-SOURCE-QNT-READINESS - Refresh cleanroom and source-QNT readiness evidence | done | L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION | Source/accounting readiness verified; no target replay evidence claimed. |
 | 29 | L18VERIFY-01-QNT-MBT-CLOSURE-REVIEW - Run focused QNT/MBT closure review for changed runtime behavior | ready-for-implementation | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS | Runs focused parity verification only for changed runtime/QNT behavior. |
 | 30 | L18VERIFY-02-RAW-UBIQUITOUS-LANGUAGE-REVIEW - Run RAW and ubiquitous-language reviewer-loop convergence | ready-for-implementation | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS | Confirms every modeled rule traces to SRD text and repo terminology. |
 | 31 | L18VERIFY-03-ARCHITECTURE-CONNASCENCE-REVIEW - Run architecture and connascence review convergence | ready-for-implementation | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS | Checks duplicate state, authored-identity dispatch, and distant coupling. |
@@ -1990,7 +1990,7 @@ Plan Impact:
 
 ### Task 28 - L18GATE-05-CLEANROOM-SOURCE-QNT-READINESS
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on: `L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION`
 
@@ -2030,7 +2030,9 @@ Verification:
 
 Plan Impact:
 
-- Update-required if readiness blockers need concrete tasks.
+- Source/accounting readiness passed with no source-QNT blocker named.
+- No target replay evidence was run or claimed.
+- Verification: `pnpm cleanroom-branch-coverage:check`, `pnpm rules-kernel-coverage:check`, and `pnpm unit-profile-coverage:check`.
 
 ### Task 29 - L18VERIFY-01-QNT-MBT-CLOSURE-REVIEW
 
