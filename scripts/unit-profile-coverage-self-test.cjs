@@ -26,6 +26,7 @@ const {
   buildSrdAuthoredProductReadiness,
   renderLevel16FullSupport,
   strictStatusForUnitForTest,
+  validateLevelEightSpellLevelFourCarryForward,
 } = require("./level1-full-support-report.cjs");
 const {
   buildRulesKernelProfileJoin,
@@ -264,6 +265,79 @@ function assertLaterLevelOnlyScopeAccounting() {
   if (level5FollowUpStatus.status !== "blocked-follow-up-split") {
     fail(
       `Self-test failed: expected in-scope later-level residual with follow-up split to close as blocked-follow-up-split, got ${JSON.stringify(level5FollowUpStatus)}`,
+    );
+  }
+}
+
+function assertLevelEightSpellLevelFourCarryForwardValidation() {
+  const level17FullSupport = {
+    claimGate: { status: "pass" },
+    frontierRows: [
+      {
+        unitId: "fixture_level_four_spell",
+        status: "closed-outside-battle-runtime-boundary",
+        sourceRows: [
+          {
+            id: "fixture:spell-level-4:fixture_level_four_spell",
+            levelBand: "spell-level-4",
+          },
+        ],
+      },
+    ],
+  };
+  const level18FullSupport = {
+    claimGate: { status: "pass" },
+    frontierRows: [
+      {
+        unitId: "fixture_level_four_spell",
+        status: "closed-outside-battle-runtime-boundary",
+        sourceRows: [
+          {
+            id: "fixture:spell-level-4:fixture_level_four_spell",
+            levelBand: "spell-level-4",
+          },
+          {
+            id: "fixture:level-8:fixture_level_eight_row",
+            levelBand: "level-8",
+          },
+        ],
+      },
+    ],
+  };
+  const passingIssues = validateLevelEightSpellLevelFourCarryForward({
+    level17FullSupport,
+    level18FullSupport,
+  });
+  if (passingIssues.length !== 0) {
+    fail(
+      `Self-test failed: expected level-8 spell-level-4 carry-forward validation to pass, got ${JSON.stringify(passingIssues)}`,
+    );
+  }
+  const failingIssues = validateLevelEightSpellLevelFourCarryForward({
+    level17FullSupport,
+    level18FullSupport: {
+      claimGate: { status: "blocked" },
+      frontierRows: [
+        {
+          unitId: "fixture_level_four_spell",
+          status: "open-profile-accounting",
+          sourceRows: [
+            {
+              id: "fixture:spell-level-4:fixture_level_four_spell",
+              levelBand: "spell-level-4",
+            },
+          ],
+        },
+      ],
+    },
+  });
+  if (
+    failingIssues.length !== 2 ||
+    !failingIssues.some((issue) => issue.includes("claim gate must pass")) ||
+    !failingIssues.some((issue) => issue.includes("must carry forward"))
+  ) {
+    fail(
+      `Self-test failed: expected level-8 spell-level-4 carry-forward validation failures, got ${JSON.stringify(failingIssues)}`,
     );
   }
 }
@@ -1164,6 +1238,7 @@ function runSelfTest(root) {
     "Strict Character Levels 1-8 scope requires generated level-8 inventory rows; got 0.",
   );
   assertLaterLevelOnlyScopeAccounting();
+  assertLevelEightSpellLevelFourCarryForwardValidation();
   assertSelectionGrantContainerScopeAccounting();
   assertMindSpikeDeferredSelectedIdentityGate();
   assertSelectedIdentityMetricExcludesWholeClaimNotApplicable();

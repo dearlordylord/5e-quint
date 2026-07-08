@@ -244,6 +244,11 @@ function countCoverage(numerator, denominator) {
   };
 }
 
+function sameStrings(left, right) {
+  if (left.length !== right.length) return false;
+  return left.every((value, index) => value === right[index]);
+}
+
 function inventoryRowsByCandidateId(rows) {
   return rows.reduce((groups, row) => {
     const current = groups.get(row.candidateUnitId) ?? [];
@@ -1513,6 +1518,47 @@ function buildLevel18FullSupport(matrix, srdUnitInventory, options = {}) {
   );
 }
 
+function spellLevelFourFrontierSignatures(report) {
+  return report.frontierRows
+    .map((row) => {
+      const spellLevelFourSourceIds = row.sourceRows
+        .filter((sourceRow) => sourceRow.levelBand === "spell-level-4")
+        .map((sourceRow) => sourceRow.id)
+        .sort();
+      if (spellLevelFourSourceIds.length === 0) return undefined;
+      return `${row.unitId}:${row.status}:${spellLevelFourSourceIds.join(",")}`;
+    })
+    .filter(Boolean)
+    .sort();
+}
+
+function validateLevelEightSpellLevelFourCarryForward({
+  level17FullSupport,
+  level18FullSupport,
+}) {
+  const issues = [];
+  if (level18FullSupport.claimGate.status !== "pass") {
+    issues.push(
+      "level-1-8 full-support claim gate must pass after carrying forward spell-level-4 closure.",
+    );
+  }
+  const level17SpellFourSignatures =
+    spellLevelFourFrontierSignatures(level17FullSupport);
+  const level18SpellFourSignatures =
+    spellLevelFourFrontierSignatures(level18FullSupport);
+  if (level17SpellFourSignatures.length === 0) {
+    issues.push(
+      "level-1-7 full-support report must contain spell-level-4 frontier signatures before level-1-8 carry-forward can be validated.",
+    );
+  }
+  if (!sameStrings(level17SpellFourSignatures, level18SpellFourSignatures)) {
+    issues.push(
+      `level-1-8 spell-level-4 frontier must carry forward level-1-7 closure without reopening or duplicating rows: expected ${level17SpellFourSignatures.join("; ")}, got ${level18SpellFourSignatures.join("; ")}.`,
+    );
+  }
+  return issues;
+}
+
 function md(value) {
   return String(value ?? "")
     .replace(/\n/g, " ")
@@ -1896,6 +1942,7 @@ module.exports = {
   buildLevel16FullSupport,
   buildLevel17FullSupport,
   buildLevel18FullSupport,
+  validateLevelEightSpellLevelFourCarryForward,
   buildSrdAuthoredProductReadiness,
   buildSelectedIdentityReadiness,
   strictStatusForUnitForTest: (unit, maxCharacterLevel) =>

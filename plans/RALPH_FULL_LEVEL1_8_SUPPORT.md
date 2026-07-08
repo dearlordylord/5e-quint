@@ -139,13 +139,13 @@
     {
       "number": 23,
       "id": "L8FULL-05-SPELL-LEVEL4-CARRY-FORWARD",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Carry spell-level-4 closure into the level-8 claim"
     },
     {
       "number": 24,
       "id": "L18GATE-01-LEVEL17-FULL-SUPPORT-ARTIFACTS",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Refresh and verify level-1-7 full-support artifacts"
     },
     {
@@ -348,7 +348,7 @@ Spell-level-4 unique identities currently in the level-7 mining audit:
 | 20 | L8FULL-02-REPEATED-ASI-GRANT-OCCURRENCES - Close the twelve level-8 repeated Ability Score Improvement rows | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Repeated ASI occurrence closure across all SRD classes. |
 | 21 | L8FULL-03-NUMERIC-PROGRESSION-DELTAS - Close level-8 class numeric progression deltas | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Prepared spells, spell slots, points/resources, and table counters. |
 | 22 | L8FULL-04-DRUID-WILD-SHAPE-FLY-SPEED-THRESHOLD - Audit Druid Wild Shape Fly Speed threshold at level 8 | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Level-8 threshold changes form eligibility, not active-form persistence. |
-| 23 | L8FULL-05-SPELL-LEVEL4-CARRY-FORWARD - Carry spell-level-4 closure into the level-8 claim | ready-for-implementation | L7FULL-14-SPELL-LEVEL4-STRICT-CLOSURE, L8FULL-03-NUMERIC-PROGRESSION-DELTAS | Ensures level 8 does not reopen spell-level-4 pressure. |
+| 23 | L8FULL-05-SPELL-LEVEL4-CARRY-FORWARD - Carry spell-level-4 closure into the level-8 claim | done | L7FULL-14-SPELL-LEVEL4-STRICT-CLOSURE, L8FULL-03-NUMERIC-PROGRESSION-DELTAS | Ensures level 8 does not reopen spell-level-4 pressure. |
 | 24 | L18GATE-01-LEVEL17-FULL-SUPPORT-ARTIFACTS - Refresh and verify level-1-7 full-support artifacts | ready-for-implementation | L7FULL-01-CLASS-TABLE-SUMMARY-CLOSURE, L7FULL-03-MONK-EVASION-REUSE-ADMISSION, L7FULL-04-FIGHTER-ADDITIONAL-FIGHTING-STYLE, L7FULL-05-CLERIC-BLESSED-STRIKES, L7FULL-06-DRUID-ELEMENTAL-FURY, L7FULL-07-BARBARIAN-INSTINCTIVE-POUNCE, L7FULL-08-SORCERER-SORCERY-INCARNATE, L7FULL-09-BARBARIAN-FERAL-INSTINCT, L7FULL-10-BARD-COUNTERCHARM, L7FULL-11-PALADIN-AURA-OF-DEVOTION, L7FULL-12-RANGER-DEFENSIVE-TACTICS, L7FULL-13-ROGUE-RELIABLE-TALENT, L7FULL-14-SPELL-LEVEL4-STRICT-CLOSURE | Serializes generated level-1-7 artifacts after all row closures. |
 | 25 | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS - Refresh and verify level-1-8 full-support artifacts | blocked | L18GATE-01-LEVEL17-FULL-SUPPORT-ARTIFACTS, L8FULL-01-CLASS-TABLE-SUMMARY-CLOSURE, L8FULL-02-REPEATED-ASI-GRANT-OCCURRENCES, L8FULL-03-NUMERIC-PROGRESSION-DELTAS, L8FULL-04-DRUID-WILD-SHAPE-FLY-SPEED-THRESHOLD, L8FULL-05-SPELL-LEVEL4-CARRY-FORWARD | Serializes generated level-1-8 artifacts. |
 | 26 | L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION - Extend ultra-golden scope through level 8 | blocked | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS | Adds level-1-7 and level-1-8 to the aggregate without weakening prior scopes. |
@@ -1740,7 +1740,7 @@ Plan Impact:
 
 ### Task 23 - L8FULL-05-SPELL-LEVEL4-CARRY-FORWARD
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on: `L7FULL-14-SPELL-LEVEL4-STRICT-CLOSURE`, `L8FULL-03-NUMERIC-PROGRESSION-DELTAS`
 
@@ -1778,16 +1778,19 @@ Verification:
 
 Plan Impact:
 
-- Update-required if level 8 creates additional spell pressure beyond
-  spell-level-4 carry-forward.
+- `applied`: level-1-8 full support now validates that spell-level-4 frontier
+  signatures carry forward exactly from level-1-7 by Unit id, strict status, and
+  spell-level-4 source-row ids.
+- Added reusable checker/self-test coverage for the carry-forward invariant and
+  for the level-1-8 claim gate remaining `pass`; no parallel spell-level-4
+  artifact was introduced.
+- Verification: `pnpm unit-profile-coverage:check:self-test`,
+  `pnpm unit-profile-coverage:check --write`,
+  `pnpm unit-profile-coverage:check`, `git diff --check`.
 
 ### Task 24 - L18GATE-01-LEVEL17-FULL-SUPPORT-ARTIFACTS
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: waits for all level-7 closure tasks.
+Status: `ready-for-implementation`
 
 Depends on: `L7FULL-01-CLASS-TABLE-SUMMARY-CLOSURE`, `L7FULL-03-MONK-EVASION-REUSE-ADMISSION`, `L7FULL-04-FIGHTER-ADDITIONAL-FIGHTING-STYLE`, `L7FULL-05-CLERIC-BLESSED-STRIKES`, `L7FULL-06-DRUID-ELEMENTAL-FURY`, `L7FULL-07-BARBARIAN-INSTINCTIVE-POUNCE`, `L7FULL-08-SORCERER-SORCERY-INCARNATE`, `L7FULL-09-BARBARIAN-FERAL-INSTINCT`, `L7FULL-10-BARD-COUNTERCHARM`, `L7FULL-11-PALADIN-AURA-OF-DEVOTION`, `L7FULL-12-RANGER-DEFENSIVE-TACTICS`, `L7FULL-13-ROGUE-RELIABLE-TALENT`, `L7FULL-14-SPELL-LEVEL4-STRICT-CLOSURE`
 

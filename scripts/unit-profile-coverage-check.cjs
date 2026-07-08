@@ -37,6 +37,7 @@ const {
   renderLevel16FullSupport,
   renderLevel17FullSupport,
   renderLevel18FullSupport,
+  validateLevelEightSpellLevelFourCarryForward,
 } = require("./level1-full-support-report.cjs");
 const {
   buildSrdUnitInventory,
@@ -374,6 +375,10 @@ function main() {
         level17FullSupport,
         unitClaims,
         unitEvidence,
+      }),
+      validateLevelEightSpellLevelFourCarryForward({
+        level17FullSupport,
+        level18FullSupport,
       }),
     );
   if (postBuildIssues.length > 0) {
