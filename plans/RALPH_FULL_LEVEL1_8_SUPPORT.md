@@ -151,13 +151,13 @@
     {
       "number": 25,
       "id": "L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Refresh and verify level-1-8 full-support artifacts"
     },
     {
       "number": 26,
       "id": "L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Extend ultra-golden scope through level 8"
     },
     {
@@ -350,8 +350,8 @@ Spell-level-4 unique identities currently in the level-7 mining audit:
 | 22 | L8FULL-04-DRUID-WILD-SHAPE-FLY-SPEED-THRESHOLD - Audit Druid Wild Shape Fly Speed threshold at level 8 | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Level-8 threshold changes form eligibility, not active-form persistence. |
 | 23 | L8FULL-05-SPELL-LEVEL4-CARRY-FORWARD - Carry spell-level-4 closure into the level-8 claim | done | L7FULL-14-SPELL-LEVEL4-STRICT-CLOSURE, L8FULL-03-NUMERIC-PROGRESSION-DELTAS | Ensures level 8 does not reopen spell-level-4 pressure. |
 | 24 | L18GATE-01-LEVEL17-FULL-SUPPORT-ARTIFACTS - Refresh and verify level-1-7 full-support artifacts | done | L7FULL-01-CLASS-TABLE-SUMMARY-CLOSURE, L7FULL-03-MONK-EVASION-REUSE-ADMISSION, L7FULL-04-FIGHTER-ADDITIONAL-FIGHTING-STYLE, L7FULL-05-CLERIC-BLESSED-STRIKES, L7FULL-06-DRUID-ELEMENTAL-FURY, L7FULL-07-BARBARIAN-INSTINCTIVE-POUNCE, L7FULL-08-SORCERER-SORCERY-INCARNATE, L7FULL-09-BARBARIAN-FERAL-INSTINCT, L7FULL-10-BARD-COUNTERCHARM, L7FULL-11-PALADIN-AURA-OF-DEVOTION, L7FULL-12-RANGER-DEFENSIVE-TACTICS, L7FULL-13-ROGUE-RELIABLE-TALENT, L7FULL-14-SPELL-LEVEL4-STRICT-CLOSURE | Serializes generated level-1-7 artifacts after all row closures. |
-| 25 | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS - Refresh and verify level-1-8 full-support artifacts | ready-for-implementation | L18GATE-01-LEVEL17-FULL-SUPPORT-ARTIFACTS, L8FULL-01-CLASS-TABLE-SUMMARY-CLOSURE, L8FULL-02-REPEATED-ASI-GRANT-OCCURRENCES, L8FULL-03-NUMERIC-PROGRESSION-DELTAS, L8FULL-04-DRUID-WILD-SHAPE-FLY-SPEED-THRESHOLD, L8FULL-05-SPELL-LEVEL4-CARRY-FORWARD | Serializes generated level-1-8 artifacts. |
-| 26 | L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION - Extend ultra-golden scope through level 8 | blocked | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS | Adds level-1-7 and level-1-8 to the aggregate without weakening prior scopes. |
+| 25 | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS - Refresh and verify level-1-8 full-support artifacts | done | L18GATE-01-LEVEL17-FULL-SUPPORT-ARTIFACTS, L8FULL-01-CLASS-TABLE-SUMMARY-CLOSURE, L8FULL-02-REPEATED-ASI-GRANT-OCCURRENCES, L8FULL-03-NUMERIC-PROGRESSION-DELTAS, L8FULL-04-DRUID-WILD-SHAPE-FLY-SPEED-THRESHOLD, L8FULL-05-SPELL-LEVEL4-CARRY-FORWARD | Serializes generated level-1-8 artifacts. |
+| 26 | L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION - Extend ultra-golden scope through level 8 | ready-for-implementation | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS | Adds level-1-7 and level-1-8 to the aggregate without weakening prior scopes. |
 | 27 | L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS - Validate MCP evidence and required flows for level 7-8 scope | blocked | L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION | Adds or classifies MCP vertical evidence only after support artifacts exist. |
 | 28 | L18GATE-05-CLEANROOM-SOURCE-QNT-READINESS - Refresh cleanroom and source-QNT readiness evidence | blocked | L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION | Source/accounting obligation only; no target replay claim unless actually run. |
 | 29 | L18VERIFY-01-QNT-MBT-CLOSURE-REVIEW - Run focused QNT/MBT closure review for changed runtime behavior | blocked | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS | Runs focused parity verification only for changed runtime/QNT behavior. |
@@ -1836,7 +1836,7 @@ Plan Impact:
 
 ### Task 25 - L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on: `L18GATE-01-LEVEL17-FULL-SUPPORT-ARTIFACTS`, `L8FULL-01-CLASS-TABLE-SUMMARY-CLOSURE`, `L8FULL-02-REPEATED-ASI-GRANT-OCCURRENCES`, `L8FULL-03-NUMERIC-PROGRESSION-DELTAS`, `L8FULL-04-DRUID-WILD-SHAPE-FLY-SPEED-THRESHOLD`, `L8FULL-05-SPELL-LEVEL4-CARRY-FORWARD`
 
@@ -1873,15 +1873,17 @@ Verification:
 
 Plan Impact:
 
-- Update-required if blockers remain and need concrete follow-up tasks.
+- `applied`: refreshed the generated level-1-8 full-support artifacts; they
+  remained stable with a passing claim gate.
+- Verified strict blockers 0, selected-identity blockers 0, and
+  SRD-authored-readiness blockers 0 for `level1-8-full-support.json`; the
+  level-1-7 claim gate remained passing.
+- Verification: `pnpm unit-profile-coverage:check --write`,
+  `pnpm unit-profile-coverage:check`, `git diff --check`.
 
 ### Task 26 - L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: waits for `L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS`.
+Status: `ready-for-implementation`
 
 Depends on: `L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS`
 
