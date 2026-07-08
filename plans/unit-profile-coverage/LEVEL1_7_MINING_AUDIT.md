@@ -43,8 +43,8 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | --- | ---: |
 | catalog-authored-review-required | 49 |
 | catalog-installed-owner-evidence-present | 503 |
-| catalog-only/dead-for-now | 223 |
-| class-progression-follow-up-required | 9 |
+| catalog-only/dead-for-now | 224 |
+| class-progression-follow-up-required | 8 |
 | missing-authored-record | 32 |
 | non-runtime | 84 |
 
@@ -59,10 +59,10 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 129 |
+| not-recorded | 128 |
 | profile-subset-supported | 59 |
 | supported-profile | 310 |
-| unsupported-profile | 402 |
+| unsupported-profile | 403 |
 
 ### Battle Readiness Snapshot
 
@@ -423,7 +423,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Cleric level 5 feature table row | level-5 | character-level | character-creation or progression mechanic | `class_cleric` | `.references/srd-5.2.1/Classes/Cleric.md:39` |  | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
 | Cleric Blessed Healer | level-6 | character-level | class feature | `cleric_blessed_healer` | `.references/srd-5.2.1/Classes/Cleric.md:334` |  | present | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | outside-battle-runtime: future-owner-before-SDK battle-runtime spell healing rider owner plus selected Life Domain feature admission owner and existing spell Hit Point restoration profiles | SRD Blessed Healer triggers immediately after the Cleric casts a spell with a Spell Slot that restores Hit Points to one or more creatures other than the caster, then restores Hit Points to the caster equal to 2 plus that Spell Slot level. Existing spell.hit-point-restoration profiles own Spell Slot spend, target healing facts, and Hit Point restoration for Cure Wounds, Healing Word, Mass Cure Wounds, and Mass Healing Word, and the Disciple of Life spell-slot healing modifier owner adds 2 plus Spell Slot level to each healed target. They do not admit a selected-feature, post-cast self-heal once per qualifying spell cast. A future owner must consume typed Surface facts for the selected Life Domain feature, the existing Spell Slot invocation level, and the resolved healed-target set with at least one non-caster target, then apply caster Hit Point restoration through the shared healing transition without duplicating Spell Slot state, prepared Spell Access, healing target state, caster Hit Point state, subclass selection state, or dispatching on Cleric, Life Domain, Blessed Healer, or healing spell authored identity. |
 | Cleric level 6 feature table row | level-6 | character-level | character-creation or progression mechanic | `class_cleric` | `.references/srd-5.2.1/Classes/Cleric.md:40` |  | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
-| Cleric Blessed Strikes | level-7 | character-level | class feature | `cleric_blessed_strikes` | `.references/srd-5.2.1/Classes/Cleric.md:114` |  | present | not-installed | not-recorded | class-progression-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
+| Cleric Blessed Strikes | level-7 | character-level | class feature | `cleric_blessed_strikes` | `.references/srd-5.2.1/Classes/Cleric.md:114` |  | present | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | outside-battle-runtime: future Blessed Strikes selected-option owner plus unit-feature weapon-hit damage rider and cantrip damage ability-modifier owners | A future owner must represent the character's Blessed Strikes option choice as a durable selected feature fact, admit Divine Strike through a generic optional once-per-turn weapon-hit damage rider with caller-chosen Necrotic or Radiant damage, and admit Potent Spellcasting through a generic Cleric-cantrip damage ability-modifier owner. The closure must not store both options as simultaneously executable, collapse the option into inert metadata, copy selected cantrip or weapon damage state, or dispatch on Cleric, Blessed Strikes, Divine Strike, Potent Spellcasting, spell names, or class names in reducers. |
 | Cleric level 7 feature table row | level-7 | character-level | character-creation or progression mechanic | `class_cleric` | `.references/srd-5.2.1/Classes/Cleric.md:41` |  | present | installed | unsupported-profile | non-runtime | not-applicable | outside-battle-runtime: class-progression-accounting | No runtime work; keep classification as explicit closure. |
 | Cleric spell list Guidance | spell-level-0 | spell-level | spell Unit pressure | `guidance` | `.references/srd-5.2.1/Classes/Cleric.md:150` |  | present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | not-recorded | Owner-specific operational evidence is classified and present. |
 | Cleric spell list Light | spell-level-0 | spell-level | spell Unit pressure | `light` | `.references/srd-5.2.1/Classes/Cleric.md:151` |  | present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | not-recorded | Owner-specific operational evidence is classified and present. |

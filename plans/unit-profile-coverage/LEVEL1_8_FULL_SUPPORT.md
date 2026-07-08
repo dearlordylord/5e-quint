@@ -17,7 +17,7 @@ Blockers: strict=19, selected-identity=0, SRD-authored-readiness=0.
 | Strict runtime/profile support | 168/284 (59.2%) |
 | Strict target closure | 265/284 (93.3%) |
 | Selected identity readiness | 194/194 (100%) |
-| Diagnostic product readiness | 822/924 (89%) |
+| Diagnostic product readiness | 823/924 (89.1%) |
 | SRD authored product readiness | 115/115 (100%) |
 | Rules-kernel profile join | 118/118 (100%) |
 | Rules-kernel covered profile join | 118/118 (100%) |
@@ -25,7 +25,7 @@ Blockers: strict=19, selected-identity=0, SRD-authored-readiness=0.
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
-The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 822/924 (89%) while the claim gate reports **blocked** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
+The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 823/924 (89.1%) while the claim gate reports **blocked** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
 
 ### Diagnostic Product Readiness Accounting
 
@@ -34,9 +34,9 @@ Diagnostic product readiness keeps lower-layer planning pressure visible. Rows i
 | Status | Rows |
 | --- | ---: |
 | accepted | 499 |
-| accepted-no-battle-effect | 323 |
+| accepted-no-battle-effect | 324 |
 | battle-runtime-required | 32 |
-| owner-evidence-required | 70 |
+| owner-evidence-required | 69 |
 
 ### Selected Identity Replay Accounting
 
@@ -290,7 +290,7 @@ This gate checks authored records and retained Unit references that must resolve
 | `black_tentacles` | 1 | The SRD row has spell-level-4 spell-list Unit pressure, but no Unit matrix row exists yet. | missing-authored-record | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. | _none_ | Wizard spell list Black Tentacles |
 | `cleric_ability_score_improvement_l8` | 1 | The SRD row has level-8 class-feature pressure, but no Unit matrix row exists yet. | class-progression-follow-up-required | not-recorded | Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. | _none_ | Cleric Ability Score Improvement |
 | `cleric_blessed_healer` | 1 | The SRD row has level-6 class-feature pressure, but no Unit matrix row exists yet. | catalog-only/dead-for-now | outside-battle-runtime: future-owner-before-SDK battle-runtime spell healing rider owner plus selected Life Domain feature admission owner and existing spell Hit Point restoration profiles | SRD Blessed Healer triggers immediately after the Cleric casts a spell with a Spell Slot that restores Hit Points to one or more creatures other than the caster, then restores Hit Points to the caster equal to 2 plus that Spell Slot level. Existing spell.hit-point-restoration profiles own Spell Slot spend, target healing facts, and Hit Point restoration for Cure Wounds, Healing Word, Mass Cure Wounds, and Mass Healing Word, and the Disciple of Life spell-slot healing modifier owner adds 2 plus Spell Slot level to each healed target. They do not admit a selected-feature, post-cast self-heal once per qualifying spell cast. A future owner must consume typed Surface facts for the selected Life Domain feature, the existing Spell Slot invocation level, and the resolved healed-target set with at least one non-caster target, then apply caster Hit Point restoration through the shared healing transition without duplicating Spell Slot state, prepared Spell Access, healing target state, caster Hit Point state, subclass selection state, or dispatching on Cleric, Life Domain, Blessed Healer, or healing spell authored identity. | _none_ | Cleric Blessed Healer |
-| `cleric_blessed_strikes` | 1 | The SRD row has level-7 class-feature pressure, but no Unit matrix row exists yet. | class-progression-follow-up-required | not-recorded | Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. | _none_ | Cleric Blessed Strikes |
+| `cleric_blessed_strikes` | 1 | The SRD row has level-7 class-feature pressure, but no Unit matrix row exists yet. | catalog-only/dead-for-now | outside-battle-runtime: future Blessed Strikes selected-option owner plus unit-feature weapon-hit damage rider and cantrip damage ability-modifier owners | A future owner must represent the character's Blessed Strikes option choice as a durable selected feature fact, admit Divine Strike through a generic optional once-per-turn weapon-hit damage rider with caller-chosen Necrotic or Radiant damage, and admit Potent Spellcasting through a generic Cleric-cantrip damage ability-modifier owner. The closure must not store both options as simultaneously executable, collapse the option into inert metadata, copy selected cantrip or weapon damage state, or dispatch on Cleric, Blessed Strikes, Divine Strike, Potent Spellcasting, spell names, or class names in reducers. | _none_ | Cleric Blessed Strikes |
 | `cleric_sear_undead` | 1 | The SRD row has level-5 class-feature pressure, but no Unit matrix row exists yet. | catalog-only/dead-for-now | resource-option-rider-boundary: future Turn Undead Channel Divinity option execution owner | SRD Sear Undead triggers only when the Cleric uses Turn Undead: it optionally rolls Wisdom-modifier d8s, minimum 1d8, and applies Radiant damage to each Undead that fails that use's Wisdom saving throw, while the damage does not end the turn effect. The future Turn Undead owner must derive Sear Undead from the selected Cleric feature and existing Channel Divinity procedure state instead of adding a separate Sear Undead action, resource, target list, or Turn Undead cleanup rule. | _none_ | Cleric Sear Undead |
 | `confusion` | 4 | The SRD row has spell-level-4 spell-list Unit pressure, but no Unit matrix row exists yet. | missing-authored-record | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. | _none_ | Bard spell list Confusion; Druid spell list Confusion; Sorcerer spell list Confusion; Wizard spell list Confusion |
 | `control_water` | 3 | The SRD row has spell-level-4 spell-list Unit pressure, but no Unit matrix row exists yet. | missing-authored-record | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. | _none_ | Cleric spell list Control Water; Druid spell list Control Water; Wizard spell list Control Water |

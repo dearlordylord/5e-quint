@@ -6251,13 +6251,13 @@
   "metrics": {
     "productReadiness": {
       "denominator": 924,
-      "numerator": 822,
-      "percent": "89%",
+      "numerator": 823,
+      "percent": "89.1%",
       "rowsByStatus": {
         "accepted": 499,
-        "accepted-no-battle-effect": 323,
+        "accepted-no-battle-effect": 324,
         "battle-runtime-required": 32,
-        "owner-evidence-required": 70
+        "owner-evidence-required": 69
       }
     },
     "rulesKernelCoveredProfileJoin": {
@@ -6730,17 +6730,21 @@
         "inventoryAccounting": [
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "outside-battle-runtime",
+              "owner": "future Blessed Strikes selected-option owner plus unit-feature weapon-hit damage rider and cantrip damage ability-modifier owners",
+              "reason": "A future owner must represent the character's Blessed Strikes option choice as a durable selected feature fact, admit Divine Strike through a generic optional once-per-turn weapon-hit damage rider with caller-chosen Necrotic or Radiant damage, and admit Potent Spellcasting through a generic Cleric-cantrip damage ability-modifier owner. The closure must not store both options as simultaneously executable, collapse the option into inert metadata, copy selected cantrip or weapon damage state, or dispatch on Cleric, Blessed Strikes, Divine Strike, Potent Spellcasting, spell names, or class names in reducers.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
             "battleReadinessStatus": "not-applicable",
             "catalogAdmissionState": "not-installed",
             "concept": "Cleric Blessed Strikes",
-            "finalDisposition": "class-progression-follow-up-required",
+            "finalDisposition": "catalog-only/dead-for-now",
             "levelBand": "level-7",
-            "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+            "nextAction": "A future owner must represent the character's Blessed Strikes option choice as a durable selected feature fact, admit Divine Strike through a generic optional once-per-turn weapon-hit damage rider with caller-chosen Necrotic or Radiant damage, and admit Potent Spellcasting through a generic Cleric-cantrip damage ability-modifier owner. The closure must not store both options as simultaneously executable, collapse the option into inert metadata, copy selected cantrip or weapon damage state, or dispatch on Cleric, Blessed Strikes, Divine Strike, Potent Spellcasting, spell names, or class names in reducers.",
             "rowId": "srd521:classes/cleric:level-7:class-feature-grant:cleric_blessed_strikes",
             "rowKind": "class-feature-grant",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           }
         ],
         "reason": "The SRD row has level-7 class-feature pressure, but no Unit matrix row exists yet.",
