@@ -156,6 +156,13 @@ const expectedLevelEightProgressionDeltaSignatures = new Map([
     ["class-table-column:Prepared Spells:11->12", "spell-slot-count:4:1->2"],
   ],
 ]);
+const expectedDruidLevelEightWildShapeThreshold = {
+  candidateUnitId: "druid_wild_shape",
+  flySpeed: "Yes",
+  knownForms: "8",
+  level: 8,
+  maxCr: "1",
+};
 const subclassSpellAccessFeatureNames = new Set([
   "Circle of the Land Spells",
   "Draconic Spells",
@@ -5488,10 +5495,19 @@ function validateSrdUnitInventory(report) {
   );
   if (
     druidWildShapeThreshold === undefined ||
-    druidWildShapeThreshold.flySpeed !== "Yes"
+    druidWildShapeThreshold.candidateUnitId !==
+      expectedDruidLevelEightWildShapeThreshold.candidateUnitId ||
+    druidWildShapeThreshold.flySpeed !==
+      expectedDruidLevelEightWildShapeThreshold.flySpeed ||
+    druidWildShapeThreshold.knownForms !==
+      expectedDruidLevelEightWildShapeThreshold.knownForms ||
+    druidWildShapeThreshold.level !==
+      expectedDruidLevelEightWildShapeThreshold.level ||
+    druidWildShapeThreshold.maxCr !==
+      expectedDruidLevelEightWildShapeThreshold.maxCr
   ) {
     issues.push(
-      "Druid level-8 class-table-summary row must carry the Wild Shape Beast Shapes Fly Speed threshold.",
+      "Druid level-8 class-table-summary row must carry the exact Wild Shape Beast Shapes threshold for known forms, Max CR, and Fly Speed eligibility.",
     );
   }
   const classProgressionFeatureCandidateIds = new Map(
