@@ -347,8 +347,8 @@
       "catalog-installed-owner-evidence-present": 2
     },
     "levelSevenClassRowsByDisposition": {
-      "class-progression-follow-up-required": 6,
-      "catalog-only/dead-for-now": 4,
+      "class-progression-follow-up-required": 5,
+      "catalog-only/dead-for-now": 5,
       "non-runtime": 12,
       "catalog-installed-owner-evidence-present": 2
     },
@@ -375,8 +375,8 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 503,
       "non-runtime": 96,
-      "catalog-only/dead-for-now": 226,
-      "class-progression-follow-up-required": 18,
+      "catalog-only/dead-for-now": 227,
+      "class-progression-follow-up-required": 17,
       "catalog-authored-review-required": 49,
       "missing-authored-record": 32
     },
@@ -28805,9 +28805,16 @@
         "state": "not-installed",
         "unitId": "sorcerer_sorcery_incarnate"
       },
-      "finalDisposition": "class-progression-follow-up-required",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "outside-battle-runtime",
+        "owner": "future Innate Sorcery alternate-cost activation owner plus active-Innate-Sorcery Metamagic option-limit owner",
+        "reason": "A future owner must consume the selected Sorcery Incarnate source fact, the existing sorcerer_innate_sorcery Bonus Action activation/use-count owner, and the existing sorcerer_font_of_magic shared Sorcery Point point-pool bridge to offer the 2-Sorcery-Point activation only when no Innate Sorcery uses remain. A sibling Metamagic governor owner must consume the existing Innate Sorcery active ongoing feature occurrence and the selected sorcerer_metamagic option facts to allow up to two Metamagic options on each spell while Innate Sorcery is active, while still enforcing known-option, affordability, option-specific support, and explicit stacking rules. The closure must not restore Sorcery Points, create a Sorcery Incarnate-local Sorcery Point pool, duplicate Innate Sorcery active state, weaken unsupported Metamagic option rejection into inert labels, or dispatch on Sorcerer, Sorcery Incarnate, Innate Sorcery, Metamagic, or option authored identity."
+      },
       "ownerEvidence": [],
-      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+      "nextAction": "A future owner must consume the selected Sorcery Incarnate source fact, the existing sorcerer_innate_sorcery Bonus Action activation/use-count owner, and the existing sorcerer_font_of_magic shared Sorcery Point point-pool bridge to offer the 2-Sorcery-Point activation only when no Innate Sorcery uses remain. A sibling Metamagic governor owner must consume the existing Innate Sorcery active ongoing feature occurrence and the selected sorcerer_metamagic option facts to allow up to two Metamagic options on each spell while Innate Sorcery is active, while still enforcing known-option, affordability, option-specific support, and explicit stacking rules. The closure must not restore Sorcery Points, create a Sorcery Incarnate-local Sorcery Point pool, duplicate Innate Sorcery active state, weaken unsupported Metamagic option rejection into inert labels, or dispatch on Sorcerer, Sorcery Incarnate, Innate Sorcery, Metamagic, or option authored identity."
     },
     {
       "id": "srd521:classes/sorcerer:level-7:class-table-summary:sorcerer_level_7_feature_table_row",

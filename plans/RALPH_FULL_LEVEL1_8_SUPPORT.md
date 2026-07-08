@@ -73,7 +73,7 @@
     {
       "number": 12,
       "id": "L7FULL-08-SORCERER-SORCERY-INCARNATE",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Resolve Sorcerer Sorcery Incarnate level-7 accounting"
     },
     {
@@ -337,7 +337,7 @@ Spell-level-4 unique identities currently in the level-7 mining audit:
 | 9 | L7FULL-05-CLERIC-BLESSED-STRIKES - Resolve Cleric Blessed Strikes level-7 accounting | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Explicit future-owner split for selected-option damage riders. |
 | 10 | L7FULL-06-DRUID-ELEMENTAL-FURY - Resolve Druid Elemental Fury level-7 accounting | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Explicit future-owner split for selected-option cantrip and Wild Shape attack riders. |
 | 11 | L7FULL-07-BARBARIAN-INSTINCTIVE-POUNCE - Resolve Barbarian Instinctive Pounce level-7 accounting | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Rage-entry activation rider closed to future movement owner. |
-| 12 | L7FULL-08-SORCERER-SORCERY-INCARNATE - Resolve Sorcerer Sorcery Incarnate level-7 accounting | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Innate Sorcery/Sorcery Point closure or runtime support. |
+| 12 | L7FULL-08-SORCERER-SORCERY-INCARNATE - Resolve Sorcerer Sorcery Incarnate level-7 accounting | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Split future owners for Innate Sorcery alternate spend and active Metamagic option limit. |
 | 13 | L7FULL-09-BARBARIAN-FERAL-INSTINCT - Close Barbarian Feral Instinct at the Initiative boundary | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Initiative is not ordinary battle-turn runtime unless promoted by a start-combat owner. |
 | 14 | L7FULL-10-BARD-COUNTERCHARM - Close Bard Countercharm with explicit reaction/save-reroll ownership | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Reaction timing and Charmed/Frightened save-failure trigger must be typed or future-owned. |
 | 15 | L7FULL-11-PALADIN-AURA-OF-DEVOTION - Close Paladin Aura of Devotion with explicit aura ownership | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Aura membership and immunity projection are future-owner facts unless implemented. |
@@ -1044,7 +1044,7 @@ Plan Impact:
 
 ### Task 12 - L7FULL-08-SORCERER-SORCERY-INCARNATE
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on: `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`
 
@@ -1060,8 +1060,23 @@ Starting Points:
 
 Output:
 
-- Checker-visible accounting for restored Sorcery Points, Innate Sorcery
+- Checker-visible accounting for spending Sorcery Points, Innate Sorcery
   activation, and multi-Metamagic interaction, or a precise future-owner split.
+
+Completion Evidence:
+
+- Added an `unsupported-profile` Unit claim for `sorcerer_sorcery_incarnate`
+  with an `outside-battle-runtime` closure.
+- The closure names two future owners: an Innate Sorcery alternate-cost
+  activation owner and an active-Innate-Sorcery Metamagic option-limit owner.
+- Regenerated the SRD inventory and level-1-7/level-1-8 support reports.
+- `sorcerer_sorcery_incarnate` now remains not installed, is not counted as a
+  supported runtime profile, and is closed by explicit future-owner evidence
+  that threads existing `sorcerer_innate_sorcery`, `sorcerer_font_of_magic`,
+  and `sorcerer_metamagic` facts.
+- Corrected the plan's stale "restored Sorcery Points" wording: RAW spends 2
+  Sorcery Points to activate Innate Sorcery when no uses remain; it does not
+  restore Sorcery Points.
 
 Acceptance:
 
@@ -1078,12 +1093,25 @@ Forbidden Shortcuts:
 Verification:
 
 - RAW check against Sorcery Incarnate and referenced Sorcerer features.
-- Focused runtime/QNT tests if behavior is promoted.
+- RAW checked `.references/srd-5.2.1/Classes/Sorcerer.md:83-101`,
+  `.references/srd-5.2.1/Classes/Sorcerer.md:103-127`, and
+  `.references/srd-5.2.1/Classes/Sorcerer.md:131-136`; Ubiquitous Language
+  checked Pool, Spend, Active Ongoing Feature Occurrence, Bonus Action, and
+  Spell Invocation.
+- Reviewed existing `sorcerer_innate_sorcery`, `sorcerer_font_of_magic`, and
+  `sorcerer_metamagic` Unit claims, plus
+  `scripts/content-surface-survey/results-srd/sorcerer_sorcery_incarnate_l7/result.json`
+  and `verdict.json`.
+- No focused runtime/QNT tests were run because no runtime behavior was
+  promoted.
+- `pnpm unit-profile-coverage:check --write`
 - `pnpm unit-profile-coverage:check`
 
 Plan Impact:
 
-- Update-required if Metamagic accounting needs separate follow-up tasks.
+- `applied`: future promotion should keep Sorcery Incarnate as modifiers on
+  existing Innate Sorcery, Font of Magic, and Metamagic owners rather than a
+  standalone Sorcery Incarnate pool, active-state record, or status label.
 
 ### Task 13 - L7FULL-09-BARBARIAN-FERAL-INSTINCT
 

@@ -6251,13 +6251,13 @@
   "metrics": {
     "productReadiness": {
       "denominator": 900,
-      "numerator": 813,
-      "percent": "90.3%",
+      "numerator": 814,
+      "percent": "90.4%",
       "rowsByStatus": {
         "accepted": 499,
-        "accepted-no-battle-effect": 314,
+        "accepted-no-battle-effect": 315,
         "battle-runtime-required": 32,
-        "owner-evidence-required": 55
+        "owner-evidence-required": 54
       }
     },
     "rulesKernelCoveredProfileJoin": {
@@ -9052,17 +9052,21 @@
         "inventoryAccounting": [
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "outside-battle-runtime",
+              "owner": "future Innate Sorcery alternate-cost activation owner plus active-Innate-Sorcery Metamagic option-limit owner",
+              "reason": "A future owner must consume the selected Sorcery Incarnate source fact, the existing sorcerer_innate_sorcery Bonus Action activation/use-count owner, and the existing sorcerer_font_of_magic shared Sorcery Point point-pool bridge to offer the 2-Sorcery-Point activation only when no Innate Sorcery uses remain. A sibling Metamagic governor owner must consume the existing Innate Sorcery active ongoing feature occurrence and the selected sorcerer_metamagic option facts to allow up to two Metamagic options on each spell while Innate Sorcery is active, while still enforcing known-option, affordability, option-specific support, and explicit stacking rules. The closure must not restore Sorcery Points, create a Sorcery Incarnate-local Sorcery Point pool, duplicate Innate Sorcery active state, weaken unsupported Metamagic option rejection into inert labels, or dispatch on Sorcerer, Sorcery Incarnate, Innate Sorcery, Metamagic, or option authored identity.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
             "battleReadinessStatus": "not-applicable",
             "catalogAdmissionState": "not-installed",
             "concept": "Sorcerer Sorcery Incarnate",
-            "finalDisposition": "class-progression-follow-up-required",
+            "finalDisposition": "catalog-only/dead-for-now",
             "levelBand": "level-7",
-            "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+            "nextAction": "A future owner must consume the selected Sorcery Incarnate source fact, the existing sorcerer_innate_sorcery Bonus Action activation/use-count owner, and the existing sorcerer_font_of_magic shared Sorcery Point point-pool bridge to offer the 2-Sorcery-Point activation only when no Innate Sorcery uses remain. A sibling Metamagic governor owner must consume the existing Innate Sorcery active ongoing feature occurrence and the selected sorcerer_metamagic option facts to allow up to two Metamagic options on each spell while Innate Sorcery is active, while still enforcing known-option, affordability, option-specific support, and explicit stacking rules. The closure must not restore Sorcery Points, create a Sorcery Incarnate-local Sorcery Point pool, duplicate Innate Sorcery active state, weaken unsupported Metamagic option rejection into inert labels, or dispatch on Sorcerer, Sorcery Incarnate, Innate Sorcery, Metamagic, or option authored identity.",
             "rowId": "srd521:classes/sorcerer:level-7:class-feature-grant:sorcerer_sorcery_incarnate",
             "rowKind": "class-feature-grant",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           }
         ],
         "reason": "The SRD row has level-7 class-feature pressure, but no Unit matrix row exists yet.",

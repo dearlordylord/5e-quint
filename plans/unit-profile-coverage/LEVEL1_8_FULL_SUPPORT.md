@@ -17,7 +17,7 @@ Blockers: strict=19, selected-identity=0, SRD-authored-readiness=0.
 | Strict runtime/profile support | 168/284 (59.2%) |
 | Strict target closure | 265/284 (93.3%) |
 | Selected identity readiness | 194/194 (100%) |
-| Diagnostic product readiness | 825/924 (89.3%) |
+| Diagnostic product readiness | 826/924 (89.4%) |
 | SRD authored product readiness | 115/115 (100%) |
 | Rules-kernel profile join | 118/118 (100%) |
 | Rules-kernel covered profile join | 118/118 (100%) |
@@ -25,7 +25,7 @@ Blockers: strict=19, selected-identity=0, SRD-authored-readiness=0.
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
-The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 825/924 (89.3%) while the claim gate reports **blocked** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
+The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 826/924 (89.4%) while the claim gate reports **blocked** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
 
 ### Diagnostic Product Readiness Accounting
 
@@ -34,9 +34,9 @@ Diagnostic product readiness keeps lower-layer planning pressure visible. Rows i
 | Status | Rows |
 | --- | ---: |
 | accepted | 499 |
-| accepted-no-battle-effect | 326 |
+| accepted-no-battle-effect | 327 |
 | battle-runtime-required | 32 |
-| owner-evidence-required | 67 |
+| owner-evidence-required | 66 |
 
 ### Selected Identity Replay Accounting
 
@@ -338,7 +338,7 @@ This gate checks authored records and retained Unit references that must resolve
 | `secret_chest` | 1 | The SRD row has spell-level-4 spell-list Unit pressure, but no Unit matrix row exists yet. | missing-authored-record | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. | _none_ | Wizard spell list Secret Chest |
 | `sorcerer_ability_score_improvement_l8` | 1 | The SRD row has level-8 class-feature pressure, but no Unit matrix row exists yet. | class-progression-follow-up-required | not-recorded | Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. | _none_ | Sorcerer Ability Score Improvement |
 | `sorcerer_elemental_affinity` | 1 | The SRD row has level-6 class-feature pressure, but no Unit matrix row exists yet. | catalog-only/dead-for-now | character-fact-and-runtime-detached-split: future-owner-before-SDK character-sheet-runtime selected Elemental Affinity damage-type owner plus battle-runtime passive Resistance and spell damage-roll modifier owners | SRD Elemental Affinity chooses one of Acid, Cold, Fire, Lightning, or Poison, grants Resistance to that chosen damage type, and lets the Sorcerer add Charisma modifier to one damage roll of a spell that deals that damage type. The local SRD 5.2.1 text does not spend Sorcery Points for this feature. Existing passive damage Resistance support is scoped to fixed or species Draconic Ancestry facts, and existing spell damage owners do not admit a selected class-feature damage-type filter, one-roll-per-spell accounting, or a shared build-time damage-type binding across Resistance and the spell damage rider. A future owner must consume typed Surface facts for the selected Elemental Affinity feature, retain the single chosen damage type as a character-owned source fact, project target-side Resistance through the shared damage adjustment boundary, and project the optional Charisma modifier through the spell damage-roll owner without duplicating Spell Slot state, spell damage dice or totals, character ability state, damage adjustment state, Sorcery Point state, subclass selection state, or dispatching on Sorcerer, Draconic Sorcery, Elemental Affinity, or selected spell authored identity. | _none_ | Sorcerer Elemental Affinity |
-| `sorcerer_sorcery_incarnate` | 1 | The SRD row has level-7 class-feature pressure, but no Unit matrix row exists yet. | class-progression-follow-up-required | not-recorded | Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. | _none_ | Sorcerer Sorcery Incarnate |
+| `sorcerer_sorcery_incarnate` | 1 | The SRD row has level-7 class-feature pressure, but no Unit matrix row exists yet. | catalog-only/dead-for-now | outside-battle-runtime: future Innate Sorcery alternate-cost activation owner plus active-Innate-Sorcery Metamagic option-limit owner | A future owner must consume the selected Sorcery Incarnate source fact, the existing sorcerer_innate_sorcery Bonus Action activation/use-count owner, and the existing sorcerer_font_of_magic shared Sorcery Point point-pool bridge to offer the 2-Sorcery-Point activation only when no Innate Sorcery uses remain. A sibling Metamagic governor owner must consume the existing Innate Sorcery active ongoing feature occurrence and the selected sorcerer_metamagic option facts to allow up to two Metamagic options on each spell while Innate Sorcery is active, while still enforcing known-option, affordability, option-specific support, and explicit stacking rules. The closure must not restore Sorcery Points, create a Sorcery Incarnate-local Sorcery Point pool, duplicate Innate Sorcery active state, weaken unsupported Metamagic option rejection into inert labels, or dispatch on Sorcerer, Sorcery Incarnate, Innate Sorcery, Metamagic, or option authored identity. | _none_ | Sorcerer Sorcery Incarnate |
 | `stone_shape` | 3 | The SRD row has spell-level-4 spell-list Unit pressure, but no Unit matrix row exists yet. | missing-authored-record | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. | _none_ | Cleric spell list Stone Shape; Druid spell list Stone Shape; Wizard spell list Stone Shape |
 | `unseen_servant` | 3 | The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | catalog-only/dead-for-now | not-recorded | Created servant stat block, object-interaction commands, Bonus Action control, HP, and distance-based expiry are summoned helper/exploration state outside promoted runtime owners. | `plans/unit-profile-coverage/frontier-decisions/unseen_servant.md` | Bard spell list Unseen Servant; Warlock spell list Unseen Servant; Wizard spell list Unseen Servant |
 | `vitriolic_sphere` | 2 | The SRD row has spell-level-4 spell-list Unit pressure, but no Unit matrix row exists yet. | missing-authored-record | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. | _none_ | Sorcerer spell list Vitriolic Sphere; Wizard spell list Vitriolic Sphere |

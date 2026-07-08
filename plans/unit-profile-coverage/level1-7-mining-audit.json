@@ -55,8 +55,8 @@
     "rowsByFinalDisposition": {
       "catalog-authored-review-required": 49,
       "catalog-installed-owner-evidence-present": 503,
-      "catalog-only/dead-for-now": 226,
-      "class-progression-follow-up-required": 6,
+      "catalog-only/dead-for-now": 227,
+      "class-progression-follow-up-required": 5,
       "missing-authored-record": 32,
       "non-runtime": 84
     },
@@ -88,10 +88,10 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 126,
+      "not-recorded": 125,
       "profile-subset-supported": 59,
       "supported-profile": 310,
-      "unsupported-profile": 405
+      "unsupported-profile": 406
     }
   },
   "rows": [
@@ -25793,7 +25793,7 @@
         "sourceInventoryRowId": "srd521:classes/sorcerer:level-7:class-feature-grant:sorcerer_sorcery_incarnate",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "A future owner must consume the selected Sorcery Incarnate source fact, the existing sorcerer_innate_sorcery Bonus Action activation/use-count owner, and the existing sorcerer_font_of_magic shared Sorcery Point point-pool bridge to offer the 2-Sorcery-Point activation only when no Innate Sorcery uses remain. A sibling Metamagic governor owner must consume the existing Innate Sorcery active ongoing feature occurrence and the selected sorcerer_metamagic option facts to allow up to two Metamagic options on each spell while Innate Sorcery is active, while still enforcing known-option, affordability, option-specific support, and explicit stacking rules. The closure must not restore Sorcery Points, create a Sorcery Incarnate-local Sorcery Point pool, duplicate Innate Sorcery active state, weaken unsupported Metamagic option rejection into inert labels, or dispatch on Sorcerer, Sorcery Incarnate, Innate Sorcery, Metamagic, or option authored identity.",
       "rowId": "srd521:classes/sorcerer:level-7:class-feature-grant:sorcerer_sorcery_incarnate",
       "rowKind": "class-feature-grant",
       "source": {
@@ -25809,15 +25809,20 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future Innate Sorcery alternate-cost activation owner plus active-Innate-Sorcery Metamagic option-limit owner",
+          "reason": "A future owner must consume the selected Sorcery Incarnate source fact, the existing sorcerer_innate_sorcery Bonus Action activation/use-count owner, and the existing sorcerer_font_of_magic shared Sorcery Point point-pool bridge to offer the 2-Sorcery-Point activation only when no Innate Sorcery uses remain. A sibling Metamagic governor owner must consume the existing Innate Sorcery active ongoing feature occurrence and the selected sorcerer_metamagic option facts to allow up to two Metamagic options on each spell while Innate Sorcery is active, while still enforcing known-option, affordability, option-specific support, and explicit stacking rules. The closure must not restore Sorcery Points, create a Sorcery Incarnate-local Sorcery Point pool, duplicate Innate Sorcery active state, weaken unsupported Metamagic option rejection into inert labels, or dispatch on Sorcerer, Sorcery Incarnate, Innate Sorcery, Metamagic, or option authored identity.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "sorcerer_sorcery_incarnate"
         },
-        "finalDisposition": "class-progression-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
