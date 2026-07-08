@@ -834,6 +834,57 @@ function adoptedNoMatrixDecisionRowsForSelfTest(root) {
     });
 }
 
+function strictScopeWitnessRowForSelfTest(levelBand) {
+  return {
+    id: `fixture:${levelBand}:scope-witness:fixture_${levelBand.replace(/-/g, "_")}`,
+    source: {
+      path: ".references/srd-5.2.1/Classes/Fixture.md",
+      lineStart: 1,
+      lineEnd: 1,
+    },
+    className: "Fixture",
+    levelBand,
+    rowKind:
+      levelBand.startsWith("spell-level-")
+        ? "spell-unit-pressure"
+        : "class-feature-grant",
+    category:
+      levelBand.startsWith("spell-level-")
+        ? "spell Unit pressure"
+        : "class feature",
+    concept: `Fixture ${levelBand} scope witness`,
+    detail: "Fixture non-vacuous scope witness row.",
+    candidateUnitId: `fixture_${levelBand.replace(/-/g, "_")}`,
+    catalogAdmission: {
+      state: "not-installed",
+      unitId: `fixture_${levelBand.replace(/-/g, "_")}`,
+    },
+    unitProfileDisposition: "unsupported-profile",
+    finalDisposition: "catalog-only/dead-for-now",
+    nextAction: "Fixture non-vacuous scope witness row.",
+  };
+}
+
+function strictScopeWitnessRowsForSelfTest() {
+  return ["level-7", "level-8", "spell-level-4"].map(
+    strictScopeWitnessRowForSelfTest,
+  );
+}
+
+function expectSelfTestError(label, run, expectedMessage) {
+  try {
+    run();
+  } catch (error) {
+    if (String(error?.message ?? error).includes(expectedMessage)) return;
+    fail(
+      `Self-test failed: expected ${label} to fail with ${JSON.stringify(expectedMessage)}, got ${String(error?.message ?? error)}`,
+    );
+  }
+  fail(
+    `Self-test failed: expected ${label} to fail with ${JSON.stringify(expectedMessage)}.`,
+  );
+}
+
 function assertNoMatrixRowsPreserveInventoryAccounting(root) {
   const adoptedDecisionRows = adoptedNoMatrixDecisionRowsForSelfTest(root);
   const fixtureClosure = {
@@ -1043,7 +1094,10 @@ function runSelfTest(root) {
     rulesKernelProfileJoin: { profiles: [] },
   };
   const minimalFullSupportInventory = {
-    rows: adoptedNoMatrixDecisionRowsForSelfTest(root),
+    rows: [
+      ...adoptedNoMatrixDecisionRowsForSelfTest(root),
+      ...strictScopeWitnessRowsForSelfTest(),
+    ],
   };
   const level17FullSupport = buildLevel17FullSupport(
     emptyFullSupportMatrix,
@@ -1067,6 +1121,48 @@ function runSelfTest(root) {
       `Self-test failed: expected level 1-7/1-8 full-support scopes to expose the new band frontiers, got ${JSON.stringify({ level17: level17FullSupport.scope, level18: level18FullSupport.scope })}`,
     );
   }
+  expectSelfTestError(
+    "level 1-7 full-support scope without level-7 rows",
+    () =>
+      buildLevel17FullSupport(
+        emptyFullSupportMatrix,
+        {
+          rows: minimalFullSupportInventory.rows.filter(
+            (row) => row.levelBand !== "level-7",
+          ),
+        },
+        { root },
+      ),
+    "Strict Character Levels 1-7 scope requires generated level-7 inventory rows; got 0.",
+  );
+  expectSelfTestError(
+    "level 1-7 full-support scope without spell-level-4 rows",
+    () =>
+      buildLevel17FullSupport(
+        emptyFullSupportMatrix,
+        {
+          rows: minimalFullSupportInventory.rows.filter(
+            (row) => row.levelBand !== "spell-level-4",
+          ),
+        },
+        { root },
+      ),
+    "Strict Character Levels 1-7 scope requires generated spell-level-4 inventory rows; got 0.",
+  );
+  expectSelfTestError(
+    "level 1-8 full-support scope without level-8 rows",
+    () =>
+      buildLevel18FullSupport(
+        emptyFullSupportMatrix,
+        {
+          rows: minimalFullSupportInventory.rows.filter(
+            (row) => row.levelBand !== "level-8",
+          ),
+        },
+        { root },
+      ),
+    "Strict Character Levels 1-8 scope requires generated level-8 inventory rows; got 0.",
+  );
   assertLaterLevelOnlyScopeAccounting();
   assertSelectionGrantContainerScopeAccounting();
   assertMindSpikeDeferredSelectedIdentityGate();

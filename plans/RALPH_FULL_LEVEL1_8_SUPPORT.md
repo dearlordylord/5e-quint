@@ -25,19 +25,19 @@
     {
       "number": 4,
       "id": "L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Add checker protection against empty or vacuous higher-level scopes"
     },
     {
       "number": 5,
       "id": "L7FULL-01-CLASS-TABLE-SUMMARY-CLOSURE",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Close the twelve level-7 class-table summary rows"
     },
     {
       "number": 6,
       "id": "L7FULL-02-ROGUE-EVASION-EVIDENCE-PRESERVATION",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Preserve existing Rogue Evasion support evidence"
     },
     {
@@ -49,91 +49,91 @@
     {
       "number": 8,
       "id": "L7FULL-04-FIGHTER-ADDITIONAL-FIGHTING-STYLE",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Resolve Fighter Additional Fighting Style level-7 accounting"
     },
     {
       "number": 9,
       "id": "L7FULL-05-CLERIC-BLESSED-STRIKES",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Resolve Cleric Blessed Strikes level-7 accounting"
     },
     {
       "number": 10,
       "id": "L7FULL-06-DRUID-ELEMENTAL-FURY",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Resolve Druid Elemental Fury level-7 accounting"
     },
     {
       "number": 11,
       "id": "L7FULL-07-BARBARIAN-INSTINCTIVE-POUNCE",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Resolve Barbarian Instinctive Pounce level-7 accounting"
     },
     {
       "number": 12,
       "id": "L7FULL-08-SORCERER-SORCERY-INCARNATE",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Resolve Sorcerer Sorcery Incarnate level-7 accounting"
     },
     {
       "number": 13,
       "id": "L7FULL-09-BARBARIAN-FERAL-INSTINCT",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Close Barbarian Feral Instinct at the Initiative boundary"
     },
     {
       "number": 14,
       "id": "L7FULL-10-BARD-COUNTERCHARM",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Close Bard Countercharm with explicit reaction/save-reroll ownership"
     },
     {
       "number": 15,
       "id": "L7FULL-11-PALADIN-AURA-OF-DEVOTION",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Close Paladin Aura of Devotion with explicit aura ownership"
     },
     {
       "number": 16,
       "id": "L7FULL-12-RANGER-DEFENSIVE-TACTICS",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Close Ranger Defensive Tactics with explicit check/save ownership"
     },
     {
       "number": 17,
       "id": "L7FULL-13-ROGUE-RELIABLE-TALENT",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Close Rogue Reliable Talent with explicit Ability Check ownership"
     },
     {
       "number": 18,
       "id": "L7FULL-14-SPELL-LEVEL4-STRICT-CLOSURE",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Classify and close spell-level-4 pressure for level 7"
     },
     {
       "number": 19,
       "id": "L8FULL-01-CLASS-TABLE-SUMMARY-CLOSURE",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Close the twelve level-8 class-table summary rows"
     },
     {
       "number": 20,
       "id": "L8FULL-02-REPEATED-ASI-GRANT-OCCURRENCES",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Close the twelve level-8 repeated Ability Score Improvement rows"
     },
     {
       "number": 21,
       "id": "L8FULL-03-NUMERIC-PROGRESSION-DELTAS",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Close level-8 class numeric progression deltas"
     },
     {
       "number": 22,
       "id": "L8FULL-04-DRUID-WILD-SHAPE-FLY-SPEED-THRESHOLD",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Audit Druid Wild Shape Fly Speed threshold at level 8"
     },
     {
@@ -329,25 +329,25 @@ Spell-level-4 unique identities currently in the level-7 mining audit:
 | 1 | L18FOUND-01-BASELINE-ACCOUNTING-SNAPSHOT - Capture the level-1-6 full and level-7 mining baseline | done | none | Baseline recorded in `plans/unit-profile-coverage/LEVEL1_8_BASELINE_2026-07-07.md`. |
 | 2 | L18FOUND-02-LEVEL8-INVENTORY-ENABLEMENT - Extend SRD inventory mining through character level 8 | done | L18FOUND-01-BASELINE-ACCOUNTING-SNAPSHOT | Added generated `level1-8-mining-audit` artifacts and level-8 inventory rows. |
 | 3 | L18FOUND-03-LEVEL17-18-REPORT-GATE-SHAPE - Add level-1-7 and level-1-8 full-support report plumbing | done | L18FOUND-02-LEVEL8-INVENTORY-ENABLEMENT | Creates strict full-support artifacts for both scopes. |
-| 4 | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION - Add checker protection against empty or vacuous higher-level scopes | ready-for-implementation | L18FOUND-03-LEVEL17-18-REPORT-GATE-SHAPE | Prevents accidental pass from missing bands or empty denominators. |
-| 5 | L7FULL-01-CLASS-TABLE-SUMMARY-CLOSURE - Close the twelve level-7 class-table summary rows | blocked | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Table rows remain non-runtime but checker-visible. |
-| 6 | L7FULL-02-ROGUE-EVASION-EVIDENCE-PRESERVATION - Preserve existing Rogue Evasion support evidence | blocked | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Existing support must survive the new strict scope. |
+| 4 | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION - Add checker protection against empty or vacuous higher-level scopes | done | L18FOUND-03-LEVEL17-18-REPORT-GATE-SHAPE | Prevents accidental pass from missing bands or empty denominators. |
+| 5 | L7FULL-01-CLASS-TABLE-SUMMARY-CLOSURE - Close the twelve level-7 class-table summary rows | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Table rows remain non-runtime but checker-visible. |
+| 6 | L7FULL-02-ROGUE-EVASION-EVIDENCE-PRESERVATION - Preserve existing Rogue Evasion support evidence | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Existing support must survive the new strict scope. |
 | 7 | L7FULL-03-MONK-EVASION-REUSE-ADMISSION - Admit Monk Evasion through the existing Evasion support model | blocked | L7FULL-02-ROGUE-EVASION-EVIDENCE-PRESERVATION | Reuses typed Evasion semantics without authored-identity dispatch. |
-| 8 | L7FULL-04-FIGHTER-ADDITIONAL-FIGHTING-STYLE - Resolve Fighter Additional Fighting Style level-7 accounting | blocked | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Character-selection grant closure or support evidence. |
-| 9 | L7FULL-05-CLERIC-BLESSED-STRIKES - Resolve Cleric Blessed Strikes level-7 accounting | blocked | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Damage rider or explicit future-owner split. |
-| 10 | L7FULL-06-DRUID-ELEMENTAL-FURY - Resolve Druid Elemental Fury level-7 accounting | blocked | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Weapon/Wild Shape damage rider or explicit future-owner split. |
-| 11 | L7FULL-07-BARBARIAN-INSTINCTIVE-POUNCE - Resolve Barbarian Instinctive Pounce level-7 accounting | blocked | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Rage-entry movement rider or explicit movement-owner split. |
-| 12 | L7FULL-08-SORCERER-SORCERY-INCARNATE - Resolve Sorcerer Sorcery Incarnate level-7 accounting | blocked | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Innate Sorcery/Sorcery Point closure or runtime support. |
-| 13 | L7FULL-09-BARBARIAN-FERAL-INSTINCT - Close Barbarian Feral Instinct at the Initiative boundary | blocked | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Initiative is not ordinary battle-turn runtime unless promoted by a start-combat owner. |
-| 14 | L7FULL-10-BARD-COUNTERCHARM - Close Bard Countercharm with explicit reaction/save-reroll ownership | blocked | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Reaction timing and Charmed/Frightened save-failure trigger must be typed or future-owned. |
-| 15 | L7FULL-11-PALADIN-AURA-OF-DEVOTION - Close Paladin Aura of Devotion with explicit aura ownership | blocked | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Aura membership and immunity projection are future-owner facts unless implemented. |
-| 16 | L7FULL-12-RANGER-DEFENSIVE-TACTICS - Close Ranger Defensive Tactics with explicit check/save ownership | blocked | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Multi-option subclass defensive facts must not become vague unsupported rows. |
-| 17 | L7FULL-13-ROGUE-RELIABLE-TALENT - Close Rogue Reliable Talent with explicit Ability Check ownership | blocked | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Ability Check floor is not attack/save runtime unless a generic check owner exists. |
-| 18 | L7FULL-14-SPELL-LEVEL4-STRICT-CLOSURE - Classify and close spell-level-4 pressure for level 7 | blocked | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Strict denominator closure for 34 unique identities and 81 class-list rows. |
-| 19 | L8FULL-01-CLASS-TABLE-SUMMARY-CLOSURE - Close the twelve level-8 class-table summary rows | blocked | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Requires generated level-8 inventory rows. |
-| 20 | L8FULL-02-REPEATED-ASI-GRANT-OCCURRENCES - Close the twelve level-8 repeated Ability Score Improvement rows | blocked | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Repeated ASI occurrence closure across all SRD classes. |
-| 21 | L8FULL-03-NUMERIC-PROGRESSION-DELTAS - Close level-8 class numeric progression deltas | blocked | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Prepared spells, spell slots, points/resources, and table counters. |
-| 22 | L8FULL-04-DRUID-WILD-SHAPE-FLY-SPEED-THRESHOLD - Audit Druid Wild Shape Fly Speed threshold at level 8 | blocked | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Level-8 threshold changes form eligibility, not active-form persistence. |
+| 8 | L7FULL-04-FIGHTER-ADDITIONAL-FIGHTING-STYLE - Resolve Fighter Additional Fighting Style level-7 accounting | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Character-selection grant closure or support evidence. |
+| 9 | L7FULL-05-CLERIC-BLESSED-STRIKES - Resolve Cleric Blessed Strikes level-7 accounting | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Damage rider or explicit future-owner split. |
+| 10 | L7FULL-06-DRUID-ELEMENTAL-FURY - Resolve Druid Elemental Fury level-7 accounting | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Weapon/Wild Shape damage rider or explicit future-owner split. |
+| 11 | L7FULL-07-BARBARIAN-INSTINCTIVE-POUNCE - Resolve Barbarian Instinctive Pounce level-7 accounting | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Rage-entry movement rider or explicit movement-owner split. |
+| 12 | L7FULL-08-SORCERER-SORCERY-INCARNATE - Resolve Sorcerer Sorcery Incarnate level-7 accounting | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Innate Sorcery/Sorcery Point closure or runtime support. |
+| 13 | L7FULL-09-BARBARIAN-FERAL-INSTINCT - Close Barbarian Feral Instinct at the Initiative boundary | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Initiative is not ordinary battle-turn runtime unless promoted by a start-combat owner. |
+| 14 | L7FULL-10-BARD-COUNTERCHARM - Close Bard Countercharm with explicit reaction/save-reroll ownership | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Reaction timing and Charmed/Frightened save-failure trigger must be typed or future-owned. |
+| 15 | L7FULL-11-PALADIN-AURA-OF-DEVOTION - Close Paladin Aura of Devotion with explicit aura ownership | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Aura membership and immunity projection are future-owner facts unless implemented. |
+| 16 | L7FULL-12-RANGER-DEFENSIVE-TACTICS - Close Ranger Defensive Tactics with explicit check/save ownership | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Multi-option subclass defensive facts must not become vague unsupported rows. |
+| 17 | L7FULL-13-ROGUE-RELIABLE-TALENT - Close Rogue Reliable Talent with explicit Ability Check ownership | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Ability Check floor is not attack/save runtime unless a generic check owner exists. |
+| 18 | L7FULL-14-SPELL-LEVEL4-STRICT-CLOSURE - Classify and close spell-level-4 pressure for level 7 | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Strict denominator closure for 34 unique identities and 81 class-list rows. |
+| 19 | L8FULL-01-CLASS-TABLE-SUMMARY-CLOSURE - Close the twelve level-8 class-table summary rows | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Requires generated level-8 inventory rows. |
+| 20 | L8FULL-02-REPEATED-ASI-GRANT-OCCURRENCES - Close the twelve level-8 repeated Ability Score Improvement rows | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Repeated ASI occurrence closure across all SRD classes. |
+| 21 | L8FULL-03-NUMERIC-PROGRESSION-DELTAS - Close level-8 class numeric progression deltas | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Prepared spells, spell slots, points/resources, and table counters. |
+| 22 | L8FULL-04-DRUID-WILD-SHAPE-FLY-SPEED-THRESHOLD - Audit Druid Wild Shape Fly Speed threshold at level 8 | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Level-8 threshold changes form eligibility, not active-form persistence. |
 | 23 | L8FULL-05-SPELL-LEVEL4-CARRY-FORWARD - Carry spell-level-4 closure into the level-8 claim | blocked | L7FULL-14-SPELL-LEVEL4-STRICT-CLOSURE, L8FULL-03-NUMERIC-PROGRESSION-DELTAS | Ensures level 8 does not reopen spell-level-4 pressure. |
 | 24 | L18GATE-01-LEVEL17-FULL-SUPPORT-ARTIFACTS - Refresh and verify level-1-7 full-support artifacts | blocked | L7FULL-01-CLASS-TABLE-SUMMARY-CLOSURE, L7FULL-03-MONK-EVASION-REUSE-ADMISSION, L7FULL-04-FIGHTER-ADDITIONAL-FIGHTING-STYLE, L7FULL-05-CLERIC-BLESSED-STRIKES, L7FULL-06-DRUID-ELEMENTAL-FURY, L7FULL-07-BARBARIAN-INSTINCTIVE-POUNCE, L7FULL-08-SORCERER-SORCERY-INCARNATE, L7FULL-09-BARBARIAN-FERAL-INSTINCT, L7FULL-10-BARD-COUNTERCHARM, L7FULL-11-PALADIN-AURA-OF-DEVOTION, L7FULL-12-RANGER-DEFENSIVE-TACTICS, L7FULL-13-ROGUE-RELIABLE-TALENT, L7FULL-14-SPELL-LEVEL4-STRICT-CLOSURE | Serializes generated level-1-7 artifacts after all row closures. |
 | 25 | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS - Refresh and verify level-1-8 full-support artifacts | blocked | L18GATE-01-LEVEL17-FULL-SUPPORT-ARTIFACTS, L8FULL-01-CLASS-TABLE-SUMMARY-CLOSURE, L8FULL-02-REPEATED-ASI-GRANT-OCCURRENCES, L8FULL-03-NUMERIC-PROGRESSION-DELTAS, L8FULL-04-DRUID-WILD-SHAPE-FLY-SPEED-THRESHOLD, L8FULL-05-SPELL-LEVEL4-CARRY-FORWARD | Serializes generated level-1-8 artifacts. |
@@ -575,7 +575,7 @@ Plan Impact:
 
 ### Task 4 - L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on: `L18FOUND-03-LEVEL17-18-REPORT-GATE-SHAPE`
 
@@ -614,16 +614,16 @@ Verification:
 
 Plan Impact:
 
-- Update-required if anti-vacuity checks split or reorder downstream closure
-  tasks.
+- `applied`: `scripts/level1-full-support-report.cjs` now derives required
+  non-vacuous frontier bands from the strict scope and fails the checker if
+  level 1-7 lacks `level-7` or `spell-level-4` inventory rows, or if level 1-8
+  lacks `level-8` inventory rows. `unit-profile-coverage:check:self-test`
+  covers the missing `level-7`, `spell-level-4`, and `level-8` cases, and the
+  real generated artifacts pass `unit-profile-coverage:check`.
 
 ### Task 5 - L7FULL-01-CLASS-TABLE-SUMMARY-CLOSURE
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: waits for `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`.
+Status: `ready-for-implementation`
 
 Depends on: `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`
 
@@ -667,11 +667,7 @@ Plan Impact:
 
 ### Task 6 - L7FULL-02-ROGUE-EVASION-EVIDENCE-PRESERVATION
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: waits for `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`.
+Status: `ready-for-implementation`
 
 Depends on: `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`
 
@@ -763,11 +759,7 @@ Plan Impact:
 
 ### Task 8 - L7FULL-04-FIGHTER-ADDITIONAL-FIGHTING-STYLE
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: waits for `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`.
+Status: `ready-for-implementation`
 
 Depends on: `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`
 
@@ -813,11 +805,7 @@ Plan Impact:
 
 ### Task 9 - L7FULL-05-CLERIC-BLESSED-STRIKES
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: waits for `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`.
+Status: `ready-for-implementation`
 
 Depends on: `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`
 
@@ -861,11 +849,7 @@ Plan Impact:
 
 ### Task 10 - L7FULL-06-DRUID-ELEMENTAL-FURY
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: waits for `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`.
+Status: `ready-for-implementation`
 
 Depends on: `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`
 
@@ -909,11 +893,7 @@ Plan Impact:
 
 ### Task 11 - L7FULL-07-BARBARIAN-INSTINCTIVE-POUNCE
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: waits for `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`.
+Status: `ready-for-implementation`
 
 Depends on: `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`
 
@@ -955,11 +935,7 @@ Plan Impact:
 
 ### Task 12 - L7FULL-08-SORCERER-SORCERY-INCARNATE
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: waits for `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`.
+Status: `ready-for-implementation`
 
 Depends on: `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`
 
@@ -1002,11 +978,7 @@ Plan Impact:
 
 ### Task 13 - L7FULL-09-BARBARIAN-FERAL-INSTINCT
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: waits for `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`.
+Status: `ready-for-implementation`
 
 Depends on: `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`
 
@@ -1049,11 +1021,7 @@ Plan Impact:
 
 ### Task 14 - L7FULL-10-BARD-COUNTERCHARM
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: waits for `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`.
+Status: `ready-for-implementation`
 
 Depends on: `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`
 
@@ -1096,11 +1064,7 @@ Plan Impact:
 
 ### Task 15 - L7FULL-11-PALADIN-AURA-OF-DEVOTION
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: waits for `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`.
+Status: `ready-for-implementation`
 
 Depends on: `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`
 
@@ -1143,11 +1107,7 @@ Plan Impact:
 
 ### Task 16 - L7FULL-12-RANGER-DEFENSIVE-TACTICS
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: waits for `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`.
+Status: `ready-for-implementation`
 
 Depends on: `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`
 
@@ -1188,11 +1148,7 @@ Plan Impact:
 
 ### Task 17 - L7FULL-13-ROGUE-RELIABLE-TALENT
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: waits for `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`.
+Status: `ready-for-implementation`
 
 Depends on: `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`
 
@@ -1233,11 +1189,7 @@ Plan Impact:
 
 ### Task 18 - L7FULL-14-SPELL-LEVEL4-STRICT-CLOSURE
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: waits for `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`.
+Status: `ready-for-implementation`
 
 Depends on: `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`
 
@@ -1288,11 +1240,7 @@ Plan Impact:
 
 ### Task 19 - L8FULL-01-CLASS-TABLE-SUMMARY-CLOSURE
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: waits for `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`.
+Status: `ready-for-implementation`
 
 Depends on: `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`
 
@@ -1333,11 +1281,7 @@ Plan Impact:
 
 ### Task 20 - L8FULL-02-REPEATED-ASI-GRANT-OCCURRENCES
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: waits for `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`.
+Status: `ready-for-implementation`
 
 Depends on: `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`
 
@@ -1381,11 +1325,7 @@ Plan Impact:
 
 ### Task 21 - L8FULL-03-NUMERIC-PROGRESSION-DELTAS
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: waits for `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`.
+Status: `ready-for-implementation`
 
 Depends on: `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`
 
@@ -1427,11 +1367,7 @@ Plan Impact:
 
 ### Task 22 - L8FULL-04-DRUID-WILD-SHAPE-FLY-SPEED-THRESHOLD
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: waits for `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`.
+Status: `ready-for-implementation`
 
 Depends on: `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`
 

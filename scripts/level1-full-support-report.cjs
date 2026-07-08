@@ -1228,7 +1228,37 @@ function validateAdoptedNoMatrixSrdPressureDecisions(
   }
 }
 
+function requiredNonVacuousLevelBands(scope) {
+  return [
+    ...(scope.maxCharacterLevel >= 7 ? ["level-7", "spell-level-4"] : []),
+    ...(scope.maxCharacterLevel >= 8 ? ["level-8"] : []),
+  ];
+}
+
+function validateNonVacuousStrictScope(srdUnitInventory, scope) {
+  const rowsByLevelBand = new Map();
+  for (const row of srdUnitInventory.rows) {
+    rowsByLevelBand.set(
+      row.levelBand,
+      (rowsByLevelBand.get(row.levelBand) ?? 0) + 1,
+    );
+  }
+  for (const levelBand of requiredNonVacuousLevelBands(scope)) {
+    if (!scope.levelBands.includes(levelBand)) {
+      fail(
+        `Strict ${scope.title} scope is missing required ${levelBand} denominator band.`,
+      );
+    }
+    if ((rowsByLevelBand.get(levelBand) ?? 0) === 0) {
+      fail(
+        `Strict ${scope.title} scope requires generated ${levelBand} inventory rows; got 0.`,
+      );
+    }
+  }
+}
+
 function buildStrictFullSupport(matrix, srdUnitInventory, scope, options = {}) {
+  validateNonVacuousStrictScope(srdUnitInventory, scope);
   const candidateRowsByUnitId = buildStrictCandidateGroups(
     srdUnitInventory,
     scope.levelBands,
