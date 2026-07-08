@@ -6251,13 +6251,13 @@
   "metrics": {
     "productReadiness": {
       "denominator": 900,
-      "numerator": 814,
-      "percent": "90.4%",
+      "numerator": 815,
+      "percent": "90.6%",
       "rowsByStatus": {
         "accepted": 499,
-        "accepted-no-battle-effect": 315,
+        "accepted-no-battle-effect": 316,
         "battle-runtime-required": 32,
-        "owner-evidence-required": 54
+        "owner-evidence-required": 53
       }
     },
     "rulesKernelCoveredProfileJoin": {
@@ -6340,17 +6340,21 @@
         "inventoryAccounting": [
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "outside-battle-runtime",
+              "owner": "future generic start-battle Initiative roll-mode owner plus character-battle selected class-feature admission owner",
+              "reason": "A future owner must consume a selected Feral Instinct source fact, attach Advantage to the start-combat Initiative Dexterity check, and project that roll mode through the existing start-battle Initiative setup boundary before Initiative order is fixed. The owner may reuse the existing Initiative roll-mode query shape introduced for Remarkable Athlete, but it must store generic passive Initiative profiles rather than a Barbarian- or Remarkable-Athlete-specific bucket. The closure must not classify Initiative as an attack roll or Saving Throw, mutate already-fixed turn order after combat start, duplicate Initiative score/order state, add inert support labels with no roll-mode consequence, or dispatch on Barbarian or Feral Instinct authored identity.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
             "battleReadinessStatus": "not-applicable",
             "catalogAdmissionState": "not-installed",
             "concept": "Barbarian Feral Instinct",
-            "finalDisposition": "class-progression-follow-up-required",
+            "finalDisposition": "catalog-only/dead-for-now",
             "levelBand": "level-7",
-            "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+            "nextAction": "A future owner must consume a selected Feral Instinct source fact, attach Advantage to the start-combat Initiative Dexterity check, and project that roll mode through the existing start-battle Initiative setup boundary before Initiative order is fixed. The owner may reuse the existing Initiative roll-mode query shape introduced for Remarkable Athlete, but it must store generic passive Initiative profiles rather than a Barbarian- or Remarkable-Athlete-specific bucket. The closure must not classify Initiative as an attack roll or Saving Throw, mutate already-fixed turn order after combat start, duplicate Initiative score/order state, add inert support labels with no roll-mode consequence, or dispatch on Barbarian or Feral Instinct authored identity.",
             "rowId": "srd521:classes/barbarian:level-7:class-feature-grant:barbarian_feral_instinct",
             "rowKind": "class-feature-grant",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           }
         ],
         "reason": "The SRD row has level-7 class-feature pressure, but no Unit matrix row exists yet.",

@@ -17,7 +17,7 @@ Blockers: strict=19, selected-identity=0, SRD-authored-readiness=0.
 | Strict runtime/profile support | 168/284 (59.2%) |
 | Strict target closure | 265/284 (93.3%) |
 | Selected identity readiness | 194/194 (100%) |
-| Diagnostic product readiness | 826/924 (89.4%) |
+| Diagnostic product readiness | 827/924 (89.5%) |
 | SRD authored product readiness | 115/115 (100%) |
 | Rules-kernel profile join | 118/118 (100%) |
 | Rules-kernel covered profile join | 118/118 (100%) |
@@ -25,7 +25,7 @@ Blockers: strict=19, selected-identity=0, SRD-authored-readiness=0.
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
-The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 826/924 (89.4%) while the claim gate reports **blocked** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
+The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 827/924 (89.5%) while the claim gate reports **blocked** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
 
 ### Diagnostic Product Readiness Accounting
 
@@ -34,9 +34,9 @@ Diagnostic product readiness keeps lower-layer planning pressure visible. Rows i
 | Status | Rows |
 | --- | ---: |
 | accepted | 499 |
-| accepted-no-battle-effect | 327 |
+| accepted-no-battle-effect | 328 |
 | battle-runtime-required | 32 |
-| owner-evidence-required | 66 |
+| owner-evidence-required | 65 |
 
 ### Selected Identity Replay Accounting
 
@@ -280,7 +280,7 @@ This gate checks authored records and retained Unit references that must resolve
 | Unit | Source rows | Reason | Final dispositions | Readiness closures | Next actions | Adopted decision artifact | Concepts |
 | --- | ---: | --- | --- | --- | --- | --- | --- |
 | `barbarian_ability_score_improvement_l8` | 1 | The SRD row has level-8 class-feature pressure, but no Unit matrix row exists yet. | class-progression-follow-up-required | not-recorded | Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. | _none_ | Barbarian Ability Score Improvement |
-| `barbarian_feral_instinct` | 1 | The SRD row has level-7 class-feature pressure, but no Unit matrix row exists yet. | class-progression-follow-up-required | not-recorded | Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. | _none_ | Barbarian Feral Instinct |
+| `barbarian_feral_instinct` | 1 | The SRD row has level-7 class-feature pressure, but no Unit matrix row exists yet. | catalog-only/dead-for-now | outside-battle-runtime: future generic start-battle Initiative roll-mode owner plus character-battle selected class-feature admission owner | A future owner must consume a selected Feral Instinct source fact, attach Advantage to the start-combat Initiative Dexterity check, and project that roll mode through the existing start-battle Initiative setup boundary before Initiative order is fixed. The owner may reuse the existing Initiative roll-mode query shape introduced for Remarkable Athlete, but it must store generic passive Initiative profiles rather than a Barbarian- or Remarkable-Athlete-specific bucket. The closure must not classify Initiative as an attack roll or Saving Throw, mutate already-fixed turn order after combat start, duplicate Initiative score/order state, add inert support labels with no roll-mode consequence, or dispatch on Barbarian or Feral Instinct authored identity. | _none_ | Barbarian Feral Instinct |
 | `barbarian_instinctive_pounce` | 1 | The SRD row has level-7 class-feature pressure, but no Unit matrix row exists yet. | catalog-only/dead-for-now | resource-option-rider-boundary: future battle-runtime Rage activation rider owner plus existing movement, path, and Opportunity Attack validation owners | SRD Instinctive Pounce triggers only as part of the Bonus Action used to enter Rage: the Barbarian can move up to half Speed. A future promoted owner must consume an admitted Instinctive Pounce activation-rider source fact with the existing barbarian_rage bonus-action ongoing-feature activation, then offer optional bonus Movement through the existing movement fill owner with a cap of half the actor's current Speed. Path legality, terrain cost, occupied-space constraints, and ordinary Opportunity Attack validation remain owned by existing movement/table owners; unlike Tactical Shift, Instinctive Pounce does not grant a no-Opportunity-Attack exception. The closure must not add a second Rage pool, duplicate active Rage state, duplicate turn Movement budget, store map position or pathing locally to Rage, hard-code half Speed as an untyped number, or dispatch on Barbarian, Rage, or Instinctive Pounce authored identity. | _none_ | Barbarian Instinctive Pounce |
 | `barbarian_mindless_rage` | 1 | The SRD row has level-6 class-feature pressure, but no Unit matrix row exists yet. | catalog-only/dead-for-now | outside-battle-runtime: future battle-runtime active Rage condition-immunity and enter-rage cleanup owner plus subclass feature admission owner | The existing Barbarian Rage owner supports activation, use-count spend, duration/extension, Bludgeoning/Piercing/Slashing Resistance, Rage Damage, Concentration break/prevention, and spellcasting restriction, but it does not admit subclass-gated Charmed/Frightened condition immunity or remove existing Charmed/Frightened active effects on entering Rage. Keep this not-installed row closed until a promoted owner consumes typed Surface facts for the selected Berserker feature, derives immunity from the active Rage occurrence, and performs condition cleanup without duplicating Rage state, condition state, subclass selection state, or authored-identity dispatch. | _none_ | Barbarian Mindless Rage |
 | `bard_ability_score_improvement_l8` | 1 | The SRD row has level-8 class-feature pressure, but no Unit matrix row exists yet. | class-progression-follow-up-required | not-recorded | Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. | _none_ | Bard Ability Score Improvement |

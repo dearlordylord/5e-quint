@@ -43,8 +43,8 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | --- | ---: |
 | catalog-authored-review-required | 49 |
 | catalog-installed-owner-evidence-present | 503 |
-| catalog-only/dead-for-now | 227 |
-| class-progression-follow-up-required | 5 |
+| catalog-only/dead-for-now | 228 |
+| class-progression-follow-up-required | 4 |
 | missing-authored-record | 32 |
 | non-runtime | 84 |
 
@@ -59,10 +59,10 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 125 |
+| not-recorded | 124 |
 | profile-subset-supported | 59 |
 | supported-profile | 310 |
-| unsupported-profile | 406 |
+| unsupported-profile | 407 |
 
 ### Battle Readiness Snapshot
 
@@ -285,7 +285,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Barbarian level 5 feature table row | level-5 | character-level | character-creation or progression mechanic | `class_barbarian` | `.references/srd-5.2.1/Classes/Barbarian.md:39` |  | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
 | Barbarian Mindless Rage | level-6 | character-level | class feature | `barbarian_mindless_rage` | `.references/srd-5.2.1/Classes/Barbarian.md:182` |  | present | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | outside-battle-runtime: future battle-runtime active Rage condition-immunity and enter-rage cleanup owner plus subclass feature admission owner | The existing Barbarian Rage owner supports activation, use-count spend, duration/extension, Bludgeoning/Piercing/Slashing Resistance, Rage Damage, Concentration break/prevention, and spellcasting restriction, but it does not admit subclass-gated Charmed/Frightened condition immunity or remove existing Charmed/Frightened active effects on entering Rage. Keep this not-installed row closed until a promoted owner consumes typed Surface facts for the selected Berserker feature, derives immunity from the active Rage occurrence, and performs condition cleanup without duplicating Rage state, condition state, subclass selection state, or authored-identity dispatch. |
 | Barbarian level 6 feature table row | level-6 | character-level | character-creation or progression mechanic | `class_barbarian` | `.references/srd-5.2.1/Classes/Barbarian.md:40` |  | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
-| Barbarian Feral Instinct | level-7 | character-level | class feature | `barbarian_feral_instinct` | `.references/srd-5.2.1/Classes/Barbarian.md:120` |  | present | not-installed | not-recorded | class-progression-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
+| Barbarian Feral Instinct | level-7 | character-level | class feature | `barbarian_feral_instinct` | `.references/srd-5.2.1/Classes/Barbarian.md:120` |  | present | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | outside-battle-runtime: future generic start-battle Initiative roll-mode owner plus character-battle selected class-feature admission owner | A future owner must consume a selected Feral Instinct source fact, attach Advantage to the start-combat Initiative Dexterity check, and project that roll mode through the existing start-battle Initiative setup boundary before Initiative order is fixed. The owner may reuse the existing Initiative roll-mode query shape introduced for Remarkable Athlete, but it must store generic passive Initiative profiles rather than a Barbarian- or Remarkable-Athlete-specific bucket. The closure must not classify Initiative as an attack roll or Saving Throw, mutate already-fixed turn order after combat start, duplicate Initiative score/order state, add inert support labels with no roll-mode consequence, or dispatch on Barbarian or Feral Instinct authored identity. |
 | Barbarian Instinctive Pounce | level-7 | character-level | class feature | `barbarian_instinctive_pounce` | `.references/srd-5.2.1/Classes/Barbarian.md:124` |  | present | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | resource-option-rider-boundary: future battle-runtime Rage activation rider owner plus existing movement, path, and Opportunity Attack validation owners | SRD Instinctive Pounce triggers only as part of the Bonus Action used to enter Rage: the Barbarian can move up to half Speed. A future promoted owner must consume an admitted Instinctive Pounce activation-rider source fact with the existing barbarian_rage bonus-action ongoing-feature activation, then offer optional bonus Movement through the existing movement fill owner with a cap of half the actor's current Speed. Path legality, terrain cost, occupied-space constraints, and ordinary Opportunity Attack validation remain owned by existing movement/table owners; unlike Tactical Shift, Instinctive Pounce does not grant a no-Opportunity-Attack exception. The closure must not add a second Rage pool, duplicate active Rage state, duplicate turn Movement budget, store map position or pathing locally to Rage, hard-code half Speed as an untyped number, or dispatch on Barbarian, Rage, or Instinctive Pounce authored identity. |
 | Barbarian level 7 feature table row | level-7 | character-level | character-creation or progression mechanic | `class_barbarian` | `.references/srd-5.2.1/Classes/Barbarian.md:41` |  | present | installed | unsupported-profile | non-runtime | not-applicable | outside-battle-runtime: class-progression-accounting | No runtime work; keep classification as explicit closure. |
 | Bard class container | level-1 | character-level | class container | `class_bard` | `.references/srd-5.2.1/Classes/Bard.md:3` |  | present | installed | unsupported-profile | catalog-installed-owner-evidence-present | accepted | not-recorded | Owner-specific operational evidence is classified and present. |
