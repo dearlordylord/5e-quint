@@ -1330,7 +1330,7 @@ Plan Impact:
 
 ### Task 16 - L7FULL-12-RANGER-DEFENSIVE-TACTICS
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on: `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`
 
@@ -1365,9 +1365,31 @@ Verification:
 - Focused tests if any option is promoted.
 - `pnpm unit-profile-coverage:check`
 
+Completion Evidence:
+
+- Added checker-readable `ranger_defensive_tactics` unsupported-profile closure
+  in `plans/unit-profile-coverage/unit-claims.jsonl`.
+- RAW checked `.references/srd-5.2.1/Classes/Ranger.md:251-258`;
+  Ubiquitous Language checked Attack Roll, Disadvantage, Opportunity Attack,
+  Reaction, and turn-boundary terminology.
+- Reviewed existing Hunter's Prey selected-option support so Defensive Tactics
+  future work reuses retained selected feature refs instead of copying option
+  state or claiming support from another Ranger row.
+- Escape the Horde is assigned to a future selected-option owner plus the
+  existing Opportunity Attack reaction window and attack-roll roll-mode
+  pipeline.
+- Multiattack Defense is assigned to a future selected-option owner plus
+  same-turn repeat-attacker attack-roll Disadvantage owner consuming the hit
+  event, attacker identity, and current-turn boundary.
+- No focused runtime/MBT tests were run because no option was promoted.
+- `pnpm unit-profile-coverage:check --write`
+- `pnpm unit-profile-coverage:check`
+
 Plan Impact:
 
-- Update-required if options need separate executable Ralph tasks.
+- `applied`: future promotion should split Defensive Tactics into one retained
+  selected option and two typed attack-roll Disadvantage projections, not a
+  generic defensive status row.
 
 ### Task 17 - L7FULL-13-ROGUE-RELIABLE-TALENT
 

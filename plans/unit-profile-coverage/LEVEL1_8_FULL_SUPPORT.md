@@ -17,7 +17,7 @@ Blockers: strict=19, selected-identity=0, SRD-authored-readiness=0.
 | Strict runtime/profile support | 168/284 (59.2%) |
 | Strict target closure | 265/284 (93.3%) |
 | Selected identity readiness | 194/194 (100%) |
-| Diagnostic product readiness | 829/924 (89.7%) |
+| Diagnostic product readiness | 830/924 (89.8%) |
 | SRD authored product readiness | 115/115 (100%) |
 | Rules-kernel profile join | 118/118 (100%) |
 | Rules-kernel covered profile join | 118/118 (100%) |
@@ -25,7 +25,7 @@ Blockers: strict=19, selected-identity=0, SRD-authored-readiness=0.
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
-The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 829/924 (89.7%) while the claim gate reports **blocked** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
+The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 830/924 (89.8%) while the claim gate reports **blocked** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
 
 ### Diagnostic Product Readiness Accounting
 
@@ -34,9 +34,9 @@ Diagnostic product readiness keeps lower-layer planning pressure visible. Rows i
 | Status | Rows |
 | --- | ---: |
 | accepted | 499 |
-| accepted-no-battle-effect | 330 |
+| accepted-no-battle-effect | 331 |
 | battle-runtime-required | 32 |
-| owner-evidence-required | 63 |
+| owner-evidence-required | 62 |
 
 ### Selected Identity Replay Accounting
 
@@ -330,7 +330,7 @@ This gate checks authored records and retained Unit references that must resolve
 | `private_sanctum` | 1 | The SRD row has spell-level-4 spell-list Unit pressure, but no Unit matrix row exists yet. | missing-authored-record | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. | _none_ | Wizard spell list Private Sanctum |
 | `purify_food_and_drink` | 3 | The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | catalog-only/dead-for-now | not-recorded | Removing poison and rot from nonmagical food and drink is exploration/inventory state outside promoted runtime owners. | `plans/unit-profile-coverage/frontier-decisions/purify_food_and_drink.md` | Cleric spell list Purify Food and Drink; Druid spell list Purify Food and Drink; Paladin spell list Purify Food and Drink |
 | `ranger_ability_score_improvement_l8` | 1 | The SRD row has level-8 class-feature pressure, but no Unit matrix row exists yet. | class-progression-follow-up-required | not-recorded | Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. | _none_ | Ranger Ability Score Improvement |
-| `ranger_defensive_tactics` | 1 | The SRD row has level-7 class-feature pressure, but no Unit matrix row exists yet. | class-progression-follow-up-required | not-recorded | Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. | _none_ | Ranger Defensive Tactics |
+| `ranger_defensive_tactics` | 1 | The SRD row has level-7 class-feature pressure, but no Unit matrix row exists yet. | catalog-only/dead-for-now | outside-battle-runtime: future Defensive Tactics selected-option owner plus Opportunity Attack and same-turn repeat-attacker attack-roll Disadvantage owners | SRD 5.2.1 Defensive Tactics grants one replaceable option after a Short or Long Rest. Escape the Horde makes Opportunity Attacks have Disadvantage against the Ranger, consuming the existing Opportunity Attack reaction window and attack-roll roll-mode pipeline. Multiattack Defense triggers when a creature hits the Ranger with an attack roll, then gives that same creature Disadvantage on all other attack rolls against the Ranger for the rest of that turn, consuming the attack-hit event, current-turn boundary, attacker identity, and attack-roll roll-mode pipeline. A future owner must retain exactly one selected option on the selected feature ref, preserve Short/Long Rest replacement, and route each option through typed roll-mode facts without storing both options as simultaneously executable, duplicating Opportunity Attack/reaction state, duplicating attack history beyond the source-owned same-turn effect, or dispatching on Ranger, Hunter, Defensive Tactics, or option authored identity. | _none_ | Ranger Defensive Tactics |
 | `ranger_hunters_lore` | 1 | The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet. | catalog-only/dead-for-now | not-recorded | Hunter's Lore reveals whether a Hunter's Mark target has Immunities, Resistances, or Vulnerabilities and what they are. That disclosure is table/stat-block knowledge, not promoted battle state; the runtime must not duplicate Stat Block facts into Ranger feature state. | _none_ | Ranger Hunter's Lore |
 | `resilient_sphere` | 1 | The SRD row has spell-level-4 spell-list Unit pressure, but no Unit matrix row exists yet. | missing-authored-record | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. | _none_ | Wizard spell list Resilient Sphere |
 | `rogue_ability_score_improvement_l8` | 1 | The SRD row has level-8 class-feature pressure, but no Unit matrix row exists yet. | class-progression-follow-up-required | not-recorded | Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. | _none_ | Rogue Ability Score Improvement |

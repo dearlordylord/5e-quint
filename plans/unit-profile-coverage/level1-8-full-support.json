@@ -6251,13 +6251,13 @@
   "metrics": {
     "productReadiness": {
       "denominator": 924,
-      "numerator": 829,
-      "percent": "89.7%",
+      "numerator": 830,
+      "percent": "89.8%",
       "rowsByStatus": {
         "accepted": 499,
-        "accepted-no-battle-effect": 330,
+        "accepted-no-battle-effect": 331,
         "battle-runtime-required": 32,
-        "owner-evidence-required": 63
+        "owner-evidence-required": 62
       }
     },
     "rulesKernelCoveredProfileJoin": {
@@ -9128,17 +9128,21 @@
         "inventoryAccounting": [
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "outside-battle-runtime",
+              "owner": "future Defensive Tactics selected-option owner plus Opportunity Attack and same-turn repeat-attacker attack-roll Disadvantage owners",
+              "reason": "SRD 5.2.1 Defensive Tactics grants one replaceable option after a Short or Long Rest. Escape the Horde makes Opportunity Attacks have Disadvantage against the Ranger, consuming the existing Opportunity Attack reaction window and attack-roll roll-mode pipeline. Multiattack Defense triggers when a creature hits the Ranger with an attack roll, then gives that same creature Disadvantage on all other attack rolls against the Ranger for the rest of that turn, consuming the attack-hit event, current-turn boundary, attacker identity, and attack-roll roll-mode pipeline. A future owner must retain exactly one selected option on the selected feature ref, preserve Short/Long Rest replacement, and route each option through typed roll-mode facts without storing both options as simultaneously executable, duplicating Opportunity Attack/reaction state, duplicating attack history beyond the source-owned same-turn effect, or dispatching on Ranger, Hunter, Defensive Tactics, or option authored identity.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
             "battleReadinessStatus": "not-applicable",
             "catalogAdmissionState": "not-installed",
             "concept": "Ranger Defensive Tactics",
-            "finalDisposition": "class-progression-follow-up-required",
+            "finalDisposition": "catalog-only/dead-for-now",
             "levelBand": "level-7",
-            "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+            "nextAction": "SRD 5.2.1 Defensive Tactics grants one replaceable option after a Short or Long Rest. Escape the Horde makes Opportunity Attacks have Disadvantage against the Ranger, consuming the existing Opportunity Attack reaction window and attack-roll roll-mode pipeline. Multiattack Defense triggers when a creature hits the Ranger with an attack roll, then gives that same creature Disadvantage on all other attack rolls against the Ranger for the rest of that turn, consuming the attack-hit event, current-turn boundary, attacker identity, and attack-roll roll-mode pipeline. A future owner must retain exactly one selected option on the selected feature ref, preserve Short/Long Rest replacement, and route each option through typed roll-mode facts without storing both options as simultaneously executable, duplicating Opportunity Attack/reaction state, duplicating attack history beyond the source-owned same-turn effect, or dispatching on Ranger, Hunter, Defensive Tactics, or option authored identity.",
             "rowId": "srd521:classes/ranger:level-7:class-feature-grant:ranger_defensive_tactics",
             "rowKind": "class-feature-grant",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           }
         ],
         "reason": "The SRD row has level-7 class-feature pressure, but no Unit matrix row exists yet.",

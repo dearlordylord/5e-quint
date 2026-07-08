@@ -44,8 +44,8 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | --- | ---: |
 | catalog-authored-review-required | 49 |
 | catalog-installed-owner-evidence-present | 503 |
-| catalog-only/dead-for-now | 230 |
-| class-progression-follow-up-required | 14 |
+| catalog-only/dead-for-now | 231 |
+| class-progression-follow-up-required | 13 |
 | missing-authored-record | 32 |
 | non-runtime | 96 |
 
@@ -60,10 +60,10 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 134 |
+| not-recorded | 133 |
 | profile-subset-supported | 59 |
 | supported-profile | 310 |
-| unsupported-profile | 421 |
+| unsupported-profile | 422 |
 
 ### Battle Readiness Snapshot
 
@@ -758,7 +758,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Ranger level 5 feature table row | level-5 | character-level | character-creation or progression mechanic | `class_ranger` | `.references/srd-5.2.1/Classes/Ranger.md:39` |  | present |  |  | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
 | Ranger Roving | level-6 | character-level | class feature | `ranger_roving` | `.references/srd-5.2.1/Classes/Ranger.md:114` |  | present |  |  | installed | supported-profile | catalog-installed-owner-evidence-present | not-applicable | not-recorded | Owner-specific operational evidence is classified and present. |
 | Ranger level 6 feature table row | level-6 | character-level | character-creation or progression mechanic | `class_ranger` | `.references/srd-5.2.1/Classes/Ranger.md:40` |  | present |  |  | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
-| Ranger Defensive Tactics | level-7 | character-level | class feature | `ranger_defensive_tactics` | `.references/srd-5.2.1/Classes/Ranger.md:251` |  | present |  |  | not-installed | not-recorded | class-progression-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
+| Ranger Defensive Tactics | level-7 | character-level | class feature | `ranger_defensive_tactics` | `.references/srd-5.2.1/Classes/Ranger.md:251` |  | present |  |  | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | outside-battle-runtime: future Defensive Tactics selected-option owner plus Opportunity Attack and same-turn repeat-attacker attack-roll Disadvantage owners | SRD 5.2.1 Defensive Tactics grants one replaceable option after a Short or Long Rest. Escape the Horde makes Opportunity Attacks have Disadvantage against the Ranger, consuming the existing Opportunity Attack reaction window and attack-roll roll-mode pipeline. Multiattack Defense triggers when a creature hits the Ranger with an attack roll, then gives that same creature Disadvantage on all other attack rolls against the Ranger for the rest of that turn, consuming the attack-hit event, current-turn boundary, attacker identity, and attack-roll roll-mode pipeline. A future owner must retain exactly one selected option on the selected feature ref, preserve Short/Long Rest replacement, and route each option through typed roll-mode facts without storing both options as simultaneously executable, duplicating Opportunity Attack/reaction state, duplicating attack history beyond the source-owned same-turn effect, or dispatching on Ranger, Hunter, Defensive Tactics, or option authored identity. |
 | Ranger level 7 feature table row | level-7 | character-level | character-creation or progression mechanic | `class_ranger` | `.references/srd-5.2.1/Classes/Ranger.md:41` |  | present |  |  | installed | unsupported-profile | non-runtime | not-applicable | outside-battle-runtime: class-progression-accounting | No runtime work; keep classification as explicit closure. |
 | Ranger Ability Score Improvement | level-8 | character-level | class feature | `ranger_ability_score_improvement_l8` | `.references/srd-5.2.1/Classes/Ranger.md:42` | dedicated-rule-text: .references/srd-5.2.1/Classes/Ranger.md:106 | present |  |  | not-installed | not-recorded | class-progression-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
 | Ranger level 8 feature table row | level-8 | character-level | character-creation or progression mechanic | `class_ranger` | `.references/srd-5.2.1/Classes/Ranger.md:42` |  | present |  |  | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |

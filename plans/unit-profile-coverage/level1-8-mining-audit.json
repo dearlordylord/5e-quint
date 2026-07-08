@@ -56,8 +56,8 @@
     "rowsByFinalDisposition": {
       "catalog-authored-review-required": 49,
       "catalog-installed-owner-evidence-present": 503,
-      "catalog-only/dead-for-now": 230,
-      "class-progression-follow-up-required": 14,
+      "catalog-only/dead-for-now": 231,
+      "class-progression-follow-up-required": 13,
       "missing-authored-record": 32,
       "non-runtime": 96
     },
@@ -90,10 +90,10 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 134,
+      "not-recorded": 133,
       "profile-subset-supported": 59,
       "supported-profile": 310,
-      "unsupported-profile": 421
+      "unsupported-profile": 422
     }
   },
   "rows": [
@@ -22686,7 +22686,7 @@
         "sourceInventoryRowId": "srd521:classes/ranger:level-7:class-feature-grant:ranger_defensive_tactics",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "SRD 5.2.1 Defensive Tactics grants one replaceable option after a Short or Long Rest. Escape the Horde makes Opportunity Attacks have Disadvantage against the Ranger, consuming the existing Opportunity Attack reaction window and attack-roll roll-mode pipeline. Multiattack Defense triggers when a creature hits the Ranger with an attack roll, then gives that same creature Disadvantage on all other attack rolls against the Ranger for the rest of that turn, consuming the attack-hit event, current-turn boundary, attacker identity, and attack-roll roll-mode pipeline. A future owner must retain exactly one selected option on the selected feature ref, preserve Short/Long Rest replacement, and route each option through typed roll-mode facts without storing both options as simultaneously executable, duplicating Opportunity Attack/reaction state, duplicating attack history beyond the source-owned same-turn effect, or dispatching on Ranger, Hunter, Defensive Tactics, or option authored identity.",
       "rowId": "srd521:classes/ranger:level-7:class-feature-grant:ranger_defensive_tactics",
       "rowKind": "class-feature-grant",
       "source": {
@@ -22702,15 +22702,20 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future Defensive Tactics selected-option owner plus Opportunity Attack and same-turn repeat-attacker attack-roll Disadvantage owners",
+          "reason": "SRD 5.2.1 Defensive Tactics grants one replaceable option after a Short or Long Rest. Escape the Horde makes Opportunity Attacks have Disadvantage against the Ranger, consuming the existing Opportunity Attack reaction window and attack-roll roll-mode pipeline. Multiattack Defense triggers when a creature hits the Ranger with an attack roll, then gives that same creature Disadvantage on all other attack rolls against the Ranger for the rest of that turn, consuming the attack-hit event, current-turn boundary, attacker identity, and attack-roll roll-mode pipeline. A future owner must retain exactly one selected option on the selected feature ref, preserve Short/Long Rest replacement, and route each option through typed roll-mode facts without storing both options as simultaneously executable, duplicating Opportunity Attack/reaction state, duplicating attack history beyond the source-owned same-turn effect, or dispatching on Ranger, Hunter, Defensive Tactics, or option authored identity.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "ranger_defensive_tactics"
         },
-        "finalDisposition": "class-progression-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
