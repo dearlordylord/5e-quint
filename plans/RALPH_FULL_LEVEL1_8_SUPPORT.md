@@ -31,7 +31,7 @@
     {
       "number": 5,
       "id": "L7FULL-01-CLASS-TABLE-SUMMARY-CLOSURE",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Close the twelve level-7 class-table summary rows"
     },
     {
@@ -330,7 +330,7 @@ Spell-level-4 unique identities currently in the level-7 mining audit:
 | 2 | L18FOUND-02-LEVEL8-INVENTORY-ENABLEMENT - Extend SRD inventory mining through character level 8 | done | L18FOUND-01-BASELINE-ACCOUNTING-SNAPSHOT | Added generated `level1-8-mining-audit` artifacts and level-8 inventory rows. |
 | 3 | L18FOUND-03-LEVEL17-18-REPORT-GATE-SHAPE - Add level-1-7 and level-1-8 full-support report plumbing | done | L18FOUND-02-LEVEL8-INVENTORY-ENABLEMENT | Creates strict full-support artifacts for both scopes. |
 | 4 | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION - Add checker protection against empty or vacuous higher-level scopes | done | L18FOUND-03-LEVEL17-18-REPORT-GATE-SHAPE | Prevents accidental pass from missing bands or empty denominators. |
-| 5 | L7FULL-01-CLASS-TABLE-SUMMARY-CLOSURE - Close the twelve level-7 class-table summary rows | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Table rows remain non-runtime but checker-visible. |
+| 5 | L7FULL-01-CLASS-TABLE-SUMMARY-CLOSURE - Close the twelve level-7 class-table summary rows | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Table rows remain non-runtime but checker-visible. |
 | 6 | L7FULL-02-ROGUE-EVASION-EVIDENCE-PRESERVATION - Preserve existing Rogue Evasion support evidence | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Existing support must survive the new strict scope. |
 | 7 | L7FULL-03-MONK-EVASION-REUSE-ADMISSION - Admit Monk Evasion through the existing Evasion support model | blocked | L7FULL-02-ROGUE-EVASION-EVIDENCE-PRESERVATION | Reuses typed Evasion semantics without authored-identity dispatch. |
 | 8 | L7FULL-04-FIGHTER-ADDITIONAL-FIGHTING-STYLE - Resolve Fighter Additional Fighting Style level-7 accounting | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Character-selection grant closure or support evidence. |
@@ -623,7 +623,7 @@ Plan Impact:
 
 ### Task 5 - L7FULL-01-CLASS-TABLE-SUMMARY-CLOSURE
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on: `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`
 
@@ -663,7 +663,11 @@ Verification:
 
 Plan Impact:
 
-- none unless new table-derived obligations are found.
+- `applied`: level-7 `class-table-summary` rows now carry a generated
+  `outside-battle-runtime: class-progression-accounting` closure in
+  `srd-unit-inventory.json`, `level1-7-mining-audit.json`, and the level 1-8
+  mining artifacts. The checker validates all twelve level-7 table rows keep
+  that source-backed non-runtime closure.
 
 ### Task 6 - L7FULL-02-ROGUE-EVASION-EVIDENCE-PRESERVATION
 

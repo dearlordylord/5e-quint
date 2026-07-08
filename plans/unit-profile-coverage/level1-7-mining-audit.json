@@ -1398,7 +1398,11 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "class-progression-accounting",
+          "reason": "The SRD class table row is a progression summary. Narrower feature, spell-access, resource, and table-derived rows own executable obligations; no battle runtime state is introduced for the summary row.",
+          "source": "srd-unit-inventory:level-7-class-table-summary",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "installed",
@@ -2633,7 +2637,11 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "class-progression-accounting",
+          "reason": "The SRD class table row is a progression summary. Narrower feature, spell-access, resource, and table-derived rows own executable obligations; no battle runtime state is introduced for the summary row.",
+          "source": "srd-unit-inventory:level-7-class-table-summary",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "installed",
@@ -7549,7 +7557,11 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "class-progression-accounting",
+          "reason": "The SRD class table row is a progression summary. Narrower feature, spell-access, resource, and table-derived rows own executable obligations; no battle runtime state is introduced for the summary row.",
+          "source": "srd-unit-inventory:level-7-class-table-summary",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "installed",
@@ -11888,7 +11900,11 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "class-progression-accounting",
+          "reason": "The SRD class table row is a progression summary. Narrower feature, spell-access, resource, and table-derived rows own executable obligations; no battle runtime state is introduced for the summary row.",
+          "source": "srd-unit-inventory:level-7-class-table-summary",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "installed",
@@ -16819,7 +16835,11 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "class-progression-accounting",
+          "reason": "The SRD class table row is a progression summary. Narrower feature, spell-access, resource, and table-derived rows own executable obligations; no battle runtime state is introduced for the summary row.",
+          "source": "srd-unit-inventory:level-7-class-table-summary",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "installed",
@@ -18228,7 +18248,11 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "class-progression-accounting",
+          "reason": "The SRD class table row is a progression summary. Narrower feature, spell-access, resource, and table-derived rows own executable obligations; no battle runtime state is introduced for the summary row.",
+          "source": "srd-unit-inventory:level-7-class-table-summary",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "installed",
@@ -19558,7 +19582,11 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "class-progression-accounting",
+          "reason": "The SRD class table row is a progression summary. Narrower feature, spell-access, resource, and table-derived rows own executable obligations; no battle runtime state is introduced for the summary row.",
+          "source": "srd-unit-inventory:level-7-class-table-summary",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "installed",
@@ -21887,7 +21915,11 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "class-progression-accounting",
+          "reason": "The SRD class table row is a progression summary. Narrower feature, spell-access, resource, and table-derived rows own executable obligations; no battle runtime state is introduced for the summary row.",
+          "source": "srd-unit-inventory:level-7-class-table-summary",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "installed",
@@ -24595,7 +24627,11 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "class-progression-accounting",
+          "reason": "The SRD class table row is a progression summary. Narrower feature, spell-access, resource, and table-derived rows own executable obligations; no battle runtime state is introduced for the summary row.",
+          "source": "srd-unit-inventory:level-7-class-table-summary",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "installed",
@@ -25792,7 +25828,11 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "class-progression-accounting",
+          "reason": "The SRD class table row is a progression summary. Narrower feature, spell-access, resource, and table-derived rows own executable obligations; no battle runtime state is introduced for the summary row.",
+          "source": "srd-unit-inventory:level-7-class-table-summary",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "installed",
@@ -31219,7 +31259,11 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "class-progression-accounting",
+          "reason": "The SRD class table row is a progression summary. Narrower feature, spell-access, resource, and table-derived rows own executable obligations; no battle runtime state is introduced for the summary row.",
+          "source": "srd-unit-inventory:level-7-class-table-summary",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "installed",
@@ -34419,7 +34463,11 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "class-progression-accounting",
+          "reason": "The SRD class table row is a progression summary. Narrower feature, spell-access, resource, and table-derived rows own executable obligations; no battle runtime state is introduced for the summary row.",
+          "source": "srd-unit-inventory:level-7-class-table-summary",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "installed",

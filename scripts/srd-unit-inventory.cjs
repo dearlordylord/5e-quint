@@ -1,6 +1,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const {
+  battleReadinessClosureKind,
   battleReadinessClosureKinds,
   deterministicAdmissionProjectionEvidenceTag,
   isUnitFeatureProfileId,
@@ -3023,7 +3024,8 @@ function withState(rows, authored, installedIds, ownerEvidenceSources) {
     );
     const battleReadinessClosure =
       battleReadinessClosureFromUnitClaim(unitClaim) ??
-      battleReadinessClosureFromSpellUnitMissingClassification(row);
+      battleReadinessClosureFromSpellUnitMissingClassification(row) ??
+      classTableSummaryClosure(row, disposition);
     const missingClassificationEvidence =
       ownerEvidenceFromSpellUnitMissingClassification(row, disposition);
     const rowWithState = {
@@ -3142,6 +3144,23 @@ function battleReadinessClosureFromSpellUnitMissingClassification(row) {
     reason:
       classification.battleReadinessClosure.reason ??
       classification.missingConstruct,
+  };
+}
+
+function classTableSummaryClosure(row, disposition) {
+  if (
+    disposition !== "non-runtime" ||
+    row.rowKind !== "class-table-summary" ||
+    row.levelBand !== "level-7"
+  ) {
+    return undefined;
+  }
+  return {
+    source: "srd-unit-inventory:level-7-class-table-summary",
+    kind: battleReadinessClosureKind.outsideBattleRuntime,
+    owner: "class-progression-accounting",
+    reason:
+      "The SRD class table row is a progression summary. Narrower feature, spell-access, resource, and table-derived rows own executable obligations; no battle runtime state is introduced for the summary row.",
   };
 }
 
@@ -5166,6 +5185,27 @@ function validateSrdUnitInventory(report) {
     if (levelRows.length !== expectedCount) {
       issues.push(
         `${levelBand} class/subclass mining inventory must contain ${expectedCount} rows; got ${levelRows.length}.`,
+      );
+    }
+  }
+  const levelSevenTableRows = report.rows.filter(
+    (row) => row.levelBand === "level-7" && row.rowKind === "class-table-summary",
+  );
+  if (levelSevenTableRows.length !== 12) {
+    issues.push(
+      `Level-7 mining inventory must contain 12 class-table-summary rows; got ${levelSevenTableRows.length}.`,
+    );
+  }
+  for (const row of levelSevenTableRows) {
+    if (
+      row.battleReadinessClosure?.source !==
+        "srd-unit-inventory:level-7-class-table-summary" ||
+      row.battleReadinessClosure.kind !==
+        battleReadinessClosureKind.outsideBattleRuntime ||
+      row.battleReadinessClosure.owner !== "class-progression-accounting"
+    ) {
+      issues.push(
+        `${row.id} lacks the generated level-7 class-table summary closure.`,
       );
     }
   }
