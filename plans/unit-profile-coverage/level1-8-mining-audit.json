@@ -52,8 +52,7 @@
     },
     "rowsByFinalDisposition": {
       "catalog-installed-owner-evidence-present": 503,
-      "catalog-only/dead-for-now": 281,
-      "class-progression-follow-up-required": 12,
+      "catalog-only/dead-for-now": 293,
       "missing-authored-runtime-closed": 32,
       "non-runtime": 96
     },
@@ -86,10 +85,10 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 51,
+      "not-recorded": 39,
       "profile-subset-supported": 59,
       "supported-profile": 310,
-      "unsupported-profile": 504
+      "unsupported-profile": 516
     }
   },
   "rows": [
@@ -1435,7 +1434,7 @@
         "sourceInventoryRowId": "srd521:classes/barbarian:level-8:class-feature-grant:barbarian_ability_score_improvement",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
       "relatedSources": [
         {
           "kind": "dedicated-rule-text",
@@ -1461,15 +1460,20 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "selection-grant-container",
+          "owner": "future character-creation repeated ASI grant-occurrence owner plus selected feat Unit profiles",
+          "reason": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "barbarian_ability_score_improvement_l8"
         },
-        "finalDisposition": "class-progression-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -2777,7 +2781,7 @@
         "sourceInventoryRowId": "srd521:classes/bard:level-8:class-feature-grant:bard_ability_score_improvement",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
       "relatedSources": [
         {
           "kind": "dedicated-rule-text",
@@ -2803,15 +2807,20 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "selection-grant-container",
+          "owner": "future character-creation repeated ASI grant-occurrence owner plus selected feat Unit profiles",
+          "reason": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "bard_ability_score_improvement_l8"
         },
-        "finalDisposition": "class-progression-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -7883,7 +7892,7 @@
         "sourceInventoryRowId": "srd521:classes/cleric:level-8:class-feature-grant:cleric_ability_score_improvement",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
       "relatedSources": [
         {
           "kind": "dedicated-rule-text",
@@ -7909,15 +7918,20 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "selection-grant-container",
+          "owner": "future character-creation repeated ASI grant-occurrence owner plus selected feat Unit profiles",
+          "reason": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "cleric_ability_score_improvement_l8"
         },
-        "finalDisposition": "class-progression-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -12407,7 +12421,7 @@
         "sourceInventoryRowId": "srd521:classes/druid:level-8:class-feature-grant:druid_ability_score_improvement",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
       "relatedSources": [
         {
           "kind": "dedicated-rule-text",
@@ -12433,15 +12447,20 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "selection-grant-container",
+          "owner": "future character-creation repeated ASI grant-occurrence owner plus selected feat Unit profiles",
+          "reason": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "druid_ability_score_improvement_l8"
         },
-        "finalDisposition": "class-progression-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -17583,7 +17602,7 @@
         "sourceInventoryRowId": "srd521:classes/fighter:level-8:class-feature-grant:fighter_ability_score_improvement",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
       "relatedSources": [
         {
           "kind": "dedicated-rule-text",
@@ -17609,15 +17628,20 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "selection-grant-container",
+          "owner": "future character-creation repeated ASI grant-occurrence owner plus selected feat Unit profiles",
+          "reason": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "fighter_ability_score_improvement_l8"
         },
-        "finalDisposition": "class-progression-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -19097,7 +19121,7 @@
         "sourceInventoryRowId": "srd521:classes/monk:level-8:class-feature-grant:monk_ability_score_improvement",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
       "relatedSources": [
         {
           "kind": "dedicated-rule-text",
@@ -19123,15 +19147,20 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "selection-grant-container",
+          "owner": "future character-creation repeated ASI grant-occurrence owner plus selected feat Unit profiles",
+          "reason": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "monk_ability_score_improvement_l8"
         },
-        "finalDisposition": "class-progression-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -20551,7 +20580,7 @@
         "sourceInventoryRowId": "srd521:classes/paladin:level-8:class-feature-grant:paladin_ability_score_improvement",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
       "relatedSources": [
         {
           "kind": "dedicated-rule-text",
@@ -20577,15 +20606,20 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "selection-grant-container",
+          "owner": "future character-creation repeated ASI grant-occurrence owner plus selected feat Unit profiles",
+          "reason": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "paladin_ability_score_improvement_l8"
         },
-        "finalDisposition": "class-progression-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -22987,7 +23021,7 @@
         "sourceInventoryRowId": "srd521:classes/ranger:level-8:class-feature-grant:ranger_ability_score_improvement",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
       "relatedSources": [
         {
           "kind": "dedicated-rule-text",
@@ -23013,15 +23047,20 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "selection-grant-container",
+          "owner": "future character-creation repeated ASI grant-occurrence owner plus selected feat Unit profiles",
+          "reason": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "ranger_ability_score_improvement_l8"
         },
-        "finalDisposition": "class-progression-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -25802,7 +25841,7 @@
         "sourceInventoryRowId": "srd521:classes/rogue:level-8:class-feature-grant:rogue_ability_score_improvement",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
       "relatedSources": [
         {
           "kind": "dedicated-rule-text",
@@ -25828,15 +25867,20 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "selection-grant-container",
+          "owner": "future character-creation repeated ASI grant-occurrence owner plus selected feat Unit profiles",
+          "reason": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "rogue_ability_score_improvement_l8"
         },
-        "finalDisposition": "class-progression-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -27106,7 +27150,7 @@
         "sourceInventoryRowId": "srd521:classes/sorcerer:level-8:class-feature-grant:sorcerer_ability_score_improvement",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
       "relatedSources": [
         {
           "kind": "dedicated-rule-text",
@@ -27132,15 +27176,20 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "selection-grant-container",
+          "owner": "future character-creation repeated ASI grant-occurrence owner plus selected feat Unit profiles",
+          "reason": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "sorcerer_ability_score_improvement_l8"
         },
-        "finalDisposition": "class-progression-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -32749,7 +32798,7 @@
         "sourceInventoryRowId": "srd521:classes/warlock:level-8:class-feature-grant:warlock_ability_score_improvement",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
       "relatedSources": [
         {
           "kind": "dedicated-rule-text",
@@ -32775,15 +32824,20 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "selection-grant-container",
+          "owner": "future character-creation repeated ASI grant-occurrence owner plus selected feat Unit profiles",
+          "reason": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "warlock_ability_score_improvement_l8"
         },
-        "finalDisposition": "class-progression-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
@@ -36093,7 +36147,7 @@
         "sourceInventoryRowId": "srd521:classes/wizard:level-8:class-feature-grant:wizard_ability_score_improvement",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
       "relatedSources": [
         {
           "kind": "dedicated-rule-text",
@@ -36119,15 +36173,20 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "selection-grant-container",
+          "owner": "future character-creation repeated ASI grant-occurrence owner plus selected feat Unit profiles",
+          "reason": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "wizard_ability_score_improvement_l8"
         },
-        "finalDisposition": "class-progression-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },

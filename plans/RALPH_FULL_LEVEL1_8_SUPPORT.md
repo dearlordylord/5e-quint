@@ -345,7 +345,7 @@ Spell-level-4 unique identities currently in the level-7 mining audit:
 | 17 | L7FULL-13-ROGUE-RELIABLE-TALENT - Close Rogue Reliable Talent with explicit Ability Check ownership | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Ability Check floor is not attack/save runtime unless a generic check owner exists. |
 | 18 | L7FULL-14-SPELL-LEVEL4-STRICT-CLOSURE - Classify and close spell-level-4 pressure for level 7 | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Strict denominator closure for 34 unique identities and 81 class-list rows. |
 | 19 | L8FULL-01-CLASS-TABLE-SUMMARY-CLOSURE - Close the twelve level-8 class-table summary rows | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Requires generated level-8 inventory rows. |
-| 20 | L8FULL-02-REPEATED-ASI-GRANT-OCCURRENCES - Close the twelve level-8 repeated Ability Score Improvement rows | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Repeated ASI occurrence closure across all SRD classes. |
+| 20 | L8FULL-02-REPEATED-ASI-GRANT-OCCURRENCES - Close the twelve level-8 repeated Ability Score Improvement rows | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Repeated ASI occurrence closure across all SRD classes. |
 | 21 | L8FULL-03-NUMERIC-PROGRESSION-DELTAS - Close level-8 class numeric progression deltas | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Prepared spells, spell slots, points/resources, and table counters. |
 | 22 | L8FULL-04-DRUID-WILD-SHAPE-FLY-SPEED-THRESHOLD - Audit Druid Wild Shape Fly Speed threshold at level 8 | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Level-8 threshold changes form eligibility, not active-form persistence. |
 | 23 | L8FULL-05-SPELL-LEVEL4-CARRY-FORWARD - Carry spell-level-4 closure into the level-8 claim | blocked | L7FULL-14-SPELL-LEVEL4-STRICT-CLOSURE, L8FULL-03-NUMERIC-PROGRESSION-DELTAS | Ensures level 8 does not reopen spell-level-4 pressure. |
@@ -1576,7 +1576,7 @@ Plan Impact:
 
 ### Task 20 - L8FULL-02-REPEATED-ASI-GRANT-OCCURRENCES
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on: `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`
 
@@ -1615,8 +1615,19 @@ Verification:
 
 Plan Impact:
 
-- Update-required if repeated ASI closure becomes a shared helper that changes
-  level-6 or level-4 accounting.
+- `applied`: added explicit unsupported-profile closures for all twelve
+  level-8 Ability Score Improvement grant occurrences. Each row closes as a
+  repeated ASI `selection-grant-container` owned by a future character-creation
+  repeated grant-occurrence owner plus selected feat Unit profiles.
+- Added checker validation that table-derived repeated ASI rows keep the
+  repeated ASI selection-grant-container disposition instead of drifting back to
+  generic class-progression follow-up.
+- RAW/ubiquitous-language pass checked all twelve level-8 class table rows, the
+  class-specific level-4 ASI rule text that names the level-8 repeat, and the
+  `UBIQUITOUS_LANGUAGE.md` Ability Score Improvement / Feat / Character Sheet
+  terms.
+- Verification: `pnpm unit-profile-coverage:check --write`,
+  `pnpm unit-profile-coverage:check`, `git diff --check`.
 
 ### Task 21 - L8FULL-03-NUMERIC-PROGRESSION-DELTAS
 

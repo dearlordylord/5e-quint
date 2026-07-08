@@ -5474,6 +5474,19 @@ function validateSrdUnitInventory(report) {
         `${levelBand} table-derived repeated class-feature inventory row ${candidateUnitId} lacks a dedicated rule-text related source.`,
       );
     }
+    if (candidateUnitId.includes("_ability_score_improvement_")) {
+      if (
+        row.finalDisposition !== "catalog-only/dead-for-now" ||
+        row.battleReadinessClosure?.kind !==
+          battleReadinessClosureKind.selectionGrantContainer ||
+        row.battleReadinessClosure.owner !==
+          "future character-creation repeated ASI grant-occurrence owner plus selected feat Unit profiles"
+      ) {
+        issues.push(
+          `${levelBand} repeated Ability Score Improvement row ${candidateUnitId} must close as a repeated ASI selection-grant container.`,
+        );
+      }
+    }
   }
   for (const row of report.rows.filter((candidate) =>
     classProgressionFrontierLevelBands.has(candidate.levelBand),
