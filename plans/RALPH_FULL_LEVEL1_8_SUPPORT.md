@@ -85,7 +85,7 @@
     {
       "number": 14,
       "id": "L7FULL-10-BARD-COUNTERCHARM",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Close Bard Countercharm with explicit reaction/save-reroll ownership"
     },
     {
@@ -339,7 +339,7 @@ Spell-level-4 unique identities currently in the level-7 mining audit:
 | 11 | L7FULL-07-BARBARIAN-INSTINCTIVE-POUNCE - Resolve Barbarian Instinctive Pounce level-7 accounting | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Rage-entry activation rider closed to future movement owner. |
 | 12 | L7FULL-08-SORCERER-SORCERY-INCARNATE - Resolve Sorcerer Sorcery Incarnate level-7 accounting | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Split future owners for Innate Sorcery alternate spend and active Metamagic option limit. |
 | 13 | L7FULL-09-BARBARIAN-FERAL-INSTINCT - Close Barbarian Feral Instinct at the Initiative boundary | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Future generic start-battle Initiative roll-mode owner required. |
-| 14 | L7FULL-10-BARD-COUNTERCHARM - Close Bard Countercharm with explicit reaction/save-reroll ownership | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Reaction timing and Charmed/Frightened save-failure trigger must be typed or future-owned. |
+| 14 | L7FULL-10-BARD-COUNTERCHARM - Close Bard Countercharm with explicit reaction/save-reroll ownership | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Future class-feature triggered-Reaction save reroll owner required. |
 | 15 | L7FULL-11-PALADIN-AURA-OF-DEVOTION - Close Paladin Aura of Devotion with explicit aura ownership | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Aura membership and immunity projection are future-owner facts unless implemented. |
 | 16 | L7FULL-12-RANGER-DEFENSIVE-TACTICS - Close Ranger Defensive Tactics with explicit check/save ownership | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Multi-option subclass defensive facts must not become vague unsupported rows. |
 | 17 | L7FULL-13-ROGUE-RELIABLE-TALENT - Close Rogue Reliable Talent with explicit Ability Check ownership | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Ability Check floor is not attack/save runtime unless a generic check owner exists. |
@@ -1189,7 +1189,7 @@ Plan Impact:
 
 ### Task 14 - L7FULL-10-BARD-COUNTERCHARM
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on: `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`
 
@@ -1208,6 +1208,19 @@ Output:
 - Support evidence or precise closure for "creature within 30 feet fails a
   Saving Throw against an effect applying Charmed or Frightened".
 
+Completion Evidence:
+
+- Added an `unsupported-profile` Unit claim for `bard_countercharm` with an
+  `outside-battle-runtime` closure.
+- The closure names a future class-feature triggered-Reaction save-failure
+  reroll owner plus condition-application and range-witness owners.
+- Regenerated the SRD inventory and level-1-7/level-1-8 support reports.
+- `bard_countercharm` now remains not installed, is not counted as a supported
+  runtime profile, and is closed by explicit future-owner evidence for
+  observing the in-flight failed Saving Throw, checking Charmed/Frightened
+  application, checking the Bard-or-within-30-feet range predicate, spending
+  Reaction, and rerolling the same save with Advantage.
+
 Acceptance:
 
 - Trigger timing, range witness, condition-applies predicate, Reaction spend,
@@ -1223,12 +1236,26 @@ Forbidden Shortcuts:
 Verification:
 
 - RAW check against Countercharm and condition terminology.
-- Focused reaction/save tests if promoted.
+- RAW checked `.references/srd-5.2.1/Classes/Bard.md:119-123`,
+  `.references/srd-5.2.1/Playing-the-Game.md:326-333`,
+  `.references/srd-5.2.1/Rules-Glossary.md:816-818`, and
+  `.references/srd-5.2.1/Rules-Glossary.md:484-496`; Ubiquitous Language
+  checked Saving Throw, Charmed, Frightened, Reaction, and Turn terminology.
+- Reviewed `scripts/content-surface-survey/REPORT_SRD.md` and
+  `scripts/content-surface-survey/results-srd/bard_countercharm_l7/proposal.md`
+  for triggered-reaction, save-failure-condition trigger, range, and
+  reroll-with-Advantage surface gaps.
+- No focused reaction/save tests were run because no runtime behavior was
+  promoted.
+- `pnpm unit-profile-coverage:check --write`
 - `pnpm unit-profile-coverage:check`
 
 Plan Impact:
 
-- Update-required if class-feature triggered reactions become a shared family.
+- `applied`: future promotion should introduce a shared class-feature
+  triggered-Reaction family that consumes the existing Reaction resource and
+  in-flight save outcome facts without copying condition or spell state into
+  Bard-local storage.
 
 ### Task 15 - L7FULL-11-PALADIN-AURA-OF-DEVOTION
 

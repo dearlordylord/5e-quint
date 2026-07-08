@@ -44,8 +44,8 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | --- | ---: |
 | catalog-authored-review-required | 49 |
 | catalog-installed-owner-evidence-present | 503 |
-| catalog-only/dead-for-now | 228 |
-| class-progression-follow-up-required | 16 |
+| catalog-only/dead-for-now | 229 |
+| class-progression-follow-up-required | 15 |
 | missing-authored-record | 32 |
 | non-runtime | 96 |
 
@@ -60,10 +60,10 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 136 |
+| not-recorded | 135 |
 | profile-subset-supported | 59 |
 | supported-profile | 310 |
-| unsupported-profile | 419 |
+| unsupported-profile | 420 |
 
 ### Battle Readiness Snapshot
 
@@ -317,7 +317,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Bard level 5 feature table row | level-5 | character-level | character-creation or progression mechanic | `class_bard` | `.references/srd-5.2.1/Classes/Bard.md:40` |  | present |  |  | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
 | Bard Magical Discoveries | level-6 | character-level | class feature | `bard_magical_discoveries` | `.references/srd-5.2.1/Classes/Bard.md:336` |  | present |  |  | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | character-fact-and-runtime-detached-split: future-owner-before-SDK character-creation and character-sheet Magical Discoveries spell-access selection owner plus selected Spell Definition invocation profiles | SRD Magical Discoveries grants two chosen always-prepared spells from the Cleric, Druid, or Wizard spell lists, limited to cantrips or spells for which the Bard has Spell Slots, and allows replacing one chosen spell whenever the character gains a Bard level. A future owner must consume typed Surface facts for the selected College of Lore feature, derive eligible cross-list options from canonical spell-list and Bard Spell Slot facts, retain selected Spell Access as source-scoped character facts, and perform Bard-level replacement without adding a duplicate prepared-spell list, duplicating Spell Slot state, or dispatching on Bard, College of Lore, Magical Discoveries, or selected spell authored identity. Individual Spell Definition invocation behavior remains owned by spell invocation profiles. |
 | Bard level 6 feature table row | level-6 | character-level | character-creation or progression mechanic | `class_bard` | `.references/srd-5.2.1/Classes/Bard.md:41` |  | present |  |  | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
-| Bard Countercharm | level-7 | character-level | class feature | `bard_countercharm` | `.references/srd-5.2.1/Classes/Bard.md:119` |  | present |  |  | not-installed | not-recorded | class-progression-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
+| Bard Countercharm | level-7 | character-level | class feature | `bard_countercharm` | `.references/srd-5.2.1/Classes/Bard.md:119` |  | present |  |  | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | outside-battle-runtime: future class-feature triggered-Reaction save-failure reroll owner plus condition-application and range-witness owners | A future owner must consume a selected Countercharm source fact, observe an in-flight failed Saving Throw event, verify that the failed save's source effect applies the Charmed or Frightened condition, verify the triggering creature is the Bard or is within 30 feet through caller/table range witnesses, open an optional Reaction window for the Bard, spend the Bard's existing Reaction resource on commit, and reroll the same Saving Throw with Advantage while preserving the ordinary save outcome pipeline. The closure must not model Countercharm as a passive save bonus, preemptively grant Advantage to all Charmed/Frightened saves, copy spell or condition state into Bard-local storage, create a second Reaction ledger, or dispatch on Bard, Countercharm, Charmed/Frightened source spell, or condition authored identity. |
 | Bard level 7 feature table row | level-7 | character-level | character-creation or progression mechanic | `class_bard` | `.references/srd-5.2.1/Classes/Bard.md:42` |  | present |  |  | installed | unsupported-profile | non-runtime | not-applicable | outside-battle-runtime: class-progression-accounting | No runtime work; keep classification as explicit closure. |
 | Bard Ability Score Improvement | level-8 | character-level | class feature | `bard_ability_score_improvement_l8` | `.references/srd-5.2.1/Classes/Bard.md:43` | dedicated-rule-text: .references/srd-5.2.1/Classes/Bard.md:109 | present |  |  | not-installed | not-recorded | class-progression-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
 | Bard level 8 feature table row | level-8 | character-level | character-creation or progression mechanic | `class_bard` | `.references/srd-5.2.1/Classes/Bard.md:43` |  | present | Prepared Spells: 11 -> 12 (.references/srd-5.2.1/Classes/Bard.md:42 -> .references/srd-5.2.1/Classes/Bard.md:43); Spell slot level 4: 1 -> 2 (.references/srd-5.2.1/Classes/Bard.md:42 -> .references/srd-5.2.1/Classes/Bard.md:43) |  | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |

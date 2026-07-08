@@ -56,8 +56,8 @@
     "rowsByFinalDisposition": {
       "catalog-authored-review-required": 49,
       "catalog-installed-owner-evidence-present": 503,
-      "catalog-only/dead-for-now": 228,
-      "class-progression-follow-up-required": 16,
+      "catalog-only/dead-for-now": 229,
+      "class-progression-follow-up-required": 15,
       "missing-authored-record": 32,
       "non-runtime": 96
     },
@@ -90,10 +90,10 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 136,
+      "not-recorded": 135,
       "profile-subset-supported": 59,
       "supported-profile": 310,
-      "unsupported-profile": 419
+      "unsupported-profile": 420
     }
   },
   "rows": [
@@ -2685,7 +2685,7 @@
         "sourceInventoryRowId": "srd521:classes/bard:level-7:class-feature-grant:bard_countercharm",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "A future owner must consume a selected Countercharm source fact, observe an in-flight failed Saving Throw event, verify that the failed save's source effect applies the Charmed or Frightened condition, verify the triggering creature is the Bard or is within 30 feet through caller/table range witnesses, open an optional Reaction window for the Bard, spend the Bard's existing Reaction resource on commit, and reroll the same Saving Throw with Advantage while preserving the ordinary save outcome pipeline. The closure must not model Countercharm as a passive save bonus, preemptively grant Advantage to all Charmed/Frightened saves, copy spell or condition state into Bard-local storage, create a second Reaction ledger, or dispatch on Bard, Countercharm, Charmed/Frightened source spell, or condition authored identity.",
       "rowId": "srd521:classes/bard:level-7:class-feature-grant:bard_countercharm",
       "rowKind": "class-feature-grant",
       "source": {
@@ -2701,15 +2701,20 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future class-feature triggered-Reaction save-failure reroll owner plus condition-application and range-witness owners",
+          "reason": "A future owner must consume a selected Countercharm source fact, observe an in-flight failed Saving Throw event, verify that the failed save's source effect applies the Charmed or Frightened condition, verify the triggering creature is the Bard or is within 30 feet through caller/table range witnesses, open an optional Reaction window for the Bard, spend the Bard's existing Reaction resource on commit, and reroll the same Saving Throw with Advantage while preserving the ordinary save outcome pipeline. The closure must not model Countercharm as a passive save bonus, preemptively grant Advantage to all Charmed/Frightened saves, copy spell or condition state into Bard-local storage, create a second Reaction ledger, or dispatch on Bard, Countercharm, Charmed/Frightened source spell, or condition authored identity.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "bard_countercharm"
         },
-        "finalDisposition": "class-progression-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },
