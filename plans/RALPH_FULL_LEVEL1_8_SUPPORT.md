@@ -175,7 +175,7 @@
     {
       "number": 29,
       "id": "L18VERIFY-01-QNT-MBT-CLOSURE-REVIEW",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Run focused QNT/MBT closure review for changed runtime behavior"
     },
     {
@@ -354,7 +354,7 @@ Spell-level-4 unique identities currently in the level-7 mining audit:
 | 26 | L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION - Extend ultra-golden scope through level 8 | done | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS | Adds level-1-7 and level-1-8 to the aggregate without weakening prior scopes. |
 | 27 | L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS - Validate MCP evidence and required flows for level 7-8 scope | done | L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION | Adds or classifies MCP vertical evidence only after support artifacts exist. |
 | 28 | L18GATE-05-CLEANROOM-SOURCE-QNT-READINESS - Refresh cleanroom and source-QNT readiness evidence | done | L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION | Source/accounting readiness verified; no target replay evidence claimed. |
-| 29 | L18VERIFY-01-QNT-MBT-CLOSURE-REVIEW - Run focused QNT/MBT closure review for changed runtime behavior | ready-for-implementation | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS | Runs focused parity verification only for changed runtime/QNT behavior. |
+| 29 | L18VERIFY-01-QNT-MBT-CLOSURE-REVIEW - Run focused QNT/MBT closure review for changed runtime behavior | done | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS | Focused Monk Evasion admission parity passed; no broad MBT run claimed. |
 | 30 | L18VERIFY-02-RAW-UBIQUITOUS-LANGUAGE-REVIEW - Run RAW and ubiquitous-language reviewer-loop convergence | ready-for-implementation | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS | Confirms every modeled rule traces to SRD text and repo terminology. |
 | 31 | L18VERIFY-03-ARCHITECTURE-CONNASCENCE-REVIEW - Run architecture and connascence review convergence | ready-for-implementation | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS | Checks duplicate state, authored-identity dispatch, and distant coupling. |
 | 32 | L18VERIFY-04-RALPH-FORMAT-CONSISTENCY-REVIEW - Verify Ralph task-index, DAG, and task-body consistency | ready-for-implementation | L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION | Ensures the plan remains runnable after task-driven edits. |
@@ -2036,7 +2036,7 @@ Plan Impact:
 
 ### Task 29 - L18VERIFY-01-QNT-MBT-CLOSURE-REVIEW
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on: `L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS`
 
@@ -2075,7 +2075,10 @@ Verification:
 
 Plan Impact:
 
-- Update-required if missing parity evidence needs concrete follow-up tasks.
+- The plan's runtime behavior change was the Monk Evasion admission through the
+  existing Evasion support model; no `*.qnt` files changed in this queue.
+- Focused verification passed: `pnpm --filter @dnd/battle-runtime exec vitest run src/rule-core-features.mbt.test.ts src/unit-profile-admission-class-roll-and-resource-features.test.ts` with timing wrapper (`TOTAL: 29s`).
+- No missing parity evidence follow-up task is required.
 
 ### Task 30 - L18VERIFY-02-RAW-UBIQUITOUS-LANGUAGE-REVIEW
 
