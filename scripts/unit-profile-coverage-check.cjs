@@ -343,6 +343,8 @@ function main() {
     level14FullSupport,
     level15FullSupport,
     level16FullSupport,
+    level17FullSupport,
+    level18FullSupport,
     mcpScenarioEvidence,
     rulesKernelMatrix: rulesKernelCoverage.matrix,
     selectedIdentityReplayEvidenceTag,

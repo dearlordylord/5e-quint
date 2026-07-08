@@ -108,17 +108,23 @@ function mcpScenarioEvidenceFixture(kind) {
         flowId: "mcp-workflow-discovery",
         scopeIds: [
           "level-1",
+          "level-1-2",
           "level-1-3",
           "level-1-4",
           "level-1-5",
           "level-1-6",
+          "level-1-7",
+          "level-1-8",
         ],
         followUpTaskIdsByScope: {
           "level-1": "C3-MCP-LEVEL12-SCENARIO-GATE",
+          "level-1-2": "C3-MCP-LEVEL12-SCENARIO-GATE",
           "level-1-3": "L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT",
           "level-1-4": "L14G-MCP-LEVEL14-SCENARIO-GATE",
           "level-1-5": "L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE",
           "level-1-6": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE",
+          "level-1-7": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS",
+          "level-1-8": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS",
         },
         description: "sample MCP flow",
       },
@@ -127,7 +133,7 @@ function mcpScenarioEvidenceFixture(kind) {
       {
         kind,
         flowId: "mcp-workflow-discovery",
-        scopeIds: ["level-1"],
+        scopeIds: ["level-1", "level-1-2"],
         scenarioId: "discover-mcp-surface",
         ownerPath: "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
         testPath: "packages/mcp/src/mcp-protocol.test.ts",
@@ -178,6 +184,28 @@ function mcpScenarioEvidenceFixture(kind) {
         requiredEvidence: {
           scenarioGoal: "fixture level-6 scenario",
           inputs: ["fixture level-6 input"],
+        },
+      },
+      {
+        scopeId: "level-1-7",
+        auditTaskId: "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS",
+        result: "new-scenario-required",
+        reason: "fixture missing level-7 scenario evidence",
+        reusedFlowIds: [],
+        requiredEvidence: {
+          scenarioGoal: "fixture level-7 scenario",
+          inputs: ["fixture level-7 input"],
+        },
+      },
+      {
+        scopeId: "level-1-8",
+        auditTaskId: "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS",
+        result: "new-scenario-required",
+        reason: "fixture missing level-8 scenario evidence",
+        reusedFlowIds: [],
+        requiredEvidence: {
+          scenarioGoal: "fixture level-8 scenario",
+          inputs: ["fixture level-8 input"],
         },
       },
     ],
@@ -1350,6 +1378,8 @@ function runSelfTest(root) {
       level14FullSupport: completeLevelReport,
       level15FullSupport: completeLevelReport,
       level16FullSupport: completeLevelReport,
+      level17FullSupport: completeLevelReport,
+      level18FullSupport: completeLevelReport,
       mcpScenarioEvidence: {
         check: {
           packageName: "@dnd/mcp",
@@ -1358,12 +1388,21 @@ function runSelfTest(root) {
         requiredFlows: [
           {
             flowId: "fixture-missing-flow",
-            scopeIds: ["level-1", "level-1-3", "level-1-5", "level-1-6"],
+            scopeIds: [
+              "level-1",
+              "level-1-3",
+              "level-1-5",
+              "level-1-6",
+              "level-1-7",
+              "level-1-8",
+            ],
             followUpTaskIdsByScope: {
               "level-1": "C15-ULTRA-GOLDEN-CHECKER-REGRESSION",
               "level-1-3": "L13UG-A04-MCP-LEVEL13-EVIDENCE-AUDIT",
               "level-1-5": "L5UG-MCP-05-LEVEL15-SCENARIO-EVIDENCE",
               "level-1-6": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE",
+              "level-1-7": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS",
+              "level-1-8": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS",
             },
             description: "fixture missing scenario evidence",
           },
@@ -1414,6 +1453,28 @@ function runSelfTest(root) {
               inputs: ["fixture level-6 input"],
             },
           },
+          {
+            scopeId: "level-1-7",
+            auditTaskId: "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS",
+            result: "new-scenario-required",
+            reason: "fixture missing level-7 scenario evidence",
+            reusedFlowIds: [],
+            requiredEvidence: {
+              scenarioGoal: "fixture level-7 scenario",
+              inputs: ["fixture level-7 input"],
+            },
+          },
+          {
+            scopeId: "level-1-8",
+            auditTaskId: "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS",
+            result: "new-scenario-required",
+            reason: "fixture missing level-8 scenario evidence",
+            reusedFlowIds: [],
+            requiredEvidence: {
+              scenarioGoal: "fixture level-8 scenario",
+              inputs: ["fixture level-8 input"],
+            },
+          },
         ],
       },
       rulesKernelMatrix: {
@@ -1455,23 +1516,35 @@ function runSelfTest(root) {
       ultraGoldenGate,
       "level-1-6",
     );
+    const completeLevel17Scope = requireSelfTestScope(
+      ultraGoldenGate,
+      "level-1-7",
+    );
+    const completeLevel18Scope = requireSelfTestScope(
+      ultraGoldenGate,
+      "level-1-8",
+    );
     if (
       ultraGoldenGate.status !== "blocked" ||
       !ultraGoldenGate.blockedScopeIds.includes("level-1") ||
       !ultraGoldenGate.blockedScopeIds.includes("level-1-3") ||
       !ultraGoldenGate.blockedScopeIds.includes("level-1-5") ||
       !ultraGoldenGate.blockedScopeIds.includes("level-1-6") ||
+      !ultraGoldenGate.blockedScopeIds.includes("level-1-7") ||
+      !ultraGoldenGate.blockedScopeIds.includes("level-1-8") ||
       incompleteScope.status !== "blocked" ||
       completeScope.status !== "pass" ||
       completeLevel13Scope.status !== "blocked" ||
       completeLevel14Scope.status !== "pass" ||
       completeLevel15Scope.status !== "blocked" ||
       completeLevel16Scope.status !== "blocked" ||
+      completeLevel17Scope.status !== "blocked" ||
+      completeLevel18Scope.status !== "blocked" ||
       incompleteScope.layerResult.completeLayers !== 0 ||
       incompleteScope.layerResult.totalLayers !== 4
     ) {
       fail(
-        `Self-test failed: expected incomplete ultra-golden fixture to block every level-1 layer, block level-1-3, level-1-5, and level-1-6 on MCP evidence, and leave level-1-2 and level-1-4 pass, got ${JSON.stringify(ultraGoldenGate)}`,
+        `Self-test failed: expected incomplete ultra-golden fixture to block every level-1 layer; block level-1-3, level-1-5, level-1-6, level-1-7, and level-1-8 on MCP evidence; and leave level-1-2 and level-1-4 pass, got ${JSON.stringify(ultraGoldenGate)}`,
       );
     }
     for (const fixtureLayerId of [
@@ -1502,6 +1575,10 @@ function runSelfTest(root) {
       "| level-1-5 | mcp-scenario-evidence | blocked |",
       "| level-1-6 | blocked | 3/4 | 0 |",
       "| level-1-6 | mcp-scenario-evidence | blocked |",
+      "| level-1-7 | blocked | 3/4 | 0 |",
+      "| level-1-7 | mcp-scenario-evidence | blocked |",
+      "| level-1-8 | blocked | 3/4 | 0 |",
+      "| level-1-8 | mcp-scenario-evidence | blocked |",
     ]) {
       if (!renderedUltraGoldenGate.includes(expectedRow)) {
         fail(
@@ -1547,6 +1624,8 @@ function runSelfTest(root) {
       level14FullSupport: completeLevelReport,
       level15FullSupport: completeLevelReport,
       level16FullSupport: completeLevelReport,
+      level17FullSupport: completeLevelReport,
+      level18FullSupport: completeLevelReport,
       mcpScenarioEvidence: {
         check: {
           packageName: "@dnd/mcp",

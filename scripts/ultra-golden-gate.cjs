@@ -18,6 +18,8 @@ const ultraGoldenScopeFields = Object.freeze([
   { scopeId: "level-1-4", reportField: "level14FullSupport" },
   { scopeId: "level-1-5", reportField: "level15FullSupport" },
   { scopeId: "level-1-6", reportField: "level16FullSupport" },
+  { scopeId: "level-1-7", reportField: "level17FullSupport" },
+  { scopeId: "level-1-8", reportField: "level18FullSupport" },
 ]);
 const ultraGoldenScopeIds = Object.freeze(
   ultraGoldenScopeFields.map((scope) => scope.scopeId),
@@ -459,6 +461,7 @@ function validateMcpScenarioEvidence(manifest, { root }) {
     issues.push(`${context} requiredFlows must not be empty.`);
   } else {
     const seenFlowIds = new Set();
+    const scopeIdsWithRequiredFlows = new Set();
     for (const [index, flow] of manifest.requiredFlows.entries()) {
       const flowContext = `${context} requiredFlows[${index}]`;
       if (!isRecord(flow)) {
@@ -480,6 +483,8 @@ function validateMcpScenarioEvidence(manifest, { root }) {
         for (const scopeId of flow.scopeIds) {
           if (!ultraGoldenScopeIds.includes(scopeId)) {
             issues.push(`${flowContext}.scopeIds includes unknown ${scopeId}.`);
+          } else {
+            scopeIdsWithRequiredFlows.add(scopeId);
           }
         }
       }
@@ -504,6 +509,13 @@ function validateMcpScenarioEvidence(manifest, { root }) {
             );
           }
         }
+      }
+    }
+    for (const scopeId of ultraGoldenScopeIds) {
+      if (!scopeIdsWithRequiredFlows.has(scopeId)) {
+        issues.push(
+          `${context} must declare at least one required MCP flow for ${scopeId}.`,
+        );
       }
     }
   }
@@ -1061,6 +1073,8 @@ function buildSelectedIdentityEvidenceAudit({
   level14FullSupport,
   level15FullSupport,
   level16FullSupport,
+  level17FullSupport,
+  level18FullSupport,
   mcpScenarioEvidence,
   rulesKernelMatrix,
   selectedIdentityReplayEvidenceTag,
@@ -1074,6 +1088,8 @@ function buildSelectedIdentityEvidenceAudit({
     level14FullSupport,
     level15FullSupport,
     level16FullSupport,
+    level17FullSupport,
+    level18FullSupport,
   };
   return stable({
     criteria: {
@@ -1133,6 +1149,8 @@ function buildUltraGoldenGate({
   level14FullSupport,
   level15FullSupport,
   level16FullSupport,
+  level17FullSupport,
+  level18FullSupport,
   mcpScenarioEvidence,
   rulesKernelMatrix,
   selectedIdentityReplayEvidenceTag,
@@ -1145,6 +1163,8 @@ function buildUltraGoldenGate({
     level14FullSupport,
     level15FullSupport,
     level16FullSupport,
+    level17FullSupport,
+    level18FullSupport,
   };
   const scopes = ultraGoldenScopeFields.map(({ reportField, scopeId }) =>
     buildScopeGate({
@@ -1162,6 +1182,8 @@ function buildUltraGoldenGate({
     level14FullSupport,
     level15FullSupport,
     level16FullSupport,
+    level17FullSupport,
+    level18FullSupport,
     mcpScenarioEvidence,
     rulesKernelMatrix,
     selectedIdentityReplayEvidenceTag,
@@ -1181,6 +1203,10 @@ function buildUltraGoldenGate({
         "plans/unit-profile-coverage/level1-5-full-support.json",
       level16FullSupport:
         "plans/unit-profile-coverage/level1-6-full-support.json",
+      level17FullSupport:
+        "plans/unit-profile-coverage/level1-7-full-support.json",
+      level18FullSupport:
+        "plans/unit-profile-coverage/level1-8-full-support.json",
       mcpScenarioEvidence: mcpScenarioEvidenceSourcePath,
       rulesKernelMatrix: "plans/rules-kernel-coverage/matrix.json",
       unitMatrix: "plans/unit-profile-coverage/unit-matrix.json",
