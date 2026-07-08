@@ -347,10 +347,10 @@
       "catalog-installed-owner-evidence-present": 2
     },
     "levelSevenClassRowsByDisposition": {
-      "catalog-only/dead-for-now": 7,
+      "catalog-only/dead-for-now": 8,
       "non-runtime": 12,
       "catalog-installed-owner-evidence-present": 2,
-      "class-progression-follow-up-required": 3
+      "class-progression-follow-up-required": 2
     },
     "levelEightClassRowsByDisposition": {
       "class-progression-follow-up-required": 12,
@@ -375,8 +375,8 @@
     "allRowsByDisposition": {
       "catalog-installed-owner-evidence-present": 503,
       "non-runtime": 96,
-      "catalog-only/dead-for-now": 229,
-      "class-progression-follow-up-required": 15,
+      "catalog-only/dead-for-now": 230,
+      "class-progression-follow-up-required": 14,
       "catalog-authored-review-required": 49,
       "missing-authored-record": 32
     },
@@ -22471,9 +22471,16 @@
         "state": "not-installed",
         "unitId": "paladin_aura_of_devotion"
       },
-      "finalDisposition": "class-progression-follow-up-required",
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "catalog-only/dead-for-now",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "table-spatial-derivation",
+        "owner": "future Aura of Protection membership owner plus passive class-feature Charmed condition-immunity and active-condition suppression owner",
+        "reason": "A future owner must consume the selected Aura of Devotion source fact, the selected Oath of Devotion subclass fact, and the existing/future Aura of Protection membership facts: 10-foot or expanded Emanation from the Paladin, self-and-allies membership, inactive-while-Incapacitated gating, and table/spatial membership witnesses. It must prevent new Charmed application for affected members and suppress the effects of already-applied Charmed while the ally is in the aura, without representing that suppression as condition removal unless a separate removal effect occurs. The closure must not create a second Aura of Devotion area model, duplicate Aura of Protection membership or Paladin position state, duplicate Charmed condition state, treat immunity as damage Resistance, ignore inactive-while-Incapacitated gating, or dispatch on Paladin, Oath of Devotion, Aura of Protection, Aura of Devotion, or Charmed source authored identity."
+      },
       "ownerEvidence": [],
-      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported."
+      "nextAction": "A future owner must consume the selected Aura of Devotion source fact, the selected Oath of Devotion subclass fact, and the existing/future Aura of Protection membership facts: 10-foot or expanded Emanation from the Paladin, self-and-allies membership, inactive-while-Incapacitated gating, and table/spatial membership witnesses. It must prevent new Charmed application for affected members and suppress the effects of already-applied Charmed while the ally is in the aura, without representing that suppression as condition removal unless a separate removal effect occurs. The closure must not create a second Aura of Devotion area model, duplicate Aura of Protection membership or Paladin position state, duplicate Charmed condition state, treat immunity as damage Resistance, ignore inactive-while-Incapacitated gating, or dispatch on Paladin, Oath of Devotion, Aura of Protection, Aura of Devotion, or Charmed source authored identity."
     },
     {
       "id": "srd521:classes/paladin:level-7:class-table-summary:paladin_level_7_feature_table_row",

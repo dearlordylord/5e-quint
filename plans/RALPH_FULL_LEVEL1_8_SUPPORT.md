@@ -91,7 +91,7 @@
     {
       "number": 15,
       "id": "L7FULL-11-PALADIN-AURA-OF-DEVOTION",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Close Paladin Aura of Devotion with explicit aura ownership"
     },
     {
@@ -340,7 +340,7 @@ Spell-level-4 unique identities currently in the level-7 mining audit:
 | 12 | L7FULL-08-SORCERER-SORCERY-INCARNATE - Resolve Sorcerer Sorcery Incarnate level-7 accounting | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Split future owners for Innate Sorcery alternate spend and active Metamagic option limit. |
 | 13 | L7FULL-09-BARBARIAN-FERAL-INSTINCT - Close Barbarian Feral Instinct at the Initiative boundary | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Future generic start-battle Initiative roll-mode owner required. |
 | 14 | L7FULL-10-BARD-COUNTERCHARM - Close Bard Countercharm with explicit reaction/save-reroll ownership | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Future class-feature triggered-Reaction save reroll owner required. |
-| 15 | L7FULL-11-PALADIN-AURA-OF-DEVOTION - Close Paladin Aura of Devotion with explicit aura ownership | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Aura membership and immunity projection are future-owner facts unless implemented. |
+| 15 | L7FULL-11-PALADIN-AURA-OF-DEVOTION - Close Paladin Aura of Devotion with explicit aura ownership | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Depends on future Aura of Protection membership plus Charmed immunity/suppression owner. |
 | 16 | L7FULL-12-RANGER-DEFENSIVE-TACTICS - Close Ranger Defensive Tactics with explicit check/save ownership | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Multi-option subclass defensive facts must not become vague unsupported rows. |
 | 17 | L7FULL-13-ROGUE-RELIABLE-TALENT - Close Rogue Reliable Talent with explicit Ability Check ownership | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Ability Check floor is not attack/save runtime unless a generic check owner exists. |
 | 18 | L7FULL-14-SPELL-LEVEL4-STRICT-CLOSURE - Classify and close spell-level-4 pressure for level 7 | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Strict denominator closure for 34 unique identities and 81 class-list rows. |
@@ -1259,7 +1259,7 @@ Plan Impact:
 
 ### Task 15 - L7FULL-11-PALADIN-AURA-OF-DEVOTION
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on: `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`
 
@@ -1278,6 +1278,20 @@ Output:
 - Support evidence or future-owner closure for aura membership, inactive
   gating, Charmed immunity, and applicable cleanup/prevention facts.
 
+Completion Evidence:
+
+- Added an `unsupported-profile` Unit claim for `paladin_aura_of_devotion`
+  with a `table-spatial-derivation` closure.
+- The closure names the future Aura of Protection membership owner plus passive
+  class-feature Charmed condition-immunity and active-condition suppression
+  owner.
+- Regenerated the SRD inventory and level-1-7/level-1-8 support reports.
+- `paladin_aura_of_devotion` now remains not installed, is not counted as a
+  supported runtime profile, and is closed by explicit future-owner evidence
+  for Aura of Protection membership, inactive-while-Incapacitated gating,
+  Charmed prevention, and already-applied Charmed effect suppression while in
+  the aura.
+
 Acceptance:
 
 - Aura area membership is consumed from a spatial/aura owner, not duplicated in
@@ -1293,12 +1307,26 @@ Forbidden Shortcuts:
 Verification:
 
 - RAW check against Aura of Devotion and Aura of Protection references.
-- Focused condition/aura tests if promoted.
+- RAW checked `.references/srd-5.2.1/Classes/Paladin.md:136-142` and
+  `.references/srd-5.2.1/Classes/Paladin.md:271-273`; Ubiquitous Language
+  checked Immunity, Condition Immunity, Charmed, Stat Block, and Character
+  Sheet terminology.
+- Reviewed existing `paladin_aura_of_protection` closure and
+  `scripts/content-surface-survey/results-srd/paladin_aura_of_devotion_l7/result.json`,
+  `verdict.json`, and `claude-out.json`; the remaining gap is aura scope and
+  cross-feature Aura of Protection membership, not standalone Charmed condition
+  identity.
+- No focused condition/aura tests were run because no runtime behavior was
+  promoted.
+- `pnpm unit-profile-coverage:check --write`
 - `pnpm unit-profile-coverage:check`
 
 Plan Impact:
 
-- Update-required if aura ownership is generalized in this task.
+- `applied`: future promotion should generalize passive class-feature aura
+  membership through the Aura of Protection owner and layer condition immunity
+  as a consumer, without duplicating aura area, Paladin position, or Charmed
+  condition state.
 
 ### Task 16 - L7FULL-12-RANGER-DEFENSIVE-TACTICS
 

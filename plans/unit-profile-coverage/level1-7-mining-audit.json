@@ -55,8 +55,8 @@
     "rowsByFinalDisposition": {
       "catalog-authored-review-required": 49,
       "catalog-installed-owner-evidence-present": 503,
-      "catalog-only/dead-for-now": 229,
-      "class-progression-follow-up-required": 3,
+      "catalog-only/dead-for-now": 230,
+      "class-progression-follow-up-required": 2,
       "missing-authored-record": 32,
       "non-runtime": 84
     },
@@ -88,10 +88,10 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 123,
+      "not-recorded": 122,
       "profile-subset-supported": 59,
       "supported-profile": 310,
-      "unsupported-profile": 408
+      "unsupported-profile": 409
     }
   },
   "rows": [
@@ -19557,7 +19557,7 @@
         "sourceInventoryRowId": "srd521:classes/paladin:level-7:class-feature-grant:paladin_aura_of_devotion",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "A future owner must consume the selected Aura of Devotion source fact, the selected Oath of Devotion subclass fact, and the existing/future Aura of Protection membership facts: 10-foot or expanded Emanation from the Paladin, self-and-allies membership, inactive-while-Incapacitated gating, and table/spatial membership witnesses. It must prevent new Charmed application for affected members and suppress the effects of already-applied Charmed while the ally is in the aura, without representing that suppression as condition removal unless a separate removal effect occurs. The closure must not create a second Aura of Devotion area model, duplicate Aura of Protection membership or Paladin position state, duplicate Charmed condition state, treat immunity as damage Resistance, ignore inactive-while-Incapacitated gating, or dispatch on Paladin, Oath of Devotion, Aura of Protection, Aura of Devotion, or Charmed source authored identity.",
       "rowId": "srd521:classes/paladin:level-7:class-feature-grant:paladin_aura_of_devotion",
       "rowKind": "class-feature-grant",
       "source": {
@@ -19573,15 +19573,20 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "table-spatial-derivation",
+          "owner": "future Aura of Protection membership owner plus passive class-feature Charmed condition-immunity and active-condition suppression owner",
+          "reason": "A future owner must consume the selected Aura of Devotion source fact, the selected Oath of Devotion subclass fact, and the existing/future Aura of Protection membership facts: 10-foot or expanded Emanation from the Paladin, self-and-allies membership, inactive-while-Incapacitated gating, and table/spatial membership witnesses. It must prevent new Charmed application for affected members and suppress the effects of already-applied Charmed while the ally is in the aura, without representing that suppression as condition removal unless a separate removal effect occurs. The closure must not create a second Aura of Devotion area model, duplicate Aura of Protection membership or Paladin position state, duplicate Charmed condition state, treat immunity as damage Resistance, ignore inactive-while-Incapacitated gating, or dispatch on Paladin, Oath of Devotion, Aura of Protection, Aura of Devotion, or Charmed source authored identity.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "paladin_aura_of_devotion"
         },
-        "finalDisposition": "class-progression-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },

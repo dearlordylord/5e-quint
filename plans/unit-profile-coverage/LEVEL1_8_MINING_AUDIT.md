@@ -44,8 +44,8 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | --- | ---: |
 | catalog-authored-review-required | 49 |
 | catalog-installed-owner-evidence-present | 503 |
-| catalog-only/dead-for-now | 229 |
-| class-progression-follow-up-required | 15 |
+| catalog-only/dead-for-now | 230 |
+| class-progression-follow-up-required | 14 |
 | missing-authored-record | 32 |
 | non-runtime | 96 |
 
@@ -60,10 +60,10 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 135 |
+| not-recorded | 134 |
 | profile-subset-supported | 59 |
 | supported-profile | 310 |
-| unsupported-profile | 420 |
+| unsupported-profile | 421 |
 
 ### Battle Readiness Snapshot
 
@@ -704,7 +704,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Paladin level 5 feature table row | level-5 | character-level | character-creation or progression mechanic | `class_paladin` | `.references/srd-5.2.1/Classes/Paladin.md:39` |  | present |  |  | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
 | Paladin Aura of Protection | level-6 | character-level | class feature | `paladin_aura_of_protection` | `.references/srd-5.2.1/Classes/Paladin.md:136` |  | present |  |  | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | table-spatial-derivation: future-owner-before-SDK battle-runtime passive class-feature aura and Saving Throw modifier owner plus table/spatial aura-membership witness owner | SRD Aura of Protection creates a 10-foot Emanation from the Paladin, inactive while the Paladin has the Incapacitated condition, and grants the Paladin and allies in the aura a Saving Throw bonus equal to the Paladin's Charisma modifier with a minimum of +1, while overlapping Paladin auras require the affected creature to choose one. Existing character facts own Paladin level and Charisma ability state, existing condition state owns Incapacitated, existing save procedure owners resolve Saving Throws, and spell aura support consumes caller/table-supplied area membership for spell-specific occurrences. The current promoted owners do not admit a selected passive class-feature aura with ally membership, source Charisma bonus projection, inactive gating, or overlapping-aura choice. A future owner must consume typed Surface facts for the selected Aura of Protection feature, existing character and condition state, explicit aura membership/choice witnesses, and the shared Saving Throw roll modifier boundary without duplicating Character Sheet ability state, condition state, table position state, Saving Throw result state, aura membership state, or dispatching on Paladin or Aura of Protection authored identity. |
 | Paladin level 6 feature table row | level-6 | character-level | character-creation or progression mechanic | `class_paladin` | `.references/srd-5.2.1/Classes/Paladin.md:40` |  | present |  |  | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
-| Paladin Aura of Devotion | level-7 | character-level | class feature | `paladin_aura_of_devotion` | `.references/srd-5.2.1/Classes/Paladin.md:271` |  | present |  |  | not-installed | not-recorded | class-progression-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
+| Paladin Aura of Devotion | level-7 | character-level | class feature | `paladin_aura_of_devotion` | `.references/srd-5.2.1/Classes/Paladin.md:271` |  | present |  |  | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | table-spatial-derivation: future Aura of Protection membership owner plus passive class-feature Charmed condition-immunity and active-condition suppression owner | A future owner must consume the selected Aura of Devotion source fact, the selected Oath of Devotion subclass fact, and the existing/future Aura of Protection membership facts: 10-foot or expanded Emanation from the Paladin, self-and-allies membership, inactive-while-Incapacitated gating, and table/spatial membership witnesses. It must prevent new Charmed application for affected members and suppress the effects of already-applied Charmed while the ally is in the aura, without representing that suppression as condition removal unless a separate removal effect occurs. The closure must not create a second Aura of Devotion area model, duplicate Aura of Protection membership or Paladin position state, duplicate Charmed condition state, treat immunity as damage Resistance, ignore inactive-while-Incapacitated gating, or dispatch on Paladin, Oath of Devotion, Aura of Protection, Aura of Devotion, or Charmed source authored identity. |
 | Paladin level 7 feature table row | level-7 | character-level | character-creation or progression mechanic | `class_paladin` | `.references/srd-5.2.1/Classes/Paladin.md:41` |  | present |  |  | installed | unsupported-profile | non-runtime | not-applicable | outside-battle-runtime: class-progression-accounting | No runtime work; keep classification as explicit closure. |
 | Paladin Ability Score Improvement | level-8 | character-level | class feature | `paladin_ability_score_improvement_l8` | `.references/srd-5.2.1/Classes/Paladin.md:42` | dedicated-rule-text: .references/srd-5.2.1/Classes/Paladin.md:122 | present |  |  | not-installed | not-recorded | class-progression-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
 | Paladin level 8 feature table row | level-8 | character-level | character-creation or progression mechanic | `class_paladin` | `.references/srd-5.2.1/Classes/Paladin.md:42` |  | present |  |  | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
