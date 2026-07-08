@@ -67,7 +67,7 @@
     {
       "number": 11,
       "id": "L7FULL-07-BARBARIAN-INSTINCTIVE-POUNCE",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Resolve Barbarian Instinctive Pounce level-7 accounting"
     },
     {
@@ -336,7 +336,7 @@ Spell-level-4 unique identities currently in the level-7 mining audit:
 | 8 | L7FULL-04-FIGHTER-ADDITIONAL-FIGHTING-STYLE - Resolve Fighter Additional Fighting Style level-7 accounting | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Character-selection grant closure; selected Fighting Style feat Units own executable behavior. |
 | 9 | L7FULL-05-CLERIC-BLESSED-STRIKES - Resolve Cleric Blessed Strikes level-7 accounting | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Explicit future-owner split for selected-option damage riders. |
 | 10 | L7FULL-06-DRUID-ELEMENTAL-FURY - Resolve Druid Elemental Fury level-7 accounting | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Explicit future-owner split for selected-option cantrip and Wild Shape attack riders. |
-| 11 | L7FULL-07-BARBARIAN-INSTINCTIVE-POUNCE - Resolve Barbarian Instinctive Pounce level-7 accounting | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Rage-entry movement rider or explicit movement-owner split. |
+| 11 | L7FULL-07-BARBARIAN-INSTINCTIVE-POUNCE - Resolve Barbarian Instinctive Pounce level-7 accounting | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Rage-entry activation rider closed to future movement owner. |
 | 12 | L7FULL-08-SORCERER-SORCERY-INCARNATE - Resolve Sorcerer Sorcery Incarnate level-7 accounting | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Innate Sorcery/Sorcery Point closure or runtime support. |
 | 13 | L7FULL-09-BARBARIAN-FERAL-INSTINCT - Close Barbarian Feral Instinct at the Initiative boundary | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Initiative is not ordinary battle-turn runtime unless promoted by a start-combat owner. |
 | 14 | L7FULL-10-BARD-COUNTERCHARM - Close Bard Countercharm with explicit reaction/save-reroll ownership | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Reaction timing and Charmed/Frightened save-failure trigger must be typed or future-owned. |
@@ -977,7 +977,7 @@ Plan Impact:
 
 ### Task 11 - L7FULL-07-BARBARIAN-INSTINCTIVE-POUNCE
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on: `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`
 
@@ -996,6 +996,21 @@ Output:
 - Support evidence or explicit closure for "as part of entering Rage, move up
   to half Speed".
 
+Completion Evidence:
+
+- Added an `unsupported-profile` Unit claim for
+  `barbarian_instinctive_pounce` with a
+  `resource-option-rider-boundary` closure.
+- The closure names the future Rage activation rider owner plus existing
+  movement, path, and Opportunity Attack validation owners.
+- Regenerated the SRD inventory and level-1-7/level-1-8 support reports.
+- `barbarian_instinctive_pounce` now remains not installed, is not counted as a
+  supported runtime profile, and is closed by explicit future-owner evidence
+  for optional bonus Movement capped at half current Speed.
+- The closure explicitly preserves ordinary Opportunity Attack validation:
+  Instinctive Pounce does not inherit Tactical Shift's no-Opportunity-Attack
+  exception.
+
 Acceptance:
 
 - If promoted, movement budget and path facts use existing movement owners.
@@ -1010,12 +1025,22 @@ Forbidden Shortcuts:
 Verification:
 
 - RAW check against Rage and Instinctive Pounce.
-- Focused movement/Rage tests if behavior changes.
+- RAW checked `.references/srd-5.2.1/Classes/Barbarian.md:56-80` and
+  `.references/srd-5.2.1/Classes/Barbarian.md:124-126`; Ubiquitous Language
+  checked Speed, Movement, Turn, Bonus Action, and Active Ongoing Feature
+  Occurrence.
+- Reviewed `scripts/content-surface-survey/REPORT_SRD.md` and
+  `scripts/content-surface-survey/results-srd/barbarian_instinctive_pounce_l7/proposal.md`
+  structural pressure for activation-rider and move-effect source facts.
+- No focused movement/Rage tests were run because no runtime behavior changed.
+- `pnpm unit-profile-coverage:check --write`
 - `pnpm unit-profile-coverage:check`
 
 Plan Impact:
 
-- Update-required if Rage-entry riders become a reusable feature family.
+- `applied`: future promotion should add a reusable activation-rider source
+  shape for Rage-entry riders and consume the existing movement owner rather
+  than introducing Rage-local position, path, or Movement budget state.
 
 ### Task 12 - L7FULL-08-SORCERER-SORCERY-INCARNATE
 

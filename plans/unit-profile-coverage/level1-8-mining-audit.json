@@ -56,8 +56,8 @@
     "rowsByFinalDisposition": {
       "catalog-authored-review-required": 49,
       "catalog-installed-owner-evidence-present": 503,
-      "catalog-only/dead-for-now": 225,
-      "class-progression-follow-up-required": 19,
+      "catalog-only/dead-for-now": 226,
+      "class-progression-follow-up-required": 18,
       "missing-authored-record": 32,
       "non-runtime": 96
     },
@@ -90,10 +90,10 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 139,
+      "not-recorded": 138,
       "profile-subset-supported": 59,
       "supported-profile": 310,
-      "unsupported-profile": 416
+      "unsupported-profile": 417
     }
   },
   "rows": [
@@ -1342,7 +1342,7 @@
         "sourceInventoryRowId": "srd521:classes/barbarian:level-7:class-feature-grant:barbarian_instinctive_pounce",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "SRD Instinctive Pounce triggers only as part of the Bonus Action used to enter Rage: the Barbarian can move up to half Speed. A future promoted owner must consume an admitted Instinctive Pounce activation-rider source fact with the existing barbarian_rage bonus-action ongoing-feature activation, then offer optional bonus Movement through the existing movement fill owner with a cap of half the actor's current Speed. Path legality, terrain cost, occupied-space constraints, and ordinary Opportunity Attack validation remain owned by existing movement/table owners; unlike Tactical Shift, Instinctive Pounce does not grant a no-Opportunity-Attack exception. The closure must not add a second Rage pool, duplicate active Rage state, duplicate turn Movement budget, store map position or pathing locally to Rage, hard-code half Speed as an untyped number, or dispatch on Barbarian, Rage, or Instinctive Pounce authored identity.",
       "rowId": "srd521:classes/barbarian:level-7:class-feature-grant:barbarian_instinctive_pounce",
       "rowKind": "class-feature-grant",
       "source": {
@@ -1358,15 +1358,20 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "resource-option-rider-boundary",
+          "owner": "future battle-runtime Rage activation rider owner plus existing movement, path, and Opportunity Attack validation owners",
+          "reason": "SRD Instinctive Pounce triggers only as part of the Bonus Action used to enter Rage: the Barbarian can move up to half Speed. A future promoted owner must consume an admitted Instinctive Pounce activation-rider source fact with the existing barbarian_rage bonus-action ongoing-feature activation, then offer optional bonus Movement through the existing movement fill owner with a cap of half the actor's current Speed. Path legality, terrain cost, occupied-space constraints, and ordinary Opportunity Attack validation remain owned by existing movement/table owners; unlike Tactical Shift, Instinctive Pounce does not grant a no-Opportunity-Attack exception. The closure must not add a second Rage pool, duplicate active Rage state, duplicate turn Movement budget, store map position or pathing locally to Rage, hard-code half Speed as an untyped number, or dispatch on Barbarian, Rage, or Instinctive Pounce authored identity.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "barbarian_instinctive_pounce"
         },
-        "finalDisposition": "class-progression-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },

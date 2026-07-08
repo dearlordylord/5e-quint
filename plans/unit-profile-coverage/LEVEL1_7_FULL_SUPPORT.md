@@ -17,7 +17,7 @@ Blockers: strict=19, selected-identity=0, SRD-authored-readiness=0.
 | Strict runtime/profile support | 168/284 (59.2%) |
 | Strict target closure | 265/284 (93.3%) |
 | Selected identity readiness | 194/194 (100%) |
-| Diagnostic product readiness | 812/900 (90.2%) |
+| Diagnostic product readiness | 813/900 (90.3%) |
 | SRD authored product readiness | 115/115 (100%) |
 | Rules-kernel profile join | 118/118 (100%) |
 | Rules-kernel covered profile join | 118/118 (100%) |
@@ -25,7 +25,7 @@ Blockers: strict=19, selected-identity=0, SRD-authored-readiness=0.
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
-The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 812/900 (90.2%) while the claim gate reports **blocked** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
+The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 813/900 (90.3%) while the claim gate reports **blocked** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
 
 ### Diagnostic Product Readiness Accounting
 
@@ -34,9 +34,9 @@ Diagnostic product readiness keeps lower-layer planning pressure visible. Rows i
 | Status | Rows |
 | --- | ---: |
 | accepted | 499 |
-| accepted-no-battle-effect | 313 |
+| accepted-no-battle-effect | 314 |
 | battle-runtime-required | 32 |
-| owner-evidence-required | 56 |
+| owner-evidence-required | 55 |
 
 ### Selected Identity Replay Accounting
 
@@ -280,7 +280,7 @@ This gate checks authored records and retained Unit references that must resolve
 | Unit | Source rows | Reason | Final dispositions | Readiness closures | Next actions | Adopted decision artifact | Concepts |
 | --- | ---: | --- | --- | --- | --- | --- | --- |
 | `barbarian_feral_instinct` | 1 | The SRD row has level-7 class-feature pressure, but no Unit matrix row exists yet. | class-progression-follow-up-required | not-recorded | Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. | _none_ | Barbarian Feral Instinct |
-| `barbarian_instinctive_pounce` | 1 | The SRD row has level-7 class-feature pressure, but no Unit matrix row exists yet. | class-progression-follow-up-required | not-recorded | Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. | _none_ | Barbarian Instinctive Pounce |
+| `barbarian_instinctive_pounce` | 1 | The SRD row has level-7 class-feature pressure, but no Unit matrix row exists yet. | catalog-only/dead-for-now | resource-option-rider-boundary: future battle-runtime Rage activation rider owner plus existing movement, path, and Opportunity Attack validation owners | SRD Instinctive Pounce triggers only as part of the Bonus Action used to enter Rage: the Barbarian can move up to half Speed. A future promoted owner must consume an admitted Instinctive Pounce activation-rider source fact with the existing barbarian_rage bonus-action ongoing-feature activation, then offer optional bonus Movement through the existing movement fill owner with a cap of half the actor's current Speed. Path legality, terrain cost, occupied-space constraints, and ordinary Opportunity Attack validation remain owned by existing movement/table owners; unlike Tactical Shift, Instinctive Pounce does not grant a no-Opportunity-Attack exception. The closure must not add a second Rage pool, duplicate active Rage state, duplicate turn Movement budget, store map position or pathing locally to Rage, hard-code half Speed as an untyped number, or dispatch on Barbarian, Rage, or Instinctive Pounce authored identity. | _none_ | Barbarian Instinctive Pounce |
 | `barbarian_mindless_rage` | 1 | The SRD row has level-6 class-feature pressure, but no Unit matrix row exists yet. | catalog-only/dead-for-now | outside-battle-runtime: future battle-runtime active Rage condition-immunity and enter-rage cleanup owner plus subclass feature admission owner | The existing Barbarian Rage owner supports activation, use-count spend, duration/extension, Bludgeoning/Piercing/Slashing Resistance, Rage Damage, Concentration break/prevention, and spellcasting restriction, but it does not admit subclass-gated Charmed/Frightened condition immunity or remove existing Charmed/Frightened active effects on entering Rage. Keep this not-installed row closed until a promoted owner consumes typed Surface facts for the selected Berserker feature, derives immunity from the active Rage occurrence, and performs condition cleanup without duplicating Rage state, condition state, subclass selection state, or authored-identity dispatch. | _none_ | Barbarian Mindless Rage |
 | `bard_countercharm` | 1 | The SRD row has level-7 class-feature pressure, but no Unit matrix row exists yet. | class-progression-follow-up-required | not-recorded | Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. | _none_ | Bard Countercharm |
 | `bard_font_of_inspiration` | 1 | The SRD row has level-5 class-feature pressure, but no Unit matrix row exists yet. | catalog-only/dead-for-now | character-fact-and-runtime-detached-split: future character-sheet-runtime Bardic Inspiration resource-recovery owner plus existing battle-runtime Bardic Inspiration grant/use profiles | SRD Font of Inspiration changes the existing bard_bardic_inspiration use-count Pool to regain all expended uses on a Short Rest or Long Rest and permits spending a Spell Slot with no action to regain one expended use. Battle runtime already owns in-battle Bardic Inspiration grant and failed-D20 die use from the bard_bardic_inspiration Unit; persistent Short Rest, Long Rest, and Spell Slot recovery must be derived by a Character Sheet resource owner from the existing Bardic Inspiration resource instead of introducing duplicate bard_font_of_inspiration resource state. | _none_ | Bard Font of Inspiration |
