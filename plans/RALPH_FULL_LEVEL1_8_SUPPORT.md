@@ -37,13 +37,13 @@
     {
       "number": 6,
       "id": "L7FULL-02-ROGUE-EVASION-EVIDENCE-PRESERVATION",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Preserve existing Rogue Evasion support evidence"
     },
     {
       "number": 7,
       "id": "L7FULL-03-MONK-EVASION-REUSE-ADMISSION",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Admit Monk Evasion through the existing Evasion support model"
     },
     {
@@ -331,8 +331,8 @@ Spell-level-4 unique identities currently in the level-7 mining audit:
 | 3 | L18FOUND-03-LEVEL17-18-REPORT-GATE-SHAPE - Add level-1-7 and level-1-8 full-support report plumbing | done | L18FOUND-02-LEVEL8-INVENTORY-ENABLEMENT | Creates strict full-support artifacts for both scopes. |
 | 4 | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION - Add checker protection against empty or vacuous higher-level scopes | done | L18FOUND-03-LEVEL17-18-REPORT-GATE-SHAPE | Prevents accidental pass from missing bands or empty denominators. |
 | 5 | L7FULL-01-CLASS-TABLE-SUMMARY-CLOSURE - Close the twelve level-7 class-table summary rows | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Table rows remain non-runtime but checker-visible. |
-| 6 | L7FULL-02-ROGUE-EVASION-EVIDENCE-PRESERVATION - Preserve existing Rogue Evasion support evidence | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Existing support must survive the new strict scope. |
-| 7 | L7FULL-03-MONK-EVASION-REUSE-ADMISSION - Admit Monk Evasion through the existing Evasion support model | blocked | L7FULL-02-ROGUE-EVASION-EVIDENCE-PRESERVATION | Reuses typed Evasion semantics without authored-identity dispatch. |
+| 6 | L7FULL-02-ROGUE-EVASION-EVIDENCE-PRESERVATION - Preserve existing Rogue Evasion support evidence | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Existing support must survive the new strict scope. |
+| 7 | L7FULL-03-MONK-EVASION-REUSE-ADMISSION - Admit Monk Evasion through the existing Evasion support model | ready-for-implementation | L7FULL-02-ROGUE-EVASION-EVIDENCE-PRESERVATION | Reuses typed Evasion semantics without authored-identity dispatch. |
 | 8 | L7FULL-04-FIGHTER-ADDITIONAL-FIGHTING-STYLE - Resolve Fighter Additional Fighting Style level-7 accounting | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Character-selection grant closure or support evidence. |
 | 9 | L7FULL-05-CLERIC-BLESSED-STRIKES - Resolve Cleric Blessed Strikes level-7 accounting | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Damage rider or explicit future-owner split. |
 | 10 | L7FULL-06-DRUID-ELEMENTAL-FURY - Resolve Druid Elemental Fury level-7 accounting | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Weapon/Wild Shape damage rider or explicit future-owner split. |
@@ -671,7 +671,7 @@ Plan Impact:
 
 ### Task 6 - L7FULL-02-ROGUE-EVASION-EVIDENCE-PRESERVATION
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on: `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`
 
@@ -710,15 +710,16 @@ Verification:
 
 Plan Impact:
 
-- none unless existing evidence is insufficient and needs a follow-up task.
+- `applied`: `unit-profile-coverage:check` now preserves the existing
+  `rogue_evasion` evidence chain for the level 1-7 strict report: supported
+  `unit-feature.save-damage-replacement` claim, deterministic admission
+  projection evidence, selected-identity replay evidence, supported-profile
+  report classification, and covered rules-kernel support. Task 7 is unblocked
+  to reuse this Evasion support model for Monk Evasion.
 
 ### Task 7 - L7FULL-03-MONK-EVASION-REUSE-ADMISSION
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: waits for `L7FULL-02-ROGUE-EVASION-EVIDENCE-PRESERVATION`.
+Status: `ready-for-implementation`
 
 Depends on: `L7FULL-02-ROGUE-EVASION-EVIDENCE-PRESERVATION`
 

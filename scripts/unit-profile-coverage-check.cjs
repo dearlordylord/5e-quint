@@ -163,6 +163,73 @@ function validateUnitFeatureProfileScopedOwnerEvidence({
   return issues;
 }
 
+function validateLevelSevenRogueEvasionEvidence({
+  level17FullSupport,
+  unitClaims,
+  unitEvidence,
+}) {
+  const issues = [];
+  const rogueEvasionUnitId = "rogue_evasion";
+  const saveDamageReplacementProfileId = "unit-feature.save-damage-replacement";
+  const claim = unitClaims.find((row) => row.unitId === rogueEvasionUnitId);
+  if (
+    claim?.claim?.tag !== "supported-profile" ||
+    !claim.claim.profileIds?.includes(saveDamageReplacementProfileId)
+  ) {
+    issues.push(
+      "level-1-7 rogue_evasion must retain a supported-profile claim for unit-feature.save-damage-replacement.",
+    );
+  }
+  const hasDeterministicAdmissionEvidence = unitEvidence.some(
+    (row) =>
+      row.unitId === rogueEvasionUnitId &&
+      row.evidence?.tag === deterministicAdmissionProjectionEvidenceTag &&
+      row.evidence.ownerPath ===
+        "packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts",
+  );
+  if (!hasDeterministicAdmissionEvidence) {
+    issues.push(
+      "level-1-7 rogue_evasion must retain deterministic admission projection evidence.",
+    );
+  }
+  const hasSelectedIdentityReplayEvidence = unitEvidence.some(
+    (row) =>
+      row.unitId === rogueEvasionUnitId &&
+      row.evidence?.tag === selectedIdentityReplayEvidenceTag &&
+      row.evidence.ownerPath ===
+        "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+  );
+  if (!hasSelectedIdentityReplayEvidence) {
+    issues.push(
+      "level-1-7 rogue_evasion must retain selected-identity replay evidence.",
+    );
+  }
+  const supportedGroup = level17FullSupport.groups.find(
+    (group) => group.status === "supported-profile",
+  );
+  if (!supportedGroup?.unitIds.includes(rogueEvasionUnitId)) {
+    issues.push(
+      "level-1-7 full-support report must classify rogue_evasion as supported-profile.",
+    );
+  }
+  const rulesKernelJoin = level17FullSupport.rulesKernelSupportedUnitJoin.units.find(
+    (unit) => unit.unitId === rogueEvasionUnitId,
+  );
+  if (
+    rulesKernelJoin?.joinStatus !== "covered" ||
+    !rulesKernelJoin.profiles.some(
+      (profile) =>
+        profile.profileId === saveDamageReplacementProfileId &&
+        profile.joinStatus === "covered",
+    )
+  ) {
+    issues.push(
+      "level-1-7 rogue_evasion must retain covered rules-kernel support for unit-feature.save-damage-replacement.",
+    );
+  }
+  return issues;
+}
+
 function main() {
   const collections = readJson(paths.collections);
   const profiles = readJsonl(root, paths.profiles);
@@ -302,6 +369,11 @@ function main() {
         featureProcedureMbtEvidenceGate,
         level12QntMbtJoin,
         profiles,
+      }),
+      validateLevelSevenRogueEvasionEvidence({
+        level17FullSupport,
+        unitClaims,
+        unitEvidence,
       }),
     );
   if (postBuildIssues.length > 0) {
