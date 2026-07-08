@@ -5908,7 +5908,7 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "groups": [
     {
-      "count": 167,
+      "count": 168,
       "description": "Full support exists at the Unit profile boundary for this strict accounting scope.",
       "status": "supported-profile",
       "unitIds": [
@@ -6004,6 +6004,7 @@
         "mirror_image",
         "misty_step",
         "monk_deflect_attacks",
+        "monk_evasion",
         "monk_extra_attack",
         "monk_martial_arts",
         "monk_open_hand_technique",
@@ -6250,13 +6251,13 @@
   "metrics": {
     "productReadiness": {
       "denominator": 924,
-      "numerator": 820,
-      "percent": "88.7%",
+      "numerator": 821,
+      "percent": "88.9%",
       "rowsByStatus": {
-        "accepted": 498,
+        "accepted": 499,
         "accepted-no-battle-effect": 322,
         "battle-runtime-required": 32,
-        "owner-evidence-required": 72
+        "owner-evidence-required": 71
       }
     },
     "rulesKernelCoveredProfileJoin": {
@@ -6270,18 +6271,18 @@
       "percent": "100%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 165,
-      "numerator": 165,
+      "denominator": 166,
+      "numerator": 166,
       "percent": "100%"
     },
     "strictRuntimeProfileSupport": {
-      "denominator": 283,
-      "numerator": 167,
-      "percent": "59%"
+      "denominator": 284,
+      "numerator": 168,
+      "percent": "59.2%"
     },
     "strictTargetClosure": {
-      "denominator": 283,
-      "numerator": 264,
+      "denominator": 284,
+      "numerator": 265,
       "percent": "93.3%"
     }
   },
@@ -8584,40 +8585,6 @@
           }
         ],
         "unitId": "monk_empowered_strikes"
-      },
-      {
-        "inventoryAccounting": [
-          {
-            "battleReadinessClosure": {
-              "state": "not-recorded"
-            },
-            "battleReadinessStatus": "not-applicable",
-            "catalogAdmissionState": "not-installed",
-            "concept": "Monk Evasion",
-            "finalDisposition": "class-progression-follow-up-required",
-            "levelBand": "level-7",
-            "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
-            "rowId": "srd521:classes/monk:level-7:class-feature-grant:monk_evasion",
-            "rowKind": "class-feature-grant",
-            "unitProfileDisposition": "not-recorded"
-          }
-        ],
-        "reason": "The SRD row has level-7 class-feature pressure, but no Unit matrix row exists yet.",
-        "sourceRows": [
-          {
-            "category": "class feature",
-            "concept": "Monk Evasion",
-            "id": "srd521:classes/monk:level-7:class-feature-grant:monk_evasion",
-            "levelBand": "level-7",
-            "rowKind": "class-feature-grant",
-            "source": {
-              "lineEnd": 137,
-              "lineStart": 132,
-              "path": ".references/srd-5.2.1/Classes/Monk.md"
-            }
-          }
-        ],
-        "unitId": "monk_evasion"
       },
       {
         "inventoryAccounting": [
@@ -12694,8 +12661,8 @@
     "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
-        "denominator": 165,
-        "numerator": 165,
+        "denominator": 166,
+        "numerator": 166,
         "percent": "100%"
       }
     },
@@ -15292,6 +15259,28 @@
                 "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
               }
             ],
+            "profileId": "unit-feature.save-damage-replacement",
+            "profileKind": "passive",
+            "qntOwners": [
+              "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
+            ]
+          }
+        ],
+        "unitId": "monk_evasion"
+      },
+      {
+        "joinStatus": "covered",
+        "profiles": [
+          {
+            "joinStatus": "covered",
+            "obligations": [
+              {
+                "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                "runtime": "battle",
+                "status": "covered",
+                "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+              }
+            ],
             "profileId": "unit-feature.attack-action-attack-count-scaling",
             "profileKind": "passive",
             "qntOwners": [
@@ -17301,18 +17290,18 @@
     "blockingRows": [],
     "blockingRowsByStatus": {},
     "metrics": {
-      "denominator": 193,
-      "numerator": 193,
+      "denominator": 194,
+      "numerator": 194,
       "percent": "100%"
     },
     "readyRowsByStatus": {
       "not-applicable": 6,
-      "witness-present": 187
+      "witness-present": 188
     },
     "rowsByStatus": {
       "not-applicable": 6,
       "not-required": 90,
-      "witness-present": 187
+      "witness-present": 188
     }
   },
   "sourceArtifacts": {
@@ -18540,7 +18529,7 @@
     "groupsByClaimTag": {
       "missing": 19,
       "profile-subset-supported": 26,
-      "supported-profile": 167,
+      "supported-profile": 168,
       "unsupported-profile": 71
     },
     "groupsByStatus": {
@@ -18551,9 +18540,9 @@
       "closed-runtime-detached-table-adjudication": 47,
       "closed-selection-grant-container": 12,
       "open-runtime-behavior": 19,
-      "supported-profile": 167
+      "supported-profile": 168
     },
     "nonSupportedFrontier": 116,
-    "strictDenominator": 283
+    "strictDenominator": 284
   }
 }

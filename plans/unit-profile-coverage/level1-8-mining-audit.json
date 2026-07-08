@@ -40,8 +40,8 @@
       "owner-evidence-required": 49
     },
     "rowsByCatalogAdmission": {
-      "installed": 706,
-      "not-installed": 218
+      "installed": 707,
+      "not-installed": 217
     },
     "rowsByCategory": {
       "character-creation or progression mechanic": 184,
@@ -55,9 +55,9 @@
     },
     "rowsByFinalDisposition": {
       "catalog-authored-review-required": 49,
-      "catalog-installed-owner-evidence-present": 502,
+      "catalog-installed-owner-evidence-present": 503,
       "catalog-only/dead-for-now": 222,
-      "class-progression-follow-up-required": 23,
+      "class-progression-follow-up-required": 22,
       "missing-authored-record": 32,
       "non-runtime": 96
     },
@@ -90,9 +90,9 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 143,
+      "not-recorded": 142,
       "profile-subset-supported": 59,
-      "supported-profile": 309,
+      "supported-profile": 310,
       "unsupported-profile": 413
     }
   },
@@ -18776,7 +18776,7 @@
         "sourceInventoryRowId": "srd521:classes/monk:level-7:class-feature-grant:monk_evasion",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "rowId": "srd521:classes/monk:level-7:class-feature-grant:monk_evasion",
       "rowKind": "class-feature-grant",
       "source": {
@@ -18786,7 +18786,9 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/monk_evasion.json",
+          "state": "authored-record-present",
+          "unitId": "monk_evasion"
         },
         "battleReadiness": {
           "state": "not-applicable"
@@ -18795,12 +18797,13 @@
           "state": "not-recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "monk_evasion"
         },
-        "finalDisposition": "class-progression-follow-up-required",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "supported-profile",
+          "state": "recorded"
         }
       }
     },

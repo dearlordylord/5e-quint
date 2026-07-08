@@ -2,7 +2,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-damage-rider unit-feature.bonus-action-ongoing-rage unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-armor-class-bonus unit-feature.passive-ranged-attack-roll-bonus unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS BATTLE.DAMAGE.ATTACK_BRANCHES BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay QMBT7 fighter_second_wind
-// UNIT-IDENTITY-EVIDENCE: selected-identity-replay QMBT9 fighter_action_surge fighter_improved_critical barbarian_rage barbarian_reckless_attack rogue_cunning_action rogue_evasion rogue_uncanny_dodge rogue_sneak_attack
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay QMBT9 fighter_action_surge fighter_improved_critical barbarian_rage barbarian_reckless_attack rogue_cunning_action rogue_evasion monk_evasion rogue_uncanny_dodge rogue_sneak_attack
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3-FOLLOWUP-BARBARIAN-FRENZY barbarian_frenzy
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay QMBT31 feat_savage_attacker
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay passive-and-zero-hp-features defense feat_archery orc_relentless_endurance
@@ -17,6 +17,7 @@
 // UNIT-IDENTITY-REPLAY: QMBT9 barbarian_reckless_attack doRecklessAttack
 // UNIT-IDENTITY-REPLAY: QMBT9 rogue_cunning_action doCunningDash doCunningDisengage doCunningHide
 // UNIT-IDENTITY-REPLAY: QMBT9 rogue_evasion doEvasionSuccess doEvasionFailure
+// UNIT-IDENTITY-REPLAY: QMBT9 monk_evasion doEvasionSuccess doEvasionFailure
 // UNIT-IDENTITY-REPLAY: QMBT9 rogue_uncanny_dodge doUncannyDodge
 // UNIT-IDENTITY-REPLAY: QMBT9 rogue_sneak_attack doSneakAttack
 // UNIT-IDENTITY-REPLAY: L3-FOLLOWUP-BARBARIAN-FRENZY barbarian_frenzy doFrenzy
@@ -249,6 +250,7 @@ type SelectedUnitIdentityReplay = {
   readonly actions: readonly RuleCoreFeatureDriverAction[];
   readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
 };
+type EvasionUnitId = "rogue_evasion" | "monk_evasion";
 const selectedUnitRuntimeBoundaryIds = new Set<string>();
 
 const selectedUnitIdentityReplays = [
@@ -414,6 +416,31 @@ const selectedUnitIdentityReplays = [
   {
     taskId: "QMBT9",
     unitId: "rogue_evasion",
+    actions: ["doEvasionSuccess", "doEvasionFailure"],
+    sequences: [
+      {
+        name: "success",
+        actions: ["doEvasionSuccess"],
+        expected: expectedProjection({
+          actionAvailable: false,
+          lastResult: "resolved",
+        }),
+      },
+      {
+        name: "failure",
+        actions: ["doEvasionFailure"],
+        expected: expectedProjection({
+          actionAvailable: false,
+          actorHp: 9,
+          lastDamageAmount: 3,
+          lastResult: "resolved",
+        }),
+      },
+    ],
+  },
+  {
+    taskId: "QMBT9",
+    unitId: "monk_evasion",
     actions: ["doEvasionSuccess", "doEvasionFailure"],
     sequences: [
       {
@@ -703,7 +730,16 @@ function recordSelectedUnitRuntimeBoundaryId<UnitId extends string>(
   return unitId;
 }
 
-function createRuleCoreFeatureDriver() {
+function evasionUnitIdForReplay(unitId: string): EvasionUnitId | undefined {
+  if (unitId === "rogue_evasion" || unitId === "monk_evasion") {
+    return unitId;
+  }
+  return undefined;
+}
+
+function createRuleCoreFeatureDriver(input: {
+  readonly evasionUnitId?: EvasionUnitId;
+} = {}) {
   return defineDriver(driverSchema, () => {
     let state = featureBattle();
     let holes: readonly BattleHole[] = [];
@@ -1351,7 +1387,7 @@ function createRuleCoreFeatureDriver() {
     }
 
     function resolveDexHalfCantrip(succeeded: boolean): void {
-      state = evasionBattle();
+      state = evasionBattle(input.evasionUnitId);
       resetProjection();
       const subject: BattleSubject = {
         tag: "actionSpell",
@@ -1537,7 +1573,12 @@ describe("rule-core Feature focused MBT", () => {
       const replayedActions = new Set<RuleCoreFeatureDriverAction>();
 
       for (const sequence of replay.sequences) {
-        const driver = createRuleCoreFeatureDriver()();
+        const replayEvasionUnitId = evasionUnitIdForReplay(replay.unitId);
+        const driver = createRuleCoreFeatureDriver(
+          replayEvasionUnitId === undefined
+            ? {}
+            : { evasionUnitId: replayEvasionUnitId },
+        )();
 
         for (const actionName of sequence.actions) {
           resetSelectedUnitRuntimeBoundaryIds();
@@ -1973,7 +2014,13 @@ function relentlessEnduranceBattle(): BattleState {
   });
 }
 
-function evasionBattle(): BattleState {
+function evasionBattle(unitId: EvasionUnitId = "rogue_evasion"): BattleState {
+  const unit = unitLibrary.requireUnit(
+    recordSelectedUnitRuntimeBoundaryId(unitId),
+  );
+  if (unit.kind !== "class_feature") {
+    throw new Error("Expected Evasion class feature Unit.");
+  }
   return startBattleRight({
     battleId: battleId("rule-core-evasion"),
     combatants: [
@@ -1999,18 +2046,16 @@ function evasionBattle(): BattleState {
       featureActor({
         initiative: 10,
         currentHp: 12,
-        classLevels: [{ className: "rogue", level: 7 }],
+        classLevels: [{ className: unit.className, level: 7 }],
         attack: null,
         unitFeatures: [
           {
-            unit: unitLibrary.requireUnit(
-              recordSelectedUnitRuntimeBoundaryId("rogue_evasion"),
-            ),
+            unit,
           },
         ],
         characterUnitRefs: [
           {
-            unitId: recordSelectedUnitRuntimeBoundaryId("rogue_evasion"),
+            unitId: recordSelectedUnitRuntimeBoundaryId(unit.id),
             supportProfiles: [SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE],
           },
         ],

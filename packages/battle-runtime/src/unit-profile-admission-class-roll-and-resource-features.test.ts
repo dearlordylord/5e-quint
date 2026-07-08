@@ -1,4 +1,4 @@
-// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT7 fighter_second_wind barbarian_reckless_attack rogue_evasion
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT7 fighter_second_wind barbarian_reckless_attack rogue_evasion monk_evasion
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT62 fighter_tactical_mind
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT65 bard_cutting_words
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV72A bard_bardic_inspiration
@@ -11,6 +11,7 @@ import {
   bardCuttingWordsUnitId,
   fighterSecondWindUnitId,
   fighterTacticalMindUnitId,
+  monkEvasionUnitId,
   rogueEvasionUnitId,
   sorcererInnateSorceryUnitId,
   unitLibrary,
@@ -107,32 +108,41 @@ describe("QMBT7 deterministic Unit profile admission", () => {
     );
   });
 
-  test("rogue_evasion is admitted and projected through production feature support", () => {
-    const unit = unitLibrary.requireUnit(rogueEvasionUnitId);
-    const profile = parseSupportedUnitFeatureProfile(unit, [
-      { className: "rogue", level: classLevel(7) },
-    ]);
+  test.each([
+    { className: "rogue", unitId: rogueEvasionUnitId },
+    { className: "monk", unitId: monkEvasionUnitId },
+  ] as const)(
+    "$unitId is admitted and projected through production feature support",
+    ({ className, unitId }) => {
+      const unit = unitLibrary.requireUnit(unitId);
+      const profile = parseSupportedUnitFeatureProfile(unit, [
+        { className, level: classLevel(7) },
+      ]);
 
-    expect(
-      battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
-    ).toEqual(
-      Either.right({
-        unitId: rogueEvasionUnitId,
-        supportProfiles: [SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE],
-      }),
-    );
-    expect(profile).toEqual(
-      expect.objectContaining({
-        kind: "saveDamageReplacement",
-        unit,
-        ability: "dex",
-        requiredSuccessDamage: "half",
-        onSuccess: "none",
-        onFail: "half",
-        suppressedByCondition: "incapacitated",
-      }),
-    );
-  });
+      expect(
+        battleUnitRefWithSupportProfiles({
+          unitRef: { unitId: unit.id },
+          unit,
+        }),
+      ).toEqual(
+        Either.right({
+          unitId,
+          supportProfiles: [SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE],
+        }),
+      );
+      expect(profile).toEqual(
+        expect.objectContaining({
+          kind: "saveDamageReplacement",
+          unit,
+          ability: "dex",
+          requiredSuccessDamage: "half",
+          onSuccess: "none",
+          onFail: "half",
+          suppressedByCondition: "incapacitated",
+        }),
+      );
+    },
+  );
 });
 
 describe("QMBT62 Tactical Mind deterministic Unit profile admission", () => {

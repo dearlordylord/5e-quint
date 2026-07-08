@@ -43,14 +43,14 @@
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "metrics": {
     "authoredSurfaceExecutableCatalogAdmissionCoverage": {
-      "denominator": 466,
-      "numerator": 281,
-      "percent": "60.3%"
+      "denominator": 467,
+      "numerator": 282,
+      "percent": "60.4%"
     },
     "authoredSurfaceUnitCatalogAdmissionCoverage": {
-      "denominator": 554,
-      "numerator": 331,
-      "percent": "59.7%"
+      "denominator": 555,
+      "numerator": 332,
+      "percent": "59.8%"
     },
     "classicNonSrdExpressionGate": {
       "denominator": 1,
@@ -59,16 +59,16 @@
     },
     "collectionInventoryCount": {
       "unit": "Units",
-      "value": 332
+      "value": 333
     },
     "deterministicAdmissionProjectionCoverage": {
-      "denominator": 191,
-      "numerator": 186,
+      "denominator": 192,
+      "numerator": 187,
       "percent": "97.4%"
     },
     "profileClassificationCoverage": {
-      "denominator": 332,
-      "numerator": 332,
+      "denominator": 333,
+      "numerator": 333,
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
@@ -92,8 +92,8 @@
       "percent": "99.4%"
     },
     "rulesKernelSupportedUnitCoverage": {
-      "denominator": 186,
-      "numerator": 186,
+      "denominator": 187,
+      "numerator": 187,
       "percent": "100%"
     },
     "runtimeMappingCoverage": {
@@ -107,14 +107,14 @@
       "percent": "100%"
     },
     "selectedIdentityReplayCoverage": {
-      "denominator": 183,
-      "numerator": 183,
+      "denominator": 184,
+      "numerator": 184,
       "percent": "100%"
     },
     "supportedProfileCoverage": {
-      "denominator": 282,
-      "numerator": 191,
-      "percent": "67.7%"
+      "denominator": 283,
+      "numerator": 192,
+      "percent": "67.8%"
     }
   },
   "metricSemantics": [
@@ -8825,8 +8825,8 @@
       "denominatorRule": "supported Unit ids with at least one rules-kernel-applicable profile",
       "metrics": {
         "rulesKernelSupportedUnitCoverage": {
-          "denominator": 186,
-          "numerator": 186,
+          "denominator": 187,
+          "numerator": 187,
           "percent": "100%"
         }
       },
@@ -11713,6 +11713,28 @@
             }
           ],
           "unitId": "monk_deflect_attacks"
+        },
+        {
+          "joinStatus": "covered",
+          "profiles": [
+            {
+              "joinStatus": "covered",
+              "obligations": [
+                {
+                  "obligationId": "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+                  "runtime": "battle",
+                  "status": "covered",
+                  "title": "Battle Unit feature procedure profiles for supported action, bonus action, reaction, passive, resource, and active-effect shapes"
+                }
+              ],
+              "profileId": "unit-feature.save-damage-replacement",
+              "profileKind": "passive",
+              "qntOwners": [
+                "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
+              ]
+            }
+          ],
+          "unitId": "monk_evasion"
         },
         {
           "joinStatus": "covered",
@@ -17849,17 +17871,17 @@
         "unsupportedOrOtherUnits": 33
       },
       {
-        "executableUnitDenominator": 96,
-        "installedUnitDenominator": 96,
+        "executableUnitDenominator": 97,
+        "installedUnitDenominator": 97,
         "kind": "class_feature",
         "label": "Class-feature Units",
-        "profileFactDenominator": 122,
+        "profileFactDenominator": 123,
         "profileSubsetSupportedUnits": 8,
         "selectedIdentityDeferredNonApplicableUnits": 0,
-        "selectedIdentityReplayDenominator": 76,
+        "selectedIdentityReplayDenominator": 77,
         "selectedIdentityReplayGapUnits": 0,
-        "selectedIdentityReplayWitnessUnits": 76,
-        "supportedProfileUnits": 74,
+        "selectedIdentityReplayWitnessUnits": 77,
+        "supportedProfileUnits": 75,
         "unsupportedOrOtherUnits": 14
       }
     ]
@@ -21662,6 +21684,67 @@
       ],
       "sourceRecordPath": "packages/surface/content/monk_deflect_attacks.json",
       "unitId": "monk_deflect_attacks"
+    },
+    {
+      "authoredSurfaceDuplicateIdCount": 1,
+      "catalogAdmission": {
+        "collectionId": "srd-5.2.1",
+        "status": "installed"
+      },
+      "claim": {
+        "profileIds": [
+          "unit-feature.save-damage-replacement"
+        ],
+        "rawRequirementIds": [
+          "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
+        ],
+        "tag": "supported-profile"
+      },
+      "collectionId": "srd-5.2.1",
+      "evidence": [
+        {
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts",
+          "tag": "deterministic-admission-projection",
+          "taskId": "QMBT7"
+        },
+        {
+          "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts",
+          "tag": "selected-identity-replay",
+          "taskId": "QMBT9"
+        }
+      ],
+      "executableMechanics": true,
+      "kind": "class_feature",
+      "profiles": [
+        {
+          "id": "unit-feature.save-damage-replacement",
+          "profileKind": "passive",
+          "qntOwners": [
+            "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
+          ],
+          "runtimeOwners": [
+            "packages/battle-runtime/src/unit-feature-support.ts",
+            "packages/battle-runtime/src/battle-reducer.ts"
+          ],
+          "taskRefs": [
+            "QCORE9",
+            "QMBT4"
+          ],
+          "title": "Unit feature replaces Dexterity half-damage Saving Throw outcomes",
+          "verificationOwners": [
+            {
+              "kind": "qnt-proof",
+              "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-procedure-profiles-inductive.qnt"
+            },
+            {
+              "kind": "focused-mbt",
+              "ownerPath": "packages/battle-runtime/src/rule-core-features.mbt.test.ts"
+            }
+          ]
+        }
+      ],
+      "sourceRecordPath": "packages/surface/content/monk_evasion.json",
+      "unitId": "monk_evasion"
     },
     {
       "authoredSurfaceDuplicateIdCount": 1,

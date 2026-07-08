@@ -43,7 +43,7 @@
     {
       "number": 7,
       "id": "L7FULL-03-MONK-EVASION-REUSE-ADMISSION",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Admit Monk Evasion through the existing Evasion support model"
     },
     {
@@ -332,7 +332,7 @@ Spell-level-4 unique identities currently in the level-7 mining audit:
 | 4 | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION - Add checker protection against empty or vacuous higher-level scopes | done | L18FOUND-03-LEVEL17-18-REPORT-GATE-SHAPE | Prevents accidental pass from missing bands or empty denominators. |
 | 5 | L7FULL-01-CLASS-TABLE-SUMMARY-CLOSURE - Close the twelve level-7 class-table summary rows | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Table rows remain non-runtime but checker-visible. |
 | 6 | L7FULL-02-ROGUE-EVASION-EVIDENCE-PRESERVATION - Preserve existing Rogue Evasion support evidence | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Existing support must survive the new strict scope. |
-| 7 | L7FULL-03-MONK-EVASION-REUSE-ADMISSION - Admit Monk Evasion through the existing Evasion support model | ready-for-implementation | L7FULL-02-ROGUE-EVASION-EVIDENCE-PRESERVATION | Reuses typed Evasion semantics without authored-identity dispatch. |
+| 7 | L7FULL-03-MONK-EVASION-REUSE-ADMISSION - Admit Monk Evasion through the existing Evasion support model | done | L7FULL-02-ROGUE-EVASION-EVIDENCE-PRESERVATION | Reuses typed Evasion semantics without authored-identity dispatch. |
 | 8 | L7FULL-04-FIGHTER-ADDITIONAL-FIGHTING-STYLE - Resolve Fighter Additional Fighting Style level-7 accounting | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Character-selection grant closure or support evidence. |
 | 9 | L7FULL-05-CLERIC-BLESSED-STRIKES - Resolve Cleric Blessed Strikes level-7 accounting | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Damage rider or explicit future-owner split. |
 | 10 | L7FULL-06-DRUID-ELEMENTAL-FURY - Resolve Druid Elemental Fury level-7 accounting | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Weapon/Wild Shape damage rider or explicit future-owner split. |
@@ -719,7 +719,7 @@ Plan Impact:
 
 ### Task 7 - L7FULL-03-MONK-EVASION-REUSE-ADMISSION
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on: `L7FULL-02-ROGUE-EVASION-EVIDENCE-PRESERVATION`
 
@@ -739,6 +739,21 @@ Output:
 - SRD Surface record and unit-profile evidence for Monk Evasion, or a typed
   shared Evasion feature shape consumed by both Rogue and Monk records.
 
+Completion Evidence:
+
+- Added `packages/surface/content/monk_evasion.{dhall,json}` with the same
+  typed `save_damage_replacement` mechanics shape used by Rogue Evasion and SRD
+  Monk provenance.
+- Installed `monk_evasion` in `srdUnitCollection`.
+- Added deterministic admission evidence in
+  `packages/battle-runtime/src/unit-profile-admission-class-roll-and-resource-features.test.ts`.
+- Added selected-identity replay evidence in
+  `packages/battle-runtime/src/rule-core-features.mbt.test.ts` by parameterizing
+  the Evasion replay fixture over selected Unit id and class, without runtime
+  authored-identity dispatch.
+- Regenerated unit-profile coverage reports; Monk Evasion is now installed,
+  `supported-profile`, and covered by `unit-feature.save-damage-replacement`.
+
 Acceptance:
 
 - The runtime behavior keys on Evasion support-profile shape and save-damage
@@ -753,14 +768,22 @@ Forbidden Shortcuts:
 
 Verification:
 
-- Focused runtime tests for Monk Evasion admission if runtime path changes.
-- Focused QNT/MBT only if parity behavior changes.
+- RAW checked `.references/srd-5.2.1/Classes/Monk.md:132-137` and
+  `.references/srd-5.2.1/Classes/Rogue.md:113-115`; Ubiquitous Language checked
+  Saving Throw, Damage, Incapacitated, and class feature terminology.
+- `pnpm --filter @dnd/battle-runtime exec vitest run src/unit-profile-admission-class-roll-and-resource-features.test.ts`
+- `pnpm --filter @dnd/battle-runtime exec vitest run src/rule-core-features.mbt.test.ts -t "replays selected Unit identities deterministically"`
+- `pnpm --filter @dnd/battle-runtime exec tsc --noEmit --pretty false`
+- `pnpm --filter @dnd/surface exec tsc --noEmit --pretty false`
+- `pnpm --filter @dnd/surface exec vitest run src/surface/unit-catalog.test.ts`
+- `pnpm unit-profile-coverage:check --write`
 - `pnpm unit-profile-coverage:check`
 
 Plan Impact:
 
-- Update-required if shared Evasion modeling creates a new reusable task for
-  other save-damage replacement features.
+- `applied`: no new reusable task is needed. Monk and Rogue Evasion share the
+  existing typed save-damage replacement support profile; Task 24 remains
+  blocked on the remaining level-7 closures.
 
 ### Task 8 - L7FULL-04-FIGHTER-ADDITIONAL-FIGHTING-STYLE
 

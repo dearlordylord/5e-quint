@@ -96,6 +96,8 @@ export const rogueCunningActionUnitId = "rogue_cunning_action";
 
 export const rogueEvasionUnitId = "rogue_evasion";
 
+export const monkEvasionUnitId = "monk_evasion";
+
 export const rogueUncannyDodgeUnitId = "rogue_uncanny_dodge";
 
 export const rogueSneakAttackUnitId = "rogue_sneak_attack";

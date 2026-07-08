@@ -160,6 +160,7 @@ const requiredFirstVerticalUnitIds = [
   "paladin_paladins_smite",
   "ranger_fighting_style",
   ...levelThreeSubclassChoiceUnitIds,
+  "monk_evasion",
   "rogue_evasion",
   "wizard_ritual_adept",
   "wizard_arcane_recovery",

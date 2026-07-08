@@ -42,9 +42,9 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | Disposition | Rows |
 | --- | ---: |
 | catalog-authored-review-required | 49 |
-| catalog-installed-owner-evidence-present | 502 |
+| catalog-installed-owner-evidence-present | 503 |
 | catalog-only/dead-for-now | 222 |
-| class-progression-follow-up-required | 11 |
+| class-progression-follow-up-required | 10 |
 | missing-authored-record | 32 |
 | non-runtime | 84 |
 
@@ -52,16 +52,16 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Catalog state | Rows |
 | --- | ---: |
-| installed | 694 |
-| not-installed | 206 |
+| installed | 695 |
+| not-installed | 205 |
 
 ### Unit Profile Disposition
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 131 |
+| not-recorded | 130 |
 | profile-subset-supported | 59 |
-| supported-profile | 309 |
+| supported-profile | 310 |
 | unsupported-profile | 401 |
 
 ### Battle Readiness Snapshot
@@ -661,7 +661,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Monk Empowered Strikes | level-6 | character-level | class feature | `monk_empowered_strikes` | `.references/srd-5.2.1/Classes/Monk.md:128` |  | present | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | outside-battle-runtime: future-owner-before-SDK battle-runtime Unarmed Strike damage-type-choice owner plus selected Monk class-feature admission owner | SRD Empowered Strikes applies whenever the Monk deals damage with an Unarmed Strike, allowing a choice between Force damage and the strike's normal damage type. Existing Martial Arts support owns Unarmed Strike damage die replacement, Dexterity attack and damage projection, Grapple/Shove DC projection, and Bonus Action Unarmed Strike discovery, while existing spell and weapon-imbue damage-type-choice holes are scoped to their own host profiles. A future owner must consume typed Surface facts for the selected Empowered Strikes feature and the existing Unarmed Strike damage profile, then offer and validate the Force-or-normal damage type choice at attack damage resolution without adding duplicate Unarmed Strike state, Martial Arts state, class progression state, or authored-identity dispatch. |
 | Monk Wholeness of Body | level-6 | character-level | class feature | `monk_wholeness_of_body` | `.references/srd-5.2.1/Classes/Monk.md:202` |  | present | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | character-fact-and-runtime-detached-split: future-owner-before-SDK character-sheet-runtime and battle-runtime Wholeness of Body feature-resource self-healing owner plus selected Warrior of the Open Hand feature admission owner | SRD Wholeness of Body lets the selected Monk use a Bonus Action to roll the Martial Arts die and regain Hit Points equal to the roll plus Wisdom modifier, with a minimum of 1 Hit Point regained, a Wisdom-modifier use count with a minimum of one use, and Long Rest recovery. Existing Martial Arts support owns the die-size projection, existing character facts own Wisdom ability scores, and existing Hit Point recovery owners apply positive healing. The current battle self-bonus-action-healing profile is admitted for Second Wind's class-level formula and partial Short Rest/full Long Rest reset, while the current Character Sheet use-count owner is limited to typed resource profiles such as Wild Shape and Monk's Focus rather than arbitrary feature ids. A future owner must consume typed Surface facts for the selected Wholeness of Body feature, derive the Martial Arts die, Wisdom modifier, Long Rest use state, and Bonus Action spend from existing owners, then apply self Hit Point healing without duplicating Hit Point state, Martial Arts progression, Wisdom ability state, use-count expenditure state, subclass selection state, action-economy state, or dispatching on Monk, Warrior of the Open Hand, or Wholeness of Body authored identity. |
 | Monk level 6 feature table row | level-6 | character-level | character-creation or progression mechanic | `class_monk` | `.references/srd-5.2.1/Classes/Monk.md:37` |  | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
-| Monk Evasion | level-7 | character-level | class feature | `monk_evasion` | `.references/srd-5.2.1/Classes/Monk.md:132` |  | present | not-installed | not-recorded | class-progression-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
+| Monk Evasion | level-7 | character-level | class feature | `monk_evasion` | `.references/srd-5.2.1/Classes/Monk.md:132` |  | present | installed | supported-profile | catalog-installed-owner-evidence-present | not-applicable | not-recorded | Owner-specific operational evidence is classified and present. |
 | Monk level 7 feature table row | level-7 | character-level | character-creation or progression mechanic | `class_monk` | `.references/srd-5.2.1/Classes/Monk.md:38` |  | present | installed | unsupported-profile | non-runtime | not-applicable | outside-battle-runtime: class-progression-accounting | No runtime work; keep classification as explicit closure. |
 | Paladin class container | level-1 | character-level | class container | `class_paladin` | `.references/srd-5.2.1/Classes/Paladin.md:3` |  | present | installed | unsupported-profile | catalog-installed-owner-evidence-present | accepted | not-recorded | Owner-specific operational evidence is classified and present. |
 | Paladin Lay On Hands | level-1 | character-level | class feature | `paladin_lay_on_hands` | `.references/srd-5.2.1/Classes/Paladin.md:58` |  | present | installed | supported-profile | catalog-installed-owner-evidence-present | accepted | not-recorded | Owner-specific operational evidence is classified and present. |
