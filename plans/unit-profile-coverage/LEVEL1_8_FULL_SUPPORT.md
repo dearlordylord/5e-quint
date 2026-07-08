@@ -17,7 +17,7 @@ Blockers: strict=19, selected-identity=0, SRD-authored-readiness=0.
 | Strict runtime/profile support | 168/284 (59.2%) |
 | Strict target closure | 265/284 (93.3%) |
 | Selected identity readiness | 194/194 (100%) |
-| Diagnostic product readiness | 830/924 (89.8%) |
+| Diagnostic product readiness | 831/924 (89.9%) |
 | SRD authored product readiness | 115/115 (100%) |
 | Rules-kernel profile join | 118/118 (100%) |
 | Rules-kernel covered profile join | 118/118 (100%) |
@@ -25,7 +25,7 @@ Blockers: strict=19, selected-identity=0, SRD-authored-readiness=0.
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
-The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 830/924 (89.8%) while the claim gate reports **blocked** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
+The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 831/924 (89.9%) while the claim gate reports **blocked** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
 
 ### Diagnostic Product Readiness Accounting
 
@@ -34,9 +34,9 @@ Diagnostic product readiness keeps lower-layer planning pressure visible. Rows i
 | Status | Rows |
 | --- | ---: |
 | accepted | 499 |
-| accepted-no-battle-effect | 331 |
+| accepted-no-battle-effect | 332 |
 | battle-runtime-required | 32 |
-| owner-evidence-required | 62 |
+| owner-evidence-required | 61 |
 
 ### Selected Identity Replay Accounting
 
@@ -334,7 +334,7 @@ This gate checks authored records and retained Unit references that must resolve
 | `ranger_hunters_lore` | 1 | The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet. | catalog-only/dead-for-now | not-recorded | Hunter's Lore reveals whether a Hunter's Mark target has Immunities, Resistances, or Vulnerabilities and what they are. That disclosure is table/stat-block knowledge, not promoted battle state; the runtime must not duplicate Stat Block facts into Ranger feature state. | _none_ | Ranger Hunter's Lore |
 | `resilient_sphere` | 1 | The SRD row has spell-level-4 spell-list Unit pressure, but no Unit matrix row exists yet. | missing-authored-record | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. | _none_ | Wizard spell list Resilient Sphere |
 | `rogue_ability_score_improvement_l8` | 1 | The SRD row has level-8 class-feature pressure, but no Unit matrix row exists yet. | class-progression-follow-up-required | not-recorded | Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. | _none_ | Rogue Ability Score Improvement |
-| `rogue_reliable_talent` | 1 | The SRD row has level-7 class-feature pressure, but no Unit matrix row exists yet. | class-progression-follow-up-required | not-recorded | Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. | _none_ | Rogue Reliable Talent |
+| `rogue_reliable_talent` | 1 | The SRD row has level-7 class-feature pressure, but no Unit matrix row exists yet. | catalog-only/dead-for-now | character-fact-and-runtime-detached-split: future Ability Check d20-floor owner plus existing character-sheet skill/tool proficiency projection | A future owner must derive Reliable Talent eligibility from the selected Rogue feature ref plus the existing CharacterBuild skill and tool proficiency facts, then apply a pre-total d20 floor of 10 only when the resolved Ability Check uses an owned skill or tool proficiency. The owner must compose with Advantage/Disadvantage selected-die results and other d20 replacement/reroll effects at the Ability Check roll boundary, while leaving attack rolls, Saving Throws, Death Saving Throws, passive checks with no d20 roll, and unproficient checks untouched. The closure must not duplicate skill/tool proficiency state, store a parallel list of reliable checks, treat Expertise or Jack of All Trades as separate eligibility copies, add Rogue-name dispatch to check reducers, or modify Proficiency Bonus arithmetic instead of the underlying d20 result. | _none_ | Rogue Reliable Talent |
 | `secret_chest` | 1 | The SRD row has spell-level-4 spell-list Unit pressure, but no Unit matrix row exists yet. | missing-authored-record | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. | _none_ | Wizard spell list Secret Chest |
 | `sorcerer_ability_score_improvement_l8` | 1 | The SRD row has level-8 class-feature pressure, but no Unit matrix row exists yet. | class-progression-follow-up-required | not-recorded | Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. | _none_ | Sorcerer Ability Score Improvement |
 | `sorcerer_elemental_affinity` | 1 | The SRD row has level-6 class-feature pressure, but no Unit matrix row exists yet. | catalog-only/dead-for-now | character-fact-and-runtime-detached-split: future-owner-before-SDK character-sheet-runtime selected Elemental Affinity damage-type owner plus battle-runtime passive Resistance and spell damage-roll modifier owners | SRD Elemental Affinity chooses one of Acid, Cold, Fire, Lightning, or Poison, grants Resistance to that chosen damage type, and lets the Sorcerer add Charisma modifier to one damage roll of a spell that deals that damage type. The local SRD 5.2.1 text does not spend Sorcery Points for this feature. Existing passive damage Resistance support is scoped to fixed or species Draconic Ancestry facts, and existing spell damage owners do not admit a selected class-feature damage-type filter, one-roll-per-spell accounting, or a shared build-time damage-type binding across Resistance and the spell damage rider. A future owner must consume typed Surface facts for the selected Elemental Affinity feature, retain the single chosen damage type as a character-owned source fact, project target-side Resistance through the shared damage adjustment boundary, and project the optional Charisma modifier through the spell damage-roll owner without duplicating Spell Slot state, spell damage dice or totals, character ability state, damage adjustment state, Sorcery Point state, subclass selection state, or dispatching on Sorcerer, Draconic Sorcery, Elemental Affinity, or selected spell authored identity. | _none_ | Sorcerer Elemental Affinity |

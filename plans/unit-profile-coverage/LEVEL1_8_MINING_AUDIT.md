@@ -44,8 +44,8 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | --- | ---: |
 | catalog-authored-review-required | 49 |
 | catalog-installed-owner-evidence-present | 503 |
-| catalog-only/dead-for-now | 231 |
-| class-progression-follow-up-required | 13 |
+| catalog-only/dead-for-now | 232 |
+| class-progression-follow-up-required | 12 |
 | missing-authored-record | 32 |
 | non-runtime | 96 |
 
@@ -60,10 +60,10 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 133 |
+| not-recorded | 132 |
 | profile-subset-supported | 59 |
 | supported-profile | 310 |
-| unsupported-profile | 422 |
+| unsupported-profile | 423 |
 
 ### Battle Readiness Snapshot
 
@@ -820,7 +820,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Rogue Expertise | level-6 | character-level | class feature | `rogue_expertise` | `.references/srd-5.2.1/Classes/Rogue.md:41` | dedicated-rule-text: .references/srd-5.2.1/Classes/Rogue.md:57 | present |  |  | installed | supported-profile | catalog-installed-owner-evidence-present | not-applicable | not-recorded | Owner-specific operational evidence is classified and present. |
 | Rogue level 6 feature table row | level-6 | character-level | character-creation or progression mechanic | `class_rogue` | `.references/srd-5.2.1/Classes/Rogue.md:41` |  | present |  |  | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
 | Rogue Evasion | level-7 | character-level | class feature | `rogue_evasion` | `.references/srd-5.2.1/Classes/Rogue.md:113` |  | present |  |  | installed | supported-profile | catalog-installed-owner-evidence-present | not-applicable | not-recorded | Owner-specific operational evidence is classified and present. |
-| Rogue Reliable Talent | level-7 | character-level | class feature | `rogue_reliable_talent` | `.references/srd-5.2.1/Classes/Rogue.md:117` |  | present |  |  | not-installed | not-recorded | class-progression-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
+| Rogue Reliable Talent | level-7 | character-level | class feature | `rogue_reliable_talent` | `.references/srd-5.2.1/Classes/Rogue.md:117` |  | present |  |  | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | character-fact-and-runtime-detached-split: future Ability Check d20-floor owner plus existing character-sheet skill/tool proficiency projection | A future owner must derive Reliable Talent eligibility from the selected Rogue feature ref plus the existing CharacterBuild skill and tool proficiency facts, then apply a pre-total d20 floor of 10 only when the resolved Ability Check uses an owned skill or tool proficiency. The owner must compose with Advantage/Disadvantage selected-die results and other d20 replacement/reroll effects at the Ability Check roll boundary, while leaving attack rolls, Saving Throws, Death Saving Throws, passive checks with no d20 roll, and unproficient checks untouched. The closure must not duplicate skill/tool proficiency state, store a parallel list of reliable checks, treat Expertise or Jack of All Trades as separate eligibility copies, add Rogue-name dispatch to check reducers, or modify Proficiency Bonus arithmetic instead of the underlying d20 result. |
 | Rogue level 7 feature table row | level-7 | character-level | character-creation or progression mechanic | `class_rogue` | `.references/srd-5.2.1/Classes/Rogue.md:42` |  | present |  |  | installed | unsupported-profile | non-runtime | not-applicable | outside-battle-runtime: class-progression-accounting | No runtime work; keep classification as explicit closure. |
 | Rogue Ability Score Improvement | level-8 | character-level | class feature | `rogue_ability_score_improvement_l8` | `.references/srd-5.2.1/Classes/Rogue.md:43` | dedicated-rule-text: .references/srd-5.2.1/Classes/Rogue.md:93 | present |  |  | not-installed | not-recorded | class-progression-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
 | Rogue level 8 feature table row | level-8 | character-level | character-creation or progression mechanic | `class_rogue` | `.references/srd-5.2.1/Classes/Rogue.md:43` |  | present |  |  | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |

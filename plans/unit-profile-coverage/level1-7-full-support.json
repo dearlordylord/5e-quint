@@ -6251,13 +6251,13 @@
   "metrics": {
     "productReadiness": {
       "denominator": 900,
-      "numerator": 818,
-      "percent": "90.9%",
+      "numerator": 819,
+      "percent": "91%",
       "rowsByStatus": {
         "accepted": 499,
-        "accepted-no-battle-effect": 319,
+        "accepted-no-battle-effect": 320,
         "battle-runtime-required": 32,
-        "owner-evidence-required": 50
+        "owner-evidence-required": 49
       }
     },
     "rulesKernelCoveredProfileJoin": {
@@ -8962,17 +8962,21 @@
         "inventoryAccounting": [
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "character-fact-and-runtime-detached-split",
+              "owner": "future Ability Check d20-floor owner plus existing character-sheet skill/tool proficiency projection",
+              "reason": "A future owner must derive Reliable Talent eligibility from the selected Rogue feature ref plus the existing CharacterBuild skill and tool proficiency facts, then apply a pre-total d20 floor of 10 only when the resolved Ability Check uses an owned skill or tool proficiency. The owner must compose with Advantage/Disadvantage selected-die results and other d20 replacement/reroll effects at the Ability Check roll boundary, while leaving attack rolls, Saving Throws, Death Saving Throws, passive checks with no d20 roll, and unproficient checks untouched. The closure must not duplicate skill/tool proficiency state, store a parallel list of reliable checks, treat Expertise or Jack of All Trades as separate eligibility copies, add Rogue-name dispatch to check reducers, or modify Proficiency Bonus arithmetic instead of the underlying d20 result.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
             "battleReadinessStatus": "not-applicable",
             "catalogAdmissionState": "not-installed",
             "concept": "Rogue Reliable Talent",
-            "finalDisposition": "class-progression-follow-up-required",
+            "finalDisposition": "catalog-only/dead-for-now",
             "levelBand": "level-7",
-            "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+            "nextAction": "A future owner must derive Reliable Talent eligibility from the selected Rogue feature ref plus the existing CharacterBuild skill and tool proficiency facts, then apply a pre-total d20 floor of 10 only when the resolved Ability Check uses an owned skill or tool proficiency. The owner must compose with Advantage/Disadvantage selected-die results and other d20 replacement/reroll effects at the Ability Check roll boundary, while leaving attack rolls, Saving Throws, Death Saving Throws, passive checks with no d20 roll, and unproficient checks untouched. The closure must not duplicate skill/tool proficiency state, store a parallel list of reliable checks, treat Expertise or Jack of All Trades as separate eligibility copies, add Rogue-name dispatch to check reducers, or modify Proficiency Bonus arithmetic instead of the underlying d20 result.",
             "rowId": "srd521:classes/rogue:level-7:class-feature-grant:rogue_reliable_talent",
             "rowKind": "class-feature-grant",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           }
         ],
         "reason": "The SRD row has level-7 class-feature pressure, but no Unit matrix row exists yet.",

@@ -1393,7 +1393,7 @@ Plan Impact:
 
 ### Task 17 - L7FULL-13-ROGUE-RELIABLE-TALENT
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on: `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`
 
@@ -1428,9 +1428,32 @@ Verification:
 - Focused check tests if promoted.
 - `pnpm unit-profile-coverage:check`
 
+Completion Evidence:
+
+- Added checker-readable `rogue_reliable_talent` unsupported-profile closure in
+  `plans/unit-profile-coverage/unit-claims.jsonl`.
+- RAW checked `.references/srd-5.2.1/Classes/Rogue.md:117-119`,
+  `.references/srd-5.2.1/Playing-the-Game.md:71-101`, and
+  `.references/srd-5.2.1/Playing-the-Game.md:217-242`; Ubiquitous Language
+  checked Ability Check, Saving Throw, Attack Roll, Passive Check, Proficiency
+  Bonus, Proficiency Level, and Expertise terminology.
+- Reviewed existing `character-sheet.ability-check-proficiency-bonus` support
+  for ordinary skill proficiency, Expertise, and Jack of All Trades; Reliable
+  Talent eligibility must consume those character facts rather than copy them.
+- Closure assigns execution to a future Ability Check d20-floor owner that
+  floors the pre-total d20 result to 10 only for Ability Checks using an owned
+  skill or tool proficiency, leaving attack rolls, Saving Throws, Death Saving
+  Throws, passive checks, and unproficient checks untouched.
+- No focused runtime/MBT tests were run because no Ability Check floor behavior
+  was promoted.
+- `pnpm unit-profile-coverage:check --write`
+- `pnpm unit-profile-coverage:check`
+
 Plan Impact:
 
-- Update-required if a generic Ability Check owner is added or split out.
+- `applied`: future promotion needs a generic Ability Check d20-floor owner
+  that composes with Advantage/Disadvantage and reroll/replacement effects,
+  backed by existing CharacterBuild proficiency facts.
 
 ### Task 18 - L7FULL-14-SPELL-LEVEL4-STRICT-CLOSURE
 
