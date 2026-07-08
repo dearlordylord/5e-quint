@@ -1,8 +1,5 @@
 {
-  "blockedScopeIds": [
-    "level-1-7",
-    "level-1-8"
-  ],
+  "blockedScopeIds": [],
   "definition": {
     "aggregateRule": "Ultra-golden passes only when every required layer passes for every scoped level report. The checker deliberately does not publish a blended ultra-golden percentage.",
     "layers": [
@@ -1490,7 +1487,7 @@
     },
     {
       "layerResult": {
-        "completeLayers": 3,
+        "completeLayers": 4,
         "totalLayers": 4
       },
       "layers": [
@@ -1560,20 +1557,17 @@
         {
           "auditDecision": {
             "auditTaskId": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS",
-            "reason": "Level-1-7 ultra-golden scope now has required MCP flows, but no executable level-7 MCP scenario evidence is admitted yet.",
-            "requiredEvidence": {
-              "inputs": [
-                "A level-7 SRD character path with concrete returned hole ids and draft revisions",
-                "A durable Character Sheet read that demonstrates the new level-7 state",
-                "A battle interaction that follows returned battle subjects and holes"
-              ],
-              "scenarioGoal": "Exercise a level-7 SRD character workflow through MCP discovery, character creation, Character Sheet state, and battle handoff using returned tool state."
-            },
-            "result": "new-scenario-required",
-            "reusedFlowIds": [],
+            "reason": "Level-1-7 adds supported Evasion runtime obligations plus closed class/spell accounting, but no new MCP tool workflow shape beyond workflow discovery, character creation, Character Sheet read, and battle handoff. The existing level-6 Rogue vertical is the highest admitted MCP character-creation path and already follows returned draft revisions, option ids, character ids, battle ids, and battle subjects; Evasion support remains proven by the support, QNT/generator, and MBT/parity layers rather than by MCP evidence.",
+            "result": "reuse-existing-evidence",
+            "reusedFlowIds": [
+              "mcp-workflow-discovery",
+              "character-creation",
+              "character-sheet",
+              "battle"
+            ],
             "scopeId": "level-1-7"
           },
-          "blockingCount": 4,
+          "blockingCount": 0,
           "evidence": {
             "check": {
               "command": "pnpm --filter @dnd/mcp test:mcp-scenario-evidence",
@@ -1582,35 +1576,43 @@
             },
             "scenarioEvidenceFlows": {
               "denominator": 4,
-              "numerator": 0
+              "numerator": 4
             },
             "source": "plans/unit-profile-coverage/mcp-scenario-evidence.json",
             "witnessKind": "mcp-scenario"
           },
-          "evidenceRows": [],
-          "id": "mcp-scenario-evidence",
-          "missingEvidenceRows": [
+          "evidenceRows": [
             {
-              "description": "The MCP server exposes discoverable tool contracts, workflow guidance, catalogs, and structured result paths before a caller commits to a character or battle workflow.",
               "flowId": "mcp-workflow-discovery",
-              "followUpTaskId": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS"
+              "kind": "mcp-scenario",
+              "scenarioId": "create-level-six-rogue-expertise-and-steady-aim-battle-handoff",
+              "taskId": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-level-six-sheet-scenario.test.ts"
             },
             {
-              "description": "The MCP surface admits an SRD character creation workflow through create, discover, fill, and finalize tools without relying on support-profile status as scenario evidence.",
               "flowId": "character-creation",
-              "followUpTaskId": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS"
+              "kind": "mcp-scenario",
+              "scenarioId": "create-level-six-rogue-expertise-and-steady-aim-battle-handoff",
+              "taskId": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-level-six-sheet-scenario.test.ts"
             },
             {
-              "description": "The MCP surface exposes durable character sheet state and battle handoff results through list and session snapshot tools.",
               "flowId": "character-sheet",
-              "followUpTaskId": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS"
+              "kind": "mcp-scenario",
+              "scenarioId": "create-level-six-rogue-expertise-and-steady-aim-battle-handoff",
+              "taskId": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-level-six-sheet-scenario.test.ts"
             },
             {
-              "description": "The MCP surface admits an SRD battle flow through start, read, discover acts, fill battle holes, resolve acts, end turns, and end battle tools.",
               "flowId": "battle",
-              "followUpTaskId": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS"
+              "kind": "mcp-scenario",
+              "scenarioId": "create-level-six-rogue-expertise-and-steady-aim-battle-handoff",
+              "taskId": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
             }
           ],
+          "id": "mcp-scenario-evidence",
+          "missingEvidenceRows": [],
           "requiredFlows": [
             {
               "description": "The MCP server exposes discoverable tool contracts, workflow guidance, catalogs, and structured result paths before a caller commits to a character or battle workflow.",
@@ -1633,7 +1635,7 @@
               "followUpTaskId": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS"
             }
           ],
-          "status": "blocked"
+          "status": "pass"
         }
       ],
       "scopedObligationIds": [
@@ -1712,12 +1714,12 @@
         "SHEET.WEAPON_MASTERY.RESELECTION"
       ],
       "scopeId": "level-1-7",
-      "status": "blocked",
+      "status": "pass",
       "title": "Character Levels 1-7"
     },
     {
       "layerResult": {
-        "completeLayers": 3,
+        "completeLayers": 4,
         "totalLayers": 4
       },
       "layers": [
@@ -1787,20 +1789,17 @@
         {
           "auditDecision": {
             "auditTaskId": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS",
-            "reason": "Level-1-8 ultra-golden scope now has required MCP flows, but no executable level-8 MCP scenario evidence is admitted yet.",
-            "requiredEvidence": {
-              "inputs": [
-                "A level-8 SRD character path with concrete returned hole ids and draft revisions",
-                "A durable Character Sheet read that demonstrates the new level-8 state",
-                "A battle interaction that follows returned battle subjects and holes"
-              ],
-              "scenarioGoal": "Exercise a level-8 SRD character workflow through MCP discovery, character creation, Character Sheet state, and battle handoff using returned tool state."
-            },
-            "result": "new-scenario-required",
-            "reusedFlowIds": [],
+            "reason": "Level-1-8 adds repeated ASI, numeric progression, and Wild Shape threshold accounting that is closed outside MCP workflow execution; it does not introduce a new MCP tool flow beyond the four existing required flows. The existing level-6 Rogue vertical remains the highest admitted MCP character-creation path and proves returned-state sequencing for creation, sheet, and battle handoff, while level-8 mechanics stay covered by support completeness and parity layers.",
+            "result": "reuse-existing-evidence",
+            "reusedFlowIds": [
+              "mcp-workflow-discovery",
+              "character-creation",
+              "character-sheet",
+              "battle"
+            ],
             "scopeId": "level-1-8"
           },
-          "blockingCount": 4,
+          "blockingCount": 0,
           "evidence": {
             "check": {
               "command": "pnpm --filter @dnd/mcp test:mcp-scenario-evidence",
@@ -1809,35 +1808,43 @@
             },
             "scenarioEvidenceFlows": {
               "denominator": 4,
-              "numerator": 0
+              "numerator": 4
             },
             "source": "plans/unit-profile-coverage/mcp-scenario-evidence.json",
             "witnessKind": "mcp-scenario"
           },
-          "evidenceRows": [],
-          "id": "mcp-scenario-evidence",
-          "missingEvidenceRows": [
+          "evidenceRows": [
             {
-              "description": "The MCP server exposes discoverable tool contracts, workflow guidance, catalogs, and structured result paths before a caller commits to a character or battle workflow.",
               "flowId": "mcp-workflow-discovery",
-              "followUpTaskId": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS"
+              "kind": "mcp-scenario",
+              "scenarioId": "create-level-six-rogue-expertise-and-steady-aim-battle-handoff",
+              "taskId": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-level-six-sheet-scenario.test.ts"
             },
             {
-              "description": "The MCP surface admits an SRD character creation workflow through create, discover, fill, and finalize tools without relying on support-profile status as scenario evidence.",
               "flowId": "character-creation",
-              "followUpTaskId": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS"
+              "kind": "mcp-scenario",
+              "scenarioId": "create-level-six-rogue-expertise-and-steady-aim-battle-handoff",
+              "taskId": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-level-six-sheet-scenario.test.ts"
             },
             {
-              "description": "The MCP surface exposes durable character sheet state and battle handoff results through list and session snapshot tools.",
               "flowId": "character-sheet",
-              "followUpTaskId": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS"
+              "kind": "mcp-scenario",
+              "scenarioId": "create-level-six-rogue-expertise-and-steady-aim-battle-handoff",
+              "taskId": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-level-six-sheet-scenario.test.ts"
             },
             {
-              "description": "The MCP surface admits an SRD battle flow through start, read, discover acts, fill battle holes, resolve acts, end turns, and end battle tools.",
               "flowId": "battle",
-              "followUpTaskId": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS"
+              "kind": "mcp-scenario",
+              "scenarioId": "create-level-six-rogue-expertise-and-steady-aim-battle-handoff",
+              "taskId": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE",
+              "testPath": "packages/mcp/src/mcp-protocol.test.ts"
             }
           ],
+          "id": "mcp-scenario-evidence",
+          "missingEvidenceRows": [],
           "requiredFlows": [
             {
               "description": "The MCP server exposes discoverable tool contracts, workflow guidance, catalogs, and structured result paths before a caller commits to a character or battle workflow.",
@@ -1860,7 +1867,7 @@
               "followUpTaskId": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS"
             }
           ],
-          "status": "blocked"
+          "status": "pass"
         }
       ],
       "scopedObligationIds": [
@@ -1939,7 +1946,7 @@
         "SHEET.WEAPON_MASTERY.RESELECTION"
       ],
       "scopeId": "level-1-8",
-      "status": "blocked",
+      "status": "pass",
       "title": "Character Levels 1-8"
     }
   ],
@@ -2118,5 +2125,5 @@
     "rulesKernelMatrix": "plans/rules-kernel-coverage/matrix.json",
     "unitMatrix": "plans/unit-profile-coverage/unit-matrix.json"
   },
-  "status": "blocked"
+  "status": "pass"
 }

@@ -51,7 +51,8 @@ const manifestPath = resolve(
   "plans/unit-profile-coverage/mcp-scenario-evidence.json",
 );
 const packageJsonPath = resolve(repoRoot, "packages/mcp/package.json");
-const taskIdPattern = /^(?:C\d+|L13UG-A\d+|L14G-\d+|L5UG|L6UG)-[A-Z0-9-]+$/;
+const taskIdPattern =
+  /^(?:C\d+|L13UG-A\d+|L14G-\d+|L5UG|L6UG|L18GATE)-[A-Z0-9-]+$/;
 const require = createRequire(import.meta.url);
 // This local CJS checker has no TypeScript declaration; type it at the import
 // boundary so this test exercises the same manifest validator used by the

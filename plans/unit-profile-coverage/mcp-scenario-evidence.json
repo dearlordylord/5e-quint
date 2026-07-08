@@ -287,42 +287,42 @@
     {
       "kind": "mcp-scenario",
       "flowId": "mcp-workflow-discovery",
-      "scopeIds": ["level-1-6"],
+      "scopeIds": ["level-1-6", "level-1-7", "level-1-8"],
       "scenarioId": "create-level-six-rogue-expertise-and-steady-aim-battle-handoff",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-level-six-sheet-scenario.test.ts",
       "taskId": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE",
-      "summary": "The level-6 Rogue scenario reads the workflow guide result paths and catalog units before following returned Rogue 6 creation holes, durable Character Sheet state, and battle act subjects."
+      "summary": "The level-6 Rogue scenario reads the workflow guide result paths and catalog units before following returned Rogue 6 creation holes, durable Character Sheet state, and battle act subjects. Level-7 and level-8 add no new MCP tool workflow beyond these returned-state paths; their new runtime obligations stay in the support, QNT, and parity layers."
     },
     {
       "kind": "mcp-scenario",
       "flowId": "character-creation",
-      "scopeIds": ["level-1-6"],
+      "scopeIds": ["level-1-6", "level-1-7", "level-1-8"],
       "scenarioId": "create-level-six-rogue-expertise-and-steady-aim-battle-handoff",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-level-six-sheet-scenario.test.ts",
       "taskId": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE",
-      "summary": "The level-6 Rogue scenario creates and finalizes an Orc Soldier Rogue 6 by selecting only returned progression, class, background, Ability Score Improvement, equipment, loadout, and Expertise option ids."
+      "summary": "The level-6 Rogue scenario creates and finalizes an Orc Soldier Rogue 6 by selecting only returned progression, class, background, Ability Score Improvement, equipment, loadout, and Expertise option ids. The level-7 and level-8 scopes reuse this highest admitted MCP creation vertical because character creation does not yet admit level-7 or level-8 progression options; no MCP evidence row is used as runtime support for those later-level mechanics."
     },
     {
       "kind": "mcp-scenario",
       "flowId": "character-sheet",
-      "scopeIds": ["level-1-6"],
+      "scopeIds": ["level-1-6", "level-1-7", "level-1-8"],
       "scenarioId": "create-level-six-rogue-expertise-and-steady-aim-battle-handoff",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-level-six-sheet-scenario.test.ts",
       "taskId": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE",
-      "summary": "The level-6 Rogue scenario reads list_characters after finalization and verifies the durable Rogue 6 Character Sheet exposes Hit Points, owned skill proficiencies, and the four selected Expertise proficiencies."
+      "summary": "The level-6 Rogue scenario reads list_characters after finalization and verifies the durable Rogue 6 Character Sheet exposes Hit Points, owned skill proficiencies, and the four selected Expertise proficiencies. Level-7 and level-8 support adds no new MCP sheet protocol shape; new supported mechanics remain covered by runtime and parity evidence."
     },
     {
       "kind": "mcp-scenario",
       "flowId": "battle",
-      "scopeIds": ["level-1-6"],
+      "scopeIds": ["level-1-6", "level-1-7", "level-1-8"],
       "scenarioId": "create-level-six-rogue-expertise-and-steady-aim-battle-handoff",
       "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
       "testPath": "packages/mcp/src/mcp-protocol.test.ts",
       "taskId": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE",
-      "summary": "The level-6 Rogue scenario starts battle from the finalized Rogue 6 Character Sheet, discovers the Steady Aim unit-feature act, resolves the no-hole subject, and verifies the returned battle state spends the Bonus Action and zeros movement for that combatant."
+      "summary": "The level-6 Rogue scenario starts battle from the finalized Rogue 6 Character Sheet, discovers the Steady Aim unit-feature act, resolves the no-hole subject, and verifies the returned battle state spends the Bonus Action and zeros movement for that combatant. Level-7 and level-8 reuse this MCP battle-flow evidence while Evasion and later-level runtime behavior remain validated by the support, QNT, and parity layers."
     },
     {
       "kind": "mcp-scenario",
@@ -447,32 +447,26 @@
     {
       "scopeId": "level-1-7",
       "auditTaskId": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS",
-      "result": "new-scenario-required",
-      "reason": "Level-1-7 ultra-golden scope now has required MCP flows, but no executable level-7 MCP scenario evidence is admitted yet.",
-      "reusedFlowIds": [],
-      "requiredEvidence": {
-        "scenarioGoal": "Exercise a level-7 SRD character workflow through MCP discovery, character creation, Character Sheet state, and battle handoff using returned tool state.",
-        "inputs": [
-          "A level-7 SRD character path with concrete returned hole ids and draft revisions",
-          "A durable Character Sheet read that demonstrates the new level-7 state",
-          "A battle interaction that follows returned battle subjects and holes"
-        ]
-      }
+      "result": "reuse-existing-evidence",
+      "reason": "Level-1-7 adds supported Evasion runtime obligations plus closed class/spell accounting, but no new MCP tool workflow shape beyond workflow discovery, character creation, Character Sheet read, and battle handoff. The existing level-6 Rogue vertical is the highest admitted MCP character-creation path and already follows returned draft revisions, option ids, character ids, battle ids, and battle subjects; Evasion support remains proven by the support, QNT/generator, and MBT/parity layers rather than by MCP evidence.",
+      "reusedFlowIds": [
+        "mcp-workflow-discovery",
+        "character-creation",
+        "character-sheet",
+        "battle"
+      ]
     },
     {
       "scopeId": "level-1-8",
       "auditTaskId": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS",
-      "result": "new-scenario-required",
-      "reason": "Level-1-8 ultra-golden scope now has required MCP flows, but no executable level-8 MCP scenario evidence is admitted yet.",
-      "reusedFlowIds": [],
-      "requiredEvidence": {
-        "scenarioGoal": "Exercise a level-8 SRD character workflow through MCP discovery, character creation, Character Sheet state, and battle handoff using returned tool state.",
-        "inputs": [
-          "A level-8 SRD character path with concrete returned hole ids and draft revisions",
-          "A durable Character Sheet read that demonstrates the new level-8 state",
-          "A battle interaction that follows returned battle subjects and holes"
-        ]
-      }
+      "result": "reuse-existing-evidence",
+      "reason": "Level-1-8 adds repeated ASI, numeric progression, and Wild Shape threshold accounting that is closed outside MCP workflow execution; it does not introduce a new MCP tool flow beyond the four existing required flows. The existing level-6 Rogue vertical remains the highest admitted MCP character-creation path and proves returned-state sequencing for creation, sheet, and battle handoff, while level-8 mechanics stay covered by support completeness and parity layers.",
+      "reusedFlowIds": [
+        "mcp-workflow-discovery",
+        "character-creation",
+        "character-sheet",
+        "battle"
+      ]
     }
   ]
 }

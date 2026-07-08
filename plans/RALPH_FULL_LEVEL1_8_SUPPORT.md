@@ -163,37 +163,37 @@
     {
       "number": 27,
       "id": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Validate MCP evidence and required flows for level 7-8 scope"
     },
     {
       "number": 28,
       "id": "L18GATE-05-CLEANROOM-SOURCE-QNT-READINESS",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Refresh cleanroom and source-QNT readiness evidence"
     },
     {
       "number": 29,
       "id": "L18VERIFY-01-QNT-MBT-CLOSURE-REVIEW",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Run focused QNT/MBT closure review for changed runtime behavior"
     },
     {
       "number": 30,
       "id": "L18VERIFY-02-RAW-UBIQUITOUS-LANGUAGE-REVIEW",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Run RAW and ubiquitous-language reviewer-loop convergence"
     },
     {
       "number": 31,
       "id": "L18VERIFY-03-ARCHITECTURE-CONNASCENCE-REVIEW",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Run architecture and connascence review convergence"
     },
     {
       "number": 32,
       "id": "L18VERIFY-04-RALPH-FORMAT-CONSISTENCY-REVIEW",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Verify Ralph task-index, DAG, and task-body consistency"
     },
     {
@@ -352,12 +352,12 @@ Spell-level-4 unique identities currently in the level-7 mining audit:
 | 24 | L18GATE-01-LEVEL17-FULL-SUPPORT-ARTIFACTS - Refresh and verify level-1-7 full-support artifacts | done | L7FULL-01-CLASS-TABLE-SUMMARY-CLOSURE, L7FULL-03-MONK-EVASION-REUSE-ADMISSION, L7FULL-04-FIGHTER-ADDITIONAL-FIGHTING-STYLE, L7FULL-05-CLERIC-BLESSED-STRIKES, L7FULL-06-DRUID-ELEMENTAL-FURY, L7FULL-07-BARBARIAN-INSTINCTIVE-POUNCE, L7FULL-08-SORCERER-SORCERY-INCARNATE, L7FULL-09-BARBARIAN-FERAL-INSTINCT, L7FULL-10-BARD-COUNTERCHARM, L7FULL-11-PALADIN-AURA-OF-DEVOTION, L7FULL-12-RANGER-DEFENSIVE-TACTICS, L7FULL-13-ROGUE-RELIABLE-TALENT, L7FULL-14-SPELL-LEVEL4-STRICT-CLOSURE | Serializes generated level-1-7 artifacts after all row closures. |
 | 25 | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS - Refresh and verify level-1-8 full-support artifacts | done | L18GATE-01-LEVEL17-FULL-SUPPORT-ARTIFACTS, L8FULL-01-CLASS-TABLE-SUMMARY-CLOSURE, L8FULL-02-REPEATED-ASI-GRANT-OCCURRENCES, L8FULL-03-NUMERIC-PROGRESSION-DELTAS, L8FULL-04-DRUID-WILD-SHAPE-FLY-SPEED-THRESHOLD, L8FULL-05-SPELL-LEVEL4-CARRY-FORWARD | Serializes generated level-1-8 artifacts. |
 | 26 | L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION - Extend ultra-golden scope through level 8 | done | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS | Adds level-1-7 and level-1-8 to the aggregate without weakening prior scopes. |
-| 27 | L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS - Validate MCP evidence and required flows for level 7-8 scope | ready-for-implementation | L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION | Adds or classifies MCP vertical evidence only after support artifacts exist. |
-| 28 | L18GATE-05-CLEANROOM-SOURCE-QNT-READINESS - Refresh cleanroom and source-QNT readiness evidence | blocked | L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION | Source/accounting obligation only; no target replay claim unless actually run. |
-| 29 | L18VERIFY-01-QNT-MBT-CLOSURE-REVIEW - Run focused QNT/MBT closure review for changed runtime behavior | blocked | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS | Runs focused parity verification only for changed runtime/QNT behavior. |
-| 30 | L18VERIFY-02-RAW-UBIQUITOUS-LANGUAGE-REVIEW - Run RAW and ubiquitous-language reviewer-loop convergence | blocked | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS | Confirms every modeled rule traces to SRD text and repo terminology. |
-| 31 | L18VERIFY-03-ARCHITECTURE-CONNASCENCE-REVIEW - Run architecture and connascence review convergence | blocked | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS | Checks duplicate state, authored-identity dispatch, and distant coupling. |
-| 32 | L18VERIFY-04-RALPH-FORMAT-CONSISTENCY-REVIEW - Verify Ralph task-index, DAG, and task-body consistency | blocked | L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION | Ensures the plan remains runnable after task-driven edits. |
+| 27 | L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS - Validate MCP evidence and required flows for level 7-8 scope | done | L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION | Adds or classifies MCP vertical evidence only after support artifacts exist. |
+| 28 | L18GATE-05-CLEANROOM-SOURCE-QNT-READINESS - Refresh cleanroom and source-QNT readiness evidence | ready-for-implementation | L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION | Source/accounting obligation only; no target replay claim unless actually run. |
+| 29 | L18VERIFY-01-QNT-MBT-CLOSURE-REVIEW - Run focused QNT/MBT closure review for changed runtime behavior | ready-for-implementation | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS | Runs focused parity verification only for changed runtime/QNT behavior. |
+| 30 | L18VERIFY-02-RAW-UBIQUITOUS-LANGUAGE-REVIEW - Run RAW and ubiquitous-language reviewer-loop convergence | ready-for-implementation | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS | Confirms every modeled rule traces to SRD text and repo terminology. |
+| 31 | L18VERIFY-03-ARCHITECTURE-CONNASCENCE-REVIEW - Run architecture and connascence review convergence | ready-for-implementation | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS | Checks duplicate state, authored-identity dispatch, and distant coupling. |
+| 32 | L18VERIFY-04-RALPH-FORMAT-CONSISTENCY-REVIEW - Verify Ralph task-index, DAG, and task-body consistency | ready-for-implementation | L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION | Ensures the plan remains runnable after task-driven edits. |
 | 33 | L18FINAL-01-SERIALIZED-QUALITY-GATE - Run final serialized quality gate for full level 1-8 support | blocked | L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS, L18GATE-05-CLEANROOM-SOURCE-QNT-READINESS, L18VERIFY-01-QNT-MBT-CLOSURE-REVIEW, L18VERIFY-02-RAW-UBIQUITOUS-LANGUAGE-REVIEW, L18VERIFY-03-ARCHITECTURE-CONNASCENCE-REVIEW, L18VERIFY-04-RALPH-FORMAT-CONSISTENCY-REVIEW | Final pass after generated, MCP, cleanroom, RAW, architecture, and parity gates converge. |
 
 ## Shared Verification
@@ -1936,7 +1936,7 @@ Plan Impact:
 
 ### Task 27 - L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on: `L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION`
 
@@ -1975,15 +1975,22 @@ Verification:
 
 Plan Impact:
 
-- Update-required if new MCP scenario implementation tasks are needed.
+- `applied`: level-1-7 and level-1-8 MCP required flows are satisfied by
+  checker-consumed evidence rows that reuse the executable level-6 Rogue MCP
+  vertical for workflow discovery, character creation, Character Sheet read,
+  and battle handoff.
+- The reuse decision is explicit and non-vacuous: level-7 adds supported
+  Evasion runtime obligations and level-8 adds closed progression accounting,
+  but neither introduces a new MCP tool workflow shape; runtime/QNT/MBT support
+  remains proven by the non-MCP ultra-golden layers.
+- Widened the MCP evidence task-id test gate to admit `L18GATE-*` plan ids.
+- Verification: `pnpm --filter @dnd/mcp test:mcp-scenario-evidence`,
+  `pnpm unit-profile-coverage:check --write`,
+  `pnpm unit-profile-coverage:check`, `git diff --check`.
 
 ### Task 28 - L18GATE-05-CLEANROOM-SOURCE-QNT-READINESS
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: waits for `L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION`.
+Status: `ready-for-implementation`
 
 Depends on: `L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION`
 
@@ -2027,11 +2034,7 @@ Plan Impact:
 
 ### Task 29 - L18VERIFY-01-QNT-MBT-CLOSURE-REVIEW
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: waits for `L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS`.
+Status: `ready-for-implementation`
 
 Depends on: `L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS`
 
@@ -2074,11 +2077,7 @@ Plan Impact:
 
 ### Task 30 - L18VERIFY-02-RAW-UBIQUITOUS-LANGUAGE-REVIEW
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: waits for `L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS`.
+Status: `ready-for-implementation`
 
 Depends on: `L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS`
 
@@ -2122,11 +2121,7 @@ Plan Impact:
 
 ### Task 31 - L18VERIFY-03-ARCHITECTURE-CONNASCENCE-REVIEW
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: waits for `L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS`.
+Status: `ready-for-implementation`
 
 Depends on: `L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS`
 
@@ -2172,11 +2167,7 @@ Plan Impact:
 
 ### Task 32 - L18VERIFY-04-RALPH-FORMAT-CONSISTENCY-REVIEW
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: waits for `L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION`.
+Status: `ready-for-implementation`
 
 Depends on: `L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION`
 
