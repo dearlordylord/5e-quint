@@ -56,8 +56,8 @@
     "rowsByFinalDisposition": {
       "catalog-authored-review-required": 49,
       "catalog-installed-owner-evidence-present": 503,
-      "catalog-only/dead-for-now": 222,
-      "class-progression-follow-up-required": 22,
+      "catalog-only/dead-for-now": 223,
+      "class-progression-follow-up-required": 21,
       "missing-authored-record": 32,
       "non-runtime": 96
     },
@@ -90,10 +90,10 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 142,
+      "not-recorded": 141,
       "profile-subset-supported": 59,
       "supported-profile": 310,
-      "unsupported-profile": 413
+      "unsupported-profile": 414
     }
   },
   "rows": [
@@ -17269,7 +17269,7 @@
         "sourceInventoryRowId": "srd521:classes/fighter:level-7:class-feature-grant:fighter_additional_fighting_style",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "SRD Champion Additional Fighting Style grants another Fighting Style feat choice. This level-7 subclass feature is a selection boundary, not an executable battle feature: the selected Fighting Style feat Unit owns any battle pressure, and character creation must retain the additional selected feat ref through the same selected-feature ownership model instead of copying feat behavior or creating a second divergent selected Fighting Style state model on the grant container.",
       "rowId": "srd521:classes/fighter:level-7:class-feature-grant:fighter_additional_fighting_style",
       "rowKind": "class-feature-grant",
       "source": {
@@ -17285,15 +17285,20 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "selection-grant-container",
+          "owner": "future character-creation repeated Fighting Style grant owner plus selected Fighting Style feat Unit profiles",
+          "reason": "SRD Champion Additional Fighting Style grants another Fighting Style feat choice. This level-7 subclass feature is a selection boundary, not an executable battle feature: the selected Fighting Style feat Unit owns any battle pressure, and character creation must retain the additional selected feat ref through the same selected-feature ownership model instead of copying feat behavior or creating a second divergent selected Fighting Style state model on the grant container.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "fighter_additional_fighting_style"
         },
-        "finalDisposition": "class-progression-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },

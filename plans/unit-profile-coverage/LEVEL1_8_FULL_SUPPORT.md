@@ -17,7 +17,7 @@ Blockers: strict=19, selected-identity=0, SRD-authored-readiness=0.
 | Strict runtime/profile support | 168/284 (59.2%) |
 | Strict target closure | 265/284 (93.3%) |
 | Selected identity readiness | 194/194 (100%) |
-| Diagnostic product readiness | 821/924 (88.9%) |
+| Diagnostic product readiness | 822/924 (89%) |
 | SRD authored product readiness | 115/115 (100%) |
 | Rules-kernel profile join | 118/118 (100%) |
 | Rules-kernel covered profile join | 118/118 (100%) |
@@ -25,7 +25,7 @@ Blockers: strict=19, selected-identity=0, SRD-authored-readiness=0.
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
-The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 821/924 (88.9%) while the claim gate reports **blocked** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
+The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 822/924 (89%) while the claim gate reports **blocked** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
 
 ### Diagnostic Product Readiness Accounting
 
@@ -34,9 +34,9 @@ Diagnostic product readiness keeps lower-layer planning pressure visible. Rows i
 | Status | Rows |
 | --- | ---: |
 | accepted | 499 |
-| accepted-no-battle-effect | 322 |
+| accepted-no-battle-effect | 323 |
 | battle-runtime-required | 32 |
-| owner-evidence-required | 71 |
+| owner-evidence-required | 70 |
 
 ### Selected Identity Replay Accounting
 
@@ -306,7 +306,7 @@ This gate checks authored records and retained Unit references that must resolve
 | `faithful_hound` | 1 | The SRD row has spell-level-4 spell-list Unit pressure, but no Unit matrix row exists yet. | missing-authored-record | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. | _none_ | Wizard spell list Faithful Hound |
 | `fighter_ability_score_improvement_l6` | 1 | The SRD row has level-6 class-feature pressure, but no Unit matrix row exists yet. | catalog-only/dead-for-now | selection-grant-container: future character-creation repeated ASI grant-occurrence owner plus selected feat Unit profiles | The SRD level-4 Fighter Ability Score Improvement rule text says the feature is gained again at Fighter level 6, and the Fighter level-6 table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this second ASI without installing an incomplete Fighter 6 progression while Tactical Shift remains missing or duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners. | _none_ | Fighter Ability Score Improvement |
 | `fighter_ability_score_improvement_l8` | 1 | The SRD row has level-8 class-feature pressure, but no Unit matrix row exists yet. | class-progression-follow-up-required | not-recorded | Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. | _none_ | Fighter Ability Score Improvement |
-| `fighter_additional_fighting_style` | 1 | The SRD row has level-7 class-feature pressure, but no Unit matrix row exists yet. | class-progression-follow-up-required | not-recorded | Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. | _none_ | Fighter Additional Fighting Style |
+| `fighter_additional_fighting_style` | 1 | The SRD row has level-7 class-feature pressure, but no Unit matrix row exists yet. | catalog-only/dead-for-now | selection-grant-container: future character-creation repeated Fighting Style grant owner plus selected Fighting Style feat Unit profiles | SRD Champion Additional Fighting Style grants another Fighting Style feat choice. This level-7 subclass feature is a selection boundary, not an executable battle feature: the selected Fighting Style feat Unit owns any battle pressure, and character creation must retain the additional selected feat ref through the same selected-feature ownership model instead of copying feat behavior or creating a second divergent selected Fighting Style state model on the grant container. | _none_ | Fighter Additional Fighting Style |
 | `fighter_tactical_shift` | 1 | The SRD row has level-5 class-feature pressure, but no Unit matrix row exists yet. | catalog-only/dead-for-now | resource-option-rider-boundary: future battle-runtime Second Wind activation rider owner plus existing movement and Opportunity Attack validation owners | SRD Tactical Shift triggers only when the Fighter activates Second Wind with a Bonus Action: the Fighter can move up to half Speed without provoking Opportunity Attacks. A future promoted owner must consume an admitted Tactical Shift support profile with the existing fighter_second_wind self-bonus-action-healing resource, then offer optional bonus Movement through the existing movement fill owner with a cap of half the actor's current Speed and Opportunity Attack rejection. It must not add a second Second Wind pool, duplicate turn Movement budget, duplicate Opportunity Attack state, or dispatch on Tactical Shift authored identity. | _none_ | Fighter Tactical Shift |
 | `floating_disk` | 1 | The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | catalog-only/dead-for-now | not-recorded | Created carrying disk, load capacity, terrain-following, and distance-based end behavior are object/exploration state outside promoted runtime owners. | `plans/unit-profile-coverage/frontier-decisions/floating_disk.md` | Wizard spell list Floating Disk |
 | `giant_insect` | 1 | The SRD row has spell-level-4 spell-list Unit pressure, but no Unit matrix row exists yet. | missing-authored-record | not-recorded | Author an SRD-provenance Surface record or explicitly close the row. | _none_ | Druid spell list Giant Insect |

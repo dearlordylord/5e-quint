@@ -49,7 +49,7 @@
     {
       "number": 8,
       "id": "L7FULL-04-FIGHTER-ADDITIONAL-FIGHTING-STYLE",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Resolve Fighter Additional Fighting Style level-7 accounting"
     },
     {
@@ -333,7 +333,7 @@ Spell-level-4 unique identities currently in the level-7 mining audit:
 | 5 | L7FULL-01-CLASS-TABLE-SUMMARY-CLOSURE - Close the twelve level-7 class-table summary rows | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Table rows remain non-runtime but checker-visible. |
 | 6 | L7FULL-02-ROGUE-EVASION-EVIDENCE-PRESERVATION - Preserve existing Rogue Evasion support evidence | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Existing support must survive the new strict scope. |
 | 7 | L7FULL-03-MONK-EVASION-REUSE-ADMISSION - Admit Monk Evasion through the existing Evasion support model | done | L7FULL-02-ROGUE-EVASION-EVIDENCE-PRESERVATION | Reuses typed Evasion semantics without authored-identity dispatch. |
-| 8 | L7FULL-04-FIGHTER-ADDITIONAL-FIGHTING-STYLE - Resolve Fighter Additional Fighting Style level-7 accounting | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Character-selection grant closure or support evidence. |
+| 8 | L7FULL-04-FIGHTER-ADDITIONAL-FIGHTING-STYLE - Resolve Fighter Additional Fighting Style level-7 accounting | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Character-selection grant closure; selected Fighting Style feat Units own executable behavior. |
 | 9 | L7FULL-05-CLERIC-BLESSED-STRIKES - Resolve Cleric Blessed Strikes level-7 accounting | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Damage rider or explicit future-owner split. |
 | 10 | L7FULL-06-DRUID-ELEMENTAL-FURY - Resolve Druid Elemental Fury level-7 accounting | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Weapon/Wild Shape damage rider or explicit future-owner split. |
 | 11 | L7FULL-07-BARBARIAN-INSTINCTIVE-POUNCE - Resolve Barbarian Instinctive Pounce level-7 accounting | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Rage-entry movement rider or explicit movement-owner split. |
@@ -787,7 +787,7 @@ Plan Impact:
 
 ### Task 8 - L7FULL-04-FIGHTER-ADDITIONAL-FIGHTING-STYLE
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on: `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`
 
@@ -807,6 +807,16 @@ Output:
 - A Surface/accounting record that models the additional Fighting Style grant as
   a selection boundary, with selected style Units owning executable behavior.
 
+Completion Evidence:
+
+- Added an `unsupported-profile` Unit claim for
+  `fighter_additional_fighting_style` with a `selection-grant-container`
+  closure.
+- Regenerated the SRD inventory and level-1-7/level-1-8 support reports.
+- `fighter_additional_fighting_style` now remains not installed and not counted
+  as battle-runtime support, while the reports point to a future repeated
+  Fighting Style grant owner plus selected Fighting Style feat Unit profiles.
+
 Acceptance:
 
 - The row is not counted as battle runtime support unless a selected Fighting
@@ -823,13 +833,18 @@ Forbidden Shortcuts:
 Verification:
 
 - RAW check against Fighter Additional Fighting Style text.
+- RAW checked `.references/srd-5.2.1/Classes/Fighter.md:146-149`; Ubiquitous
+  Language checked Class, Ability Score Improvement, and Weapon Mastery to keep
+  the repeated grant distinct from battle execution.
+- `pnpm level-lt4-choice-closure:check`
+- `pnpm unit-profile-coverage:check --write`
 - `pnpm unit-profile-coverage:check`
-- Choice-closure check if the task changes Fighting Style selection plumbing.
 
 Plan Impact:
 
-- Update-required if repeated choice-grant closure should be shared with ASI
-  or Invocation grants.
+- `applied`: repeated Fighting Style grant closure reuses the existing
+  selection-grant-container accounting pattern; no new shared ASI or Invocation
+  grant task is required by this closure.
 
 ### Task 9 - L7FULL-05-CLERIC-BLESSED-STRIKES
 

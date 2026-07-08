@@ -44,8 +44,8 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | --- | ---: |
 | catalog-authored-review-required | 49 |
 | catalog-installed-owner-evidence-present | 503 |
-| catalog-only/dead-for-now | 222 |
-| class-progression-follow-up-required | 22 |
+| catalog-only/dead-for-now | 223 |
+| class-progression-follow-up-required | 21 |
 | missing-authored-record | 32 |
 | non-runtime | 96 |
 
@@ -60,10 +60,10 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 142 |
+| not-recorded | 141 |
 | profile-subset-supported | 59 |
 | supported-profile | 310 |
-| unsupported-profile | 413 |
+| unsupported-profile | 414 |
 
 ### Battle Readiness Snapshot
 
@@ -638,7 +638,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Fighter level 5 feature table row | level-5 | character-level | character-creation or progression mechanic | `class_fighter` | `.references/srd-5.2.1/Classes/Fighter.md:35` |  | present |  |  | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
 | Fighter Ability Score Improvement | level-6 | character-level | class feature | `fighter_ability_score_improvement_l6` | `.references/srd-5.2.1/Classes/Fighter.md:36` | dedicated-rule-text: .references/srd-5.2.1/Classes/Fighter.md:90 | present |  |  | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | selection-grant-container: future character-creation repeated ASI grant-occurrence owner plus selected feat Unit profiles | The SRD level-4 Fighter Ability Score Improvement rule text says the feature is gained again at Fighter level 6, and the Fighter level-6 table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this second ASI without installing an incomplete Fighter 6 progression while Tactical Shift remains missing or duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners. |
 | Fighter level 6 feature table row | level-6 | character-level | character-creation or progression mechanic | `class_fighter` | `.references/srd-5.2.1/Classes/Fighter.md:36` |  | present |  |  | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
-| Fighter Additional Fighting Style | level-7 | character-level | class feature | `fighter_additional_fighting_style` | `.references/srd-5.2.1/Classes/Fighter.md:146` |  | present |  |  | not-installed | not-recorded | class-progression-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
+| Fighter Additional Fighting Style | level-7 | character-level | class feature | `fighter_additional_fighting_style` | `.references/srd-5.2.1/Classes/Fighter.md:146` |  | present |  |  | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | selection-grant-container: future character-creation repeated Fighting Style grant owner plus selected Fighting Style feat Unit profiles | SRD Champion Additional Fighting Style grants another Fighting Style feat choice. This level-7 subclass feature is a selection boundary, not an executable battle feature: the selected Fighting Style feat Unit owns any battle pressure, and character creation must retain the additional selected feat ref through the same selected-feature ownership model instead of copying feat behavior or creating a second divergent selected Fighting Style state model on the grant container. |
 | Fighter level 7 feature table row | level-7 | character-level | character-creation or progression mechanic | `class_fighter` | `.references/srd-5.2.1/Classes/Fighter.md:37` |  | present |  |  | installed | unsupported-profile | non-runtime | not-applicable | outside-battle-runtime: class-progression-accounting | No runtime work; keep classification as explicit closure. |
 | Fighter Ability Score Improvement | level-8 | character-level | class feature | `fighter_ability_score_improvement_l8` | `.references/srd-5.2.1/Classes/Fighter.md:38` | dedicated-rule-text: .references/srd-5.2.1/Classes/Fighter.md:90 | present |  |  | not-installed | not-recorded | class-progression-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
 | Fighter level 8 feature table row | level-8 | character-level | character-creation or progression mechanic | `class_fighter` | `.references/srd-5.2.1/Classes/Fighter.md:38` |  | present |  |  | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
