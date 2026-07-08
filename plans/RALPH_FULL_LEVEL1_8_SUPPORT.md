@@ -97,37 +97,37 @@
     {
       "number": 16,
       "id": "L7FULL-12-RANGER-DEFENSIVE-TACTICS",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Close Ranger Defensive Tactics with explicit check/save ownership"
     },
     {
       "number": 17,
       "id": "L7FULL-13-ROGUE-RELIABLE-TALENT",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Close Rogue Reliable Talent with explicit Ability Check ownership"
     },
     {
       "number": 18,
       "id": "L7FULL-14-SPELL-LEVEL4-STRICT-CLOSURE",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Classify and close spell-level-4 pressure for level 7"
     },
     {
       "number": 19,
       "id": "L8FULL-01-CLASS-TABLE-SUMMARY-CLOSURE",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Close the twelve level-8 class-table summary rows"
     },
     {
       "number": 20,
       "id": "L8FULL-02-REPEATED-ASI-GRANT-OCCURRENCES",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Close the twelve level-8 repeated Ability Score Improvement rows"
     },
     {
       "number": 21,
       "id": "L8FULL-03-NUMERIC-PROGRESSION-DELTAS",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Close level-8 class numeric progression deltas"
     },
     {
@@ -193,13 +193,13 @@
     {
       "number": 32,
       "id": "L18VERIFY-04-RALPH-FORMAT-CONSISTENCY-REVIEW",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Verify Ralph task-index, DAG, and task-body consistency"
     },
     {
       "number": 33,
       "id": "L18FINAL-01-SERIALIZED-QUALITY-GATE",
-      "status": "blocked",
+      "status": "ready-for-implementation",
       "title": "Run final serialized quality gate for full level 1-8 support"
     }
   ]
@@ -357,8 +357,8 @@ Spell-level-4 unique identities currently in the level-7 mining audit:
 | 29 | L18VERIFY-01-QNT-MBT-CLOSURE-REVIEW - Run focused QNT/MBT closure review for changed runtime behavior | done | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS | Focused Monk Evasion admission parity passed; no broad MBT run claimed. |
 | 30 | L18VERIFY-02-RAW-UBIQUITOUS-LANGUAGE-REVIEW - Run RAW and ubiquitous-language reviewer-loop convergence | done | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS | RAW and terminology review converged with no follow-up task. |
 | 31 | L18VERIFY-03-ARCHITECTURE-CONNASCENCE-REVIEW - Run architecture and connascence review convergence | done | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS | Architecture and connascence review converged with no refactor task. |
-| 32 | L18VERIFY-04-RALPH-FORMAT-CONSISTENCY-REVIEW - Verify Ralph task-index, DAG, and task-body consistency | ready-for-implementation | L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION | Ensures the plan remains runnable after task-driven edits. |
-| 33 | L18FINAL-01-SERIALIZED-QUALITY-GATE - Run final serialized quality gate for full level 1-8 support | blocked | L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS, L18GATE-05-CLEANROOM-SOURCE-QNT-READINESS, L18VERIFY-01-QNT-MBT-CLOSURE-REVIEW, L18VERIFY-02-RAW-UBIQUITOUS-LANGUAGE-REVIEW, L18VERIFY-03-ARCHITECTURE-CONNASCENCE-REVIEW, L18VERIFY-04-RALPH-FORMAT-CONSISTENCY-REVIEW | Final pass after generated, MCP, cleanroom, RAW, architecture, and parity gates converge. |
+| 32 | L18VERIFY-04-RALPH-FORMAT-CONSISTENCY-REVIEW - Verify Ralph task-index, DAG, and task-body consistency | done | L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION | Ralph index, DAG rows, and task bodies are synchronized. |
+| 33 | L18FINAL-01-SERIALIZED-QUALITY-GATE - Run final serialized quality gate for full level 1-8 support | ready-for-implementation | L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS, L18GATE-05-CLEANROOM-SOURCE-QNT-READINESS, L18VERIFY-01-QNT-MBT-CLOSURE-REVIEW, L18VERIFY-02-RAW-UBIQUITOUS-LANGUAGE-REVIEW, L18VERIFY-03-ARCHITECTURE-CONNASCENCE-REVIEW, L18VERIFY-04-RALPH-FORMAT-CONSISTENCY-REVIEW | Final pass after generated, MCP, cleanroom, RAW, architecture, and parity gates converge. |
 
 ## Shared Verification
 
@@ -2200,7 +2200,7 @@ Plan Impact:
 
 ### Task 32 - L18VERIFY-04-RALPH-FORMAT-CONSISTENCY-REVIEW
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on: `L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION`
 
@@ -2240,15 +2240,16 @@ Verification:
 
 Plan Impact:
 
-- Applied by the task itself if inconsistencies are found.
+- Synchronized stale JSON statuses for Tasks 16-21 with their table/body `done`
+  states.
+- Marked Task 32 done and unblocked Task 33 to `ready-for-implementation` after
+  all dependency tasks reached `done`.
+- Verification: Node parse/cross-check of the `ralph-task-index`, DAG rows, and
+  task body statuses; `git diff --check`.
 
 ### Task 33 - L18FINAL-01-SERIALIZED-QUALITY-GATE
 
-Status: `blocked`
-
-Blocker Type: dependency
-
-Blocker Detail: waits for MCP, cleanroom/source-QNT, QNT/MBT, RAW, architecture, and Ralph-format review tasks.
+Status: `ready-for-implementation`
 
 Depends on: `L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS`, `L18GATE-05-CLEANROOM-SOURCE-QNT-READINESS`, `L18VERIFY-01-QNT-MBT-CLOSURE-REVIEW`, `L18VERIFY-02-RAW-UBIQUITOUS-LANGUAGE-REVIEW`, `L18VERIFY-03-ARCHITECTURE-CONNASCENCE-REVIEW`, `L18VERIFY-04-RALPH-FORMAT-CONSISTENCY-REVIEW`
 
