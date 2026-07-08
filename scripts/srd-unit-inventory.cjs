@@ -122,6 +122,7 @@ const classProgressionFrontierLevelBands = new Set([
   "level-7",
   "level-8",
 ]);
+const classTableSummaryClosureLevelBands = new Set(["level-7", "level-8"]);
 const subclassSpellAccessFeatureNames = new Set([
   "Circle of the Land Spells",
   "Draconic Spells",
@@ -3305,17 +3306,21 @@ function classTableSummaryClosure(row, disposition) {
   if (
     disposition !== "non-runtime" ||
     row.rowKind !== "class-table-summary" ||
-    row.levelBand !== "level-7"
+    !classTableSummaryClosureLevelBands.has(row.levelBand)
   ) {
     return undefined;
   }
   return {
-    source: "srd-unit-inventory:level-7-class-table-summary",
+    source: classTableSummaryClosureSource(row.levelBand),
     kind: battleReadinessClosureKind.outsideBattleRuntime,
     owner: "class-progression-accounting",
     reason:
       "The SRD class table row is a progression summary. Narrower feature, spell-access, resource, and table-derived rows own executable obligations; no battle runtime state is introduced for the summary row.",
   };
+}
+
+function classTableSummaryClosureSource(levelBand) {
+  return `srd-unit-inventory:${levelBand}-class-table-summary`;
 }
 
 function ownerEvidenceFromSpellUnitMissingClassification(row, disposition) {
@@ -5371,7 +5376,7 @@ function validateSrdUnitInventory(report) {
   for (const row of levelSevenTableRows) {
     if (
       row.battleReadinessClosure?.source !==
-        "srd-unit-inventory:level-7-class-table-summary" ||
+        classTableSummaryClosureSource("level-7") ||
       row.battleReadinessClosure.kind !==
         battleReadinessClosureKind.outsideBattleRuntime ||
       row.battleReadinessClosure.owner !== "class-progression-accounting"
@@ -5390,6 +5395,17 @@ function validateSrdUnitInventory(report) {
     );
   }
   for (const row of levelEightTableRows) {
+    if (
+      row.battleReadinessClosure?.source !==
+        classTableSummaryClosureSource("level-8") ||
+      row.battleReadinessClosure.kind !==
+        battleReadinessClosureKind.outsideBattleRuntime ||
+      row.battleReadinessClosure.owner !== "class-progression-accounting"
+    ) {
+      issues.push(
+        `${row.id} lacks the generated level-8 class-table summary closure.`,
+      );
+    }
     if (!Array.isArray(row.progressionDeltas)) {
       issues.push(`${row.id} lacks generated level-8 progression deltas.`);
     }

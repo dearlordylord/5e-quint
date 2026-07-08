@@ -344,7 +344,7 @@ Spell-level-4 unique identities currently in the level-7 mining audit:
 | 16 | L7FULL-12-RANGER-DEFENSIVE-TACTICS - Close Ranger Defensive Tactics with explicit check/save ownership | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Multi-option subclass defensive facts must not become vague unsupported rows. |
 | 17 | L7FULL-13-ROGUE-RELIABLE-TALENT - Close Rogue Reliable Talent with explicit Ability Check ownership | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Ability Check floor is not attack/save runtime unless a generic check owner exists. |
 | 18 | L7FULL-14-SPELL-LEVEL4-STRICT-CLOSURE - Classify and close spell-level-4 pressure for level 7 | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Strict denominator closure for 34 unique identities and 81 class-list rows. |
-| 19 | L8FULL-01-CLASS-TABLE-SUMMARY-CLOSURE - Close the twelve level-8 class-table summary rows | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Requires generated level-8 inventory rows. |
+| 19 | L8FULL-01-CLASS-TABLE-SUMMARY-CLOSURE - Close the twelve level-8 class-table summary rows | done | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Requires generated level-8 inventory rows. |
 | 20 | L8FULL-02-REPEATED-ASI-GRANT-OCCURRENCES - Close the twelve level-8 repeated Ability Score Improvement rows | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Repeated ASI occurrence closure across all SRD classes. |
 | 21 | L8FULL-03-NUMERIC-PROGRESSION-DELTAS - Close level-8 class numeric progression deltas | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Prepared spells, spell slots, points/resources, and table counters. |
 | 22 | L8FULL-04-DRUID-WILD-SHAPE-FLY-SPEED-THRESHOLD - Audit Druid Wild Shape Fly Speed threshold at level 8 | ready-for-implementation | L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION | Level-8 threshold changes form eligibility, not active-form persistence. |
@@ -1528,7 +1528,7 @@ Plan Impact:
 
 ### Task 19 - L8FULL-01-CLASS-TABLE-SUMMARY-CLOSURE
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on: `L18FOUND-04-NONVACUOUS-SCOPE-VALIDATION`
 
@@ -1565,7 +1565,14 @@ Verification:
 
 Plan Impact:
 
-- none unless level-8 mining discovers additional table-row classes.
+- `applied`: level-8 `class-table-summary` rows now carry the same generated
+  non-runtime `class-progression-accounting` closure as level 7, with source
+  `srd-unit-inventory:level-8-class-table-summary`.
+- RAW checked all twelve level-8 SRD class table rows in
+  `.references/srd-5.2.1/Classes/`; ubiquitous language checked character-sheet
+  progression terms including Ability Score Improvement and Spell Slot.
+- Verification: `pnpm unit-profile-coverage:check --write`,
+  `pnpm unit-profile-coverage:check`, `git diff --check`.
 
 ### Task 20 - L8FULL-02-REPEATED-ASI-GRANT-OCCURRENCES
 
