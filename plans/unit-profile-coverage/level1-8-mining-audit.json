@@ -56,8 +56,8 @@
     "rowsByFinalDisposition": {
       "catalog-authored-review-required": 49,
       "catalog-installed-owner-evidence-present": 503,
-      "catalog-only/dead-for-now": 224,
-      "class-progression-follow-up-required": 20,
+      "catalog-only/dead-for-now": 225,
+      "class-progression-follow-up-required": 19,
       "missing-authored-record": 32,
       "non-runtime": 96
     },
@@ -90,10 +90,10 @@
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
-      "not-recorded": 140,
+      "not-recorded": 139,
       "profile-subset-supported": 59,
       "supported-profile": 310,
-      "unsupported-profile": 415
+      "unsupported-profile": 416
     }
   },
   "rows": [
@@ -12197,7 +12197,7 @@
         "sourceInventoryRowId": "srd521:classes/druid:level-7:class-feature-grant:druid_elemental_fury",
         "state": "present"
       },
-      "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+      "nextAction": "A future owner must represent the character's Elemental Fury option choice as a durable selected feature fact, admit Potent Spellcasting through a generic Druid-cantrip damage ability-modifier owner, and admit Primal Strike through a generic optional once-per-turn attack-hit damage rider that consumes either existing weapon-hit facts or existing active Wild Shape Beast form attack facts with caller-chosen Cold, Fire, Lightning, or Thunder damage. The closure must not store both options as simultaneously executable, collapse the option into inert metadata, copy Wild Shape form or attack identity state, reimplement Wild Shape attack projection, or dispatch on Druid, Elemental Fury, Potent Spellcasting, Primal Strike, Beast form, spell names, or class names in reducers.",
       "rowId": "srd521:classes/druid:level-7:class-feature-grant:druid_elemental_fury",
       "rowKind": "class-feature-grant",
       "source": {
@@ -12213,15 +12213,20 @@
           "state": "not-applicable"
         },
         "battleReadinessClosure": {
-          "state": "not-recorded"
+          "kind": "outside-battle-runtime",
+          "owner": "future Elemental Fury selected-option owner plus cantrip damage ability-modifier, weapon-hit damage rider, and Wild Shape active-form attack rider owners",
+          "reason": "A future owner must represent the character's Elemental Fury option choice as a durable selected feature fact, admit Potent Spellcasting through a generic Druid-cantrip damage ability-modifier owner, and admit Primal Strike through a generic optional once-per-turn attack-hit damage rider that consumes either existing weapon-hit facts or existing active Wild Shape Beast form attack facts with caller-chosen Cold, Fire, Lightning, or Thunder damage. The closure must not store both options as simultaneously executable, collapse the option into inert metadata, copy Wild Shape form or attack identity state, reimplement Wild Shape attack projection, or dispatch on Druid, Elemental Fury, Potent Spellcasting, Primal Strike, Beast form, spell names, or class names in reducers.",
+          "source": "unit-claim",
+          "state": "recorded"
         },
         "catalogAdmission": {
           "state": "not-installed",
           "unitId": "druid_elemental_fury"
         },
-        "finalDisposition": "class-progression-follow-up-required",
+        "finalDisposition": "catalog-only/dead-for-now",
         "unitProfile": {
-          "state": "not-recorded"
+          "disposition": "unsupported-profile",
+          "state": "recorded"
         }
       }
     },

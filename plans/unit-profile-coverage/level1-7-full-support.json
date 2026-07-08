@@ -6251,13 +6251,13 @@
   "metrics": {
     "productReadiness": {
       "denominator": 900,
-      "numerator": 811,
-      "percent": "90.1%",
+      "numerator": 812,
+      "percent": "90.2%",
       "rowsByStatus": {
         "accepted": 499,
-        "accepted-no-battle-effect": 312,
+        "accepted-no-battle-effect": 313,
         "battle-runtime-required": 32,
-        "owner-evidence-required": 57
+        "owner-evidence-required": 56
       }
     },
     "rulesKernelCoveredProfileJoin": {
@@ -7136,17 +7136,21 @@
         "inventoryAccounting": [
           {
             "battleReadinessClosure": {
-              "state": "not-recorded"
+              "kind": "outside-battle-runtime",
+              "owner": "future Elemental Fury selected-option owner plus cantrip damage ability-modifier, weapon-hit damage rider, and Wild Shape active-form attack rider owners",
+              "reason": "A future owner must represent the character's Elemental Fury option choice as a durable selected feature fact, admit Potent Spellcasting through a generic Druid-cantrip damage ability-modifier owner, and admit Primal Strike through a generic optional once-per-turn attack-hit damage rider that consumes either existing weapon-hit facts or existing active Wild Shape Beast form attack facts with caller-chosen Cold, Fire, Lightning, or Thunder damage. The closure must not store both options as simultaneously executable, collapse the option into inert metadata, copy Wild Shape form or attack identity state, reimplement Wild Shape attack projection, or dispatch on Druid, Elemental Fury, Potent Spellcasting, Primal Strike, Beast form, spell names, or class names in reducers.",
+              "source": "unit-claim",
+              "state": "recorded"
             },
             "battleReadinessStatus": "not-applicable",
             "catalogAdmissionState": "not-installed",
             "concept": "Druid Elemental Fury",
-            "finalDisposition": "class-progression-follow-up-required",
+            "finalDisposition": "catalog-only/dead-for-now",
             "levelBand": "level-7",
-            "nextAction": "Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported.",
+            "nextAction": "A future owner must represent the character's Elemental Fury option choice as a durable selected feature fact, admit Potent Spellcasting through a generic Druid-cantrip damage ability-modifier owner, and admit Primal Strike through a generic optional once-per-turn attack-hit damage rider that consumes either existing weapon-hit facts or existing active Wild Shape Beast form attack facts with caller-chosen Cold, Fire, Lightning, or Thunder damage. The closure must not store both options as simultaneously executable, collapse the option into inert metadata, copy Wild Shape form or attack identity state, reimplement Wild Shape attack projection, or dispatch on Druid, Elemental Fury, Potent Spellcasting, Primal Strike, Beast form, spell names, or class names in reducers.",
             "rowId": "srd521:classes/druid:level-7:class-feature-grant:druid_elemental_fury",
             "rowKind": "class-feature-grant",
-            "unitProfileDisposition": "not-recorded"
+            "unitProfileDisposition": "unsupported-profile"
           }
         ],
         "reason": "The SRD row has level-7 class-feature pressure, but no Unit matrix row exists yet.",

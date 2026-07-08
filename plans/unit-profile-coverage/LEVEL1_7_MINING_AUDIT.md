@@ -43,8 +43,8 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 | --- | ---: |
 | catalog-authored-review-required | 49 |
 | catalog-installed-owner-evidence-present | 503 |
-| catalog-only/dead-for-now | 224 |
-| class-progression-follow-up-required | 8 |
+| catalog-only/dead-for-now | 225 |
+| class-progression-follow-up-required | 7 |
 | missing-authored-record | 32 |
 | non-runtime | 84 |
 
@@ -59,10 +59,10 @@ These counts describe the current runtime/catalog state of mined rows. They are 
 
 | Unit profile disposition | Rows |
 | --- | ---: |
-| not-recorded | 128 |
+| not-recorded | 127 |
 | profile-subset-supported | 59 |
 | supported-profile | 310 |
-| unsupported-profile | 403 |
+| unsupported-profile | 404 |
 
 ### Battle Readiness Snapshot
 
@@ -519,7 +519,7 @@ These counts separate class-list rows from unique Spell Definition identities. A
 | Druid level 5 feature table row | level-5 | character-level | character-creation or progression mechanic | `class_druid` | `.references/srd-5.2.1/Classes/Druid.md:36` |  | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
 | Druid Natural Recovery | level-6 | character-level | class feature | `druid_natural_recovery` | `.references/srd-5.2.1/Classes/Druid.md:412` |  | present | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | character-fact-and-runtime-detached-split: future-owner-before-SDK character-sheet-runtime Natural Recovery rest feature owner plus existing Spell Slot and Circle Spells owners | SRD Natural Recovery grants a once-per-Long-Rest no-slot cast of a prepared level 1+ spell from Circle Spells, and separately lets the Druid recover expended Spell Slots when finishing a Short Rest with a combined slot-level budget of half Druid level rounded up and no recovered slot at level 6 or higher. Existing character-sheet.short-rest-spell-slot-recovery and character-sheet.class-feature-long-rest-use-state owners cover shared Spell Slot refund and Long Rest use-state patterns, while character-sheet.druid-circle-land-spell-access owns selected-land prepared Spell Access. They do not admit a selected level-6 Circle of the Land feature that combines the no-slot Circle Spell cast resource, Druid-level recovery budget, Short Rest trigger, and Long Rest reset. A future owner must consume typed Surface facts for the selected Natural Recovery feature, existing Circle Spells prepared access, existing Druid class level, and existing Spell Slot expenditure state, then update the canonical Character Sheet Spell Slot owner and rest-feature use state without adding duplicate Spell Slot state, prepared Spell Access, subclass selection state, or dispatching on Druid, Circle of the Land, Natural Recovery, or spell authored identity. |
 | Druid level 6 feature table row | level-6 | character-level | character-creation or progression mechanic | `class_druid` | `.references/srd-5.2.1/Classes/Druid.md:37` |  | present | installed | unsupported-profile | non-runtime | not-applicable | not-recorded | No runtime work; keep classification as explicit closure. |
-| Druid Elemental Fury | level-7 | character-level | class feature | `druid_elemental_fury` | `.references/srd-5.2.1/Classes/Druid.md:144` |  | present | not-installed | not-recorded | class-progression-follow-up-required | not-applicable | not-recorded | Promote or explicitly close this class progression feature by authoring the SRD feature record when missing, identifying the Character Sheet, character-creation, or battle-runtime owner, and adding checker-readable owner evidence before treating this mined row as supported. |
+| Druid Elemental Fury | level-7 | character-level | class feature | `druid_elemental_fury` | `.references/srd-5.2.1/Classes/Druid.md:144` |  | present | not-installed | unsupported-profile | catalog-only/dead-for-now | not-applicable | outside-battle-runtime: future Elemental Fury selected-option owner plus cantrip damage ability-modifier, weapon-hit damage rider, and Wild Shape active-form attack rider owners | A future owner must represent the character's Elemental Fury option choice as a durable selected feature fact, admit Potent Spellcasting through a generic Druid-cantrip damage ability-modifier owner, and admit Primal Strike through a generic optional once-per-turn attack-hit damage rider that consumes either existing weapon-hit facts or existing active Wild Shape Beast form attack facts with caller-chosen Cold, Fire, Lightning, or Thunder damage. The closure must not store both options as simultaneously executable, collapse the option into inert metadata, copy Wild Shape form or attack identity state, reimplement Wild Shape attack projection, or dispatch on Druid, Elemental Fury, Potent Spellcasting, Primal Strike, Beast form, spell names, or class names in reducers. |
 | Druid level 7 feature table row | level-7 | character-level | character-creation or progression mechanic | `class_druid` | `.references/srd-5.2.1/Classes/Druid.md:38` |  | present | installed | unsupported-profile | non-runtime | not-applicable | outside-battle-runtime: class-progression-accounting | No runtime work; keep classification as explicit closure. |
 | Druid spell list Druidcraft | spell-level-0 | spell-level | spell Unit pressure | `druidcraft` | `.references/srd-5.2.1/Classes/Druid.md:188` |  | present | not-installed | not-recorded | catalog-only/dead-for-now | accepted-no-battle-effect | not-recorded | Weather signs, harmless sensory effects, plant blossoming, and candle/torch/campfire narration are noncombat environmental effects outside promoted runtime owners. |
 | Druid spell list Elementalism | spell-level-0 | spell-level | spell Unit pressure | `elementalism` | `.references/srd-5.2.1/Classes/Druid.md:189` |  | present | not-installed | not-recorded | catalog-only/dead-for-now | accepted-no-battle-effect | not-recorded | Harmless elemental sensory changes, small water creation, surface marks, and crude shaping are noncombat environmental effects outside promoted runtime owners. |
