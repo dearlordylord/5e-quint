@@ -181,7 +181,7 @@
     {
       "number": 30,
       "id": "L18VERIFY-02-RAW-UBIQUITOUS-LANGUAGE-REVIEW",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Run RAW and ubiquitous-language reviewer-loop convergence"
     },
     {
@@ -355,7 +355,7 @@ Spell-level-4 unique identities currently in the level-7 mining audit:
 | 27 | L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS - Validate MCP evidence and required flows for level 7-8 scope | done | L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION | Adds or classifies MCP vertical evidence only after support artifacts exist. |
 | 28 | L18GATE-05-CLEANROOM-SOURCE-QNT-READINESS - Refresh cleanroom and source-QNT readiness evidence | done | L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION | Source/accounting readiness verified; no target replay evidence claimed. |
 | 29 | L18VERIFY-01-QNT-MBT-CLOSURE-REVIEW - Run focused QNT/MBT closure review for changed runtime behavior | done | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS | Focused Monk Evasion admission parity passed; no broad MBT run claimed. |
-| 30 | L18VERIFY-02-RAW-UBIQUITOUS-LANGUAGE-REVIEW - Run RAW and ubiquitous-language reviewer-loop convergence | ready-for-implementation | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS | Confirms every modeled rule traces to SRD text and repo terminology. |
+| 30 | L18VERIFY-02-RAW-UBIQUITOUS-LANGUAGE-REVIEW - Run RAW and ubiquitous-language reviewer-loop convergence | done | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS | RAW and terminology review converged with no follow-up task. |
 | 31 | L18VERIFY-03-ARCHITECTURE-CONNASCENCE-REVIEW - Run architecture and connascence review convergence | ready-for-implementation | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS | Checks duplicate state, authored-identity dispatch, and distant coupling. |
 | 32 | L18VERIFY-04-RALPH-FORMAT-CONSISTENCY-REVIEW - Verify Ralph task-index, DAG, and task-body consistency | ready-for-implementation | L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION | Ensures the plan remains runnable after task-driven edits. |
 | 33 | L18FINAL-01-SERIALIZED-QUALITY-GATE - Run final serialized quality gate for full level 1-8 support | blocked | L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS, L18GATE-05-CLEANROOM-SOURCE-QNT-READINESS, L18VERIFY-01-QNT-MBT-CLOSURE-REVIEW, L18VERIFY-02-RAW-UBIQUITOUS-LANGUAGE-REVIEW, L18VERIFY-03-ARCHITECTURE-CONNASCENCE-REVIEW, L18VERIFY-04-RALPH-FORMAT-CONSISTENCY-REVIEW | Final pass after generated, MCP, cleanroom, RAW, architecture, and parity gates converge. |
@@ -2082,7 +2082,7 @@ Plan Impact:
 
 ### Task 30 - L18VERIFY-02-RAW-UBIQUITOUS-LANGUAGE-REVIEW
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on: `L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS`
 
@@ -2122,7 +2122,20 @@ Verification:
 
 Plan Impact:
 
-- Update-required if RAW review finds missing implementation tasks.
+- RAW review traced the queue's modeled level-7/8 closures to the local SRD
+  5.2.1 class tables and feature text: `Classes/Barbarian.md` Feral Instinct
+  and Instinctive Pounce; `Classes/Bard.md` Countercharm; `Classes/Cleric.md`
+  Blessed Strikes; `Classes/Druid.md` Wild Shape/Beast Shapes, Ability Score
+  Improvement, and Elemental Fury; `Classes/Fighter.md` Additional Fighting
+  Style; `Classes/Monk.md` Evasion; `Classes/Paladin.md` Aura of Devotion;
+  `Classes/Ranger.md` Defensive Tactics; `Classes/Rogue.md` Evasion and
+  Reliable Talent; `Classes/Sorcerer.md` Sorcery Incarnate; and caster class
+  Spellcasting tables for spell-level-4 pressure.
+- Ubiquitous-language review confirmed the closures preserve the repo terms for
+  Ability Check, Saving Throw, Initiative, Ability Score Improvement, Wild
+  Shape, Stat Block, and Character Sheet boundaries.
+- Reviewer loop ran two RAW/terminology passes and found no reasonable follow-up
+  task. Verification: `pnpm unit-profile-coverage:check`.
 
 ### Task 31 - L18VERIFY-03-ARCHITECTURE-CONNASCENCE-REVIEW
 
