@@ -187,7 +187,7 @@
     {
       "number": 31,
       "id": "L18VERIFY-03-ARCHITECTURE-CONNASCENCE-REVIEW",
-      "status": "ready-for-implementation",
+      "status": "done",
       "title": "Run architecture and connascence review convergence"
     },
     {
@@ -356,7 +356,7 @@ Spell-level-4 unique identities currently in the level-7 mining audit:
 | 28 | L18GATE-05-CLEANROOM-SOURCE-QNT-READINESS - Refresh cleanroom and source-QNT readiness evidence | done | L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION | Source/accounting readiness verified; no target replay evidence claimed. |
 | 29 | L18VERIFY-01-QNT-MBT-CLOSURE-REVIEW - Run focused QNT/MBT closure review for changed runtime behavior | done | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS | Focused Monk Evasion admission parity passed; no broad MBT run claimed. |
 | 30 | L18VERIFY-02-RAW-UBIQUITOUS-LANGUAGE-REVIEW - Run RAW and ubiquitous-language reviewer-loop convergence | done | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS | RAW and terminology review converged with no follow-up task. |
-| 31 | L18VERIFY-03-ARCHITECTURE-CONNASCENCE-REVIEW - Run architecture and connascence review convergence | ready-for-implementation | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS | Checks duplicate state, authored-identity dispatch, and distant coupling. |
+| 31 | L18VERIFY-03-ARCHITECTURE-CONNASCENCE-REVIEW - Run architecture and connascence review convergence | done | L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS | Architecture and connascence review converged with no refactor task. |
 | 32 | L18VERIFY-04-RALPH-FORMAT-CONSISTENCY-REVIEW - Verify Ralph task-index, DAG, and task-body consistency | ready-for-implementation | L18GATE-03-ULTRA-GOLDEN-SCOPE-EXTENSION | Ensures the plan remains runnable after task-driven edits. |
 | 33 | L18FINAL-01-SERIALIZED-QUALITY-GATE - Run final serialized quality gate for full level 1-8 support | blocked | L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS, L18GATE-05-CLEANROOM-SOURCE-QNT-READINESS, L18VERIFY-01-QNT-MBT-CLOSURE-REVIEW, L18VERIFY-02-RAW-UBIQUITOUS-LANGUAGE-REVIEW, L18VERIFY-03-ARCHITECTURE-CONNASCENCE-REVIEW, L18VERIFY-04-RALPH-FORMAT-CONSISTENCY-REVIEW | Final pass after generated, MCP, cleanroom, RAW, architecture, and parity gates converge. |
 
@@ -2139,7 +2139,7 @@ Plan Impact:
 
 ### Task 31 - L18VERIFY-03-ARCHITECTURE-CONNASCENCE-REVIEW
 
-Status: `ready-for-implementation`
+Status: `done`
 
 Depends on: `L18GATE-02-LEVEL18-FULL-SUPPORT-ARTIFACTS`
 
@@ -2181,7 +2181,22 @@ Verification:
 
 Plan Impact:
 
-- Update-required if architecture review finds missing refactor tasks.
+- Connascence review checked the queue's trigger terms in changed checker,
+  generated-evidence, surface, MCP, and runtime-admission files. Strong
+  couplings are localized in executable helpers: level scope bands in
+  `requiredNonVacuousLevelBands`, spell-level-4 carry-forward signatures in
+  `spellLevelFourFrontierSignatures`, Druid Wild Shape threshold parsing in
+  `druidWildShapeThresholdFacts`, MCP required-flow joins in
+  `buildMcpScenarioEvidenceLayer`, and Evasion replay narrowing in
+  `evasionUnitIdForReplay`.
+- No duplicate state, invalid support/provenance state, production authored-id
+  dispatch, or weak support-gate finding required a follow-up task. The
+  `monk_evasion` admission reuses the existing `save_damage_replacement`
+  mechanics and Evasion support profile rather than adding a parallel runtime
+  model.
+- Reviewer loop ran broad trigger scanning plus focused block review and
+  converged with no reasonable findings. Verification:
+  `pnpm unit-profile-coverage:check` and `pnpm quality`.
 
 ### Task 32 - L18VERIFY-04-RALPH-FORMAT-CONSISTENCY-REVIEW
 
