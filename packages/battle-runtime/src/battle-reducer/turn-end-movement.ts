@@ -6766,6 +6766,7 @@ export function resetBattleTurnResources(
     ...base,
     commandHalt: null,
     jumpDistanceMultiplier: null,
+    heightenedStepOfTheWindCarriedCreatures: [],
     spellSlotUsesThisTurn: [],
     levelOnePlusSpellCastsThisTurn: [],
     quickenedLevelOnePlusSpellCastsThisTurn: [],

@@ -9,7 +9,7 @@ This strict view tracks executable SRD character-level-1, cantrip, and spell-lev
 Full-support claim: **pass**.
 
 Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
-Strict level-9 final-support blockers: 0.
+Strict level-9 final support blockers: 0.
 
 ## Metrics
 
@@ -27,7 +27,7 @@ Strict level-9 final-support blockers: 0.
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
-The full-support claim gate uses strict target closure, selected identity readiness, SRD-authored product readiness, and strict level-9 final-support blockers. Diagnostic product readiness is a source-row accounting view, so it can report 367/367 (100%) while the claim gate reports **pass** only when level-9 and spell-level-5 rows have no unsupported, catalog-only, missing-authored, future-owner, or audit-only closure.
+The full-support claim gate uses strict target closure, selected identity readiness, SRD-authored product readiness, and strict final-support blockers. Diagnostic product readiness is a source-row accounting view, so it can report 367/367 (100%) while the claim gate reports **pass** only when level-9 and spell-level-5 rows have no unsupported, catalog-only, missing-authored, future-owner, or audit-only closure.
 
 ### Diagnostic Product Readiness Accounting
 
@@ -64,9 +64,9 @@ This is the selected-identity gate layer for the strict denominator. `witness-pr
 
 Every gate row must pass for a full level-support claim. A 100% result in one layer does not satisfy another layer, failed gates are not combined into a weighted completion percentage, and diagnostic product-readiness rows are intentionally absent from this gate unless they enter the SRD-authored blocker set.
 
-### Strict Level-9 Final-Support Blockers
+### Strict level-9 final support Blockers
 
-These rows are forbidden as final level-1-9 support for `level-9` and `spell-level-5` SRD pressure. They may remain only while implementation tasks are in progress.
+These rows are forbidden as final character level 1 support for level-9 and spell-level-5 rows. They may remain only while implementation tasks are in progress.
 
 | Unit | Blocker kind | Reasons | Level bands | Source rows |
 | --- | --- | --- | --- | --- |

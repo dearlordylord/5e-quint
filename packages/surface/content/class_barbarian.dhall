@@ -17,7 +17,7 @@ let barbarian =
           { categories = [ "light", "medium", "shield" ], kind = "trained" }
       , className = "barbarian"
       , description =
-          "SRD Barbarian class creation facts plus level 1-9 progression, including level 5 Extra Attack and Fast Movement and the level 9 Brutal Strike grant."
+          "SRD Barbarian class creation facts plus level 1-10 progression, including level 5 Extra Attack and Fast Movement and the level 9 Brutal Strike grant."
       , featureGrants =
         [ { level = 1, unitId = "barbarian_rage" }
         , { level = 1, unitId = "barbarian_unarmored_defense" }

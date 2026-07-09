@@ -69,6 +69,28 @@ describe("Character Sheet runtime / spell slots", () => {
     });
   });
 
+  test("projects level-10 Warlock Pact Slots without spell-level-6 access", () => {
+    const sheet = requireRight(
+      createFreshCharacterSheet({
+        characterId: characterSheetId("character:warlock-level-10-pact"),
+        build: warlockMagicalCunningBuild({
+          warlockAdvancements: 9,
+          pactSlotCount: 2,
+          pactSlotLevel: 5,
+        }),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+
+    expect(characterSheetPactSlots(sheet)).toEqual({
+      slotLevel: 5,
+      count: 2,
+      expended: 0,
+    });
+    expect(characterSheetSpellSlots(sheet)).toEqual([]);
+  });
+
   test("rejects nonzero ordinary Spell Slot expenditure above build capacity", () => {
     const sheet = createFreshCharacterSheet({
       characterId: characterSheetId("character:wizard-slot-over-capacity"),

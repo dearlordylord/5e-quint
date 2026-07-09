@@ -1,5 +1,5 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.acrobatic-movement unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-damage-die-floor unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-delegated-standard-actions unit-feature.bonus-action-ongoing-rage unit-feature.brutal-strike unit-feature.creature-space-movement-permission unit-feature.cunning-strike unit-feature.druid-wild-shape-known-form unit-feature.enemy-zero-hit-point-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.failed-saving-throw-reroll unit-feature.first-attack-roll-reckless-advantage unit-feature.grappler unit-feature.hide-action-obscurement-permission unit-feature.hunters-prey unit-feature.initiative-proficiency-and-swap unit-feature.innate-sorcery-activation unit-feature.light-extra-attack-damage-ability-modifier unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.magic-action-save-gated-condition unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.open-hand-technique unit-feature.paladin-sacred-weapon unit-feature.passive-ability-check-roll-mode unit-feature.passive-armor-class-bonus unit-feature.passive-damage-resistance unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.potent-cantrip unit-feature.reaction-roll-or-damage-reduction unit-feature.remarkable-athlete unit-feature.rogue-steady-aim unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.spell-slot-healing-modifier unit-feature.stunning-strike unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow unit-feature.fighter-tactical-master unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.acrobatic-movement unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-damage-die-floor unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-delegated-standard-actions unit-feature.bonus-action-ongoing-rage unit-feature.brutal-strike unit-feature.creature-space-movement-permission unit-feature.cunning-strike unit-feature.druid-wild-shape-known-form unit-feature.enemy-zero-hit-point-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.failed-saving-throw-reroll unit-feature.first-attack-roll-reckless-advantage unit-feature.grappler unit-feature.hide-action-obscurement-permission unit-feature.hunters-prey unit-feature.initiative-proficiency-and-swap unit-feature.innate-sorcery-activation unit-feature.light-extra-attack-damage-ability-modifier unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.magic-action-save-gated-condition unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.open-hand-technique unit-feature.paladin-sacred-weapon unit-feature.passive-ability-check-roll-mode unit-feature.passive-armor-class-bonus unit-feature.passive-damage-resistance unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.potent-cantrip unit-feature.reaction-roll-or-damage-reduction unit-feature.retaliation-reaction-attack unit-feature.remarkable-athlete unit-feature.rogue-steady-aim unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.spell-slot-healing-modifier unit-feature.stunning-strike unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow unit-feature.fighter-tactical-master unit-feature.zero-hit-point-replacement
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike-option-grant
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 import { Match } from "effect";
@@ -151,6 +151,8 @@ export const ROGUE_STEADY_AIM_SUPPORT_PROFILE = "rogueSteadyAim";
 export const POTENT_CANTRIP_SUPPORT_PROFILE = "potentCantrip";
 export const GRAPPLER_SUPPORT_PROFILE = "grappler";
 export const BRUTAL_STRIKE_SUPPORT_PROFILE = "brutalStrike";
+export const RETALIATION_REACTION_ATTACK_SUPPORT_PROFILE =
+  "retaliationReactionAttack";
 export const WEAPON_MASTERY_SAP_SUPPORT_PROFILE = "weaponMasterySap";
 export const WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE = "weaponMasteryTopple";
 export const WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE = "weaponMasteryCleave";
@@ -272,6 +274,7 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   POTENT_CANTRIP_SUPPORT_PROFILE,
   GRAPPLER_SUPPORT_PROFILE,
   BRUTAL_STRIKE_SUPPORT_PROFILE,
+  RETALIATION_REACTION_ATTACK_SUPPORT_PROFILE,
   WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
   WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
   WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
@@ -1086,6 +1089,20 @@ export type BattleBrutalStrikeSupportProfile = {
   readonly kind: typeof BRUTAL_STRIKE_SUPPORT_PROFILE;
   readonly brutalStrike: BrutalStrikeProfile;
 };
+export type RetaliationReactionAttackProfile = {
+  readonly trigger: {
+    readonly kind: "takesDamageFromCreatureWithinFiveFeet";
+    readonly rangeFeet: 5;
+  };
+  readonly response: {
+    readonly kind: "oneMeleeWeaponOrUnarmedStrikeAgainstDamageSource";
+    readonly actionCost: "reaction";
+  };
+};
+export type BattleRetaliationReactionAttackSupportProfile = {
+  readonly kind: typeof RETALIATION_REACTION_ATTACK_SUPPORT_PROFILE;
+  readonly retaliation: RetaliationReactionAttackProfile;
+};
 export type BattleMonkFocusBattleOptionsSupportProfile = {
   readonly kind: typeof MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE;
   readonly effectSaveDc: {
@@ -1171,6 +1188,7 @@ export type BattleUnitSupportProfile =
   | BattlePotentCantripSupportProfile
   | BattleGrapplerSupportProfile
   | BattleBrutalStrikeSupportProfile
+  | BattleRetaliationReactionAttackSupportProfile
   | BattleTacticalMasterReplacementSupportProfile
   | BattleLightExtraAttackDamageAbilityModifierSupportProfile
   | Exclude<
@@ -1211,6 +1229,7 @@ export type BattleUnitSupportProfile =
       | "rogueSteadyAim"
       | "potentCantrip"
       | "brutalStrike"
+      | "retaliationReactionAttack"
       | "grappler"
       | "tacticalMasterReplacement"
       | "lightExtraAttackDamageAbilityModifier"
@@ -1333,6 +1352,17 @@ export function battleUnitSupportProfilesForUnit(input: {
     supportProfiles.push(
       ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
     );
+  }
+
+  const retaliationReactionAttackSupport =
+    battleRetaliationReactionAttackSupportForUnit(input.unit);
+  if (retaliationReactionAttackSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Retaliation reaction attack Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (retaliationReactionAttackSupport !== null) {
+    supportProfiles.push(retaliationReactionAttackSupport);
   }
 
   const passiveArmorClassBonusSupport =
@@ -2594,6 +2624,11 @@ export type SupportedUnitFeatureProfile =
       readonly kind: "grappler";
       readonly unit: UnitRecord;
       readonly grappler: GrapplerProfile;
+    }
+  | {
+      readonly kind: "retaliationReactionAttack";
+      readonly unit: UnitRecord;
+      readonly retaliation: RetaliationReactionAttackProfile;
     };
 
 export type BattleAttackDamageRiderSupport =
@@ -2652,6 +2687,10 @@ export type BattleCunningStrikeSupport =
   | null;
 export type BattleCunningStrikeOptionGrantSupport =
   | BattleCunningStrikeOptionGrantSupportProfile
+  | "unsupported"
+  | null;
+export type BattleRetaliationReactionAttackSupport =
+  | BattleRetaliationReactionAttackSupportProfile
   | "unsupported"
   | null;
 export type BattlePaladinSacredWeaponSupport =
@@ -5994,6 +6033,7 @@ export function parseSupportedUnitFeatureProfile(
     parseAttackDamageRiderUnitFeatureProfile(unit, classLevels) ??
     parseSaveDamageReplacementUnitFeatureProfile(unit, classLevels) ??
     parseReactionRollOrDamageReductionUnitFeatureProfile(unit, classLevels) ??
+    parseRetaliationReactionAttackUnitFeatureProfile(unit) ??
     parsePassiveArmorClassBonusUnitFeatureProfile(unit) ??
     parsePassiveRangedAttackRollBonusUnitFeatureProfile(unit) ??
     parseInitiativeProficiencyAndSwapUnitFeatureProfile(unit) ??
@@ -7363,7 +7403,7 @@ function bardicInspirationSrdDieSizeAtClassLevel(
   );
 }
 
-function martialArtsSrdDieSizeAtClassLevel(
+export function martialArtsSrdDieSizeAtClassLevel(
   classLevel: ClassLevel,
 ): MartialArtsDieSize {
   return (
@@ -7412,6 +7452,86 @@ function parseExtraActionGrantUnitFeatureProfile(
         restriction: effect.restriction,
       }
     : null;
+}
+
+function parseRetaliationReactionAttackUnitFeatureProfile(
+  unit: UnitRecord,
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "retaliationReactionAttack" }
+> | null {
+  const support = battleRetaliationReactionAttackSupportForUnit(unit);
+  return support === null || support === "unsupported"
+    ? null
+    : {
+        kind: RETALIATION_REACTION_ATTACK_SUPPORT_PROFILE,
+        unit,
+        retaliation: support.retaliation,
+      };
+}
+
+export function battleRetaliationReactionAttackSupportForUnit(
+  unit: UnitRecord,
+): BattleRetaliationReactionAttackSupport {
+  if (unit.kind !== "class_feature") {
+    return null;
+  }
+  const mechanics = unit.mechanics;
+  if (
+    mechanics.family !== "activation" ||
+    mechanics.activationCost.kind !== "reaction"
+  ) {
+    return null;
+  }
+  const activationTrigger = mechanics.activationCost.trigger;
+  if (
+    !isRecord(activationTrigger) ||
+    activationTrigger["kind"] !== "takes_damage_from_creature"
+  ) {
+    return null;
+  }
+  if (activationTrigger["rangeFeet"] !== 5 || mechanics.phases.length !== 1) {
+    return "unsupported";
+  }
+  const phase = mechanics.phases[0];
+  const phaseEffects =
+    phase?.kind === "direct" ? (phase.effects ?? []) : undefined;
+  if (
+    phase?.kind !== "direct" ||
+    phaseEffects?.length !== 1 ||
+    phase.attachment.kind !== "self"
+  ) {
+    return "unsupported";
+  }
+  const effect = phaseEffects[0];
+  if (effect?.kind !== "grant_extra_action") {
+    return "unsupported";
+  }
+  const restriction = effect.restriction;
+  if (restriction.kind !== "allow_only" || restriction.actions.length !== 1) {
+    return "unsupported";
+  }
+  const action = restriction.actions[0];
+  if (
+    action?.action !== "attack" ||
+    action.attackLimit?.kind !== "attack_count" ||
+    action.attackLimit.count !== 1
+  ) {
+    return "unsupported";
+  }
+  return {
+    kind: RETALIATION_REACTION_ATTACK_SUPPORT_PROFILE,
+    retaliation: {
+      trigger: {
+        kind: "takesDamageFromCreatureWithinFiveFeet",
+        rangeFeet: 5,
+      },
+      response: {
+        kind: "oneMeleeWeaponOrUnarmedStrikeAgainstDamageSource",
+        actionCost: "reaction",
+      },
+    },
+  };
 }
 
 function parseSelfBonusActionHealingUnitFeatureProfile(

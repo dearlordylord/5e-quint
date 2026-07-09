@@ -5,6 +5,7 @@ let circleOfTheLand =
       , featureGrants =
           [ { level = 3, unitId = "druid_circle_of_the_land_spells" }
           , { level = 3, unitId = "druid_lands_aid" }
+          , { level = 10, unitId = "druid_natures_ward" }
           ]
       , id = "subclass_druid_circle_of_the_land"
       , kind = "subclass"

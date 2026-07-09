@@ -1,5 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner CREATION.CHOICE_DISCOVERY_CARDINALITY
-// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.grappler-general-feat character-creation.origin-feat-proficiency-choice character-creation.species-trait-proficiency-choice character-creation.species-origin-feat-choice character-creation.species-origin-feat-proficiency-choice character-creation.species-lineage-choice
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.grappler-general-feat character-creation.origin-feat-proficiency-choice character-creation.species-trait-proficiency-choice character-creation.species-origin-feat-choice character-creation.species-origin-feat-proficiency-choice character-creation.species-lineage-choice character-sheet.cleric-divine-intervention-session-invocation character-sheet.ranger-tireless
 import { Either } from "effect";
 import {
   BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY,
@@ -200,6 +200,7 @@ const SUPPORTED_PROGRESSIONS = [
   supportedSameClassProgression(WIDTH_CLASS_WIZARD_UNIT_ID, 5),
   supportedSameClassProgression(SRD_RANGER_CLASS_UNIT_ID, 9),
   supportedSameClassProgression(SRD_ROGUE_CLASS_UNIT_ID, 6),
+  supportedSameClassProgression(SRD_ROGUE_CLASS_UNIT_ID, 10),
   ...SRD_LEVEL_ONE_CLASS_UNIT_IDS.filter(
     (classUnitId) => classUnitId !== PHASE1_CLASS_FIGHTER_UNIT_ID,
   ).map((classUnitId) =>
@@ -339,12 +340,14 @@ const CHARACTER_BUILD_RESOURCE_UNIT_IDS = [
   "barbarian_rage",
   "bard_bardic_inspiration",
   "cleric_channel_divinity",
+  "cleric_divine_intervention",
   "druid_wild_shape",
   "fighter_action_surge",
   "fighter_second_wind",
   "monk_monks_focus",
   "paladin_channel_divinity",
   "paladin_lay_on_hands",
+  "ranger_tireless",
   "sorcerer_font_of_magic",
   "sorcerer_innate_sorcery",
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;

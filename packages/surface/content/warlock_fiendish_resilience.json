@@ -1,0 +1,43 @@
+{
+  "acquiredAtLevel": 10,
+  "className": "warlock",
+  "description": "Choose one damage type, other than Force, whenever you finish a Short or Long Rest. You have Resistance to that damage type until you choose a different one with this feature. Surface owner need: rest-choice sheet state must store the current selected damage type; the passive resistance here consumes that existing selection rather than duplicating it.",
+  "id": "warlock_fiendish_resilience",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "damageType": {
+          "holeId": "warlock_fiendish_resilience_damage_type",
+          "kind": "hole",
+          "label": "Fiendish Resilience damage type",
+          "value": {
+            "kind": "choice",
+            "label": "Fiendish Resilience damage type",
+            "options": [
+              "acid",
+              "bludgeoning",
+              "cold",
+              "fire",
+              "lightning",
+              "necrotic",
+              "piercing",
+              "poison",
+              "psychic",
+              "radiant",
+              "slashing",
+              "thunder"
+            ]
+          }
+        },
+        "kind": "grant_resistance"
+      }
+    ]
+  },
+  "name": "Fiendish Resilience",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Warlock.md:483-485"
+  }
+}

@@ -27,14 +27,14 @@
     "qntRegistry[]": "Derived from packages/**/*.qnt excluding .mbt.qnt drivers and *-tests.qnt files, qnt-owner-roles.jsonl, and checker-owned qntRegistryExemptions."
   },
   "battleHoleFrontierSummary": {
-    "total": 178,
+    "total": 179,
     "bySubject": {
       "battle-hole-family": 90,
       "battle-fill-kind": 50,
-      "battle-subject-kind": 38
+      "battle-subject-kind": 39
     },
     "byClassification": {
-      "semantic-frontier": 145,
+      "semantic-frontier": 146,
       "deterministic-boundary-projection": 0,
       "table-owned-fact": 33,
       "unsupported-dead-branch": 0
@@ -381,6 +381,7 @@
         "packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt",
         "packages/battle-runtime/battle-runtime-movement.qnt",
         "packages/battle-runtime/battle-runtime-monk-focus.qnt",
+        "packages/battle-runtime/battle-runtime-retaliation.qnt",
         "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
         "packages/battle-runtime/battle-runtime-turn-order.qnt",
         "packages/battle-runtime/battle-runtime-weapon-attacks.qnt",
@@ -6732,6 +6733,17 @@
         "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
       ],
       "followUpTaskIds": [],
+      "id": "runtimeCommandRetaliationAttack",
+      "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
+      "subject": "battle-subject-kind",
+      "subjectKind": "runtimeCommandRetaliationAttack"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY"
+      ],
+      "followUpTaskIds": [],
       "id": "runtimeLinkRelease",
       "reason": "BattleSubject kind vocabulary is covered by BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY: QNT subject-kind leaf vocabulary and the runtime projection contract test join this schema discriminant to the battle protocol registry. Procedure ordering, interrupt resume, replay, and reducer semantics remain covered by separate obligations.",
       "subject": "battle-subject-kind",
@@ -7082,6 +7094,12 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "profileId": "unit-feature.monk-focus-battle-options"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.retaliation-reaction-attack"
     },
     {
       "obligationIds": [
@@ -8486,6 +8504,22 @@
             "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
           ],
           "profileId": "unit-feature.monk-focus-battle-options"
+        }
+      ],
+      "role": "semantic-core"
+    },
+    {
+      "evidence": "packages/battle-runtime/battle-runtime-retaliation.qnt carries focused Barbarian Retaliation reaction-attack eligibility, trigger, resource, range-fact, and attack-resolution projection semantics.",
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "ownerPath": "packages/battle-runtime/battle-runtime-retaliation.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.retaliation-reaction-attack"
         }
       ],
       "role": "semantic-core"
@@ -11133,6 +11167,11 @@
     },
     {
       "classification": "qnt-owner-role",
+      "ownerPath": "packages/battle-runtime/battle-runtime-retaliation.qnt",
+      "role": "semantic-core"
+    },
+    {
+      "classification": "qnt-owner-role",
       "ownerPath": "packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt",
       "role": "semantic-core"
     },
@@ -12559,6 +12598,18 @@
             "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
           ],
           "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-remarkable-athlete-core.qnt",
+          "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.retaliation-reaction-attack",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/battle-runtime/battle-runtime-retaliation.qnt",
           "role": "semantic-core"
         }
       ]
@@ -16000,6 +16051,7 @@
     }
   ],
   "profileIdsSeenFromUnitProfileCoverage": [
+    "character-creation.bard-magical-secrets-spell-access",
     "character-creation.class-feature-advancement-replacement",
     "character-creation.class-feature-feat-choice",
     "character-creation.class-feature-option-projection",
@@ -16031,6 +16083,7 @@
     "character-sheet.class-feature-prepared-spell-access",
     "character-sheet.class-feature-spell-free-cast-resource",
     "character-sheet.class-feature-use-count-resource",
+    "character-sheet.cleric-divine-intervention-session-invocation",
     "character-sheet.commune-session-invocation",
     "character-sheet.commune-with-nature-session-invocation",
     "character-sheet.contact-patron-session-invocation",
@@ -16038,6 +16091,7 @@
     "character-sheet.dominate-person-session-invocation",
     "character-sheet.dream-session-invocation",
     "character-sheet.druid-circle-land-spell-access",
+    "character-sheet.fighter-heroic-warrior",
     "character-sheet.font-of-magic-slot-to-sorcery-points",
     "character-sheet.font-of-magic-sorcery-points-to-spell-slot",
     "character-sheet.geas-session-invocation",
@@ -16051,7 +16105,9 @@
     "character-sheet.modify-memory-session-invocation",
     "character-sheet.monk-uncanny-metabolism-initiative-recovery",
     "character-sheet.pact-slot-recovery",
+    "character-sheet.passive-defense-projection",
     "character-sheet.passwall-session-invocation",
+    "character-sheet.ranger-tireless",
     "character-sheet.rest-triggered-heroic-inspiration",
     "character-sheet.restoration-death-spell-session",
     "character-sheet.scrying-session-invocation",
@@ -16238,6 +16294,7 @@
     "unit-feature.potent-cantrip",
     "unit-feature.reaction-roll-or-damage-reduction",
     "unit-feature.remarkable-athlete",
+    "unit-feature.retaliation-reaction-attack",
     "unit-feature.rogue-steady-aim",
     "unit-feature.save-damage-replacement",
     "unit-feature.self-bonus-action-healing",

@@ -77,6 +77,7 @@ import {
 import {
   attackHitTriggerKind,
   attackKindForDeflectRedirect,
+  meleeWeaponOrUnarmedStrikeOptionForReactor,
   opportunityAttackOptionForReactor,
 } from "./movement-speed.ts";
 import { reactionSpellTargetFactsForAfterDamage } from "./reaction-triggered-spells.ts";
@@ -104,7 +105,10 @@ export function resolveOpportunityAttackCommand(
   input: BattleResolutionInputForSubject<
     Extract<
       BattleSubject,
-      { readonly tag: "runtimeCommand"; readonly command: "opportunityAttack" }
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "opportunityAttack" | "retaliationAttack";
+      }
     >
   > & {
     readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
@@ -116,25 +120,35 @@ export function resolveOpportunityAttackCommand(
   const pendingAttackDamageReductions =
     input.pendingAttackDamageReductions ?? [];
   const subject = input.subject;
+  const commandLabel =
+    subject.command === "retaliationAttack" ? "Retaliation" : "Opportunity Attack";
   const target = input.state.combatants.get(subject.targetId);
-  const attack = opportunityAttackOptionForReactor(
-    input.state,
-    subject.reactorId,
-    subject.targetId,
-    subject.attackName,
-  );
+  const attack =
+    subject.command === "retaliationAttack"
+      ? meleeWeaponOrUnarmedStrikeOptionForReactor(
+          input.state,
+          subject.reactorId,
+          subject.targetId,
+          subject.attackName,
+        )
+      : opportunityAttackOptionForReactor(
+          input.state,
+          subject.reactorId,
+          subject.targetId,
+          subject.attackName,
+        );
   if (target === undefined || attack === undefined) {
     return invalidResult(
       input.state,
       "staleSubject",
-      "Opportunity Attack is no longer available.",
+      `${commandLabel} attack is no longer available.`,
     );
   }
   if (attackActionOptionName(attack) !== subject.attackName) {
     return invalidResult(
       input.state,
       "unsupportedActOption",
-      "Opportunity Attack requires the selected melee attack option.",
+      `${commandLabel} requires the selected melee attack option.`,
     );
   }
   const fillSet = attackFillSet(input.fills);
@@ -145,7 +159,7 @@ export function resolveOpportunityAttackCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Opportunity Attack target is fixed by the movement trigger.",
+      `${commandLabel} target is fixed by the reaction trigger.`,
     );
   }
   const requiredRollMode = requiredAttackRollMode(
@@ -160,7 +174,7 @@ export function resolveOpportunityAttackCommand(
       return invalidResult(
         input.state,
         "invalidFill",
-        "Opportunity Attack roll must be filled before damage.",
+        `${commandLabel} attack roll must be filled before damage.`,
       );
     }
     return needsHolesResult(input.state, input.subject, [
@@ -175,7 +189,7 @@ export function resolveOpportunityAttackCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Opportunity Attack roll result is outside the d20 attack-roll protocol.",
+      `${commandLabel} attack roll result is outside the d20 attack-roll protocol.`,
     );
   }
   const spellAttackRerollIssue = spellAttackRerollUnsupportedIssue(
@@ -188,7 +202,7 @@ export function resolveOpportunityAttackCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Opportunity Attack roll mode does not match the current attack-roll rule.",
+      `${commandLabel} attack roll mode does not match the current attack-roll rule.`,
     );
   }
   const reactor = input.state.combatants.get(subject.reactorId);
@@ -367,7 +381,7 @@ export function resolveOpportunityAttackCommand(
     return invalidResult(
       input.state,
       "invalidFill",
-      "Opportunity Attack damage can only be filled after a hit.",
+      `${commandLabel} damage can only be filled after a hit.`,
     );
   }
   if (!hit) {
@@ -404,7 +418,7 @@ export function resolveOpportunityAttackCommand(
       return invalidResult(
         input.state,
         "invalidFill",
-        "Opportunity Attack fixed damage is no longer available.",
+        `${commandLabel} fixed damage is no longer available.`,
       );
     }
     const damageEvent = {

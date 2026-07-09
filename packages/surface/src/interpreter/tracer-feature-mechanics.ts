@@ -442,6 +442,17 @@ export function traceClassFeatureMechanics(
       });
       return [recoveryId];
     }
+    case "combat_turn_start_heroic_inspiration": {
+      const heroicInspirationId = ids("heroicInspiration");
+      nodes.push({
+        id: heroicInspirationId,
+        category: "procedure",
+        atomKind: "combat_turn_start_heroic_inspiration",
+        label:
+          "combat_turn_start_heroic_inspiration\nstart_turn\ncombat\nrequires missing Heroic Inspiration",
+      });
+      return [heroicInspirationId];
+    }
     case "composite":
       return m.parts.map((part) => {
         switch (part.family) {

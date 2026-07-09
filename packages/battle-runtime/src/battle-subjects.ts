@@ -1,3 +1,4 @@
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.retaliation-reaction-attack
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form spell.invocation-flaming-sphere-hazard-ram spell.invocation-self-transformation-mode spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
@@ -82,6 +83,7 @@ export const BATTLE_RUNTIME_COMMANDS = [
   "castAttackHitBonusActionSpell",
   "releaseGrapple",
   "opportunityAttack",
+  "retaliationAttack",
   "greaseGroundHazardSave",
   "webRestraintSave",
   "sleetStormAreaHazardSave",
@@ -792,6 +794,14 @@ export const BattleSubjectSchema = Schema.Union(
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("opportunityAttack"),
+    reactorId: CombatantId,
+    targetId: CombatantId,
+    attackName: BattleSubjectTextSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("retaliationAttack"),
     reactorId: CombatantId,
     targetId: CombatantId,
     attackName: BattleSubjectTextSchema,

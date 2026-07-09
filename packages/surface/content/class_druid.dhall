@@ -1,7 +1,7 @@
 { armorTraining = { categories = [ "light", "shield" ], kind = "trained" }
 , className = "druid"
 , description =
-    "SRD Druid class creation and level 1-5 progression facts, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, level 1-2 class feature grants, level 3 subclass selection, and the level 4 Ability Score Improvement feature grant."
+    "SRD Druid class creation and level 1-10 progression facts, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, level 1-2 class feature grants, level 3 subclass selection, and the level 4 Ability Score Improvement feature grant."
 , featureGrants =
   [ { level = 1, unitId = "druid_druidic" }
   , { level = 1, unitId = "druid_primal_order" }
@@ -156,6 +156,57 @@
         [ { count = 4, spellLevel = 1 }
         , { count = 3, spellLevel = 2 }
         , { count = 2, spellLevel = 3 }
+        ]
+      }
+    , { atLevel = 6
+      , cantripCount = 3
+      , preparedSpellCount = 10
+      , spellSlots =
+        [ { count = 4, spellLevel = 1 }
+        , { count = 3, spellLevel = 2 }
+        , { count = 3, spellLevel = 3 }
+        ]
+      }
+    , { atLevel = 7
+      , cantripCount = 3
+      , preparedSpellCount = 11
+      , spellSlots =
+        [ { count = 4, spellLevel = 1 }
+        , { count = 3, spellLevel = 2 }
+        , { count = 3, spellLevel = 3 }
+        , { count = 1, spellLevel = 4 }
+        ]
+      }
+    , { atLevel = 8
+      , cantripCount = 3
+      , preparedSpellCount = 12
+      , spellSlots =
+        [ { count = 4, spellLevel = 1 }
+        , { count = 3, spellLevel = 2 }
+        , { count = 3, spellLevel = 3 }
+        , { count = 2, spellLevel = 4 }
+        ]
+      }
+    , { atLevel = 9
+      , cantripCount = 3
+      , preparedSpellCount = 14
+      , spellSlots =
+        [ { count = 4, spellLevel = 1 }
+        , { count = 3, spellLevel = 2 }
+        , { count = 3, spellLevel = 3 }
+        , { count = 3, spellLevel = 4 }
+        , { count = 1, spellLevel = 5 }
+        ]
+      }
+    , { atLevel = 10
+      , cantripCount = 4
+      , preparedSpellCount = 15
+      , spellSlots =
+        [ { count = 4, spellLevel = 1 }
+        , { count = 3, spellLevel = 2 }
+        , { count = 3, spellLevel = 3 }
+        , { count = 3, spellLevel = 4 }
+        , { count = 2, spellLevel = 5 }
         ]
       }
     ]

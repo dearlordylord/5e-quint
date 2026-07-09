@@ -1,0 +1,21 @@
+{
+  "acquiredAtLevel": 10,
+  "className": "paladin",
+  "description": "You and your allies have Immunity to the Frightened condition while in your Aura of Protection. If a Frightened ally enters the aura, that condition has no effect on that ally while there. Surface owner need: Aura of Protection membership and ally-scoped passive projection must carry this Frightened immunity beyond the self immunity fact.",
+  "id": "paladin_aura_of_courage",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "condition": "frightened",
+        "kind": "grant_condition_immunity"
+      }
+    ]
+  },
+  "name": "Aura of Courage",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Paladin.md:148-150"
+  }
+}

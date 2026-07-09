@@ -275,6 +275,7 @@ function antilifeShellDruidSheet(input: {
       },
     },
     hitPointMaximumReduction: Hp(0),
+    exhaustionLevel: 0,
     hitPoints: { tag: "positive", currentHp: Hp(57), tempHp: Hp(0) },
     conditions: [],
     spentHitDice: [],

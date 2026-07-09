@@ -110,8 +110,8 @@ const levelFourFollowUpRequiredDisposition = "level-4-follow-up-required";
 const classProgressionFollowUpRequiredDisposition =
   "class-progression-follow-up-required";
 const subclassSelectionLevel = 3;
-const maxLevelOneNineMiningCharacterLevel = 9;
-const maxInventoriedClassFeatureLevel = maxLevelOneNineMiningCharacterLevel;
+const maxLevelOneTenMiningCharacterLevel = 10;
+const maxInventoriedClassFeatureLevel = maxLevelOneTenMiningCharacterLevel;
 const inventoriedClassFeatureLevels = Array.from(
   { length: maxInventoriedClassFeatureLevel },
   (_, index) => index + 1,
@@ -122,11 +122,13 @@ const classProgressionFrontierLevelBands = new Set([
   "level-7",
   "level-8",
   "level-9",
+  "level-10",
 ]);
 const classTableSummaryClosureLevelBands = new Set([
   "level-7",
   "level-8",
   "level-9",
+  "level-10",
 ]);
 const expectedLevelEightProgressionDeltaSignatures = new Map([
   ["Barbarian", []],
@@ -261,6 +263,69 @@ const expectedLevelNineProgressionDeltaSignatures = new Map([
       "class-table-column:Proficiency Bonus:+3->+4",
       "spell-slot-count:4:2->3",
       "spell-slot-count:5:—->1",
+    ],
+  ],
+]);
+const expectedLevelTenProgressionDeltaSignatures = new Map([
+  ["Barbarian", ["class-table-column:Weapon Mastery:3->4"]],
+  [
+    "Bard",
+    [
+      "class-table-column:Bardic Die:D8->D10",
+      "class-table-column:Cantrips:3->4",
+      "class-table-column:Prepared Spells:14->15",
+      "spell-slot-count:5:1->2",
+    ],
+  ],
+  [
+    "Cleric",
+    [
+      "class-table-column:Cantrips:4->5",
+      "class-table-column:Prepared Spells:14->15",
+      "spell-slot-count:5:1->2",
+    ],
+  ],
+  [
+    "Druid",
+    [
+      "class-table-column:Cantrips:3->4",
+      "class-table-column:Prepared Spells:14->15",
+      "spell-slot-count:5:1->2",
+    ],
+  ],
+  [
+    "Fighter",
+    [
+      "class-table-column:Second Wind:3->4",
+      "class-table-column:Weapon Mastery:4->5",
+    ],
+  ],
+  [
+    "Monk",
+    [
+      "class-table-column:Focus Points:9->10",
+      "class-table-column:Unarmored Movement:+15 ft.->+20 ft.",
+    ],
+  ],
+  ["Paladin", []],
+  ["Ranger", []],
+  ["Rogue", []],
+  [
+    "Sorcerer",
+    [
+      "class-table-column:Cantrips:5->6",
+      "class-table-column:Prepared Spells:14->15",
+      "class-table-column:Sorcery Points:9->10",
+      "spell-slot-count:5:1->2",
+    ],
+  ],
+  ["Warlock", ["class-table-column:Cantrips:3->4"]],
+  [
+    "Wizard",
+    [
+      "class-table-column:Cantrips:4->5",
+      "class-table-column:Prepared Spells:14->15",
+      "spell-slot-count:5:1->2",
     ],
   ],
 ]);
@@ -503,6 +568,7 @@ const rowBattleReadinessLevelBands = new Set([
   "level-7",
   "level-8",
   "level-9",
+  "level-10",
 ]);
 const authoredNotInstalledSpellReviewRequiredLevelBands = new Set([
   ...levelOneSpellPressureLevelBands,
@@ -1059,7 +1125,7 @@ function inventoriedSpellListEntries(lines, className, spellLevel) {
     lines,
     className,
     spellLevel,
-    maxLevelOneNineMiningCharacterLevel,
+    maxLevelOneTenMiningCharacterLevel,
   )
     ? entries
     : [];
@@ -2486,7 +2552,7 @@ function classRows(root, className) {
           lineStart: featureTable.row.line,
           candidateUnitId: `class_${classSlug}`,
           progressionDeltas:
-            level === 8 || level === 9
+            level === 8 || level === 9 || level === 10
               ? classTableProgressionDeltas({
                   className,
                   currentFeatureTable: featureTable,
@@ -2608,7 +2674,7 @@ function classRows(root, className) {
           lines,
           className,
           spell.spellLevel,
-          maxLevelOneNineMiningCharacterLevel,
+          maxLevelOneTenMiningCharacterLevel,
         ) &&
         !inventoriedClassSpellUnitIds.has(slug(spell.name)),
     );
@@ -5148,7 +5214,7 @@ function buildSrdUnitInventory({
     generatedBy: "scripts/unit-profile-coverage-check.cjs",
     sourceCorpus: ".references/srd-5.2.1/Classes",
     scope:
-      "SRD 5.2.1 class-derived Unit/catalog backlog rows, prioritized by character level. Character levels 1-2 include cantrips and spell-level-1 pressure; character level 3 adds class/subclass level-3 rows and spell-level-2 pressure; character level 4 adds level-4 class-feature pressure while continuing to exclude spell-level-3 pressure. Character levels 5-9 are mined as a non-blocking audit frontier for class-table, class-feature, subclass-feature, repeated progression rows, and later-frontier spell-list pressure. Spell-level-3 pressure starts at character level 5 for full casters and Warlock Pact Magic and at class level 9 for Paladin and Ranger; spell-level-4 pressure starts at character level 7 for full casters and Warlock Pact Magic; spell-level-5 pressure starts at character level 9 for full casters and Warlock Pact Magic.",
+      "SRD 5.2.1 class-derived Unit/catalog backlog rows, prioritized by character level. Character levels 1-2 include cantrips and spell-level-1 pressure; character level 3 adds class/subclass level-3 rows and spell-level-2 pressure; character level 4 adds level-4 class-feature pressure while continuing to exclude spell-level-3 pressure. Character levels 5-10 are mined as a non-blocking audit frontier for class-table, class-feature, subclass-feature, repeated progression rows, and later-frontier spell-list pressure. Spell-level-3 pressure starts at character level 5 for full casters and Warlock Pact Magic and at class level 9 for Paladin and Ranger; spell-level-4 pressure starts at character level 7 for full casters and Warlock Pact Magic; spell-level-5 pressure starts at character level 9 for full casters and Warlock Pact Magic. Character level 10 carries spell-level-5 forward and does not introduce spell-level-6 pressure.",
     evidenceArtifacts: {
       characterCreationOwnerEvidence: summarizeCharacterCreationOwnerEvidence(
         root,
@@ -5609,6 +5675,7 @@ function validateSrdUnitInventory(report) {
     ["level-7", 24],
     ["level-8", 24],
     ["level-9", 21],
+    ["level-10", 25],
   ]);
   for (const [levelBand, expectedCount] of classProgressionExpectedCounts) {
     const levelRows = report.rows.filter((row) => row.levelBand === levelBand);
@@ -5737,6 +5804,52 @@ function validateSrdUnitInventory(report) {
     }
     if (!Array.isArray(row.progressionDeltas)) {
       issues.push(`${row.id} lacks generated level-9 progression deltas.`);
+    }
+  }
+  const levelTenTableRows = report.rows.filter(
+    (row) => row.levelBand === "level-10" && row.rowKind === "class-table-summary",
+  );
+  if (levelTenTableRows.length !== 12) {
+    issues.push(
+      `Level-10 mining inventory must contain 12 class-table-summary rows; got ${levelTenTableRows.length}.`,
+    );
+  }
+  for (const row of levelTenTableRows) {
+    if (
+      row.battleReadinessClosure?.source !==
+        classTableSummaryClosureSource("level-10") ||
+      row.battleReadinessClosure.kind !==
+        battleReadinessClosureKind.outsideBattleRuntime ||
+      row.battleReadinessClosure.owner !== "class-progression-accounting"
+    ) {
+      issues.push(
+        `${row.id} lacks the generated level-10 class-table summary closure.`,
+      );
+    }
+    if (!Array.isArray(row.progressionDeltas)) {
+      issues.push(`${row.id} lacks generated level-10 progression deltas.`);
+    }
+  }
+  for (const row of levelTenTableRows) {
+    const expectedSignatures =
+      expectedLevelTenProgressionDeltaSignatures.get(row.className);
+    if (expectedSignatures === undefined) {
+      issues.push(
+        `Level-10 progression delta validation has no expected signatures for ${row.className}.`,
+      );
+      continue;
+    }
+    const actualSignatures = (row.progressionDeltas ?? [])
+      .map(progressionDeltaSignature)
+      .sort();
+    const sortedExpectedSignatures = [...expectedSignatures].sort();
+    if (
+      JSON.stringify(actualSignatures) !==
+      JSON.stringify(sortedExpectedSignatures)
+    ) {
+      issues.push(
+        `${row.id} has unexpected level-10 progression deltas: expected ${sortedExpectedSignatures.join(", ")}; got ${actualSignatures.join(", ")}.`,
+      );
     }
   }
   for (const row of levelNineTableRows) {

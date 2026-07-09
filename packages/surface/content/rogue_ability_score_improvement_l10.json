@@ -1,0 +1,22 @@
+{
+  "acquiredAtLevel": 10,
+  "className": "rogue",
+  "description": "You gain the Ability Score Improvement feat or another feat of your choice for which you qualify.",
+  "id": "rogue_ability_score_improvement_l10",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "category": "general",
+        "kind": "grant_feat",
+        "openFallback": "any_qualifying_feat"
+      }
+    ]
+  },
+  "name": "Ability Score Improvement",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Rogue.md:93-95"
+  }
+}

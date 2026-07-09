@@ -21,6 +21,7 @@ const ultraGoldenScopeFields = Object.freeze([
   { scopeId: "level-1-7", reportField: "level17FullSupport" },
   { scopeId: "level-1-8", reportField: "level18FullSupport" },
   { scopeId: "level-1-9", reportField: "level19FullSupport" },
+  { scopeId: "level-1-10", reportField: "level110FullSupport" },
 ]);
 const ultraGoldenScopeIds = Object.freeze(
   ultraGoldenScopeFields.map((scope) => scope.scopeId),
@@ -37,7 +38,7 @@ const layerDefinitions = [
     id: layerId.supportCompleteness,
     label: "Support completeness",
     criterion:
-      "The strict level-support claim has no open strict rows, selected-identity blockers, SRD-authored product-readiness blockers, or strict level-9 final-support blockers; diagnostic product-readiness rows do not block unless promoted into that blocker set.",
+      "The strict level-support claim has no open strict rows, selected-identity blockers, SRD-authored product-readiness blockers, or strict final-support blockers; diagnostic product-readiness rows do not block unless promoted into that blocker set.",
   },
   {
     id: layerId.qntGeneratorReadiness,
@@ -389,11 +390,12 @@ function validateMcpScopeAuditDecisions(manifest, context) {
       );
     }
     if (
-      decision.scopeId === "level-1-9" &&
+      (decision.scopeId === "level-1-9" ||
+        decision.scopeId === "level-1-10") &&
       decision.result === "reuse-existing-evidence"
     ) {
       issues.push(
-        `${decisionContext}.result must not reuse existing evidence for level-1-9; executable level-1-9 MCP scenario evidence is required.`,
+        `${decisionContext}.result must not reuse existing evidence for ${decision.scopeId}; executable ${decision.scopeId} MCP scenario evidence is required.`,
       );
     }
 
@@ -1130,6 +1132,7 @@ function buildSelectedIdentityEvidenceAudit({
   level17FullSupport,
   level18FullSupport,
   level19FullSupport,
+  level110FullSupport,
   mcpScenarioEvidence,
   rulesKernelMatrix,
   selectedIdentityReplayEvidenceTag,
@@ -1146,6 +1149,7 @@ function buildSelectedIdentityEvidenceAudit({
     level17FullSupport,
     level18FullSupport,
     level19FullSupport,
+    level110FullSupport,
   };
   return stable({
     criteria: {
@@ -1208,6 +1212,7 @@ function buildUltraGoldenGate({
   level17FullSupport,
   level18FullSupport,
   level19FullSupport,
+  level110FullSupport,
   mcpScenarioEvidence,
   rulesKernelMatrix,
   selectedIdentityReplayEvidenceTag,
@@ -1223,6 +1228,7 @@ function buildUltraGoldenGate({
     level17FullSupport,
     level18FullSupport,
     level19FullSupport,
+    level110FullSupport,
   };
   const scopes = ultraGoldenScopeFields.map(({ reportField, scopeId }) =>
     buildScopeGate({
@@ -1243,6 +1249,7 @@ function buildUltraGoldenGate({
     level17FullSupport,
     level18FullSupport,
     level19FullSupport,
+    level110FullSupport,
     mcpScenarioEvidence,
     rulesKernelMatrix,
     selectedIdentityReplayEvidenceTag,
@@ -1268,6 +1275,8 @@ function buildUltraGoldenGate({
         "plans/unit-profile-coverage/level1-8-full-support.json",
       level19FullSupport:
         "plans/unit-profile-coverage/level1-9-full-support.json",
+      level110FullSupport:
+        "plans/unit-profile-coverage/level1-10-full-support.json",
       mcpScenarioEvidence: mcpScenarioEvidenceSourcePath,
       rulesKernelMatrix: "plans/rules-kernel-coverage/matrix.json",
       unitMatrix: "plans/unit-profile-coverage/unit-matrix.json",

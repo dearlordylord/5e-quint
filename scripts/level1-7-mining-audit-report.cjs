@@ -4,6 +4,7 @@ const { stable } = require("./unit-profile-coverage-report.cjs");
 const maxLevelOneSevenAuditCharacterLevel = 7;
 const maxLevelOneEightAuditCharacterLevel = 8;
 const maxLevelOneNineAuditCharacterLevel = 9;
+const maxLevelOneTenAuditCharacterLevel = 10;
 const levelOneSevenMiningAuditLevelBands = characterLevelBands(
   maxLevelOneSevenAuditCharacterLevel,
 );
@@ -13,6 +14,9 @@ const levelOneEightMiningAuditLevelBands = characterLevelBands(
 const levelOneNineMiningAuditLevelBands = characterLevelBands(
   maxLevelOneNineAuditCharacterLevel,
 );
+const levelOneTenMiningAuditLevelBands = characterLevelBands(
+  maxLevelOneTenAuditCharacterLevel,
+);
 const levelOneSevenMiningAuditLevelBandSet = new Set(
   levelOneSevenMiningAuditLevelBands,
 );
@@ -21,6 +25,9 @@ const levelOneEightMiningAuditLevelBandSet = new Set(
 );
 const levelOneNineMiningAuditLevelBandSet = new Set(
   levelOneNineMiningAuditLevelBands,
+);
+const levelOneTenMiningAuditLevelBandSet = new Set(
+  levelOneTenMiningAuditLevelBands,
 );
 
 function countValues(values) {
@@ -319,6 +326,16 @@ function buildLevelOneNineMiningAudit(srdUnitInventory) {
   });
 }
 
+function buildLevelOneTenMiningAudit(srdUnitInventory) {
+  return buildMiningAudit({
+    srdUnitInventory,
+    maxCharacterLevel: maxLevelOneTenAuditCharacterLevel,
+    levelBands: levelOneTenMiningAuditLevelBands,
+    levelBandSet: levelOneTenMiningAuditLevelBandSet,
+    title: "Character Levels 1-10 Mining Audit",
+  });
+}
+
 function md(value) {
   return String(value ?? "")
     .replace(/\n/g, " ")
@@ -546,9 +563,11 @@ function renderLevelOneSevenMiningAudit(report) {
 module.exports = {
   buildLevelOneEightMiningAudit,
   buildLevelOneNineMiningAudit,
+  buildLevelOneTenMiningAudit,
   buildLevelOneSevenMiningAudit,
   levelOneEightMiningAuditLevelBands,
   levelOneNineMiningAuditLevelBands,
+  levelOneTenMiningAuditLevelBands,
   levelOneSevenMiningAuditLevelBands,
   renderLevelOneSevenMiningAudit,
 };

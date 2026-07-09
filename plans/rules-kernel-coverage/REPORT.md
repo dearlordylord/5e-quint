@@ -166,17 +166,17 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Battle Hole Frontier
 
-- Total classified rows: 178
+- Total classified rows: 179
 
 | Subject | Count |
 | --- | ---: |
 | battle-hole-family | 90 |
 | battle-fill-kind | 50 |
-| battle-subject-kind | 38 |
+| battle-subject-kind | 39 |
 
 | Classification | Count |
 | --- | ---: |
-| semantic-frontier | 145 |
+| semantic-frontier | 146 |
 | deterministic-boundary-projection | 0 |
 | table-owned-fact | 33 |
 | unsupported-dead-branch | 0 |
@@ -343,6 +343,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | battle-subject-kind | `runtimeMovement` | `runtimeMovement` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
 | battle-subject-kind | `runtimeReadiedResponse` | `runtimeReadiedResponse` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
 | battle-subject-kind | `runtimeReaction` | `runtimeReaction` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
+| battle-subject-kind | `runtimeCommandRetaliationAttack` | `runtimeCommandRetaliationAttack` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
 | battle-subject-kind | `runtimeLinkRelease` | `runtimeLinkRelease` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
 | battle-subject-kind | `runtimeSavingThrow` | `runtimeSavingThrow` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
 | battle-subject-kind | `runtimeEffectCleanup` | `runtimeEffectCleanup` | semantic-frontier | `BATTLE.PROTOCOL.HOLE_FAMILY_VOCABULARY` | _none_ |
@@ -407,6 +408,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/shared-algebras/proofs/rule-core/unit-feature-quickened-action-spell-procedure-support-core.qnt` | semantic-core | `BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR` |
 | `packages/battle-runtime/battle-runtime-mirror-image.qnt` | semantic-core | `BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION` |
 | `packages/battle-runtime/battle-runtime-monk-focus.qnt` | semantic-core | profile-scoped: `unit-feature.monk-focus-battle-options` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `packages/battle-runtime/battle-runtime-retaliation.qnt` | semantic-core | profile-scoped: `unit-feature.retaliation-reaction-attack` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/battle-runtime/battle-runtime-open-hand-technique.qnt` | semantic-core | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/battle-runtime/battle-runtime-open-hand-technique.mbt.qnt` | mbt-fixture | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/battle-runtime/battle-runtime-moonbeam-movable-zone.qnt` | semantic-core | `BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE` |
@@ -731,6 +733,7 @@ Rows here inventory `packages/**/*.qnt` files excluding `.mbt.qnt` drivers and `
 | `packages/battle-runtime/battle-runtime-remarkable-athlete-roll-modes.qnt` | qnt-owner-role | proof-only |
 | `packages/battle-runtime/battle-runtime-replay-equivalence.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt` | qnt-owner-role | semantic-core |
+| `packages/battle-runtime/battle-runtime-retaliation.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-roll-modifier-choice.qnt` | qnt-owner-role | semantic-core |
 | `packages/battle-runtime/battle-runtime-route-choice-payloads.qnt` | exempt | leaf-type-vocabulary: Exact reducer-route choice payload vocabulary leaf imported by focused route connector MBT drivers without owning reducer semantics. |
 | `packages/battle-runtime/battle-runtime-sanctuary.qnt` | qnt-owner-role | semantic-core |
@@ -953,6 +956,7 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `unit-feature.potent-cantrip` | `packages/shared-algebras/proofs/rule-core/unit-feature-potent-cantrip-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.reaction-roll-or-damage-reduction` | `packages/shared-algebras/proofs/rule-core/unit-feature-reaction-reduction-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`)<br>`packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt` (semantic-core; `BATTLE.REACTION.OFFER_DECLINE_RESUME`)<br>`packages/battle-runtime/battle-runtime-slow-fall.qnt` (proof-only; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.remarkable-athlete` | `packages/shared-algebras/proofs/rule-core/unit-feature-remarkable-athlete-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.retaliation-reaction-attack` | `packages/battle-runtime/battle-runtime-retaliation.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.rogue-steady-aim` | `packages/shared-algebras/proofs/rule-core/unit-feature-rogue-steady-aim-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.save-damage-replacement` | `packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.self-bonus-action-healing` | `packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |

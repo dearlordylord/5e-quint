@@ -3,6 +3,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.fighter-fighting-style-advancement-replacement
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.fighting-style-cantrip-advancement-replacement
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.weapon-mastery-level-gain
+// UNIT-PROFILE-COVERAGE: runtime-owner character-creation.bard-magical-secrets-spell-access
 import { Brand, Either, Match, Option } from "effect";
 import type { ClassName } from "@dnd/shared/game-facts";
 import { readClassCreationFacts } from "@dnd/surface/surface/character-creation-readers";
@@ -74,8 +75,16 @@ import {
 } from "./weapon-mastery.ts";
 
 const FIGHTER_CLASS_NAME = "fighter" as const satisfies ClassName;
+const BARD_CLASS_NAME = "bard" as const satisfies ClassName;
 const SORCERER_CLASS_NAME = "sorcerer" as const satisfies ClassName;
 const WARLOCK_CLASS_NAME = "warlock" as const satisfies ClassName;
+const BARD_MAGICAL_SECRETS_UNIT_ID = "bard_magical_secrets" as const;
+const BARD_MAGICAL_SECRETS_SPELL_LISTS = [
+  "bard",
+  "cleric",
+  "druid",
+  "wizard",
+] as const satisfies ReadonlyArray<ClassSpellListName>;
 const FIGHTING_STYLE_FEAT_CATEGORY =
   "fighting_style" as const satisfies FeatRecord["category"];
 const FIGHTING_STYLE_CANTRIP_SPELL_LEVEL = 0 as const;
@@ -136,6 +145,13 @@ export type CharacterBuildFightingStyleCantripReplacementLevelGain = {
     readonly replaceCantripId: FightingStyleCantripUnitId;
     readonly selectedCantripId: FightingStyleCantripUnitId;
   };
+  readonly preparedSpellcasting: CharacterBuildListPreparedSpellcastingLevelGain;
+};
+
+export type CharacterBuildListPreparedSpellcastingOnlyLevelGain = {
+  readonly tag: "classLevelGainWithListPreparedSpellcasting";
+  readonly classUnitId: ClassUnitId;
+  readonly hitPointRule: FixedHigherLevelClassHitPointRule;
   readonly preparedSpellcasting: CharacterBuildListPreparedSpellcastingLevelGain;
 };
 
@@ -228,6 +244,7 @@ export type CharacterBuildWarlockEldritchInvocationSelectionInput =
 
 export type CharacterBuildClassLevelGain =
   | CharacterBuildPlainClassLevelGain
+  | CharacterBuildListPreparedSpellcastingOnlyLevelGain
   | CharacterBuildFighterFightingStyleReplacementLevelGain
   | CharacterBuildFightingStyleCantripReplacementLevelGain
   | CharacterBuildWeaponMasteryLevelGain
@@ -673,9 +690,9 @@ type FightingStyleCantripGrant = Extract<
   EffectAtom,
   { readonly kind: "grant_spell_access_choice" }
 >;
-type FightingStyleCantripGrantSpellList = keyof typeof CLASS_SPELL_LISTS;
+type ClassSpellListName = keyof typeof CLASS_SPELL_LISTS;
 type SupportedFightingStyleCantripGrant = FightingStyleCantripGrant & {
-  readonly spellList: FightingStyleCantripGrantSpellList;
+  readonly spellList: ClassSpellListName;
   readonly replacement: {
     readonly trigger: "class_level_gain";
     readonly replacementCount: typeof FIGHTING_STYLE_CANTRIP_REPLACEMENT_COUNT;
@@ -1165,6 +1182,19 @@ export function advanceCharacterBuildClassLevel(input: {
       }),
     ),
     Match.when(
+      { tag: "classLevelGainWithListPreparedSpellcasting" },
+      () =>
+        plainClassLevelGainFeatures({
+          build: buildForFeatureUpdate,
+          unitLibrary: input.unitLibrary,
+          levelGain: {
+            tag: "classLevelGain",
+            classUnitId: input.levelGain.classUnitId,
+            hitPointRule: input.levelGain.hitPointRule,
+          },
+        }),
+    ),
+    Match.when(
       { tag: "fighterLevelGainWithFightingStyleReplacement" },
       (levelGain) =>
         replaceFightingStyleSelectedFeature({
@@ -1456,6 +1486,14 @@ function updateSpellcastingForClassLevelGain(input: {
     });
   }
 
+  if (input.levelGain.tag === "classLevelGainWithListPreparedSpellcasting") {
+    return updateListPreparedSpellcasting({
+      build: input.build,
+      unitLibrary: input.unitLibrary,
+      levelGain: input.levelGain,
+    });
+  }
+
   if (input.levelGain.tag !== "classLevelGain") {
     return Either.right(input.build.spellcasting);
   }
@@ -1492,6 +1530,60 @@ function updateSpellcastingForClassLevelGain(input: {
   if (Either.isLeft(unchanged)) return Either.left(unchanged.left);
 
   return Either.right(input.build.spellcasting);
+}
+
+function updateListPreparedSpellcasting(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+  readonly levelGain: CharacterBuildListPreparedSpellcastingOnlyLevelGain;
+}): Either.Either<
+  CharacterBuild["spellcasting"],
+  CharacterBuildAdvancementIssue
+> {
+  const spellcasting = input.build.spellcasting;
+  const source = spellcasting?.sources.find(
+    (candidate) => candidate.sourceUnitId === input.levelGain.classUnitId,
+  );
+  if (spellcasting === undefined || source === undefined) {
+    return Either.left({
+      code: "missingListPreparedSpellcasting",
+      classUnitId: input.levelGain.classUnitId,
+      message:
+        "Cannot advance list-prepared spellcasting because the build has no matching class spellcasting source.",
+    });
+  }
+
+  const preparedSpellcasting = applyListPreparedSpellcastingLevelGain({
+    build: input.build,
+    unitLibrary: input.unitLibrary,
+    classUnitId: input.levelGain.classUnitId,
+    source,
+    levelGain: input.levelGain.preparedSpellcasting,
+  });
+  if (Either.isLeft(preparedSpellcasting)) {
+    return Either.left(preparedSpellcasting.left);
+  }
+
+  return Either.right({
+    ...spellcasting,
+    sources: mapCharacterBuildSpellcastingSources(
+      spellcasting.sources,
+      (candidate) =>
+        candidate.sourceUnitId === input.levelGain.classUnitId
+          ? {
+              ...candidate,
+              preparedSpells: preparedSpellcasting.right.preparedSpells,
+            }
+          : candidate,
+    ),
+    slotPools: {
+      ...spellcasting.slotPools,
+      spellcasting: {
+        kind: "spellcasting",
+        slots: preparedSpellcasting.right.spellSlots,
+      },
+    },
+  });
 }
 
 function classUnitRecord(input: {
@@ -2446,7 +2538,7 @@ function applyListPreparedSpellcastingLevelGain(input: {
     nextSpellcasting === undefined ||
     !isListPreparedSpellcastingCreation(currentSpellcasting) ||
     !isListPreparedSpellcastingCreation(nextSpellcasting) ||
-    !isFightingStyleCantripGrantSpellList(facts.value.className)
+    !isClassSpellListName(facts.value.className)
   ) {
     return Either.left({
       code: "missingListPreparedSpellcasting",
@@ -2457,7 +2549,13 @@ function applyListPreparedSpellcastingLevelGain(input: {
   }
 
   const preparedSpells = applyListPreparedSpellChanges({
-    className: facts.value.className,
+    eligibleSpellLists: listPreparedSpellEligibleSpellLists({
+      build: input.build,
+      unitLibrary: input.unitLibrary,
+      className: facts.value.className,
+      classUnitId: input.classUnitId,
+      nextClassLevel: currentClassLevel + 1,
+    }),
     currentPreparedSpells: input.source.preparedSpells,
     levelGain: input.levelGain,
     currentClassLevel,
@@ -2474,7 +2572,7 @@ function applyListPreparedSpellcastingLevelGain(input: {
 }
 
 function applyListPreparedSpellChanges(input: {
-  readonly className: FightingStyleCantripGrantSpellList;
+  readonly eligibleSpellLists: readonly ClassSpellListName[];
   readonly currentPreparedSpells: readonly UnitRecord["id"][];
   readonly levelGain: CharacterBuildListPreparedSpellcastingLevelGain;
   readonly currentClassLevel: number;
@@ -2526,8 +2624,8 @@ function applyListPreparedSpellChanges(input: {
     input.nextSpellcasting.spellSlotProjection.slots,
   );
   const invalidSpell = finalPreparedSpells.find((spellId) => {
-    const spellLevel = classSpellListPreparedSpellLevel(
-      input.className,
+    const spellLevel = preparedSpellLevelFromEligibleLists(
+      input.eligibleSpellLists,
       spellId,
     );
     return spellLevel === undefined || !availableSpellLevels.has(spellLevel);
@@ -2595,6 +2693,54 @@ function replaceListPreparedSpell(input: {
         : spellId,
     ),
   );
+}
+
+function listPreparedSpellEligibleSpellLists(input: {
+  readonly build: Pick<CharacterBuild, "features">;
+  readonly unitLibrary: UnitCatalog;
+  readonly className: ClassSpellListName;
+  readonly classUnitId: ClassUnitId;
+  readonly nextClassLevel: number;
+}): readonly ClassSpellListName[] {
+  if (
+    input.className === BARD_CLASS_NAME &&
+    bardMagicalSecretsApplies(input)
+  ) {
+    return BARD_MAGICAL_SECRETS_SPELL_LISTS;
+  }
+  return [input.className];
+}
+
+function bardMagicalSecretsApplies(input: {
+  readonly build: Pick<CharacterBuild, "features">;
+  readonly unitLibrary: UnitCatalog;
+  readonly classUnitId: ClassUnitId;
+  readonly nextClassLevel: number;
+}): boolean {
+  const unit = input.unitLibrary.getUnit(BARD_MAGICAL_SECRETS_UNIT_ID);
+  return (
+    Option.isSome(unit) &&
+    unit.value.kind === "class_feature" &&
+    unit.value.className === BARD_CLASS_NAME &&
+    unit.value.acquiredAtLevel <= input.nextClassLevel &&
+    input.build.features.some(
+      (feature) =>
+        feature.kind === "selectedClassChoice" &&
+        feature.selectedFromUnitId === input.classUnitId &&
+        feature.unitId === BARD_MAGICAL_SECRETS_UNIT_ID,
+    )
+  );
+}
+
+function preparedSpellLevelFromEligibleLists(
+  spellLists: readonly ClassSpellListName[],
+  spellId: UnitRecord["id"],
+): number | undefined {
+  for (const spellList of spellLists) {
+    const spellLevel = classSpellListPreparedSpellLevel(spellList, spellId);
+    if (spellLevel !== undefined) return spellLevel;
+  }
+  return undefined;
 }
 
 function updateSorcererMetamagicOptions(input: {
@@ -3539,7 +3685,7 @@ function fightingStyleCantripFeatureChoiceForClass(input: {
           optionGrant.replacement?.trigger !== "class_level_gain" ||
           optionGrant.replacement.replacementCount !==
             FIGHTING_STYLE_CANTRIP_REPLACEMENT_COUNT ||
-          !isFightingStyleCantripGrantSpellList(optionGrant.spellList)
+          !isClassSpellListName(optionGrant.spellList)
         ) {
           return [];
         }
@@ -3593,9 +3739,9 @@ function fightingStyleCantripFeatureChoiceForClass(input: {
   return Either.right(choice);
 }
 
-function isFightingStyleCantripGrantSpellList(
+function isClassSpellListName(
   spellList: string,
-): spellList is FightingStyleCantripGrantSpellList {
+): spellList is ClassSpellListName {
   return Object.hasOwn(CLASS_SPELL_LISTS, spellList);
 }
 

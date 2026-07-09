@@ -1,0 +1,68 @@
+{
+  "schema": "l12-cleanroom-verifier-gate-spec.v1",
+  "generatedBy": "plans/ralph-artifacts/l12-cleanroom-generation/generate-artifacts.cjs",
+  "baseCheck": {
+    "status": "not-run",
+    "reason": "No Ralph task Base SHA was provided in the user request; generated artifacts record this as missing task-run metadata rather than fabricating a base check."
+  },
+  "sourceHashes": {
+    "plans/unit-profile-coverage/level1-2-full-support.json": "ebd1c73b238de48d6bb133599a6e532680726a5efc0b228d426c8fd535259e9f",
+    "plans/unit-profile-coverage/srd-unit-inventory.json": "bc520ef06e595dd65d47380056f0b31520c797e86f47ad86387b5cc47f19136a",
+    "plans/unit-profile-coverage/unit-matrix.json": "c670b9c0eecb534493034ec53eb2bc0d88ccdf0a32211191f411ca9f44318ba2",
+    "plans/cleanroom-branch-coverage/reducer-route-inventory.json": "061aaafaf7cde96f0878292c8f27031e55ece2542d1fe2f710cd1196a6b4b7eb",
+    "plans/cleanroom-branch-coverage/reducer-convergence-backlog.json": "6338b215e8b20ca983ac76e1bf59c212a948816ca7ca64fd4a392b9bf6cbb6e0"
+  },
+  "gates": [
+    {
+      "id": "L12VG-01-DENOMINATOR-SCHEMA-HASH",
+      "owner": "new checker task",
+      "failsWhen": [
+        "denominator artifact is missing",
+        "source hashes do not match current source artifacts",
+        "row provenance is not srd-5.2.1",
+        "level band is outside level-1, level-2, spell-level-0, or spell-level-1"
+      ],
+      "selfTestRequirement": "fixture with stale source hash and non-SRD row"
+    },
+    {
+      "id": "L12VG-02-CAPABILITY-FACT-COVERAGE",
+      "owner": "new checker task",
+      "failsWhen": [
+        "executable denominator row has no capability fact row",
+        "required fact family is missing",
+        "runtime fact discriminant contains authored id/name/slug/source heading"
+      ],
+      "selfTestRequirement": "fixture with missing targetShape and authored spell id discriminant"
+    },
+    {
+      "id": "L12VG-03-ROUTE-PROOF-COVERAGE",
+      "owner": "scripts/check-reducer-route-connectors.cjs extension or companion checker",
+      "failsWhen": [
+        "executable mapped row has missing-proof-join",
+        "connector path is absent",
+        "catalog-after-substrate grouped driver is counted as accepted evidence directly"
+      ],
+      "selfTestRequirement": "fixture with grouped selected-identity row and no generic connector"
+    },
+    {
+      "id": "L12VG-04-MAPPING-JOIN-COVERAGE",
+      "owner": "new checker task",
+      "failsWhen": [
+        "denominator row is absent from srd-row-generic-fact-map.json",
+        "mapping row verifier expectation conflicts with denominator disposition",
+        "non-executable row requires battle route proof"
+      ],
+      "selfTestRequirement": "fixture with dropped denominator row and contradictory verifier expectation"
+    },
+    {
+      "id": "L12VG-05-TARGET-REPLAY-EVIDENCE",
+      "owner": "scripts/cleanroom-branch-coverage-check.cjs target evidence path",
+      "failsWhen": [
+        "target replay evidence omits source branch inventory hash",
+        "target replay does not observe qRoute or qComponentRoute projection",
+        "stateCheck projection hashes are stale"
+      ],
+      "selfTestRequirement": "fixture target evidence with stale QNT hash and missing projection"
+    }
+  ]
+}

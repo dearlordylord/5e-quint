@@ -261,6 +261,7 @@ export {
   ClassGeneralFeatureMechanicsSchema,
   ClassFeatureMechanicsSchema,
   ClassFeatureRecordSchema,
+  CombatTurnStartHeroicInspirationMechanicsSchema,
   ClassRecordSchema,
   ClericClassFeatureMechanicsSchema,
   ClericClassFeatureRecordSchema,

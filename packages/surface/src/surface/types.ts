@@ -755,6 +755,9 @@ export type ClassFeatureComponentMechanics = Schema.Schema.Type<
 export type CompositeClassFeatureMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.CompositeClassFeatureMechanicsSchema
 >;
+export type CombatTurnStartHeroicInspirationMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.CombatTurnStartHeroicInspirationMechanicsSchema
+>;
 export type ClassFeatureAcquisitionChoiceMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.ClassFeatureAcquisitionChoiceMechanicsSchema
 >;

@@ -259,11 +259,14 @@ export function reactionSpellTargetFactsForAfterDamage(input: {
 }): readonly BattleTargetSpatialFact[] {
   return input.facts.filter(
     (fact) =>
-      fact.kind === "reactionSpellDamagerVisibleWithinRange" &&
-      ((fact.reactorId === input.damagedId &&
-        fact.damageSourceId === input.damageSourceId) ||
-        (fact.reactorId === input.damageSourceId &&
-          fact.damageSourceId === input.damagedId)),
+      (fact.kind === "reactionSpellDamagerVisibleWithinRange" &&
+        ((fact.reactorId === input.damagedId &&
+          fact.damageSourceId === input.damageSourceId) ||
+          (fact.reactorId === input.damageSourceId &&
+            fact.damageSourceId === input.damagedId))) ||
+      (fact.kind === "retaliationDamagerWithinFiveFeet" &&
+        fact.damagedId === input.damagedId &&
+        fact.damageSourceId === input.damageSourceId),
   );
 }
 

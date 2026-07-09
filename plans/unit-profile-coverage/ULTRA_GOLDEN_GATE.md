@@ -10,7 +10,7 @@ The aggregate rule is conjunctive: every scope must pass every layer. The checke
 
 | Layer | Label | Criterion |
 | --- | --- | --- |
-| support-completeness | Support completeness | The strict level-support claim has no open strict rows, selected-identity blockers, SRD-authored product-readiness blockers, or strict level-9 final-support blockers; diagnostic product-readiness rows do not block unless promoted into that blocker set. |
+| support-completeness | Support completeness | The strict level-support claim has no open strict rows, selected-identity blockers, SRD-authored product-readiness blockers, or strict final-support blockers; diagnostic product-readiness rows do not block unless promoted into that blocker set. |
 | qnt-generator-readiness | QNT/generator readiness | Every scoped reducer-semantic obligation is covered, and every scoped semantic-core QNT owner is generation-subset-clean with no run-block blocker. |
 | mbt-parity-evidence | MBT/parity evidence | Every scoped reducer-semantic obligation has at least one rules-kernel parity witness. |
 | mcp-scenario-evidence | MCP scenario evidence | Every scoped user-facing MCP flow has checker-owned scenario evidence backed by the MCP scenario evidence command. |
@@ -40,6 +40,7 @@ The metric distinguishes reducer parity witnesses from MCP scenario evidence by 
 | level-1-7 | pass | 4/4 | 73 |
 | level-1-8 | pass | 4/4 | 73 |
 | level-1-9 | pass | 4/4 | 73 |
+| level-1-10 | pass | 4/4 | 73 |
 
 ## Layer Results
 
@@ -81,6 +82,10 @@ The metric distinguishes reducer parity witnesses from MCP scenario evidence by 
 | level-1-9 | qnt-generator-readiness | pass | _none_ |
 | level-1-9 | mbt-parity-evidence | pass | _none_ |
 | level-1-9 | mcp-scenario-evidence | pass | _none_ |
+| level-1-10 | support-completeness | pass | _none_ |
+| level-1-10 | qnt-generator-readiness | pass | _none_ |
+| level-1-10 | mbt-parity-evidence | pass | _none_ |
+| level-1-10 | mcp-scenario-evidence | pass | _none_ |
 
 ## MCP Scenario Evidence
 
@@ -124,6 +129,10 @@ MCP scenario evidence is an explicit required layer. Its manifest records requir
 | level-1-9 | character-creation | pass | `mcp-scenario` | `create-level-nine-ranger-expertise-and-battle-handoff` | _none_ |
 | level-1-9 | character-sheet | pass | `mcp-scenario` | `create-level-nine-ranger-expertise-and-battle-handoff` | _none_ |
 | level-1-9 | battle | pass | `mcp-scenario` | `create-level-nine-ranger-expertise-and-battle-handoff` | _none_ |
+| level-1-10 | mcp-workflow-discovery | pass | `mcp-scenario` | `create-level-ten-fighter-champion-and-battle-handoff` | _none_ |
+| level-1-10 | character-creation | pass | `mcp-scenario` | `create-level-ten-fighter-champion-and-battle-handoff` | _none_ |
+| level-1-10 | character-sheet | pass | `mcp-scenario` | `create-level-ten-fighter-champion-and-battle-handoff` | _none_ |
+| level-1-10 | battle | pass | `mcp-scenario` | `create-level-ten-fighter-champion-and-battle-handoff` | _none_ |
 
 ## MCP Level-Scope Audit Decisions
 
@@ -140,6 +149,7 @@ Scope audit decisions are checker-owned conclusions from the MCP scenario eviden
 | level-1-7 | reuse-existing-evidence | `mcp-workflow-discovery`, `character-creation`, `character-sheet`, `battle` | _none_ | _none_ | _none_ |
 | level-1-8 | reuse-existing-evidence | `mcp-workflow-discovery`, `character-creation`, `character-sheet`, `battle` | _none_ | _none_ | _none_ |
 | level-1-9 | _none_ | _none_ | _none_ | _none_ | _none_ |
+| level-1-10 | _none_ | _none_ | _none_ | _none_ | _none_ |
 
 ## Selected Identity Evidence Join Audit
 
@@ -155,7 +165,8 @@ Selected-identity replay is Unit identity wiring evidence. This audit keeps it s
 | level-1-6 | 171 | 171/171 | 0 |
 | level-1-7 | 173 | 173/173 | 0 |
 | level-1-8 | 174 | 174/174 | 0 |
-| level-1-9 | 180 | 180/180 | 0 |
+| level-1-9 | 181 | 181/181 | 0 |
+| level-1-10 | 186 | 186/186 | 0 |
 
 | Scope | Unit | Kind | Evidence task | Evidence owner | Parity witness join | Parity witness owners for Unit | MCP join | Required MCP flows | Missing MCP flows | Profiles |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |

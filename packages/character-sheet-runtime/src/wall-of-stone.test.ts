@@ -350,6 +350,7 @@ function wallOfStoneWizardSheet(input: {
       },
     },
     hitPointMaximumReduction: Hp(0),
+    exhaustionLevel: 0,
     hitPoints: { tag: "positive", currentHp: Hp(44), tempHp: Hp(0) },
     conditions: [],
     spentHitDice: [],

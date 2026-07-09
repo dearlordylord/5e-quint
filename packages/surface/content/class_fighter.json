@@ -9,7 +9,7 @@
     "kind": "trained"
   },
   "className": "fighter",
-  "description": "SRD Fighter class creation facts plus level 1-9 progression, including level 5 Extra Attack and level 9 Indomitable and Tactical Master grants.",
+  "description": "SRD Fighter class creation facts plus level 1-10 progression, including level 5 Extra Attack and level 9 Indomitable and Tactical Master grants.",
   "featureGrants": [
     {
       "level": 1,

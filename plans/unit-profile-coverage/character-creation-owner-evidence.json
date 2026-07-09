@@ -3219,6 +3219,49 @@
         "packages/character-creation-runtime/src/wizard-scholar.test.ts:replays Evocation Savant acquisition versus later slot-access grant",
         "packages/character-creation-runtime/src/class-feature-selected-identity.mbt.test.ts:selected-wizard-evocation-savant-finalizes-spellbook-grants"
       ]
+    },
+    "srd521:classes/bard:level-10:class-feature-grant:bard_magical_secrets": {
+      "taskId": "L10-CHAR-BARD-MAGICAL-SECRETS",
+      "profile": "Character Creation Bard Magical Secrets spell-access progression",
+      "summary": "Bard Magical Secrets is retained from the installed level-10 Bard class feature grant and consumed by level-gain prepared-spell advancement. The runtime widens gained prepared-spell and replacement choices to Bard, Cleric, Druid, and Wizard spell lists while preserving the existing prepared-spell state owner and rejecting spells outside those lists.",
+      "discovery": [
+        "packages/character-creation-runtime/src/character-build-advancement.ts:listPreparedSpellEligibleSpellLists"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/character-build-advancement.ts:applyListPreparedSpellcastingLevelGain"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/character-build-advancement.ts:preparedSpellLevelFromEligibleLists"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/character-build-advancement.ts:applyListPreparedSpellcastingLevelGain"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/level10-character-support.test.ts:bardMagicalSecretsLevelTenSpellAccessTestName",
+        "packages/character-creation-runtime/src/level10-character-support.test.ts:bardMagicalSecretsLevelTenSpellAccessGateTestName"
+      ]
+    },
+    "srd521:classes/rogue:level-10:class-feature-grant:rogue_ability_score_improvement": {
+      "taskId": "L10-CHAR-ROGUE-ASI",
+      "profile": "Character Creation repeated Ability Score Improvement feat-choice progression",
+      "summary": "Rogue level-10 Ability Score Improvement is retained as a repeated installed class-feature grant and routed through the existing feat-choice finalization owner. The support profile admits Rogue progression through level 10 without duplicating the selected feat state or the level-4 ASI rule record.",
+      "discovery": [
+        "packages/character-creation-runtime/src/discovery.ts:classFeatureGrantChoiceHoles"
+      ],
+      "fill": [
+        "packages/character-creation-runtime/src/support-gates.ts:supportedSameClassProgression"
+      ],
+      "finalization": [
+        "packages/character-creation-runtime/src/finalization.ts:finalizedClassChoiceFeatures",
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds"
+      ],
+      "buildProjection": [
+        "packages/character-creation-runtime/src/finalization.ts:finalizedClassChoiceFeatures",
+        "packages/character-creation-runtime/src/finalization.ts:characterBuildFeatureUnitIds"
+      ],
+      "tests": [
+        "packages/character-creation-runtime/src/level10-character-support.test.ts:rogueAbilityScoreImprovementLevelTenTestName"
+      ]
     }
   }
 }

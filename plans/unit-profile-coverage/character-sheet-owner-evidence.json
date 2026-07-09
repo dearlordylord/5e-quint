@@ -900,5 +900,65 @@
     "tests": [
       "packages/character-sheet-runtime/src/dominate-person.test.ts:Character Sheet runtime / Dominate Person"
     ]
+  },
+  "srd521:classes/druid:level-10:class-feature-grant:druid_natures_ward": {
+    "taskId": "L10-SHEET-DRUID-NATURES-WARD",
+    "profile": "Character Sheet Nature's Ward passive defense projection",
+    "summary": "Nature's Ward is read from the retained level-10 Circle of the Land feature and the existing selected land state. The Character Sheet runtime projects Poisoned condition immunity and a land-derived damage Resistance without storing a duplicate resistance choice, and Long Rest land reselection updates the derived Resistance.",
+    "runtimeProjection": [
+      "packages/character-sheet-runtime/src/passive-defenses.ts:characterSheetPassiveDefenseProjection",
+      "packages/character-sheet-runtime/src/passive-defenses.ts:naturesWardForSheet",
+      "packages/character-sheet-runtime/src/rests.ts:completeLongRest"
+    ],
+    "tests": [
+      "packages/character-sheet-runtime/src/passive-defenses.test.ts:naturesWardPassiveDefenseProjectionTestName"
+    ]
+  },
+  "srd521:classes/warlock:level-10:class-feature-grant:warlock_fiendish_resilience": {
+    "taskId": "L10-SHEET-WARLOCK-FIENDISH-RESILIENCE",
+    "profile": "Character Sheet Fiendish Resilience rest-choice passive defense projection",
+    "summary": "Fiendish Resilience is read from the retained level-10 Fiend Patron feature and explicit Character Sheet rest-choice state. The runtime validates the non-Force damage type selection, projects the current damage Resistance, and permits reselection on Short Rest or Long Rest without duplicating damage-resistance state in battle or the feature record.",
+    "runtimeProjection": [
+      "packages/character-sheet-runtime/src/passive-defenses.ts:fiendishResilienceFromInput",
+      "packages/character-sheet-runtime/src/passive-defenses.ts:characterSheetPassiveDefenseProjection",
+      "packages/character-sheet-runtime/src/passive-defenses.ts:fiendishResilienceAfterShortRest",
+      "packages/character-sheet-runtime/src/passive-defenses.ts:fiendishResilienceAfterLongRest",
+      "packages/character-sheet-runtime/src/rests.ts:completeShortRest",
+      "packages/character-sheet-runtime/src/rests.ts:completeLongRest"
+    ],
+    "tests": [
+      "packages/character-sheet-runtime/src/passive-defenses.test.ts:fiendishResiliencePassiveDefenseProjectionTestName",
+      "packages/character-sheet-runtime/src/passive-defenses.test.ts:fiendishResiliencePassiveDefenseGateTestName"
+    ]
+  },
+  "srd521:classes/ranger:level-10:class-feature-grant:ranger_tireless": {
+    "taskId": "L10-SHEET-RANGER-TIRELESS",
+    "profile": "Character Sheet Ranger Tireless resource and rest-state runtime",
+    "summary": "Tireless is read from retained Ranger level-10 feature facts and the installed Surface ability-modifier use-count resource. The Character Sheet runtime spends one Wisdom-modifier use for the Magic-action Temporary Hit Point grant, preserves the higher existing Temporary Hit Point value, decreases Exhaustion on Short Rest when the feature is owned, and clears the Long Rest use-count expenditure through shared rest recovery.",
+    "runtimeProjection": [
+      "packages/character-creation-runtime/src/support-gates.ts:supportsCharacterBuildResourceUnitId",
+      "packages/character-sheet-runtime/src/resources.ts:characterSheetResources",
+      "packages/character-sheet-runtime/src/resources.ts:useRangerTirelessTemporaryHitPoints",
+      "packages/character-sheet-runtime/src/rests.ts:completeShortRest",
+      "packages/character-sheet-runtime/src/rests.ts:completeLongRest",
+      "packages/character-sheet-runtime/src/sheet-lifecycle.ts:parseCharacterSheet"
+    ],
+    "tests": [
+      "packages/character-sheet-runtime/src/ranger-tireless.test.ts:rangerTirelessTemporaryHitPointsTestName",
+      "packages/character-sheet-runtime/src/ranger-tireless.test.ts:rangerTirelessRestRecoveryTestName"
+    ]
+  },
+  "srd521:classes/fighter:level-10:class-feature-grant:fighter_heroic_warrior": {
+    "taskId": "L110D-02-FIGHTER-HEROIC-WARRIOR",
+    "profile": "Character Sheet Fighter Heroic Warrior combat turn-start Heroic Inspiration runtime",
+    "summary": "Heroic Warrior is read from retained Champion Fighter level-10 feature facts and the typed Surface combat-turn-start Heroic Inspiration mechanic. The Character Sheet runtime grants the shared at-most-one Heroic Inspiration state at combat turn start only when the sheet lacks it, and rejects missing feature ownership or an already-available Heroic Inspiration state.",
+    "runtimeProjection": [
+      "packages/surface/src/surface/schema-nonspell.ts:CombatTurnStartHeroicInspirationMechanicsSchema",
+      "packages/character-sheet-runtime/src/heroic-warrior.ts:useHeroicWarriorAtCombatTurnStart"
+    ],
+    "tests": [
+      "packages/character-sheet-runtime/src/heroic-warrior.test.ts:fighterHeroicWarriorCombatTurnStartTestName",
+      "packages/character-sheet-runtime/src/heroic-warrior.test.ts:fighterHeroicWarriorCombatTurnStartGateTestName"
+    ]
   }
 }

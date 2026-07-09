@@ -5,6 +5,10 @@
     {
       "level": 3,
       "unitId": "barbarian_frenzy"
+    },
+    {
+      "level": 10,
+      "unitId": "barbarian_retaliation"
     }
   ],
   "id": "subclass_barbarian_path_of_the_berserker",

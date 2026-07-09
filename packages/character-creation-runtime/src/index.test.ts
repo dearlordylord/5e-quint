@@ -52,6 +52,7 @@ import {
   characterBuildSorcererFontOfMagicFacts,
   characterBuildSorcererMetamagicFacts,
   characterBuildGnomishLineageTraitProjection,
+  classSpellcastingCreationAtLevel,
   computeTotalLevel,
   CHARACTER_EQUIPMENT_ITEM_SLOTS,
   LOADOUT_SLOTS,
@@ -59,6 +60,9 @@ import {
   UNIT_CHOICE_KEYS,
   abilityScoreAssignment,
   advanceCharacterBuildClassLevel,
+  isListPreparedSpellcastingCreation,
+  isPactMagicSpellcastingCreation,
+  isWizardSpellcastingCreation,
   classLevelGainWithFightingStyleCantripReplacement,
   classUnitIdFromUnitId,
   createCharacterDraft,
@@ -550,6 +554,84 @@ function warlockLevelFiveBuildWithThirstingBlade(): CharacterBuild {
           gainedInvocations: [
             nonRepeatableEldritchInvocation("thirsting_blade"),
             nonRepeatableEldritchInvocation("eldritch_mind"),
+          ],
+        }),
+      ),
+    }),
+  );
+}
+
+function warlockLevelNineBuild(): CharacterBuild {
+  const warlockClassUnitId = testClassUnitId("class_warlock");
+  const levelFive = warlockLevelFiveBuildWithThirstingBlade();
+  const levelSix = expectRight(
+    advanceCharacterBuildClassLevel({
+      build: levelFive,
+      unitLibrary,
+      levelGain: expectRight(
+        warlockLevelGain({
+          unitLibrary,
+          classUnitId: warlockClassUnitId,
+          hitPointRule: { tag: "fixedHigherLevelGain" },
+          pactMagic: warlockPactMagicLevelGain({
+            gainedPreparedSpells: ["fly"],
+          }),
+          gainedInvocations: [],
+        }),
+      ),
+    }),
+  );
+  const levelSeven = expectRight(
+    advanceCharacterBuildClassLevel({
+      build: levelSix,
+      unitLibrary,
+      levelGain: expectRight(
+        warlockLevelGain({
+          unitLibrary,
+          classUnitId: warlockClassUnitId,
+          hitPointRule: { tag: "fixedHigherLevelGain" },
+          pactMagic: warlockPactMagicLevelGain({
+            gainedPreparedSpells: ["counterspell"],
+          }),
+          gainedInvocations: [
+            nonRepeatableEldritchInvocation("ascendant_step"),
+          ],
+        }),
+      ),
+    }),
+  );
+  const levelEight = expectRight(
+    advanceCharacterBuildClassLevel({
+      build: levelSeven,
+      unitLibrary,
+      levelGain: expectRight(
+        warlockLevelGain({
+          unitLibrary,
+          classUnitId: warlockClassUnitId,
+          hitPointRule: { tag: "fixedHigherLevelGain" },
+          pactMagic: warlockPactMagicLevelGain({
+            gainedPreparedSpells: ["invisibility"],
+          }),
+          gainedInvocations: [],
+        }),
+      ),
+    }),
+  );
+
+  return expectRight(
+    advanceCharacterBuildClassLevel({
+      build: levelEight,
+      unitLibrary,
+      levelGain: expectRight(
+        warlockLevelGain({
+          unitLibrary,
+          classUnitId: warlockClassUnitId,
+          hitPointRule: { tag: "fixedHigherLevelGain" },
+          pactMagic: warlockPactMagicLevelGain({
+            gainedPreparedSpells: ["contact_other_plane"],
+          }),
+          gainedInvocations: [
+            nonRepeatableEldritchInvocation("mask_of_many_faces"),
           ],
         }),
       ),
@@ -7473,6 +7555,126 @@ describe("character creation finalization", () => {
       slotLevel: 2,
       count: 2,
     });
+  });
+
+  test("advances Warlock level 10 Pact Magic without spell-level-6 access", () => {
+    const levelNine = warlockLevelNineBuild();
+    const result = expectRight(
+      advanceCharacterBuildClassLevel({
+        build: levelNine,
+        unitLibrary,
+        levelGain: expectRight(
+          warlockLevelGain({
+            unitLibrary,
+            classUnitId: testClassUnitId("class_warlock"),
+            hitPointRule: { tag: "fixedHigherLevelGain" },
+            pactMagic: warlockPactMagicLevelGain({
+              gainedCantrips: ["mage_hand"],
+            }),
+            gainedInvocations: [],
+          }),
+        ),
+      }),
+    );
+
+    const warlockSource = result.spellcasting?.sources.find(
+      (source) => source.sourceUnitId === "class_warlock",
+    );
+    expect(computeTotalLevel(result.progression)).toBe(10);
+    expect(warlockSource?.cantrips).toEqual([
+      "chill_touch",
+      "eldritch_blast",
+      "poison_spray",
+      "mage_hand",
+    ]);
+    expect(warlockSource?.preparedSpells).toHaveLength(10);
+    expect(result.spellcasting?.slotPools.pactMagic).toEqual({
+      kind: "pactMagic",
+      slotLevel: 5,
+      count: 2,
+    });
+    expect(
+      selectedBuildEldritchInvocationIds(
+        result,
+        "warlock_eldritch_invocations",
+      ),
+    ).toHaveLength(7);
+  });
+
+  test("authored level-10 spellcasting projections expose no spell-level-6 choices or slots", () => {
+    const classUnitIds = [
+      "class_bard",
+      "class_cleric",
+      "class_druid",
+      "class_sorcerer",
+      "class_warlock",
+      "class_wizard",
+    ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
+    const projectedClassUnitIds: UnitRecord["id"][] = [];
+
+    for (const classUnitId of classUnitIds) {
+      const classFacts = readableClassFacts(classUnitId);
+      if (!("spellcasting" in classFacts)) continue;
+      const spellcasting = classSpellcastingCreationAtLevel(
+        classFacts.spellcasting,
+        10,
+      );
+      if (spellcasting === undefined) continue;
+      projectedClassUnitIds.push(classUnitId);
+
+      if (isPactMagicSpellcastingCreation(spellcasting)) {
+        expect(spellcasting.pactSlotProjection.spellLevel, classUnitId).toBe(5);
+        expect(
+          spellcasting.preparedAccess.spells
+            .filter(
+              (spell) =>
+                spell.spellLevel <= spellcasting.pactSlotProjection.spellLevel,
+            )
+            .some((spell) => spell.spellLevel >= 6),
+          classUnitId,
+        ).toBe(false);
+      }
+      if (isListPreparedSpellcastingCreation(spellcasting)) {
+        const availableSpellLevels = new Set(
+          spellcasting.spellSlotProjection.slots
+            .filter((slot) => slot.count > 0)
+            .map((slot) => slot.spellLevel),
+        );
+        expect(
+          spellcasting.spellSlotProjection.slots.some(
+            (slot) => slot.spellLevel >= 6 && slot.count > 0,
+          ),
+          classUnitId,
+        ).toBe(false);
+        expect(
+          spellcasting.preparedAccess.spells
+            .filter((spell) => availableSpellLevels.has(spell.spellLevel))
+            .some((spell) => spell.spellLevel >= 6),
+          classUnitId,
+        ).toBe(false);
+      }
+      if (isWizardSpellcastingCreation(spellcasting)) {
+        const availableSpellLevels = new Set(
+          spellcasting.spellSlotProjection.slots
+            .filter((slot) => slot.count > 0)
+            .map((slot) => slot.spellLevel),
+        );
+        expect(
+          spellcasting.spellSlotProjection.slots.some(
+            (slot) => slot.spellLevel >= 6 && slot.count > 0,
+          ),
+          classUnitId,
+        ).toBe(false);
+        expect(
+          spellcasting.spellbookAccess.spells
+            .filter((spell) => availableSpellLevels.has(spell.spellLevel))
+            .some((spell) => spell.spellLevel >= 6),
+          classUnitId,
+        ).toBe(false);
+      }
+    }
+
+    expect(projectedClassUnitIds).toContain("class_warlock");
   });
 
   test("rejects a plain Warlock level gain when Pact Magic facts change", () => {

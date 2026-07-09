@@ -1,0 +1,1896 @@
+{
+  "schema": "l12-route-proof-inventory.v1",
+  "generatedBy": "plans/ralph-artifacts/l12-cleanroom-generation/generate-artifacts.cjs",
+  "baseCheck": {
+    "status": "not-run",
+    "reason": "No Ralph task Base SHA was provided in the user request; generated artifacts record this as missing task-run metadata rather than fabricating a base check."
+  },
+  "sourceHashes": {
+    "plans/unit-profile-coverage/level1-2-full-support.json": "ebd1c73b238de48d6bb133599a6e532680726a5efc0b228d426c8fd535259e9f",
+    "plans/unit-profile-coverage/srd-unit-inventory.json": "bc520ef06e595dd65d47380056f0b31520c797e86f47ad86387b5cc47f19136a",
+    "plans/unit-profile-coverage/unit-matrix.json": "c670b9c0eecb534493034ec53eb2bc0d88ccdf0a32211191f411ca9f44318ba2",
+    "plans/cleanroom-branch-coverage/reducer-route-inventory.json": "061aaafaf7cde96f0878292c8f27031e55ece2542d1fe2f710cd1196a6b4b7eb",
+    "plans/cleanroom-branch-coverage/reducer-convergence-backlog.json": "6338b215e8b20ca983ac76e1bf59c212a948816ca7ca64fd4a392b9bf6cbb6e0"
+  },
+  "counts": {
+    "rows": 107,
+    "byRoute": {
+      "catalog-after-substrate": 15,
+      "component-first": 16,
+      "reducer-routed": 75,
+      "replay-refresh-only": 1
+    },
+    "byProofClassification": {
+      "focused-qComponentRoute": 16,
+      "focused-qRoute": 75,
+      "grouped-selected-identity-not-accepted": 15,
+      "missing-proof": 1
+    },
+    "missingConnectorRows": 1,
+    "groupedSelectedIdentityNotAccepted": 15
+  },
+  "rows": [
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-ability-check-choice-search.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-ability-check-choice-search.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR21-BATTLE-ABILITY-SEARCH-CHOICE-ROUTES",
+      "subjectFamily": "ability-check, Search, and choice spell-effect route",
+      "branchObligations": 12,
+      "currentOutOfScopeBranchObligations": 6,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-adrenaline-rush.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-adrenaline-rush.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-BATTLE-FEATURE-SUBSTRATE-ROUTES",
+      "subjectFamily": "bonus-action Unit feature Dash with Temporary Hit Points and feature resource spend",
+      "branchObligations": 2,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-after-hit-damage-riders.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR15-AFTER-HIT-RIDER-OWNER-SPLIT",
+      "subjectFamily": "after-hit spell damage rider owner split",
+      "branchObligations": 26,
+      "currentOutOfScopeBranchObligations": 9,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-attack-spell-shape-selected-identity.mbt.qnt",
+      "route": "catalog-after-substrate",
+      "proofClassification": "grouped-selected-identity-not-accepted",
+      "selectedIdentityDriverAccepted": false,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-hit-point-regain-prevention.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-next-attack-roll-mode.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-opportunity-attack-denial.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+      "subjectFamily": "selected spell attack, save-gated damage, and post-hit active-effect substrates",
+      "branchObligations": 6,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "The grouped selected-identity driver is not accepted directly; only the listed generic connector substrate can count as acceptance evidence."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-chained-attack-sequence.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-chained-attack-sequence.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR16-CHAINED-ATTACK-PROCEDURE-ROUTES",
+      "subjectFamily": "generic chained spell-attack procedure route",
+      "branchObligations": 10,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-command-ordering.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
+      "subjectFamily": "Command option next-turn active-effect replay",
+      "branchObligations": 15,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-command-ordering.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-command-ordering.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
+      "subjectFamily": "Command spell/effect frontier and next-turn option route",
+      "branchObligations": 19,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-concentration-break-teardown.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-concentration-break-teardown.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE",
+      "subjectFamily": "Concentration break teardown",
+      "branchObligations": 5,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
+      "route": "catalog-after-substrate",
+      "proofClassification": "grouped-selected-identity-not-accepted",
+      "selectedIdentityDriverAccepted": false,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-condition-riders.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+      "subjectFamily": "selected save-gated condition spell and repeat-save substrates",
+      "branchObligations": 9,
+      "currentOutOfScopeBranchObligations": 5,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "The grouped selected-identity driver is not accepted directly; only the listed generic connector substrate can count as acceptance evidence."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt",
+      "route": "catalog-after-substrate",
+      "proofClassification": "grouped-selected-identity-not-accepted",
+      "selectedIdentityDriverAccepted": false,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+      "subjectFamily": "creature-type target admission, charm, and protection active-effect substrates",
+      "branchObligations": 7,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "The grouped selected-identity driver is not accepted directly; only the listed generic connector substrate can count as acceptance evidence."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-danger-sense-selected-identity.mbt.qnt",
+      "route": "catalog-after-substrate",
+      "proofClassification": "grouped-selected-identity-not-accepted",
+      "selectedIdentityDriverAccepted": false,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-danger-sense-substrates.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-FU03-CONDITION-AND-ROLL-MODIFIER-FEATURE-SUBSTRATES",
+      "subjectFamily": "feature-hosted passive saving throw roll-mode and condition-suppression substrates",
+      "branchObligations": 2,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "The grouped selected-identity driver is not accepted directly; only the listed generic connector substrate can count as acceptance evidence."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-death-saving-throw.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-death-saving-throw.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR03-FINISH-CURRENT-DIAGNOSTIC-QUEUE",
+      "subjectFamily": "start-turn Death Saving Throw lifecycle",
+      "branchObligations": 3,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-dragonborn-breath-weapon.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-attack-action-area-save-damage-replacement.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-FU07-DRAGONBORN-BREATH-WEAPON-SUBSTRATE",
+      "subjectFamily": "attack-action area save damage replacement feature substrate",
+      "branchObligations": 5,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.mbt.qnt",
+      "route": "catalog-after-substrate",
+      "proofClassification": "grouped-selected-identity-not-accepted",
+      "selectedIdentityDriverAccepted": false,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-druid-wild-shape-form-lifecycle.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-FU05-FEATURE-MOVEMENT-AND-FORM-SUBSTRATES",
+      "subjectFamily": "active-form lifecycle, form stat projection, and movement-resource substrates",
+      "branchObligations": 7,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "The grouped selected-identity driver is not accepted directly; only the listed generic connector substrate can count as acceptance evidence."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-eldritch-blast.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-eldritch-blast.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR22-BATTLE-INDEPENDENT-SPELL-ATTACK-SEQUENCE-ROUTES",
+      "subjectFamily": "independent multi-beam spell attack sequence route",
+      "branchObligations": 10,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-feature-selected-identity.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-feature-selected-identity.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-FU09-INNATE-SPELL-BENEFIT-FEATURE-SUBSTRATE",
+      "subjectFamily": "active feature spell-save and spell-attack benefit substrate",
+      "branchObligations": 3,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR20-BATTLE-COMPANION-OBJECT-BOUNDARY-ROUTES",
+      "subjectFamily": "companion lifecycle, shared-sense, touch-delivery, and familiar Reaction route",
+      "branchObligations": 5,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-find-familiar-selected-identity.mbt.qnt",
+      "route": "catalog-after-substrate",
+      "proofClassification": "grouped-selected-identity-not-accepted",
+      "selectedIdentityDriverAccepted": false,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-find-familiar-companion-lifecycle.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+      "subjectFamily": "selected companion lifecycle, replacement, reappearance, and touch-delivery substrates",
+      "branchObligations": 4,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "The grouped selected-identity driver is not accepted directly; only the listed generic connector substrate can count as acceptance evidence."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-halfling-nimbleness-selected-identity.mbt.qnt",
+      "route": "catalog-after-substrate",
+      "proofClassification": "grouped-selected-identity-not-accepted",
+      "selectedIdentityDriverAccepted": false,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-species-passive-trait-substrates.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-FU02-SPECIES-PASSIVE-TRAIT-SUBSTRATES",
+      "subjectFamily": "species passive trait damage, save, movement, and size/speed substrates",
+      "branchObligations": 4,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "The grouped selected-identity driver is not accepted directly; only the listed generic connector substrate can count as acceptance evidence."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-healing-stabilization-selected-identity.mbt.qnt",
+      "route": "catalog-after-substrate",
+      "proofClassification": "grouped-selected-identity-not-accepted",
+      "selectedIdentityDriverAccepted": false,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-zero-hit-point-stabilization.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-FU04-ZERO-HP-STABILIZATION-SUBSTRATE",
+      "subjectFamily": "zero-Hit-Point stabilization feature/spell substrate",
+      "branchObligations": 1,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "The grouped selected-identity driver is not accepted directly; only the listed generic connector substrate can count as acceptance evidence."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "completed-reducer-route-tracer",
+      "subjectFamily": "already routed battle reducer diagnostic subject",
+      "branchObligations": 9,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-interrupt-stack-resume.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-interrupt-stack-resume.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR19-BATTLE-REACTION-INTERRUPT-ROUTES",
+      "subjectFamily": "interrupt stack continuation and reaction resume route",
+      "branchObligations": 3,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-level1-buff-mark-smite-selected-identity.mbt.qnt",
+      "route": "catalog-after-substrate",
+      "proofClassification": "grouped-selected-identity-not-accepted",
+      "selectedIdentityDriverAccepted": false,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-after-hit-damage-riders.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-held-weapon-active-effect.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-marked-damage-immunity-active-effects.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-spell-hosted-weapon-attack.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-weapon-damage-rider.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+      "subjectFamily": "selected weapon-hosted buff, after-hit rider, scalar buff, and marked-effect substrates",
+      "branchObligations": 12,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "The grouped selected-identity driver is not accepted directly; only the listed generic connector substrate can count as acceptance evidence."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
+      "route": "catalog-after-substrate",
+      "proofClassification": "grouped-selected-identity-not-accepted",
+      "selectedIdentityDriverAccepted": false,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-chained-attack-sequence.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-condition-riders.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-mixed-target-outcomes.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-starry-wisp-object.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+      "subjectFamily": "selected damage spell attack, save-gated damage, object-target, and mixed-shape substrates",
+      "branchObligations": 10,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "The grouped selected-identity driver is not accepted directly; only the listed generic connector substrate can count as acceptance evidence."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-level1-spatial-witness-selected-identity.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-movement-presentation.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-object-light-riders.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-reaction-interrupt-payload-taxonomy.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+      "subjectFamily": "selected spatial, light, area hazard, movement, and reaction mitigation substrates",
+      "branchObligations": 10,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-level2-damage-spell-selected-identity.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-concentration-hazard-exact-damage.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-concentration-hazard-selected-route.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-spatial-effect-route-surfaces.qnt",
+        "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS",
+      "subjectFamily": "selected level-2 damage spell concentration-backed area hazard rows",
+      "branchObligations": 2,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-level2-control-spell-selected-identity.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-concentration-hazard-selected-route.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-spatial-effect-route-surfaces.qnt",
+        "packages/battle-runtime/battle-runtime-spatial-effects.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "SOURCE-SQNT07A-CONCENTRATION-HAZARD-SELECTED-ROUTE-WITNESS",
+      "subjectFamily": "selected level-2 control spell concentration-backed area hazard rows",
+      "branchObligations": 2,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-mage-armor-selected-identity.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-spell-base-armor-class-effect.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+      "subjectFamily": "generic spell base Armor Class active-effect and target-admission substrate",
+      "branchObligations": 4,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-magic-missile.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "completed-reducer-route-tracer",
+      "subjectFamily": "already routed battle reducer diagnostic subject",
+      "branchObligations": 2,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.mbt.qnt",
+      "route": "catalog-after-substrate",
+      "proofClassification": "grouped-selected-identity-not-accepted",
+      "selectedIdentityDriverAccepted": false,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-movement-forced-movement-selected-identity.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-FU05-FEATURE-MOVEMENT-AND-FORM-SUBSTRATES",
+      "subjectFamily": "movement-resource, special-speed, Dash, and forced-movement substrates",
+      "branchObligations": 6,
+      "currentOutOfScopeBranchObligations": 2,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "The grouped selected-identity driver is not accepted directly; only the listed generic connector substrate can count as acceptance evidence."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-quickened-spell-governor.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+      "subjectFamily": "metamagic typed option facts, resource governor, and spell procedure substrates",
+      "branchObligations": 11,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-reaction-casting-time.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-reaction-casting-time.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR19-BATTLE-REACTION-INTERRUPT-ROUTES",
+      "subjectFamily": "reaction spell casting-time and interrupt route",
+      "branchObligations": 3,
+      "currentOutOfScopeBranchObligations": 2,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-reaction-spell-selected-identity.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-reaction-interrupt-payload-taxonomy.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "FCSF-05-REACTION-INTERRUPT-PAYLOAD-TAXONOMY",
+      "subjectFamily": "selected reaction spell branches projected through generic reaction payload taxonomy routes",
+      "branchObligations": 3,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-reducer-spine-contract.mbt.qnt",
+      "route": "replay-refresh-only",
+      "proofClassification": "missing-proof",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-reducer-spine-contract.route.mbt.qnt"
+      ],
+      "missingConnectors": [
+        "packages/battle-runtime/battle-runtime-reducer-spine-contract.route.mbt.qnt"
+      ],
+      "routeTaskId": "completed-baseline-reducer-spine-witness",
+      "subjectFamily": "battle reducer lifecycle composition witness",
+      "branchObligations": 9,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [
+        "This witness is a baseline composition check, not a queued cleanroom implementation driver."
+      ],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES",
+      "subjectFamily": "roll-modifier active Spell Effect lifecycle route",
+      "branchObligations": 16,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-roll-modifier-buff-selected-identity.mbt.qnt",
+      "route": "catalog-after-substrate",
+      "proofClassification": "grouped-selected-identity-not-accepted",
+      "selectedIdentityDriverAccepted": false,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-spell-damage-reduction.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-FU03-CONDITION-AND-ROLL-MODIFIER-FEATURE-SUBSTRATES",
+      "subjectFamily": "roll-modifier, damage-reduction, and scalar-buff active-effect substrates",
+      "branchObligations": 5,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "The grouped selected-identity driver is not accepted directly; only the listed generic connector substrate can count as acceptance evidence."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.mbt.qnt",
+      "route": "catalog-after-substrate",
+      "proofClassification": "grouped-selected-identity-not-accepted",
+      "selectedIdentityDriverAccepted": false,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-sanctuary-selected-identity.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+      "subjectFamily": "selected warded-target interdiction and early-end active-effect substrate",
+      "branchObligations": 9,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "The grouped selected-identity driver is not accepted directly; only the listed generic connector substrate can count as acceptance evidence."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-save-gated-spell-ordering.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "completed-reducer-route-tracer",
+      "subjectFamily": "already routed battle reducer diagnostic subject",
+      "branchObligations": 10,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-scalar-buff-active-effects.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES",
+      "subjectFamily": "scalar-buff active Spell Effect lifecycle route",
+      "branchObligations": 6,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-scalar-buff.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-scalar-buff.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR06-BATTLE-SPELL-EFFECT-ROUTES",
+      "subjectFamily": "scalar buff spell-effect target route",
+      "branchObligations": 2,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-sleep-repeat-save.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-sleep-repeat-save.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES",
+      "subjectFamily": "repeat-save condition Spell Effect lifecycle route",
+      "branchObligations": 10,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-careful-selected-identity.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+      "subjectFamily": "metamagic typed option facts, resource governor, and spell procedure substrates",
+      "branchObligations": 2,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-distant-selected-identity.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+      "subjectFamily": "metamagic typed option facts, resource governor, and spell procedure substrates",
+      "branchObligations": 1,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-empowered-selected-identity.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+      "subjectFamily": "metamagic typed option facts, resource governor, and spell procedure substrates",
+      "branchObligations": 1,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-extended-selected-identity.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+      "subjectFamily": "metamagic typed option facts, resource governor, and spell procedure substrates",
+      "branchObligations": 1,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-heightened-selected-identity.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+      "subjectFamily": "metamagic typed option facts, resource governor, and spell procedure substrates",
+      "branchObligations": 5,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-seeking-selected-identity.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+      "subjectFamily": "metamagic typed option facts, resource governor, and spell procedure substrates",
+      "branchObligations": 1,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-selected-identity.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+      "subjectFamily": "metamagic typed option facts, resource governor, and spell procedure substrates",
+      "branchObligations": 1,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-selected-identity.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+      "subjectFamily": "metamagic typed option facts, resource governor, and spell procedure substrates",
+      "branchObligations": 1,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-spell-attack-sequence-selected-identity.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+      "subjectFamily": "metamagic typed option facts, resource governor, and spell procedure substrates",
+      "branchObligations": 1,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-subtle-selected-identity.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+      "subjectFamily": "metamagic typed option facts, resource governor, and spell procedure substrates",
+      "branchObligations": 2,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-transmuted-selected-identity.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+      "subjectFamily": "metamagic typed option facts, resource governor, and spell procedure substrates",
+      "branchObligations": 2,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-sorcerer-metamagic-twinned-selected-identity.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-sorcerer-metamagic.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-FU08-METAMAGIC-GOVERNOR-AND-OPTION-SUBSTRATES",
+      "subjectFamily": "metamagic typed option facts, resource governor, and spell procedure substrates",
+      "branchObligations": 1,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-species-passive-trait-selected-identity.mbt.qnt",
+      "route": "catalog-after-substrate",
+      "proofClassification": "grouped-selected-identity-not-accepted",
+      "selectedIdentityDriverAccepted": false,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-species-passive-trait-substrates.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-FU02-SPECIES-PASSIVE-TRAIT-SUBSTRATES",
+      "subjectFamily": "species passive trait damage, save, movement, and size/speed substrates",
+      "branchObligations": 4,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "The grouped selected-identity driver is not accepted directly; only the listed generic connector substrate can count as acceptance evidence."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-spell-attack-ordering.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-spell-attack-ordering.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
+      "subjectFamily": "battle action, attack, weapon, creature, or stat-block route subject",
+      "branchObligations": 12,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-starry-wisp-object.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-starry-wisp-object.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR20-BATTLE-COMPANION-OBJECT-BOUNDARY-ROUTES",
+      "subjectFamily": "object-target spell attack boundary route",
+      "branchObligations": 7,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-stat-block-action-ordering.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-stat-block-action-ordering.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
+      "subjectFamily": "battle action, attack, weapon, creature, or stat-block route subject",
+      "branchObligations": 12,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-stat-block-multi-damage.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
+      "subjectFamily": "battle action, attack, weapon, creature, or stat-block route subject",
+      "branchObligations": 3,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
+      "subjectFamily": "battle action, attack, weapon, creature, or stat-block route subject",
+      "branchObligations": 3,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-thaumaturgy-selected-identity.mbt.qnt",
+      "route": "catalog-after-substrate",
+      "proofClassification": "grouped-selected-identity-not-accepted",
+      "selectedIdentityDriverAccepted": false,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-roll-modifier-active-effects.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-FU01-LEVEL1-SPELL-IDENTITY-SUBSTRATES",
+      "subjectFamily": "selected roll-modifier active-effect substrate",
+      "branchObligations": 1,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "The grouped selected-identity driver is not accepted directly; only the listed generic connector substrate can count as acceptance evidence."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-turn-boundary-effect-lifecycle.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES",
+      "subjectFamily": "turn-boundary active Spell Effect lifecycle route",
+      "branchObligations": 2,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-attack-ordering.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-weapon-attack-ordering.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
+      "subjectFamily": "battle action, attack, weapon, creature, or stat-block route subject",
+      "branchObligations": 7,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-weapon-attack-skeleton.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
+      "subjectFamily": "battle action, attack, weapon, creature, or stat-block route subject",
+      "branchObligations": 14,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-hosted-attack-and-riders.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-held-weapon-active-effect.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-held-weapon-release-cleanup.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-spell-hosted-weapon-attack.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-weapon-damage-rider-cleanup.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-weapon-damage-rider.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-weapon-enhancement-cleanup.route.mbt.qnt",
+        "packages/battle-runtime/battle-runtime-weapon-enhancement-item-target.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR17-WEAPON-HOSTED-RIDER-ROUTES",
+      "subjectFamily": "weapon-hosted attack, rider, active-effect, item-target, and cleanup owner split",
+      "branchObligations": 23,
+      "currentOutOfScopeBranchObligations": 4,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-weapon-mastery-selected-identity.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR07-FU06-WEAPON-MASTERY-PROPERTY-SUBSTRATES",
+      "subjectFamily": "weapon mastery property attack, save, condition, and rider substrates",
+      "branchObligations": 3,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/battle-runtime-zero-hit-point-mid-resolution.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR18-BATTLE-ACTIVE-EFFECT-LIFECYCLE-ROUTES",
+      "subjectFamily": "zero-Hit-Point mid-resolution Spell Effect teardown route",
+      "branchObligations": 1,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/creature-attack.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/creature-attack.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR05-BATTLE-ACTION-ATTACK-STATBLOCK-ROUTES",
+      "subjectFamily": "battle action, attack, weapon, creature, or stat-block route subject",
+      "branchObligations": 2,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt",
+      "route": "component-first",
+      "proofClassification": "focused-qComponentRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qComponentRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/rule-core-ability-skill-command.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+      "subjectFamily": "rule-core reusable component",
+      "branchObligations": 32,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt",
+      "route": "component-first",
+      "proofClassification": "focused-qComponentRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qComponentRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/rule-core-attack-damage-disposition.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+      "subjectFamily": "rule-core reusable component",
+      "branchObligations": 2,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt",
+      "route": "component-first",
+      "proofClassification": "focused-qComponentRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qComponentRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/rule-core-feature-action-economy.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+      "subjectFamily": "rule-core reusable component",
+      "branchObligations": 12,
+      "currentOutOfScopeBranchObligations": 1,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt",
+      "route": "component-first",
+      "proofClassification": "focused-qComponentRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qComponentRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/rule-core-feature-attack-riders.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+      "subjectFamily": "rule-core reusable component",
+      "branchObligations": 8,
+      "currentOutOfScopeBranchObligations": 1,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt",
+      "route": "component-first",
+      "proofClassification": "focused-qComponentRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qComponentRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/rule-core-feature-save-reactions.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+      "subjectFamily": "rule-core reusable component",
+      "branchObligations": 5,
+      "currentOutOfScopeBranchObligations": 3,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt",
+      "route": "component-first",
+      "proofClassification": "focused-qComponentRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qComponentRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/rule-core-feature-passive-zero-hp.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+      "subjectFamily": "rule-core reusable component",
+      "branchObligations": 2,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt",
+      "route": "component-first",
+      "proofClassification": "focused-qComponentRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qComponentRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/rule-core-hit-point-damage.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+      "subjectFamily": "rule-core reusable component",
+      "branchObligations": 4,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/rule-core-movement.mbt.qnt",
+      "route": "component-first",
+      "proofClassification": "focused-qComponentRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qComponentRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/rule-core-movement.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+      "subjectFamily": "rule-core reusable component",
+      "branchObligations": 21,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/rule-core-reactions.mbt.qnt",
+      "route": "component-first",
+      "proofClassification": "focused-qComponentRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qComponentRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/rule-core-reactions.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+      "subjectFamily": "rule-core reusable component",
+      "branchObligations": 11,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt",
+      "route": "component-first",
+      "proofClassification": "focused-qComponentRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qComponentRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/rule-core-shove-outcome.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+      "subjectFamily": "rule-core reusable component",
+      "branchObligations": 6,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+      "route": "component-first",
+      "proofClassification": "focused-qComponentRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qComponentRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/rule-core-spell-damage.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+      "subjectFamily": "rule-core reusable component",
+      "branchObligations": 12,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt",
+      "route": "component-first",
+      "proofClassification": "focused-qComponentRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qComponentRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/rule-core-spell-restoration.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+      "subjectFamily": "rule-core reusable component",
+      "branchObligations": 13,
+      "currentOutOfScopeBranchObligations": 3,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt",
+      "route": "component-first",
+      "proofClassification": "focused-qComponentRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qComponentRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/rule-core-spell-defensive-effect.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+      "subjectFamily": "rule-core reusable component",
+      "branchObligations": 2,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt",
+      "route": "component-first",
+      "proofClassification": "focused-qComponentRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qComponentRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/rule-core-spell-readied-response.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+      "subjectFamily": "rule-core reusable component",
+      "branchObligations": 3,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt",
+      "route": "component-first",
+      "proofClassification": "focused-qComponentRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qComponentRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/rule-core-exact-damage-projection.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "FCSF-03G-EXACT-DAMAGE-PROJECTION-FACTS",
+      "subjectFamily": "rule-core exact spell damage projection component evidence",
+      "branchObligations": 4,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [
+        "source-qnt-corpus-blocker: exact projection facts are now public for after-hit attack damage, after-hit timed damage, weapon damage rider damage, held-weapon active-effect damage, and spell-hosted weapon attack damage through packages/battle-runtime/battle-runtime-exact-damage-details.route.mbt.qnt, but this does not accept mixed-target outcome ordering, object-target durability, duplicate-face limits, or other non-damage branch obligations.",
+        "source-qnt-corpus-blocker: selected spell identity remains a catalog/admission fixture boundary and must not be counted as generic exact-damage evidence."
+      ],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt",
+      "route": "component-first",
+      "proofClassification": "focused-qComponentRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qComponentRoute",
+      "connectorPaths": [
+        "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR04-RULE-CORE-COMPONENT-CONNECTORS",
+      "subjectFamily": "rule-core reusable component",
+      "branchObligations": 7,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/character-battle-runtime/character-battle-init-projection.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/character-battle-runtime/character-battle-encounter-composition.route.mbt.qnt",
+        "packages/character-battle-runtime/character-battle-init-projection.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES",
+      "subjectFamily": "character sheet to battle init projection",
+      "branchObligations": 6,
+      "currentOutOfScopeBranchObligations": 1,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/character-battle-runtime/character-battle-origin-feat-selected-identity.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/character-battle-runtime/character-battle-origin-feat-selected-identity.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES",
+      "subjectFamily": "character-battle selected-reference handoff",
+      "branchObligations": 2,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/character-battle-runtime/character-session-sheet-derived-battle-acts.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "SDK-GAP-SHEET-DERIVED-BATTLE-ACTS",
+      "subjectFamily": "sheet-derived SDK battle acts and settlement",
+      "branchObligations": 8,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/character-battle-runtime/character-battle-settlement.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/character-battle-runtime/character-battle-settlement.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES",
+      "subjectFamily": "battle to character sheet settlement",
+      "branchObligations": 8,
+      "currentOutOfScopeBranchObligations": 1,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/character-battle-runtime/character-layer-projection-lifecycle.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/character-battle-runtime/character-layer-projection-lifecycle.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES",
+      "subjectFamily": "character lifecycle layer projection",
+      "branchObligations": 5,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/character-battle-runtime/character-sheet-feature-resources.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/character-battle-runtime/character-sheet-feature-resources.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR10-CHARACTER-BATTLE-HANDOFF-ROUTES",
+      "subjectFamily": "character sheet feature-resource handoff",
+      "branchObligations": 14,
+      "currentOutOfScopeBranchObligations": 4,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/character-creation-runtime/character-creation-class-feature-projections.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/character-creation-runtime/character-creation-class-feature-projections.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
+      "subjectFamily": "character creation build projection through draft/finalize route",
+      "branchObligations": 2,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/character-creation-runtime/character-creation-class-feature-selected-identity.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/character-creation-runtime/character-creation-class-feature-selected-identity.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
+      "subjectFamily": "character creation selected-reference retention",
+      "branchObligations": 12,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/character-creation-runtime/character-creation-cleric-druid-order-selected-identity.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
+      "subjectFamily": "character creation class-feature option retention",
+      "branchObligations": 4,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/character-creation-runtime/character-creation-fighter-fighting-style-selected-identity.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
+      "subjectFamily": "character creation class-feature feat retention and replacement",
+      "branchObligations": 8,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/character-creation-runtime/character-creation-rogue-expertise-selected-identity.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
+      "subjectFamily": "character creation skill Expertise retention",
+      "branchObligations": 2,
+      "currentOutOfScopeBranchObligations": 1,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/character-creation-runtime/character-creation-runtime.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/character-creation-runtime/character-creation-runtime.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
+      "subjectFamily": "character creation draft/fill/finalize reducer",
+      "branchObligations": 16,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/character-creation-runtime/character-creation-warlock-eldritch-invocations-selected-identity.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
+      "subjectFamily": "character creation invocation option retention and Pact Magic projection",
+      "branchObligations": 6,
+      "currentOutOfScopeBranchObligations": 1,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/character-creation-runtime/character-creation-weapon-mastery-containers-selected-identity.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR08-CHARACTER-CREATION-ROUTES",
+      "subjectFamily": "character creation Weapon Mastery selected weapon retention",
+      "branchObligations": 5,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/character-sheet-runtime/character-sheet-ability-check-proficiency-bonus.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
+      "subjectFamily": "character sheet resource/rest/projection reducer",
+      "branchObligations": 6,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/character-sheet-runtime/character-sheet-arcane-recovery-selected-identity.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
+      "subjectFamily": "character sheet selected-reference projection",
+      "branchObligations": 3,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/character-sheet-runtime/character-sheet-armor-class-base-selected-identity.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
+      "subjectFamily": "character sheet selected-reference projection",
+      "branchObligations": 6,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/character-sheet-runtime/character-sheet-class-feature-selected-identity.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
+      "subjectFamily": "character sheet selected-reference projection",
+      "branchObligations": 8,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/character-sheet-runtime/character-sheet-healing-resource-selected-identity.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/character-sheet-runtime/character-sheet-healing-resource-selected-identity.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
+      "subjectFamily": "character sheet selected-reference projection",
+      "branchObligations": 1,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/character-sheet-runtime/character-sheet-hit-point-maximum.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/character-sheet-runtime/character-sheet-hit-point-maximum.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
+      "subjectFamily": "character sheet resource/rest/projection reducer",
+      "branchObligations": 6,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/character-sheet-runtime/character-sheet-hp-rest-hit-dice.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
+      "subjectFamily": "character sheet resource/rest/projection reducer",
+      "branchObligations": 13,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/character-sheet-runtime/character-sheet-spell-slots-pact-slots.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
+      "subjectFamily": "character sheet resource/rest/projection reducer",
+      "branchObligations": 11,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/character-sheet-runtime/character-sheet-spellbook-ritual-selected-identity.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
+      "subjectFamily": "character sheet selected-reference projection",
+      "branchObligations": 5,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    },
+    {
+      "driverPath": "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.mbt.qnt",
+      "route": "reducer-routed",
+      "proofClassification": "focused-qRoute",
+      "selectedIdentityDriverAccepted": true,
+      "acceptedProjection": "qRoute",
+      "connectorPaths": [
+        "packages/character-sheet-runtime/character-sheet-weapon-mastery-containers-selected-identity.route.mbt.qnt"
+      ],
+      "missingConnectors": [],
+      "routeTaskId": "L15-RR09-CHARACTER-SHEET-ROUTES",
+      "subjectFamily": "character sheet selected-reference projection",
+      "branchObligations": 8,
+      "currentOutOfScopeBranchObligations": 0,
+      "derivabilityBlockers": [],
+      "acceptanceNote": "Focused connector evidence can count when target replay observes the copied projection."
+    }
+  ]
+}

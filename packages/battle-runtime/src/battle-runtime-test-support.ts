@@ -414,6 +414,7 @@ export function subjectName(
   | "castTriggeredReactionSpell"
   | "castAttackHitBonusActionSpell"
   | "opportunityAttack"
+  | "retaliationAttack"
   | "greaseGroundHazardSave"
   | "webRestraintSave"
   | "sleetStormAreaHazardSave"

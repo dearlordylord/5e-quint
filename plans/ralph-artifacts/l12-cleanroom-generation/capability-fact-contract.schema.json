@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "capability-fact-contract.schema.json",
+  "type": "object",
+  "required": [
+    "schema",
+    "factFamilies",
+    "rows"
+  ],
+  "properties": {
+    "schema": {
+      "const": "l12-capability-fact-coverage-matrix.v1"
+    },
+    "factFamilies": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "actionTiming",
+          "resourceCost",
+          "targetShape",
+          "attackSaveCheckShape",
+          "damageEffectFacts",
+          "durationLifecycle",
+          "owners",
+          "exactArithmetic"
+        ]
+      }
+    },
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "rowId",
+          "candidateUnitId",
+          "profileIds",
+          "requirements"
+        ],
+        "properties": {
+          "requirements": {
+            "type": "object",
+            "additionalProperties": {
+              "enum": [
+                "required",
+                "not-applicable",
+                "needs-research"
+              ]
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

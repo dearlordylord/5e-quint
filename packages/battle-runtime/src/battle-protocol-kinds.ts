@@ -339,6 +339,7 @@ function runtimeCommandSubjectKind(
       ),
       byCommand("releaseGrapple", () => "runtimeLinkRelease" as const),
       byCommand("opportunityAttack", () => "runtimeReaction" as const),
+      byCommand("retaliationAttack", () => "runtimeReaction" as const),
       byCommand("greaseGroundHazardSave", () => "runtimeSavingThrow" as const),
       byCommand("webRestraintSave", () => "runtimeSavingThrow" as const),
       byCommand(

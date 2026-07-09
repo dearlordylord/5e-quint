@@ -52,7 +52,7 @@ const manifestPath = resolve(
 );
 const packageJsonPath = resolve(repoRoot, "packages/mcp/package.json");
 const taskIdPattern =
-  /^(?:C\d+|L13UG-A\d+|L14G-\d+|L5UG|L6UG|L18GATE|L19GATE)-[A-Z0-9-]+$/;
+  /^(?:C\d+|L13UG-A\d+|L14G-\d+|L5UG|L6UG|L18GATE|L19GATE|L110F-\d+)-[A-Z0-9-]+$/;
 const require = createRequire(import.meta.url);
 // This local CJS checker has no TypeScript declaration; type it at the import
 // boundary so this test exercises the same manifest validator used by the

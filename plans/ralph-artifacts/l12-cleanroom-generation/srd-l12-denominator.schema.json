@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "srd-l12-cleanroom-denominator.schema.json",
+  "type": "object",
+  "required": [
+    "schema",
+    "collectionBoundary",
+    "counts",
+    "rows"
+  ],
+  "properties": {
+    "schema": {
+      "const": "srd-l12-cleanroom-denominator.v1"
+    },
+    "collectionBoundary": {
+      "type": "object",
+      "required": [
+        "provenance",
+        "allowedLevelBands",
+        "forbiddenProvenance"
+      ],
+      "properties": {
+        "provenance": {
+          "const": "srd-5.2.1"
+        },
+        "allowedLevelBands": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "level-1",
+              "level-2",
+              "spell-level-0",
+              "spell-level-1"
+            ]
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "forbiddenProvenance": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "rowId",
+          "collectionId",
+          "provenance",
+          "levelBand",
+          "candidateUnitId",
+          "cleanroomDisposition"
+        ],
+        "properties": {
+          "collectionId": {
+            "const": "srd-5.2.1"
+          },
+          "provenance": {
+            "const": "srd-5.2.1"
+          },
+          "levelBand": {
+            "enum": [
+              "level-1",
+              "level-2",
+              "spell-level-0",
+              "spell-level-1"
+            ]
+          },
+          "cleanroomDisposition": {
+            "enum": [
+              "executable",
+              "no-battle-table-closed",
+              "character-sheet-owned",
+              "handoff-owned",
+              "outside-cleanroom-battle-route-denominator"
+            ]
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

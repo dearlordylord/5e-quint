@@ -3228,12 +3228,12 @@
       "catalogStatus": "installed",
       "claimTag": "profile-subset-supported",
       "closureKinds": [
-        "follow-up-split"
+        "outside-battle-runtime"
       ],
       "collectionId": "srd-5.2.1",
       "executableMechanics": true,
       "kind": "class_feature",
-      "reason": "L12G-FOLLOWUP-SORCERER-METAMAGIC-QUICKENED-ALL-ACTION-SPELLS: Promote Quickened Spell beyond the current direct restoration, scalar buff, save-gated damage, save-gated condition/immunity, direct condition, roll modifier, and direct spell-attack damage subset only for standalone damage, control, ongoing-effect, and other action-casting Spell Invocation procedures whose owners add typed resource-threading and parity witnesses, using typed procedure support gates and the level-1-plus spell cast turn lock for slot, free-cast, and cantrip resource paths. Owner: battle-runtime Spell Invocation discovery and resolution profiles plus Quint parity. Required output: Supported-profile or profile-subset-supported Unit claim with focused runtime tests and promoted Quint/runtime parity for any additional Quickened action-to-Bonus-Action rewrite procedure owner without option authored identity dispatch.",
+      "reason": "The completed Metamagic subset is executable for the named promoted action-time Spell Invocation profiles and rejects unsupported procedures before Sorcery Point spending. Additional standalone damage, control, ongoing-effect, or other action-casting procedures must each add their own typed resource-threading and parity witness before they can opt into Quickened Spell; this is a procedure-owner product boundary, not an unresolved Level 10 Metamagic blocker.; Distant Spell now has a promoted object-light Touch-range slice, but additional target or origin procedures must each consume a typed cast-local range fact before range can be rewritten without trusting authored spell identity; Extended Spell now has a promoted Enlarge/Reduce duration slice, but additional duration-bearing procedures must each consume a typed cast-local duration fact before duration can be rewritten. Subtle Spell now has a promoted cast-local component projection slice, but future consumers such as stealth, audibility, visibility, Counterspell, hidden-caster, free-hand, Silence, and procedure-specific component requirements remain outside this profile. Unsupported cast-property options remain rejected before Sorcery Point spending rather than charging inert Metamagic.; The promoted Empowered Spell slice is owned by the pending single spellAttackDamage rolledDice continuation for Ray of Frost. Repeated spell attacks need invocation-local one-use accounting, allocation spells need allocation-aware dice ownership, and save/ongoing/object damage owners must each consume the typed reroll facts before they can admit Empowered without charging inert Metamagic or storing a parallel reroll opportunity state.; The promoted Seeking Spell slice is owned by the pending single spellAttackDamage Attack Roll continuation. Repeated spell attack sequences need a procedure-local accounting fact that allows at most one Seeking reroll for the whole spell casting across multiple attack rolls before Scorching Ray or similar procedures can consume the same post-miss boundary.",
       "selectedIdentity": {
         "reason": "The Unit has selected-identity-replay evidence.",
         "status": "witness-present"
@@ -3258,7 +3258,7 @@
           "unitProfileDisposition": "profile-subset-supported"
         }
       ],
-      "status": "blocked-follow-up-split",
+      "status": "closed-outside-battle-runtime-boundary",
       "strictTargetClosed": true,
       "unitId": "sorcerer_metamagic"
     },
@@ -3943,7 +3943,7 @@
       ]
     },
     {
-      "count": 7,
+      "count": 8,
       "description": "The remaining residuals are explicitly outside promoted battle-runtime ownership.",
       "status": "closed-outside-battle-runtime-boundary",
       "unitIds": [
@@ -3953,7 +3953,8 @@
         "levitate",
         "moonbeam",
         "prayer_of_healing",
-        "rogue_fast_hands"
+        "rogue_fast_hands",
+        "sorcerer_metamagic"
       ]
     },
     {
@@ -3983,14 +3984,6 @@
       "unitIds": [
         "ranger_favored_enemy",
         "wizard_evocation_savant"
-      ]
-    },
-    {
-      "count": 1,
-      "description": "The Unit claim records concrete smaller follow-up splits for the remaining executable owner work.",
-      "status": "blocked-follow-up-split",
-      "unitIds": [
-        "sorcerer_metamagic"
       ]
     }
   ],
@@ -13927,11 +13920,10 @@
       "unsupported-profile": 41
     },
     "groupsByStatus": {
-      "blocked-follow-up-split": 1,
       "closed-character-fact-and-runtime-detached-split": 4,
       "closed-companion-control-boundary": 2,
       "closed-later-level-only": 2,
-      "closed-outside-battle-runtime-boundary": 7,
+      "closed-outside-battle-runtime-boundary": 8,
       "closed-runtime-detached-table-adjudication": 35,
       "closed-selection-grant-container": 12,
       "supported-profile": 147

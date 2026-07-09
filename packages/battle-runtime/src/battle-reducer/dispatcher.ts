@@ -1,4 +1,5 @@
 // Battle dispatcher/orchestration extracted from ../battle-reducer.ts.
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.retaliation-reaction-attack
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form spell.invocation-warding-bond-linked-effect
@@ -131,6 +132,7 @@ import {
 } from "./damage-apply.ts";
 
 import {
+  attackActionOptionsForActor,
   damageDispositionFillFor,
   damageDispositionFillsValidation,
   damageDispositionForTarget,
@@ -139,7 +141,10 @@ import {
 
 import { needsHolesResult } from "./hole-helpers.ts";
 
-import { opportunityAttackOptionForReactor } from "./movement-speed.ts";
+import {
+  meleeWeaponOrUnarmedStrikeOptionForReactor,
+  opportunityAttackOptionForReactor,
+} from "./movement-speed.ts";
 
 import {
   attackDamageEventAmountForTarget,
@@ -279,7 +284,11 @@ import {
 } from "./spells-resolve-fill-set.ts";
 import { validateSavingThrowOutcomes } from "./spells-resolve-save-gates.ts";
 
-import { attackActionOptionName } from "./statblock-attacks.ts";
+import {
+  attackActionOptionName,
+  attackTargetConstraint,
+} from "./statblock-attacks.ts";
+import { RETALIATION_REACTION_ATTACK_SUPPORT_PROFILE } from "../unit-feature-support.ts";
 
 import type {
   BattleAfterDamageEvent,
@@ -1712,7 +1721,8 @@ export function resolveBattleSubjectInternal(
     }
     if (
       subject.tag === "runtimeCommand" &&
-      subject.command === "opportunityAttack"
+      (subject.command === "opportunityAttack" ||
+        subject.command === "retaliationAttack")
     ) {
       return resolveOpportunityAttackCommand({
         ...input,
@@ -4647,6 +4657,7 @@ function interruptChoiceTurnResource(
     Match.when("castTriggeredReactionSpell", () => "reaction" as const),
     Match.when("castAttackHitBonusActionSpell", () => "none" as const),
     Match.when("opportunityAttack", () => "reaction" as const),
+    Match.when("retaliationAttack", () => "reaction" as const),
     Match.when("reactionRollOrDamageReduction", () => "reaction" as const),
     Match.exhaustive,
   );
@@ -4691,11 +4702,23 @@ export function sameInterruptProcedureChoice(
   ) {
     return sameSpellInvocationRef(choice.invocation, decisionChoice.invocation);
   }
-  return (
+  if (
     choice.kind === "opportunityAttack" &&
-    decisionChoice.kind === "opportunityAttack" &&
-    choice.reactorId === decisionChoice.reactorId
-  );
+    decisionChoice.kind === "opportunityAttack"
+  ) {
+    return choice.reactorId === decisionChoice.reactorId;
+  }
+  if (
+    choice.kind === "retaliationAttack" &&
+    decisionChoice.kind === "retaliationAttack"
+  ) {
+    return (
+      choice.reactorId === decisionChoice.reactorId &&
+      choice.subject.command === "retaliationAttack" &&
+      choice.subject.attackName === decisionChoice.attackName
+    );
+  }
+  return false;
 }
 
 export function completeActiveInterruptProcedure(
@@ -6188,6 +6211,8 @@ export function battleTurnSnapshot(state: BattleState): BattleTurnSnapshot {
     actionResources: resources.actionResources,
     bonusActionAvailable: canSpendBonusAction(resources),
     jumpDistanceMultiplier: resources.jumpDistanceMultiplier,
+    heightenedStepOfTheWindCarriedCreatures:
+      resources.heightenedStepOfTheWindCarriedCreatures,
     spellSlotUsesThisTurn: resources.spellSlotUsesThisTurn,
     levelOnePlusSpellCastsThisTurn: resources.levelOnePlusSpellCastsThisTurn,
     quickenedLevelOnePlusSpellCastsThisTurn:
@@ -6495,6 +6520,7 @@ export function interruptChoices(
     attackHitBonusActionSpellReactionChoices(state, frame);
   const triggeredSpellChoices = triggeredReactionSpellChoices(state, frame);
   const modifierChoices = reactionRollOrDamageReductionChoices(state, frame);
+  const retaliationChoices = retaliationReactionAttackChoices(state, frame);
   return frame.trigger === "opportunityAttack"
     ? [
         ...readiedChoices,
@@ -6510,6 +6536,7 @@ export function interruptChoices(
         ...readiedChoices,
         ...attackHitBonusActionSpellChoices,
         ...triggeredSpellChoices,
+        ...retaliationChoices,
         ...modifierChoices,
       ];
 }
@@ -6624,4 +6651,78 @@ export function opportunityAttackReactionChoices(
       },
     ];
   });
+}
+
+export function retaliationReactionAttackChoices(
+  state: BattleState,
+  frame: BattleInterruptCheckpointInput,
+): readonly BattleInterruptProcedureChoice[] {
+  if (
+    frame.trigger !== "afterDamage" ||
+    Number(frame.damageAmount) <= 0 ||
+    frame.damageSourceId === frame.damagedId
+  ) {
+    return [];
+  }
+  const reactorId = frame.damagedId;
+  const reactor = state.combatants.get(reactorId);
+  if (
+    reactor?.origin.kind !== "character" ||
+    !combatantCanTakeReactions(reactor) ||
+    !retaliationDamageSourceWithinFiveFeet(frame, reactorId)
+  ) {
+    return [];
+  }
+  if (
+    !reactor.origin.characterUnitRefs.some((unitRef) =>
+      unitRef.supportProfiles.some(
+        (profile) =>
+          typeof profile === "object" &&
+          profile.kind === RETALIATION_REACTION_ATTACK_SUPPORT_PROFILE,
+      ),
+    )
+  ) {
+    return [];
+  }
+  return attackActionOptionsForActor(state, reactorId).flatMap((attack) => {
+    const attackName = attackActionOptionName(attack);
+    const eligibleAttack =
+      (attack.kind === "weapon" || attack.kind === "unarmedStrike") &&
+      attackTargetConstraint(attack).kind === "meleeReach" &&
+      meleeWeaponOrUnarmedStrikeOptionForReactor(
+        state,
+        reactorId,
+        frame.damageSourceId,
+        attackName,
+      ) !== undefined;
+    return eligibleAttack
+      ? [
+          {
+            kind: "retaliationAttack" as const,
+            reactorId,
+            initialHoles: [],
+            subject: {
+              tag: "runtimeCommand" as const,
+              actorId: currentActorId(state),
+              command: "retaliationAttack" as const,
+              reactorId,
+              targetId: frame.damageSourceId,
+              attackName,
+            },
+          },
+        ]
+      : [];
+  });
+}
+
+function retaliationDamageSourceWithinFiveFeet(
+  frame: Extract<BattleInterruptCheckpointInput, { readonly trigger: "afterDamage" }>,
+  reactorId: CombatantId,
+): boolean {
+  return frame.reactionSpellTargetFacts.some(
+    (fact) =>
+      fact.kind === "retaliationDamagerWithinFiveFeet" &&
+      fact.damagedId === reactorId &&
+      fact.damageSourceId === frame.damageSourceId,
+  );
 }

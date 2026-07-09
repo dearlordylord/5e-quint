@@ -2,6 +2,15 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.monk-focus-battle-options unit-feature.open-hand-technique unit-feature.stunning-strike
 
 import {
+  rolledDiceTotal,
+  validateRolledDiceForDiceExpr,
+} from "@dnd/shared-algebras/runtime-dice-algebra";
+import {
+  holeId,
+  holeInstanceKey,
+} from "@dnd/shared-algebras/runtime-hole-algebra";
+import type { DiceExpr } from "@dnd/surface/surface/types";
+import {
   canSpendBonusAction,
   spendActivationResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
@@ -14,13 +23,18 @@ import type {
 import type {
   AvailableBattleAct,
   BattleCreatureState,
+  BattleFill,
+  BattleRolledDiceFill,
   BattleResolutionResult,
   BattleState,
+  BattleTargetChoiceHole,
   BattleTurnResources,
+  BattleUnitFeatureRollHole,
   CharacterBattleCreatureState,
   MonkFocusFlurryOfBlowsStrikeBattleResolutionInput,
   MonkFocusOptionBattleResolutionInput,
 } from "../battle-reducer.ts";
+import { SIZES } from "@dnd/shared/types";
 import type { CombatantId } from "../identity.ts";
 import type { CharacterBattleUseCountResourceState } from "../character-battle-resources.ts";
 import {
@@ -30,6 +44,7 @@ import {
 } from "../character-battle-resources.ts";
 import {
   battleMonkFocusBattleOptionsSupportForUnit,
+  martialArtsSrdDieSizeAtClassLevel,
   type BattleMonkFocusBattleOptionsSupportProfile,
 } from "../unit-feature-support.ts";
 
@@ -40,11 +55,17 @@ import {
   combatantCanTakeActions,
   isCharacterBattleCreatureState,
 } from "./creature-state.ts";
-import { attackTargetChoices, attackTargetHole } from "./hole-helpers.ts";
+import {
+  attackTargetChoices,
+  attackTargetHole,
+  needsHolesResult,
+} from "./hole-helpers.ts";
 import { representedMovementSpeedKinds } from "./movement-speed.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { resolveSelectedAttackProcedure } from "./attack-main.ts";
 import { snapshotBattle } from "./dispatcher.ts";
+import { applyTemporaryHitPoints } from "./damage-apply.ts";
+import { combatantEffectiveSize } from "./druid-wild-shape.ts";
 import {
   attackActionOptionName,
   clearPendingAttackRollMissToHitReplacementSelection,
@@ -55,6 +76,8 @@ export type MonkFocusResourceFact = {
   readonly resource: CharacterBattleUseCountResourceState;
   readonly profile: BattleMonkFocusBattleOptionsSupportProfile;
 };
+
+const HEIGHTENED_FOCUS_MONK_LEVEL = 10;
 
 export function monkFocusActs(
   state: BattleState,
@@ -93,8 +116,7 @@ function monkFocusOptionActs(
         option: "flurryOfBlows",
       },
       label: focus.profile.flurryOfBlows.displayName,
-      summary:
-        "Spend 1 Focus Point and a Bonus Action to make two Unarmed Strikes.",
+      summary: `Spend 1 Focus Point and a Bonus Action to make ${monkFocusFlurryOfBlowsStrikeCount(focus)} Unarmed Strikes.`,
       initialHoles: [],
     });
   }
@@ -123,7 +145,9 @@ function monkFocusOptionActs(
       label: `${focus.profile.patientDefense.displayName}: Disengage and Dodge`,
       summary:
         "Spend 1 Focus Point and a Bonus Action to take the Disengage and Dodge actions.",
-      initialHoles: [],
+      initialHoles: monkHasHeightenedFocus(actor)
+        ? [heightenedPatientDefenseTemporaryHitPointsRollHole(focus)]
+        : [],
     });
   }
 
@@ -154,7 +178,9 @@ function monkFocusOptionActs(
         label: `${focus.profile.stepOfTheWind.displayName}: Disengage and Dash`,
         summary:
           "Spend 1 Focus Point and a Bonus Action to take the Disengage and Dash actions.",
-        initialHoles: [],
+        initialHoles: monkHasHeightenedFocus(actor)
+          ? [heightenedStepOfTheWindCarryHole(state, focus)]
+          : [],
       });
     }
   }
@@ -202,13 +228,6 @@ function monkFocusFlurryOfBlowsStrikeActs(
 export function resolveMonkFocusOption(
   input: MonkFocusOptionBattleResolutionInput,
 ): BattleResolutionResult {
-  if (input.fills.length > 0) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Monk Focus options accept no fills.",
-    );
-  }
   const focus = monkFocusResourceForActor(input.state, input.subject.actorId);
   if (
     focus === null ||
@@ -236,6 +255,40 @@ export function resolveMonkFocusOption(
       input.state,
       "staleSubject",
       "Flurry of Blows requires an available Unarmed Strike target.",
+    );
+  }
+  const heightenedPatientDefenseRollRequest =
+    heightenedPatientDefenseTemporaryHitPointsRollRequest(input, focus);
+  const heightenedStepOfTheWindCarryRequest =
+    heightenedStepOfTheWindCarryRequestForInput(input, focus);
+  if (heightenedPatientDefenseRollRequest.tag === "needsRoll") {
+    return needsHolesResult(input.state, input.subject, [
+      heightenedPatientDefenseRollRequest.hole,
+    ]);
+  }
+  if (heightenedPatientDefenseRollRequest.tag === "invalid") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      heightenedPatientDefenseRollRequest.message,
+    );
+  }
+  if (heightenedStepOfTheWindCarryRequest.tag === "invalid") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      heightenedStepOfTheWindCarryRequest.message,
+    );
+  }
+  if (
+    input.fills.length > 0 &&
+    heightenedPatientDefenseRollRequest.tag !== "roll" &&
+    heightenedStepOfTheWindCarryRequest.tag !== "carry"
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Monk Focus options accept no fills.",
     );
   }
   const spent = spendActivationResource(input.state.currentTurnResources, {
@@ -292,7 +345,12 @@ export function resolveMonkFocusOption(
     input.subject.option === "stepOfTheWind" &&
     input.subject.mode === "focusDisengageDash"
   ) {
-    return resolveStepOfTheWindFocus(input, focus, spent.right);
+    return resolveStepOfTheWindFocus(
+      input,
+      focus,
+      spent.right,
+      heightenedStepOfTheWindCarryRequest,
+    );
   }
   return invalidResult(
     input.state,
@@ -325,7 +383,7 @@ function resolveFlurryOfBlowsActivation(
       actionResources: [
         ...spentResources.actionResources,
         ...Array.from(
-          { length: focus.profile.flurryOfBlows.strikeCount },
+          { length: monkFocusFlurryOfBlowsStrikeCount(focus) },
           (): MonkFocusFlurryOfBlowsActionResource => ({
             kind: "action",
             source: "monkFocusFlurryOfBlows",
@@ -368,19 +426,190 @@ function resolvePatientDefenseFocus(
       dodgingActor,
     ),
   };
+  const heightenedRoll = heightenedPatientDefenseTemporaryHitPointsRollRequest(
+    input,
+    focus,
+  );
+  if (heightenedRoll.tag === "invalid" || heightenedRoll.tag === "needsRoll") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      heightenedRoll.tag === "invalid"
+        ? heightenedRoll.message
+        : "Heightened Focus Patient Defense requires a Temporary Hit Points roll.",
+    );
+  }
+  const withHeightenedTemporaryHitPoints =
+    heightenedRoll.tag === "roll"
+      ? stateWithHeightenedPatientDefenseTemporaryHitPoints(
+          withDodge,
+          dodgingActor,
+          heightenedRoll.roll,
+        )
+      : withDodge;
+  const actorAfterTemporaryHitPoints =
+    withHeightenedTemporaryHitPoints.combatants.get(input.subject.actorId);
+  if (!isCharacterBattleCreatureState(actorAfterTemporaryHitPoints)) {
+    return invalidResult(
+      input.state,
+      "missingCombatant",
+      "Patient Defense actor is not in this battle.",
+    );
+  }
   return resolved(
     stateWithMonkFocusResource(
-      withDodge,
-      dodgingActor,
+      withHeightenedTemporaryHitPoints,
+      actorAfterTemporaryHitPoints,
       spendCharacterResourceUse(focus.resource),
     ),
   );
+}
+
+type HeightenedPatientDefenseTemporaryHitPointsRollRequest =
+  | { readonly tag: "none" }
+  | { readonly tag: "needsRoll"; readonly hole: BattleUnitFeatureRollHole }
+  | { readonly tag: "roll"; readonly roll: BattleRolledDiceFill }
+  | { readonly tag: "invalid"; readonly message: string };
+
+function heightenedPatientDefenseTemporaryHitPointsRollRequest(
+  input: MonkFocusOptionBattleResolutionInput,
+  focus: MonkFocusResourceFact,
+): HeightenedPatientDefenseTemporaryHitPointsRollRequest {
+  if (
+    input.subject.option !== "patientDefense" ||
+    input.subject.mode !== "focusDisengageDodge" ||
+    !monkHasHeightenedFocus(focus.actor)
+  ) {
+    return { tag: "none" };
+  }
+  const roll = singleRolledDiceFill(input.fills);
+  if (roll === undefined) {
+    return {
+      tag: "needsRoll",
+      hole: heightenedPatientDefenseTemporaryHitPointsRollHole(focus),
+    };
+  }
+  if (roll === "invalid") {
+    return {
+      tag: "invalid",
+      message:
+        "Heightened Focus Patient Defense requires exactly one Temporary Hit Points roll.",
+    };
+  }
+  const expectedHole = heightenedPatientDefenseTemporaryHitPointsRollHole(focus);
+  if (roll.holeId !== expectedHole.holeId) {
+    return {
+      tag: "invalid",
+      message:
+        "Heightened Focus Patient Defense roll does not match the requested hole.",
+    };
+  }
+  if (
+    roll.selectedAttackDamageRiderUnitIds !== undefined ||
+    roll.cunningStrikeOption !== undefined ||
+    roll.weaponDamageDiceRollChoice !== undefined ||
+    roll.attackDamageDieFloorChoice !== undefined ||
+    roll.attackDamageAbilityModifierChoice !== undefined ||
+    roll.spellDamageReroll !== undefined
+  ) {
+    return {
+      tag: "invalid",
+      message:
+        "Heightened Focus Patient Defense roll does not accept damage-roll feature choices.",
+    };
+  }
+  const validation = validateRolledDiceForDiceExpr(
+    roll.value,
+    heightenedPatientDefenseTemporaryHitPointsDiceExpr(focus),
+  );
+  return validation === null
+    ? { tag: "roll", roll }
+    : { tag: "invalid", message: validation.reason };
+}
+
+function singleRolledDiceFill(
+  fills: readonly BattleFill[],
+): BattleRolledDiceFill | "invalid" | undefined {
+  const [first, ...rest] = fills;
+  if (first === undefined) return undefined;
+  if (first.kind !== "rolledDice" || rest.length > 0) return "invalid";
+  return first;
+}
+
+function heightenedPatientDefenseTemporaryHitPointsRollHole(
+  focus: MonkFocusResourceFact,
+): BattleUnitFeatureRollHole {
+  const expr = heightenedPatientDefenseTemporaryHitPointsDiceExpr(focus);
+  const protocolId = `battle:monk-focus:heightened-patient-defense-temporary-hit-points:${focus.resource.unit.id}:${diceExprLabel(expr)}`;
+  return {
+    kind: "rolledDice",
+    holeId: holeId(protocolId),
+    holeInstanceKey: holeInstanceKey(protocolId),
+    label: `${focus.profile.patientDefense.displayName} Temporary Hit Points (${diceExprLabel(expr)})`,
+    unitFeature: focus.profile,
+  };
+}
+
+function stateWithHeightenedPatientDefenseTemporaryHitPoints(
+  state: BattleState,
+  actor: CharacterBattleCreatureState,
+  roll: BattleRolledDiceFill,
+): BattleState {
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(
+      actor.combatantId,
+      applyTemporaryHitPoints(actor, rolledDiceTotal(roll.value)),
+    ),
+  };
+}
+
+function heightenedPatientDefenseTemporaryHitPointsDiceExpr(
+  focus: MonkFocusResourceFact,
+): DiceExpr {
+  const level = monkClassLevel(focus.actor);
+  return {
+    dice: 2,
+    dieSize:
+      level === null ? 6 : martialArtsSrdDieSizeAtClassLevel(level),
+  };
+}
+
+function monkFocusFlurryOfBlowsStrikeCount(
+  focus: MonkFocusResourceFact,
+): BattleMonkFocusBattleOptionsSupportProfile["flurryOfBlows"]["strikeCount"] | 3 {
+  return monkHasHeightenedFocus(focus.actor)
+    ? 3
+    : focus.profile.flurryOfBlows.strikeCount;
+}
+
+function monkHasHeightenedFocus(actor: CharacterBattleCreatureState): boolean {
+  const level = monkClassLevel(actor);
+  return level !== null && Number(level) >= HEIGHTENED_FOCUS_MONK_LEVEL;
+}
+
+function monkClassLevel(actor: CharacterBattleCreatureState) {
+  return (
+    actor.origin.classLevels.find((level) => level.className === "monk")
+      ?.level ?? null
+  );
+}
+
+function diceExprLabel(expr: DiceExpr): string {
+  const flat =
+    expr.flat === undefined || expr.flat === 0
+      ? ""
+      : expr.flat > 0
+        ? `+${expr.flat}`
+        : `${expr.flat}`;
+  return `${expr.dice}d${expr.dieSize}${flat}`;
 }
 
 function resolveStepOfTheWindFocus(
   input: MonkFocusOptionBattleResolutionInput,
   focus: MonkFocusResourceFact,
   spentResources: BattleTurnResources,
+  carryRequest: HeightenedStepOfTheWindCarryRequest,
 ): BattleResolutionResult {
   if (!resourceHasUsesRemaining(focus.resource)) {
     return invalidResult(
@@ -421,7 +650,12 @@ function resolveStepOfTheWindFocus(
     withDisengage,
     focus,
   );
-  const actor = withDisengage.combatants.get(input.subject.actorId);
+  const withCarriedCreature = applyHeightenedStepOfTheWindCarry(
+    withJumpDistanceMultiplier,
+    focus,
+    carryRequest,
+  );
+  const actor = withCarriedCreature.combatants.get(input.subject.actorId);
   if (!isCharacterBattleCreatureState(actor)) {
     return invalidResult(
       input.state,
@@ -431,11 +665,130 @@ function resolveStepOfTheWindFocus(
   }
   return resolved(
     stateWithMonkFocusResource(
-      withJumpDistanceMultiplier,
+      withCarriedCreature,
       actor,
       spendCharacterResourceUse(focus.resource),
     ),
   );
+}
+
+type HeightenedStepOfTheWindCarryRequest =
+  | { readonly tag: "none" }
+  | { readonly tag: "noCarry" }
+  | { readonly tag: "carry"; readonly carriedCreatureId: CombatantId }
+  | { readonly tag: "invalid"; readonly message: string };
+
+function heightenedStepOfTheWindCarryRequestForInput(
+  input: MonkFocusOptionBattleResolutionInput,
+  focus: MonkFocusResourceFact,
+): HeightenedStepOfTheWindCarryRequest {
+  if (
+    input.subject.option !== "stepOfTheWind" ||
+    input.subject.mode !== "focusDisengageDash" ||
+    !monkHasHeightenedFocus(focus.actor)
+  ) {
+    return { tag: "none" };
+  }
+  const [first, ...rest] = input.fills;
+  if (first === undefined) return { tag: "noCarry" };
+  if (
+    rest.length > 0 ||
+    first.kind !== "targetChoice" ||
+    first.holeId !== heightenedStepOfTheWindCarryHole(input.state, focus).holeId
+  ) {
+    return {
+      tag: "invalid",
+      message:
+        "Heightened Focus Step of the Wind accepts at most one carried-creature target choice.",
+    };
+  }
+  const carriedCreature = input.state.combatants.get(first.value);
+  if (first.value === input.subject.actorId || carriedCreature === undefined) {
+    return {
+      tag: "invalid",
+      message:
+        "Heightened Focus Step of the Wind carried creature must be another combatant in the battle.",
+    };
+  }
+  if (
+    !heightenedStepOfTheWindCarryHole(input.state, focus).choices.includes(
+      first.value,
+    )
+  ) {
+    return {
+      tag: "invalid",
+      message:
+        "Heightened Focus Step of the Wind carried creature is not an eligible target choice.",
+    };
+  }
+  if (!creatureSizeAtMostLarge(carriedCreature)) {
+    return {
+      tag: "invalid",
+      message:
+        "Heightened Focus Step of the Wind carried creature must be Large or smaller.",
+    };
+  }
+  if (
+    !first.spatialFacts?.some(
+      (fact) =>
+        fact.kind === "heightenedStepOfTheWindCarryEligible" &&
+        fact.carrierId === input.subject.actorId &&
+        fact.carriedCreatureId === first.value,
+    )
+  ) {
+    return {
+      tag: "invalid",
+      message:
+        "Heightened Focus Step of the Wind requires a table fact that the carried creature is willing and within 5 feet.",
+    };
+  }
+  return { tag: "carry", carriedCreatureId: first.value };
+}
+
+function heightenedStepOfTheWindCarryHole(
+  state: BattleState,
+  focus: MonkFocusResourceFact,
+): BattleTargetChoiceHole {
+  const protocolId = `battle:monk-focus:heightened-step-of-the-wind-carry:${focus.resource.unit.id}:${focus.actor.combatantId}`;
+  return {
+    kind: "targetChoice",
+    holeId: holeId(protocolId),
+    holeInstanceKey: holeInstanceKey(protocolId),
+    label: `${focus.profile.stepOfTheWind.displayName} carried creature`,
+    requiresTableSpatialFact: true,
+    choices: [...state.combatants.keys()].filter(
+      (combatantId) => combatantId !== focus.actor.combatantId,
+    ),
+  };
+}
+
+function creatureSizeAtMostLarge(combatant: BattleCreatureState): boolean {
+  return SIZES.indexOf(combatantEffectiveSize(combatant)) <=
+    SIZES.indexOf("large");
+}
+
+function applyHeightenedStepOfTheWindCarry(
+  state: BattleState,
+  focus: MonkFocusResourceFact,
+  request: HeightenedStepOfTheWindCarryRequest,
+): BattleState {
+  if (request.tag !== "carry") return state;
+  return {
+    ...state,
+    currentTurnResources: {
+      ...state.currentTurnResources,
+      heightenedStepOfTheWindCarriedCreatures: [
+        ...state.currentTurnResources.heightenedStepOfTheWindCarriedCreatures,
+        {
+          carrierId: focus.actor.combatantId,
+          carriedCreatureId: request.carriedCreatureId,
+          sourceUnitId: focus.resource.unit.id,
+          movementDoesNotProvokeOpportunityAttacks: true,
+          expires: "endOfCarrierTurn",
+        },
+      ],
+    },
+  };
 }
 
 function applyStepOfTheWindJumpDistanceMultiplier(

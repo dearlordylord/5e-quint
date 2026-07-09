@@ -1,0 +1,56 @@
+{
+  "acquiredAtLevel": 10,
+  "className": "barbarian",
+  "description": "When you take damage from a creature within 5 feet of you, you can take a Reaction to make one melee attack against that creature, using a weapon or an Unarmed Strike. Surface owner need: the current reaction-action projection can model the reaction trigger and one Attack action, but needs a narrower melee weapon-or-Unarmed Strike attack target bound to the damaging creature.",
+  "id": "barbarian_retaliation",
+  "kind": "class_feature",
+  "mechanics": {
+    "activationCost": {
+      "kind": "reaction",
+      "trigger": {
+        "kind": "takes_damage_from_creature",
+        "rangeFeet": 5
+      }
+    },
+    "family": "activation",
+    "phases": [
+      {
+        "attachment": {
+          "kind": "self"
+        },
+        "effects": [
+          {
+            "kind": "grant_extra_action",
+            "restriction": {
+              "actions": [
+                {
+                  "action": "attack",
+                  "attackLimit": {
+                    "count": 1,
+                    "kind": "attack_count"
+                  }
+                }
+              ],
+              "kind": "allow_only"
+            }
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "resetCadence": {
+      "kind": "long_rest"
+    },
+    "resource": {
+      "cap": {
+        "kind": "unlimited"
+      },
+      "kind": "use_count"
+    }
+  },
+  "name": "Retaliation",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Barbarian.md:186-188"
+  }
+}

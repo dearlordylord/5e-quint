@@ -1,7 +1,7 @@
 {
   "generatedBy": "scripts/unit-profile-coverage-check.cjs",
   "sourceCorpus": ".references/srd-5.2.1/Classes",
-  "scope": "SRD 5.2.1 class-derived Unit/catalog backlog rows, prioritized by character level. Character levels 1-2 include cantrips and spell-level-1 pressure; character level 3 adds class/subclass level-3 rows and spell-level-2 pressure; character level 4 adds level-4 class-feature pressure while continuing to exclude spell-level-3 pressure. Character levels 5-9 are mined as a non-blocking audit frontier for class-table, class-feature, subclass-feature, repeated progression rows, and later-frontier spell-list pressure. Spell-level-3 pressure starts at character level 5 for full casters and Warlock Pact Magic and at class level 9 for Paladin and Ranger; spell-level-4 pressure starts at character level 7 for full casters and Warlock Pact Magic; spell-level-5 pressure starts at character level 9 for full casters and Warlock Pact Magic.",
+  "scope": "SRD 5.2.1 class-derived Unit/catalog backlog rows, prioritized by character level. Character levels 1-2 include cantrips and spell-level-1 pressure; character level 3 adds class/subclass level-3 rows and spell-level-2 pressure; character level 4 adds level-4 class-feature pressure while continuing to exclude spell-level-3 pressure. Character levels 5-10 are mined as a non-blocking audit frontier for class-table, class-feature, subclass-feature, repeated progression rows, and later-frontier spell-list pressure. Spell-level-3 pressure starts at character level 5 for full casters and Warlock Pact Magic and at class level 9 for Paladin and Ranger; spell-level-4 pressure starts at character level 7 for full casters and Warlock Pact Magic; spell-level-5 pressure starts at character level 9 for full casters and Warlock Pact Magic. Character level 10 carries spell-level-5 forward and does not introduce spell-level-6 pressure.",
   "evidenceArtifacts": {
     "characterCreationOwnerEvidence": {
       "schema": "dnd.srd-character-creation-owner-evidence.v1",
@@ -17,6 +17,7 @@
         "srd521:classes/barbarian:level-1:multiclass-entry:barbarian_multiclass_entry_traits",
         "srd521:classes/barbarian:level-3:class-feature-grant:barbarian_primal_knowledge",
         "srd521:classes/barbarian:level-3:subclass-selection:barbarian_subclass",
+        "srd521:classes/bard:level-10:class-feature-grant:bard_magical_secrets",
         "srd521:classes/bard:level-1:class-container:bard_class_container",
         "srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration",
         "srd521:classes/bard:level-1:core-trait:bard_armor_training",
@@ -108,6 +109,7 @@
         "srd521:classes/ranger:level-2:class-feature-grant:ranger_deft_explorer",
         "srd521:classes/ranger:level-2:class-feature-grant:ranger_fighting_style",
         "srd521:classes/ranger:level-3:subclass-selection:ranger_subclass",
+        "srd521:classes/rogue:level-10:class-feature-grant:rogue_ability_score_improvement",
         "srd521:classes/rogue:level-1:class-container:rogue_class_container",
         "srd521:classes/rogue:level-1:class-feature-grant:rogue_expertise",
         "srd521:classes/rogue:level-1:class-feature-grant:rogue_thieves_cant",
@@ -275,7 +277,7 @@
     }
   },
   "metrics": {
-    "totalRows": 1054,
+    "totalRows": 1079,
     "levelOneRows": 156,
     "levelTwoRows": 33,
     "levelThreeClassRows": 51,
@@ -445,8 +447,8 @@
       "character-creation or progression mechanic": 12
     },
     "allRowsByDisposition": {
-      "catalog-installed-owner-evidence-present": 604,
-      "non-runtime": 108,
+      "catalog-installed-owner-evidence-present": 617,
+      "non-runtime": 120,
       "catalog-only/dead-for-now": 307,
       "missing-authored-runtime-closed": 35
     },
@@ -4161,6 +4163,110 @@
       "battleReadinessStatus": "accepted"
     },
     {
+      "id": "srd521:classes/barbarian:level-10:class-feature-grant:barbarian_retaliation",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Barbarian.md",
+        "lineStart": 186,
+        "lineEnd": 189
+      },
+      "className": "Barbarian",
+      "levelBand": "level-10",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Barbarian Retaliation",
+      "detail": "Level 10 class feature.",
+      "candidateUnitId": "barbarian_retaliation",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "barbarian_retaliation",
+        "sourceRecordPath": "packages/surface/content/barbarian_retaliation.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "barbarian_retaliation"
+      },
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit barbarian_retaliation is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L110D-01-BARBARIAN-RETALIATION at packages/battle-runtime/src/barbarian-retaliation.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
+    },
+    {
+      "id": "srd521:classes/barbarian:level-10:class-table-summary:barbarian_level_10_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Barbarian.md",
+        "lineStart": 44,
+        "lineEnd": 44
+      },
+      "className": "Barbarian",
+      "levelBand": "level-10",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Barbarian level 10 feature table row",
+      "detail": "10 | +4 | Subclass feature | 4 | +3 | 4",
+      "candidateUnitId": "class_barbarian",
+      "progressionDeltas": [
+        {
+          "kind": "class-table-column",
+          "column": "Weapon Mastery",
+          "previousValue": "3",
+          "currentValue": "4",
+          "previousSource": {
+            "path": ".references/srd-5.2.1/Classes/Barbarian.md",
+            "lineStart": 43,
+            "lineEnd": 43
+          },
+          "currentSource": {
+            "path": ".references/srd-5.2.1/Classes/Barbarian.md",
+            "lineStart": 44,
+            "lineEnd": 44
+          }
+        }
+      ],
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_barbarian",
+        "sourceRecordPath": "packages/surface/content/class_barbarian.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_barbarian"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "battleReadinessClosure": {
+        "source": "srd-unit-inventory:level-10-class-table-summary",
+        "kind": "outside-battle-runtime",
+        "owner": "class-progression-accounting",
+        "reason": "The SRD class table row is a progression summary. Narrower feature, spell-access, resource, and table-derived rows own executable obligations; no battle runtime state is introduced for the summary row."
+      },
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
       "id": "srd521:classes/barbarian:level-2:class-feature-grant:barbarian_danger_sense",
       "source": {
         "path": ".references/srd-5.2.1/Classes/Barbarian.md",
@@ -5674,6 +5780,164 @@
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
       "battleReadinessStatus": "accepted"
+    },
+    {
+      "id": "srd521:classes/bard:level-10:class-feature-grant:bard_magical_secrets",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Bard.md",
+        "lineStart": 123,
+        "lineEnd": 126
+      },
+      "className": "Bard",
+      "levelBand": "level-10",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Bard Magical Secrets",
+      "detail": "Level 10 class feature.",
+      "candidateUnitId": "bard_magical_secrets",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "bard_magical_secrets",
+        "sourceRecordPath": "packages/surface/content/bard_magical_secrets.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "bard_magical_secrets"
+      },
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "character-fact-and-runtime-detached-split",
+        "owner": "Character Creation Bard spell-access advancement owner",
+        "reason": "Magical Secrets changes prepared-spell access during Bard advancement. Character Creation owns the spell-list widening and build projection; downstream spell invocation continues through the selected prepared spell records instead of feature-local runtime state."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit bard_magical_secrets is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L10-CHAR-BARD-MAGICAL-SECRETS Character Creation Bard Magical Secrets spell-access progression; Bard Magical Secrets is retained from the installed level-10 Bard class feature grant and consumed by level-gain prepared-spell advancement. The runtime widens gained prepared-spell and replacement choices to Bard, Cleric, Druid, and Wizard spell lists while preserving the existing prepared-spell state owner and rejecting spells outside those lists.",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
+    },
+    {
+      "id": "srd521:classes/bard:level-10:class-table-summary:bard_level_10_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Bard.md",
+        "lineStart": 45,
+        "lineEnd": 45
+      },
+      "className": "Bard",
+      "levelBand": "level-10",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Bard level 10 feature table row",
+      "detail": "10 | +4 | Magical Secrets | D10 | 4 | 15 | 4 | 3 | 3 | 3 | 2 | — | — | — | —",
+      "candidateUnitId": "class_bard",
+      "progressionDeltas": [
+        {
+          "kind": "class-table-column",
+          "column": "Bardic Die",
+          "previousValue": "D8",
+          "currentValue": "D10",
+          "previousSource": {
+            "path": ".references/srd-5.2.1/Classes/Bard.md",
+            "lineStart": 44,
+            "lineEnd": 44
+          },
+          "currentSource": {
+            "path": ".references/srd-5.2.1/Classes/Bard.md",
+            "lineStart": 45,
+            "lineEnd": 45
+          }
+        },
+        {
+          "kind": "class-table-column",
+          "column": "Cantrips",
+          "previousValue": "3",
+          "currentValue": "4",
+          "previousSource": {
+            "path": ".references/srd-5.2.1/Classes/Bard.md",
+            "lineStart": 44,
+            "lineEnd": 44
+          },
+          "currentSource": {
+            "path": ".references/srd-5.2.1/Classes/Bard.md",
+            "lineStart": 45,
+            "lineEnd": 45
+          }
+        },
+        {
+          "kind": "class-table-column",
+          "column": "Prepared Spells",
+          "previousValue": "14",
+          "currentValue": "15",
+          "previousSource": {
+            "path": ".references/srd-5.2.1/Classes/Bard.md",
+            "lineStart": 44,
+            "lineEnd": 44
+          },
+          "currentSource": {
+            "path": ".references/srd-5.2.1/Classes/Bard.md",
+            "lineStart": 45,
+            "lineEnd": 45
+          }
+        },
+        {
+          "kind": "spell-slot-count",
+          "spellLevel": 5,
+          "previousValue": "1",
+          "currentValue": "2",
+          "previousSource": {
+            "path": ".references/srd-5.2.1/Classes/Bard.md",
+            "lineStart": 44,
+            "lineEnd": 44
+          },
+          "currentSource": {
+            "path": ".references/srd-5.2.1/Classes/Bard.md",
+            "lineStart": 45,
+            "lineEnd": 45
+          }
+        }
+      ],
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_bard",
+        "sourceRecordPath": "packages/surface/content/class_bard.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_bard"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "battleReadinessClosure": {
+        "source": "srd-unit-inventory:level-10-class-table-summary",
+        "kind": "outside-battle-runtime",
+        "owner": "class-progression-accounting",
+        "reason": "The SRD class table row is a progression summary. Narrower feature, spell-access, resource, and table-derived rows own executable obligations; no battle runtime state is introduced for the summary row."
+      },
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/bard:level-2:class-feature-grant:bard_expertise",
@@ -11446,6 +11710,142 @@
       "battleReadinessStatus": "accepted"
     },
     {
+      "id": "srd521:classes/cleric:level-10:class-feature-grant:cleric_divine_intervention",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Cleric.md",
+        "lineStart": 122,
+        "lineEnd": 125
+      },
+      "className": "Cleric",
+      "levelBand": "level-10",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Cleric Divine Intervention",
+      "detail": "Level 10 class feature.",
+      "candidateUnitId": "cleric_divine_intervention",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "cleric_divine_intervention",
+        "sourceRecordPath": "packages/surface/content/cleric_divine_intervention.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "cleric_divine_intervention"
+      },
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit cleric_divine_intervention is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L110C-03-DIVINE-INTERVENTION-SESSION at packages/character-sheet-runtime/src/divine-intervention.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
+    },
+    {
+      "id": "srd521:classes/cleric:level-10:class-table-summary:cleric_level_10_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Cleric.md",
+        "lineStart": 44,
+        "lineEnd": 44
+      },
+      "className": "Cleric",
+      "levelBand": "level-10",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Cleric level 10 feature table row",
+      "detail": "10 | +4 | Divine Intervention | 3 | 5 | 15 | 4 | 3 | 3 | 3 | 2 | — | — | — | —",
+      "candidateUnitId": "class_cleric",
+      "progressionDeltas": [
+        {
+          "kind": "class-table-column",
+          "column": "Cantrips",
+          "previousValue": "4",
+          "currentValue": "5",
+          "previousSource": {
+            "path": ".references/srd-5.2.1/Classes/Cleric.md",
+            "lineStart": 43,
+            "lineEnd": 43
+          },
+          "currentSource": {
+            "path": ".references/srd-5.2.1/Classes/Cleric.md",
+            "lineStart": 44,
+            "lineEnd": 44
+          }
+        },
+        {
+          "kind": "class-table-column",
+          "column": "Prepared Spells",
+          "previousValue": "14",
+          "currentValue": "15",
+          "previousSource": {
+            "path": ".references/srd-5.2.1/Classes/Cleric.md",
+            "lineStart": 43,
+            "lineEnd": 43
+          },
+          "currentSource": {
+            "path": ".references/srd-5.2.1/Classes/Cleric.md",
+            "lineStart": 44,
+            "lineEnd": 44
+          }
+        },
+        {
+          "kind": "spell-slot-count",
+          "spellLevel": 5,
+          "previousValue": "1",
+          "currentValue": "2",
+          "previousSource": {
+            "path": ".references/srd-5.2.1/Classes/Cleric.md",
+            "lineStart": 43,
+            "lineEnd": 43
+          },
+          "currentSource": {
+            "path": ".references/srd-5.2.1/Classes/Cleric.md",
+            "lineStart": 44,
+            "lineEnd": 44
+          }
+        }
+      ],
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_cleric",
+        "sourceRecordPath": "packages/surface/content/class_cleric.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_cleric"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "battleReadinessClosure": {
+        "source": "srd-unit-inventory:level-10-class-table-summary",
+        "kind": "outside-battle-runtime",
+        "owner": "class-progression-accounting",
+        "reason": "The SRD class table row is a progression summary. Narrower feature, spell-access, resource, and table-derived rows own executable obligations; no battle runtime state is introduced for the summary row."
+      },
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
       "id": "srd521:classes/cleric:level-2:class-feature-grant:cleric_channel_divinity",
       "source": {
         "path": ".references/srd-5.2.1/Classes/Cleric.md",
@@ -15366,7 +15766,7 @@
         },
         {
           "owner": "battle-runtime spell invocation/projection",
-          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L19E-01-L5-AREA-SAVE-DAMAGE at packages/battle-runtime/src/unit-profile-admission-damage-spells.test.ts",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L110C-03-DIVINE-INTERVENTION-SESSION at packages/character-sheet-runtime/src/divine-intervention.test.ts",
           "status": "owner evidence present"
         }
       ],
@@ -16463,6 +16863,148 @@
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
       "battleReadinessStatus": "accepted"
+    },
+    {
+      "id": "srd521:classes/druid:level-10:class-feature-grant:druid_natures_ward",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Druid.md",
+        "lineStart": 418,
+        "lineEnd": 428
+      },
+      "className": "Druid",
+      "levelBand": "level-10",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Druid Nature's Ward",
+      "detail": "Level 10 class feature.",
+      "candidateUnitId": "druid_natures_ward",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "druid_natures_ward",
+        "sourceRecordPath": "packages/surface/content/druid_natures_ward.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "druid_natures_ward"
+      },
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "character-fact-and-runtime-detached-split",
+        "owner": "Character Sheet passive defense projection owner",
+        "reason": "Nature's Ward is a passive Character Sheet defense projection over existing selected-land state. The runtime derives immunity and Resistance at the sheet owner rather than adding parallel battle-local or feature-local resistance state."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit druid_natures_ward is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L110D-08-LAND-AND-FIEND-RESISTANCES at packages/character-sheet-runtime/src/passive-defenses.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
+    },
+    {
+      "id": "srd521:classes/druid:level-10:class-table-summary:druid_level_10_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Druid.md",
+        "lineStart": 41,
+        "lineEnd": 41
+      },
+      "className": "Druid",
+      "levelBand": "level-10",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Druid level 10 feature table row",
+      "detail": "10 | +4 | Subclass feature | 3 | 4 | 15 | 4 | 3 | 3 | 3 | 2 | — | — | — | —",
+      "candidateUnitId": "class_druid",
+      "progressionDeltas": [
+        {
+          "kind": "class-table-column",
+          "column": "Cantrips",
+          "previousValue": "3",
+          "currentValue": "4",
+          "previousSource": {
+            "path": ".references/srd-5.2.1/Classes/Druid.md",
+            "lineStart": 40,
+            "lineEnd": 40
+          },
+          "currentSource": {
+            "path": ".references/srd-5.2.1/Classes/Druid.md",
+            "lineStart": 41,
+            "lineEnd": 41
+          }
+        },
+        {
+          "kind": "class-table-column",
+          "column": "Prepared Spells",
+          "previousValue": "14",
+          "currentValue": "15",
+          "previousSource": {
+            "path": ".references/srd-5.2.1/Classes/Druid.md",
+            "lineStart": 40,
+            "lineEnd": 40
+          },
+          "currentSource": {
+            "path": ".references/srd-5.2.1/Classes/Druid.md",
+            "lineStart": 41,
+            "lineEnd": 41
+          }
+        },
+        {
+          "kind": "spell-slot-count",
+          "spellLevel": 5,
+          "previousValue": "1",
+          "currentValue": "2",
+          "previousSource": {
+            "path": ".references/srd-5.2.1/Classes/Druid.md",
+            "lineStart": 40,
+            "lineEnd": 40
+          },
+          "currentSource": {
+            "path": ".references/srd-5.2.1/Classes/Druid.md",
+            "lineStart": 41,
+            "lineEnd": 41
+          }
+        }
+      ],
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_druid",
+        "sourceRecordPath": "packages/surface/content/class_druid.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_druid"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "battleReadinessClosure": {
+        "source": "srd-unit-inventory:level-10-class-table-summary",
+        "kind": "outside-battle-runtime",
+        "owner": "class-progression-accounting",
+        "reason": "The SRD class table row is a progression summary. Narrower feature, spell-access, resource, and table-derived rows own executable obligations; no battle runtime state is introduced for the summary row."
+      },
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/druid:level-2:class-feature-grant:druid_wild_companion",
@@ -22106,6 +22648,132 @@
       "battleReadinessStatus": "accepted"
     },
     {
+      "id": "srd521:classes/fighter:level-10:class-feature-grant:fighter_heroic_warrior",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Fighter.md",
+        "lineStart": 150,
+        "lineEnd": 153
+      },
+      "className": "Fighter",
+      "levelBand": "level-10",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Fighter Heroic Warrior",
+      "detail": "Level 10 class feature.",
+      "candidateUnitId": "fighter_heroic_warrior",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "fighter_heroic_warrior",
+        "sourceRecordPath": "packages/surface/content/fighter_heroic_warrior.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "fighter_heroic_warrior"
+      },
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "character-fact-and-runtime-detached-split",
+        "owner": "Character Sheet combat turn-start Heroic Inspiration owner",
+        "reason": "Heroic Warrior executes as a Character Sheet/session combat-turn-start state transition over the existing Heroic Inspiration state. A future D20 reroll spender should consume that shared state rather than re-reading Champion or Heroic Warrior authored identity."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit fighter_heroic_warrior is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L110D-02-FIGHTER-HEROIC-WARRIOR at packages/character-sheet-runtime/src/heroic-warrior.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
+    },
+    {
+      "id": "srd521:classes/fighter:level-10:class-table-summary:fighter_level_10_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Fighter.md",
+        "lineStart": 40,
+        "lineEnd": 40
+      },
+      "className": "Fighter",
+      "levelBand": "level-10",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Fighter level 10 feature table row",
+      "detail": "10 | +4 | Subclass feature | 4 | 5",
+      "candidateUnitId": "class_fighter",
+      "progressionDeltas": [
+        {
+          "kind": "class-table-column",
+          "column": "Second Wind",
+          "previousValue": "3",
+          "currentValue": "4",
+          "previousSource": {
+            "path": ".references/srd-5.2.1/Classes/Fighter.md",
+            "lineStart": 39,
+            "lineEnd": 39
+          },
+          "currentSource": {
+            "path": ".references/srd-5.2.1/Classes/Fighter.md",
+            "lineStart": 40,
+            "lineEnd": 40
+          }
+        },
+        {
+          "kind": "class-table-column",
+          "column": "Weapon Mastery",
+          "previousValue": "4",
+          "currentValue": "5",
+          "previousSource": {
+            "path": ".references/srd-5.2.1/Classes/Fighter.md",
+            "lineStart": 39,
+            "lineEnd": 39
+          },
+          "currentSource": {
+            "path": ".references/srd-5.2.1/Classes/Fighter.md",
+            "lineStart": 40,
+            "lineEnd": 40
+          }
+        }
+      ],
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_fighter",
+        "sourceRecordPath": "packages/surface/content/class_fighter.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_fighter"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "battleReadinessClosure": {
+        "source": "srd-unit-inventory:level-10-class-table-summary",
+        "kind": "outside-battle-runtime",
+        "owner": "class-progression-accounting",
+        "reason": "The SRD class table row is a progression summary. Narrower feature, spell-access, resource, and table-derived rows own executable obligations; no battle runtime state is introduced for the summary row."
+      },
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
       "id": "srd521:classes/fighter:level-2:class-feature-grant:fighter_action_surge",
       "source": {
         "path": ".references/srd-5.2.1/Classes/Fighter.md",
@@ -23613,6 +24281,175 @@
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
       "battleReadinessStatus": "accepted"
+    },
+    {
+      "id": "srd521:classes/monk:level-10:class-feature-grant:monk_heightened_focus",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Monk.md",
+        "lineStart": 142,
+        "lineEnd": 151
+      },
+      "className": "Monk",
+      "levelBand": "level-10",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Monk Heightened Focus",
+      "detail": "Level 10 class feature.",
+      "candidateUnitId": "monk_heightened_focus",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "monk_heightened_focus",
+        "sourceRecordPath": "packages/surface/content/monk_heightened_focus.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "monk_heightened_focus"
+      },
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit monk_heightened_focus is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L110D-04-MONK-STEP-OF-WIND-CARRY at packages/battle-runtime/src/battle-runtime-monk-focus.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
+    },
+    {
+      "id": "srd521:classes/monk:level-10:class-feature-grant:monk_self_restoration",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Monk.md",
+        "lineStart": 152,
+        "lineEnd": 157
+      },
+      "className": "Monk",
+      "levelBand": "level-10",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Monk Self-Restoration",
+      "detail": "Level 10 class feature.",
+      "candidateUnitId": "monk_self_restoration",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "monk_self_restoration",
+        "sourceRecordPath": "packages/surface/content/monk_self_restoration.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "monk_self_restoration"
+      },
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "character-fact-and-runtime-detached-split",
+        "owner": "Character Sheet passive defense projection owner",
+        "reason": "Self-Restoration's promoted support is a Character Sheet/session transition over existing condition state plus a survival-rule projection. It does not add duplicate battle-local condition state or table survival state."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit monk_self_restoration is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L110D-09-MONK-PALADIN-WIZARD-LEVEL10-SHEET at packages/character-sheet-runtime/src/passive-defenses.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
+    },
+    {
+      "id": "srd521:classes/monk:level-10:class-table-summary:monk_level_10_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Monk.md",
+        "lineStart": 41,
+        "lineEnd": 41
+      },
+      "className": "Monk",
+      "levelBand": "level-10",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Monk level 10 feature table row",
+      "detail": "10 | +4 | Heightened Focus, Self-Restoration | 1d8 | 10 | +20 ft.",
+      "candidateUnitId": "class_monk",
+      "progressionDeltas": [
+        {
+          "kind": "class-table-column",
+          "column": "Focus Points",
+          "previousValue": "9",
+          "currentValue": "10",
+          "previousSource": {
+            "path": ".references/srd-5.2.1/Classes/Monk.md",
+            "lineStart": 40,
+            "lineEnd": 40
+          },
+          "currentSource": {
+            "path": ".references/srd-5.2.1/Classes/Monk.md",
+            "lineStart": 41,
+            "lineEnd": 41
+          }
+        },
+        {
+          "kind": "class-table-column",
+          "column": "Unarmored Movement",
+          "previousValue": "+15 ft.",
+          "currentValue": "+20 ft.",
+          "previousSource": {
+            "path": ".references/srd-5.2.1/Classes/Monk.md",
+            "lineStart": 40,
+            "lineEnd": 40
+          },
+          "currentSource": {
+            "path": ".references/srd-5.2.1/Classes/Monk.md",
+            "lineStart": 41,
+            "lineEnd": 41
+          }
+        }
+      ],
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_monk",
+        "sourceRecordPath": "packages/surface/content/class_monk.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_monk"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "battleReadinessClosure": {
+        "source": "srd-unit-inventory:level-10-class-table-summary",
+        "kind": "outside-battle-runtime",
+        "owner": "class-progression-accounting",
+        "reason": "The SRD class table row is a progression summary. Narrower feature, spell-access, resource, and table-derived rows own executable obligations; no battle runtime state is introduced for the summary row."
+      },
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/monk:level-2:class-feature-grant:monk_monks_focus",
@@ -25259,6 +26096,99 @@
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
       "battleReadinessStatus": "accepted"
+    },
+    {
+      "id": "srd521:classes/paladin:level-10:class-feature-grant:paladin_aura_of_courage",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Paladin.md",
+        "lineStart": 148,
+        "lineEnd": 151
+      },
+      "className": "Paladin",
+      "levelBand": "level-10",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Paladin Aura of Courage",
+      "detail": "Level 10 class feature.",
+      "candidateUnitId": "paladin_aura_of_courage",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "paladin_aura_of_courage",
+        "sourceRecordPath": "packages/surface/content/paladin_aura_of_courage.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "paladin_aura_of_courage"
+      },
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "character-fact-and-runtime-detached-split",
+        "owner": "Character Sheet passive defense projection owner plus table/aura membership consumers",
+        "reason": "Aura of Courage's promoted support projects the typed Frightened-immunity fact and Aura of Protection membership source. Spatial membership, ally relation, and aura overlap choice remain table/aura inputs rather than duplicated feature-local state."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit paladin_aura_of_courage is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L110D-09-MONK-PALADIN-WIZARD-LEVEL10-SHEET at packages/character-sheet-runtime/src/passive-defenses.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
+    },
+    {
+      "id": "srd521:classes/paladin:level-10:class-table-summary:paladin_level_10_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Paladin.md",
+        "lineStart": 44,
+        "lineEnd": 44
+      },
+      "className": "Paladin",
+      "levelBand": "level-10",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Paladin level 10 feature table row",
+      "detail": "10 | +4 | Aura of Courage | 2 | 9 | 4 | 3 | 2 | — | —",
+      "candidateUnitId": "class_paladin",
+      "progressionDeltas": [],
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_paladin",
+        "sourceRecordPath": "packages/surface/content/class_paladin.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_paladin"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "battleReadinessClosure": {
+        "source": "srd-unit-inventory:level-10-class-table-summary",
+        "kind": "outside-battle-runtime",
+        "owner": "class-progression-accounting",
+        "reason": "The SRD class table row is a progression summary. Narrower feature, spell-access, resource, and table-derived rows own executable obligations; no battle runtime state is introduced for the summary row."
+      },
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/paladin:level-2:class-feature-grant:paladin_fighting_style",
@@ -28136,6 +29066,99 @@
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
       "battleReadinessStatus": "accepted"
+    },
+    {
+      "id": "srd521:classes/ranger:level-10:class-feature-grant:ranger_tireless",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Ranger.md",
+        "lineStart": 122,
+        "lineEnd": 129
+      },
+      "className": "Ranger",
+      "levelBand": "level-10",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Ranger Tireless",
+      "detail": "Level 10 class feature.",
+      "candidateUnitId": "ranger_tireless",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "ranger_tireless",
+        "sourceRecordPath": "packages/surface/content/ranger_tireless.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "ranger_tireless"
+      },
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "character-fact-and-runtime-detached-split",
+        "owner": "Character Sheet Tireless resource/rest owner",
+        "reason": "Tireless is a Character Sheet self-resource and rest-state feature. The promoted owner consumes existing build feature/resource facts, canonical Temporary Hit Point state, and canonical Exhaustion level state rather than adding battle-local duplicate feature state."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit ranger_tireless is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L10-SHEET-RANGER-TIRELESS at packages/character-sheet-runtime/src/ranger-tireless.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
+    },
+    {
+      "id": "srd521:classes/ranger:level-10:class-table-summary:ranger_level_10_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Ranger.md",
+        "lineStart": 44,
+        "lineEnd": 44
+      },
+      "className": "Ranger",
+      "levelBand": "level-10",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Ranger level 10 feature table row",
+      "detail": "10 | +4 | Tireless | 4 | 9 | 4 | 3 | 2 | — | —",
+      "candidateUnitId": "class_ranger",
+      "progressionDeltas": [],
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_ranger",
+        "sourceRecordPath": "packages/surface/content/class_ranger.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_ranger"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "battleReadinessClosure": {
+        "source": "srd-unit-inventory:level-10-class-table-summary",
+        "kind": "outside-battle-runtime",
+        "owner": "class-progression-accounting",
+        "reason": "The SRD class table row is a progression summary. Narrower feature, spell-access, resource, and table-derived rows own executable obligations; no battle runtime state is introduced for the summary row."
+      },
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/ranger:level-2:class-feature-grant:ranger_deft_explorer",
@@ -31517,6 +32540,109 @@
       "battleReadinessStatus": "accepted"
     },
     {
+      "id": "srd521:classes/rogue:level-10:class-feature-grant:rogue_ability_score_improvement",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Rogue.md",
+        "lineStart": 45,
+        "lineEnd": 45
+      },
+      "className": "Rogue",
+      "levelBand": "level-10",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Rogue Ability Score Improvement",
+      "detail": "Level 10 table-derived repeated class feature; the feature's dedicated rule text appears at an earlier level.",
+      "candidateUnitId": "rogue_ability_score_improvement_l10",
+      "relatedSources": [
+        {
+          "kind": "dedicated-rule-text",
+          "source": {
+            "path": ".references/srd-5.2.1/Classes/Rogue.md",
+            "lineStart": 93,
+            "lineEnd": 96
+          }
+        }
+      ],
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "rogue_ability_score_improvement_l10",
+        "sourceRecordPath": "packages/surface/content/rogue_ability_score_improvement_l10.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "rogue_ability_score_improvement_l10"
+      },
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "selection-grant-container",
+        "owner": "Character Creation class-feature feat choice plus selected feat Unit profiles",
+        "reason": "The level-10 Rogue row is a repeated grant container. Character Creation owns the grant occurrence and selected feat projection; each selected feat Unit owns its executable behavior."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit rogue_ability_score_improvement_l10 is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime",
+          "evidence": "plans/unit-profile-coverage/character-creation-owner-evidence.json records row-level discovery, fill, finalization, and build projection evidence; L10-CHAR-ROGUE-ASI Character Creation repeated Ability Score Improvement feat-choice progression; Rogue level-10 Ability Score Improvement is retained as a repeated installed class-feature grant and routed through the existing feat-choice finalization owner. The support profile admits Rogue progression through level 10 without duplicating the selected feat state or the level-4 ASI rule record.",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
+    },
+    {
+      "id": "srd521:classes/rogue:level-10:class-table-summary:rogue_level_10_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Rogue.md",
+        "lineStart": 45,
+        "lineEnd": 45
+      },
+      "className": "Rogue",
+      "levelBand": "level-10",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Rogue level 10 feature table row",
+      "detail": "10 | +4 | Ability Score Improvement | 5d6",
+      "candidateUnitId": "class_rogue",
+      "progressionDeltas": [],
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_rogue",
+        "sourceRecordPath": "packages/surface/content/class_rogue.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_rogue"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "battleReadinessClosure": {
+        "source": "srd-unit-inventory:level-10-class-table-summary",
+        "kind": "outside-battle-runtime",
+        "owner": "class-progression-accounting",
+        "reason": "The SRD class table row is a progression summary. Narrower feature, spell-access, resource, and table-derived rows own executable obligations; no battle runtime state is introduced for the summary row."
+      },
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
       "id": "srd521:classes/rogue:level-2:class-feature-grant:rogue_cunning_action",
       "source": {
         "path": ".references/srd-5.2.1/Classes/Rogue.md",
@@ -33007,6 +34133,174 @@
       "battleReadinessStatus": "accepted"
     },
     {
+      "id": "srd521:classes/sorcerer:level-10:class-feature-grant:sorcerer_metamagic",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Sorcerer.md",
+        "lineStart": 44,
+        "lineEnd": 44
+      },
+      "className": "Sorcerer",
+      "levelBand": "level-10",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Sorcerer Metamagic",
+      "detail": "Level 10 table-derived repeated class feature; the feature's dedicated rule text appears at an earlier level.",
+      "candidateUnitId": "sorcerer_metamagic",
+      "relatedSources": [
+        {
+          "kind": "dedicated-rule-text",
+          "source": {
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md",
+            "lineStart": 111,
+            "lineEnd": 118
+          }
+        }
+      ],
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "sorcerer_metamagic",
+        "sourceRecordPath": "packages/surface/content/sorcerer_metamagic.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "sorcerer_metamagic"
+      },
+      "unitProfileDisposition": "profile-subset-supported",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "deferred-mechanics",
+        "kind": "profile-subset-remaining-mechanics-closed",
+        "owner": "procedure-specific Spell Invocation owners outside the completed Metamagic subset; future procedure-specific range and duration consumers; future procedure-specific spell damage reroll owners; future repeated spell attack sequence reroll owner",
+        "reason": "The completed Metamagic subset is executable for the named promoted action-time Spell Invocation profiles and rejects unsupported procedures before Sorcery Point spending. Additional standalone damage, control, ongoing-effect, or other action-casting procedures must each add their own typed resource-threading and parity witness before they can opt into Quickened Spell; this is a procedure-owner product boundary, not an unresolved Level 10 Metamagic blocker.; Distant Spell now has a promoted object-light Touch-range slice, but additional target or origin procedures must each consume a typed cast-local range fact before range can be rewritten without trusting authored spell identity; Extended Spell now has a promoted Enlarge/Reduce duration slice, but additional duration-bearing procedures must each consume a typed cast-local duration fact before duration can be rewritten. Subtle Spell now has a promoted cast-local component projection slice, but future consumers such as stealth, audibility, visibility, Counterspell, hidden-caster, free-hand, Silence, and procedure-specific component requirements remain outside this profile. Unsupported cast-property options remain rejected before Sorcery Point spending rather than charging inert Metamagic.; The promoted Empowered Spell slice is owned by the pending single spellAttackDamage rolledDice continuation for Ray of Frost. Repeated spell attacks need invocation-local one-use accounting, allocation spells need allocation-aware dice ownership, and save/ongoing/object damage owners must each consume the typed reroll facts before they can admit Empowered without charging inert Metamagic or storing a parallel reroll opportunity state.; The promoted Seeking Spell slice is owned by the pending single spellAttackDamage Attack Roll continuation. Repeated spell attack sequences need a procedure-local accounting fact that allows at most one Seeking reroll for the whole spell casting across multiple attack rolls before Scorching Ray or similar procedures can consume the same post-miss boundary."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit sorcerer_metamagic is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-creation-runtime; character-sheet-runtime; battle-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L14G-D03-SORCERER-METAMAGIC-PARTIAL-PROFILE at packages/battle-runtime/src/battle-runtime-metamagic-resource.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
+    },
+    {
+      "id": "srd521:classes/sorcerer:level-10:class-table-summary:sorcerer_level_10_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Sorcerer.md",
+        "lineStart": 44,
+        "lineEnd": 44
+      },
+      "className": "Sorcerer",
+      "levelBand": "level-10",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Sorcerer level 10 feature table row",
+      "detail": "10 | +4 | Metamagic | 10 | 6 | 15 | 4 | 3 | 3 | 3 | 2 | — | — | — | —",
+      "candidateUnitId": "class_sorcerer",
+      "progressionDeltas": [
+        {
+          "kind": "class-table-column",
+          "column": "Sorcery Points",
+          "previousValue": "9",
+          "currentValue": "10",
+          "previousSource": {
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md",
+            "lineStart": 43,
+            "lineEnd": 43
+          },
+          "currentSource": {
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md",
+            "lineStart": 44,
+            "lineEnd": 44
+          }
+        },
+        {
+          "kind": "class-table-column",
+          "column": "Cantrips",
+          "previousValue": "5",
+          "currentValue": "6",
+          "previousSource": {
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md",
+            "lineStart": 43,
+            "lineEnd": 43
+          },
+          "currentSource": {
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md",
+            "lineStart": 44,
+            "lineEnd": 44
+          }
+        },
+        {
+          "kind": "class-table-column",
+          "column": "Prepared Spells",
+          "previousValue": "14",
+          "currentValue": "15",
+          "previousSource": {
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md",
+            "lineStart": 43,
+            "lineEnd": 43
+          },
+          "currentSource": {
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md",
+            "lineStart": 44,
+            "lineEnd": 44
+          }
+        },
+        {
+          "kind": "spell-slot-count",
+          "spellLevel": 5,
+          "previousValue": "1",
+          "currentValue": "2",
+          "previousSource": {
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md",
+            "lineStart": 43,
+            "lineEnd": 43
+          },
+          "currentSource": {
+            "path": ".references/srd-5.2.1/Classes/Sorcerer.md",
+            "lineStart": 44,
+            "lineEnd": 44
+          }
+        }
+      ],
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_sorcerer",
+        "sourceRecordPath": "packages/surface/content/class_sorcerer.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_sorcerer"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "battleReadinessClosure": {
+        "source": "srd-unit-inventory:level-10-class-table-summary",
+        "kind": "outside-battle-runtime",
+        "owner": "class-progression-accounting",
+        "reason": "The SRD class table row is a progression summary. Narrower feature, spell-access, resource, and table-derived rows own executable obligations; no battle runtime state is introduced for the summary row."
+      },
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
       "id": "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_font_of_magic",
       "source": {
         "path": ".references/srd-5.2.1/Classes/Sorcerer.md",
@@ -33091,8 +34385,8 @@
       "battleReadinessClosure": {
         "source": "deferred-mechanics",
         "kind": "profile-subset-remaining-mechanics-closed",
-        "owner": "future procedure-specific Quickened Spell Invocation owners; future procedure-specific range and duration consumers; future procedure-specific spell damage reroll owners; future repeated spell attack sequence reroll owner",
-        "reason": "The promoted Quickened Spell subset is closed to the named action-time Spell Invocation profiles that already consume typed Metamagic effectKind, shared Sorcery Point spending, Bonus Action rewriting, and the level-1-plus same-turn spell lock. Standalone damage, control, ongoing-effect, and other action-casting procedures must each add their own typed resource-threading and Quint/runtime parity witness before they can admit Quickened Spell; unsupported procedures remain rejected before Sorcery Point spending instead of using authored spell identity dispatch.; Distant Spell now has a promoted object-light Touch-range slice, but additional target or origin procedures must each consume a typed cast-local range fact before range can be rewritten without trusting authored spell identity; Extended Spell now has a promoted Enlarge/Reduce duration slice, but additional duration-bearing procedures must each consume a typed cast-local duration fact before duration can be rewritten. Subtle Spell now has a promoted cast-local component projection slice, but future consumers such as stealth, audibility, visibility, Counterspell, hidden-caster, free-hand, Silence, and procedure-specific component requirements remain outside this profile. Unsupported cast-property options remain rejected before Sorcery Point spending rather than charging inert Metamagic.; The promoted Empowered Spell slice is owned by the pending single spellAttackDamage rolledDice continuation for Ray of Frost. Repeated spell attacks need invocation-local one-use accounting, allocation spells need allocation-aware dice ownership, and save/ongoing/object damage owners must each consume the typed reroll facts before they can admit Empowered without charging inert Metamagic or storing a parallel reroll opportunity state.; The promoted Seeking Spell slice is owned by the pending single spellAttackDamage Attack Roll continuation. Repeated spell attack sequences need a procedure-local accounting fact that allows at most one Seeking reroll for the whole spell casting across multiple attack rolls before Scorching Ray or similar procedures can consume the same post-miss boundary."
+        "owner": "procedure-specific Spell Invocation owners outside the completed Metamagic subset; future procedure-specific range and duration consumers; future procedure-specific spell damage reroll owners; future repeated spell attack sequence reroll owner",
+        "reason": "The completed Metamagic subset is executable for the named promoted action-time Spell Invocation profiles and rejects unsupported procedures before Sorcery Point spending. Additional standalone damage, control, ongoing-effect, or other action-casting procedures must each add their own typed resource-threading and parity witness before they can opt into Quickened Spell; this is a procedure-owner product boundary, not an unresolved Level 10 Metamagic blocker.; Distant Spell now has a promoted object-light Touch-range slice, but additional target or origin procedures must each consume a typed cast-local range fact before range can be rewritten without trusting authored spell identity; Extended Spell now has a promoted Enlarge/Reduce duration slice, but additional duration-bearing procedures must each consume a typed cast-local duration fact before duration can be rewritten. Subtle Spell now has a promoted cast-local component projection slice, but future consumers such as stealth, audibility, visibility, Counterspell, hidden-caster, free-hand, Silence, and procedure-specific component requirements remain outside this profile. Unsupported cast-property options remain rejected before Sorcery Point spending rather than charging inert Metamagic.; The promoted Empowered Spell slice is owned by the pending single spellAttackDamage rolledDice continuation for Ray of Frost. Repeated spell attacks need invocation-local one-use accounting, allocation spells need allocation-aware dice ownership, and save/ongoing/object damage owners must each consume the typed reroll facts before they can admit Empowered without charging inert Metamagic or storing a parallel reroll opportunity state.; The promoted Seeking Spell slice is owned by the pending single spellAttackDamage Attack Roll continuation. Repeated spell attack sequences need a procedure-local accounting fact that allows at most one Seeking reroll for the whole spell casting across multiple attack rolls before Scorching Ray or similar procedures can consume the same post-miss boundary."
       },
       "ownerEvidence": [
         {
@@ -39186,6 +40480,116 @@
       "battleReadinessStatus": "accepted"
     },
     {
+      "id": "srd521:classes/warlock:level-10:class-feature-grant:warlock_fiendish_resilience",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Warlock.md",
+        "lineStart": 483,
+        "lineEnd": 486
+      },
+      "className": "Warlock",
+      "levelBand": "level-10",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Warlock Fiendish Resilience",
+      "detail": "Level 10 class feature.",
+      "candidateUnitId": "warlock_fiendish_resilience",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "warlock_fiendish_resilience",
+        "sourceRecordPath": "packages/surface/content/warlock_fiendish_resilience.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "warlock_fiendish_resilience"
+      },
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "character-fact-and-runtime-detached-split",
+        "owner": "Character Sheet rest-choice passive defense projection owner",
+        "reason": "Fiendish Resilience is a Character Sheet rest-choice state and passive defense projection. Battle consumers should read the derived resistance projection rather than storing a second damage-type choice."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit warlock_fiendish_resilience is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L110D-08-LAND-AND-FIEND-RESISTANCES at packages/character-sheet-runtime/src/passive-defenses.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
+    },
+    {
+      "id": "srd521:classes/warlock:level-10:class-table-summary:warlock_level_10_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Warlock.md",
+        "lineStart": 44,
+        "lineEnd": 44
+      },
+      "className": "Warlock",
+      "levelBand": "level-10",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Warlock level 10 feature table row",
+      "detail": "10 | +4 | Subclass feature | 7 | 4 | 10 | 2 | 5",
+      "candidateUnitId": "class_warlock",
+      "progressionDeltas": [
+        {
+          "kind": "class-table-column",
+          "column": "Cantrips",
+          "previousValue": "3",
+          "currentValue": "4",
+          "previousSource": {
+            "path": ".references/srd-5.2.1/Classes/Warlock.md",
+            "lineStart": 43,
+            "lineEnd": 43
+          },
+          "currentSource": {
+            "path": ".references/srd-5.2.1/Classes/Warlock.md",
+            "lineStart": 44,
+            "lineEnd": 44
+          }
+        }
+      ],
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_warlock",
+        "sourceRecordPath": "packages/surface/content/class_warlock.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_warlock"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "battleReadinessClosure": {
+        "source": "srd-unit-inventory:level-10-class-table-summary",
+        "kind": "outside-battle-runtime",
+        "owner": "class-progression-accounting",
+        "reason": "The SRD class table row is a progression summary. Narrower feature, spell-access, resource, and table-derived rows own executable obligations; no battle runtime state is introduced for the summary row."
+      },
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
+    },
+    {
       "id": "srd521:classes/warlock:level-2:class-feature-grant:warlock_magical_cunning",
       "source": {
         "path": ".references/srd-5.2.1/Classes/Warlock.md",
@@ -42802,6 +44206,148 @@
       ],
       "nextAction": "Owner-specific operational evidence is classified and present.",
       "battleReadinessStatus": "accepted"
+    },
+    {
+      "id": "srd521:classes/wizard:level-10:class-feature-grant:wizard_empowered_evocation",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Wizard.md",
+        "lineStart": 425,
+        "lineEnd": 428
+      },
+      "className": "Wizard",
+      "levelBand": "level-10",
+      "rowKind": "class-feature-grant",
+      "category": "class feature",
+      "concept": "Wizard Empowered Evocation",
+      "detail": "Level 10 class feature.",
+      "candidateUnitId": "wizard_empowered_evocation",
+      "surface": {
+        "state": "current-surface-can-express-source-facts"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "wizard_empowered_evocation",
+        "sourceRecordPath": "packages/surface/content/wizard_empowered_evocation.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "wizard_empowered_evocation"
+      },
+      "unitProfileDisposition": "supported-profile",
+      "finalDisposition": "catalog-installed-owner-evidence-present",
+      "battleReadinessClosure": {
+        "source": "unit-claim",
+        "kind": "character-fact-and-runtime-detached-split",
+        "owner": "Character Sheet passive defense projection owner and downstream spell-damage consumers",
+        "reason": "Empowered Evocation's promoted support is the typed sheet/session projection for Wizard Evocation damage-roll modifier eligibility. It consumes existing Spell Access, Spell Definition school, and ability-score facts without duplicating spell rosters, school state, or battle damage state."
+      },
+      "ownerEvidence": [
+        {
+          "owner": "Unit catalog/admission",
+          "evidence": "candidate Unit wizard_empowered_evocation is installed in srdUnitCollection",
+          "status": "catalog evidence"
+        },
+        {
+          "owner": "character-sheet-runtime",
+          "evidence": "plans/unit-profile-coverage/unit-claims.jsonl records this SRD Unit as supported or subset-supported; plans/unit-profile-coverage/unit-evidence.jsonl records deterministic-admission-projection evidence; L110D-09-MONK-PALADIN-WIZARD-LEVEL10-SHEET at packages/character-sheet-runtime/src/passive-defenses.test.ts",
+          "status": "owner evidence present"
+        }
+      ],
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "battleReadinessStatus": "accepted"
+    },
+    {
+      "id": "srd521:classes/wizard:level-10:class-table-summary:wizard_level_10_feature_table_row",
+      "source": {
+        "path": ".references/srd-5.2.1/Classes/Wizard.md",
+        "lineStart": 44,
+        "lineEnd": 44
+      },
+      "className": "Wizard",
+      "levelBand": "level-10",
+      "rowKind": "class-table-summary",
+      "category": "character-creation or progression mechanic",
+      "concept": "Wizard level 10 feature table row",
+      "detail": "10 | +4 | Subclass feature | 5 | 15 | 4 | 3 | 3 | 3 | 2 | — | — | — | —",
+      "candidateUnitId": "class_wizard",
+      "progressionDeltas": [
+        {
+          "kind": "class-table-column",
+          "column": "Cantrips",
+          "previousValue": "4",
+          "currentValue": "5",
+          "previousSource": {
+            "path": ".references/srd-5.2.1/Classes/Wizard.md",
+            "lineStart": 43,
+            "lineEnd": 43
+          },
+          "currentSource": {
+            "path": ".references/srd-5.2.1/Classes/Wizard.md",
+            "lineStart": 44,
+            "lineEnd": 44
+          }
+        },
+        {
+          "kind": "class-table-column",
+          "column": "Prepared Spells",
+          "previousValue": "14",
+          "currentValue": "15",
+          "previousSource": {
+            "path": ".references/srd-5.2.1/Classes/Wizard.md",
+            "lineStart": 43,
+            "lineEnd": 43
+          },
+          "currentSource": {
+            "path": ".references/srd-5.2.1/Classes/Wizard.md",
+            "lineStart": 44,
+            "lineEnd": 44
+          }
+        },
+        {
+          "kind": "spell-slot-count",
+          "spellLevel": 5,
+          "previousValue": "1",
+          "currentValue": "2",
+          "previousSource": {
+            "path": ".references/srd-5.2.1/Classes/Wizard.md",
+            "lineStart": 43,
+            "lineEnd": 43
+          },
+          "currentSource": {
+            "path": ".references/srd-5.2.1/Classes/Wizard.md",
+            "lineStart": 44,
+            "lineEnd": 44
+          }
+        }
+      ],
+      "surface": {
+        "state": "outside-surface-runtime-mechanics"
+      },
+      "authoredContent": {
+        "state": "authored-record-present",
+        "unitId": "class_wizard",
+        "sourceRecordPath": "packages/surface/content/class_wizard.json"
+      },
+      "catalogAdmission": {
+        "state": "installed",
+        "unitId": "class_wizard"
+      },
+      "characterCreationOwnership": {
+        "state": "non-runtime-table-summary",
+        "owner": "not-applicable",
+        "evidenceBoundary": "The feature table summarizes level progression; narrower class trait, feature, spell-access, mastery, and equipment rows own executable evidence."
+      },
+      "unitProfileDisposition": "unsupported-profile",
+      "finalDisposition": "non-runtime",
+      "battleReadinessClosure": {
+        "source": "srd-unit-inventory:level-10-class-table-summary",
+        "kind": "outside-battle-runtime",
+        "owner": "class-progression-accounting",
+        "reason": "The SRD class table row is a progression summary. Narrower feature, spell-access, resource, and table-derived rows own executable obligations; no battle runtime state is introduced for the summary row."
+      },
+      "ownerEvidence": [],
+      "nextAction": "No runtime work; keep classification as explicit closure.",
+      "battleReadinessStatus": "accepted-no-battle-effect"
     },
     {
       "id": "srd521:classes/wizard:level-2:class-feature-grant:wizard_scholar",

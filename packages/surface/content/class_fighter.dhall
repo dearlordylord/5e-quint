@@ -21,7 +21,7 @@ let fighter =
           }
       , className = "fighter"
       , description =
-          "SRD Fighter class creation facts plus level 1-9 progression, including level 5 Extra Attack and level 9 Indomitable and Tactical Master grants."
+          "SRD Fighter class creation facts plus level 1-10 progression, including level 5 Extra Attack and level 9 Indomitable and Tactical Master grants."
       , featureGrants =
         [ { level = 1, unitId = "fighter_fighting_style" }
         , { level = 1, unitId = "fighter_second_wind" }

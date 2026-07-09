@@ -559,6 +559,23 @@ export function opportunityAttackOptionForReactor(
   });
 }
 
+export function meleeWeaponOrUnarmedStrikeOptionForReactor(
+  state: BattleState,
+  reactorId: CombatantId,
+  targetId: CombatantId,
+  attackName: string,
+): SupportedAttackActionOption | undefined {
+  return attackActionOptionsForActor(state, reactorId).find((attack) => {
+    const constraint = attackTargetConstraint(attack);
+    return (
+      (attack.kind === "weapon" || attack.kind === "unarmedStrike") &&
+      attackActionOptionName(attack) === attackName &&
+      constraint.kind === "meleeReach" &&
+      state.combatants.has(targetId)
+    );
+  });
+}
+
 export function attackTargetIsLegal(
   state: BattleState,
   actorId: CombatantId,

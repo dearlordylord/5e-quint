@@ -1,0 +1,2184 @@
+{
+  "schema": "l12-cleanroom-exhaustive-task-graph.v1",
+  "generatedBy": "plans/ralph-artifacts/l12-cleanroom-generation/generate-artifacts.cjs",
+  "baseCheck": {
+    "status": "not-run",
+    "reason": "No Ralph task Base SHA was provided in the user request; generated artifacts record this as missing task-run metadata rather than fabricating a base check."
+  },
+  "sourceHashes": {
+    "plans/unit-profile-coverage/level1-2-full-support.json": "ebd1c73b238de48d6bb133599a6e532680726a5efc0b228d426c8fd535259e9f",
+    "plans/unit-profile-coverage/srd-unit-inventory.json": "bc520ef06e595dd65d47380056f0b31520c797e86f47ad86387b5cc47f19136a",
+    "plans/unit-profile-coverage/unit-matrix.json": "c670b9c0eecb534493034ec53eb2bc0d88ccdf0a32211191f411ca9f44318ba2",
+    "plans/cleanroom-branch-coverage/reducer-route-inventory.json": "061aaafaf7cde96f0878292c8f27031e55ece2542d1fe2f710cd1196a6b4b7eb",
+    "plans/cleanroom-branch-coverage/reducer-convergence-backlog.json": "6338b215e8b20ca983ac76e1bf59c212a948816ca7ca64fd4a392b9bf6cbb6e0"
+  },
+  "summary": {
+    "denominatorRows": 400,
+    "executableRows": 146,
+    "routeProofRows": 107,
+    "missingProofJoinRows": 113,
+    "missingProofUnitTasks": 58
+  },
+  "tasks": [
+    {
+      "number": 1,
+      "id": "L12CEG-01-DENOMINATOR-CHECKER",
+      "family": "denominator",
+      "dependencies": [],
+      "input": [
+        "srd-l12-denominator.schema.json",
+        "srd-l12-denominator.json",
+        "plans/unit-profile-coverage/srd-unit-inventory.json"
+      ],
+      "output": [
+        "production checker or script extension selected by implementer"
+      ],
+      "validation": [
+        "pnpm unit-profile-coverage:check",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "SRD-only level 1-2 denominator is validated with stale-hash self-tests",
+        "mixed-provenance rows are rejected"
+      ],
+      "oneAgentSessionScope": "One checker/schema gate and its self-test fixtures; no runtime behavior."
+    },
+    {
+      "number": 2,
+      "id": "L12CEG-02-CAPABILITY-FACT-CHECKER",
+      "family": "facts",
+      "dependencies": [
+        "L12CEG-01-DENOMINATOR-CHECKER"
+      ],
+      "input": [
+        "capability-fact-contract.schema.json",
+        "capability-fact-coverage-matrix.json"
+      ],
+      "output": [
+        "capability fact verifier task implementation"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "Every executable denominator row requires all applicable fact families",
+        "authored ids/names are rejected in runtime fact discriminants"
+      ],
+      "oneAgentSessionScope": "One checker gate over generated capability facts and fixtures."
+    },
+    {
+      "number": 3,
+      "id": "L12CEG-03-ROUTE-PROOF-GATE",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-01-DENOMINATOR-CHECKER"
+      ],
+      "input": [
+        "route-proof-inventory.json"
+      ],
+      "output": [
+        "route proof verifier extension or companion checker"
+      ],
+      "validation": [
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "Grouped selected-identity rows cannot count as acceptance evidence directly",
+        "qRoute/qComponentRoute connector path existence and projection names are checked"
+      ],
+      "oneAgentSessionScope": "One verifier gate over the existing connector inventory."
+    },
+    {
+      "number": 4,
+      "id": "L12CEG-04-MAPPING-GATE",
+      "family": "mapping",
+      "dependencies": [
+        "L12CEG-01-DENOMINATOR-CHECKER",
+        "L12CEG-02-CAPABILITY-FACT-CHECKER",
+        "L12CEG-03-ROUTE-PROOF-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.schema.json",
+        "srd-row-generic-fact-map.json"
+      ],
+      "output": [
+        "mapping verifier gate"
+      ],
+      "validation": [
+        "pnpm unit-profile-coverage:check",
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "Every denominator row maps exactly once",
+        "Executable rows cannot pass with missing-proof-join"
+      ],
+      "oneAgentSessionScope": "One mapping checker and self-test fixture set."
+    },
+    {
+      "number": 5,
+      "id": "L12CEG-05-ACID-SPLASH-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for acid_splash",
+        "srd-l12-denominator.json rows for acid_splash",
+        "capability-fact-coverage-matrix.json rows for acid_splash",
+        "route-proof-inventory.json",
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for acid_splash",
+        "updated route-proof-inventory or source connector task for acid_splash",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for acid_splash"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "2 denominator row(s) for acid_splash no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-damage-save-or-attack, spell.readied-action-time-spell",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (acid_splash) across 2 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 6,
+      "id": "L12CEG-06-ANIMAL-FRIENDSHIP-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for animal_friendship",
+        "srd-l12-denominator.json rows for animal_friendship",
+        "capability-fact-coverage-matrix.json rows for animal_friendship",
+        "route-proof-inventory.json",
+        "packages/battle-runtime/battle-runtime-creature-type-protection.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for animal_friendship",
+        "updated route-proof-inventory or source connector task for animal_friendship",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for animal_friendship"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "3 denominator row(s) for animal_friendship no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.creature-type-protection-and-charm",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (animal_friendship) across 3 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 7,
+      "id": "L12CEG-07-BARBARIAN-DANGER-SENSE-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for barbarian_danger_sense",
+        "srd-l12-denominator.json rows for barbarian_danger_sense",
+        "capability-fact-coverage-matrix.json rows for barbarian_danger_sense",
+        "route-proof-inventory.json",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for barbarian_danger_sense",
+        "updated route-proof-inventory or source connector task for barbarian_danger_sense",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for barbarian_danger_sense"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "1 denominator row(s) for barbarian_danger_sense no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: unit-feature.passive-saving-throw-roll-mode",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (barbarian_danger_sense) across 1 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 8,
+      "id": "L12CEG-08-BARBARIAN-RAGE-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for barbarian_rage",
+        "srd-l12-denominator.json rows for barbarian_rage",
+        "capability-fact-coverage-matrix.json rows for barbarian_rage",
+        "route-proof-inventory.json",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for barbarian_rage",
+        "updated route-proof-inventory or source connector task for barbarian_rage",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for barbarian_rage"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "1 denominator row(s) for barbarian_rage no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: unit-feature.bonus-action-ongoing-rage",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (barbarian_rage) across 1 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 9,
+      "id": "L12CEG-09-BARBARIAN-RECKLESS-ATTACK-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for barbarian_reckless_attack",
+        "srd-l12-denominator.json rows for barbarian_reckless_attack",
+        "capability-fact-coverage-matrix.json rows for barbarian_reckless_attack",
+        "route-proof-inventory.json",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for barbarian_reckless_attack",
+        "updated route-proof-inventory or source connector task for barbarian_reckless_attack",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for barbarian_reckless_attack"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "1 denominator row(s) for barbarian_reckless_attack no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: unit-feature.first-attack-roll-reckless-advantage",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (barbarian_reckless_attack) across 1 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 10,
+      "id": "L12CEG-10-BARD-BARDIC-INSPIRATION-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for bard_bardic_inspiration",
+        "srd-l12-denominator.json rows for bard_bardic_inspiration",
+        "capability-fact-coverage-matrix.json rows for bard_bardic_inspiration",
+        "route-proof-inventory.json",
+        "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt",
+        "packages/battle-runtime/battle-runtime-bardic-inspiration.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for bard_bardic_inspiration",
+        "updated route-proof-inventory or source connector task for bard_bardic_inspiration",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for bard_bardic_inspiration"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "1 denominator row(s) for bard_bardic_inspiration no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: unit-feature.bardic-inspiration-failed-d20-test, unit-feature.bardic-inspiration-grant",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (bard_bardic_inspiration) across 1 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 11,
+      "id": "L12CEG-11-BURNING-HANDS-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for burning_hands",
+        "srd-l12-denominator.json rows for burning_hands",
+        "capability-fact-coverage-matrix.json rows for burning_hands",
+        "route-proof-inventory.json",
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for burning_hands",
+        "updated route-proof-inventory or source connector task for burning_hands",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for burning_hands"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "2 denominator row(s) for burning_hands no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-damage-save-or-attack, spell.readied-action-time-spell",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (burning_hands) across 2 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 12,
+      "id": "L12CEG-12-CHILL-TOUCH-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for chill_touch",
+        "srd-l12-denominator.json rows for chill_touch",
+        "capability-fact-coverage-matrix.json rows for chill_touch",
+        "route-proof-inventory.json",
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for chill_touch",
+        "updated route-proof-inventory or source connector task for chill_touch",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for chill_touch"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "3 denominator row(s) for chill_touch no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-damage-save-or-attack, spell.readied-action-time-spell",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (chill_touch) across 3 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 13,
+      "id": "L12CEG-13-CHROMATIC-ORB-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for chromatic_orb",
+        "srd-l12-denominator.json rows for chromatic_orb",
+        "capability-fact-coverage-matrix.json rows for chromatic_orb",
+        "route-proof-inventory.json",
+        "packages/battle-runtime/battle-runtime-chained-spell-attack.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for chromatic_orb",
+        "updated route-proof-inventory or source connector task for chromatic_orb",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for chromatic_orb"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "2 denominator row(s) for chromatic_orb no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-chained-attack-damage, spell.readied-action-time-spell",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (chromatic_orb) across 2 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 14,
+      "id": "L12CEG-14-COLOR-SPRAY-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for color_spray",
+        "srd-l12-denominator.json rows for color_spray",
+        "capability-fact-coverage-matrix.json rows for color_spray",
+        "route-proof-inventory.json",
+        "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for color_spray",
+        "updated route-proof-inventory or source connector task for color_spray",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for color_spray"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "3 denominator row(s) for color_spray no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-condition-save",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (color_spray) across 3 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 15,
+      "id": "L12CEG-15-CURE-WOUNDS-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for cure_wounds",
+        "srd-l12-denominator.json rows for cure_wounds",
+        "capability-fact-coverage-matrix.json rows for cure_wounds",
+        "route-proof-inventory.json",
+        "packages/shared-algebras/proofs/rule-core/spell-hit-point-restoration-core.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for cure_wounds",
+        "updated route-proof-inventory or source connector task for cure_wounds",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for cure_wounds"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "5 denominator row(s) for cure_wounds no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.hit-point-restoration",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (cure_wounds) across 5 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 16,
+      "id": "L12CEG-16-DANCING-LIGHTS-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for dancing_lights",
+        "srd-l12-denominator.json rows for dancing_lights",
+        "capability-fact-coverage-matrix.json rows for dancing_lights",
+        "route-proof-inventory.json",
+        "packages/battle-runtime/battle-runtime-light.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for dancing_lights",
+        "updated route-proof-inventory or source connector task for dancing_lights",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for dancing_lights"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "3 denominator row(s) for dancing_lights no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-dancing-lights-movable-dim-light",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (dancing_lights) across 3 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 17,
+      "id": "L12CEG-17-DISSONANT-WHISPERS-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for dissonant_whispers",
+        "srd-l12-denominator.json rows for dissonant_whispers",
+        "capability-fact-coverage-matrix.json rows for dissonant_whispers",
+        "route-proof-inventory.json",
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+        "packages/battle-runtime/battle-runtime-movement.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for dissonant_whispers",
+        "updated route-proof-inventory or source connector task for dissonant_whispers",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for dissonant_whispers"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "1 denominator row(s) for dissonant_whispers no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-damage-save-or-attack, spell.invocation-forced-reaction-movement",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (dissonant_whispers) across 1 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 18,
+      "id": "L12CEG-18-DIVINE-FAVOR-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for divine_favor",
+        "srd-l12-denominator.json rows for divine_favor",
+        "capability-fact-coverage-matrix.json rows for divine_favor",
+        "route-proof-inventory.json",
+        "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for divine_favor",
+        "updated route-proof-inventory or source connector task for divine_favor",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for divine_favor"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "1 denominator row(s) for divine_favor no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-weapon-damage-rider",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (divine_favor) across 1 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 19,
+      "id": "L12CEG-19-DIVINE-SMITE-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for divine_smite",
+        "srd-l12-denominator.json rows for divine_smite",
+        "capability-fact-coverage-matrix.json rows for divine_smite",
+        "route-proof-inventory.json",
+        "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for divine_smite",
+        "updated route-proof-inventory or source connector task for divine_smite",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for divine_smite"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "1 denominator row(s) for divine_smite no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-after-hit-damage",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (divine_smite) across 1 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 20,
+      "id": "L12CEG-20-ENSNARING-STRIKE-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for ensnaring_strike",
+        "srd-l12-denominator.json rows for ensnaring_strike",
+        "capability-fact-coverage-matrix.json rows for ensnaring_strike",
+        "route-proof-inventory.json",
+        "packages/battle-runtime/battle-runtime-weapon-hit-turn-effects.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for ensnaring_strike",
+        "updated route-proof-inventory or source connector task for ensnaring_strike",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for ensnaring_strike"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "1 denominator row(s) for ensnaring_strike no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-after-hit-restraint-turn-start-damage",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (ensnaring_strike) across 1 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 21,
+      "id": "L12CEG-21-ENTANGLE-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for entangle",
+        "srd-l12-denominator.json rows for entangle",
+        "capability-fact-coverage-matrix.json rows for entangle",
+        "route-proof-inventory.json",
+        "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for entangle",
+        "updated route-proof-inventory or source connector task for entangle",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for entangle"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "2 denominator row(s) for entangle no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-condition-save",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (entangle) across 2 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 22,
+      "id": "L12CEG-22-EXPEDITIOUS-RETREAT-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for expeditious_retreat",
+        "srd-l12-denominator.json rows for expeditious_retreat",
+        "capability-fact-coverage-matrix.json rows for expeditious_retreat",
+        "route-proof-inventory.json",
+        "packages/battle-runtime/battle-runtime-movement.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for expeditious_retreat",
+        "updated route-proof-inventory or source connector task for expeditious_retreat",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for expeditious_retreat"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "3 denominator row(s) for expeditious_retreat no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-expeditious-retreat-dash",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (expeditious_retreat) across 3 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 23,
+      "id": "L12CEG-23-FAERIE-FIRE-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for faerie_fire",
+        "srd-l12-denominator.json rows for faerie_fire",
+        "capability-fact-coverage-matrix.json rows for faerie_fire",
+        "route-proof-inventory.json",
+        "packages/battle-runtime/battle-runtime-save-gated-spell.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for faerie_fire",
+        "updated route-proof-inventory or source connector task for faerie_fire",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for faerie_fire"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "2 denominator row(s) for faerie_fire no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-attack-roll-advantage-save",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (faerie_fire) across 2 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 24,
+      "id": "L12CEG-24-FALSE-LIFE-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for false_life",
+        "srd-l12-denominator.json rows for false_life",
+        "capability-fact-coverage-matrix.json rows for false_life",
+        "route-proof-inventory.json",
+        "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for false_life",
+        "updated route-proof-inventory or source connector task for false_life",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for false_life"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "2 denominator row(s) for false_life no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.scalar-buff",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (false_life) across 2 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 25,
+      "id": "L12CEG-25-FEATHER-FALL-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for feather_fall",
+        "srd-l12-denominator.json rows for feather_fall",
+        "capability-fact-coverage-matrix.json rows for feather_fall",
+        "route-proof-inventory.json",
+        "packages/battle-runtime/battle-runtime-feather-fall.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for feather_fall",
+        "updated route-proof-inventory or source connector task for feather_fall",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for feather_fall"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "3 denominator row(s) for feather_fall no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-feather-fall-mitigation",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (feather_fall) across 3 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 26,
+      "id": "L12CEG-26-FIGHTER-ACTION-SURGE-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for fighter_action_surge",
+        "srd-l12-denominator.json rows for fighter_action_surge",
+        "capability-fact-coverage-matrix.json rows for fighter_action_surge",
+        "route-proof-inventory.json",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-action-count-core.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for fighter_action_surge",
+        "updated route-proof-inventory or source connector task for fighter_action_surge",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for fighter_action_surge"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "1 denominator row(s) for fighter_action_surge no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: unit-feature.action-surge-resource",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (fighter_action_surge) across 1 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 27,
+      "id": "L12CEG-27-FIGHTER-SECOND-WIND-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for fighter_second_wind",
+        "srd-l12-denominator.json rows for fighter_second_wind",
+        "capability-fact-coverage-matrix.json rows for fighter_second_wind",
+        "route-proof-inventory.json",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for fighter_second_wind",
+        "updated route-proof-inventory or source connector task for fighter_second_wind",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for fighter_second_wind"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "1 denominator row(s) for fighter_second_wind no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: unit-feature.self-bonus-action-healing",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (fighter_second_wind) across 1 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 28,
+      "id": "L12CEG-28-FIGHTER-TACTICAL-MIND-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for fighter_tactical_mind",
+        "srd-l12-denominator.json rows for fighter_tactical_mind",
+        "capability-fact-coverage-matrix.json rows for fighter_tactical_mind",
+        "route-proof-inventory.json",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for fighter_tactical_mind",
+        "updated route-proof-inventory or source connector task for fighter_tactical_mind",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for fighter_tactical_mind"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "1 denominator row(s) for fighter_tactical_mind no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: unit-feature.failed-ability-check-resource-boost",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (fighter_tactical_mind) across 1 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 29,
+      "id": "L12CEG-29-FIRE-BOLT-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for fire_bolt",
+        "srd-l12-denominator.json rows for fire_bolt",
+        "capability-fact-coverage-matrix.json rows for fire_bolt",
+        "route-proof-inventory.json",
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for fire_bolt",
+        "updated route-proof-inventory or source connector task for fire_bolt",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for fire_bolt"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "2 denominator row(s) for fire_bolt no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-damage-save-or-attack",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (fire_bolt) across 2 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 30,
+      "id": "L12CEG-30-FOG-CLOUD-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for fog_cloud",
+        "srd-l12-denominator.json rows for fog_cloud",
+        "capability-fact-coverage-matrix.json rows for fog_cloud",
+        "route-proof-inventory.json",
+        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for fog_cloud",
+        "updated route-proof-inventory or source connector task for fog_cloud",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for fog_cloud"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "4 denominator row(s) for fog_cloud no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-fog-cloud-obscurement",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (fog_cloud) across 4 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 31,
+      "id": "L12CEG-31-GREASE-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for grease",
+        "srd-l12-denominator.json rows for grease",
+        "capability-fact-coverage-matrix.json rows for grease",
+        "route-proof-inventory.json",
+        "packages/battle-runtime/battle-runtime-ground-command.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for grease",
+        "updated route-proof-inventory or source connector task for grease",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for grease"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "2 denominator row(s) for grease no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-grease-ground-hazard",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (grease) across 2 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 32,
+      "id": "L12CEG-32-GUIDING-BOLT-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for guiding_bolt",
+        "srd-l12-denominator.json rows for guiding_bolt",
+        "capability-fact-coverage-matrix.json rows for guiding_bolt",
+        "route-proof-inventory.json",
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for guiding_bolt",
+        "updated route-proof-inventory or source connector task for guiding_bolt",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for guiding_bolt"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "1 denominator row(s) for guiding_bolt no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-damage-save-or-attack, spell.readied-action-time-spell",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (guiding_bolt) across 1 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 33,
+      "id": "L12CEG-33-HEALING-WORD-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for healing_word",
+        "srd-l12-denominator.json rows for healing_word",
+        "capability-fact-coverage-matrix.json rows for healing_word",
+        "route-proof-inventory.json",
+        "packages/shared-algebras/proofs/rule-core/spell-hit-point-restoration-core.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for healing_word",
+        "updated route-proof-inventory or source connector task for healing_word",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for healing_word"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "3 denominator row(s) for healing_word no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.hit-point-restoration",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (healing_word) across 3 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 34,
+      "id": "L12CEG-34-HELLISH-REBUKE-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for hellish_rebuke",
+        "srd-l12-denominator.json rows for hellish_rebuke",
+        "capability-fact-coverage-matrix.json rows for hellish_rebuke",
+        "route-proof-inventory.json",
+        "packages/battle-runtime/battle-runtime-reaction-resolution.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for hellish_rebuke",
+        "updated route-proof-inventory or source connector task for hellish_rebuke",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for hellish_rebuke"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "1 denominator row(s) for hellish_rebuke no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-damage-save-or-attack, spell.reaction-hellish-rebuke",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (hellish_rebuke) across 1 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 35,
+      "id": "L12CEG-35-HEROISM-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for heroism",
+        "srd-l12-denominator.json rows for heroism",
+        "capability-fact-coverage-matrix.json rows for heroism",
+        "route-proof-inventory.json",
+        "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for heroism",
+        "updated route-proof-inventory or source connector task for heroism",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for heroism"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "2 denominator row(s) for heroism no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-condition-immunity-turn-start-temporary-hit-points",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (heroism) across 2 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 36,
+      "id": "L12CEG-36-HEX-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for hex",
+        "srd-l12-denominator.json rows for hex",
+        "capability-fact-coverage-matrix.json rows for hex",
+        "route-proof-inventory.json",
+        "packages/battle-runtime/battle-runtime-marked-riders.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for hex",
+        "updated route-proof-inventory or source connector task for hex",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for hex"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "1 denominator row(s) for hex no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-marked-damage-rider",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (hex) across 1 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 37,
+      "id": "L12CEG-37-HIDEOUS-LAUGHTER-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for hideous_laughter",
+        "srd-l12-denominator.json rows for hideous_laughter",
+        "capability-fact-coverage-matrix.json rows for hideous_laughter",
+        "route-proof-inventory.json",
+        "packages/battle-runtime/battle-runtime-sleep-hideous-laughter.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for hideous_laughter",
+        "updated route-proof-inventory or source connector task for hideous_laughter",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for hideous_laughter"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "3 denominator row(s) for hideous_laughter no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-hideous-laughter-repeat-save-lifecycle",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (hideous_laughter) across 3 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 38,
+      "id": "L12CEG-38-HUNTERS-MARK-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for hunters_mark",
+        "srd-l12-denominator.json rows for hunters_mark",
+        "capability-fact-coverage-matrix.json rows for hunters_mark",
+        "route-proof-inventory.json",
+        "packages/battle-runtime/battle-runtime-marked-riders.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for hunters_mark",
+        "updated route-proof-inventory or source connector task for hunters_mark",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for hunters_mark"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "1 denominator row(s) for hunters_mark no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-marked-damage-rider",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (hunters_mark) across 1 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 39,
+      "id": "L12CEG-39-ICE-KNIFE-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for ice_knife",
+        "srd-l12-denominator.json rows for ice_knife",
+        "capability-fact-coverage-matrix.json rows for ice_knife",
+        "route-proof-inventory.json",
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for ice_knife",
+        "updated route-proof-inventory or source connector task for ice_knife",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for ice_knife"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "3 denominator row(s) for ice_knife no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-damage-save-or-attack",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (ice_knife) across 3 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 40,
+      "id": "L12CEG-40-INFLICT-WOUNDS-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for inflict_wounds",
+        "srd-l12-denominator.json rows for inflict_wounds",
+        "capability-fact-coverage-matrix.json rows for inflict_wounds",
+        "route-proof-inventory.json",
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for inflict_wounds",
+        "updated route-proof-inventory or source connector task for inflict_wounds",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for inflict_wounds"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "1 denominator row(s) for inflict_wounds no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-damage-save-or-attack, spell.readied-action-time-spell",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (inflict_wounds) across 1 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 41,
+      "id": "L12CEG-41-JUMP-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for jump",
+        "srd-l12-denominator.json rows for jump",
+        "capability-fact-coverage-matrix.json rows for jump",
+        "route-proof-inventory.json",
+        "packages/battle-runtime/battle-runtime-jump-movement.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for jump",
+        "updated route-proof-inventory or source connector task for jump",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for jump"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "4 denominator row(s) for jump no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-jump-movement-replacement",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (jump) across 4 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 42,
+      "id": "L12CEG-42-MONK-MARTIAL-ARTS-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for monk_martial_arts",
+        "srd-l12-denominator.json rows for monk_martial_arts",
+        "capability-fact-coverage-matrix.json rows for monk_martial_arts",
+        "route-proof-inventory.json",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for monk_martial_arts",
+        "updated route-proof-inventory or source connector task for monk_martial_arts",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for monk_martial_arts"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "1 denominator row(s) for monk_martial_arts no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: unit-feature.martial-arts-attack-projection",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (monk_martial_arts) across 1 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 43,
+      "id": "L12CEG-43-MONK-UNARMORED-MOVEMENT-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for monk_unarmored_movement",
+        "srd-l12-denominator.json rows for monk_unarmored_movement",
+        "capability-fact-coverage-matrix.json rows for monk_unarmored_movement",
+        "route-proof-inventory.json",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-passive-movement-defense-core.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for monk_unarmored_movement",
+        "updated route-proof-inventory or source connector task for monk_unarmored_movement",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for monk_unarmored_movement"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "1 denominator row(s) for monk_unarmored_movement no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: unit-feature.passive-speed-bonus",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (monk_unarmored_movement) across 1 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 44,
+      "id": "L12CEG-44-PALADIN-PALADINS-SMITE-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for paladin_paladins_smite",
+        "srd-l12-denominator.json rows for paladin_paladins_smite",
+        "capability-fact-coverage-matrix.json rows for paladin_paladins_smite",
+        "route-proof-inventory.json",
+        "packages/battle-runtime/battle-runtime-weapon-hit-spell-riders.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for paladin_paladins_smite",
+        "updated route-proof-inventory or source connector task for paladin_paladins_smite",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for paladin_paladins_smite"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "1 denominator row(s) for paladin_paladins_smite no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-after-hit-damage",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (paladin_paladins_smite) across 1 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 45,
+      "id": "L12CEG-45-POISON-SPRAY-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for poison_spray",
+        "srd-l12-denominator.json rows for poison_spray",
+        "capability-fact-coverage-matrix.json rows for poison_spray",
+        "route-proof-inventory.json",
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for poison_spray",
+        "updated route-proof-inventory or source connector task for poison_spray",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for poison_spray"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "4 denominator row(s) for poison_spray no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-damage-save-or-attack, spell.readied-action-time-spell",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (poison_spray) across 4 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 46,
+      "id": "L12CEG-46-PRODUCE-FLAME-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for produce_flame",
+        "srd-l12-denominator.json rows for produce_flame",
+        "capability-fact-coverage-matrix.json rows for produce_flame",
+        "route-proof-inventory.json",
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+        "packages/battle-runtime/battle-runtime-light.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for produce_flame",
+        "updated route-proof-inventory or source connector task for produce_flame",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for produce_flame"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "1 denominator row(s) for produce_flame no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-damage-save-or-attack, spell.invocation-held-light-emitter",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (produce_flame) across 1 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 47,
+      "id": "L12CEG-47-PROTECTION-FROM-EVIL-AND-GOOD-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for protection_from_evil_and_good",
+        "srd-l12-denominator.json rows for protection_from_evil_and_good",
+        "capability-fact-coverage-matrix.json rows for protection_from_evil_and_good",
+        "route-proof-inventory.json",
+        "packages/battle-runtime/battle-runtime-creature-type-protection.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for protection_from_evil_and_good",
+        "updated route-proof-inventory or source connector task for protection_from_evil_and_good",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for protection_from_evil_and_good"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "5 denominator row(s) for protection_from_evil_and_good no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.creature-type-protection-and-charm",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (protection_from_evil_and_good) across 5 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 48,
+      "id": "L12CEG-48-RAY-OF-FROST-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for ray_of_frost",
+        "srd-l12-denominator.json rows for ray_of_frost",
+        "capability-fact-coverage-matrix.json rows for ray_of_frost",
+        "route-proof-inventory.json",
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for ray_of_frost",
+        "updated route-proof-inventory or source connector task for ray_of_frost",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for ray_of_frost"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "2 denominator row(s) for ray_of_frost no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-damage-save-or-attack, spell.readied-action-time-spell",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (ray_of_frost) across 2 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 49,
+      "id": "L12CEG-49-RAY-OF-SICKNESS-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for ray_of_sickness",
+        "srd-l12-denominator.json rows for ray_of_sickness",
+        "capability-fact-coverage-matrix.json rows for ray_of_sickness",
+        "route-proof-inventory.json",
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for ray_of_sickness",
+        "updated route-proof-inventory or source connector task for ray_of_sickness",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for ray_of_sickness"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "2 denominator row(s) for ray_of_sickness no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-damage-save-or-attack, spell.readied-action-time-spell",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (ray_of_sickness) across 2 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 50,
+      "id": "L12CEG-50-ROGUE-CUNNING-ACTION-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for rogue_cunning_action",
+        "srd-l12-denominator.json rows for rogue_cunning_action",
+        "capability-fact-coverage-matrix.json rows for rogue_cunning_action",
+        "route-proof-inventory.json",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for rogue_cunning_action",
+        "updated route-proof-inventory or source connector task for rogue_cunning_action",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for rogue_cunning_action"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "1 denominator row(s) for rogue_cunning_action no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: unit-feature.alternate-action-cost",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (rogue_cunning_action) across 1 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 51,
+      "id": "L12CEG-51-ROGUE-SNEAK-ATTACK-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for rogue_sneak_attack",
+        "srd-l12-denominator.json rows for rogue_sneak_attack",
+        "capability-fact-coverage-matrix.json rows for rogue_sneak_attack",
+        "route-proof-inventory.json",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for rogue_sneak_attack",
+        "updated route-proof-inventory or source connector task for rogue_sneak_attack",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for rogue_sneak_attack"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "1 denominator row(s) for rogue_sneak_attack no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: unit-feature.attack-damage-rider",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (rogue_sneak_attack) across 1 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 52,
+      "id": "L12CEG-52-SACRED-FLAME-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for sacred_flame",
+        "srd-l12-denominator.json rows for sacred_flame",
+        "capability-fact-coverage-matrix.json rows for sacred_flame",
+        "route-proof-inventory.json",
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for sacred_flame",
+        "updated route-proof-inventory or source connector task for sacred_flame",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for sacred_flame"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "1 denominator row(s) for sacred_flame no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-damage-save-or-attack, spell.readied-action-time-spell",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (sacred_flame) across 1 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 53,
+      "id": "L12CEG-53-SEARING-SMITE-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for searing_smite",
+        "srd-l12-denominator.json rows for searing_smite",
+        "capability-fact-coverage-matrix.json rows for searing_smite",
+        "route-proof-inventory.json",
+        "packages/battle-runtime/battle-runtime-weapon-hit-turn-effects.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for searing_smite",
+        "updated route-proof-inventory or source connector task for searing_smite",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for searing_smite"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "1 denominator row(s) for searing_smite no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-after-hit-timed-damage-save",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (searing_smite) across 1 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 54,
+      "id": "L12CEG-54-SHIELD-OF-FAITH-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for shield_of_faith",
+        "srd-l12-denominator.json rows for shield_of_faith",
+        "capability-fact-coverage-matrix.json rows for shield_of_faith",
+        "route-proof-inventory.json",
+        "packages/battle-runtime/battle-runtime-restoration-and-buffs.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for shield_of_faith",
+        "updated route-proof-inventory or source connector task for shield_of_faith",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for shield_of_faith"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "2 denominator row(s) for shield_of_faith no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.scalar-buff",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (shield_of_faith) across 2 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 55,
+      "id": "L12CEG-55-SHILLELAGH-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for shillelagh",
+        "srd-l12-denominator.json rows for shillelagh",
+        "capability-fact-coverage-matrix.json rows for shillelagh",
+        "route-proof-inventory.json",
+        "packages/battle-runtime/battle-runtime-weapon-attacks.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for shillelagh",
+        "updated route-proof-inventory or source connector task for shillelagh",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for shillelagh"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "1 denominator row(s) for shillelagh no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-weapon-attack-override",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (shillelagh) across 1 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 56,
+      "id": "L12CEG-56-SHOCKING-GRASP-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for shocking_grasp",
+        "srd-l12-denominator.json rows for shocking_grasp",
+        "capability-fact-coverage-matrix.json rows for shocking_grasp",
+        "route-proof-inventory.json",
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for shocking_grasp",
+        "updated route-proof-inventory or source connector task for shocking_grasp",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for shocking_grasp"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "2 denominator row(s) for shocking_grasp no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-damage-save-or-attack, spell.readied-action-time-spell",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (shocking_grasp) across 2 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 57,
+      "id": "L12CEG-57-SORCERER-INNATE-SORCERY-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for sorcerer_innate_sorcery",
+        "srd-l12-denominator.json rows for sorcerer_innate_sorcery",
+        "capability-fact-coverage-matrix.json rows for sorcerer_innate_sorcery",
+        "route-proof-inventory.json",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for sorcerer_innate_sorcery",
+        "updated route-proof-inventory or source connector task for sorcerer_innate_sorcery",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for sorcerer_innate_sorcery"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "1 denominator row(s) for sorcerer_innate_sorcery no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: unit-feature.innate-sorcery-activation",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (sorcerer_innate_sorcery) across 1 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 58,
+      "id": "L12CEG-58-SORCEROUS-BURST-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for sorcerous_burst",
+        "srd-l12-denominator.json rows for sorcerous_burst",
+        "capability-fact-coverage-matrix.json rows for sorcerous_burst",
+        "route-proof-inventory.json",
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for sorcerous_burst",
+        "updated route-proof-inventory or source connector task for sorcerous_burst",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for sorcerous_burst"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "1 denominator row(s) for sorcerous_burst no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-damage-save-or-attack",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (sorcerous_burst) across 1 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 59,
+      "id": "L12CEG-59-SPARE-THE-DYING-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for spare_the_dying",
+        "srd-l12-denominator.json rows for spare_the_dying",
+        "capability-fact-coverage-matrix.json rows for spare_the_dying",
+        "route-proof-inventory.json",
+        "packages/battle-runtime/battle-runtime-hit-points.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for spare_the_dying",
+        "updated route-proof-inventory or source connector task for spare_the_dying",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for spare_the_dying"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "2 denominator row(s) for spare_the_dying no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-make-stable",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (spare_the_dying) across 2 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 60,
+      "id": "L12CEG-60-THUNDERWAVE-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for thunderwave",
+        "srd-l12-denominator.json rows for thunderwave",
+        "capability-fact-coverage-matrix.json rows for thunderwave",
+        "route-proof-inventory.json",
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for thunderwave",
+        "updated route-proof-inventory or source connector task for thunderwave",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for thunderwave"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "4 denominator row(s) for thunderwave no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-damage-save-or-attack",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (thunderwave) across 4 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 61,
+      "id": "L12CEG-61-TRUE-STRIKE-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for true_strike",
+        "srd-l12-denominator.json rows for true_strike",
+        "capability-fact-coverage-matrix.json rows for true_strike",
+        "route-proof-inventory.json",
+        "packages/battle-runtime/battle-runtime-weapon-attacks.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for true_strike",
+        "updated route-proof-inventory or source connector task for true_strike",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for true_strike"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "4 denominator row(s) for true_strike no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-spell-hosted-weapon-attack",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (true_strike) across 4 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 62,
+      "id": "L12CEG-62-VICIOUS-MOCKERY-ROUTE-PROOF",
+      "family": "connectors",
+      "dependencies": [
+        "L12CEG-04-MAPPING-GATE"
+      ],
+      "input": [
+        "srd-row-generic-fact-map.json rows for vicious_mockery",
+        "srd-l12-denominator.json rows for vicious_mockery",
+        "capability-fact-coverage-matrix.json rows for vicious_mockery",
+        "route-proof-inventory.json",
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt"
+      ],
+      "output": [
+        "focused generic route proof mapping for vicious_mockery",
+        "updated route-proof-inventory or source connector task for vicious_mockery",
+        "updated srd-row-generic-fact-map entry clearing missing-proof-join for vicious_mockery"
+      ],
+      "validation": [
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "1 denominator row(s) for vicious_mockery no longer have routeProofStatus missing-proof-join",
+        "generic capability profiles are covered: spell.invocation-damage-save-or-attack, spell.readied-action-time-spell",
+        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch"
+      ],
+      "oneAgentSessionScope": "Resolve proof mapping for one Unit id (vicious_mockery) across 1 SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior."
+    },
+    {
+      "number": 63,
+      "id": "L12CEG-63-CLEANROOM-PACKAGE-REPLAY-GATE",
+      "family": "cleanroom-replay",
+      "dependencies": [
+        "L12CEG-01-DENOMINATOR-CHECKER",
+        "L12CEG-02-CAPABILITY-FACT-CHECKER",
+        "L12CEG-03-ROUTE-PROOF-GATE",
+        "L12CEG-04-MAPPING-GATE",
+        "L12CEG-05-ACID-SPLASH-ROUTE-PROOF",
+        "L12CEG-06-ANIMAL-FRIENDSHIP-ROUTE-PROOF",
+        "L12CEG-07-BARBARIAN-DANGER-SENSE-ROUTE-PROOF",
+        "L12CEG-08-BARBARIAN-RAGE-ROUTE-PROOF",
+        "L12CEG-09-BARBARIAN-RECKLESS-ATTACK-ROUTE-PROOF",
+        "L12CEG-10-BARD-BARDIC-INSPIRATION-ROUTE-PROOF",
+        "L12CEG-11-BURNING-HANDS-ROUTE-PROOF",
+        "L12CEG-12-CHILL-TOUCH-ROUTE-PROOF",
+        "L12CEG-13-CHROMATIC-ORB-ROUTE-PROOF",
+        "L12CEG-14-COLOR-SPRAY-ROUTE-PROOF",
+        "L12CEG-15-CURE-WOUNDS-ROUTE-PROOF",
+        "L12CEG-16-DANCING-LIGHTS-ROUTE-PROOF",
+        "L12CEG-17-DISSONANT-WHISPERS-ROUTE-PROOF",
+        "L12CEG-18-DIVINE-FAVOR-ROUTE-PROOF",
+        "L12CEG-19-DIVINE-SMITE-ROUTE-PROOF",
+        "L12CEG-20-ENSNARING-STRIKE-ROUTE-PROOF",
+        "L12CEG-21-ENTANGLE-ROUTE-PROOF",
+        "L12CEG-22-EXPEDITIOUS-RETREAT-ROUTE-PROOF",
+        "L12CEG-23-FAERIE-FIRE-ROUTE-PROOF",
+        "L12CEG-24-FALSE-LIFE-ROUTE-PROOF",
+        "L12CEG-25-FEATHER-FALL-ROUTE-PROOF",
+        "L12CEG-26-FIGHTER-ACTION-SURGE-ROUTE-PROOF",
+        "L12CEG-27-FIGHTER-SECOND-WIND-ROUTE-PROOF",
+        "L12CEG-28-FIGHTER-TACTICAL-MIND-ROUTE-PROOF",
+        "L12CEG-29-FIRE-BOLT-ROUTE-PROOF",
+        "L12CEG-30-FOG-CLOUD-ROUTE-PROOF",
+        "L12CEG-31-GREASE-ROUTE-PROOF",
+        "L12CEG-32-GUIDING-BOLT-ROUTE-PROOF",
+        "L12CEG-33-HEALING-WORD-ROUTE-PROOF",
+        "L12CEG-34-HELLISH-REBUKE-ROUTE-PROOF",
+        "L12CEG-35-HEROISM-ROUTE-PROOF",
+        "L12CEG-36-HEX-ROUTE-PROOF",
+        "L12CEG-37-HIDEOUS-LAUGHTER-ROUTE-PROOF",
+        "L12CEG-38-HUNTERS-MARK-ROUTE-PROOF",
+        "L12CEG-39-ICE-KNIFE-ROUTE-PROOF",
+        "L12CEG-40-INFLICT-WOUNDS-ROUTE-PROOF",
+        "L12CEG-41-JUMP-ROUTE-PROOF",
+        "L12CEG-42-MONK-MARTIAL-ARTS-ROUTE-PROOF",
+        "L12CEG-43-MONK-UNARMORED-MOVEMENT-ROUTE-PROOF",
+        "L12CEG-44-PALADIN-PALADINS-SMITE-ROUTE-PROOF",
+        "L12CEG-45-POISON-SPRAY-ROUTE-PROOF",
+        "L12CEG-46-PRODUCE-FLAME-ROUTE-PROOF",
+        "L12CEG-47-PROTECTION-FROM-EVIL-AND-GOOD-ROUTE-PROOF",
+        "L12CEG-48-RAY-OF-FROST-ROUTE-PROOF",
+        "L12CEG-49-RAY-OF-SICKNESS-ROUTE-PROOF",
+        "L12CEG-50-ROGUE-CUNNING-ACTION-ROUTE-PROOF",
+        "L12CEG-51-ROGUE-SNEAK-ATTACK-ROUTE-PROOF",
+        "L12CEG-52-SACRED-FLAME-ROUTE-PROOF",
+        "L12CEG-53-SEARING-SMITE-ROUTE-PROOF",
+        "L12CEG-54-SHIELD-OF-FAITH-ROUTE-PROOF",
+        "L12CEG-55-SHILLELAGH-ROUTE-PROOF",
+        "L12CEG-56-SHOCKING-GRASP-ROUTE-PROOF",
+        "L12CEG-57-SORCERER-INNATE-SORCERY-ROUTE-PROOF",
+        "L12CEG-58-SORCEROUS-BURST-ROUTE-PROOF",
+        "L12CEG-59-SPARE-THE-DYING-ROUTE-PROOF",
+        "L12CEG-60-THUNDERWAVE-ROUTE-PROOF",
+        "L12CEG-61-TRUE-STRIKE-ROUTE-PROOF",
+        "L12CEG-62-VICIOUS-MOCKERY-ROUTE-PROOF"
+      ],
+      "input": [
+        "verifier-gate-spec.json",
+        "plans/cleanroom-scaffolds/tasks/*"
+      ],
+      "output": [
+        "target replay evidence acceptance tasks"
+      ],
+      "validation": [
+        "pnpm cleanroom-scaffold:check",
+        "pnpm cleanroom-harness:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "Target replay evidence must observe focused generic route projections",
+        "stale hashes and missing projection hashes fail"
+      ],
+      "oneAgentSessionScope": "Cleanroom package/checker acceptance only; no target runtime implementation."
+    },
+    {
+      "number": 64,
+      "id": "L12CEG-64-REVIEWER-LOOP-CLOSURE",
+      "family": "review",
+      "dependencies": [
+        "L12CEG-01-DENOMINATOR-CHECKER",
+        "L12CEG-02-CAPABILITY-FACT-CHECKER",
+        "L12CEG-03-ROUTE-PROOF-GATE",
+        "L12CEG-04-MAPPING-GATE",
+        "L12CEG-05-ACID-SPLASH-ROUTE-PROOF",
+        "L12CEG-06-ANIMAL-FRIENDSHIP-ROUTE-PROOF",
+        "L12CEG-07-BARBARIAN-DANGER-SENSE-ROUTE-PROOF",
+        "L12CEG-08-BARBARIAN-RAGE-ROUTE-PROOF",
+        "L12CEG-09-BARBARIAN-RECKLESS-ATTACK-ROUTE-PROOF",
+        "L12CEG-10-BARD-BARDIC-INSPIRATION-ROUTE-PROOF",
+        "L12CEG-11-BURNING-HANDS-ROUTE-PROOF",
+        "L12CEG-12-CHILL-TOUCH-ROUTE-PROOF",
+        "L12CEG-13-CHROMATIC-ORB-ROUTE-PROOF",
+        "L12CEG-14-COLOR-SPRAY-ROUTE-PROOF",
+        "L12CEG-15-CURE-WOUNDS-ROUTE-PROOF",
+        "L12CEG-16-DANCING-LIGHTS-ROUTE-PROOF",
+        "L12CEG-17-DISSONANT-WHISPERS-ROUTE-PROOF",
+        "L12CEG-18-DIVINE-FAVOR-ROUTE-PROOF",
+        "L12CEG-19-DIVINE-SMITE-ROUTE-PROOF",
+        "L12CEG-20-ENSNARING-STRIKE-ROUTE-PROOF",
+        "L12CEG-21-ENTANGLE-ROUTE-PROOF",
+        "L12CEG-22-EXPEDITIOUS-RETREAT-ROUTE-PROOF",
+        "L12CEG-23-FAERIE-FIRE-ROUTE-PROOF",
+        "L12CEG-24-FALSE-LIFE-ROUTE-PROOF",
+        "L12CEG-25-FEATHER-FALL-ROUTE-PROOF",
+        "L12CEG-26-FIGHTER-ACTION-SURGE-ROUTE-PROOF",
+        "L12CEG-27-FIGHTER-SECOND-WIND-ROUTE-PROOF",
+        "L12CEG-28-FIGHTER-TACTICAL-MIND-ROUTE-PROOF",
+        "L12CEG-29-FIRE-BOLT-ROUTE-PROOF",
+        "L12CEG-30-FOG-CLOUD-ROUTE-PROOF",
+        "L12CEG-31-GREASE-ROUTE-PROOF",
+        "L12CEG-32-GUIDING-BOLT-ROUTE-PROOF",
+        "L12CEG-33-HEALING-WORD-ROUTE-PROOF",
+        "L12CEG-34-HELLISH-REBUKE-ROUTE-PROOF",
+        "L12CEG-35-HEROISM-ROUTE-PROOF",
+        "L12CEG-36-HEX-ROUTE-PROOF",
+        "L12CEG-37-HIDEOUS-LAUGHTER-ROUTE-PROOF",
+        "L12CEG-38-HUNTERS-MARK-ROUTE-PROOF",
+        "L12CEG-39-ICE-KNIFE-ROUTE-PROOF",
+        "L12CEG-40-INFLICT-WOUNDS-ROUTE-PROOF",
+        "L12CEG-41-JUMP-ROUTE-PROOF",
+        "L12CEG-42-MONK-MARTIAL-ARTS-ROUTE-PROOF",
+        "L12CEG-43-MONK-UNARMORED-MOVEMENT-ROUTE-PROOF",
+        "L12CEG-44-PALADIN-PALADINS-SMITE-ROUTE-PROOF",
+        "L12CEG-45-POISON-SPRAY-ROUTE-PROOF",
+        "L12CEG-46-PRODUCE-FLAME-ROUTE-PROOF",
+        "L12CEG-47-PROTECTION-FROM-EVIL-AND-GOOD-ROUTE-PROOF",
+        "L12CEG-48-RAY-OF-FROST-ROUTE-PROOF",
+        "L12CEG-49-RAY-OF-SICKNESS-ROUTE-PROOF",
+        "L12CEG-50-ROGUE-CUNNING-ACTION-ROUTE-PROOF",
+        "L12CEG-51-ROGUE-SNEAK-ATTACK-ROUTE-PROOF",
+        "L12CEG-52-SACRED-FLAME-ROUTE-PROOF",
+        "L12CEG-53-SEARING-SMITE-ROUTE-PROOF",
+        "L12CEG-54-SHIELD-OF-FAITH-ROUTE-PROOF",
+        "L12CEG-55-SHILLELAGH-ROUTE-PROOF",
+        "L12CEG-56-SHOCKING-GRASP-ROUTE-PROOF",
+        "L12CEG-57-SORCERER-INNATE-SORCERY-ROUTE-PROOF",
+        "L12CEG-58-SORCEROUS-BURST-ROUTE-PROOF",
+        "L12CEG-59-SPARE-THE-DYING-ROUTE-PROOF",
+        "L12CEG-60-THUNDERWAVE-ROUTE-PROOF",
+        "L12CEG-61-TRUE-STRIKE-ROUTE-PROOF",
+        "L12CEG-62-VICIOUS-MOCKERY-ROUTE-PROOF",
+        "L12CEG-63-CLEANROOM-PACKAGE-REPLAY-GATE"
+      ],
+      "input": [
+        "all generated L12 cleanroom artifacts and changed verifier outputs"
+      ],
+      "output": [
+        "review convergence report"
+      ],
+      "validation": [
+        "pnpm unit-profile-coverage:check",
+        "pnpm rules-kernel-coverage:check",
+        "pnpm cleanroom-branch-coverage:check",
+        "pnpm cleanroom-scaffold:check",
+        "pnpm cleanroom-harness:check",
+        "pnpm check:reducer-route-connectors",
+        "git diff --check"
+      ],
+      "successCriteria": [
+        "RAW/domain, architecture/connascence, cleanroom-authored-identity, Ralph task-quality, and code-review passes converge"
+      ],
+      "oneAgentSessionScope": "Review and repair generated plan/checker artifacts only; implementation findings become explicit follow-up tasks."
+    }
+  ]
+}

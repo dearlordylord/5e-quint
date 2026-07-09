@@ -5,6 +5,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.metamagic-battle-resource-bridge
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.monk-uncanny-metabolism-initiative-recovery
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.sorcerous-restoration-sorcery-point-recovery
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.ranger-tireless
 import {
   characterBuildFeatureUnitIds,
   characterBuildMonkUncannyMetabolismFacts,
@@ -25,6 +26,7 @@ import {
 import { abilityScoreToMod } from "@dnd/shared-algebras/ability-score-algebra";
 import {
   Hp,
+  DieRollResult,
   characterLevel,
   difficultyClass,
   resourceCount,
@@ -66,6 +68,8 @@ import {
 } from "./sheet-types.ts";
 
 const byKind = Match.discriminator("kind");
+const RANGER_TIRELESS_UNIT_ID = "ranger_tireless" as const;
+const RANGER_TIRELESS_DIE_SIZE = 8;
 
 export function characterSheetResources(
   sheet: CharacterSheet,
@@ -271,6 +275,52 @@ export function useMonkUncannyMetabolismWhenRollingInitiative(
       expenditures: healed.right.resourceExpenditures,
       unitId: useState.right.focusRecovery.resourceUnitId,
       expended: resourceCount(0),
+    }),
+  });
+}
+
+export function useRangerTirelessTemporaryHitPoints(input: {
+  readonly sheet: CharacterSheet;
+  readonly unitLibrary: UnitCatalog;
+  readonly tirelessRoll: DieRollResult;
+}): Either.Either<CharacterSheet, CharacterSheetIssue> {
+  if (input.sheet.hitPoints.tag === "zero") {
+    return characterSheetIssue(
+      "Tireless Temporary Hit Points require a conscious character.",
+    );
+  }
+  const resources = characterSheetResources(input.sheet, input.unitLibrary);
+  if (Either.isLeft(resources)) return Either.left(resources.left);
+  const resource = resources.right.find(
+    (candidate) =>
+      candidate.tag === "useCountResource" &&
+      candidate.unitId === RANGER_TIRELESS_UNIT_ID,
+  );
+  if (resource === undefined) {
+    return characterSheetIssue("Tireless requires the Ranger Tireless feature.");
+  }
+  if (resource.expended + resourceCount(1) > resource.count) {
+    return characterSheetIssue("Tireless has no remaining uses.");
+  }
+  const roll = Number(input.tirelessRoll);
+  if (roll < 1 || roll > RANGER_TIRELESS_DIE_SIZE) {
+    return characterSheetIssue("Tireless roll must be within d8.");
+  }
+  const wisdomModifier = abilityScoreToMod(input.sheet.build.abilityScores.wis);
+  const grantedTemporaryHitPoints = Hp(Math.max(1, roll + wisdomModifier));
+  return Either.right({
+    ...input.sheet,
+    hitPoints: {
+      ...input.sheet.hitPoints,
+      tempHp:
+        input.sheet.hitPoints.tempHp > grantedTemporaryHitPoints
+          ? input.sheet.hitPoints.tempHp
+          : grantedTemporaryHitPoints,
+    },
+    resourceExpenditures: replaceUseCountResourceExpenditure({
+      expenditures: input.sheet.resourceExpenditures,
+      unitId: RANGER_TIRELESS_UNIT_ID,
+      expended: resourceCount(resource.expended + resourceCount(1)),
     }),
   });
 }
@@ -871,6 +921,16 @@ function characterSheetResourceCapacity(
       resourceCount(
         characterSheetProficiencyBonusForCharacterLevel(
           characterLevel(input.build.progression.advancements.length + 1),
+        ),
+      ),
+    );
+  }
+  if (cap.kind === "ability_modifier") {
+    return Either.right(
+      resourceCount(
+        Math.max(
+          cap.minimum ?? 0,
+          abilityScoreToMod(input.build.abilityScores[cap.ability]),
         ),
       ),
     );

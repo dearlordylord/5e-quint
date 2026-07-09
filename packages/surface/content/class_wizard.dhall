@@ -1,7 +1,7 @@
 { armorTraining.kind = "none"
 , className = "wizard"
 , description =
-    "SRD Wizard class creation facts, including level 1-5 spellbook, prepared spells, Spell Slots, Ritual Adept, Arcane Recovery, Scholar, and spellcasting focus facts."
+    "SRD Wizard class creation facts, including level 1-10 spellbook, prepared spells, Spell Slots, Ritual Adept, Arcane Recovery, Scholar, and spellcasting focus facts."
 , featureGrants =
   [ { level = 1, unitId = "wizard_ritual_adept" }
   , { level = 1, unitId = "wizard_arcane_recovery" }
@@ -300,6 +300,62 @@
         , { count = 2, spellLevel = 3 }
         ]
       , spellbookSpellCount = 14
+      }
+    , { atLevel = 6
+      , cantripCount = 4
+      , preparedSpellCount = 10
+      , spellSlots =
+        [ { count = 4, spellLevel = 1 }
+        , { count = 3, spellLevel = 2 }
+        , { count = 3, spellLevel = 3 }
+        ]
+      , spellbookSpellCount = 16
+      }
+    , { atLevel = 7
+      , cantripCount = 4
+      , preparedSpellCount = 11
+      , spellSlots =
+        [ { count = 4, spellLevel = 1 }
+        , { count = 3, spellLevel = 2 }
+        , { count = 3, spellLevel = 3 }
+        , { count = 1, spellLevel = 4 }
+        ]
+      , spellbookSpellCount = 18
+      }
+    , { atLevel = 8
+      , cantripCount = 4
+      , preparedSpellCount = 12
+      , spellSlots =
+        [ { count = 4, spellLevel = 1 }
+        , { count = 3, spellLevel = 2 }
+        , { count = 3, spellLevel = 3 }
+        , { count = 2, spellLevel = 4 }
+        ]
+      , spellbookSpellCount = 20
+      }
+    , { atLevel = 9
+      , cantripCount = 4
+      , preparedSpellCount = 14
+      , spellSlots =
+        [ { count = 4, spellLevel = 1 }
+        , { count = 3, spellLevel = 2 }
+        , { count = 3, spellLevel = 3 }
+        , { count = 3, spellLevel = 4 }
+        , { count = 1, spellLevel = 5 }
+        ]
+      , spellbookSpellCount = 22
+      }
+    , { atLevel = 10
+      , cantripCount = 5
+      , preparedSpellCount = 15
+      , spellSlots =
+        [ { count = 4, spellLevel = 1 }
+        , { count = 3, spellLevel = 2 }
+        , { count = 3, spellLevel = 3 }
+        , { count = 3, spellLevel = 4 }
+        , { count = 2, spellLevel = 5 }
+        ]
+      , spellbookSpellCount = 24
       }
     ]
   }

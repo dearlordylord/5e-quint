@@ -9,6 +9,10 @@
     {
       "level": 3,
       "unitId": "wizard_potent_cantrip"
+    },
+    {
+      "level": 10,
+      "unitId": "wizard_empowered_evocation"
     }
   ],
   "id": "subclass_wizard_evoker",

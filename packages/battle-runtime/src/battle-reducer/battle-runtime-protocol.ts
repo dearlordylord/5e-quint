@@ -44,6 +44,7 @@ export const INITIAL_TURN_RESOURCES = resetTurnActionEconomy({
   movementActionBonusActionExclusion: { kind: "notRestricted" },
   commandHalt: null,
   jumpDistanceMultiplier: null,
+  heightenedStepOfTheWindCarriedCreatures: [],
   spellSlotUsesThisTurn: [],
   levelOnePlusSpellCastsThisTurn: [],
   quickenedLevelOnePlusSpellCastsThisTurn: [],

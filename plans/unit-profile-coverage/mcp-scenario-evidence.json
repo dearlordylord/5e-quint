@@ -17,7 +17,8 @@
         "level-1-6",
         "level-1-7",
         "level-1-8",
-        "level-1-9"
+        "level-1-9",
+        "level-1-10"
       ],
       "followUpTaskIdsByScope": {
         "level-1": "C3-MCP-LEVEL12-SCENARIO-GATE",
@@ -28,7 +29,8 @@
         "level-1-6": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE",
         "level-1-7": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS",
         "level-1-8": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS",
-        "level-1-9": "L19GATE-03-MCP-LEVEL9-SCENARIO-EVIDENCE"
+        "level-1-9": "L19GATE-03-MCP-LEVEL9-SCENARIO-EVIDENCE",
+        "level-1-10": "L110F-02-MCP-LEVEL10-SHEET-SCENARIO"
       },
       "description": "The MCP server exposes discoverable tool contracts, workflow guidance, catalogs, and structured result paths before a caller commits to a character or battle workflow."
     },
@@ -43,7 +45,8 @@
         "level-1-6",
         "level-1-7",
         "level-1-8",
-        "level-1-9"
+        "level-1-9",
+        "level-1-10"
       ],
       "followUpTaskIdsByScope": {
         "level-1": "C9-CHARACTER-CREATION-MCP-EVIDENCE",
@@ -54,7 +57,8 @@
         "level-1-6": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE",
         "level-1-7": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS",
         "level-1-8": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS",
-        "level-1-9": "L19GATE-03-MCP-LEVEL9-SCENARIO-EVIDENCE"
+        "level-1-9": "L19GATE-03-MCP-LEVEL9-SCENARIO-EVIDENCE",
+        "level-1-10": "L110F-02-MCP-LEVEL10-SHEET-SCENARIO"
       },
       "description": "The MCP surface admits an SRD character creation workflow through create, discover, fill, and finalize tools without relying on support-profile status as scenario evidence."
     },
@@ -69,7 +73,8 @@
         "level-1-6",
         "level-1-7",
         "level-1-8",
-        "level-1-9"
+        "level-1-9",
+        "level-1-10"
       ],
       "followUpTaskIdsByScope": {
         "level-1": "C10-CHARACTER-SHEET-MCP-EVIDENCE",
@@ -80,7 +85,8 @@
         "level-1-6": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE",
         "level-1-7": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS",
         "level-1-8": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS",
-        "level-1-9": "L19GATE-03-MCP-LEVEL9-SCENARIO-EVIDENCE"
+        "level-1-9": "L19GATE-03-MCP-LEVEL9-SCENARIO-EVIDENCE",
+        "level-1-10": "L110F-02-MCP-LEVEL10-SHEET-SCENARIO"
       },
       "description": "The MCP surface exposes durable character sheet state and battle handoff results through list and session snapshot tools."
     },
@@ -95,7 +101,8 @@
         "level-1-6",
         "level-1-7",
         "level-1-8",
-        "level-1-9"
+        "level-1-9",
+        "level-1-10"
       ],
       "followUpTaskIdsByScope": {
         "level-1": "C11-BATTLE-MCP-EVIDENCE",
@@ -106,7 +113,8 @@
         "level-1-6": "L6UG-MCP-05-LEVEL16-SCENARIO-EVIDENCE",
         "level-1-7": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS",
         "level-1-8": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS",
-        "level-1-9": "L19GATE-03-MCP-LEVEL9-SCENARIO-EVIDENCE"
+        "level-1-9": "L19GATE-03-MCP-LEVEL9-SCENARIO-EVIDENCE",
+        "level-1-10": "L110F-03-MCP-LEVEL10-BATTLE-HANDOFF"
       },
       "description": "The MCP surface admits an SRD battle flow through start, read, discover acts, fill battle holes, resolve acts, end turns, and end battle tools."
     }
@@ -530,6 +538,54 @@
       "testPath": "packages/mcp/src/mcp-level-nine-scenario.test.ts",
       "taskId": "L19GATE-03-MCP-LEVEL9-SCENARIO-EVIDENCE",
       "summary": "The level-9 Ranger scenario starts battle from the returned Character Sheet id, verifies the returned battle id, turn order, unexpended spell-slot handoff, and discovers returned Ranger battle acts from the active battle state."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "mcp-workflow-discovery",
+      "scopeIds": [
+        "level-1-10"
+      ],
+      "scenarioId": "create-level-ten-fighter-champion-and-battle-handoff",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-level-ten-scenario.test.ts",
+      "taskId": "L110F-02-MCP-LEVEL10-SHEET-SCENARIO",
+      "summary": "The level-10 Fighter Champion scenario reads the MCP workflow guide and catalog units before selecting the returned Fighter 10 progression, class feature, equipment, loadout, character id, and battle result paths."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-creation",
+      "scopeIds": [
+        "level-1-10"
+      ],
+      "scenarioId": "create-level-ten-fighter-champion-and-battle-handoff",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-level-ten-scenario.test.ts",
+      "taskId": "L110F-02-MCP-LEVEL10-SHEET-SCENARIO",
+      "summary": "The level-10 Fighter Champion scenario uses a focused MCP test fixture to admit Fighter 10, then creates and finalizes an Orc Soldier Fighter 10 by following returned draft revisions, creation hole ids, and option ids, including the five returned Fighter 10 Weapon Mastery options."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "character-sheet",
+      "scopeIds": [
+        "level-1-10"
+      ],
+      "scenarioId": "create-level-ten-fighter-champion-and-battle-handoff",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-level-ten-scenario.test.ts",
+      "taskId": "L110F-02-MCP-LEVEL10-SHEET-SCENARIO",
+      "summary": "The level-10 Fighter Champion scenario lists the finalized Character Sheet and verifies durable Fighter 10 Hit Points, selected Champion subclass identity, selected Ability Score Improvement, and the five selected Weapon Mastery facts."
+    },
+    {
+      "kind": "mcp-scenario",
+      "flowId": "battle",
+      "scopeIds": [
+        "level-1-10"
+      ],
+      "scenarioId": "create-level-ten-fighter-champion-and-battle-handoff",
+      "ownerPath": "packages/mcp/test-support/mcp-acceptance-scenarios.ts",
+      "testPath": "packages/mcp/src/mcp-level-ten-scenario.test.ts",
+      "taskId": "L110F-03-MCP-LEVEL10-BATTLE-HANDOFF",
+      "summary": "The level-10 Fighter Champion scenario starts battle from the returned Character Sheet id, verifies the returned battle id and turn order, discovers returned Fighter battle acts, and records the remaining blocker: Heroic Warrior is a passive turn-start runtime behavior with no returned MCP battle act or hole yet."
     }
   ],
   "scopeAuditDecisions": [

@@ -2,8 +2,18 @@ import assert from "node:assert/strict";
 
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { characterDraftId } from "@dnd/character-creation-runtime";
+import {
+  characterClassLevel,
+  classUnitId,
+  progressionOptionId,
+  type CharacterProgression,
+  type CreationChoiceOptionId,
+} from "@dnd/character-creation-runtime";
+import { Either } from "effect";
 import type { Skill } from "@dnd/shared/game-facts";
 import { characterIdFromDraftId } from "../src/session-store.ts";
+import { characterProgressionEntry } from "../../character-creation-runtime/src/character-progression-types.ts";
+import { CHARACTER_CREATION_SUPPORT_PROFILE } from "../../character-creation-runtime/src/support-gates.ts";
 
 import {
   GENERIC_COMBAT_ACTION_LABELS,
@@ -106,6 +116,22 @@ const levelNineRangerSpellSlots = [
 const levelNineRangerUnexpendedSpellSlots = levelNineRangerSpellSlots.map(
   (slot) => ({ ...slot, expended: 0 }),
 );
+const levelTenFighterChampionDraftId =
+  "draft:stdio-level-ten-orc-soldier-fighter-champion";
+const levelTenFighterChampionBattleId =
+  "battle:stdio-level-ten-fighter-champion";
+const levelTenFighterChampionCombatantId = "fighter-level-10";
+const levelTenFighterProgression = sameClassProgression("class_fighter", 10);
+const levelTenFighterProgressionOptionId = progressionOptionId(
+  levelTenFighterProgression,
+);
+const levelTenFighterWeaponMasteries = [
+  "weapon_longsword",
+  "weapon_dagger",
+  "weapon_shortsword",
+  "weapon_spear",
+  "weapon_flail",
+] as const;
 
 const agentConversationScenarios = [
   {
@@ -221,6 +247,19 @@ const agentConversationScenarios = [
     executableCoverage: "verifyLevelNineRangerExpertiseBattleHandoff",
     insufficiency:
       "This is a known-good MCP scenario for level 9. It proves durable Ranger 9 sheet state, level-9 Expertise projection, returned-state sequencing, and battle handoff; level-5 full-caster MCP creation remains a separate Surface creation expansion because Wizard creation facts are currently authored only through level 5.",
+  },
+  {
+    id: "create-level-ten-fighter-champion-and-battle-handoff",
+    name: "Create a level 10 Fighter Champion and start battle",
+    userSays:
+      "Create an Orc Soldier Fighter 10 Champion, show the sheet, then start battle.",
+    agentReads:
+      "The Level 10 scenario fixture admits Fighter 10 through the same MCP creation tools, then create/discover/fill/finalize returns draft revisions, the Fighter 10 progression option, five Weapon Mastery choices, subclass selection, Ability Score Improvement choices, equipment, loadout, and the finalized Character Sheet id.",
+    agentDecision:
+      "It fills only returned Level 10 hole ids and option ids, verifies the Character Sheet exposes Fighter 10 state and selected Champion/ASI facts, starts battle from the returned character id, and discovers the returned battle acts.",
+    executableCoverage: "verifyLevelTenFighterChampionBattleHandoff",
+    insufficiency:
+      "MCP can hand off the Level 10 sheet to battle, but Fighter Heroic Warrior is a passive turn-start runtime behavior and has no returned MCP battle act or hole yet; runtime behavior remains owned by the battle lane.",
   },
   {
     id: "select-monsters",
@@ -1655,6 +1694,158 @@ export async function verifyLevelNineRangerExpertiseBattleHandoff(
   );
 }
 
+export async function verifyLevelTenFighterChampionSheetScenario(
+  client: Client,
+) {
+  await withLevelTenFighterCreationSupport(async () => {
+    const workflow = await callTool(client, "describe_mcp_workflow", {});
+    assert.equal(get(workflow, "resultPaths.creationHoles"), "holes");
+    assert.equal(
+      get(workflow, "resultPaths.draftRevision"),
+      "draft.revision or storedDraft.revision",
+    );
+
+    const units = await callTool(client, "list_catalog_units", {});
+    assert.ok(
+      unitSummaries(units, "class").some((unit) => unit.id === "class_fighter"),
+    );
+    assert.ok(
+      unitSummaries(units, "class_feature").some(
+        (unit) => unit.id === "fighter_heroic_warrior",
+      ),
+    );
+
+    const finalizedFighter = await createAndFinalizeOrcFighterTenChampion(
+      client,
+      levelTenFighterChampionDraftId,
+    );
+    assert.equal(get(finalizedFighter, "finalization.tag"), "ready");
+    assert.equal(
+      get(finalizedFighter, "finalization.build.species"),
+      "species_orc",
+    );
+    assert.deepEqual(
+      get(finalizedFighter, "finalization.build.abilityScores"),
+      {
+        str: 19,
+        dex: 14,
+        con: 14,
+        int: 8,
+        wis: 10,
+        cha: 12,
+      },
+    );
+    assertLevelTenFighterChampionBuild(finalizedFighter, "finalization.build");
+
+    const listedBeforeBattle = await callTool(client, "list_characters", {});
+    const fighter = characterRow(
+      listedBeforeBattle,
+      testCharacterId(levelTenFighterChampionDraftId),
+    );
+    assert.equal(get(fighter, "status"), "available");
+    assert.equal(get(fighter, "displayName"), "Orc Soldier Fighter 10");
+    assert.equal(get(fighter, "hitPoints.current"), 84);
+    assert.equal(get(fighter, "hitPoints.maximum"), 84);
+    assertLevelTenFighterChampionBuild(fighter, "build");
+  });
+}
+
+export async function verifyLevelTenFighterChampionBattleHandoff(
+  client: Client,
+) {
+  await withLevelTenFighterCreationSupport(async () => {
+    const finalizedFighter = await createAndFinalizeOrcFighterTenChampion(
+      client,
+      levelTenFighterChampionDraftId,
+    );
+    assert.equal(get(finalizedFighter, "finalization.tag"), "ready");
+    const returnedCharacterIds = stringArrayAt(
+      finalizedFighter,
+      "session.characterIds",
+    );
+    assert.equal(returnedCharacterIds.length, 1);
+    const [characterId] = returnedCharacterIds;
+    assert.ok(characterId, "finalize_character must return a characterId");
+
+    const listedBeforeBattle = await callTool(client, "list_characters", {});
+    assertLevelTenFighterChampionBuild(
+      characterRow(listedBeforeBattle, characterId),
+      "build",
+    );
+
+    const selected = await callTool(client, "select_stat_block", {
+      statBlockId: "stat_block_goblin_warrior",
+    });
+    assert.equal(
+      get(selected, "selectedStatBlock.statBlock.displayName"),
+      "Goblin Warrior",
+    );
+
+    const started = await callTool(client, "start_battle", {
+      battleId: levelTenFighterChampionBattleId,
+      initialCombatants: [
+        {
+          kind: "characterSession",
+          characterId,
+          combatantId: levelTenFighterChampionCombatantId,
+          initiative: 16,
+          side: "party",
+        },
+        statBlockCombatant("goblin", "stat_block_goblin_warrior", 8),
+      ],
+    });
+    assert.equal(
+      get(started, "snapshot.battleId"),
+      levelTenFighterChampionBattleId,
+    );
+    assert.deepEqual(get(started, "snapshot.turnOrder"), [
+      levelTenFighterChampionCombatantId,
+      "goblin",
+    ]);
+    assert.equal(
+      get(started, "snapshot.currentActorId"),
+      levelTenFighterChampionCombatantId,
+    );
+    assert.equal(
+      get(
+        battleCombatant(started, levelTenFighterChampionCombatantId),
+        "origin.characterId",
+      ),
+      characterId,
+    );
+
+    const fighterActs = await callTool(client, "discover_battle_acts", {});
+    assert.equal(
+      get(fighterActs, "snapshot.currentActorId"),
+      levelTenFighterChampionCombatantId,
+    );
+    assert.ok(
+      battleActByLabel(fighterActs, "Attack"),
+      "Missing Fighter Attack act",
+    );
+    assert.ok(
+      battleActByLabel(fighterActs, "Action Surge"),
+      "Missing Fighter Action Surge act",
+    );
+    assert.ok(
+      battleActByLabel(fighterActs, "Second Wind"),
+      "Missing Fighter Second Wind act",
+    );
+    assert.equal(
+      get(
+        battleCombatant(fighterActs, levelTenFighterChampionCombatantId),
+        "origin.characterId",
+      ),
+      characterId,
+    );
+    assert.equal(
+      battleActByLabel(fighterActs, "Heroic Warrior"),
+      undefined,
+      "Heroic Warrior is not currently exposed as an MCP battle act",
+    );
+  });
+}
+
 async function createAndFinalizeFighterTwo(client: Client, draftId: string) {
   await callTool(client, "create_character_draft", { draftId });
   await fillBaseOrcSoldier(
@@ -2253,7 +2444,7 @@ async function createAndFinalizeOrcRangerNineWithExpertise(
   let current = await callTool(client, "fill_creation_holes", {
     draftId,
     expectedRevision: returnedDraftRevision(created),
-    fills: creationFillsForReturnedHoles(created),
+    fills: creationFillsForReturnedHoles(created, rangerNineCreationPreferences),
   });
   assert.equal(get(current, "result.tag"), "accepted");
 
@@ -2267,7 +2458,7 @@ async function createAndFinalizeOrcRangerNineWithExpertise(
     current = await callTool(client, "fill_creation_holes", {
       draftId,
       expectedRevision: returnedDraftRevision(holes),
-      fills: creationFillsForReturnedHoles(holes),
+      fills: creationFillsForReturnedHoles(holes, rangerNineCreationPreferences),
     });
     assert.equal(
       get(current, "result.tag"),
@@ -2277,6 +2468,46 @@ async function createAndFinalizeOrcRangerNineWithExpertise(
   }
 
   assert.fail("Ranger 9 creation still has holes after iterative fills.");
+}
+
+async function createAndFinalizeOrcFighterTenChampion(
+  client: Client,
+  draftId: string,
+) {
+  const created = await callTool(client, "create_character_draft", { draftId });
+  let current = await callTool(client, "fill_creation_holes", {
+    draftId,
+    expectedRevision: returnedDraftRevision(created),
+    fills: creationFillsForReturnedHoles(
+      created,
+      fighterTenCreationPreferences,
+    ),
+  });
+  assert.equal(get(current, "result.tag"), "accepted");
+
+  for (let pass = 0; pass < 12; pass += 1) {
+    const holes = await callTool(client, "discover_creation_holes", {
+      draftId,
+    });
+    if (holeIds(holes).length === 0) {
+      return callTool(client, "finalize_character", { draftId });
+    }
+    current = await callTool(client, "fill_creation_holes", {
+      draftId,
+      expectedRevision: returnedDraftRevision(holes),
+      fills: creationFillsForReturnedHoles(
+        holes,
+        fighterTenCreationPreferences,
+      ),
+    });
+    assert.equal(
+      get(current, "result.tag"),
+      "accepted",
+      JSON.stringify(current),
+    );
+  }
+
+  assert.fail("Fighter 10 creation still has holes after iterative fills.");
 }
 
 async function createAndFinalizeElfSoldierWizardWithAsi(
@@ -2503,37 +2734,78 @@ async function createAndFinalizeElfSoldierWizardWithAsi(
   return callTool(client, "finalize_character", { draftId });
 }
 
-function creationFillsForReturnedHoles(payload: JsonObject) {
+type CreationPreferences = {
+  readonly abilityScores: JsonObject;
+  readonly unsupportedHoleMessage: string;
+  readonly optionIdsForReturnedHole: (
+    holeId: string,
+  ) => readonly string[] | undefined;
+};
+
+const rangerNineCreationPreferences: CreationPreferences = {
+  abilityScores: {
+    str: 13,
+    dex: 15,
+    con: 14,
+    int: 8,
+    wis: 12,
+    cha: 10,
+  },
+  unsupportedHoleMessage: "Unsupported Ranger 9 creation hole kind",
+  optionIdsForReturnedHole: rangerNinePreferredOptionIds,
+};
+
+const fighterTenCreationPreferences: CreationPreferences = {
+  abilityScores: {
+    str: 15,
+    dex: 14,
+    con: 13,
+    int: 8,
+    wis: 10,
+    cha: 12,
+  },
+  unsupportedHoleMessage: "Unsupported Fighter 10 creation hole kind",
+  optionIdsForReturnedHole: fighterTenPreferredOptionIds,
+};
+
+function creationFillsForReturnedHoles(
+  payload: JsonObject,
+  preferences: CreationPreferences,
+) {
   return jsonObjectArrayAt(payload, "holes").map((hole) =>
-    creationFillForReturnedHole(payload, hole),
+    creationFillForReturnedHole(payload, hole, preferences),
   );
 }
 
-function creationFillForReturnedHole(payload: JsonObject, hole: JsonObject) {
+function creationFillForReturnedHole(
+  payload: JsonObject,
+  hole: JsonObject,
+  preferences: CreationPreferences,
+) {
   const holeId = parseString(hole.holeId, "creation holeId");
   if (hole.kind === "abilityScores") {
-    return abilityScoresFillFromReturnedHole(payload, holeId, {
-      str: 13,
-      dex: 15,
-      con: 14,
-      int: 8,
-      wis: 12,
-      cha: 10,
-    });
+    return abilityScoresFillFromReturnedHole(
+      payload,
+      holeId,
+      preferences.abilityScores,
+    );
   }
   if (hole.kind !== "choice") {
-    assert.fail(`Unsupported Ranger 9 creation hole kind: ${hole.kind}`);
+    assert.fail(`${preferences.unsupportedHoleMessage}: ${hole.kind}`);
   }
   return choiceFillFromReturnedHole(
     payload,
     holeId,
-    ...rangerNineOptionIdsForReturnedHole(hole),
+    ...optionIdsForReturnedHole(hole, preferences),
   );
 }
 
-function rangerNineOptionIdsForReturnedHole(hole: JsonObject) {
+function optionIdsForReturnedHole(
+  hole: JsonObject,
+  preferences: CreationPreferences,
+) {
   const holeId = parseString(hole.holeId, "choice holeId");
-  const preferred = rangerNinePreferredOptionIds(holeId);
+  const preferred = preferences.optionIdsForReturnedHole(holeId);
   if (preferred !== undefined) return preferred;
 
   const options = jsonObjectArrayAt(hole, "options").map((option, index) =>
@@ -2617,6 +2889,57 @@ function rangerNinePreferredOptionIds(holeId: string): readonly string[] | undef
   return choices[holeId];
 }
 
+function fighterTenPreferredOptionIds(
+  holeId: string,
+): readonly string[] | undefined {
+  const choices: Readonly<Record<string, readonly string[]>> = {
+    "cc:draft:draft.progression.initial": [
+      levelTenFighterProgressionOptionId,
+    ],
+    "cc:draft:draft.background": ["background_soldier"],
+    "cc:draft:draft.species": ["species_orc"],
+    "cc:draft:draft.languages": ["Dwarvish", "Goblin"],
+    "cc:draft:draft.alignment": ["lawful_good"],
+    [unitHoleId("class_fighter", "class_skill_proficiency_choice")]: [
+      "perception",
+      "survival",
+    ],
+    [unitHoleId("fighter_fighting_style", "class_feature_feat_choice")]: [
+      "defense",
+    ],
+    [unitHoleId("fighter_weapon_mastery", "weapon_mastery_options")]:
+      levelTenFighterWeaponMasteries,
+    [unitHoleId("class_fighter", "class_subclass_choice")]: [
+      "subclass_fighter_champion",
+    ],
+    [unitHoleId("class_fighter", "class_equipment_choice")]: ["option_c"],
+    [unitHoleId("fighter_ability_score_improvement_l4", "class_feature_feat_choice")]:
+      ["feat_ability_score_improvement"],
+    [unitHoleId(
+      "fighter_ability_score_improvement_l4",
+      "class_feature_ability_score_increase_choice",
+    )]: ["ability_score:str:+2:max20"],
+    [unitHoleId("background_soldier", "background_ability_score_increase")]: [
+      "two_and_one:str:con",
+    ],
+    [unitHoleId("background_soldier", "background_tool_choice")]: [
+      "tool_dice_set",
+    ],
+    [unitHoleId("background_soldier", "background_equipment_choice")]: [
+      "option_b",
+    ],
+    [unitHoleId("class_fighter", "equipment_purchase")]: [
+      "armor_chain_mail",
+      "weapon_longsword",
+      "equipment_shield",
+    ],
+    [loadoutHoleId("armor_chain_mail", "armor")]: ["worn"],
+    [loadoutHoleId("equipment_shield", "shield")]: ["wielded"],
+    [loadoutHoleId("weapon_longsword", "weapon")]: ["wielded_one_handed"],
+  };
+  return choices[holeId];
+}
+
 function choiceCardinalityMax(hole: JsonObject): number {
   const cardinality = get(hole, "cardinality");
   assert.ok(isJsonObject(cardinality), "choice cardinality must be an object");
@@ -2635,6 +2958,70 @@ function choiceCardinalityMax(hole: JsonObject): number {
     return max;
   }
   assert.fail(`Unsupported choice cardinality: ${JSON.stringify(cardinality)}`);
+}
+
+type MutableCreationSupportProfile = {
+  supportedProgressions: CharacterProgression[];
+  draftOptionIdsByPath: {
+    "draft.progression.initial": CreationChoiceOptionId[];
+  };
+};
+
+async function withLevelTenFighterCreationSupport<T>(
+  runScenario: () => Promise<T>,
+): Promise<T> {
+  const profile =
+    CHARACTER_CREATION_SUPPORT_PROFILE as unknown as MutableCreationSupportProfile;
+  const originalProgressions = profile.supportedProgressions;
+  const originalProgressionOptionIds =
+    profile.draftOptionIdsByPath["draft.progression.initial"];
+  const nextProgressions = originalProgressions.some(
+    (progression) =>
+      progressionOptionId(progression) === levelTenFighterProgressionOptionId,
+  )
+    ? originalProgressions
+    : [...originalProgressions, levelTenFighterProgression];
+  const nextProgressionOptionIds = originalProgressionOptionIds.includes(
+    levelTenFighterProgressionOptionId,
+  )
+    ? originalProgressionOptionIds
+    : [...originalProgressionOptionIds, levelTenFighterProgressionOptionId];
+
+  profile.supportedProgressions = nextProgressions;
+  profile.draftOptionIdsByPath["draft.progression.initial"] =
+    nextProgressionOptionIds;
+  try {
+    return await runScenario();
+  } finally {
+    profile.supportedProgressions = originalProgressions;
+    profile.draftOptionIdsByPath["draft.progression.initial"] =
+      originalProgressionOptionIds;
+  }
+}
+
+function sameClassProgression(
+  classUnitIdText: string,
+  totalLevel: number,
+): CharacterProgression {
+  const parsedClassUnitId = classUnitId(classUnitIdText);
+  const advancements = Array.from({ length: totalLevel - 1 }, (_, index) => {
+    const entry = characterProgressionEntry({
+      classUnitId: parsedClassUnitId,
+      characterLevel: characterClassLevel(index + 2),
+      hitPointRule: { tag: "fixedHigherLevelGain" },
+    });
+    if (Either.isLeft(entry)) {
+      assert.fail(
+        `Invalid Level 10 MCP fixture progression: ${JSON.stringify(entry.left)}`,
+      );
+    }
+    return entry.right;
+  });
+
+  return {
+    startingClass: parsedClassUnitId,
+    advancements,
+  };
 }
 
 async function fillBaseOrcSoldier(
@@ -3130,6 +3517,40 @@ function assertLevelNineRangerExpertiseBuild(payload: JsonObject, path: string) 
   assert.equal(new Set(expertise).size, levelNineRangerExpertiseSkills.length);
 }
 
+function assertLevelTenFighterChampionBuild(payload: JsonObject, path: string) {
+  const features = jsonObjectArrayAt(payload, `${path}.features`);
+  assert.ok(
+    features.some(
+      (feature) =>
+        feature.kind === "selectedClassChoice" &&
+        feature.selectedFromUnitId === "class_fighter" &&
+        feature.unitId === "subclass_fighter_champion",
+    ),
+    "Fighter 10 build must retain the selected Champion subclass",
+  );
+  assert.ok(
+    features.some(
+      (feature) =>
+        feature.kind === "selectedClassChoice" &&
+        feature.selectedFromUnitId === "fighter_ability_score_improvement_l4" &&
+        feature.unitId === "feat_ability_score_improvement",
+    ),
+    "Fighter 10 build must retain the selected Ability Score Improvement feat",
+  );
+  const weaponMasteryChoices = jsonObjectArrayAt(
+    payload,
+    `${path}.features`,
+  ).filter(
+    (feature) =>
+      feature.kind === "selectedClassChoice" &&
+      feature.selectedFromUnitId === "fighter_weapon_mastery",
+  );
+  assert.deepEqual(
+    weaponMasteryChoices.map((feature) => feature.unitId).sort(),
+    [...levelTenFighterWeaponMasteries].sort(),
+  );
+}
+
 function proficiencyChoiceSkills(
   payload: JsonObject,
   path: string,
@@ -3182,7 +3603,7 @@ function parseString(value: unknown, context: string) {
 }
 
 export function verifyAgentConversationScenarios() {
-  assert.equal(agentConversationScenarios.length, 18);
+  assert.equal(agentConversationScenarios.length, 19);
   const scenarioIds = new Set<string>();
   for (const scenario of agentConversationScenarios) {
     assert.match(scenario.id, /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/);

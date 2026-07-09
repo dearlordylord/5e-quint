@@ -22,12 +22,14 @@ const {
   buildLevel17FullSupport,
   buildLevel18FullSupport,
   buildLevel19FullSupport,
+  buildLevel110FullSupport,
   buildSelectedIdentityReadiness,
   characterLevelBands,
   buildSrdAuthoredProductReadiness,
   renderLevel16FullSupport,
   strictStatusForUnitForTest,
   validateLevelEightSpellLevelFourCarryForward,
+  validateLevelTenSpellLevelFiveCarryForward,
 } = require("./level1-full-support-report.cjs");
 const {
   buildRulesKernelProfileJoin,
@@ -59,6 +61,8 @@ const {
   levelOneEightMiningAuditLevelBands,
   buildLevelOneNineMiningAudit,
   levelOneNineMiningAuditLevelBands,
+  buildLevelOneTenMiningAudit,
+  levelOneTenMiningAuditLevelBands,
   buildLevelOneSevenMiningAudit,
   levelOneSevenMiningAuditLevelBands,
   renderLevelOneSevenMiningAudit,
@@ -119,6 +123,7 @@ function mcpScenarioEvidenceFixture(kind) {
           "level-1-7",
           "level-1-8",
           "level-1-9",
+          "level-1-10",
         ],
         followUpTaskIdsByScope: {
           "level-1": "C3-MCP-LEVEL12-SCENARIO-GATE",
@@ -130,6 +135,7 @@ function mcpScenarioEvidenceFixture(kind) {
           "level-1-7": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS",
           "level-1-8": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS",
           "level-1-9": "L19GATE-03-MCP-LEVEL9-SCENARIO-EVIDENCE",
+          "level-1-10": "L110F-02-MCP-LEVEL10-SHEET-SCENARIO",
         },
         description: "sample MCP flow",
       },
@@ -222,6 +228,17 @@ function mcpScenarioEvidenceFixture(kind) {
         requiredEvidence: {
           scenarioGoal: "fixture level-9 scenario",
           inputs: ["fixture level-9 input"],
+        },
+      },
+      {
+        scopeId: "level-1-10",
+        auditTaskId: "L110F-02-MCP-LEVEL10-SHEET-SCENARIO",
+        result: "new-scenario-required",
+        reason: "fixture missing level-10 scenario evidence",
+        reusedFlowIds: [],
+        requiredEvidence: {
+          scenarioGoal: "fixture level-10 scenario",
+          inputs: ["fixture level-10 input"],
         },
       },
     ],
@@ -602,6 +619,75 @@ function assertLevelEightSpellLevelFourCarryForwardValidation() {
   ) {
     fail(
       `Self-test failed: expected level-8 spell-level-4 carry-forward validation failures, got ${JSON.stringify(failingIssues)}`,
+    );
+  }
+}
+
+function assertLevelTenSpellLevelFiveCarryForwardValidation() {
+  const level19FullSupport = {
+    frontierRows: [
+      {
+        unitId: "fixture_level_five_spell",
+        status: "closed-outside-battle-runtime-boundary",
+        sourceRows: [
+          {
+            id: "fixture:spell-level-5:fixture_level_five_spell",
+            levelBand: "spell-level-5",
+          },
+        ],
+      },
+    ],
+  };
+  const level110FullSupport = {
+    frontierRows: [
+      {
+        unitId: "fixture_level_five_spell",
+        status: "closed-outside-battle-runtime-boundary",
+        sourceRows: [
+          {
+            id: "fixture:spell-level-5:fixture_level_five_spell",
+            levelBand: "spell-level-5",
+          },
+          {
+            id: "fixture:level-10:fixture_level_ten_row",
+            levelBand: "level-10",
+          },
+        ],
+      },
+    ],
+  };
+  const passingIssues = validateLevelTenSpellLevelFiveCarryForward({
+    level19FullSupport,
+    level110FullSupport,
+  });
+  if (passingIssues.length !== 0) {
+    fail(
+      `Self-test failed: expected level-10 spell-level-5 carry-forward validation to pass, got ${JSON.stringify(passingIssues)}`,
+    );
+  }
+  const failingIssues = validateLevelTenSpellLevelFiveCarryForward({
+    level19FullSupport,
+    level110FullSupport: {
+      frontierRows: [
+        {
+          unitId: "fixture_level_five_spell",
+          status: "open-profile-accounting",
+          sourceRows: [
+            {
+              id: "fixture:spell-level-5:fixture_level_five_spell",
+              levelBand: "spell-level-5",
+            },
+          ],
+        },
+      ],
+    },
+  });
+  if (
+    failingIssues.length !== 1 ||
+    !failingIssues[0].includes("must carry forward")
+  ) {
+    fail(
+      `Self-test failed: expected level-10 spell-level-5 carry-forward validation failure, got ${JSON.stringify(failingIssues)}`,
     );
   }
 }
@@ -1078,6 +1164,32 @@ function assertLevelOneSevenMiningAuditSeparatesRowPresenceFromSupport() {
       `Self-test failed: expected level 1-9 mining audit bands ${JSON.stringify(expectedLevelOneNineAuditBands)}, got ${JSON.stringify(levelOneNineMiningAuditLevelBands)}`,
     );
   }
+  const expectedLevelOneTenAuditBands = [
+    "level-1",
+    "level-2",
+    "level-3",
+    "level-4",
+    "level-5",
+    "level-6",
+    "level-7",
+    "level-8",
+    "level-9",
+    "level-10",
+    "spell-level-0",
+    "spell-level-1",
+    "spell-level-2",
+    "spell-level-3",
+    "spell-level-4",
+    "spell-level-5",
+  ];
+  if (
+    JSON.stringify(levelOneTenMiningAuditLevelBands) !==
+    JSON.stringify(expectedLevelOneTenAuditBands)
+  ) {
+    fail(
+      `Self-test failed: expected level 1-10 mining audit bands ${JSON.stringify(expectedLevelOneTenAuditBands)}, got ${JSON.stringify(levelOneTenMiningAuditLevelBands)}`,
+    );
+  }
   const levelOneEightReport = buildLevelOneEightMiningAudit({
     rows: [
       {
@@ -1112,6 +1224,43 @@ function assertLevelOneSevenMiningAuditSeparatesRowPresenceFromSupport() {
     if (!renderedLevelOneEight.includes(expectedText)) {
       fail(
         `Self-test failed: expected level 1-8 mining audit report to include ${JSON.stringify(expectedText)}, got ${JSON.stringify(renderedLevelOneEight)}`,
+      );
+    }
+  }
+  const levelOneTenReport = buildLevelOneTenMiningAudit({
+    rows: [
+      {
+        id: "fixture:level-10:feature",
+        levelBand: "level-10",
+        rowKind: "class-feature-grant",
+        category: "class feature",
+        className: "Fixture",
+        concept: "Fixture Level 10 Feature",
+        candidateUnitId: "fixture_level_10_feature",
+        source: {
+          path: ".references/srd-5.2.1/Classes/Fixture.md",
+          lineStart: 10,
+          lineEnd: 10,
+        },
+        authoredContent: { state: "missing-authored-record" },
+        catalogAdmission: { state: "not-installed" },
+        unitProfileDisposition: "unsupported-profile",
+        finalDisposition: "missing-authored-record",
+        nextAction: "Fixture level-10 follow-up.",
+      },
+    ],
+  });
+  const renderedLevelOneTen = renderLevelOneSevenMiningAudit(
+    levelOneTenReport,
+  );
+  for (const expectedText of [
+    "# Character Levels 1-10 Mining Audit",
+    "| level-10 | character-level | present | 1 |",
+    "| Fixture Level 10 Feature | level-10 | character-level | class feature | `fixture_level_10_feature` | `.references/srd-5.2.1/Classes/Fixture.md:10` | present | not-installed | unsupported-profile | missing-authored-record | not-applicable | not-recorded | Fixture level-10 follow-up. |",
+  ]) {
+    if (!renderedLevelOneTen.includes(expectedText)) {
+      fail(
+        `Self-test failed: expected level 1-10 mining audit report to include ${JSON.stringify(expectedText)}, got ${JSON.stringify(renderedLevelOneTen)}`,
       );
     }
   }
@@ -1288,9 +1437,14 @@ function strictScopeWitnessRowForSelfTest(levelBand) {
 }
 
 function strictScopeWitnessRowsForSelfTest() {
-  return ["level-7", "level-8", "level-9", "spell-level-4", "spell-level-5"].map(
-    strictScopeWitnessRowForSelfTest,
-  );
+  return [
+    "level-7",
+    "level-8",
+    "level-9",
+    "level-10",
+    "spell-level-4",
+    "spell-level-5",
+  ].map(strictScopeWitnessRowForSelfTest);
 }
 
 function expectSelfTestError(label, run, expectedMessage) {
@@ -1536,6 +1690,32 @@ function runSelfTest(root) {
       `Self-test failed: expected character level 9 bands to include level-9 and spell-level-5, got ${JSON.stringify(levelNineBands)}`,
     );
   }
+  const levelTenBands = characterLevelBands(10);
+  if (
+    JSON.stringify(levelTenBands) !==
+    JSON.stringify([
+      "level-1",
+      "level-2",
+      "level-3",
+      "level-4",
+      "level-5",
+      "level-6",
+      "level-7",
+      "level-8",
+      "level-9",
+      "level-10",
+      "spell-level-0",
+      "spell-level-1",
+      "spell-level-2",
+      "spell-level-3",
+      "spell-level-4",
+      "spell-level-5",
+    ])
+  ) {
+    fail(
+      `Self-test failed: expected character level 10 bands to include level-10 and spell-level-5 while excluding spell-level-6, got ${JSON.stringify(levelTenBands)}`,
+    );
+  }
   const emptyFullSupportMatrix = {
     units: [],
     rulesKernelProfileJoin: { profiles: [] },
@@ -1561,6 +1741,11 @@ function runSelfTest(root) {
     minimalFullSupportInventory,
     { root },
   );
+  const level110FullSupport = buildLevel110FullSupport(
+    emptyFullSupportMatrix,
+    minimalFullSupportInventory,
+    { root },
+  );
   if (
     JSON.stringify(level17FullSupport.scope.levelBands) !==
       JSON.stringify(levelSevenBands) ||
@@ -1570,10 +1755,13 @@ function runSelfTest(root) {
     level18FullSupport.scope.title !== "Character Levels 1-8" ||
     JSON.stringify(level19FullSupport.scope.levelBands) !==
       JSON.stringify(levelNineBands) ||
-    level19FullSupport.scope.title !== "Character Levels 1-9"
+    level19FullSupport.scope.title !== "Character Levels 1-9" ||
+    JSON.stringify(level110FullSupport.scope.levelBands) !==
+      JSON.stringify(levelTenBands) ||
+    level110FullSupport.scope.title !== "Character Levels 1-10"
   ) {
     fail(
-      `Self-test failed: expected level 1-7/1-8/1-9 full-support scopes to expose the new band frontiers, got ${JSON.stringify({ level17: level17FullSupport.scope, level18: level18FullSupport.scope, level19: level19FullSupport.scope })}`,
+      `Self-test failed: expected level 1-7/1-8/1-9/1-10 full-support scopes to expose the new band frontiers, got ${JSON.stringify({ level17: level17FullSupport.scope, level18: level18FullSupport.scope, level19: level19FullSupport.scope, level110: level110FullSupport.scope })}`,
     );
   }
   expectSelfTestError(
@@ -1646,10 +1834,25 @@ function runSelfTest(root) {
       ),
     "Strict Character Levels 1-9 scope requires generated spell-level-5 inventory rows; got 0.",
   );
+  expectSelfTestError(
+    "level 1-10 full-support scope without level-10 rows",
+    () =>
+      buildLevel110FullSupport(
+        emptyFullSupportMatrix,
+        {
+          rows: minimalFullSupportInventory.rows.filter(
+            (row) => row.levelBand !== "level-10",
+          ),
+        },
+        { root },
+      ),
+    "Strict Character Levels 1-10 scope requires generated level-10 inventory rows; got 0.",
+  );
   assertLaterLevelOnlyScopeAccounting();
   assertTableSpatialUnsupportedClosureStrictClosed();
   assertLevelNineFinalSupportBlocksUnsupportedAndMissingRows();
   assertLevelEightSpellLevelFourCarryForwardValidation();
+  assertLevelTenSpellLevelFiveCarryForwardValidation();
   assertSelectionGrantContainerScopeAccounting();
   assertMindSpikeDeferredSelectedIdentityGate();
   assertSelectedIdentityMetricExcludesWholeClaimNotApplicable();
@@ -1742,6 +1945,31 @@ function runSelfTest(root) {
         `Self-test failed: expected level-1-9 MCP audit reuse issue ${JSON.stringify(expectedLevelNineReuseMcpAuditIssue)}, got ${JSON.stringify(levelNineReuseMcpAuditIssues)}`,
       );
     }
+    const levelTenReuseMcpAudit = mcpScenarioEvidenceFixture(
+      mcpScenarioWitnessKind,
+    );
+    const levelTenDecision =
+      levelTenReuseMcpAudit.scopeAuditDecisions.find(
+        (decision) => decision.scopeId === "level-1-10",
+      );
+    levelTenDecision.result = "reuse-existing-evidence";
+    levelTenDecision.reusedFlowIds = ["mcp-workflow-discovery"];
+    delete levelTenDecision.requiredEvidence;
+    const levelTenReuseMcpAuditIssues = validateMcpScenarioEvidence(
+      levelTenReuseMcpAudit,
+      { root: tempDir },
+    );
+    const expectedLevelTenReuseMcpAuditIssue =
+      "MCP scenario evidence manifest scopeAuditDecisions[7].result must not reuse existing evidence for level-1-10; executable level-1-10 MCP scenario evidence is required.";
+    if (
+      !levelTenReuseMcpAuditIssues.includes(
+        expectedLevelTenReuseMcpAuditIssue,
+      )
+    ) {
+      fail(
+        `Self-test failed: expected level-1-10 MCP audit reuse issue ${JSON.stringify(expectedLevelTenReuseMcpAuditIssue)}, got ${JSON.stringify(levelTenReuseMcpAuditIssues)}`,
+      );
+    }
     const incompleteLevelReport = fullSupportReportFixture({
       scopeTitle: "Fixture incomplete level",
       claimGate: {
@@ -1789,6 +2017,7 @@ function runSelfTest(root) {
       level17FullSupport: completeLevelReport,
       level18FullSupport: completeLevelReport,
       level19FullSupport: completeLevelReport,
+      level110FullSupport: completeLevelReport,
       mcpScenarioEvidence: {
         check: {
           packageName: "@dnd/mcp",
@@ -1805,6 +2034,7 @@ function runSelfTest(root) {
               "level-1-7",
               "level-1-8",
               "level-1-9",
+              "level-1-10",
             ],
             followUpTaskIdsByScope: {
               "level-1": "C15-ULTRA-GOLDEN-CHECKER-REGRESSION",
@@ -1814,6 +2044,7 @@ function runSelfTest(root) {
               "level-1-7": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS",
               "level-1-8": "L18GATE-04-MCP-EVIDENCE-REQUIRED-FLOWS",
               "level-1-9": "L19GATE-03-MCP-LEVEL9-SCENARIO-EVIDENCE",
+              "level-1-10": "L110F-02-MCP-LEVEL10-SHEET-SCENARIO",
             },
             description: "fixture missing scenario evidence",
           },
@@ -1897,6 +2128,17 @@ function runSelfTest(root) {
               inputs: ["fixture level-9 input"],
             },
           },
+          {
+            scopeId: "level-1-10",
+            auditTaskId: "L110F-02-MCP-LEVEL10-SHEET-SCENARIO",
+            result: "new-scenario-required",
+            reason: "fixture missing level-10 scenario evidence",
+            reusedFlowIds: [],
+            requiredEvidence: {
+              scenarioGoal: "fixture level-10 scenario",
+              inputs: ["fixture level-10 input"],
+            },
+          },
         ],
       },
       rulesKernelMatrix: {
@@ -1950,6 +2192,10 @@ function runSelfTest(root) {
       ultraGoldenGate,
       "level-1-9",
     );
+    const completeLevel110Scope = requireSelfTestScope(
+      ultraGoldenGate,
+      "level-1-10",
+    );
     if (
       ultraGoldenGate.status !== "blocked" ||
       !ultraGoldenGate.blockedScopeIds.includes("level-1") ||
@@ -1959,6 +2205,7 @@ function runSelfTest(root) {
       !ultraGoldenGate.blockedScopeIds.includes("level-1-7") ||
       !ultraGoldenGate.blockedScopeIds.includes("level-1-8") ||
       !ultraGoldenGate.blockedScopeIds.includes("level-1-9") ||
+      !ultraGoldenGate.blockedScopeIds.includes("level-1-10") ||
       incompleteScope.status !== "blocked" ||
       completeScope.status !== "pass" ||
       completeLevel13Scope.status !== "blocked" ||
@@ -1968,11 +2215,12 @@ function runSelfTest(root) {
       completeLevel17Scope.status !== "blocked" ||
       completeLevel18Scope.status !== "blocked" ||
       completeLevel19Scope.status !== "blocked" ||
+      completeLevel110Scope.status !== "blocked" ||
       incompleteScope.layerResult.completeLayers !== 0 ||
       incompleteScope.layerResult.totalLayers !== 4
     ) {
       fail(
-        `Self-test failed: expected incomplete ultra-golden fixture to block every level-1 layer; block level-1-3, level-1-5, level-1-6, level-1-7, level-1-8, and level-1-9 on MCP evidence; and leave level-1-2 and level-1-4 pass, got ${JSON.stringify(ultraGoldenGate)}`,
+        `Self-test failed: expected incomplete ultra-golden fixture to block every level-1 layer; block level-1-3, level-1-5, level-1-6, level-1-7, level-1-8, level-1-9, and level-1-10 on MCP evidence; and leave level-1-2 and level-1-4 pass, got ${JSON.stringify(ultraGoldenGate)}`,
       );
     }
     for (const fixtureLayerId of [
@@ -2009,6 +2257,8 @@ function runSelfTest(root) {
       "| level-1-8 | mcp-scenario-evidence | blocked |",
       "| level-1-9 | blocked | 3/4 | 0 |",
       "| level-1-9 | mcp-scenario-evidence | blocked |",
+      "| level-1-10 | blocked | 3/4 | 0 |",
+      "| level-1-10 | mcp-scenario-evidence | blocked |",
     ]) {
       if (!renderedUltraGoldenGate.includes(expectedRow)) {
         fail(
@@ -2057,6 +2307,7 @@ function runSelfTest(root) {
       level17FullSupport: completeLevelReport,
       level18FullSupport: completeLevelReport,
       level19FullSupport: completeLevelReport,
+      level110FullSupport: completeLevelReport,
       mcpScenarioEvidence: {
         check: {
           packageName: "@dnd/mcp",

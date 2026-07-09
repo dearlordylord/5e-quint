@@ -76,6 +76,7 @@ import type {
   HoleInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { validateRolledDiceForDiceExpr } from "@dnd/shared-algebras/runtime-dice-algebra";
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.retaliation-reaction-attack
 import {
   type AttackRollMode,
   type AttackRollResult,
@@ -199,6 +200,7 @@ import {
 import {
   type BattlePassiveSpeedBonusSupportProfile,
   type BattlePassiveSpeedKindGrantsSupportProfile,
+  type BattleMonkFocusBattleOptionsSupportProfile,
   type BattleCunningStrikeSupportProfile,
   type CunningStrikeEndTurnCoverDegree,
   type CunningStrikeOption,
@@ -1081,6 +1083,10 @@ export type BattleAttackHostSubject =
   | Extract<
       BattleSubject,
       { readonly tag: "runtimeCommand"; readonly command: "opportunityAttack" }
+    >
+  | Extract<
+      BattleSubject,
+      { readonly tag: "runtimeCommand"; readonly command: "retaliationAttack" }
     >;
 export type BattleAttackDamagePrefixFill = Extract<
   BattleFill,
@@ -1188,6 +1194,9 @@ type BattleInterruptProcedureChoiceWithSubject = {
   | {
       readonly kind: "opportunityAttack";
     }
+  | {
+      readonly kind: "retaliationAttack";
+    }
 );
 type BattleAttackDamageContinuation = Extract<
   BattleInterruptedProcedure,
@@ -1292,6 +1301,11 @@ export type BattleInterruptProcedureSelection = {
   | {
       readonly kind: "opportunityAttack";
       readonly reactorId: CombatantId;
+    }
+  | {
+      readonly kind: "retaliationAttack";
+      readonly reactorId: CombatantId;
+      readonly attackName: string;
     }
   | {
       readonly kind: "reactionRollOrDamageReduction";
@@ -1649,6 +1663,11 @@ export type BattleTargetSpatialFact =
       readonly attackName: string;
     }
   | {
+      readonly kind: "retaliationDamagerWithinFiveFeet";
+      readonly damagedId: CombatantId;
+      readonly damageSourceId: CombatantId;
+    }
+  | {
       readonly kind: "cleaveSecondTargetWithin5FeetOfFirstTarget";
       readonly attackerId: CombatantId;
       readonly firstTargetId: CombatantId;
@@ -1715,6 +1734,11 @@ export type BattleTargetSpatialFact =
       readonly casterId: CombatantId;
       readonly targetId: CombatantId;
       readonly spellId: SpellRecord["id"];
+    }
+  | {
+      readonly kind: "heightenedStepOfTheWindCarryEligible";
+      readonly carrierId: CombatantId;
+      readonly carriedCreatureId: CombatantId;
     }
   | {
       readonly kind: "spiritualWeaponTargetWithinForceReach";
@@ -4117,6 +4141,7 @@ export type BattleTurnResources = ActionEconomyState & {
   readonly currentHasBonusAction: boolean;
   readonly commandHalt: BattleCommandHaltTurnSuppression | null;
   readonly jumpDistanceMultiplier: BattleJumpDistanceMultiplier | null;
+  readonly heightenedStepOfTheWindCarriedCreatures: readonly HeightenedStepOfTheWindCarriedCreature[];
   readonly spellSlotUsesThisTurn: readonly BattleTurnSpellSlotUse[];
   readonly levelOnePlusSpellCastsThisTurn: readonly CombatantId[];
   readonly quickenedLevelOnePlusSpellCastsThisTurn: readonly CombatantId[];
@@ -4134,6 +4159,14 @@ export type BattleTurnResources = ActionEconomyState & {
   };
   readonly dashMovementBonusFeet: MovementFeet;
   readonly disengaged: boolean;
+};
+
+export type HeightenedStepOfTheWindCarriedCreature = {
+  readonly carrierId: CombatantId;
+  readonly carriedCreatureId: CombatantId;
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly movementDoesNotProvokeOpportunityAttacks: true;
+  readonly expires: "endOfCarrierTurn";
 };
 
 export type BattleTurnSpellSlotUse =
@@ -6178,6 +6211,7 @@ export type BattleUnitFeatureRollHole = Extract<
   { readonly kind: "rolledDice" }
 > & {
   readonly unitFeature:
+    | BattleMonkFocusBattleOptionsSupportProfile
     | Extract<
         SupportedUnitFeatureProfile,
         { readonly kind: "selfBonusActionHealing" }
@@ -7259,6 +7293,7 @@ export type BattleTurnSnapshot = {
   readonly actionResources: readonly RuntimeActionResource[];
   readonly bonusActionAvailable: boolean;
   readonly jumpDistanceMultiplier: BattleJumpDistanceMultiplier | null;
+  readonly heightenedStepOfTheWindCarriedCreatures: readonly HeightenedStepOfTheWindCarriedCreature[];
   readonly spellSlotUsesThisTurn: readonly BattleTurnSpellSlotUse[];
   readonly levelOnePlusSpellCastsThisTurn: readonly CombatantId[];
   readonly quickenedLevelOnePlusSpellCastsThisTurn: readonly CombatantId[];

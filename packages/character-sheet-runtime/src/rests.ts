@@ -7,6 +7,8 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-long-rest-use-state
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.rest-triggered-heroic-inspiration
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.sorcerous-restoration-sorcery-point-recovery
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.passive-defense-projection
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.ranger-tireless
 import {
   characterBuildFeatureUnitIds,
   classLevelForUnit,
@@ -43,6 +45,10 @@ import {
   druidWildShapeKnownFormsAfterLongRest,
 } from "./druid-features.ts";
 import {
+  fiendishResilienceAfterLongRest,
+  fiendishResilienceAfterShortRest,
+} from "./passive-defenses.ts";
+import {
   completeShortRestArcaneRecoveryBenefitsWithOwner,
   completeShortRestBenefits,
 } from "./healing-rest-benefit.ts";
@@ -65,6 +71,7 @@ import {
   characterSheetShortRestStartBrand,
   getRequiredUnit,
   type CharacterSheet,
+  type CharacterSheetExhaustionLevel,
   type CharacterSheetHeroicInspiration,
   type CharacterSheetIssue,
   type CharacterSheetArcaneRecoveryRestRouteResult,
@@ -121,6 +128,8 @@ type CharacterSheetRestTriggeredHeroicInspirationFeature = Extract<
   readonly mechanics: RestTriggeredHeroicInspirationMechanics;
 };
 
+const RANGER_TIRELESS_UNIT_ID = "ranger_tireless" as const;
+
 export function startShortRest(
   input: CharacterSheetShortRestStartInput,
 ): Either.Either<CharacterSheetShortRestStart, CharacterSheetIssue> {
@@ -166,13 +175,28 @@ export function interruptShortRest(
 export function completeShortRest(
   input: CharacterSheetShortRestInput,
 ): Either.Either<CharacterSheet, CharacterSheetIssue> {
-  return completeShortRestBenefits({
+  const sheet = completeShortRestBenefits({
     sheet: input.completion.startedRest.sheet,
     unitLibrary: input.unitLibrary,
     hpGate: "requiresShortRestStartHp",
     spendHitDice: input.spendHitDice,
     arcaneRecovery: input.arcaneRecovery,
     sorcerousRestoration: input.sorcerousRestoration,
+  });
+  if (Either.isLeft(sheet)) return Either.left(sheet.left);
+  const fiendishResilience = fiendishResilienceAfterShortRest({ input });
+  if (Either.isLeft(fiendishResilience)) {
+    return Either.left(fiendishResilience.left);
+  }
+  return Either.right({
+    ...sheet.right,
+    exhaustionLevel: shortRestExhaustionLevelAfterTireless({
+      sheet: sheet.right,
+      unitLibrary: input.unitLibrary,
+    }),
+    ...(fiendishResilience.right === undefined
+      ? {}
+      : { fiendishResilience: fiendishResilience.right }),
   });
 }
 
@@ -213,6 +237,24 @@ export function completeShortRestArcaneRecoveryWithRoute(
     issue: result.issue,
     qRoute: [rejectArcaneRecoveryRouteEvent(result.owner)],
   };
+}
+
+function shortRestExhaustionLevelAfterTireless(input: {
+  readonly sheet: CharacterSheet;
+  readonly unitLibrary: UnitCatalog;
+}): CharacterSheetExhaustionLevel {
+  return characterBuildFeatureUnitIds(
+    input.sheet.build,
+    input.unitLibrary,
+  ).includes(RANGER_TIRELESS_UNIT_ID)
+    ? decreaseExhaustionLevel(input.sheet.exhaustionLevel)
+    : input.sheet.exhaustionLevel;
+}
+
+function decreaseExhaustionLevel(
+  exhaustionLevel: CharacterSheetExhaustionLevel,
+): CharacterSheetExhaustionLevel {
+  return Math.max(0, exhaustionLevel - 1) as CharacterSheetExhaustionLevel;
 }
 
 export function characterSheetLongRestCalendarGate(
@@ -317,10 +359,15 @@ export function completeLongRest(
     if (Either.isLeft(druidCircleLand)) {
       return Either.left(druidCircleLand.left);
     }
+    const fiendishResilience = fiendishResilienceAfterLongRest({ input });
+    if (Either.isLeft(fiendishResilience)) {
+      return Either.left(fiendishResilience.left);
+    }
     return Either.right({
       ...sheet,
       build: build.right,
       hitPointMaximumReduction: Hp(0),
+      exhaustionLevel: decreaseExhaustionLevel(sheet.exhaustionLevel),
       hitPoints: hitPoints.right,
       spentHitDice: [],
       restFeatureUses: [],
@@ -333,6 +380,9 @@ export function completeLongRest(
       ...(druidCircleLand.right === undefined
         ? {}
         : { druidCircleLand: druidCircleLand.right }),
+      ...(fiendishResilience.right === undefined
+        ? {}
+        : { fiendishResilience: fiendishResilience.right }),
       spellSlotExpenditures: [],
       createdSpellSlots: [],
       pactSlotExpenditure: undefined,
@@ -359,10 +409,15 @@ export function completeLongRest(
   if (Either.isLeft(druidCircleLand)) {
     return Either.left(druidCircleLand.left);
   }
+  const fiendishResilience = fiendishResilienceAfterLongRest({ input });
+  if (Either.isLeft(fiendishResilience)) {
+    return Either.left(fiendishResilience.left);
+  }
   return Either.right({
     ...sheet,
     build: build.right,
     hitPointMaximumReduction: Hp(0),
+    exhaustionLevel: decreaseExhaustionLevel(sheet.exhaustionLevel),
     hitPoints: hitPoints.right,
     spentHitDice: [],
     restFeatureUses: [],
@@ -375,6 +430,9 @@ export function completeLongRest(
     ...(druidCircleLand.right === undefined
       ? {}
       : { druidCircleLand: druidCircleLand.right }),
+    ...(fiendishResilience.right === undefined
+      ? {}
+      : { fiendishResilience: fiendishResilience.right }),
   });
 }
 

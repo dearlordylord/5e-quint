@@ -1,3 +1,4 @@
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.cleric-divine-intervention-session-invocation
 import {
   DRUID_WILD_SHAPE_UNIT_ID,
   MONK_MONKS_FOCUS_UNIT_ID,
@@ -15,6 +16,7 @@ import {
   type SurfaceSkill,
 } from "@dnd/shared/game-facts";
 import {
+  type AbilityModifier,
   DieRollResult,
   type Hp as HpType,
   resourceCount,
@@ -92,17 +94,21 @@ export const ARMOR_TRAINING_CATEGORY_VALUES = [
 // here. Admission can't key on the bare shape (class_feature + use_count +
 // resetCadence): ~10 SRD features share it (Rage, Action Surge, Bardic Inspiration,
 // …), so shape alone would over-admit. The durable form is a typed support-profile
-// discriminant in the authored data, not an id list. Don't extend.
+// discriminant in the authored data, not an id list. Keep additions tied to
+// supported Character Sheet resource profiles and focused owner evidence.
 export const CHARACTER_SHEET_USE_COUNT_RESOURCE_UNIT_IDS = [
   DRUID_WILD_SHAPE_UNIT_ID,
   MONK_MONKS_FOCUS_UNIT_ID,
+  "cleric_divine_intervention",
+  "ranger_tireless",
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 export type CharacterSheetUseCountResourceUnitId =
   (typeof CHARACTER_SHEET_USE_COUNT_RESOURCE_UNIT_IDS)[number];
 // AUTHORED-IDENTITY DEBT — support gate; a tolerated exception, NOT a pattern to
 // copy. Enumerates the authored Unit ids whose point-pool resource the sheet tracks
 // here. The durable form is a typed support-profile discriminant in the authored
-// data, not an id list. Don't extend.
+// data, not an id list. Keep additions tied to supported Character Sheet
+// resource profiles and focused owner evidence.
 export const CHARACTER_SHEET_POINT_POOL_RESOURCE_UNIT_IDS = [
   SORCERER_FONT_OF_MAGIC_UNIT_ID,
 ] as const satisfies ReadonlyArray<UnitRecord["id"]>;
@@ -622,12 +628,69 @@ export type CharacterSheetWithSpellSlots = CharacterSheet & {
   readonly createdSpellSlots: readonly CharacterSheetCreatedSpellSlotState[];
 };
 
+export type CharacterSheetFiendishResilience = {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly damageType: DamageType;
+};
+
+export type CharacterSheetNatureWard = {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly conditionImmunities: readonly ["poisoned"];
+  readonly resistance: {
+    readonly damageType: DamageType;
+    readonly land: DruidCircleLandChoice;
+  };
+};
+
+export type CharacterSheetAuraOfCourage = {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly conditionImmunities: readonly ["frightened"];
+  readonly auraMembershipSource: {
+    readonly kind: "auraOfProtection";
+    readonly condition: "frightened";
+  };
+};
+
+export type CharacterSheetSelfRestoration = {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly turnEndRemovableConditions: readonly [
+    "charmed",
+    "frightened",
+    "poisoned",
+  ];
+  readonly foodAndDrinkExhaustionPrevented: true;
+};
+
+export type CharacterSheetEmpoweredEvocation = {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly spellSourceUnitId: "class_wizard";
+  readonly school: "evocation";
+  readonly damageRollAbility: "int";
+  readonly damageRollModifier: AbilityModifier;
+};
+
+export type CharacterSheetPassiveDefenseProjection = {
+  readonly damageResistances: readonly DamageType[];
+  readonly conditionImmunities: readonly CharacterSheetCondition[];
+  readonly auraOfCourage?: CharacterSheetAuraOfCourage;
+  readonly selfRestoration?: CharacterSheetSelfRestoration;
+  readonly fiendishResilience?: CharacterSheetFiendishResilience;
+  readonly naturesWard?: CharacterSheetNatureWard;
+};
+
+export const CHARACTER_SHEET_EXHAUSTION_LEVELS = [
+  0, 1, 2, 3, 4, 5, 6,
+] as const;
+export type CharacterSheetExhaustionLevel =
+  (typeof CHARACTER_SHEET_EXHAUSTION_LEVELS)[number];
+
 export type CharacterSheet =
   | {
       readonly tag: "available";
       readonly characterId: CharacterSheetId;
       readonly build: SpellcastingCharacterBuild;
       readonly hitPointMaximumReduction: HpType;
+      readonly exhaustionLevel: CharacterSheetExhaustionLevel;
       readonly hitPoints: CharacterSheetHitPoints;
       readonly conditions: readonly CharacterSheetCondition[];
       readonly spentHitDice: readonly CharacterSheetSpentHitDiePool[];
@@ -640,6 +703,7 @@ export type CharacterSheet =
         | undefined;
       readonly druidWildShapeKnownForms?: CharacterSheetDruidWildShapeKnownForms;
       readonly druidCircleLand?: CharacterSheetDruidCircleLand;
+      readonly fiendishResilience?: CharacterSheetFiendishResilience;
       readonly spellSlotExpenditures: readonly CharacterSpellSlotExpenditure[];
       readonly createdSpellSlots: readonly CharacterSheetCreatedSpellSlotState[];
       readonly pactSlotExpenditure: CharacterPactSlotExpenditure | undefined;
@@ -649,6 +713,7 @@ export type CharacterSheet =
       readonly characterId: CharacterSheetId;
       readonly build: NonSpellcastingCharacterBuild;
       readonly hitPointMaximumReduction: HpType;
+      readonly exhaustionLevel: CharacterSheetExhaustionLevel;
       readonly hitPoints: CharacterSheetHitPoints;
       readonly conditions: readonly CharacterSheetCondition[];
       readonly spentHitDice: readonly CharacterSheetSpentHitDiePool[];
@@ -659,6 +724,7 @@ export type CharacterSheet =
       readonly bookOfShadowsPresence?: never;
       readonly druidWildShapeKnownForms?: CharacterSheetDruidWildShapeKnownForms;
       readonly druidCircleLand?: CharacterSheetDruidCircleLand;
+      readonly fiendishResilience?: CharacterSheetFiendishResilience;
       readonly spellSlotExpenditures?: never;
       readonly createdSpellSlots?: never;
       readonly pactSlotExpenditure?: never;
@@ -924,6 +990,7 @@ export type CharacterSheetShortRestInput = {
   readonly sorcerousRestoration?: {
     readonly recoverSorceryPoints: ResourceCount;
   };
+  readonly fiendishResilienceDamageType?: DamageType;
 };
 
 export type CharacterSheetShortRestInterruptionInput = {
@@ -1020,6 +1087,7 @@ export type CharacterSheetLongRestInput = {
   readonly weaponMasteryReselections?: ReadonlyNonEmptyArray<CharacterSheetWeaponMasteryReselection>;
   readonly druidWildShapeKnownFormReplacement?: CharacterSheetDruidWildShapeKnownFormReplacement;
   readonly druidCircleLandChoice?: DruidCircleLandChoice;
+  readonly fiendishResilienceDamageType?: DamageType;
   readonly statBlockCatalog?: StatBlockCatalog;
 };
 
@@ -1172,6 +1240,7 @@ export type CharacterSheetInput = {
   readonly currentHp?: HpType;
   readonly tempHp: HpType;
   readonly hitPointMaximumReduction: HpType;
+  readonly exhaustionLevel?: CharacterSheetExhaustionLevel;
   readonly conditions: readonly CharacterSheetCondition[];
   readonly unitLibrary: UnitCatalog;
   readonly positiveHpUnconscious?: CharacterSheetPositiveHpUnconscious;
@@ -1186,6 +1255,7 @@ export type CharacterSheetInput = {
   readonly companion?: CharacterSheetCompanion;
   readonly druidWildShapeKnownFormStatBlockIds?: readonly StatBlockId[];
   readonly druidCircleLand?: CharacterSheetDruidCircleLand;
+  readonly fiendishResilience?: CharacterSheetFiendishResilience;
   readonly statBlockCatalog?: StatBlockCatalog;
 };
 
@@ -1722,6 +1792,28 @@ export type CharacterSheetContactPatronInvocation = {
 export type CharacterSheetContactPatronResult = {
   readonly sheet: CharacterSheet;
   readonly invocation: CharacterSheetContactPatronInvocation;
+};
+
+export type CharacterSheetDivineInterventionInvocation = {
+  readonly tag: "divineIntervention";
+  readonly spellId: UnitRecord["id"];
+  readonly spellLevel: SpellRecord["mechanics"]["level"];
+  readonly featureUnitId: UnitRecord["id"];
+  readonly spellList: "cleric";
+  readonly activationAction: "magic";
+  readonly spellSlotCost: { readonly kind: "none" };
+  readonly materialComponentRequirement: {
+    readonly kind: "not_required_by_feature";
+    readonly suppressesSpellMaterialComponents: true;
+  };
+  readonly preparationRequirement: "not_required";
+  readonly requiredSpellAccess: "class_spell_list";
+  readonly castingTime: { readonly kind: "action" };
+};
+
+export type CharacterSheetDivineInterventionResult = {
+  readonly sheet: CharacterSheet;
+  readonly invocation: CharacterSheetDivineInterventionInvocation;
 };
 
 export type CharacterSheetCommuneInvocation = {
@@ -3585,6 +3677,7 @@ export type CharacterSheetSpellInvocation =
   | CharacterSheetSpellbookRitualInvocation
   | CharacterSheetBookOfShadowsRitualInvocation
   | CharacterSheetContactPatronInvocation
+  | CharacterSheetDivineInterventionInvocation
   | CharacterSheetCommuneInvocation
   | CharacterSheetCommuneWithNatureInvocation
   | CharacterSheetLegendLoreInvocation

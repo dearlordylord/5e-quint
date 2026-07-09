@@ -619,6 +619,11 @@ const BattleTargetSpatialFactSchema = Schema.Union(
     attackName: Schema.String,
   }),
   Schema.Struct({
+    kind: Schema.Literal("retaliationDamagerWithinFiveFeet"),
+    damagedId: CombatantId,
+    damageSourceId: CombatantId,
+  }),
+  Schema.Struct({
     kind: Schema.Literal("cleaveSecondTargetWithin5FeetOfFirstTarget"),
     attackerId: CombatantId,
     firstTargetId: CombatantId,
@@ -685,6 +690,11 @@ const BattleTargetSpatialFactSchema = Schema.Union(
     casterId: CombatantId,
     targetId: CombatantId,
     spellId: Schema.String,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("heightenedStepOfTheWindCarryEligible"),
+    carrierId: CombatantId,
+    carriedCreatureId: CombatantId,
   }),
   Schema.Struct({
     kind: Schema.Literal("spiritualWeaponTargetWithinForceReach"),
@@ -867,6 +877,11 @@ const BattleTargetSpatialFactSchema = Schema.Union(
     targetId: CombatantId,
     unitId: Schema.String,
     rangeFeet: MovementFeet,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("retaliationDamagerWithinFiveFeet"),
+    damagedId: CombatantId,
+    damageSourceId: CombatantId,
   }),
   Schema.Struct({
     kind: Schema.Literal("magicActionHealingPoolTargetWithinRange"),
@@ -3355,6 +3370,12 @@ type BattleFillEncoded =
                   readonly fills: readonly BattleFillEncoded[];
                 }
               | {
+                  readonly kind: "retaliationAttack";
+                  readonly reactorId: string;
+                  readonly attackName: string;
+                  readonly fills: readonly BattleFillEncoded[];
+                }
+              | {
                   readonly kind: "reactionRollOrDamageReduction";
                   readonly unitId: string;
                   readonly modifierKind:
@@ -4261,6 +4282,12 @@ export const BattleFillSchema: Schema.Schema<
               fills: Schema.Array(BattleFillSchema),
             }),
             Schema.Struct({
+              kind: Schema.Literal("retaliationAttack"),
+              reactorId: CombatantId,
+              attackName: BattleSubjectTextSchema,
+              fills: Schema.Array(BattleFillSchema),
+            }),
+            Schema.Struct({
               kind: Schema.Literal("reactionRollOrDamageReduction"),
               unitId: BattleSubjectTextSchema,
               modifierKind: Schema.Literal(
@@ -4693,6 +4720,15 @@ const BattleTurnSnapshotSchema = Schema.Struct({
   jumpDistanceMultiplier: Schema.NullOr(
     Schema.Struct({ multiplier: Schema.Literal(2) }),
   ),
+  heightenedStepOfTheWindCarriedCreatures: Schema.Array(
+    Schema.Struct({
+      carrierId: CombatantId,
+      carriedCreatureId: CombatantId,
+      sourceUnitId: Schema.String,
+      movementDoesNotProvokeOpportunityAttacks: Schema.Literal(true),
+      expires: Schema.Literal("endOfCarrierTurn"),
+    }),
+  ),
   dashMovementBonusFeet: Schema.Number,
   disengaged: Schema.Boolean,
 });
@@ -4938,6 +4974,12 @@ const BattleInterruptProcedureChoiceSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("opportunityAttack"),
+    reactorId: CombatantId,
+    subject: BattleSubjectSchema,
+    initialHoles: Schema.Array(BattleHoleSchema),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("retaliationAttack"),
     reactorId: CombatantId,
     subject: BattleSubjectSchema,
     initialHoles: Schema.Array(BattleHoleSchema),

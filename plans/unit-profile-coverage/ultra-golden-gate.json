@@ -4,7 +4,7 @@
     "aggregateRule": "Ultra-golden passes only when every required layer passes for every scoped level report. The checker deliberately does not publish a blended ultra-golden percentage.",
     "layers": [
       {
-        "criterion": "The strict level-support claim has no open strict rows, selected-identity blockers, SRD-authored product-readiness blockers, or strict level-9 final-support blockers; diagnostic product-readiness rows do not block unless promoted into that blocker set.",
+        "criterion": "The strict level-support claim has no open strict rows, selected-identity blockers, SRD-authored product-readiness blockers, or strict final-support blockers; diagnostic product-readiness rows do not block unless promoted into that blocker set.",
         "id": "support-completeness",
         "label": "Support completeness"
       },
@@ -2258,6 +2258,236 @@
       "scopeId": "level-1-9",
       "status": "pass",
       "title": "Character Levels 1-9"
+    },
+    {
+      "layerResult": {
+        "completeLayers": 4,
+        "totalLayers": 4
+      },
+      "layers": [
+        {
+          "blockers": [],
+          "blockingCount": 0,
+          "evidence": {
+            "claimGate": {
+              "authoredReadinessBlockerCount": 0,
+              "selectedIdentityBlockerCount": 0,
+              "status": "pass",
+              "strictFinalSupportBlockerCount": 0,
+              "strictTargetOpenCount": 0
+            },
+            "selectedIdentityReadiness": {
+              "denominator": 253,
+              "numerator": 253,
+              "percent": "100%"
+            },
+            "srdAuthoredProductReadiness": {
+              "denominator": 133,
+              "numerator": 133,
+              "percent": "100%"
+            },
+            "strictFinalSupport": {
+              "denominator": 411,
+              "numerator": 411,
+              "percent": "100%"
+            },
+            "strictTargetClosure": {
+              "denominator": 343,
+              "numerator": 343,
+              "percent": "100%"
+            }
+          },
+          "id": "support-completeness",
+          "status": "pass"
+        },
+        {
+          "blockingCount": 0,
+          "evidence": {
+            "generatorReadySemanticCoreObligations": {
+              "denominator": 60,
+              "numerator": 60
+            },
+            "qntCoveredObligations": {
+              "denominator": 73,
+              "numerator": 73
+            }
+          },
+          "generatorBlockingRows": [],
+          "id": "qnt-generator-readiness",
+          "missingOrOpenObligations": [],
+          "status": "pass"
+        },
+        {
+          "blockingCount": 0,
+          "evidence": {
+            "parityWitnessedObligations": {
+              "denominator": 73,
+              "numerator": 73
+            },
+            "witnessKinds": {
+              "deterministic-qnt-replay": 11,
+              "focused-mbt": 76,
+              "runtime-test": 25
+            }
+          },
+          "id": "mbt-parity-evidence",
+          "missingWitnessRows": [],
+          "status": "pass"
+        },
+        {
+          "blockingCount": 0,
+          "evidence": {
+            "check": {
+              "command": "pnpm --filter @dnd/mcp test:mcp-scenario-evidence",
+              "packageName": "@dnd/mcp",
+              "script": "test:mcp-scenario-evidence"
+            },
+            "scenarioEvidenceFlows": {
+              "denominator": 4,
+              "numerator": 4
+            },
+            "source": "plans/unit-profile-coverage/mcp-scenario-evidence.json",
+            "witnessKind": "mcp-scenario"
+          },
+          "evidenceRows": [
+            {
+              "flowId": "mcp-workflow-discovery",
+              "kind": "mcp-scenario",
+              "scenarioId": "create-level-ten-fighter-champion-and-battle-handoff",
+              "taskId": "L110F-02-MCP-LEVEL10-SHEET-SCENARIO",
+              "testPath": "packages/mcp/src/mcp-level-ten-scenario.test.ts"
+            },
+            {
+              "flowId": "character-creation",
+              "kind": "mcp-scenario",
+              "scenarioId": "create-level-ten-fighter-champion-and-battle-handoff",
+              "taskId": "L110F-02-MCP-LEVEL10-SHEET-SCENARIO",
+              "testPath": "packages/mcp/src/mcp-level-ten-scenario.test.ts"
+            },
+            {
+              "flowId": "character-sheet",
+              "kind": "mcp-scenario",
+              "scenarioId": "create-level-ten-fighter-champion-and-battle-handoff",
+              "taskId": "L110F-02-MCP-LEVEL10-SHEET-SCENARIO",
+              "testPath": "packages/mcp/src/mcp-level-ten-scenario.test.ts"
+            },
+            {
+              "flowId": "battle",
+              "kind": "mcp-scenario",
+              "scenarioId": "create-level-ten-fighter-champion-and-battle-handoff",
+              "taskId": "L110F-03-MCP-LEVEL10-BATTLE-HANDOFF",
+              "testPath": "packages/mcp/src/mcp-level-ten-scenario.test.ts"
+            }
+          ],
+          "id": "mcp-scenario-evidence",
+          "missingEvidenceRows": [],
+          "requiredFlows": [
+            {
+              "coverageKind": "mcp-scenario",
+              "description": "The MCP server exposes discoverable tool contracts, workflow guidance, catalogs, and structured result paths before a caller commits to a character or battle workflow.",
+              "flowId": "mcp-workflow-discovery",
+              "followUpTaskId": "L110F-02-MCP-LEVEL10-SHEET-SCENARIO"
+            },
+            {
+              "coverageKind": "mcp-scenario",
+              "description": "The MCP surface admits an SRD character creation workflow through create, discover, fill, and finalize tools without relying on support-profile status as scenario evidence.",
+              "flowId": "character-creation",
+              "followUpTaskId": "L110F-02-MCP-LEVEL10-SHEET-SCENARIO"
+            },
+            {
+              "coverageKind": "mcp-scenario",
+              "description": "The MCP surface exposes durable character sheet state and battle handoff results through list and session snapshot tools.",
+              "flowId": "character-sheet",
+              "followUpTaskId": "L110F-02-MCP-LEVEL10-SHEET-SCENARIO"
+            },
+            {
+              "coverageKind": "mcp-scenario",
+              "description": "The MCP surface admits an SRD battle flow through start, read, discover acts, fill battle holes, resolve acts, end turns, and end battle tools.",
+              "flowId": "battle",
+              "followUpTaskId": "L110F-03-MCP-LEVEL10-BATTLE-HANDOFF"
+            }
+          ],
+          "status": "pass"
+        }
+      ],
+      "scopedObligationIds": [
+        "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
+        "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
+        "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+        "BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION",
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND",
+        "BATTLE.REACTION.OFFER_DECLINE_RESUME",
+        "BATTLE.SANCTUARY.TARGETING_INTERDICTION",
+        "BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING",
+        "BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS",
+        "BATTLE.SPELL.ANTIMAGIC_FIELD_TRANSIT_BLOCKING",
+        "BATTLE.SPELL.BLUR_ATTACK_ROLL_DEFENSE_LIFECYCLE",
+        "BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE",
+        "BATTLE.SPELL.CONDITION_IMMUNITY_TURN_START_TEMPORARY_HIT_POINTS",
+        "BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION",
+        "BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION",
+        "BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE",
+        "BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE",
+        "BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION",
+        "BATTLE.SPELL.DRAGONS_BREATH_INITIAL_EFFECT_STATE",
+        "BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE",
+        "BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE",
+        "BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE",
+        "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
+        "BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE",
+        "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
+        "BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE",
+        "BATTLE.SPELL.HASTE_POSITIVE_EFFECTS",
+        "BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE",
+        "BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE",
+        "BATTLE.SPELL.HIT_POINT_RESTORATION",
+        "BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE",
+        "BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE",
+        "BATTLE.SPELL.LINKED_EFFECT_DAMAGE_SHARING",
+        "BATTLE.SPELL.MAKE_STABLE_LIFECYCLE",
+        "BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER",
+        "BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION",
+        "BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE",
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE",
+        "BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY",
+        "BATTLE.SPELL.REACTION_CASTING_TIME",
+        "BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS",
+        "BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE",
+        "BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE",
+        "BATTLE.SPELL.SCALAR_BUFF_ACTIVE_EFFECTS",
+        "BATTLE.SPELL.SEE_INVISIBILITY_OBSERVER_SIGHT",
+        "BATTLE.SPELL.SELF_TELEPORT_LIFECYCLE",
+        "BATTLE.SPELL.SELF_TRANSFORMATION_MODE",
+        "BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE",
+        "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
+        "BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE",
+        "BATTLE.SPELL.WEAPON_HOSTED_ATTACK_AND_RIDERS",
+        "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE",
+        "CREATION.ADVANCEMENT.CLASS_FEATURE_REPLACEMENT",
+        "CREATION.CLASS_FEATURE_FEAT.CHOICE_FINALIZATION",
+        "CREATION.CLASS_FEATURE_OPTION.PROJECTION",
+        "CREATION.CLASS_FEATURE_RESOURCE.PROJECTION",
+        "CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION",
+        "CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE",
+        "CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION",
+        "CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION",
+        "CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION",
+        "CREATION.WEAPON_MASTERY.CLASS_LEVEL_ADVANCEMENT",
+        "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
+        "SHEET.ABILITY_CHECK.PROFICIENCY_BONUS",
+        "SHEET.ARMOR_CLASS.BASE_FORMULA_CHOICE",
+        "SHEET.FEATURE_RESOURCES.TRANSITIONS",
+        "SHEET.SPELLBOOK_RITUAL.SPELL_ACCESS_PROJECTION",
+        "SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION",
+        "SHEET.SPELL_SLOTS_PACT_SLOTS.TRANSITIONS",
+        "SHEET.WEAPON_MASTERY.CLASS_LEVEL_RESELECTION",
+        "SHEET.WEAPON_MASTERY.RESELECTION"
+      ],
+      "scopeId": "level-1-10",
+      "status": "pass",
+      "title": "Character Levels 1-10"
     }
   ],
   "selectedIdentityEvidenceAudit": {
@@ -2423,25 +2653,45 @@
       {
         "metrics": {
           "auditedEvidenceRows": {
-            "denominator": 180,
-            "numerator": 180
+            "denominator": 181,
+            "numerator": 181
           },
           "joinedEvidenceRows": {
-            "denominator": 180,
-            "numerator": 180
+            "denominator": 181,
+            "numerator": 181
           },
           "missingJoinRows": {
-            "denominator": 180,
+            "denominator": 181,
             "numerator": 0
           }
         },
         "rowCount": 0,
         "rows": [],
         "scopeId": "level-1-9"
+      },
+      {
+        "metrics": {
+          "auditedEvidenceRows": {
+            "denominator": 186,
+            "numerator": 186
+          },
+          "joinedEvidenceRows": {
+            "denominator": 186,
+            "numerator": 186
+          },
+          "missingJoinRows": {
+            "denominator": 186,
+            "numerator": 0
+          }
+        },
+        "rowCount": 0,
+        "rows": [],
+        "scopeId": "level-1-10"
       }
     ]
   },
   "sourceArtifacts": {
+    "level110FullSupport": "plans/unit-profile-coverage/level1-10-full-support.json",
     "level12FullSupport": "plans/unit-profile-coverage/level1-2-full-support.json",
     "level13FullSupport": "plans/unit-profile-coverage/level1-3-full-support.json",
     "level14FullSupport": "plans/unit-profile-coverage/level1-4-full-support.json",

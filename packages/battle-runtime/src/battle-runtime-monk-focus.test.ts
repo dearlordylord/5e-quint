@@ -1,4 +1,6 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-MONKS-FOCUS-BATTLE-OPTIONS monk_monks_focus
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L110D-03-MONK-HEIGHTENED-FOCUS-ATTACK-DEFENSE monk_heightened_focus
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L110D-04-MONK-STEP-OF-WIND-CARRY monk_heightened_focus
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.monk-focus-battle-options
 import { describe, expect, test } from "vitest";
 import {
@@ -6,6 +8,7 @@ import {
   attackRollFill,
   battleId,
   characterSeed,
+  damageRollFillWithGroups,
   discoverBattleActs,
   elapsedTimeTicks,
   endTurn,
@@ -81,6 +84,69 @@ describe("battle runtime: Monk's Focus battle options", () => {
     expect(monk.origin.resources[0]?.usesRemaining).toBe(1);
   });
 
+  test("Heightened Focus Patient Defense rolls two Martial Arts dice for Temporary Hit Points", () => {
+    const state = monkFocusBattle({ usesRemaining: 10, classLevel: 10 });
+    const subject = monkFocusSubject(
+      state,
+      (candidate) =>
+        candidate.tag === "monkFocusOption" &&
+        candidate.option === "patientDefense" &&
+        candidate.mode === "focusDisengageDodge",
+    );
+    const roll = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "rolledDice",
+    );
+
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [damageRollFillWithGroups(roll, [[3, 4]])],
+      }),
+    );
+    const monk = resolved.state.combatants.get(fighterId);
+    if (monk?.origin.kind !== "character") {
+      throw new Error("Expected character Monk.");
+    }
+    expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
+      false,
+    );
+    expect(resolved.state.currentTurnResources.disengaged).toBe(true);
+    expect(monk.dodging).toBe(true);
+    expect(Number(monk.tempHp)).toBe(7);
+    expect(monk.origin.resources[0]?.usesRemaining).toBe(9);
+  });
+
+  test("Heightened Focus Patient Defense keeps higher existing Temporary Hit Points", () => {
+    const state = monkFocusBattle({
+      usesRemaining: 10,
+      classLevel: 10,
+      tempHp: 9,
+    });
+    const subject = monkFocusSubject(
+      state,
+      (candidate) =>
+        candidate.tag === "monkFocusOption" &&
+        candidate.option === "patientDefense" &&
+        candidate.mode === "focusDisengageDodge",
+    );
+    const roll = requireHole(
+      resolveBattleSubject({ state, subject, fills: [] }),
+      "rolledDice",
+    );
+
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [damageRollFillWithGroups(roll, [[1, 2]])],
+      }),
+    );
+
+    expect(Number(resolved.state.combatants.get(fighterId)?.tempHp)).toBe(9);
+  });
+
   test("Step of the Wind can take Dash as a Bonus Action without spending Focus", () => {
     const state = monkFocusBattle({ usesRemaining: 2 });
     const subject = monkFocusSubject(
@@ -140,6 +206,102 @@ describe("battle runtime: Monk's Focus battle options", () => {
     });
     expect(monk.origin.resources[0]?.usesRemaining).toBe(1);
     expect(monk.activeEffects).toEqual([]);
+  });
+
+  test("Heightened Focus Step of the Wind carries a willing nearby creature for the turn", () => {
+    const state = monkFocusBattle({ usesRemaining: 10, classLevel: 10 });
+    const act = discoverBattleActs(state).find(
+      (candidate) =>
+        candidate.subject.tag === "monkFocusOption" &&
+        candidate.subject.option === "stepOfTheWind" &&
+        candidate.subject.mode === "focusDisengageDash" &&
+        candidate.subject.speedKind === "walk",
+    );
+    if (act === undefined) {
+      throw new Error("Expected Heightened Focus Step of the Wind act.");
+    }
+    const carryHole = act.initialHoles.find(
+      (hole) =>
+        hole.kind === "targetChoice" &&
+        "label" in hole &&
+        hole.label.includes("carried creature"),
+    );
+    if (carryHole === undefined) {
+      throw new Error("Expected carried creature target choice.");
+    }
+
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [
+          targetFill(carryHole, goblinId, [
+            {
+              kind: "heightenedStepOfTheWindCarryEligible",
+              carrierId: fighterId,
+              carriedCreatureId: goblinId,
+            },
+          ]),
+        ],
+      }),
+    );
+
+    expect(resolved.snapshot.turn.heightenedStepOfTheWindCarriedCreatures).toEqual([
+      {
+        carrierId: fighterId,
+        carriedCreatureId: goblinId,
+        sourceUnitId: "monk_monks_focus",
+        movementDoesNotProvokeOpportunityAttacks: true,
+        expires: "endOfCarrierTurn",
+      },
+    ]);
+    expect(resolved.snapshot.turn.jumpDistanceMultiplier).toEqual({
+      multiplier: 2,
+    });
+    expect(resolved.snapshot.turn.disengaged).toBe(true);
+    expect(monkFocusUsesRemaining(resolved.snapshot)).toBe(9);
+
+    const nextTurn = requireResolved(
+      endTurn({ state: resolved.state, actorId: fighterId }),
+    );
+    expect(
+      nextTurn.snapshot.turn.heightenedStepOfTheWindCarriedCreatures,
+    ).toEqual([]);
+  });
+
+  test("Heightened Focus Step of the Wind rejects carry without eligibility facts", () => {
+    const state = monkFocusBattle({ usesRemaining: 10, classLevel: 10 });
+    const act = discoverBattleActs(state).find(
+      (candidate) =>
+        candidate.subject.tag === "monkFocusOption" &&
+        candidate.subject.option === "stepOfTheWind" &&
+        candidate.subject.mode === "focusDisengageDash" &&
+        candidate.subject.speedKind === "walk",
+    );
+    if (act === undefined) {
+      throw new Error("Expected Heightened Focus Step of the Wind act.");
+    }
+    const carryHole = act.initialHoles.find(
+      (hole) =>
+        hole.kind === "targetChoice" &&
+        "label" in hole &&
+        hole.label.includes("carried creature"),
+    );
+    if (carryHole === undefined) {
+      throw new Error("Expected carried creature target choice.");
+    }
+
+    const result = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill(carryHole, goblinId, [])],
+    });
+
+    expect(result).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+    expect(monkFocusUsesRemaining(result.snapshot)).toBe(10);
   });
 
   test("Step of the Wind Focus jump distance multiplier resets at turn handoff", () => {
@@ -338,6 +500,27 @@ describe("battle runtime: Monk's Focus battle options", () => {
         (resource) => resource.source === "monkFocusFlurryOfBlows",
       ),
     ).toHaveLength(1);
+  });
+
+  test("Heightened Focus Flurry of Blows grants three Unarmed Strike resources", () => {
+    const state = monkFocusBattle({ usesRemaining: 10, classLevel: 10 });
+    const subject = monkFocusSubject(
+      state,
+      (candidate) =>
+        candidate.tag === "monkFocusOption" &&
+        candidate.option === "flurryOfBlows",
+    );
+
+    const activated = requireResolved(
+      resolveBattleSubject({ state, subject, fills: [] }),
+    );
+
+    expect(
+      activated.state.currentTurnResources.actionResources.filter(
+        (resource) => resource.source === "monkFocusFlurryOfBlows",
+      ),
+    ).toHaveLength(3);
+    expect(monkFocusUsesRemaining(activated.snapshot)).toBe(9);
   });
 
   test("Flurry of Blows resources do not pay for a generic weapon Attack", () => {
@@ -682,6 +865,8 @@ describe("battle runtime: Monk's Focus battle options", () => {
 
 function monkFocusBattle(input: {
   readonly usesRemaining: number;
+  readonly classLevel?: number;
+  readonly tempHp?: number;
   readonly weaponAttackAvailable?: true;
 }): BattleState {
   return startBattleRight({
@@ -691,7 +876,8 @@ function monkFocusBattle(input: {
         combatantId: fighterId,
         displayName: "Monk",
         initiative: 20,
-        classLevels: [{ className: "monk", level: 2 }],
+        classLevels: [{ className: "monk", level: input.classLevel ?? 2 }],
+        ...(input.tempHp === undefined ? {} : { tempHp: input.tempHp }),
         ...(input.weaponAttackAvailable === true ? {} : { attack: null }),
         resources: [monksFocusResource(input)],
       }),

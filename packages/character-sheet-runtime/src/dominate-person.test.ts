@@ -333,6 +333,7 @@ function dominatePersonWizardSheet(input: {
       },
     },
     hitPointMaximumReduction: Hp(0),
+    exhaustionLevel: 0,
     hitPoints: { tag: "positive", currentHp: Hp(30), tempHp: Hp(0) },
     conditions: [],
     spentHitDice: [],

@@ -40,6 +40,7 @@ const strictLevel16Bands = characterLevelBands(6);
 const strictLevel17Bands = characterLevelBands(7);
 const strictLevel18Bands = characterLevelBands(8);
 const strictLevel19Bands = characterLevelBands(9);
+const strictLevel110Bands = characterLevelBands(10);
 const companionWorktreeExcludedUnitIds = ["find_familiar"];
 const srdAuthoredCharacterCreationOptionGroups = [
   {
@@ -127,6 +128,14 @@ const level19Scope = {
     "This strict view tracks executable SRD character-level-1 through character-level-9 pressure, cantrips, spell-level-1 through spell-level-5 pressure, and Paladin/Ranger spell-level-3 reachability separately from the broader product readiness closure metric. Spell-level-5 pressure enters at character level 9 for full casters and Warlock Pact Magic.",
   levelBands: strictLevel19Bands,
   maxCharacterLevel: 9,
+};
+const level110Scope = {
+  title: "Character Levels 1-10",
+  outputTitle: "Character Levels 1-10 Full Support",
+  description:
+    "This strict view tracks executable SRD character-level-1 through character-level-10 pressure, cantrips, spell-level-1 through spell-level-5 pressure, and Paladin/Ranger spell-level-3 reachability separately from the broader product readiness closure metric. Character level 10 carries spell-level-5 pressure forward and deliberately excludes spell-level-6 pressure, which first enters the character-level-11 frontier.",
+  levelBands: strictLevel110Bands,
+  maxCharacterLevel: 10,
 };
 const adoptedNoMatrixSrdPressureDecisionUnitIds = new Set([
   "create_or_destroy_water",
@@ -1262,6 +1271,7 @@ function requiredNonVacuousLevelBands(scope) {
     ...(scope.maxCharacterLevel >= 7 ? ["level-7", "spell-level-4"] : []),
     ...(scope.maxCharacterLevel >= 8 ? ["level-8"] : []),
     ...(scope.maxCharacterLevel >= 9 ? ["level-9", "spell-level-5"] : []),
+    ...(scope.maxCharacterLevel >= 10 ? ["level-10"] : []),
   ];
 }
 
@@ -1287,7 +1297,11 @@ function validateNonVacuousStrictScope(srdUnitInventory, scope) {
   }
 }
 
-const strictFinalSupportLevelBands = new Set(["level-9", "spell-level-5"]);
+const strictFinalSupportLevelBands = new Set([
+  "level-9",
+  "level-10",
+  "spell-level-5",
+]);
 const strictFinalForbiddenStatuses = new Set([
   "blocked-follow-up-split",
   "closed-later-level-only",
@@ -1345,7 +1359,9 @@ function strictFinalSupportBlockerForNoMatrixRow(row, scope) {
   return stable({
     unitId: row.unitId,
     blockerKind: "missing-authored-surface-record",
-    reasons: ["missing Unit matrix row for level-9 or spell-level-5 SRD pressure"],
+    reasons: [
+      "missing Unit matrix row for level-9, level-10, or spell-level-5 SRD pressure",
+    ],
     sourceRows: row.sourceRows,
   });
 }
@@ -1646,6 +1662,15 @@ function buildLevel19FullSupport(matrix, srdUnitInventory, options = {}) {
   );
 }
 
+function buildLevel110FullSupport(matrix, srdUnitInventory, options = {}) {
+  return buildStrictFullSupport(
+    matrix,
+    srdUnitInventory,
+    level110Scope,
+    options,
+  );
+}
+
 function spellLevelFourFrontierSignatures(report) {
   return report.frontierRows
     .map((row) => {
@@ -1655,6 +1680,20 @@ function spellLevelFourFrontierSignatures(report) {
         .sort();
       if (spellLevelFourSourceIds.length === 0) return undefined;
       return `${row.unitId}:${row.status}:${spellLevelFourSourceIds.join(",")}`;
+    })
+    .filter(Boolean)
+    .sort();
+}
+
+function spellLevelFiveFrontierSignatures(report) {
+  return report.frontierRows
+    .map((row) => {
+      const spellLevelFiveSourceIds = row.sourceRows
+        .filter((sourceRow) => sourceRow.levelBand === "spell-level-5")
+        .map((sourceRow) => sourceRow.id)
+        .sort();
+      if (spellLevelFiveSourceIds.length === 0) return undefined;
+      return `${row.unitId}:${row.status}:${spellLevelFiveSourceIds.join(",")}`;
     })
     .filter(Boolean)
     .sort();
@@ -1682,6 +1721,28 @@ function validateLevelEightSpellLevelFourCarryForward({
   if (!sameStrings(level17SpellFourSignatures, level18SpellFourSignatures)) {
     issues.push(
       `level-1-8 spell-level-4 frontier must carry forward level-1-7 closure without reopening or duplicating rows: expected ${level17SpellFourSignatures.join("; ")}, got ${level18SpellFourSignatures.join("; ")}.`,
+    );
+  }
+  return issues;
+}
+
+function validateLevelTenSpellLevelFiveCarryForward({
+  level19FullSupport,
+  level110FullSupport,
+}) {
+  const issues = [];
+  const level19SpellFiveSignatures =
+    spellLevelFiveFrontierSignatures(level19FullSupport);
+  const level110SpellFiveSignatures =
+    spellLevelFiveFrontierSignatures(level110FullSupport);
+  if (level19SpellFiveSignatures.length === 0) {
+    issues.push(
+      "level-1-9 full-support report must contain spell-level-5 frontier signatures before level-1-10 carry-forward can be validated.",
+    );
+  }
+  if (!sameStrings(level19SpellFiveSignatures, level110SpellFiveSignatures)) {
+    issues.push(
+      `level-1-10 spell-level-5 frontier must carry forward level-1-9 closure without reopening or duplicating rows: expected ${level19SpellFiveSignatures.join("; ")}, got ${level110SpellFiveSignatures.join("; ")}.`,
     );
   }
   return issues;
@@ -1806,6 +1867,18 @@ function blockingIssue(count, description) {
   return count === 0 ? "_none_" : `${count} ${description}`;
 }
 
+function strictFinalSupportLabel(scope) {
+  return scope.maxCharacterLevel >= 10
+    ? "Strict level-9/10 final support"
+    : "Strict level-9 final support";
+}
+
+function strictFinalSupportDescription(scope) {
+  return scope.maxCharacterLevel >= 10
+    ? "level-9, level-10, and spell-level-5 rows"
+    : "level-9 and spell-level-5 rows";
+}
+
 function renderFullSupportGateRows(report) {
   const strictTargetOpenCount =
     report.metrics.strictTargetClosure.denominator -
@@ -1821,7 +1894,7 @@ function renderFullSupportGateRows(report) {
     `| Strict runtime/profile closure | ${gateStatus(report.metrics.strictTargetClosure)} | ${renderMetric(report.metrics.strictTargetClosure)} | ${blockingIssue(strictTargetOpenCount, "strict denominator row(s) still open")} |`,
     `| Selected identity readiness | ${gateStatus(report.selectedIdentityReadiness.metrics)} | ${renderMetric(report.selectedIdentityReadiness.metrics)} | ${blockingIssue(selectedIdentityBlockerCount, "selected-identity blocker row(s)")} |`,
     `| SRD authored product readiness | ${authoredReadinessBlockerCount === 0 ? "pass" : "blocked"} | ${renderMetric(report.srdAuthoredProductReadiness.metrics)} | ${blockingIssue(authoredReadinessBlockerCount, "unresolved authored readiness row(s)")} |`,
-    `| Strict level-9 final support | ${strictFinalSupportBlockerCount === 0 ? "pass" : "blocked"} | ${renderMetric(report.metrics.strictFinalSupport ?? { numerator: 0, denominator: 0, percent: "n/a" })} | ${blockingIssue(strictFinalSupportBlockerCount, "forbidden final-support disposition row(s)")} |`,
+    `| ${strictFinalSupportLabel(report.scope)} | ${strictFinalSupportBlockerCount === 0 ? "pass" : "blocked"} | ${renderMetric(report.metrics.strictFinalSupport ?? { numerator: 0, denominator: 0, percent: "n/a" })} | ${blockingIssue(strictFinalSupportBlockerCount, "forbidden final-support disposition row(s)")} |`,
   ];
 }
 
@@ -1835,7 +1908,7 @@ function renderSelectedIdentityBlockerRows(rows) {
 }
 
 function renderClaimDiagnosticSeparation(report) {
-  return `The full-support claim gate uses strict target closure, selected identity readiness, SRD-authored product readiness, and strict level-9 final-support blockers. Diagnostic product readiness is a source-row accounting view, so it can report ${renderMetric(report.metrics.productReadiness)} while the claim gate reports **${report.claimGate.status}** only when level-9 and spell-level-5 rows have no unsupported, catalog-only, missing-authored, future-owner, or audit-only closure.`;
+  return `The full-support claim gate uses strict target closure, selected identity readiness, SRD-authored product readiness, and strict final-support blockers. Diagnostic product readiness is a source-row accounting view, so it can report ${renderMetric(report.metrics.productReadiness)} while the claim gate reports **${report.claimGate.status}** only when ${strictFinalSupportDescription(report.scope)} have no unsupported, catalog-only, missing-authored, future-owner, or audit-only closure.`;
 }
 
 function renderStrictFinalSupportBlockerRows(rows) {
@@ -1868,7 +1941,7 @@ function renderStrictFullSupport(report, scope) {
     `Blockers: strict=${report.claimGate.strictTargetOpenCount}, selected-identity=${report.claimGate.selectedIdentityBlockerCount}, SRD-authored-readiness=${report.claimGate.authoredReadinessBlockerCount}.`,
     report.claimGate.strictFinalSupportBlockerCount === undefined
       ? ""
-      : `Strict level-9 final-support blockers: ${report.claimGate.strictFinalSupportBlockerCount}.`,
+      : `${strictFinalSupportLabel(scope)} blockers: ${report.claimGate.strictFinalSupportBlockerCount}.`,
     "",
     "## Metrics",
     "",
@@ -1878,7 +1951,7 @@ function renderStrictFullSupport(report, scope) {
     `| Strict target closure | ${renderMetric(report.metrics.strictTargetClosure)} |`,
     `| Selected identity readiness | ${renderMetric(report.selectedIdentityReadiness.metrics)} |`,
     `| Diagnostic product readiness | ${renderMetric(report.metrics.productReadiness)} |`,
-    `| Strict level-9 final support | ${renderMetric(report.metrics.strictFinalSupport ?? { numerator: 0, denominator: 0, percent: "n/a" })} |`,
+    `| ${strictFinalSupportLabel(scope)} | ${renderMetric(report.metrics.strictFinalSupport ?? { numerator: 0, denominator: 0, percent: "n/a" })} |`,
     `| SRD authored product readiness | ${renderMetric(report.srdAuthoredProductReadiness.metrics)} |`,
     `| Rules-kernel profile join | ${renderMetric(report.metrics.rulesKernelProfileJoin)} |`,
     `| Rules-kernel covered profile join | ${renderMetric(report.metrics.rulesKernelCoveredProfileJoin)} |`,
@@ -1922,9 +1995,9 @@ function renderStrictFullSupport(report, scope) {
     "",
     "Every gate row must pass for a full level-support claim. A 100% result in one layer does not satisfy another layer, failed gates are not combined into a weighted completion percentage, and diagnostic product-readiness rows are intentionally absent from this gate unless they enter the SRD-authored blocker set.",
     "",
-    "### Strict Level-9 Final-Support Blockers",
+    `### ${strictFinalSupportLabel(scope)} Blockers`,
     "",
-    "These rows are forbidden as final level-1-9 support for `level-9` and `spell-level-5` SRD pressure. They may remain only while implementation tasks are in progress.",
+    `These rows are forbidden as final ${scope.title.toLowerCase()} support for ${strictFinalSupportDescription(scope)}. They may remain only while implementation tasks are in progress.`,
     "",
     "| Unit | Blocker kind | Reasons | Level bands | Source rows |",
     "| --- | --- | --- | --- | --- |",
@@ -2096,6 +2169,10 @@ function renderLevel19FullSupport(report) {
   return renderStrictFullSupport(report, level19Scope);
 }
 
+function renderLevel110FullSupport(report) {
+  return renderStrictFullSupport(report, level110Scope);
+}
+
 module.exports = {
   characterLevelBands,
   buildLevel1FullSupport,
@@ -2107,7 +2184,9 @@ module.exports = {
   buildLevel17FullSupport,
   buildLevel18FullSupport,
   buildLevel19FullSupport,
+  buildLevel110FullSupport,
   validateLevelEightSpellLevelFourCarryForward,
+  validateLevelTenSpellLevelFiveCarryForward,
   buildSrdAuthoredProductReadiness,
   buildSelectedIdentityReadiness,
   strictStatusForUnitForTest: (unit, maxCharacterLevel) =>
@@ -2124,4 +2203,5 @@ module.exports = {
   renderLevel17FullSupport,
   renderLevel18FullSupport,
   renderLevel19FullSupport,
+  renderLevel110FullSupport,
 };

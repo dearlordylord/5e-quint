@@ -349,6 +349,11 @@ function coveragePaths(root) {
       coverageDir,
       "LEVEL1_9_FULL_SUPPORT.md",
     ),
+    level110FullSupport: path.join(coverageDir, "level1-10-full-support.json"),
+    level110FullSupportReport: path.join(
+      coverageDir,
+      "LEVEL1_10_FULL_SUPPORT.md",
+    ),
     levelOneSevenMiningAudit: path.join(
       coverageDir,
       "level1-7-mining-audit.json",
@@ -372,6 +377,14 @@ function coveragePaths(root) {
     levelOneNineMiningAuditReport: path.join(
       coverageDir,
       "LEVEL1_9_MINING_AUDIT.md",
+    ),
+    levelOneTenMiningAudit: path.join(
+      coverageDir,
+      "level1-10-mining-audit.json",
+    ),
+    levelOneTenMiningAuditReport: path.join(
+      coverageDir,
+      "LEVEL1_10_MINING_AUDIT.md",
     ),
     ultraGoldenGate: path.join(coverageDir, "ultra-golden-gate.json"),
     ultraGoldenGateReport: path.join(coverageDir, "ULTRA_GOLDEN_GATE.md"),

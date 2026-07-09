@@ -71,6 +71,66 @@ module battleRuntimeMonkFocusTests {
     }
   }
 
+  run test_heightened_focus_flurry_grants_three_strikes = all {
+    val activated = monkFocusFlurryOfBlowsFighterAtMonkLevel(initialState, 10, 10)
+    val firstStrike = monkFocusFlurryOfBlowsStrike(
+      activated.state,
+      activated.focusPointsRemaining,
+      activated.flurryStrikesRemaining,
+    )
+    val secondStrike = monkFocusFlurryOfBlowsStrike(
+      firstStrike.state,
+      firstStrike.focusPointsRemaining,
+      firstStrike.flurryStrikesRemaining,
+    )
+    val thirdStrike = monkFocusFlurryOfBlowsStrike(
+      secondStrike.state,
+      secondStrike.focusPointsRemaining,
+      secondStrike.flurryStrikesRemaining,
+    )
+    all {
+      assert(activated.focusPointsRemaining == 9),
+      assert(activated.flurryStrikesRemaining == 3),
+      assert(firstStrike.flurryStrikesRemaining == 2),
+      assert(secondStrike.flurryStrikesRemaining == 1),
+      assert(thirdStrike.flurryStrikesRemaining == 0),
+    }
+  }
+
+  run test_heightened_focus_patient_defense_projects_temporary_hit_points = all {
+    val result = monkFocusPatientDefenseFocusFighterAtMonkLevel(initialState, 10, 10, 3, 4)
+    all {
+      assert(result.state.fighter.dodging),
+      assert(result.state.disengaged),
+      assert(result.state.fighter.tempHp == 7),
+      assert(result.focusPointsRemaining == 9),
+    }
+  }
+
+  run test_heightened_focus_step_of_the_wind_carries_eligible_creature = all {
+    val result =
+      monkFocusHeightenedStepOfTheWindCarryFighter(initialState, 10, WalkSpeedKind, 10, true)
+    all {
+      assert(result.state.disengaged),
+      assert(result.state.jumpDistanceMultiplier == 2),
+      assert(result.focusPointsRemaining == 9),
+      assert(result.carriedCreatureMovesWithFighter),
+      assert(result.carriedCreatureOpportunityAttacksSuppressed),
+    }
+  }
+
+  run test_heightened_focus_step_of_the_wind_rejects_ineligible_carry = all {
+    val result =
+      monkFocusHeightenedStepOfTheWindCarryFighter(initialState, 10, WalkSpeedKind, 10, false)
+    all {
+      assert(result.state.disengaged),
+      assert(result.state.jumpDistanceMultiplier == 2),
+      assert(result.focusPointsRemaining == 9),
+      assert(not(result.carriedCreatureMovesWithFighter)),
+      assert(not(result.carriedCreatureOpportunityAttacksSuppressed)),
+    }
+  }
+
   run test_monk_focus_flurry_strike_requires_action_eligible_fighter = all {
     val activated = monkFocusFlurryOfBlowsFighter(initialState, 2)
     val incapacitatedState = {

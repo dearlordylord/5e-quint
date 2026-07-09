@@ -1,3 +1,4 @@
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.fighter-heroic-warrior character-sheet.cleric-divine-intervention-session-invocation
 import { Schema } from "effect";
 import type { ClassName } from "@dnd/shared/game-facts";
 
@@ -1652,6 +1653,16 @@ export const PassiveMechanicsSchema = Schema.Struct({
   operations: exactOptional(Schema.NonEmptyArray(PassiveOperationSchema)),
 });
 
+export const CombatTurnStartHeroicInspirationMechanicsSchema = strictStruct({
+  family: Schema.Literal("combat_turn_start_heroic_inspiration"),
+  trigger: strictStruct({
+    kind: Schema.Literal("start_turn"),
+    encounter: Schema.Literal("combat"),
+    requiresMissingHeroicInspiration: Schema.Literal(true),
+  }),
+  grant: strictStruct({ kind: Schema.Literal("heroic_inspiration") }),
+});
+
 export const ClassFeatureMechanicsSchema = Schema.Union(
   ClassFeatureComponentMechanicsSchema,
   CompositeClassFeatureMechanicsSchema,
@@ -1689,6 +1700,7 @@ export const ClassFeatureMechanicsSchema = Schema.Union(
   HuntersPreyMechanicsSchema,
   SteadyAimMechanicsSchema,
   PotentCantripMechanicsSchema,
+  CombatTurnStartHeroicInspirationMechanicsSchema,
 );
 
 export const ClassGeneralFeatureMechanicsSchema = Schema.Union(
@@ -1732,6 +1744,7 @@ export const FighterClassFeatureMechanicsSchema = Schema.Union(
   IndomitableMechanicsSchema,
   TacticalMasterMechanicsSchema,
   RemarkableAthleteMechanicsSchema,
+  CombatTurnStartHeroicInspirationMechanicsSchema,
 );
 
 export const MonkClassFeatureMechanicsSchema = Schema.Union(
@@ -2625,6 +2638,32 @@ export const CLASS_SPELL_LISTS = {
         "spirit_guardians",
         "tongues",
         "water_walk",
+      ],
+      4: [
+        "aura_of_life",
+        "banishment",
+        "control_water",
+        "death_ward",
+        "divination",
+        "freedom_of_movement",
+        "guardian_of_faith",
+        "locate_creature",
+        "stone_shape",
+      ],
+      5: [
+        "commune",
+        "contagion",
+        "dispel_evil_and_good",
+        "flame_strike",
+        "geas",
+        "greater_restoration",
+        "hallow",
+        "insect_plague",
+        "legend_lore",
+        "mass_cure_wounds",
+        "planar_binding",
+        "raise_dead",
+        "scrying",
       ],
     },
   },

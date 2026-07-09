@@ -64,7 +64,14 @@ export {
   characterSheetDruidCircleLandPreparedSpellAccess,
   characterSheetDruidWildShapeKnownForms,
 } from "./druid-features.ts";
+export { useHeroicWarriorAtCombatTurnStart } from "./heroic-warrior.ts";
+export {
+  characterSheetPassiveDefenseProjection,
+  empoweredEvocationDamageRollModifier,
+  removeSelfRestorationConditionAtTurnEnd,
+} from "./passive-defenses.ts";
 export { castContactPatron } from "./contact-patron.ts";
+export { castDivineIntervention } from "./divine-intervention.ts";
 export { castCommune } from "./commune.ts";
 export { castCommuneWithNature } from "./commune-with-nature.ts";
 export { castLegendLore, completedLegendLoreCasting } from "./legend-lore.ts";
@@ -131,6 +138,7 @@ export {
   characterSheetMonksFocusSaveDc,
   characterSheetResources,
   useMonkUncannyMetabolismWhenRollingInitiative,
+  useRangerTirelessTemporaryHitPoints,
 } from "./resources.ts";
 export {
   characterSheetLongRestCalendarGate,
@@ -184,6 +192,7 @@ export type {
 export type {
   CharacterPactSlotExpenditure,
   CharacterSheet,
+  CharacterSheetExhaustionLevel,
   CharacterSheetAbilityCheckAbility,
   CharacterSheetAbilityCheckAbilityInput,
   CharacterSheetAbilityCheckAbilitySubstitution,
@@ -209,6 +218,8 @@ export type {
   CharacterSheetBookOfShadowsRitualInvocation,
   CharacterSheetContactPatronInvocation,
   CharacterSheetContactPatronResult,
+  CharacterSheetDivineInterventionInvocation,
+  CharacterSheetDivineInterventionResult,
   CharacterSheetCommuneInvocation,
   CharacterSheetCommuneResult,
   CharacterSheetCommuneWithNatureInvocation,
@@ -234,6 +245,9 @@ export type {
   CharacterSheetCreationObjectId,
   CharacterSheetCreationObjectMaterial,
   CharacterSheetCreationResult,
+  CharacterSheetAuraOfCourage,
+  CharacterSheetEmpoweredEvocation,
+  CharacterSheetFiendishResilience,
   CharacterSheetConjureElementalElement,
   CharacterSheetConjureElementalInvocation,
   CharacterSheetConjureElementalResult,
@@ -412,6 +426,9 @@ export type {
   CharacterSheetMonkUncannyMetabolismInitiativeInput,
   CharacterSheetMonkUncannyMetabolismUseState,
   CharacterSheetMonksFocusSaveDc,
+  CharacterSheetNatureWard,
+  CharacterSheetPassiveDefenseProjection,
+  CharacterSheetSelfRestoration,
   CharacterSheetPactSlotState,
   CharacterSheetPendingDeathSaves,
   CharacterSheetPointPoolResourceUnitId,

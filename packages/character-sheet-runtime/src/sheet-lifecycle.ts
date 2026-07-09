@@ -1,5 +1,7 @@
 // KERNEL-COVERAGE: runtime-owner CHARACTER.LIFECYCLE.LAYER_PROJECTION
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.sorcerous-restoration-sorcery-point-recovery
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.passive-defense-projection
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.ranger-tireless
 import {
   characterBuildMonkUncannyMetabolismFacts,
   type CharacterBuild,
@@ -34,6 +36,10 @@ import {
   storedBookOfShadowsDruidCircleLandSelectionIssue,
 } from "./druid-features.ts";
 import {
+  fiendishResilienceFromInput,
+  parseStoredFiendishResilience,
+} from "./passive-defenses.ts";
+import {
   companionFromInput,
   parseStoredCharacterSheetCompanion,
 } from "./companions.ts";
@@ -52,6 +58,7 @@ import {
   type CharacterSheet,
   type CharacterSheetBookOfShadowsPresence,
   type CharacterSheetCondition,
+  type CharacterSheetExhaustionLevel,
   type CharacterSheetHeroicInspiration,
   type CharacterSheetInput,
   type CharacterSheetIssue,
@@ -128,6 +135,10 @@ function createCharacterSheet(
   if (Either.isLeft(druidCircleBookOfShadowsIssue)) {
     return Either.left(druidCircleBookOfShadowsIssue.left);
   }
+  const fiendishResilience = fiendishResilienceFromInput(input);
+  if (Either.isLeft(fiendishResilience)) {
+    return Either.left(fiendishResilience.left);
+  }
 
   if (isNonSpellcastingBuild(input.build)) {
     if (
@@ -153,6 +164,7 @@ function createCharacterSheet(
       characterId: input.characterId,
       build: input.build,
       hitPointMaximumReduction: input.hitPointMaximumReduction,
+      exhaustionLevel: input.exhaustionLevel ?? 0,
       hitPoints: hitPoints.right,
       conditions: conditions.right,
       spentHitDice: spentHitDice.right,
@@ -166,6 +178,9 @@ function createCharacterSheet(
       ...(druidCircleLand.right === undefined
         ? {}
         : { druidCircleLand: druidCircleLand.right }),
+      ...(fiendishResilience.right === undefined
+        ? {}
+        : { fiendishResilience: fiendishResilience.right }),
     });
   }
 
@@ -206,6 +221,7 @@ function createCharacterSheet(
     characterId: input.characterId,
     build,
     hitPointMaximumReduction: input.hitPointMaximumReduction,
+    exhaustionLevel: input.exhaustionLevel ?? 0,
     hitPoints: hitPoints.right,
     conditions: conditions.right,
     spentHitDice: spentHitDice.right,
@@ -220,6 +236,9 @@ function createCharacterSheet(
     ...(druidCircleLand.right === undefined
       ? {}
       : { druidCircleLand: druidCircleLand.right }),
+    ...(fiendishResilience.right === undefined
+      ? {}
+      : { fiendishResilience: fiendishResilience.right }),
     spellSlotExpenditures: spellSlotState.right.ordinarySpellSlotExpenditures,
     createdSpellSlots: spellSlotState.right.createdSpellSlots,
     pactSlotExpenditure: pactSlotExpenditure.right,
@@ -276,6 +295,10 @@ export function parseCharacterSheet(
   if (Either.isLeft(hitPointMaximumReduction)) {
     return Either.left(hitPointMaximumReduction.left);
   }
+  const exhaustionLevel = parseStoredExhaustionLevel(value.exhaustionLevel);
+  if (Either.isLeft(exhaustionLevel)) {
+    return Either.left(exhaustionLevel.left);
+  }
   const hitPoints = parseStoredHitPoints(value.hitPoints);
   if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
   const conditions = parseStoredConditions(value.conditions);
@@ -316,12 +339,19 @@ export function parseCharacterSheet(
   if (Either.isLeft(druidCircleLand)) {
     return Either.left(druidCircleLand.left);
   }
+  const fiendishResilience = parseStoredFiendishResilience(
+    value.fiendishResilience,
+  );
+  if (Either.isLeft(fiendishResilience)) {
+    return Either.left(fiendishResilience.left);
+  }
 
   return createCharacterSheet(
     {
       characterId: characterSheetId(value.characterId),
       build: build.right,
       hitPointMaximumReduction: hitPointMaximumReduction.right,
+      exhaustionLevel: exhaustionLevel.right,
       currentHp: hitPoints.right.currentHp,
       tempHp: hitPoints.right.tempHp,
       conditions: conditions.right,
@@ -350,6 +380,9 @@ export function parseCharacterSheet(
       ...(druidCircleLand.right === undefined
         ? {}
         : { druidCircleLand: druidCircleLand.right }),
+      ...(fiendishResilience.right === undefined
+        ? {}
+        : { fiendishResilience: fiendishResilience.right }),
     },
     spellSlots.right,
   );
@@ -382,6 +415,23 @@ function parseStoredHeroicInspiration(
   }
   return characterSheetIssue(
     "Expected Character Sheet Heroic Inspiration state.",
+  );
+}
+
+function parseStoredExhaustionLevel(
+  value: unknown,
+): Either.Either<CharacterSheetExhaustionLevel, CharacterSheetIssue> {
+  if (value === undefined) return Either.right(0);
+  if (
+    typeof value === "number" &&
+    Number.isInteger(value) &&
+    value >= 0 &&
+    value <= 6
+  ) {
+    return Either.right(value as CharacterSheetExhaustionLevel);
+  }
+  return characterSheetIssue(
+    "Character Sheet Exhaustion level must be an integer from 0 to 6.",
   );
 }
 

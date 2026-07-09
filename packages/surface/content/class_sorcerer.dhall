@@ -1,7 +1,7 @@
 { armorTraining.kind = "none"
 , className = "sorcerer"
 , description =
-    "SRD Sorcerer class creation and level 1-5 progression facts, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, level-1 and level-2 class-feature grants, level-3 subclass selection, the level-4 Ability Score Improvement feature grant, and the level-5 Sorcerous Restoration feature grant."
+    "SRD Sorcerer class creation and level 1-10 progression facts, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, level-1 and level-2 class-feature grants, level-3 subclass selection, Ability Score Improvement, Sorcerous Restoration, and level 10 Metamagic admission."
 , featureGrants =
   [ { level = 1, unitId = "sorcerer_innate_sorcery" }
   , { level = 2, unitId = "sorcerer_font_of_magic" }
@@ -168,6 +168,57 @@
         [ { count = 4, spellLevel = 1 }
         , { count = 3, spellLevel = 2 }
         , { count = 2, spellLevel = 3 }
+        ]
+      }
+    , { atLevel = 6
+      , cantripCount = 5
+      , preparedSpellCount = 10
+      , spellSlots =
+        [ { count = 4, spellLevel = 1 }
+        , { count = 3, spellLevel = 2 }
+        , { count = 3, spellLevel = 3 }
+        ]
+      }
+    , { atLevel = 7
+      , cantripCount = 5
+      , preparedSpellCount = 11
+      , spellSlots =
+        [ { count = 4, spellLevel = 1 }
+        , { count = 3, spellLevel = 2 }
+        , { count = 3, spellLevel = 3 }
+        , { count = 1, spellLevel = 4 }
+        ]
+      }
+    , { atLevel = 8
+      , cantripCount = 5
+      , preparedSpellCount = 12
+      , spellSlots =
+        [ { count = 4, spellLevel = 1 }
+        , { count = 3, spellLevel = 2 }
+        , { count = 3, spellLevel = 3 }
+        , { count = 2, spellLevel = 4 }
+        ]
+      }
+    , { atLevel = 9
+      , cantripCount = 5
+      , preparedSpellCount = 14
+      , spellSlots =
+        [ { count = 4, spellLevel = 1 }
+        , { count = 3, spellLevel = 2 }
+        , { count = 3, spellLevel = 3 }
+        , { count = 3, spellLevel = 4 }
+        , { count = 1, spellLevel = 5 }
+        ]
+      }
+    , { atLevel = 10
+      , cantripCount = 6
+      , preparedSpellCount = 15
+      , spellSlots =
+        [ { count = 4, spellLevel = 1 }
+        , { count = 3, spellLevel = 2 }
+        , { count = 3, spellLevel = 3 }
+        , { count = 3, spellLevel = 4 }
+        , { count = 2, spellLevel = 5 }
         ]
       }
     ]
