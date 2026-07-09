@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY
-// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-attack-roll-advantage-save spell.invocation-condition-save spell.invocation-save-gated-condition-immunity
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-attack-roll-advantage-save spell.invocation-condition-save spell.invocation-save-gated-condition-immunity unit-feature.magic-action-save-gated-condition
 
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle spell.invocation-ray-of-enfeeblement-damage-penalty
 
@@ -58,6 +58,7 @@ module battleRuntimeSaveGatedSpell {
       | AnimalFriendshipSaveGate => BattleRuntimeAnimalFriendshipSaveCondition
       | CharmPersonSaveGate => BattleRuntimeCharmPersonSaveCondition
       | BlindnessDeafnessSaveGate => BattleRuntimeBlindnessDeafnessSaveCondition
+      | HoldMonsterSaveGate => BattleRuntimeHoldMonsterSaveCondition
       | HoldPersonSaveGate => BattleRuntimeHoldPersonSaveCondition
     }
 
@@ -494,6 +495,7 @@ module battleRuntimeSaveGatedSpell {
       | AnimalFriendshipSaveGate => Set(AnimalFriendshipCharmed({ source: source, durationTicks: 24 * 60 }))
       | CharmPersonSaveGate => Set(CharmPersonCharmed({ source: source, durationTicks: charmPersonCharmedDurationTicks }))
       | BlindnessDeafnessSaveGate => Set()
+      | HoldMonsterSaveGate => Set()
       | HoldPersonSaveGate => Set()
     }
 
@@ -766,7 +768,7 @@ module battleRuntimeSaveGatedSpell {
           activeEffectsWithoutColorSprayFrom(target.activeEffects, source)
         else
           target.activeEffects
-        if (invocation == HoldPersonSaveGate)
+        if (invocation == HoldPersonSaveGate or invocation == HoldMonsterSaveGate)
           holdPersonTarget({ ...target, activeEffects: baseEffects }, false, source, targetActor)
         else
           { ...target, activeEffects: baseEffects.union(saveGatedConditionFailedSaveActiveEffects(invocation, state, source)) }
@@ -852,6 +854,18 @@ module battleRuntimeSaveGatedSpell {
   ): BattleState =
     if (invocation == HoldPersonSaveGate)
       resolveHoldPersonWithHeightenedTarget(
+        state,
+        slotLevel,
+        fighterTargeted,
+        fighterCreatureType,
+        fighterSavingThrowSucceeded,
+        goblinTargeted,
+        goblinCreatureType,
+        goblinSavingThrowSucceeded,
+        heightenedTarget,
+      )
+    else if (invocation == HoldMonsterSaveGate)
+      resolveHoldMonsterWithHeightenedTarget(
         state,
         slotLevel,
         fighterTargeted,
@@ -949,6 +963,28 @@ module battleRuntimeSaveGatedSpell {
       noSaveGatedConditionHeightenedTarget,
     )
 
+  pure def resolveHoldMonster(
+    state: BattleState,
+    slotLevel: int,
+    fighterTargeted: bool,
+    fighterCreatureType: RuntimeCreatureType,
+    fighterSavingThrowSucceeded: bool,
+    goblinTargeted: bool,
+    goblinCreatureType: RuntimeCreatureType,
+    goblinSavingThrowSucceeded: bool,
+  ): BattleState =
+    resolveHoldMonsterWithHeightenedTarget(
+      state,
+      slotLevel,
+      fighterTargeted,
+      fighterCreatureType,
+      fighterSavingThrowSucceeded,
+      goblinTargeted,
+      goblinCreatureType,
+      goblinSavingThrowSucceeded,
+      noSaveGatedConditionHeightenedTarget,
+    )
+
   pure def resolveHoldPersonWithHeightenedTarget(
     state: BattleState,
     slotLevel: int,
@@ -994,6 +1030,57 @@ module battleRuntimeSaveGatedSpell {
       }
       val holdPersonHasEffect = holdPersonStillActiveFrom(withTargets, Fighter)
       val withConcentration = if (holdPersonHasEffect and not(withTargets.fighter.incapacitated))
+        { ...withTargets, fighter: { ...withTargets.fighter, concentrating: true } }
+      else
+        breakConcentrationSpellEffects(withTargets, Fighter)
+      commitActorSpellSlotUse(withConcentration, Fighter)
+    }
+
+  pure def resolveHoldMonsterWithHeightenedTarget(
+    state: BattleState,
+    slotLevel: int,
+    fighterTargeted: bool,
+    fighterCreatureType: RuntimeCreatureType,
+    fighterSavingThrowSucceeded: bool,
+    goblinTargeted: bool,
+    goblinCreatureType: RuntimeCreatureType,
+    goblinSavingThrowSucceeded: bool,
+    heightenedTarget: SaveGatedConditionHeightenedTarget,
+  ): BattleState =
+    if (
+      not(state.actionAvailable) or
+      currentActor(state) != Fighter or
+      state.fighter.unconscious or
+      state.fighter.incapacitated or
+      fighterHasRage(state) or
+      not(canExpendSpellSlotThisTurn(state)) or
+      not(saveGatedConditionTargetCountIsLegal(HoldMonsterSaveGate, slotLevel, fighterTargeted, goblinTargeted)) or
+      (fighterTargeted and not(saveGatedConditionTargetCreatureTypeIsLegal(HoldMonsterSaveGate, fighterCreatureType))) or
+      (goblinTargeted and not(saveGatedConditionTargetCreatureTypeIsLegal(HoldMonsterSaveGate, goblinCreatureType)))
+    )
+      state
+    else {
+      val withoutPrior = breakConcentrationSpellEffects(state, Fighter)
+      val withTargets = {
+        ...withoutPrior,
+        fighter: if (fighterTargeted) holdPersonTargetWithHeightened(
+          withoutPrior.fighter,
+          fighterSavingThrowSucceeded,
+          Fighter,
+          Fighter,
+          saveGatedConditionHeightenedRepeatSaveDisadvantage(heightenedTarget, Fighter),
+        ) else withoutPrior.fighter,
+        goblin: if (goblinTargeted) holdPersonTargetWithHeightened(
+          withoutPrior.goblin,
+          goblinSavingThrowSucceeded,
+          Fighter,
+          Goblin,
+          saveGatedConditionHeightenedRepeatSaveDisadvantage(heightenedTarget, Goblin),
+        ) else withoutPrior.goblin,
+        actionAvailable: false,
+      }
+      val holdMonsterHasEffect = holdPersonStillActiveFrom(withTargets, Fighter)
+      val withConcentration = if (holdMonsterHasEffect and not(withTargets.fighter.incapacitated))
         { ...withTargets, fighter: { ...withTargets.fighter, concentrating: true } }
       else
         breakConcentrationSpellEffects(withTargets, Fighter)

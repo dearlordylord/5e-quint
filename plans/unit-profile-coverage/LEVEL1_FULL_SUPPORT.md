@@ -9,6 +9,7 @@ This strict view tracks executable SRD character-level-1, cantrip, and spell-lev
 Full-support claim: **pass**.
 
 Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
+Strict level-9 final-support blockers: 0.
 
 ## Metrics
 
@@ -18,6 +19,7 @@ Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
 | Strict target closure | 94/94 (100%) |
 | Selected identity readiness | 83/83 (100%) |
 | Diagnostic product readiness | 367/367 (100%) |
+| Strict level-9 final support | 107/107 (100%) |
 | SRD authored product readiness | 71/71 (100%) |
 | Rules-kernel profile join | 60/60 (100%) |
 | Rules-kernel covered profile join | 60/60 (100%) |
@@ -25,7 +27,7 @@ Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
-The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 367/367 (100%) while the claim gate reports **pass** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
+The full-support claim gate uses strict target closure, selected identity readiness, SRD-authored product readiness, and strict level-9 final-support blockers. Diagnostic product readiness is a source-row accounting view, so it can report 367/367 (100%) while the claim gate reports **pass** only when level-9 and spell-level-5 rows have no unsupported, catalog-only, missing-authored, future-owner, or audit-only closure.
 
 ### Diagnostic Product Readiness Accounting
 
@@ -58,8 +60,17 @@ This is the selected-identity gate layer for the strict denominator. `witness-pr
 | Strict runtime/profile closure | pass | 94/94 (100%) | _none_ |
 | Selected identity readiness | pass | 83/83 (100%) | _none_ |
 | SRD authored product readiness | pass | 71/71 (100%) | _none_ |
+| Strict level-9 final support | pass | 107/107 (100%) | _none_ |
 
 Every gate row must pass for a full level-support claim. A 100% result in one layer does not satisfy another layer, failed gates are not combined into a weighted completion percentage, and diagnostic product-readiness rows are intentionally absent from this gate unless they enter the SRD-authored blocker set.
+
+### Strict Level-9 Final-Support Blockers
+
+These rows are forbidden as final level-1-9 support for `level-9` and `spell-level-5` SRD pressure. They may remain only while implementation tasks are in progress.
+
+| Unit | Blocker kind | Reasons | Level bands | Source rows |
+| --- | --- | --- | --- | --- |
+| _none_ | _none_ | _none_ | _none_ | _none_ |
 
 ## SRD-Authored Product Readiness
 

@@ -49,6 +49,37 @@ module battleRuntimeFeatureBridgeExamples {
     }
   }
 
+  run test_tactical_master_runtime_projection_uses_mastery_replacement_profile = {
+    all {
+      assert(battleRuntimeTacticalMasterEligible(9, true)),
+      assert(not(battleRuntimeTacticalMasterEligible(8, true))),
+      assert(not(battleRuntimeTacticalMasterEligible(9, false))),
+      assert(battleRuntimeTacticalMasterReplacementResult(
+        RuntimeMasterySap,
+        TacticalMasterReplacePush
+      ) == RuntimeMasteryPush),
+      assert(battleRuntimeTacticalMasterReplacementResult(
+        RuntimeMasterySap,
+        TacticalMasterReplaceSap
+      ) == RuntimeMasterySap),
+      assert(battleRuntimeTacticalMasterReplacementResult(
+        RuntimeMasterySap,
+        TacticalMasterReplaceSlow
+      ) == RuntimeMasterySlow),
+      assert(battleRuntimeTacticalMasterReplacementResult(
+        RuntimeMasterySap,
+        TacticalMasterDeclineReplacement
+      ) == RuntimeMasterySap),
+      assert(battleRuntimeWeaponMasteryPushDistanceValid(0)),
+      assert(battleRuntimeWeaponMasteryPushDistanceValid(10)),
+      assert(not(battleRuntimeWeaponMasteryPushDistanceValid(11))),
+      assert(battleRuntimeWeaponMasteryPushTargetSizeEligible(TacticalMasterLarge)),
+      assert(not(battleRuntimeWeaponMasteryPushTargetSizeEligible(TacticalMasterHuge))),
+      assert(battleRuntimeWeaponMasterySlowDeltaFeet == -10),
+      assert(battleRuntimeWeaponMasterySlowMaximumReductionFeet == 10),
+    }
+  }
+
   run test_frenzy_runtime_projection_uses_rage_and_reckless_profiles = {
     all {
       assert(battleRuntimeFrenzyDamageDice(true, true, true, true, RageUnarmedStrikeAttack, false, 3) == 2),

@@ -1,23 +1,11 @@
 -- Cloudkill — SRD 5.2.1 Spell, Level 5, Conjuration.
--- Family: ongoing_effect. §A15 validation ref for
--- `on_attached_turn_start` save_gate with slot-scaled damage.
+-- Family: ongoing_effect.
 --
--- PARTIAL:
---   • Per-turn Con save inside the sphere is authored below. RAW also
---     triggers the save on initial cast, on entering the sphere, and
---     on the sphere moving into a creature's space. The single
---     OngoingOperation slot forces a choice — encoded here as
---     on_attached_turn_start per the handoff convention; the
---     on_creature_enters_area sibling trigger and the initial-cast
---     save (activation-family shape) are DEFERRED pending
---     multi-operation widening.
---   • "The Sphere moves 10 feet away from you at the start of each
---     of your turns" is area movement — caller-owned geometry per
---     ARCHITECTURE.md §1.
---   • "Dispersed by strong wind (such as Gust of Wind)" is an
---     early-end trigger that requires a caller-resolved weather
---     predicate; DM agenda.
---   • "Heavily Obscured" is caller-owned visibility.
+-- The area identity, movement membership triggers, and strong-wind
+-- dispersal predicate are table/spatial/environment witnesses. The
+-- spell record still carries the typed rule facts the battle runtime
+-- consumes: active Sphere, Heavily Obscured projection, Constitution
+-- save-for-half Poison damage, and once-per-turn area triggers.
 
 let cloudkill =
       { kind = "spell"
@@ -39,6 +27,7 @@ let cloudkill =
           , duration =
               { kind = "concentration"
               , upTo = { unit = "minute", amount = 10 }
+              , earlyEnd = [ { kind = "area_dispersed_by_strong_wind" } ]
               }
           , attachment =
               { kind = "hole"
@@ -78,7 +67,50 @@ let cloudkill =
               , onSuccess = { kind = "half_damage" }
               }
           , operations =
-              [ { trigger = { kind = "on_attached_turn_start" }
+              [ { trigger = { kind = "passive" }
+                , effect = { kind = "area_is_heavily_obscured" }
+                }
+              , { trigger = { kind = "on_attached_turn_start" }
+                , effect =
+                    { kind = "save_gate"
+                    , ability = "con"
+                    , dc = { kind = "caster_spell_save_dc" }
+                    , onFail =
+                        { kind = "damage"
+                        , damageType = "poison"
+                        , amount =
+                            { kind = "linear_per_level"
+                            , axis = "slot"
+                            , base = { dice = 5, dieSize = 8 }
+                            , perLevel = { dice = 1 }
+                            , startingAtLevel = 5
+                            }
+                        }
+                    , onSuccess = { kind = "half_damage" }
+                    }
+                }
+              , { trigger = { kind = "on_creature_enters_area" }
+                , usageLimit = { kind = "once_per_turn" }
+                , effect =
+                    { kind = "save_gate"
+                    , ability = "con"
+                    , dc = { kind = "caster_spell_save_dc" }
+                    , onFail =
+                        { kind = "damage"
+                        , damageType = "poison"
+                        , amount =
+                            { kind = "linear_per_level"
+                            , axis = "slot"
+                            , base = { dice = 5, dieSize = 8 }
+                            , perLevel = { dice = 1 }
+                            , startingAtLevel = 5
+                            }
+                        }
+                    , onSuccess = { kind = "half_damage" }
+                    }
+                }
+              , { trigger = { kind = "on_creature_ends_turn_in_area" }
+                , usageLimit = { kind = "once_per_turn" }
                 , effect =
                     { kind = "save_gate"
                     , ability = "con"

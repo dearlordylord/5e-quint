@@ -40,6 +40,7 @@ module battleRuntimeModel {
     | AnimalFriendshipSaveGate
     | CharmPersonSaveGate
     | BlindnessDeafnessSaveGate
+    | HoldMonsterSaveGate
     | HoldPersonSaveGate
   type BlindnessDeafnessConditionChoice =
     | BlindnessDeafnessBlindedChoice

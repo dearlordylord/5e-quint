@@ -349,6 +349,14 @@ export const SpellConditionRepeatSaveSchema = Schema.Struct({
   dc: DcSourceSchema,
 });
 
+export const SpellConditionCountedRepeatSaveSchema = Schema.Struct({
+  kind: Schema.Literal("counted"),
+  save: SpellConditionRepeatSaveSchema,
+  successThreshold: Schema.Number,
+  failureThreshold: Schema.Number,
+  savingThrowDisadvantageAbilities: Schema.NonEmptyArray(AbilitySchema),
+});
+
 const SpellFailedSaveFixedConditionEffectSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("fixed"),
@@ -364,7 +372,10 @@ const SpellFailedSaveFixedConditionEffectSchema = Schema.Union(
     expiresAt: SpellFailedSaveConditionExpirationSchema,
     escape: Schema.Null,
     turnStartDamage: Schema.Null,
-    repeatSave: SpellConditionRepeatSaveSchema,
+    repeatSave: Schema.Union(
+      SpellConditionRepeatSaveSchema,
+      SpellConditionCountedRepeatSaveSchema,
+    ),
   }),
 );
 
@@ -383,7 +394,10 @@ const SpellFailedSaveConditionChoiceEffectSchema = Schema.Union(
     expiresAt: SpellFailedSaveConditionExpirationSchema,
     escape: Schema.Null,
     turnStartDamage: Schema.Null,
-    repeatSave: SpellConditionRepeatSaveSchema,
+    repeatSave: Schema.Union(
+      SpellConditionRepeatSaveSchema,
+      SpellConditionCountedRepeatSaveSchema,
+    ),
   }),
 );
 

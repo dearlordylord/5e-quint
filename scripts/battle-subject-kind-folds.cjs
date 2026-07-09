@@ -68,6 +68,8 @@ function runtimeCommandSubjectKind(discriminatorValue) {
     case "greaseGroundHazardSave":
     case "webRestraintSave":
     case "sleetStormAreaHazardSave":
+    case "insectPlagueAreaHazardSave":
+    case "cloudkillAreaHazardSave":
     case "gustOfWindLineSave":
     case "movableZoneSave":
     case "moonbeamCylinderExit":
@@ -75,6 +77,7 @@ function runtimeCommandSubjectKind(discriminatorValue) {
     case "webRestrainedNoLongerInArea":
     case "webAreaRemoved":
     case "disperseFogCloud":
+    case "disperseCloudkill":
     case "wardingBondSeparation":
     case "endConcentration":
       return "runtimeEffectCleanup";

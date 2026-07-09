@@ -12,7 +12,8 @@ module spellSaveConditionProjectionCore {
   //   conditions.
   // - Spells/Descriptions-A-D.md: Animal Friendship, Blindness/Deafness, Charm
   //   Person, and Color Spray.
-  // - Spells/Descriptions-E-L.md: Entangle, Faerie Fire, and Hold Person.
+  // - Spells/Descriptions-E-L.md: Entangle, Faerie Fire, Hold Monster, and
+  //   Hold Person.
   // - UBIQUITOUS_LANGUAGE.md: Saving Throw, Spell Save DC, Advantage and
   //   Disadvantage, and condition terminology.
 
@@ -28,6 +29,7 @@ module spellSaveConditionProjectionCore {
     | AnimalFriendshipSaveConditionProfile
     | CharmPersonSaveConditionProfile
     | BlindnessDeafnessSaveConditionProfile
+    | HoldMonsterSaveConditionProfile
     | HoldPersonSaveConditionProfile
     | FaerieFireSaveAttackRollAdvantageProfile
 
@@ -38,6 +40,7 @@ module spellSaveConditionProjectionCore {
     | CharmPersonCharmedEffect({ durationTicks: int })
     | BlindnessDeafnessBlindedEffect({ durationTicks: int })
     | BlindnessDeafnessDeafenedEffect({ durationTicks: int })
+    | HoldMonsterParalyzedEffect({ durationTicks: int })
     | HoldPersonParalyzedEffect({ durationTicks: int })
     | FaerieFireOutlineEffect
 
@@ -48,6 +51,7 @@ module spellSaveConditionProjectionCore {
       | AnimalFriendshipSaveConditionProfile => SpellTargetListSaveTargets({ minTargets: 1, baseSlotLevel: 1, baseTargets: 1, additionalTargetsPerSlotLevel: 1 })
       | CharmPersonSaveConditionProfile => SpellTargetListSaveTargets({ minTargets: 1, baseSlotLevel: 1, baseTargets: 1, additionalTargetsPerSlotLevel: 1 })
       | BlindnessDeafnessSaveConditionProfile => SpellTargetListSaveTargets({ minTargets: 1, baseSlotLevel: 2, baseTargets: 1, additionalTargetsPerSlotLevel: 1 })
+      | HoldMonsterSaveConditionProfile => SpellTargetListSaveTargets({ minTargets: 1, baseSlotLevel: 5, baseTargets: 1, additionalTargetsPerSlotLevel: 1 })
       | HoldPersonSaveConditionProfile => SpellTargetListSaveTargets({ minTargets: 1, baseSlotLevel: 2, baseTargets: 1, additionalTargetsPerSlotLevel: 1 })
       | FaerieFireSaveAttackRollAdvantageProfile => SpellAreaSaveTargets
     }
@@ -59,6 +63,7 @@ module spellSaveConditionProjectionCore {
       | AnimalFriendshipSaveConditionProfile => SpellWisdomSavingThrow
       | CharmPersonSaveConditionProfile => SpellWisdomSavingThrow
       | BlindnessDeafnessSaveConditionProfile => SpellConstitutionSavingThrow
+      | HoldMonsterSaveConditionProfile => SpellWisdomSavingThrow
       | HoldPersonSaveConditionProfile => SpellWisdomSavingThrow
       | FaerieFireSaveAttackRollAdvantageProfile => SpellDexteritySavingThrow
     }
@@ -73,6 +78,7 @@ module spellSaveConditionProjectionCore {
           BlindnessDeafnessBlindedEffect({ durationTicks: 10 }),
           BlindnessDeafnessDeafenedEffect({ durationTicks: 10 })
         )
+      | HoldMonsterSaveConditionProfile => Set(HoldMonsterParalyzedEffect({ durationTicks: 10 }))
       | HoldPersonSaveConditionProfile => Set(HoldPersonParalyzedEffect({ durationTicks: 10 }))
       | FaerieFireSaveAttackRollAdvantageProfile => Set(FaerieFireOutlineEffect)
     }
@@ -86,6 +92,7 @@ module spellSaveConditionProjectionCore {
       | AnimalFriendshipSaveConditionProfile => targetIsBeast
       | CharmPersonSaveConditionProfile => targetIsHumanoid
       | BlindnessDeafnessSaveConditionProfile => true
+      | HoldMonsterSaveConditionProfile => true
       | HoldPersonSaveConditionProfile => targetIsHumanoid
       | _ => true
     }

@@ -1,4 +1,8 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.rogue-steady-aim
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.brutal-strike
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-01-BRUTAL-STRIKE-RECKLESS-DAMAGE barbarian_brutal_strike
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-02-BRUTAL-STRIKE-FORCEFUL-BLOW barbarian_brutal_strike
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-03-BRUTAL-STRIKE-HAMSTRING barbarian_brutal_strike
 import {
   startBattleRight,
   testBattleCreatureStateWithConditions,
@@ -19,6 +23,7 @@ import {
   damageRollFillWithGroups,
   attackDamageDispositionHoleAfterFills,
   attackDamageDispositionFill,
+  unitFeatureDecisionFill,
   characterSeed,
   heavyArmorClassState,
   statBlockCreatureInit,
@@ -46,6 +51,7 @@ import {
   discoverBattleActs,
   endTurn,
   movementFeet,
+  movementDeltaFeet,
   resolveBattleInterrupt,
   resolveBattleSubject,
   resolveFailedAbilityCheckResourceBoost,
@@ -53,6 +59,7 @@ import {
   spellSaveDcForCaster,
   startBattle,
 } from "./battle-runtime-test-support.ts";
+import { BRUTAL_STRIKE_SUPPORT_PROFILE } from "./unit-feature-support.ts";
 import type {
   BattleState,
   BattleSubject,
@@ -76,6 +83,7 @@ describe("battle runtime: class action features", () => {
         actionResources: [],
         currentHasBonusAction: true,
         actionOrBonusActionExclusion: { kind: "notRestricted" },
+        movementActionBonusActionExclusion: { kind: "notRestricted" },
         commandHalt: null,
         jumpDistanceMultiplier: null,
         spellSlotUsesThisTurn: [],
@@ -201,6 +209,7 @@ describe("battle runtime: class action features", () => {
         actionResources: [],
         currentHasBonusAction: true,
         actionOrBonusActionExclusion: { kind: "notRestricted" },
+        movementActionBonusActionExclusion: { kind: "notRestricted" },
         commandHalt: null,
         jumpDistanceMultiplier: null,
         spellSlotUsesThisTurn: [],
@@ -251,6 +260,7 @@ describe("battle runtime: class action features", () => {
         actionResources: [],
         currentHasBonusAction: true,
         actionOrBonusActionExclusion: { kind: "notRestricted" },
+        movementActionBonusActionExclusion: { kind: "notRestricted" },
         commandHalt: null,
         jumpDistanceMultiplier: null,
         spellSlotUsesThisTurn: [],
@@ -380,6 +390,7 @@ describe("battle runtime: class action features", () => {
         actionResources: [{ kind: "action", source: "turn" }],
         currentHasBonusAction: false,
         actionOrBonusActionExclusion: { kind: "notRestricted" },
+        movementActionBonusActionExclusion: { kind: "notRestricted" },
         commandHalt: null,
         jumpDistanceMultiplier: null,
         spellSlotUsesThisTurn: [],
@@ -2134,6 +2145,371 @@ describe("battle runtime: class action features", () => {
       attackDamageRiders: [
         expect.objectContaining({ unitId: "barbarian_frenzy" }),
       ],
+    });
+  });
+
+  test("Brutal Strike is admitted from Surface mechanics as a typed battle support profile", () => {
+    const brutalStrikeUnit = unitLibrary.requireUnit("barbarian_brutal_strike");
+
+    expect(supportedBattleUnitRef(brutalStrikeUnit).supportProfiles).toEqual([
+      expect.objectContaining({
+        kind: BRUTAL_STRIKE_SUPPORT_PROFILE,
+        brutalStrike: expect.objectContaining({
+          trigger: expect.objectContaining({
+            kind: "recklessAttackStrengthAttackHit",
+            advantageForgone: true,
+          }),
+          damage: { dice: 1, dieSize: 10, damageType: "sameAsAttack" },
+        }),
+      }),
+    ]);
+  });
+
+  test("Brutal Strike forgoes Reckless Advantage and adds same-type damage on a Strength hit", () => {
+    const brutalStrikeUnit = unitLibrary.requireUnit("barbarian_brutal_strike");
+    const state = startBattleRight({
+      battleId: battleId("battle-barbarian-brutal-strike-damage"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "barbarian", level: 9 }],
+          unitFeatures: [recklessAttackFeature()],
+          characterUnitRefs: [supportedBattleUnitRef(brutalStrikeUnit)],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+
+    const attackSubject = fighterAttackSubject();
+    const target = attackInitialTargetHole(state, attackSubject);
+    const decision = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [targetFill(target, goblinId)],
+      }),
+      "unitFeatureDecision",
+    );
+    expect(decision).toMatchObject({
+      label: "Use Brutal Strike",
+      choices: ["forceful_blow", "hamstring_blow", "decline"],
+    });
+    const roll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [
+          targetFill(target, goblinId),
+          unitFeatureDecisionFill(decision, "hamstring_blow"),
+        ],
+      }),
+      "attackRoll",
+    );
+    expect(roll).toMatchObject({
+      ongoingFeatureActivations: [
+        expect.objectContaining({ unitId: "barbarian_reckless_attack" }),
+      ],
+    });
+    expect(roll).not.toHaveProperty("rollMode");
+
+    const afterRoll = resolveBattleSubject({
+      state,
+      subject: attackSubject,
+      fills: [
+        targetFill(target, goblinId),
+        unitFeatureDecisionFill(decision, "hamstring_blow"),
+        attackRollFill(roll, {
+          total: 15,
+          naturalD20: 10,
+          activatedOngoingFeatureUnitId: "barbarian_reckless_attack",
+        }),
+      ],
+    });
+    if (afterRoll.tag !== "needsHoles") {
+      throw new Error("Expected Brutal Strike hit to need damage.");
+    }
+    const damage = findHole(afterRoll.holes, "rolledDice");
+    expect(damage).toMatchObject({
+      attackDamageRiders: [
+        {
+          unitId: "barbarian_brutal_strike",
+          optional: false,
+          damage: { dice: 1, dieSize: 10, damageType: "slashing" },
+        },
+      ],
+    });
+  });
+
+  test("Brutal Strike can forgo Reckless Advantage after Reckless Attack is already active", () => {
+    const brutalStrikeUnit = unitLibrary.requireUnit("barbarian_brutal_strike");
+    const extraAttackUnit = unitLibrary.requireUnit("barbarian_extra_attack");
+    const state = startBattleRight({
+      battleId: battleId("battle-barbarian-brutal-strike-active-reckless"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "barbarian", level: 9 }],
+          unitFeatures: [recklessAttackFeature()],
+          characterUnitRefs: [
+            supportedBattleUnitRef(brutalStrikeUnit),
+            supportedBattleUnitRef(extraAttackUnit),
+          ],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+
+    const attackSubject = fighterAttackSubject();
+    const firstTarget = attackInitialTargetHole(state, attackSubject);
+    const firstDecision = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [targetFill(firstTarget, goblinId)],
+      }),
+      "unitFeatureDecision",
+    );
+    const firstRoll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [
+          targetFill(firstTarget, goblinId),
+          unitFeatureDecisionFill(firstDecision, "decline"),
+        ],
+      }),
+      "attackRoll",
+    );
+    const afterRecklessMiss = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [
+          targetFill(firstTarget, goblinId),
+          unitFeatureDecisionFill(firstDecision, "decline"),
+          attackRollFill(firstRoll, {
+            total: 1,
+            naturalD20: 1,
+            rollMode: "advantage",
+            activatedOngoingFeatureUnitId: "barbarian_reckless_attack",
+          }),
+        ],
+      }),
+    ).state;
+
+    const secondTarget = attackInitialTargetHole(
+      afterRecklessMiss,
+      attackSubject,
+    );
+    const secondDecision = requireHole(
+      resolveBattleSubject({
+        state: afterRecklessMiss,
+        subject: attackSubject,
+        fills: [targetFill(secondTarget, goblinId)],
+      }),
+      "unitFeatureDecision",
+    );
+    const secondRoll = requireHole(
+      resolveBattleSubject({
+        state: afterRecklessMiss,
+        subject: attackSubject,
+        fills: [
+          targetFill(secondTarget, goblinId),
+          unitFeatureDecisionFill(secondDecision, "hamstring_blow"),
+        ],
+      }),
+      "attackRoll",
+    );
+    expect(secondRoll).not.toHaveProperty("rollMode");
+    expect(secondRoll).not.toHaveProperty("ongoingFeatureActivations");
+
+    const afterSecondRoll = resolveBattleSubject({
+      state: afterRecklessMiss,
+      subject: attackSubject,
+      fills: [
+        targetFill(secondTarget, goblinId),
+        unitFeatureDecisionFill(secondDecision, "hamstring_blow"),
+        attackRollFill(secondRoll, { total: 15, naturalD20: 10 }),
+      ],
+    });
+    if (afterSecondRoll.tag !== "needsHoles") {
+      throw new Error(
+        "Expected active-Reckless Brutal Strike hit to need damage.",
+      );
+    }
+    const damage = findHole(afterSecondRoll.holes, "rolledDice");
+    expect(damage).toMatchObject({
+      attackDamageRiders: [
+        {
+          unitId: "barbarian_brutal_strike",
+          optional: false,
+          damage: { dice: 1, dieSize: 10, damageType: "slashing" },
+        },
+      ],
+    });
+  });
+
+  test("Brutal Strike Forceful Blow pushes and moves the Barbarian up to half Speed", () => {
+    const brutalStrikeUnit = unitLibrary.requireUnit("barbarian_brutal_strike");
+    const state = startBattleRight({
+      battleId: battleId("battle-barbarian-brutal-strike-forceful-blow"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "barbarian", level: 9 }],
+          unitFeatures: [recklessAttackFeature()],
+          characterUnitRefs: [supportedBattleUnitRef(brutalStrikeUnit)],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const attackSubject = fighterAttackSubject();
+    const target = attackInitialTargetHole(state, attackSubject);
+    const decision = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [targetFill(target, goblinId)],
+      }),
+      "unitFeatureDecision",
+    );
+    const roll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [
+          targetFill(target, goblinId),
+          unitFeatureDecisionFill(decision, "forceful_blow"),
+        ],
+      }),
+      "attackRoll",
+    );
+    const afterRoll = resolveBattleSubject({
+      state,
+      subject: attackSubject,
+      fills: [
+        targetFill(target, goblinId),
+        unitFeatureDecisionFill(decision, "forceful_blow"),
+        attackRollFill(roll, {
+          total: 15,
+          naturalD20: 10,
+          activatedOngoingFeatureUnitId: "barbarian_reckless_attack",
+        }),
+      ],
+    });
+    if (afterRoll.tag !== "needsHoles") {
+      throw new Error("Expected Forceful Blow hit to need damage.");
+    }
+    const damage = findHole(afterRoll.holes, "rolledDice");
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state: afterRoll.state,
+        subject: attackSubject,
+        fills: [
+          targetFill(target, goblinId),
+          unitFeatureDecisionFill(decision, "forceful_blow"),
+          attackRollFill(roll, {
+            total: 15,
+            naturalD20: 10,
+            activatedOngoingFeatureUnitId: "barbarian_reckless_attack",
+          }),
+          damageRollFillWithGroups(damage, [[1], [1]]),
+        ],
+      }),
+    );
+
+    expect(resolved.shovePushes).toEqual([
+      {
+        targetId: goblinId,
+        disposition: expect.objectContaining({
+          kind: "pushed",
+          distanceFeet: movementFeet(15),
+          provokesOpportunityAttacks: false,
+        }),
+      },
+    ]);
+    expect(resolved.state.combatants.get(fighterId)?.movementSpentFeet).toBe(
+      movementFeet(15),
+    );
+  });
+
+  test("Brutal Strike Hamstring Blow reduces Speed until the Barbarian's next turn", () => {
+    const brutalStrikeUnit = unitLibrary.requireUnit("barbarian_brutal_strike");
+    const state = startBattleRight({
+      battleId: battleId("battle-barbarian-brutal-strike-hamstring-blow"),
+      combatants: [
+        characterSeed({
+          initiative: 20,
+          classLevels: [{ className: "barbarian", level: 9 }],
+          unitFeatures: [recklessAttackFeature()],
+          characterUnitRefs: [supportedBattleUnitRef(brutalStrikeUnit)],
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const attackSubject = fighterAttackSubject();
+    const target = attackInitialTargetHole(state, attackSubject);
+    const decision = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [targetFill(target, goblinId)],
+      }),
+      "unitFeatureDecision",
+    );
+    const roll = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: attackSubject,
+        fills: [
+          targetFill(target, goblinId),
+          unitFeatureDecisionFill(decision, "hamstring_blow"),
+        ],
+      }),
+      "attackRoll",
+    );
+    const afterRoll = resolveBattleSubject({
+      state,
+      subject: attackSubject,
+      fills: [
+        targetFill(target, goblinId),
+        unitFeatureDecisionFill(decision, "hamstring_blow"),
+        attackRollFill(roll, {
+          total: 15,
+          naturalD20: 10,
+          activatedOngoingFeatureUnitId: "barbarian_reckless_attack",
+        }),
+      ],
+    });
+    if (afterRoll.tag !== "needsHoles") {
+      throw new Error("Expected Hamstring Blow hit to need damage.");
+    }
+    const damage = findHole(afterRoll.holes, "rolledDice");
+    const resolved = requireResolved(
+      resolveBattleSubject({
+        state: afterRoll.state,
+        subject: attackSubject,
+        fills: [
+          targetFill(target, goblinId),
+          unitFeatureDecisionFill(decision, "hamstring_blow"),
+          attackRollFill(roll, {
+            total: 15,
+            naturalD20: 10,
+            activatedOngoingFeatureUnitId: "barbarian_reckless_attack",
+          }),
+          damageRollFillWithGroups(damage, [[1], [1]]),
+        ],
+      }),
+    );
+
+    expect(
+      resolved.state.combatants.get(goblinId)?.activeEffects,
+    ).toContainEqual({
+      kind: "unitFeatureSpeedDelta",
+      sourceUnitId: "barbarian_brutal_strike",
+      sourceCombatantId: fighterId,
+      deltaFeet: movementDeltaFeet(-15),
+      expiresAt: { kind: "startOfTurn", combatantId: fighterId },
     });
   });
 

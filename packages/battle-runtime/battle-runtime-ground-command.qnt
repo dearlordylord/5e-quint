@@ -1,8 +1,8 @@
 // -*- mode: Bluespec; -*-
-// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-fog-cloud-obscurement spell.invocation-grease-ground-hazard spell.invocation-magical-darkness-point-origin spell.invocation-sleet-storm-area-hazard spell.invocation-spike-growth-movement-hazard spell.invocation-web-restraint-hazard
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-fog-cloud-obscurement spell.invocation-grease-ground-hazard spell.invocation-insect-plague-area-hazard spell.invocation-cloudkill-area-hazard spell.invocation-magical-darkness-point-origin spell.invocation-sleet-storm-area-hazard spell.invocation-spike-growth-movement-hazard spell.invocation-web-restraint-hazard
 
 // KERNEL-COVERAGE: qnt-owner BATTLE.COMMAND.OPTION_AND_NEXT_TURN
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE
 module battleRuntimeGroundCommand {
   import battleRuntimeAreaTriggerTiming.* from "./battle-runtime-area-trigger-timing"
   import battleRuntimeMovementBridge.* from "./battle-runtime-movement-bridge"

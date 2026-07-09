@@ -33,9 +33,6 @@ let dominatePerson =
               , upTo =
                   { unit = "minute"
                   , amount = 1
-                  , upcastTiers =
-                      [ { atSlot = 6, amount = 10 }
-                      ]
                   }
               }
           , phases =
@@ -48,6 +45,7 @@ let dominatePerson =
                         { kind = "target"
                         , selection =
                             { mode = "one"
+                            , targetKinds = [ "creature" ]
                             , typeFilter = [ "humanoid" ]
                             }
                         }

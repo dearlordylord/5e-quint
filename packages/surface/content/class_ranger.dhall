@@ -2,7 +2,7 @@
   { categories = [ "light", "medium", "shield" ], kind = "trained" }
 , className = "ranger"
 , description =
-    "SRD Ranger class creation and level 1-5 progression facts, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, level-2 class-feature grants, level-3 subclass selection, the level-4 Ability Score Improvement feature grant, and the level-5 Extra Attack feature grant."
+    "SRD Ranger class creation and level 1-9 progression facts, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, level-2 class-feature grants, level-3 subclass selection, Ability Score Improvement feature grants, the level-5 Extra Attack feature grant, level-6 Roving, and level-9 Expertise."
 , featureGrants =
   [ { level = 1, unitId = "ranger_favored_enemy" }
   , { level = 1, unitId = "ranger_weapon_mastery" }
@@ -10,6 +10,9 @@
   , { level = 2, unitId = "ranger_fighting_style" }
   , { level = 4, unitId = "ranger_ability_score_improvement_l4" }
   , { level = 5, unitId = "ranger_extra_attack" }
+  , { level = 6, unitId = "ranger_roving" }
+  , { level = 8, unitId = "ranger_ability_score_improvement_l8" }
+  , { level = 9, unitId = "ranger_expertise" }
   ]
 , hitPointDie = 10
 , id = "class_ranger"
@@ -41,7 +44,7 @@
 , primaryAbilities = { abilities = [ "dex", "wis" ], kind = "all_of" }
 , provenance =
   { kind = "srd-5.2.1"
-  , section = "Classes/Ranger.md:3-24,33-43,58-99,106-112,160-196"
+  , section = "Classes/Ranger.md:3-24,33-43,58-120,160-213"
   }
 , savingThrowProficiencies = [ "str", "dex" ]
 , skillProficiencyChoice =
@@ -93,6 +96,18 @@
       , { spellId = "protection_from_poison", spellLevel = 2 }
       , { spellId = "silence", spellLevel = 2 }
       , { spellId = "spike_growth", spellLevel = 2 }
+      , { spellId = "conjure_animals", spellLevel = 3 }
+      , { spellId = "daylight", spellLevel = 3 }
+      , { spellId = "dispel_magic", spellLevel = 3 }
+      , { spellId = "meld_into_stone", spellLevel = 3 }
+      , { spellId = "nondetection", spellLevel = 3 }
+      , { spellId = "plant_growth", spellLevel = 3 }
+      , { spellId = "protection_from_energy", spellLevel = 3 }
+      , { spellId = "revivify", spellLevel = 3 }
+      , { spellId = "speak_with_plants", spellLevel = 3 }
+      , { spellId = "water_breathing", spellLevel = 3 }
+      , { spellId = "water_walk", spellLevel = 3 }
+      , { spellId = "wind_wall", spellLevel = 3 }
       ]
     }
   , spellSlotProjection =
@@ -128,6 +143,33 @@
       , preparedSpellCount = 6
       , spellSlots =
         [ { count = 4, spellLevel = 1 }, { count = 2, spellLevel = 2 } ]
+      }
+    , { atLevel = 6
+      , cantripCount = 0
+      , preparedSpellCount = 6
+      , spellSlots =
+        [ { count = 4, spellLevel = 1 }, { count = 2, spellLevel = 2 } ]
+      }
+    , { atLevel = 7
+      , cantripCount = 0
+      , preparedSpellCount = 7
+      , spellSlots =
+        [ { count = 4, spellLevel = 1 }, { count = 3, spellLevel = 2 } ]
+      }
+    , { atLevel = 8
+      , cantripCount = 0
+      , preparedSpellCount = 7
+      , spellSlots =
+        [ { count = 4, spellLevel = 1 }, { count = 3, spellLevel = 2 } ]
+      }
+    , { atLevel = 9
+      , cantripCount = 0
+      , preparedSpellCount = 9
+      , spellSlots =
+        [ { count = 4, spellLevel = 1 }
+        , { count = 3, spellLevel = 2 }
+        , { count = 2, spellLevel = 3 }
+        ]
       }
     ]
   }

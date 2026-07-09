@@ -3,6 +3,7 @@
     "authoredReadinessBlockerCount": 0,
     "selectedIdentityBlockerCount": 0,
     "status": "pass",
+    "strictFinalSupportBlockerCount": 0,
     "strictTargetOpenCount": 0
   },
   "frontierRows": [
@@ -28,28 +29,38 @@
       "sourceRecordPath": "packages/surface/content/alarm.json",
       "sourceRows": [
         {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "not-installed",
           "category": "spell Unit pressure",
           "concept": "Ranger spell list Alarm",
+          "finalDisposition": "catalog-only/dead-for-now",
           "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_alarm",
           "levelBand": "spell-level-1",
+          "nextAction": "Alarm is an exploration/table procedure; promoted battle runtime does not own hidden monitoring, map patrol, or notification adjudication.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 164,
             "lineStart": 164,
             "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         },
         {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "not-installed",
           "category": "spell Unit pressure",
           "concept": "Wizard spell list Alarm",
+          "finalDisposition": "catalog-only/dead-for-now",
           "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_alarm",
           "levelBand": "spell-level-1",
+          "nextAction": "Alarm is an exploration/table procedure; promoted battle runtime does not own hidden monitoring, map patrol, or notification adjudication.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 162,
             "lineStart": 162,
             "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         }
       ],
       "status": "closed-runtime-detached-table-adjudication",
@@ -73,64 +84,89 @@
       "sourceRecordPath": "packages/surface/content/charm_person.json",
       "sourceRows": [
         {
+          "battleReadinessStatus": "accepted",
+          "catalogAdmissionState": "installed",
           "category": "spell Unit pressure",
           "concept": "Bard spell list Charm Person",
+          "finalDisposition": "catalog-installed-owner-evidence-present",
           "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_charm_person",
           "levelBand": "spell-level-1",
+          "nextAction": "Owner-specific operational evidence is classified and present.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 164,
             "lineStart": 164,
             "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
+          },
+          "unitProfileDisposition": "profile-subset-supported"
         },
         {
+          "battleReadinessStatus": "accepted",
+          "catalogAdmissionState": "installed",
           "category": "spell Unit pressure",
           "concept": "Druid spell list Charm Person",
+          "finalDisposition": "catalog-installed-owner-evidence-present",
           "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_charm_person",
           "levelBand": "spell-level-1",
+          "nextAction": "Owner-specific operational evidence is classified and present.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 205,
             "lineStart": 205,
             "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
+          },
+          "unitProfileDisposition": "profile-subset-supported"
         },
         {
+          "battleReadinessStatus": "accepted",
+          "catalogAdmissionState": "installed",
           "category": "spell Unit pressure",
           "concept": "Sorcerer spell list Charm Person",
+          "finalDisposition": "catalog-installed-owner-evidence-present",
           "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_charm_person",
           "levelBand": "spell-level-1",
+          "nextAction": "Owner-specific operational evidence is classified and present.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 245,
             "lineStart": 245,
             "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
+          },
+          "unitProfileDisposition": "profile-subset-supported"
         },
         {
+          "battleReadinessStatus": "accepted",
+          "catalogAdmissionState": "installed",
           "category": "spell Unit pressure",
           "concept": "Warlock spell list Charm Person",
+          "finalDisposition": "catalog-installed-owner-evidence-present",
           "id": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_charm_person",
           "levelBand": "spell-level-1",
+          "nextAction": "Owner-specific operational evidence is classified and present.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 349,
             "lineStart": 349,
             "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          }
+          },
+          "unitProfileDisposition": "profile-subset-supported"
         },
         {
+          "battleReadinessStatus": "accepted",
+          "catalogAdmissionState": "installed",
           "category": "spell Unit pressure",
           "concept": "Wizard spell list Charm Person",
+          "finalDisposition": "catalog-installed-owner-evidence-present",
           "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_charm_person",
           "levelBand": "spell-level-1",
+          "nextAction": "Owner-specific operational evidence is classified and present.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 164,
             "lineStart": 164,
             "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
+          },
+          "unitProfileDisposition": "profile-subset-supported"
         }
       ],
       "status": "closed-runtime-detached-table-adjudication",
@@ -159,52 +195,72 @@
       "sourceRecordPath": "packages/surface/content/comprehend_languages.json",
       "sourceRows": [
         {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "not-installed",
           "category": "spell Unit pressure",
           "concept": "Bard spell list Comprehend Languages",
+          "finalDisposition": "catalog-only/dead-for-now",
           "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_comprehend_languages",
           "levelBand": "spell-level-1",
+          "nextAction": "Language comprehension and secret-message adjudication are table-owned communication facts outside promoted battle runtime.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 167,
             "lineStart": 167,
             "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         },
         {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "not-installed",
           "category": "spell Unit pressure",
           "concept": "Sorcerer spell list Comprehend Languages",
+          "finalDisposition": "catalog-only/dead-for-now",
           "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_comprehend_languages",
           "levelBand": "spell-level-1",
+          "nextAction": "Language comprehension and secret-message adjudication are table-owned communication facts outside promoted battle runtime.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 248,
             "lineStart": 248,
             "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         },
         {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "not-installed",
           "category": "spell Unit pressure",
           "concept": "Warlock spell list Comprehend Languages",
+          "finalDisposition": "catalog-only/dead-for-now",
           "id": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_comprehend_languages",
           "levelBand": "spell-level-1",
+          "nextAction": "Language comprehension and secret-message adjudication are table-owned communication facts outside promoted battle runtime.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 350,
             "lineStart": 350,
             "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         },
         {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "not-installed",
           "category": "spell Unit pressure",
           "concept": "Wizard spell list Comprehend Languages",
+          "finalDisposition": "catalog-only/dead-for-now",
           "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_comprehend_languages",
           "levelBand": "spell-level-1",
+          "nextAction": "Language comprehension and secret-message adjudication are table-owned communication facts outside promoted battle runtime.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 167,
             "lineStart": 167,
             "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         }
       ],
       "status": "closed-runtime-detached-table-adjudication",
@@ -228,28 +284,38 @@
       "sourceRecordPath": "packages/surface/content/detect_evil_and_good.json",
       "sourceRows": [
         {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
           "category": "spell Unit pressure",
           "concept": "Cleric spell list Detect Evil and Good",
+          "finalDisposition": "catalog-only/dead-for-now",
           "id": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_detect_evil_and_good",
           "levelBand": "spell-level-1",
+          "nextAction": "Sensing, occlusion, and Hallow discovery are exploration/detection state outside promoted battle runtime.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 167,
             "lineStart": 167,
             "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         },
         {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
           "category": "spell Unit pressure",
           "concept": "Paladin spell list Detect Evil and Good",
+          "finalDisposition": "catalog-only/dead-for-now",
           "id": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_detect_evil_and_good",
           "levelBand": "spell-level-1",
+          "nextAction": "Sensing, occlusion, and Hallow discovery are exploration/detection state outside promoted battle runtime.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 179,
             "lineStart": 179,
             "path": ".references/srd-5.2.1/Classes/Paladin.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         }
       ],
       "status": "closed-runtime-detached-table-adjudication",
@@ -273,100 +339,140 @@
       "sourceRecordPath": "packages/surface/content/detect_magic.json",
       "sourceRows": [
         {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
           "category": "spell Unit pressure",
           "concept": "Bard spell list Detect Magic",
+          "finalDisposition": "catalog-only/dead-for-now",
           "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_detect_magic",
           "levelBand": "spell-level-1",
+          "nextAction": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 169,
             "lineStart": 169,
             "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         },
         {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
           "category": "spell Unit pressure",
           "concept": "Cleric spell list Detect Magic",
+          "finalDisposition": "catalog-only/dead-for-now",
           "id": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_detect_magic",
           "levelBand": "spell-level-1",
+          "nextAction": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 168,
             "lineStart": 168,
             "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         },
         {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
           "category": "spell Unit pressure",
           "concept": "Druid spell list Detect Magic",
+          "finalDisposition": "catalog-only/dead-for-now",
           "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_detect_magic",
           "levelBand": "spell-level-1",
+          "nextAction": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 208,
             "lineStart": 208,
             "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         },
         {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
           "category": "spell Unit pressure",
           "concept": "Paladin spell list Detect Magic",
+          "finalDisposition": "catalog-only/dead-for-now",
           "id": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_detect_magic",
           "levelBand": "spell-level-1",
+          "nextAction": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 180,
             "lineStart": 180,
             "path": ".references/srd-5.2.1/Classes/Paladin.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         },
         {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
           "category": "spell Unit pressure",
           "concept": "Ranger spell list Detect Magic",
+          "finalDisposition": "catalog-only/dead-for-now",
           "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_detect_magic",
           "levelBand": "spell-level-1",
+          "nextAction": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 167,
             "lineStart": 167,
             "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         },
         {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
           "category": "spell Unit pressure",
           "concept": "Sorcerer spell list Detect Magic",
+          "finalDisposition": "catalog-only/dead-for-now",
           "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_detect_magic",
           "levelBand": "spell-level-1",
+          "nextAction": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 249,
             "lineStart": 249,
             "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         },
         {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
           "category": "spell Unit pressure",
           "concept": "Warlock spell list Detect Magic",
+          "finalDisposition": "catalog-only/dead-for-now",
           "id": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_detect_magic",
           "levelBand": "spell-level-1",
+          "nextAction": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 351,
             "lineStart": 351,
             "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         },
         {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
           "category": "spell Unit pressure",
           "concept": "Wizard spell list Detect Magic",
+          "finalDisposition": "catalog-only/dead-for-now",
           "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_detect_magic",
           "levelBand": "spell-level-1",
+          "nextAction": "Magic sensing, aura viewing, and school identification are exploration/detection state outside promoted battle runtime.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 168,
             "lineStart": 168,
             "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         }
       ],
       "status": "closed-runtime-detached-table-adjudication",
@@ -390,52 +496,72 @@
       "sourceRecordPath": "packages/surface/content/detect_poison_and_disease.json",
       "sourceRows": [
         {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
           "category": "spell Unit pressure",
           "concept": "Cleric spell list Detect Poison and Disease",
+          "finalDisposition": "catalog-only/dead-for-now",
           "id": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_detect_poison_and_disease",
           "levelBand": "spell-level-1",
+          "nextAction": "Poison, disease, creature-kind sensing, occlusion, and identification are exploration/detection state outside promoted battle runtime.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 169,
             "lineStart": 169,
             "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         },
         {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
           "category": "spell Unit pressure",
           "concept": "Druid spell list Detect Poison and Disease",
+          "finalDisposition": "catalog-only/dead-for-now",
           "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_detect_poison_and_disease",
           "levelBand": "spell-level-1",
+          "nextAction": "Poison, disease, creature-kind sensing, occlusion, and identification are exploration/detection state outside promoted battle runtime.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 209,
             "lineStart": 209,
             "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         },
         {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
           "category": "spell Unit pressure",
           "concept": "Paladin spell list Detect Poison and Disease",
+          "finalDisposition": "catalog-only/dead-for-now",
           "id": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_detect_poison_and_disease",
           "levelBand": "spell-level-1",
+          "nextAction": "Poison, disease, creature-kind sensing, occlusion, and identification are exploration/detection state outside promoted battle runtime.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 181,
             "lineStart": 181,
             "path": ".references/srd-5.2.1/Classes/Paladin.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         },
         {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
           "category": "spell Unit pressure",
           "concept": "Ranger spell list Detect Poison and Disease",
+          "finalDisposition": "catalog-only/dead-for-now",
           "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_detect_poison_and_disease",
           "levelBand": "spell-level-1",
+          "nextAction": "Poison, disease, creature-kind sensing, occlusion, and identification are exploration/detection state outside promoted battle runtime.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 168,
             "lineStart": 168,
             "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         }
       ],
       "status": "closed-runtime-detached-table-adjudication",
@@ -459,16 +585,21 @@
       "sourceRecordPath": "packages/surface/content/druid_druidic.json",
       "sourceRows": [
         {
+          "battleReadinessStatus": "accepted",
+          "catalogAdmissionState": "installed",
           "category": "class feature",
           "concept": "Druid Druidic",
+          "finalDisposition": "catalog-installed-owner-evidence-present",
           "id": "srd521:classes/druid:level-1:class-feature-grant:druid_druidic",
           "levelBand": "level-1",
+          "nextAction": "Owner-specific operational evidence is classified and present.",
           "rowKind": "class-feature-grant",
           "source": {
             "lineEnd": 86,
             "lineStart": 81,
             "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         }
       ],
       "status": "closed-character-fact-and-runtime-detached-split",
@@ -492,16 +623,21 @@
       "sourceRecordPath": "packages/surface/content/druid_wild_companion.json",
       "sourceRows": [
         {
+          "battleReadinessStatus": "accepted",
+          "catalogAdmissionState": "installed",
           "category": "class feature",
           "concept": "Druid Wild Companion",
+          "finalDisposition": "catalog-installed-owner-evidence-present",
           "id": "srd521:classes/druid:level-2:class-feature-grant:druid_wild_companion",
           "levelBand": "level-2",
+          "nextAction": "Owner-specific operational evidence is classified and present.",
           "rowKind": "class-feature-grant",
           "source": {
             "lineEnd": 129,
             "lineStart": 124,
             "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
+          },
+          "unitProfileDisposition": "profile-subset-supported"
         }
       ],
       "status": "closed-companion-control-boundary",
@@ -526,16 +662,21 @@
       "sourceRecordPath": "packages/surface/content/druid_wild_shape.json",
       "sourceRows": [
         {
+          "battleReadinessStatus": "accepted",
+          "catalogAdmissionState": "installed",
           "category": "class feature",
           "concept": "Druid Wild Shape",
+          "finalDisposition": "catalog-installed-owner-evidence-present",
           "id": "srd521:classes/druid:level-2:class-feature-grant:druid_wild_shape",
           "levelBand": "level-2",
+          "nextAction": "Owner-specific operational evidence is classified and present.",
           "rowKind": "class-feature-grant",
           "source": {
             "lineEnd": 123,
             "lineStart": 95,
             "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
+          },
+          "unitProfileDisposition": "profile-subset-supported"
         }
       ],
       "status": "closed-character-fact-and-runtime-detached-split",
@@ -564,28 +705,38 @@
       "sourceRecordPath": "packages/surface/content/identify.json",
       "sourceRows": [
         {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "not-installed",
           "category": "spell Unit pressure",
           "concept": "Bard spell list Identify",
+          "finalDisposition": "catalog-only/dead-for-now",
           "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_identify",
           "levelBand": "spell-level-1",
+          "nextAction": "Identification facts are supplied by the table or item/knowledge owner; promoted battle runtime does not model discovery of hidden item or spell facts.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 177,
             "lineStart": 177,
             "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         },
         {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "not-installed",
           "category": "spell Unit pressure",
           "concept": "Wizard spell list Identify",
+          "finalDisposition": "catalog-only/dead-for-now",
           "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_identify",
           "levelBand": "spell-level-1",
+          "nextAction": "Identification facts are supplied by the table or item/knowledge owner; promoted battle runtime does not model discovery of hidden item or spell facts.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 179,
             "lineStart": 179,
             "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         }
       ],
       "status": "closed-runtime-detached-table-adjudication",
@@ -609,52 +760,72 @@
       "sourceRecordPath": "packages/surface/content/minor_illusion.json",
       "sourceRows": [
         {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
           "category": "spell Unit pressure",
           "concept": "Bard spell list Minor Illusion",
+          "finalDisposition": "catalog-only/dead-for-now",
           "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_minor_illusion",
           "levelBand": "spell-level-0",
+          "nextAction": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are illusion/exploration state outside promoted battle runtime.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 152,
             "lineStart": 152,
             "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         },
         {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
           "category": "spell Unit pressure",
           "concept": "Sorcerer spell list Minor Illusion",
+          "finalDisposition": "catalog-only/dead-for-now",
           "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_minor_illusion",
           "levelBand": "spell-level-0",
+          "nextAction": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are illusion/exploration state outside promoted battle runtime.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 232,
             "lineStart": 232,
             "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         },
         {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
           "category": "spell Unit pressure",
           "concept": "Warlock spell list Minor Illusion",
+          "finalDisposition": "catalog-only/dead-for-now",
           "id": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_minor_illusion",
           "levelBand": "spell-level-0",
+          "nextAction": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are illusion/exploration state outside promoted battle runtime.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 339,
             "lineStart": 339,
             "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         },
         {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "installed",
           "category": "spell Unit pressure",
           "concept": "Wizard spell list Minor Illusion",
+          "finalDisposition": "catalog-only/dead-for-now",
           "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_minor_illusion",
           "levelBand": "spell-level-0",
+          "nextAction": "Sound/image illusion creation, Study adjudication, faint rendering, physical-interaction reveal, and recast expiry are illusion/exploration state outside promoted battle runtime.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 151,
             "lineStart": 151,
             "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         }
       ],
       "status": "closed-runtime-detached-table-adjudication",
@@ -678,16 +849,21 @@
       "sourceRecordPath": "packages/surface/content/monk_monks_focus.json",
       "sourceRows": [
         {
+          "battleReadinessStatus": "accepted",
+          "catalogAdmissionState": "installed",
           "category": "class feature",
           "concept": "Monk Monk's Focus",
+          "finalDisposition": "catalog-installed-owner-evidence-present",
           "id": "srd521:classes/monk:level-2:class-feature-grant:monk_monks_focus",
           "levelBand": "level-2",
+          "nextAction": "Owner-specific operational evidence is classified and present.",
           "rowKind": "class-feature-grant",
           "source": {
             "lineEnd": 91,
             "lineStart": 76,
             "path": ".references/srd-5.2.1/Classes/Monk.md"
-          }
+          },
+          "unitProfileDisposition": "profile-subset-supported"
         }
       ],
       "status": "closed-runtime-detached-table-adjudication",
@@ -711,16 +887,21 @@
       "sourceRecordPath": "packages/surface/content/ranger_favored_enemy.json",
       "sourceRows": [
         {
+          "battleReadinessStatus": "accepted",
+          "catalogAdmissionState": "installed",
           "category": "class feature",
           "concept": "Ranger Favored Enemy",
+          "finalDisposition": "catalog-installed-owner-evidence-present",
           "id": "srd521:classes/ranger:level-1:class-feature-grant:ranger_favored_enemy",
           "levelBand": "level-1",
+          "nextAction": "Owner-specific operational evidence is classified and present.",
           "rowKind": "class-feature-grant",
           "source": {
             "lineEnd": 81,
             "lineStart": 76,
             "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
+          },
+          "unitProfileDisposition": "profile-subset-supported"
         }
       ],
       "status": "closed-later-level-only",
@@ -744,16 +925,21 @@
       "sourceRecordPath": "packages/surface/content/rogue_thieves_cant.json",
       "sourceRows": [
         {
+          "battleReadinessStatus": "accepted",
+          "catalogAdmissionState": "installed",
           "category": "class feature",
           "concept": "Rogue Thieves' Cant",
+          "finalDisposition": "catalog-installed-owner-evidence-present",
           "id": "srd521:classes/rogue:level-1:class-feature-grant:rogue_thieves_cant",
           "levelBand": "level-1",
+          "nextAction": "Owner-specific operational evidence is classified and present.",
           "rowKind": "class-feature-grant",
           "source": {
             "lineEnd": 74,
             "lineStart": 71,
             "path": ".references/srd-5.2.1/Classes/Rogue.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         }
       ],
       "status": "closed-character-fact-and-runtime-detached-split",
@@ -782,40 +968,55 @@
       "sourceRecordPath": "packages/surface/content/silent_image.json",
       "sourceRows": [
         {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "not-installed",
           "category": "spell Unit pressure",
           "concept": "Bard spell list Silent Image",
+          "finalDisposition": "catalog-only/dead-for-now",
           "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_silent_image",
           "levelBand": "spell-level-1",
+          "nextAction": "Silent Image creates table-adjudicated illusion and presentation state; promoted battle runtime does not own image rendering or discovery adjudication.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 180,
             "lineStart": 180,
             "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         },
         {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "not-installed",
           "category": "spell Unit pressure",
           "concept": "Sorcerer spell list Silent Image",
+          "finalDisposition": "catalog-only/dead-for-now",
           "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_silent_image",
           "levelBand": "spell-level-1",
+          "nextAction": "Silent Image creates table-adjudicated illusion and presentation state; promoted battle runtime does not own image rendering or discovery adjudication.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 262,
             "lineStart": 262,
             "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         },
         {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "not-installed",
           "category": "spell Unit pressure",
           "concept": "Wizard spell list Silent Image",
+          "finalDisposition": "catalog-only/dead-for-now",
           "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_silent_image",
           "levelBand": "spell-level-1",
+          "nextAction": "Silent Image creates table-adjudicated illusion and presentation state; promoted battle runtime does not own image rendering or discovery adjudication.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 188,
             "lineStart": 188,
             "path": ".references/srd-5.2.1/Classes/Wizard.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         }
       ],
       "status": "closed-runtime-detached-table-adjudication",
@@ -839,16 +1040,21 @@
       "sourceRecordPath": "packages/surface/content/sorcerer_font_of_magic.json",
       "sourceRows": [
         {
+          "battleReadinessStatus": "accepted",
+          "catalogAdmissionState": "installed",
           "category": "class feature",
           "concept": "Sorcerer Font of Magic",
+          "finalDisposition": "catalog-installed-owner-evidence-present",
           "id": "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_font_of_magic",
           "levelBand": "level-2",
+          "nextAction": "Owner-specific operational evidence is classified and present.",
           "rowKind": "class-feature-grant",
           "source": {
             "lineEnd": 110,
             "lineStart": 87,
             "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
+          },
+          "unitProfileDisposition": "profile-subset-supported"
         }
       ],
       "status": "closed-character-fact-and-runtime-detached-split",
@@ -872,16 +1078,21 @@
       "sourceRecordPath": "packages/surface/content/sorcerer_metamagic.json",
       "sourceRows": [
         {
+          "battleReadinessStatus": "accepted",
+          "catalogAdmissionState": "installed",
           "category": "class feature",
           "concept": "Sorcerer Metamagic",
+          "finalDisposition": "catalog-installed-owner-evidence-present",
           "id": "srd521:classes/sorcerer:level-2:class-feature-grant:sorcerer_metamagic",
           "levelBand": "level-2",
+          "nextAction": "Owner-specific operational evidence is classified and present.",
           "rowKind": "class-feature-grant",
           "source": {
             "lineEnd": 118,
             "lineStart": 111,
             "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-          }
+          },
+          "unitProfileDisposition": "profile-subset-supported"
         }
       ],
       "status": "blocked-follow-up-split",
@@ -910,52 +1121,72 @@
       "sourceRecordPath": "packages/surface/content/speak_with_animals.json",
       "sourceRows": [
         {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "not-installed",
           "category": "spell Unit pressure",
           "concept": "Bard spell list Speak with Animals",
+          "finalDisposition": "catalog-only/dead-for-now",
           "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_speak_with_animals",
           "levelBand": "spell-level-1",
+          "nextAction": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 182,
             "lineStart": 182,
             "path": ".references/srd-5.2.1/Classes/Bard.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         },
         {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "not-installed",
           "category": "spell Unit pressure",
           "concept": "Druid spell list Speak with Animals",
+          "finalDisposition": "catalog-only/dead-for-now",
           "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_speak_with_animals",
           "levelBand": "spell-level-1",
+          "nextAction": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 220,
             "lineStart": 220,
             "path": ".references/srd-5.2.1/Classes/Druid.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         },
         {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "not-installed",
           "category": "spell Unit pressure",
           "concept": "Ranger spell list Speak with Animals",
+          "finalDisposition": "catalog-only/dead-for-now",
           "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_speak_with_animals",
           "levelBand": "spell-level-1",
+          "nextAction": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 176,
             "lineStart": 176,
             "path": ".references/srd-5.2.1/Classes/Ranger.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         },
         {
+          "battleReadinessStatus": "accepted-no-battle-effect",
+          "catalogAdmissionState": "not-installed",
           "category": "spell Unit pressure",
           "concept": "Warlock spell list Speak with Animals",
+          "finalDisposition": "catalog-only/dead-for-now",
           "id": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_speak_with_animals",
           "levelBand": "spell-level-1",
+          "nextAction": "Speak with Animals produces table-owned communication facts; promoted battle runtime does not model conversation content or social outcomes.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 358,
             "lineStart": 358,
             "path": ".references/srd-5.2.1/Classes/Warlock.md"
-          }
+          },
+          "unitProfileDisposition": "unsupported-profile"
         }
       ],
       "status": "closed-runtime-detached-table-adjudication",
@@ -979,16 +1210,21 @@
       "sourceRecordPath": "packages/surface/content/thaumaturgy.json",
       "sourceRows": [
         {
+          "battleReadinessStatus": "accepted",
+          "catalogAdmissionState": "installed",
           "category": "spell Unit pressure",
           "concept": "Cleric spell list Thaumaturgy",
+          "finalDisposition": "catalog-installed-owner-evidence-present",
           "id": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_thaumaturgy",
           "levelBand": "spell-level-0",
+          "nextAction": "Owner-specific operational evidence is classified and present.",
           "rowKind": "spell-unit-pressure",
           "source": {
             "lineEnd": 156,
             "lineStart": 156,
             "path": ".references/srd-5.2.1/Classes/Cleric.md"
-          }
+          },
+          "unitProfileDisposition": "profile-subset-supported"
         }
       ],
       "status": "closed-runtime-detached-table-adjudication",
@@ -1181,6 +1417,11 @@
       "numerator": 96,
       "percent": "100%"
     },
+    "strictFinalSupport": {
+      "denominator": 128,
+      "numerator": 128,
+      "percent": "100%"
+    },
     "strictRuntimeProfileSupport": {
       "denominator": 115,
       "numerator": 96,
@@ -1199,16 +1440,21 @@
         "reason": "Companion and familiar runtime work is owned by the separate companion worktree.",
         "sourceRows": [
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "spell Unit pressure",
             "concept": "Wizard spell list Find Familiar",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_find_familiar",
             "levelBand": "spell-level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 173,
               "lineStart": 173,
               "path": ".references/srd-5.2.1/Classes/Wizard.md"
-            }
+            },
+            "unitProfileDisposition": "profile-subset-supported"
           }
         ],
         "unitId": "find_familiar"
@@ -1250,10 +1496,14 @@
         "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Cleric spell list Create or Destroy Water",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_create_or_destroy_water",
             "levelBand": "spell-level-1",
+            "nextAction": "Creation/destruction of water, rain extinguishing exposed flames, and fog removal are exploration/environment effects outside the current promoted character-creation and battle-runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 165,
@@ -1262,10 +1512,14 @@
             }
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Druid spell list Create or Destroy Water",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_create_or_destroy_water",
             "levelBand": "spell-level-1",
+            "nextAction": "Creation/destruction of water, rain extinguishing exposed flames, and fog removal are exploration/environment effects outside the current promoted character-creation and battle-runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 206,
@@ -1325,10 +1579,14 @@
         "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Bard spell list Disguise Self",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_disguise_self",
             "levelBand": "spell-level-1",
+            "nextAction": "Self-disguise appearance, physical-inspection failure, and Study action adjudication are social/exploration pressure outside the current promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 170,
@@ -1337,10 +1595,14 @@
             }
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Sorcerer spell list Disguise Self",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_disguise_self",
             "levelBand": "spell-level-1",
+            "nextAction": "Self-disguise appearance, physical-inspection failure, and Study action adjudication are social/exploration pressure outside the current promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 250,
@@ -1349,10 +1611,14 @@
             }
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Wizard spell list Disguise Self",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_disguise_self",
             "levelBand": "spell-level-1",
+            "nextAction": "Self-disguise appearance, physical-inspection failure, and Study action adjudication are social/exploration pressure outside the current promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 169,
@@ -1384,10 +1650,14 @@
         "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Druid spell list Druidcraft",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_druidcraft",
             "levelBand": "spell-level-0",
+            "nextAction": "Weather signs, harmless sensory effects, plant blossoming, and candle/torch/campfire narration are noncombat environmental effects outside promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 188,
@@ -1447,10 +1717,14 @@
         "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Druid spell list Elementalism",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_elementalism",
             "levelBand": "spell-level-0",
+            "nextAction": "Harmless elemental sensory changes, small water creation, surface marks, and crude shaping are noncombat environmental effects outside promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 189,
@@ -1459,10 +1733,14 @@
             }
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Sorcerer spell list Elementalism",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_elementalism",
             "levelBand": "spell-level-0",
+            "nextAction": "Harmless elemental sensory changes, small water creation, surface marks, and crude shaping are noncombat environmental effects outside promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 226,
@@ -1471,10 +1749,14 @@
             }
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Wizard spell list Elementalism",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_elementalism",
             "levelBand": "spell-level-0",
+            "nextAction": "Harmless elemental sensory changes, small water creation, surface marks, and crude shaping are noncombat environmental effects outside promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 145,
@@ -1506,10 +1788,14 @@
         "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Wizard spell list Floating Disk",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_floating_disk",
             "levelBand": "spell-level-1",
+            "nextAction": "Created carrying disk, load capacity, terrain-following, and distance-based end behavior are object/exploration state outside promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 174,
@@ -1555,10 +1841,14 @@
         "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Druid spell list Goodberry",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_goodberry",
             "levelBand": "spell-level-1",
+            "nextAction": "Created consumable berries, nourishment, inventory persistence, and later Bonus Action consumption are item/character-sheet pressure outside current promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 213,
@@ -1567,10 +1857,14 @@
             }
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Ranger spell list Goodberry",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_goodberry",
             "levelBand": "spell-level-1",
+            "nextAction": "Created consumable berries, nourishment, inventory persistence, and later Bonus Action consumption are item/character-sheet pressure outside current promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 172,
@@ -1630,10 +1924,14 @@
         "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Bard spell list Illusory Script",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_illusory_script",
             "levelBand": "spell-level-1",
+            "nextAction": "Authored writing illusion, designated readers, Truesight reading, and dispelled-script cleanup are document/exploration effects outside promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 178,
@@ -1642,10 +1940,14 @@
             }
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Warlock spell list Illusory Script",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_illusory_script",
             "levelBand": "spell-level-1",
+            "nextAction": "Authored writing illusion, designated readers, Truesight reading, and dispelled-script cleanup are document/exploration effects outside promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 356,
@@ -1654,10 +1956,14 @@
             }
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Wizard spell list Illusory Script",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_illusory_script",
             "levelBand": "spell-level-1",
+            "nextAction": "Authored writing illusion, designated readers, Truesight reading, and dispelled-script cleanup are document/exploration effects outside promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 180,
@@ -1731,10 +2037,14 @@
         "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Bard spell list Mage Hand",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_mage_hand",
             "levelBand": "spell-level-0",
+            "nextAction": "Remote hand creation, object manipulation, carry limit, repeated Magic action control, and distance/recast expiry are exploration object-control effects outside promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 149,
@@ -1743,10 +2053,14 @@
             }
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Sorcerer spell list Mage Hand",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_mage_hand",
             "levelBand": "spell-level-0",
+            "nextAction": "Remote hand creation, object manipulation, carry limit, repeated Magic action control, and distance/recast expiry are exploration object-control effects outside promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 229,
@@ -1755,10 +2069,14 @@
             }
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Warlock spell list Mage Hand",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_mage_hand",
             "levelBand": "spell-level-0",
+            "nextAction": "Remote hand creation, object manipulation, carry limit, repeated Magic action control, and distance/recast expiry are exploration object-control effects outside promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 338,
@@ -1767,10 +2085,14 @@
             }
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Wizard spell list Mage Hand",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_mage_hand",
             "levelBand": "spell-level-0",
+            "nextAction": "Remote hand creation, object manipulation, carry limit, repeated Magic action control, and distance/recast expiry are exploration object-control effects outside promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 148,
@@ -1858,10 +2180,14 @@
         "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Bard spell list Mending",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_mending",
             "levelBand": "spell-level-0",
+            "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 150,
@@ -1870,10 +2196,14 @@
             }
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Cleric spell list Mending",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_mending",
             "levelBand": "spell-level-0",
+            "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 152,
@@ -1882,10 +2212,14 @@
             }
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Druid spell list Mending",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_mending",
             "levelBand": "spell-level-0",
+            "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 191,
@@ -1894,10 +2228,14 @@
             }
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Sorcerer spell list Mending",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_mending",
             "levelBand": "spell-level-0",
+            "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 230,
@@ -1906,10 +2244,14 @@
             }
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Wizard spell list Mending",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_mending",
             "levelBand": "spell-level-0",
+            "nextAction": "Object repair without restoring magic is equipment/exploration state outside promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 149,
@@ -1983,10 +2325,14 @@
         "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Bard spell list Message",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_message",
             "levelBand": "spell-level-0",
+            "nextAction": "Private communication and barrier/silence blocking are exploration communication effects outside promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 151,
@@ -1995,10 +2341,14 @@
             }
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Druid spell list Message",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_message",
             "levelBand": "spell-level-0",
+            "nextAction": "Private communication and barrier/silence blocking are exploration communication effects outside promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 192,
@@ -2007,10 +2357,14 @@
             }
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Sorcerer spell list Message",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_message",
             "levelBand": "spell-level-0",
+            "nextAction": "Private communication and barrier/silence blocking are exploration communication effects outside promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 231,
@@ -2019,10 +2373,14 @@
             }
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Wizard spell list Message",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_message",
             "levelBand": "spell-level-0",
+            "nextAction": "Private communication and barrier/silence blocking are exploration communication effects outside promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 150,
@@ -2096,10 +2454,14 @@
         "reason": "The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Bard spell list Prestidigitation",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_prestidigitation",
             "levelBand": "spell-level-0",
+            "nextAction": "Minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 153,
@@ -2108,10 +2470,14 @@
             }
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Sorcerer spell list Prestidigitation",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_prestidigitation",
             "levelBand": "spell-level-0",
+            "nextAction": "Minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 234,
@@ -2120,10 +2486,14 @@
             }
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Warlock spell list Prestidigitation",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_prestidigitation",
             "levelBand": "spell-level-0",
+            "nextAction": "Minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 341,
@@ -2132,10 +2502,14 @@
             }
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Wizard spell list Prestidigitation",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_prestidigitation",
             "levelBand": "spell-level-0",
+            "nextAction": "Minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 153,
@@ -2195,10 +2569,14 @@
         "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Cleric spell list Purify Food and Drink",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_purify_food_and_drink",
             "levelBand": "spell-level-1",
+            "nextAction": "Removing poison and rot from nonmagical food and drink is exploration/inventory state outside promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 174,
@@ -2207,10 +2585,14 @@
             }
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Druid spell list Purify Food and Drink",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_purify_food_and_drink",
             "levelBand": "spell-level-1",
+            "nextAction": "Removing poison and rot from nonmagical food and drink is exploration/inventory state outside promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 219,
@@ -2219,10 +2601,14 @@
             }
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Paladin spell list Purify Food and Drink",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_purify_food_and_drink",
             "levelBand": "spell-level-1",
+            "nextAction": "Removing poison and rot from nonmagical food and drink is exploration/inventory state outside promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 186,
@@ -2282,10 +2668,14 @@
         "reason": "The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists.",
         "sourceRows": [
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Bard spell list Unseen Servant",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_unseen_servant",
             "levelBand": "spell-level-1",
+            "nextAction": "Created servant stat block, object-interaction commands, Bonus Action control, HP, and distance-based expiry are summoned helper/exploration state outside promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 184,
@@ -2294,10 +2684,14 @@
             }
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Warlock spell list Unseen Servant",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_unseen_servant",
             "levelBand": "spell-level-1",
+            "nextAction": "Created servant stat block, object-interaction commands, Bonus Action control, HP, and distance-based expiry are summoned helper/exploration state outside promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 359,
@@ -2306,10 +2700,14 @@
             }
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "not-installed",
             "category": "spell Unit pressure",
             "concept": "Wizard spell list Unseen Servant",
+            "finalDisposition": "catalog-only/dead-for-now",
             "id": "srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_unseen_servant",
             "levelBand": "spell-level-1",
+            "nextAction": "Created servant stat block, object-interaction commands, Bonus Action control, HP, and distance-based expiry are summoned helper/exploration state outside promoted runtime owners.",
             "rowKind": "spell-unit-pressure",
             "source": {
               "lineEnd": 191,
@@ -2328,136 +2726,191 @@
         "sourceRecordPath": "packages/surface/content/class_barbarian.json",
         "sourceRows": [
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "class container",
             "concept": "Barbarian class container",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/barbarian:level-1:class-container:barbarian_class_container",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "class-container",
             "source": {
               "lineEnd": 26,
               "lineStart": 3,
               "path": ".references/srd-5.2.1/Classes/Barbarian.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Barbarian level 1 feature table row",
+            "finalDisposition": "non-runtime",
             "id": "srd521:classes/barbarian:level-1:class-table-summary:barbarian_level_1_feature_table_row",
             "levelBand": "level-1",
+            "nextAction": "No runtime work; keep classification as explicit closure.",
             "rowKind": "class-table-summary",
             "source": {
               "lineEnd": 35,
               "lineStart": 35,
               "path": ".references/srd-5.2.1/Classes/Barbarian.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Barbarian Armor Training",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/barbarian:level-1:core-trait:barbarian_armor_training",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 12,
               "lineStart": 12,
               "path": ".references/srd-5.2.1/Classes/Barbarian.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Barbarian Hit Point Die",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/barbarian:level-1:core-trait:barbarian_hit_point_die",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 8,
               "lineStart": 8,
               "path": ".references/srd-5.2.1/Classes/Barbarian.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Barbarian Primary Ability",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/barbarian:level-1:core-trait:barbarian_primary_ability",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 7,
               "lineStart": 7,
               "path": ".references/srd-5.2.1/Classes/Barbarian.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Barbarian Saving Throw Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/barbarian:level-1:core-trait:barbarian_saving_throw_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 9,
               "lineStart": 9,
               "path": ".references/srd-5.2.1/Classes/Barbarian.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Barbarian Skill Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/barbarian:level-1:core-trait:barbarian_skill_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 10,
               "lineStart": 10,
               "path": ".references/srd-5.2.1/Classes/Barbarian.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Barbarian Weapon Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/barbarian:level-1:core-trait:barbarian_weapon_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 11,
               "lineStart": 11,
               "path": ".references/srd-5.2.1/Classes/Barbarian.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "equipment/weapon/armor pressure",
             "concept": "Barbarian Starting Equipment",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/barbarian:level-1:equipment-pressure:barbarian_starting_equipment",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "equipment-pressure",
             "source": {
               "lineEnd": 13,
               "lineStart": 13,
               "path": ".references/srd-5.2.1/Classes/Barbarian.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Barbarian multiclass entry traits",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/barbarian:level-1:multiclass-entry:barbarian_multiclass_entry_traits",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "multiclass-entry",
             "source": {
               "lineEnd": 26,
               "lineStart": 22,
               "path": ".references/srd-5.2.1/Classes/Barbarian.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Barbarian level 2 feature table row",
+            "finalDisposition": "non-runtime",
             "id": "srd521:classes/barbarian:level-2:class-table-summary:barbarian_level_2_feature_table_row",
             "levelBand": "level-2",
+            "nextAction": "No runtime work; keep classification as explicit closure.",
             "rowKind": "class-table-summary",
             "source": {
               "lineEnd": 36,
               "lineStart": 36,
               "path": ".references/srd-5.2.1/Classes/Barbarian.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           }
         ],
         "unitId": "class_barbarian"
@@ -2468,160 +2921,225 @@
         "sourceRecordPath": "packages/surface/content/class_bard.json",
         "sourceRows": [
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "class container",
             "concept": "Bard class container",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/bard:level-1:class-container:bard_class_container",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "class-container",
             "source": {
               "lineEnd": 27,
               "lineStart": 3,
               "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Bard level 1 feature table row",
+            "finalDisposition": "non-runtime",
             "id": "srd521:classes/bard:level-1:class-table-summary:bard_level_1_feature_table_row",
             "levelBand": "level-1",
+            "nextAction": "No runtime work; keep classification as explicit closure.",
             "rowKind": "class-table-summary",
             "source": {
               "lineEnd": 36,
               "lineStart": 36,
               "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Bard Armor Training",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/bard:level-1:core-trait:bard_armor_training",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 13,
               "lineStart": 13,
               "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Bard Hit Point Die",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/bard:level-1:core-trait:bard_hit_point_die",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 8,
               "lineStart": 8,
               "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Bard Primary Ability",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/bard:level-1:core-trait:bard_primary_ability",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 7,
               "lineStart": 7,
               "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Bard Saving Throw Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/bard:level-1:core-trait:bard_saving_throw_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 9,
               "lineStart": 9,
               "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Bard Skill Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/bard:level-1:core-trait:bard_skill_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 10,
               "lineStart": 10,
               "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Bard Tool Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/bard:level-1:core-trait:bard_tool_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 12,
               "lineStart": 12,
               "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Bard Weapon Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/bard:level-1:core-trait:bard_weapon_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 11,
               "lineStart": 11,
               "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "equipment/weapon/armor pressure",
             "concept": "Bard Starting Equipment",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/bard:level-1:equipment-pressure:bard_starting_equipment",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "equipment-pressure",
             "source": {
               "lineEnd": 14,
               "lineStart": 14,
               "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Bard multiclass entry traits",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/bard:level-1:multiclass-entry:bard_multiclass_entry_traits",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "multiclass-entry",
             "source": {
               "lineEnd": 27,
               "lineStart": 23,
               "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "spell access/list pressure",
             "concept": "Bard Spellcasting",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/bard:level-1:spell-access:bard_spellcasting",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "spell-access",
             "source": {
               "lineEnd": 92,
               "lineStart": 69,
               "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Bard level 2 feature table row",
+            "finalDisposition": "non-runtime",
             "id": "srd521:classes/bard:level-2:class-table-summary:bard_level_2_feature_table_row",
             "levelBand": "level-2",
+            "nextAction": "No runtime work; keep classification as explicit closure.",
             "rowKind": "class-table-summary",
             "source": {
               "lineEnd": 37,
               "lineStart": 37,
               "path": ".references/srd-5.2.1/Classes/Bard.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           }
         ],
         "unitId": "class_bard"
@@ -2632,148 +3150,208 @@
         "sourceRecordPath": "packages/surface/content/class_cleric.json",
         "sourceRows": [
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "class container",
             "concept": "Cleric class container",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/cleric:level-1:class-container:cleric_class_container",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "class-container",
             "source": {
               "lineEnd": 26,
               "lineStart": 3,
               "path": ".references/srd-5.2.1/Classes/Cleric.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Cleric level 1 feature table row",
+            "finalDisposition": "non-runtime",
             "id": "srd521:classes/cleric:level-1:class-table-summary:cleric_level_1_feature_table_row",
             "levelBand": "level-1",
+            "nextAction": "No runtime work; keep classification as explicit closure.",
             "rowKind": "class-table-summary",
             "source": {
               "lineEnd": 35,
               "lineStart": 35,
               "path": ".references/srd-5.2.1/Classes/Cleric.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Cleric Armor Training",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/cleric:level-1:core-trait:cleric_armor_training",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 12,
               "lineStart": 12,
               "path": ".references/srd-5.2.1/Classes/Cleric.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Cleric Hit Point Die",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/cleric:level-1:core-trait:cleric_hit_point_die",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 8,
               "lineStart": 8,
               "path": ".references/srd-5.2.1/Classes/Cleric.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Cleric Primary Ability",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/cleric:level-1:core-trait:cleric_primary_ability",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 7,
               "lineStart": 7,
               "path": ".references/srd-5.2.1/Classes/Cleric.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Cleric Saving Throw Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/cleric:level-1:core-trait:cleric_saving_throw_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 9,
               "lineStart": 9,
               "path": ".references/srd-5.2.1/Classes/Cleric.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Cleric Skill Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/cleric:level-1:core-trait:cleric_skill_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 10,
               "lineStart": 10,
               "path": ".references/srd-5.2.1/Classes/Cleric.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Cleric Weapon Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/cleric:level-1:core-trait:cleric_weapon_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 11,
               "lineStart": 11,
               "path": ".references/srd-5.2.1/Classes/Cleric.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "equipment/weapon/armor pressure",
             "concept": "Cleric Starting Equipment",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/cleric:level-1:equipment-pressure:cleric_starting_equipment",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "equipment-pressure",
             "source": {
               "lineEnd": 13,
               "lineStart": 13,
               "path": ".references/srd-5.2.1/Classes/Cleric.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Cleric multiclass entry traits",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/cleric:level-1:multiclass-entry:cleric_multiclass_entry_traits",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "multiclass-entry",
             "source": {
               "lineEnd": 26,
               "lineStart": 22,
               "path": ".references/srd-5.2.1/Classes/Cleric.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "spell access/list pressure",
             "concept": "Cleric Spellcasting",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/cleric:level-1:spell-access:cleric_spellcasting",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "spell-access",
             "source": {
               "lineEnd": 79,
               "lineStart": 56,
               "path": ".references/srd-5.2.1/Classes/Cleric.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Cleric level 2 feature table row",
+            "finalDisposition": "non-runtime",
             "id": "srd521:classes/cleric:level-2:class-table-summary:cleric_level_2_feature_table_row",
             "levelBand": "level-2",
+            "nextAction": "No runtime work; keep classification as explicit closure.",
             "rowKind": "class-table-summary",
             "source": {
               "lineEnd": 36,
               "lineStart": 36,
               "path": ".references/srd-5.2.1/Classes/Cleric.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           }
         ],
         "unitId": "class_cleric"
@@ -2784,160 +3362,225 @@
         "sourceRecordPath": "packages/surface/content/class_druid.json",
         "sourceRows": [
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "class container",
             "concept": "Druid class container",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/druid:level-1:class-container:druid_class_container",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "class-container",
             "source": {
               "lineEnd": 27,
               "lineStart": 3,
               "path": ".references/srd-5.2.1/Classes/Druid.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Druid level 1 feature table row",
+            "finalDisposition": "non-runtime",
             "id": "srd521:classes/druid:level-1:class-table-summary:druid_level_1_feature_table_row",
             "levelBand": "level-1",
+            "nextAction": "No runtime work; keep classification as explicit closure.",
             "rowKind": "class-table-summary",
             "source": {
               "lineEnd": 32,
               "lineStart": 32,
               "path": ".references/srd-5.2.1/Classes/Druid.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Druid Armor Training",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/druid:level-1:core-trait:druid_armor_training",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 13,
               "lineStart": 13,
               "path": ".references/srd-5.2.1/Classes/Druid.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Druid Hit Point Die",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/druid:level-1:core-trait:druid_hit_point_die",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 8,
               "lineStart": 8,
               "path": ".references/srd-5.2.1/Classes/Druid.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Druid Primary Ability",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/druid:level-1:core-trait:druid_primary_ability",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 7,
               "lineStart": 7,
               "path": ".references/srd-5.2.1/Classes/Druid.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Druid Saving Throw Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/druid:level-1:core-trait:druid_saving_throw_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 9,
               "lineStart": 9,
               "path": ".references/srd-5.2.1/Classes/Druid.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Druid Skill Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/druid:level-1:core-trait:druid_skill_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 10,
               "lineStart": 10,
               "path": ".references/srd-5.2.1/Classes/Druid.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Druid Tool Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/druid:level-1:core-trait:druid_tool_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 12,
               "lineStart": 12,
               "path": ".references/srd-5.2.1/Classes/Druid.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Druid Weapon Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/druid:level-1:core-trait:druid_weapon_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 11,
               "lineStart": 11,
               "path": ".references/srd-5.2.1/Classes/Druid.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "equipment/weapon/armor pressure",
             "concept": "Druid Starting Equipment",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/druid:level-1:equipment-pressure:druid_starting_equipment",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "equipment-pressure",
             "source": {
               "lineEnd": 14,
               "lineStart": 14,
               "path": ".references/srd-5.2.1/Classes/Druid.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Druid multiclass entry traits",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/druid:level-1:multiclass-entry:druid_multiclass_entry_traits",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "multiclass-entry",
             "source": {
               "lineEnd": 27,
               "lineStart": 23,
               "path": ".references/srd-5.2.1/Classes/Druid.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "spell access/list pressure",
             "concept": "Druid Spellcasting",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/druid:level-1:spell-access:druid_spellcasting",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "spell-access",
             "source": {
               "lineEnd": 80,
               "lineStart": 57,
               "path": ".references/srd-5.2.1/Classes/Druid.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Druid level 2 feature table row",
+            "finalDisposition": "non-runtime",
             "id": "srd521:classes/druid:level-2:class-table-summary:druid_level_2_feature_table_row",
             "levelBand": "level-2",
+            "nextAction": "No runtime work; keep classification as explicit closure.",
             "rowKind": "class-table-summary",
             "source": {
               "lineEnd": 33,
               "lineStart": 33,
               "path": ".references/srd-5.2.1/Classes/Druid.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           }
         ],
         "unitId": "class_druid"
@@ -2948,136 +3591,191 @@
         "sourceRecordPath": "packages/surface/content/class_fighter.json",
         "sourceRows": [
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "class container",
             "concept": "Fighter class container",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/fighter:level-1:class-container:fighter_class_container",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "class-container",
             "source": {
               "lineEnd": 26,
               "lineStart": 3,
               "path": ".references/srd-5.2.1/Classes/Fighter.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Fighter level 1 feature table row",
+            "finalDisposition": "non-runtime",
             "id": "srd521:classes/fighter:level-1:class-table-summary:fighter_level_1_feature_table_row",
             "levelBand": "level-1",
+            "nextAction": "No runtime work; keep classification as explicit closure.",
             "rowKind": "class-table-summary",
             "source": {
               "lineEnd": 31,
               "lineStart": 31,
               "path": ".references/srd-5.2.1/Classes/Fighter.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Fighter Armor Training",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/fighter:level-1:core-trait:fighter_armor_training",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 12,
               "lineStart": 12,
               "path": ".references/srd-5.2.1/Classes/Fighter.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Fighter Hit Point Die",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/fighter:level-1:core-trait:fighter_hit_point_die",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 8,
               "lineStart": 8,
               "path": ".references/srd-5.2.1/Classes/Fighter.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Fighter Primary Ability",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/fighter:level-1:core-trait:fighter_primary_ability",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 7,
               "lineStart": 7,
               "path": ".references/srd-5.2.1/Classes/Fighter.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Fighter Saving Throw Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/fighter:level-1:core-trait:fighter_saving_throw_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 9,
               "lineStart": 9,
               "path": ".references/srd-5.2.1/Classes/Fighter.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Fighter Skill Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/fighter:level-1:core-trait:fighter_skill_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 10,
               "lineStart": 10,
               "path": ".references/srd-5.2.1/Classes/Fighter.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Fighter Weapon Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/fighter:level-1:core-trait:fighter_weapon_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 11,
               "lineStart": 11,
               "path": ".references/srd-5.2.1/Classes/Fighter.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "equipment/weapon/armor pressure",
             "concept": "Fighter Starting Equipment",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/fighter:level-1:equipment-pressure:fighter_starting_equipment",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "equipment-pressure",
             "source": {
               "lineEnd": 13,
               "lineStart": 13,
               "path": ".references/srd-5.2.1/Classes/Fighter.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Fighter multiclass entry traits",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/fighter:level-1:multiclass-entry:fighter_multiclass_entry_traits",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "multiclass-entry",
             "source": {
               "lineEnd": 26,
               "lineStart": 22,
               "path": ".references/srd-5.2.1/Classes/Fighter.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Fighter level 2 feature table row",
+            "finalDisposition": "non-runtime",
             "id": "srd521:classes/fighter:level-2:class-table-summary:fighter_level_2_feature_table_row",
             "levelBand": "level-2",
+            "nextAction": "No runtime work; keep classification as explicit closure.",
             "rowKind": "class-table-summary",
             "source": {
               "lineEnd": 32,
               "lineStart": 32,
               "path": ".references/srd-5.2.1/Classes/Fighter.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           }
         ],
         "unitId": "class_fighter"
@@ -3088,148 +3786,208 @@
         "sourceRecordPath": "packages/surface/content/class_monk.json",
         "sourceRows": [
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "class container",
             "concept": "Monk class container",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/monk:level-1:class-container:monk_class_container",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "class-container",
             "source": {
               "lineEnd": 27,
               "lineStart": 3,
               "path": ".references/srd-5.2.1/Classes/Monk.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Monk level 1 feature table row",
+            "finalDisposition": "non-runtime",
             "id": "srd521:classes/monk:level-1:class-table-summary:monk_level_1_feature_table_row",
             "levelBand": "level-1",
+            "nextAction": "No runtime work; keep classification as explicit closure.",
             "rowKind": "class-table-summary",
             "source": {
               "lineEnd": 32,
               "lineStart": 32,
               "path": ".references/srd-5.2.1/Classes/Monk.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Monk Armor Training",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/monk:level-1:core-trait:monk_armor_training",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 13,
               "lineStart": 13,
               "path": ".references/srd-5.2.1/Classes/Monk.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Monk Hit Point Die",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/monk:level-1:core-trait:monk_hit_point_die",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 8,
               "lineStart": 8,
               "path": ".references/srd-5.2.1/Classes/Monk.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Monk Primary Ability",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/monk:level-1:core-trait:monk_primary_ability",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 7,
               "lineStart": 7,
               "path": ".references/srd-5.2.1/Classes/Monk.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Monk Saving Throw Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/monk:level-1:core-trait:monk_saving_throw_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 9,
               "lineStart": 9,
               "path": ".references/srd-5.2.1/Classes/Monk.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Monk Skill Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/monk:level-1:core-trait:monk_skill_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 10,
               "lineStart": 10,
               "path": ".references/srd-5.2.1/Classes/Monk.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Monk Tool Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/monk:level-1:core-trait:monk_tool_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 12,
               "lineStart": 12,
               "path": ".references/srd-5.2.1/Classes/Monk.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Monk Weapon Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/monk:level-1:core-trait:monk_weapon_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 11,
               "lineStart": 11,
               "path": ".references/srd-5.2.1/Classes/Monk.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "equipment/weapon/armor pressure",
             "concept": "Monk Starting Equipment",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/monk:level-1:equipment-pressure:monk_starting_equipment",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "equipment-pressure",
             "source": {
               "lineEnd": 14,
               "lineStart": 14,
               "path": ".references/srd-5.2.1/Classes/Monk.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Monk multiclass entry traits",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/monk:level-1:multiclass-entry:monk_multiclass_entry_traits",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "multiclass-entry",
             "source": {
               "lineEnd": 27,
               "lineStart": 23,
               "path": ".references/srd-5.2.1/Classes/Monk.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Monk level 2 feature table row",
+            "finalDisposition": "non-runtime",
             "id": "srd521:classes/monk:level-2:class-table-summary:monk_level_2_feature_table_row",
             "levelBand": "level-2",
+            "nextAction": "No runtime work; keep classification as explicit closure.",
             "rowKind": "class-table-summary",
             "source": {
               "lineEnd": 33,
               "lineStart": 33,
               "path": ".references/srd-5.2.1/Classes/Monk.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           }
         ],
         "unitId": "class_monk"
@@ -3240,148 +3998,208 @@
         "sourceRecordPath": "packages/surface/content/class_paladin.json",
         "sourceRows": [
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "class container",
             "concept": "Paladin class container",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/paladin:level-1:class-container:paladin_class_container",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "class-container",
             "source": {
               "lineEnd": 26,
               "lineStart": 3,
               "path": ".references/srd-5.2.1/Classes/Paladin.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Paladin level 1 feature table row",
+            "finalDisposition": "non-runtime",
             "id": "srd521:classes/paladin:level-1:class-table-summary:paladin_level_1_feature_table_row",
             "levelBand": "level-1",
+            "nextAction": "No runtime work; keep classification as explicit closure.",
             "rowKind": "class-table-summary",
             "source": {
               "lineEnd": 35,
               "lineStart": 35,
               "path": ".references/srd-5.2.1/Classes/Paladin.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Paladin Armor Training",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/paladin:level-1:core-trait:paladin_armor_training",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 12,
               "lineStart": 12,
               "path": ".references/srd-5.2.1/Classes/Paladin.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Paladin Hit Point Die",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/paladin:level-1:core-trait:paladin_hit_point_die",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 8,
               "lineStart": 8,
               "path": ".references/srd-5.2.1/Classes/Paladin.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Paladin Primary Ability",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/paladin:level-1:core-trait:paladin_primary_ability",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 7,
               "lineStart": 7,
               "path": ".references/srd-5.2.1/Classes/Paladin.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Paladin Saving Throw Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/paladin:level-1:core-trait:paladin_saving_throw_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 9,
               "lineStart": 9,
               "path": ".references/srd-5.2.1/Classes/Paladin.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Paladin Skill Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/paladin:level-1:core-trait:paladin_skill_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 10,
               "lineStart": 10,
               "path": ".references/srd-5.2.1/Classes/Paladin.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Paladin Weapon Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/paladin:level-1:core-trait:paladin_weapon_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 11,
               "lineStart": 11,
               "path": ".references/srd-5.2.1/Classes/Paladin.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "equipment/weapon/armor pressure",
             "concept": "Paladin Starting Equipment",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/paladin:level-1:equipment-pressure:paladin_starting_equipment",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "equipment-pressure",
             "source": {
               "lineEnd": 13,
               "lineStart": 13,
               "path": ".references/srd-5.2.1/Classes/Paladin.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Paladin multiclass entry traits",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/paladin:level-1:multiclass-entry:paladin_multiclass_entry_traits",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "multiclass-entry",
             "source": {
               "lineEnd": 26,
               "lineStart": 22,
               "path": ".references/srd-5.2.1/Classes/Paladin.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "spell access/list pressure",
             "concept": "Paladin Spellcasting",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/paladin:level-1:spell-access:paladin_spellcasting",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "spell-access",
             "source": {
               "lineEnd": 83,
               "lineStart": 66,
               "path": ".references/srd-5.2.1/Classes/Paladin.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Paladin level 2 feature table row",
+            "finalDisposition": "non-runtime",
             "id": "srd521:classes/paladin:level-2:class-table-summary:paladin_level_2_feature_table_row",
             "levelBand": "level-2",
+            "nextAction": "No runtime work; keep classification as explicit closure.",
             "rowKind": "class-table-summary",
             "source": {
               "lineEnd": 36,
               "lineStart": 36,
               "path": ".references/srd-5.2.1/Classes/Paladin.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           }
         ],
         "unitId": "class_paladin"
@@ -3392,148 +4210,208 @@
         "sourceRecordPath": "packages/surface/content/class_ranger.json",
         "sourceRows": [
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "class container",
             "concept": "Ranger class container",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/ranger:level-1:class-container:ranger_class_container",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "class-container",
             "source": {
               "lineEnd": 26,
               "lineStart": 3,
               "path": ".references/srd-5.2.1/Classes/Ranger.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Ranger level 1 feature table row",
+            "finalDisposition": "non-runtime",
             "id": "srd521:classes/ranger:level-1:class-table-summary:ranger_level_1_feature_table_row",
             "levelBand": "level-1",
+            "nextAction": "No runtime work; keep classification as explicit closure.",
             "rowKind": "class-table-summary",
             "source": {
               "lineEnd": 35,
               "lineStart": 35,
               "path": ".references/srd-5.2.1/Classes/Ranger.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Ranger Armor Training",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/ranger:level-1:core-trait:ranger_armor_training",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 12,
               "lineStart": 12,
               "path": ".references/srd-5.2.1/Classes/Ranger.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Ranger Hit Point Die",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/ranger:level-1:core-trait:ranger_hit_point_die",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 8,
               "lineStart": 8,
               "path": ".references/srd-5.2.1/Classes/Ranger.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Ranger Primary Ability",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/ranger:level-1:core-trait:ranger_primary_ability",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 7,
               "lineStart": 7,
               "path": ".references/srd-5.2.1/Classes/Ranger.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Ranger Saving Throw Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/ranger:level-1:core-trait:ranger_saving_throw_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 9,
               "lineStart": 9,
               "path": ".references/srd-5.2.1/Classes/Ranger.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Ranger Skill Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/ranger:level-1:core-trait:ranger_skill_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 10,
               "lineStart": 10,
               "path": ".references/srd-5.2.1/Classes/Ranger.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Ranger Weapon Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/ranger:level-1:core-trait:ranger_weapon_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 11,
               "lineStart": 11,
               "path": ".references/srd-5.2.1/Classes/Ranger.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "equipment/weapon/armor pressure",
             "concept": "Ranger Starting Equipment",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/ranger:level-1:equipment-pressure:ranger_starting_equipment",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "equipment-pressure",
             "source": {
               "lineEnd": 13,
               "lineStart": 13,
               "path": ".references/srd-5.2.1/Classes/Ranger.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Ranger multiclass entry traits",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/ranger:level-1:multiclass-entry:ranger_multiclass_entry_traits",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "multiclass-entry",
             "source": {
               "lineEnd": 26,
               "lineStart": 22,
               "path": ".references/srd-5.2.1/Classes/Ranger.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "spell access/list pressure",
             "concept": "Ranger Spellcasting",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/ranger:level-1:spell-access:ranger_spellcasting",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "spell-access",
             "source": {
               "lineEnd": 75,
               "lineStart": 58,
               "path": ".references/srd-5.2.1/Classes/Ranger.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Ranger level 2 feature table row",
+            "finalDisposition": "non-runtime",
             "id": "srd521:classes/ranger:level-2:class-table-summary:ranger_level_2_feature_table_row",
             "levelBand": "level-2",
+            "nextAction": "No runtime work; keep classification as explicit closure.",
             "rowKind": "class-table-summary",
             "source": {
               "lineEnd": 36,
               "lineStart": 36,
               "path": ".references/srd-5.2.1/Classes/Ranger.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           }
         ],
         "unitId": "class_ranger"
@@ -3544,148 +4422,208 @@
         "sourceRecordPath": "packages/surface/content/class_rogue.json",
         "sourceRows": [
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "class container",
             "concept": "Rogue class container",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/rogue:level-1:class-container:rogue_class_container",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "class-container",
             "source": {
               "lineEnd": 27,
               "lineStart": 3,
               "path": ".references/srd-5.2.1/Classes/Rogue.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Rogue level 1 feature table row",
+            "finalDisposition": "non-runtime",
             "id": "srd521:classes/rogue:level-1:class-table-summary:rogue_level_1_feature_table_row",
             "levelBand": "level-1",
+            "nextAction": "No runtime work; keep classification as explicit closure.",
             "rowKind": "class-table-summary",
             "source": {
               "lineEnd": 36,
               "lineStart": 36,
               "path": ".references/srd-5.2.1/Classes/Rogue.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Rogue Armor Training",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/rogue:level-1:core-trait:rogue_armor_training",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 13,
               "lineStart": 13,
               "path": ".references/srd-5.2.1/Classes/Rogue.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Rogue Hit Point Die",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/rogue:level-1:core-trait:rogue_hit_point_die",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 8,
               "lineStart": 8,
               "path": ".references/srd-5.2.1/Classes/Rogue.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Rogue Primary Ability",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/rogue:level-1:core-trait:rogue_primary_ability",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 7,
               "lineStart": 7,
               "path": ".references/srd-5.2.1/Classes/Rogue.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Rogue Saving Throw Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/rogue:level-1:core-trait:rogue_saving_throw_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 9,
               "lineStart": 9,
               "path": ".references/srd-5.2.1/Classes/Rogue.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Rogue Skill Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/rogue:level-1:core-trait:rogue_skill_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 10,
               "lineStart": 10,
               "path": ".references/srd-5.2.1/Classes/Rogue.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Rogue Tool Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/rogue:level-1:core-trait:rogue_tool_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 12,
               "lineStart": 12,
               "path": ".references/srd-5.2.1/Classes/Rogue.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Rogue Weapon Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/rogue:level-1:core-trait:rogue_weapon_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 11,
               "lineStart": 11,
               "path": ".references/srd-5.2.1/Classes/Rogue.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "equipment/weapon/armor pressure",
             "concept": "Rogue Starting Equipment",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/rogue:level-1:equipment-pressure:rogue_starting_equipment",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "equipment-pressure",
             "source": {
               "lineEnd": 14,
               "lineStart": 14,
               "path": ".references/srd-5.2.1/Classes/Rogue.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Rogue multiclass entry traits",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/rogue:level-1:multiclass-entry:rogue_multiclass_entry_traits",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "multiclass-entry",
             "source": {
               "lineEnd": 27,
               "lineStart": 23,
               "path": ".references/srd-5.2.1/Classes/Rogue.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Rogue level 2 feature table row",
+            "finalDisposition": "non-runtime",
             "id": "srd521:classes/rogue:level-2:class-table-summary:rogue_level_2_feature_table_row",
             "levelBand": "level-2",
+            "nextAction": "No runtime work; keep classification as explicit closure.",
             "rowKind": "class-table-summary",
             "source": {
               "lineEnd": 37,
               "lineStart": 37,
               "path": ".references/srd-5.2.1/Classes/Rogue.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           }
         ],
         "unitId": "class_rogue"
@@ -3696,148 +4634,208 @@
         "sourceRecordPath": "packages/surface/content/class_sorcerer.json",
         "sourceRows": [
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "class container",
             "concept": "Sorcerer class container",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/sorcerer:level-1:class-container:sorcerer_class_container",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "class-container",
             "source": {
               "lineEnd": 26,
               "lineStart": 3,
               "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Sorcerer level 1 feature table row",
+            "finalDisposition": "non-runtime",
             "id": "srd521:classes/sorcerer:level-1:class-table-summary:sorcerer_level_1_feature_table_row",
             "levelBand": "level-1",
+            "nextAction": "No runtime work; keep classification as explicit closure.",
             "rowKind": "class-table-summary",
             "source": {
               "lineEnd": 35,
               "lineStart": 35,
               "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Sorcerer Armor Training",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/sorcerer:level-1:core-trait:sorcerer_armor_training",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 12,
               "lineStart": 12,
               "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Sorcerer Hit Point Die",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/sorcerer:level-1:core-trait:sorcerer_hit_point_die",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 8,
               "lineStart": 8,
               "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Sorcerer Primary Ability",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/sorcerer:level-1:core-trait:sorcerer_primary_ability",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 7,
               "lineStart": 7,
               "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Sorcerer Saving Throw Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/sorcerer:level-1:core-trait:sorcerer_saving_throw_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 9,
               "lineStart": 9,
               "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Sorcerer Skill Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/sorcerer:level-1:core-trait:sorcerer_skill_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 10,
               "lineStart": 10,
               "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Sorcerer Weapon Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/sorcerer:level-1:core-trait:sorcerer_weapon_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 11,
               "lineStart": 11,
               "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "equipment/weapon/armor pressure",
             "concept": "Sorcerer Starting Equipment",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/sorcerer:level-1:equipment-pressure:sorcerer_starting_equipment",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "equipment-pressure",
             "source": {
               "lineEnd": 13,
               "lineStart": 13,
               "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Sorcerer multiclass entry traits",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/sorcerer:level-1:multiclass-entry:sorcerer_multiclass_entry_traits",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "multiclass-entry",
             "source": {
               "lineEnd": 26,
               "lineStart": 22,
               "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "spell access/list pressure",
             "concept": "Sorcerer Spellcasting",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/sorcerer:level-1:spell-access:sorcerer_spellcasting",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "spell-access",
             "source": {
               "lineEnd": 77,
               "lineStart": 56,
               "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Sorcerer level 2 feature table row",
+            "finalDisposition": "non-runtime",
             "id": "srd521:classes/sorcerer:level-2:class-table-summary:sorcerer_level_2_feature_table_row",
             "levelBand": "level-2",
+            "nextAction": "No runtime work; keep classification as explicit closure.",
             "rowKind": "class-table-summary",
             "source": {
               "lineEnd": 36,
               "lineStart": 36,
               "path": ".references/srd-5.2.1/Classes/Sorcerer.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           }
         ],
         "unitId": "class_sorcerer"
@@ -3848,148 +4846,208 @@
         "sourceRecordPath": "packages/surface/content/class_warlock.json",
         "sourceRows": [
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "class container",
             "concept": "Warlock class container",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/warlock:level-1:class-container:warlock_class_container",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "class-container",
             "source": {
               "lineEnd": 26,
               "lineStart": 3,
               "path": ".references/srd-5.2.1/Classes/Warlock.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "class feature",
             "concept": "Warlock Pact Magic",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/warlock:level-1:class-feature-grant:warlock_pact_magic",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "class-feature-grant",
             "source": {
               "lineEnd": 91,
               "lineStart": 68,
               "path": ".references/srd-5.2.1/Classes/Warlock.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Warlock level 1 feature table row",
+            "finalDisposition": "non-runtime",
             "id": "srd521:classes/warlock:level-1:class-table-summary:warlock_level_1_feature_table_row",
             "levelBand": "level-1",
+            "nextAction": "No runtime work; keep classification as explicit closure.",
             "rowKind": "class-table-summary",
             "source": {
               "lineEnd": 35,
               "lineStart": 35,
               "path": ".references/srd-5.2.1/Classes/Warlock.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Warlock Armor Training",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/warlock:level-1:core-trait:warlock_armor_training",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 12,
               "lineStart": 12,
               "path": ".references/srd-5.2.1/Classes/Warlock.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Warlock Hit Point Die",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/warlock:level-1:core-trait:warlock_hit_point_die",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 8,
               "lineStart": 8,
               "path": ".references/srd-5.2.1/Classes/Warlock.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Warlock Primary Ability",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/warlock:level-1:core-trait:warlock_primary_ability",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 7,
               "lineStart": 7,
               "path": ".references/srd-5.2.1/Classes/Warlock.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Warlock Saving Throw Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/warlock:level-1:core-trait:warlock_saving_throw_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 9,
               "lineStart": 9,
               "path": ".references/srd-5.2.1/Classes/Warlock.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Warlock Skill Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/warlock:level-1:core-trait:warlock_skill_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 10,
               "lineStart": 10,
               "path": ".references/srd-5.2.1/Classes/Warlock.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Warlock Weapon Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/warlock:level-1:core-trait:warlock_weapon_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 11,
               "lineStart": 11,
               "path": ".references/srd-5.2.1/Classes/Warlock.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "equipment/weapon/armor pressure",
             "concept": "Warlock Starting Equipment",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/warlock:level-1:equipment-pressure:warlock_starting_equipment",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "equipment-pressure",
             "source": {
               "lineEnd": 13,
               "lineStart": 13,
               "path": ".references/srd-5.2.1/Classes/Warlock.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Warlock multiclass entry traits",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/warlock:level-1:multiclass-entry:warlock_multiclass_entry_traits",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "multiclass-entry",
             "source": {
               "lineEnd": 26,
               "lineStart": 22,
               "path": ".references/srd-5.2.1/Classes/Warlock.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Warlock level 2 feature table row",
+            "finalDisposition": "non-runtime",
             "id": "srd521:classes/warlock:level-2:class-table-summary:warlock_level_2_feature_table_row",
             "levelBand": "level-2",
+            "nextAction": "No runtime work; keep classification as explicit closure.",
             "rowKind": "class-table-summary",
             "source": {
               "lineEnd": 36,
               "lineStart": 36,
               "path": ".references/srd-5.2.1/Classes/Warlock.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           }
         ],
         "unitId": "class_warlock"
@@ -4000,148 +5058,208 @@
         "sourceRecordPath": "packages/surface/content/class_wizard.json",
         "sourceRows": [
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "class container",
             "concept": "Wizard class container",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/wizard:level-1:class-container:wizard_class_container",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "class-container",
             "source": {
               "lineEnd": 26,
               "lineStart": 3,
               "path": ".references/srd-5.2.1/Classes/Wizard.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Wizard level 1 feature table row",
+            "finalDisposition": "non-runtime",
             "id": "srd521:classes/wizard:level-1:class-table-summary:wizard_level_1_feature_table_row",
             "levelBand": "level-1",
+            "nextAction": "No runtime work; keep classification as explicit closure.",
             "rowKind": "class-table-summary",
             "source": {
               "lineEnd": 35,
               "lineStart": 35,
               "path": ".references/srd-5.2.1/Classes/Wizard.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Wizard Armor Training",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/wizard:level-1:core-trait:wizard_armor_training",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 12,
               "lineStart": 12,
               "path": ".references/srd-5.2.1/Classes/Wizard.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Wizard Hit Point Die",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/wizard:level-1:core-trait:wizard_hit_point_die",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 8,
               "lineStart": 8,
               "path": ".references/srd-5.2.1/Classes/Wizard.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Wizard Primary Ability",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/wizard:level-1:core-trait:wizard_primary_ability",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 7,
               "lineStart": 7,
               "path": ".references/srd-5.2.1/Classes/Wizard.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Wizard Saving Throw Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/wizard:level-1:core-trait:wizard_saving_throw_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 9,
               "lineStart": 9,
               "path": ".references/srd-5.2.1/Classes/Wizard.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Wizard Skill Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/wizard:level-1:core-trait:wizard_skill_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 10,
               "lineStart": 10,
               "path": ".references/srd-5.2.1/Classes/Wizard.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Wizard Weapon Proficiencies",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/wizard:level-1:core-trait:wizard_weapon_proficiencies",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "core-trait",
             "source": {
               "lineEnd": 11,
               "lineStart": 11,
               "path": ".references/srd-5.2.1/Classes/Wizard.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "equipment/weapon/armor pressure",
             "concept": "Wizard Starting Equipment",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/wizard:level-1:equipment-pressure:wizard_starting_equipment",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "equipment-pressure",
             "source": {
               "lineEnd": 13,
               "lineStart": 13,
               "path": ".references/srd-5.2.1/Classes/Wizard.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Wizard multiclass entry traits",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/wizard:level-1:multiclass-entry:wizard_multiclass_entry_traits",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "multiclass-entry",
             "source": {
               "lineEnd": 26,
               "lineStart": 22,
               "path": ".references/srd-5.2.1/Classes/Wizard.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted",
+            "catalogAdmissionState": "installed",
             "category": "spell access/list pressure",
             "concept": "Wizard Spellcasting",
+            "finalDisposition": "catalog-installed-owner-evidence-present",
             "id": "srd521:classes/wizard:level-1:spell-access:wizard_spellcasting",
             "levelBand": "level-1",
+            "nextAction": "Owner-specific operational evidence is classified and present.",
             "rowKind": "spell-access",
             "source": {
               "lineEnd": 93,
               "lineStart": 56,
               "path": ".references/srd-5.2.1/Classes/Wizard.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           },
           {
+            "battleReadinessStatus": "accepted-no-battle-effect",
+            "catalogAdmissionState": "installed",
             "category": "character-creation or progression mechanic",
             "concept": "Wizard level 2 feature table row",
+            "finalDisposition": "non-runtime",
             "id": "srd521:classes/wizard:level-2:class-table-summary:wizard_level_2_feature_table_row",
             "levelBand": "level-2",
+            "nextAction": "No runtime work; keep classification as explicit closure.",
             "rowKind": "class-table-summary",
             "source": {
               "lineEnd": 36,
               "lineStart": 36,
               "path": ".references/srd-5.2.1/Classes/Wizard.md"
-            }
+            },
+            "unitProfileDisposition": "unsupported-profile"
           }
         ],
         "unitId": "class_wizard"
@@ -8081,6 +9199,7 @@
     },
     "openBlockerCount": 0
   },
+  "strictFinalSupportBlockers": [],
   "summary": {
     "candidateUnitIdsBeforeExclusions": 141,
     "groupsByClaimTag": {

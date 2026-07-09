@@ -1,18 +1,18 @@
 {
   "summary": {
-    "total": 131,
-    "covered": 125,
+    "total": 133,
+    "covered": 127,
     "open": 0,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
-      "battle": 100,
+      "battle": 102,
       "character-creation": 14,
       "character-sheet": 12,
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 125,
+      "covered": 127,
       "needs-qnt-owner": 0,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
@@ -27,16 +27,16 @@
     "qntRegistry[]": "Derived from packages/**/*.qnt excluding .mbt.qnt drivers and *-tests.qnt files, qnt-owner-roles.jsonl, and checker-owned qntRegistryExemptions."
   },
   "battleHoleFrontierSummary": {
-    "total": 171,
+    "total": 178,
     "bySubject": {
-      "battle-hole-family": 84,
-      "battle-fill-kind": 49,
+      "battle-hole-family": 90,
+      "battle-fill-kind": 50,
       "battle-subject-kind": 38
     },
     "byClassification": {
-      "semantic-frontier": 140,
+      "semantic-frontier": 145,
       "deterministic-boundary-projection": 0,
-      "table-owned-fact": 31,
+      "table-owned-fact": 33,
       "unsupported-dead-branch": 0
     }
   },
@@ -111,6 +111,82 @@
         "UBIQUITOUS_LANGUAGE.md#Spellcasting"
       ],
       "title": "Battle Sleet Storm active Cylinder hazard projects Difficult Terrain and Heavily Obscured area facts, resolves entry/start-turn Prone and Concentration-loss saves, and cleans up on Concentration or duration end"
+    },
+    {
+      "id": "BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-insect-plague-area-hazard.test.ts"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-insect-plague-area-hazard"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-ground-command.qnt",
+        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt"
+      ],
+      "reason": "The promoted Insect Plague runtime consumes caller-supplied area identity, movement facts, appears-in-area, enters-area, and ends-turn-in-area trigger subjects, then owns Concentration duration, active Sphere effect state, Difficult Terrain and Lightly Obscured projections, one shared once-per-turn save ledger, Constitution save-for-half Piercing damage, slot scaling, and cleanup. Automatic Sphere geometry, pathfinding, area membership derivation, and environmental swarm presentation are explicit table/spatial boundaries.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/insect-plague-area-hazard.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-subjects.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Insect Plague",
+        "UBIQUITOUS_LANGUAGE.md#Movement",
+        "UBIQUITOUS_LANGUAGE.md#Area of Effect",
+        "UBIQUITOUS_LANGUAGE.md#Saving Throw",
+        "UBIQUITOUS_LANGUAGE.md#Damage Type",
+        "UBIQUITOUS_LANGUAGE.md#Spellcasting"
+      ],
+      "title": "Battle Insect Plague active Sphere hazard projects Difficult Terrain and Lightly Obscured area facts, resolves table-triggered Constitution saves and Piercing damage, and cleans up on Concentration or duration end"
+    },
+    {
+      "id": "BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE",
+      "kind": "active-effect-lifecycle",
+      "parityWitnesses": [
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/unit-profile-admission-cloudkill-area-hazard.test.ts"
+        }
+      ],
+      "profiles": [
+        "spell.invocation-cloudkill-area-hazard"
+      ],
+      "qntOwners": [
+        "packages/battle-runtime/battle-runtime-ground-command.qnt",
+        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt"
+      ],
+      "reason": "The promoted Cloudkill runtime consumes caller-supplied Sphere area identity, appears/moves-into-space/enters/ends-turn area membership trigger subjects, and environmental strong-wind facts, then owns Concentration duration, active Sphere effect state, Heavily Obscured projection, one shared once-per-turn save ledger, Constitution save-for-half Poison damage, slot scaling, strong-wind cleanup, and Concentration/duration cleanup. Automatic cloud movement away from the caster, terrain descent, wind derivation, pathfinding, and area membership derivation remain table/spatial and environment boundaries.",
+      "runtime": "battle",
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/cloudkill-area-hazard.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-resolve-area-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/spells-active-effects.ts",
+        "packages/battle-runtime/src/battle-reducer/turn-end-movement.ts",
+        "packages/battle-runtime/src/battle-reducer/battle-discovery.ts",
+        "packages/battle-runtime/src/battle-reducer/dispatcher.ts",
+        "packages/battle-runtime/src/battle-subjects.ts"
+      ],
+      "status": "covered",
+      "surfaceEvidence": [
+        ".references/srd-5.2.1/Spells/Descriptions-A-D.md#Cloudkill",
+        "UBIQUITOUS_LANGUAGE.md#Movement",
+        "UBIQUITOUS_LANGUAGE.md#Area of Effect",
+        "UBIQUITOUS_LANGUAGE.md#Saving Throw",
+        "UBIQUITOUS_LANGUAGE.md#Damage Type",
+        "UBIQUITOUS_LANGUAGE.md#Spellcasting"
+      ],
+      "title": "Battle Cloudkill active Sphere hazard projects Heavily Obscured area facts, resolves table-triggered Constitution saves and Poison damage, and cleans up on Concentration, duration, or strong wind"
     },
     {
       "id": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
@@ -4770,6 +4846,92 @@
     {
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "savingThrowOutcome",
+      "id": "BattleInsectPlagueAreaHazardSavingThrowOutcomeHole",
+      "reason": "Insect Plague Saving Throw outcomes consume table-triggered appearance, entry, or end-turn area membership witnesses and drive reducer-owned save-for-half damage sequencing for the active spell hazard. Automatic geometry, pathfinding, area membership derivation, visibility obstruction, and area placement remain table/environment-owned boundary facts.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
+        "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP",
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "rolledDice",
+      "id": "BattleInsectPlagueAreaHazardDamageRollHole",
+      "reason": "Insect Plague damage rolls provide the Piercing damage total after table-triggered active-area membership and Constitution save outcome are known. The spell profile owns the hazard trigger sequencing while shared HP damage and generic damage disposition own damage application.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "savingThrowOutcome",
+      "id": "BattleCloudkillAreaHazardSavingThrowOutcomeHole",
+      "reason": "Cloudkill Saving Throw outcomes consume table-triggered appearance, cloud movement, entry, or end-turn area membership witnesses and drive reducer-owned save-for-half Poison damage sequencing for the active spell hazard. Automatic cloud movement geometry, pathfinding, area membership derivation, terrain descent, and wind predicate derivation remain table/environment-owned boundary facts.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE",
+        "SHARED.HIT_POINTS.POSITIVE_DAMAGE",
+        "BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "rolledDice",
+      "id": "BattleCloudkillAreaHazardDamageRollHole",
+      "reason": "Cloudkill damage rolls provide the Poison damage total after table-triggered active-area membership and Constitution save outcome are known. The Cloudkill lifecycle obligation owns hazard trigger sequencing while shared HP damage and generic damage disposition own damage application.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "cunningStrikeEndTurnCoverFacts",
+      "id": "BattleCunningStrikeEndTurnCoverFactsHole",
+      "reason": "Cunning Strike end-turn cover facts are caller/table spatial evidence used by Supreme Sneak to decide whether the Hide Invisible condition persists after the Rogue's turn. Cover degree and witness derivation remain table-owned while the feature procedure owns dice cost, Invisible source lifecycle, and cleanup semantics.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "table-owned-fact",
+      "coveredByObligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "fillKind": "cunningStrikeEndTurnCoverFacts",
+      "followUpTaskIds": [],
+      "id": "cunningStrikeEndTurnCoverFacts",
+      "reason": "Cunning Strike end-turn cover fills provide the table-owned Three-Quarters Cover or Total Cover witness consumed by Supreme Sneak cleanup. The reducer consumes the fact without duplicating map geometry, line-of-sight, or cover derivation state.",
+      "subject": "battle-fill-kind"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.TABLE.HOLE_FACT_BOUNDARIES"
+      ],
+      "followUpTaskIds": [],
+      "holeKind": "savingThrowOutcome",
+      "id": "BattleSpellConditionCountedEndTurnSavingThrowOutcomeHole",
+      "reason": "Counted end-turn spell-condition saves consume reducer-owned active spell-condition state and caller-supplied Saving Throw outcomes to count failures or successes before either applying the terminal condition branch or cleaning up the tracked spell condition. Target identity, save DC, and condition state are reducer semantics; the die result itself remains a standard table/player fill.",
+      "subject": "battle-hole-family"
+    },
+    {
+      "classification": "semantic-frontier",
+      "coveredByObligationIds": [
         "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE"
       ],
       "followUpTaskIds": [],
@@ -6778,6 +6940,18 @@
     },
     {
       "obligationIds": [
+        "BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE"
+      ],
+      "profileId": "spell.invocation-insect-plague-area-hazard"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE"
+      ],
+      "profileId": "spell.invocation-cloudkill-area-hazard"
+    },
+    {
+      "obligationIds": [
         "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE"
       ],
       "profileId": "spell.invocation-slow-active-penalties"
@@ -6860,6 +7034,12 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "profileId": "unit-feature.bonus-action-ongoing-rage"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.magic-action-save-gated-condition"
     },
     {
       "obligationIds": [
@@ -7811,6 +7991,12 @@
       "obligationIds": [
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
+      "profileId": "unit-feature.cunning-strike-option-grant"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
       "profileId": "unit-feature.grappler"
     },
     {
@@ -7848,6 +8034,30 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "profileId": "unit-feature.stunning-strike"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.fighter-tactical-master"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.brutal-strike"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.weapon-mastery-push"
+    },
+    {
+      "obligationIds": [
+        "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "profileId": "unit-feature.weapon-mastery-slow"
     }
   ],
   "qntOwnerRoles": [
@@ -7862,8 +8072,10 @@
     {
       "evidence": "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt is the focused QNT owner carrying reusable reducer-owned area and emanation trigger cadence semantics while keeping area membership and geometry as table-supplied witness facts.",
       "obligationIds": [
+        "BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE",
         "BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE",
         "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
+        "BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE",
         "BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE",
         "BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE",
         "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE"
@@ -8091,6 +8303,14 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-cunning-strike.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.cunning-strike-option-grant"
+        }
+      ],
       "role": "proof-only"
     },
     {
@@ -8105,8 +8325,10 @@
       "evidence": "packages/battle-runtime/battle-runtime-ground-command.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
         "BATTLE.COMMAND.OPTION_AND_NEXT_TURN",
+        "BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE",
         "BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE",
         "BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE",
+        "BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE",
         "BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE",
         "BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE",
         "BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE"
@@ -9168,6 +9390,8 @@
     {
       "evidence": "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt is the covered obligation QNT owner carrying QCORE10 save-gated damage projection semantics without importing authored Spell Definition records.",
       "obligationIds": [
+        "BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE",
+        "BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE",
         "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt",
@@ -9871,6 +10095,38 @@
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-feature-bridge.qnt",
+      "profileScopes": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.brutal-strike"
+        },
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.fighter-tactical-master"
+        },
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.magic-action-save-gated-condition"
+        },
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.weapon-mastery-push"
+        },
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.weapon-mastery-slow"
+        }
+      ],
       "role": "bridge"
     },
     {
@@ -10180,6 +10436,12 @@
             "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
           ],
           "profileId": "unit-feature.cunning-strike"
+        },
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "profileId": "unit-feature.cunning-strike-option-grant"
         }
       ],
       "role": "semantic-core"
@@ -11921,6 +12183,18 @@
       ]
     },
     {
+      "profileId": "unit-feature.brutal-strike",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/battle-runtime/battle-runtime-feature-bridge.qnt",
+          "role": "bridge"
+        }
+      ]
+    },
+    {
       "profileId": "unit-feature.creature-space-movement-permission",
       "qntOwners": [
         {
@@ -11941,6 +12215,25 @@
           ],
           "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-cunning-strike-core.qnt",
           "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.cunning-strike-option-grant",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-cunning-strike-core.qnt",
+          "role": "semantic-core"
+        },
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/battle-runtime/battle-runtime-cunning-strike.qnt",
+          "role": "proof-only"
         }
       ]
     },
@@ -11977,6 +12270,18 @@
           ],
           "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt",
           "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.fighter-tactical-master",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/battle-runtime/battle-runtime-feature-bridge.qnt",
+          "role": "bridge"
         }
       ]
     },
@@ -12073,6 +12378,18 @@
           ],
           "ownerPath": "packages/shared-algebras/proofs/rule-core/unit-feature-preserve-life-core.qnt",
           "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.magic-action-save-gated-condition",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/battle-runtime/battle-runtime-feature-bridge.qnt",
+          "role": "bridge"
         }
       ]
     },
@@ -12343,6 +12660,18 @@
       ]
     },
     {
+      "profileId": "unit-feature.weapon-mastery-push",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/battle-runtime/battle-runtime-feature-bridge.qnt",
+          "role": "bridge"
+        }
+      ]
+    },
+    {
       "profileId": "unit-feature.weapon-mastery-sap",
       "qntOwners": [
         {
@@ -12358,6 +12687,18 @@
           ],
           "ownerPath": "packages/battle-runtime/battle-runtime-timed-effects.qnt",
           "role": "semantic-core"
+        }
+      ]
+    },
+    {
+      "profileId": "unit-feature.weapon-mastery-slow",
+      "qntOwners": [
+        {
+          "obligationIds": [
+            "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"
+          ],
+          "ownerPath": "packages/battle-runtime/battle-runtime-feature-bridge.qnt",
+          "role": "bridge"
         }
       ]
     },
@@ -12445,6 +12786,74 @@
       "semanticCore": [
         "packages/battle-runtime/battle-runtime-ground-command.qnt",
         "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "map",
+        "filter",
+        "fold",
+        "exists",
+        "set-operators",
+        "membership"
+      ],
+      "obligationId": "BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-ground-command.qnt",
+        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "import",
+        "variant",
+        "record",
+        "record-update",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "arithmetic",
+        "comparison",
+        "boolean-connective",
+        "pattern-match",
+        "set",
+        "map",
+        "filter",
+        "fold",
+        "exists",
+        "set-operators",
+        "membership"
+      ],
+      "obligationId": "BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE",
+      "proofOnly": [],
+      "semanticCore": [
+        "packages/battle-runtime/battle-runtime-ground-command.qnt",
+        "packages/battle-runtime/battle-runtime-area-trigger-timing.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt"
       ],
       "status": "generation-subset-clean"
     },
@@ -15613,26 +16022,52 @@
     "character-creation.wizard-spellbook-learning-choice",
     "character-sheet.ability-check-ability-substitution",
     "character-sheet.ability-check-proficiency-bonus",
+    "character-sheet.antilife-shell-session-invocation",
+    "character-sheet.arcane-hand-session-invocation",
     "character-sheet.armor-class-base-formula",
+    "character-sheet.awaken-session-invocation",
     "character-sheet.class-feature-long-rest-use-state",
     "character-sheet.class-feature-point-pool-resource",
     "character-sheet.class-feature-prepared-spell-access",
+    "character-sheet.class-feature-spell-free-cast-resource",
     "character-sheet.class-feature-use-count-resource",
+    "character-sheet.commune-session-invocation",
+    "character-sheet.commune-with-nature-session-invocation",
+    "character-sheet.contact-patron-session-invocation",
+    "character-sheet.creation-session-invocation",
+    "character-sheet.dominate-person-session-invocation",
+    "character-sheet.dream-session-invocation",
     "character-sheet.druid-circle-land-spell-access",
     "character-sheet.font-of-magic-slot-to-sorcery-points",
     "character-sheet.font-of-magic-sorcery-points-to-spell-slot",
+    "character-sheet.geas-session-invocation",
+    "character-sheet.hallow-session-invocation",
     "character-sheet.healing-resource-action",
     "character-sheet.jump-distance-ability-substitution",
+    "character-sheet.legend-lore-session-invocation",
     "character-sheet.linked-speed-grant-projection",
     "character-sheet.metamagic-battle-resource-bridge",
+    "character-sheet.mislead-session-invocation",
+    "character-sheet.modify-memory-session-invocation",
     "character-sheet.monk-uncanny-metabolism-initiative-recovery",
     "character-sheet.pact-slot-recovery",
+    "character-sheet.passwall-session-invocation",
     "character-sheet.rest-triggered-heroic-inspiration",
+    "character-sheet.restoration-death-spell-session",
+    "character-sheet.scrying-session-invocation",
+    "character-sheet.seeming-session-invocation",
     "character-sheet.short-rest-spell-slot-recovery",
     "character-sheet.sorcerous-restoration-sorcery-point-recovery",
     "character-sheet.species-lineage-trait-projection",
     "character-sheet.spell-rest-benefit-application",
     "character-sheet.spellbook-ritual-invocation",
+    "character-sheet.summoned-object-lifecycle-session-invocation",
+    "character-sheet.telekinesis-session-invocation",
+    "character-sheet.telepathic-bond-session-invocation",
+    "character-sheet.teleportation-circle-session-invocation",
+    "character-sheet.tree-stride-session-invocation",
+    "character-sheet.wall-of-force-session-invocation",
+    "character-sheet.wall-of-stone-session-invocation",
     "character-sheet.weapon-mastery-class-level-reselection",
     "character-sheet.weapon-mastery-reselection",
     "spell.creature-type-protection-and-charm",
@@ -15650,6 +16085,7 @@
     "spell.invocation-blur-attack-roll-defense",
     "spell.invocation-chained-attack-damage",
     "spell.invocation-chosen-damage-resistance",
+    "spell.invocation-cloudkill-area-hazard",
     "spell.invocation-command-approach-route",
     "spell.invocation-command-drop-held-object",
     "spell.invocation-command-flee-route",
@@ -15682,6 +16118,7 @@
     "spell.invocation-hideous-laughter-repeat-save-lifecycle",
     "spell.invocation-hypnotic-pattern-control",
     "spell.invocation-independent-attack-sequence",
+    "spell.invocation-insect-plague-area-hazard",
     "spell.invocation-jump-movement-replacement",
     "spell.invocation-levitated-creature",
     "spell.invocation-magic-weapon-enhancement",
@@ -15720,6 +16157,30 @@
     "spell.readied-action-time-spell",
     "spell.scalar-buff",
     "stat-block.attack-control",
+    "table-caller.antilife-shell-barrier-contract",
+    "table-caller.arcane-hand-object-lifecycle",
+    "table-caller.awaken-transformation",
+    "table-caller.creation-object-lifecycle",
+    "table-caller.dominate-person-command-control",
+    "table-caller.dream-communication-nightmare",
+    "table-caller.geas-command-compliance",
+    "table-caller.hallow-durable-area",
+    "table-caller.legend-lore-summary",
+    "table-caller.mislead-illusion-remote-senses",
+    "table-caller.modify-memory-edit-contract",
+    "table-caller.nature-exploration-facts",
+    "table-caller.passwall-spatial-passage",
+    "table-caller.planar-entity-answers",
+    "table-caller.scrying-remote-sensor-perception",
+    "table-caller.seeming-illusion-perception",
+    "table-caller.summoned-object-lifecycle-control",
+    "table-caller.telekinesis-force-control",
+    "table-caller.telepathic-bond-communication",
+    "table-caller.teleportation-circle-travel",
+    "table-caller.tree-stride-travel",
+    "table-caller.wall-of-force-barrier-contract",
+    "table-caller.wall-of-stone-object-barrier-contract",
+    "unit-feature.acrobatic-movement",
     "unit-feature.action-surge-resource",
     "unit-feature.alternate-action-cost",
     "unit-feature.attack-action-area-save-damage-replacement",
@@ -15733,12 +16194,16 @@
     "unit-feature.bonus-action-dash-temporary-hit-points",
     "unit-feature.bonus-action-delegated-standard-actions",
     "unit-feature.bonus-action-ongoing-rage",
+    "unit-feature.brutal-strike",
     "unit-feature.creature-space-movement-permission",
     "unit-feature.cunning-strike",
+    "unit-feature.cunning-strike-option-grant",
     "unit-feature.d20-test-natural-one-reroll",
     "unit-feature.druid-wild-shape-known-form",
     "unit-feature.enemy-zero-hit-point-temporary-hit-points",
     "unit-feature.failed-ability-check-resource-boost",
+    "unit-feature.failed-saving-throw-reroll",
+    "unit-feature.fighter-tactical-master",
     "unit-feature.first-attack-roll-reckless-advantage",
     "unit-feature.grappler",
     "unit-feature.hide-action-obscurement-permission",
@@ -15748,6 +16213,7 @@
     "unit-feature.light-extra-attack-damage-ability-modifier",
     "unit-feature.magic-action-area-save-damage-healing",
     "unit-feature.magic-action-healing-pool",
+    "unit-feature.magic-action-save-gated-condition",
     "unit-feature.martial-arts-attack-projection",
     "unit-feature.metamagic-careful-save-protection",
     "unit-feature.metamagic-cast-component-suppression",
@@ -15780,7 +16246,9 @@
     "unit-feature.weapon-critical-range-19",
     "unit-feature.weapon-damage-dice-roll-choice",
     "unit-feature.weapon-mastery-cleave",
+    "unit-feature.weapon-mastery-push",
     "unit-feature.weapon-mastery-sap",
+    "unit-feature.weapon-mastery-slow",
     "unit-feature.weapon-mastery-topple",
     "unit-feature.zero-hit-point-replacement"
   ]

@@ -4,14 +4,14 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Summary
 
-- Total obligations: 131
-- Covered obligations: 125
+- Total obligations: 133
+- Covered obligations: 127
 - Open transitional obligations: 0
 - Boundary or unsupported obligations: 6
 
 | Status | Count |
 | --- | ---: |
-| covered | 125 |
+| covered | 127 |
 | needs-qnt-owner | 0 |
 | needs-parity-witness | 0 |
 | needs-surface-evidence | 0 |
@@ -21,7 +21,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | Runtime | Count |
 | --- | ---: |
 | shared-algebras | 1 |
-| battle | 100 |
+| battle | 102 |
 | character-creation | 14 |
 | character-sheet | 12 |
 | character-battle | 4 |
@@ -32,6 +32,8 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | --- | --- | --- | --- |
 | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` | battle | covered | `spell.invocation-expeditious-retreat-dash`, `spell.invocation-forced-reaction-movement`, `spell.invocation-grease-ground-hazard`, `spell.invocation-jump-movement-replacement`, `unit-feature.creature-space-movement-permission` |
 | `BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE` | battle | covered | `spell.invocation-sleet-storm-area-hazard` |
+| `BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE` | battle | covered | `spell.invocation-insect-plague-area-hazard` |
+| `BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE` | battle | covered | `spell.invocation-cloudkill-area-hazard` |
 | `BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE` | battle | covered | `spell.invocation-slow-active-penalties` |
 | `BATTLE.SHOVE.OUTCOME_AND_PUSH_BOUNDARY` | battle | covered | _direct reducer entrypoint_ |
 | `BATTLE.REACTION.OFFER_DECLINE_RESUME` | battle | covered | `spell.invocation-feather-fall-mitigation`, `spell.invocation-forced-reaction-movement`, `spell.reaction-counterspell`, `spell.reaction-hellish-rebuke`, `spell.reaction-shield`, `spell.readied-action-time-spell`, `unit-feature.attack-damage-reduction-zero-damage-redirect`, `unit-feature.reaction-roll-or-damage-reduction` |
@@ -164,25 +166,32 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 
 ## Battle Hole Frontier
 
-- Total classified rows: 171
+- Total classified rows: 178
 
 | Subject | Count |
 | --- | ---: |
-| battle-hole-family | 84 |
-| battle-fill-kind | 49 |
+| battle-hole-family | 90 |
+| battle-fill-kind | 50 |
 | battle-subject-kind | 38 |
 
 | Classification | Count |
 | --- | ---: |
-| semantic-frontier | 140 |
+| semantic-frontier | 145 |
 | deterministic-boundary-projection | 0 |
-| table-owned-fact | 31 |
+| table-owned-fact | 33 |
 | unsupported-dead-branch | 0 |
 
 | Subject | Id | Kind | Classification | Coverage | Follow-up |
 | --- | --- | --- | --- | --- | --- |
 | battle-hole-family | `BattleTargetChoiceHole` | `targetChoice` | semantic-frontier | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND`, `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.DAMAGE.ATTACK_BRANCHES`, `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` | _none_ |
 | battle-hole-family | `BattleSleetStormAreaHazardSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | `BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-hole-family | `BattleInsectPlagueAreaHazardSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-hole-family | `BattleInsectPlagueAreaHazardDamageRollHole` | `rolledDice` | semantic-frontier | `SHARED.HIT_POINTS.POSITIVE_DAMAGE`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | _none_ |
+| battle-hole-family | `BattleCloudkillAreaHazardSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | `BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-hole-family | `BattleCloudkillAreaHazardDamageRollHole` | `rolledDice` | semantic-frontier | `BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE`, `SHARED.HIT_POINTS.POSITIVE_DAMAGE`, `BATTLE.DAMAGE.DISPOSITION_AND_ZERO_HP` | _none_ |
+| battle-hole-family | `BattleCunningStrikeEndTurnCoverFactsHole` | `cunningStrikeEndTurnCoverFacts` | table-owned-fact | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-fill-kind | `cunningStrikeEndTurnCoverFacts` | `cunningStrikeEndTurnCoverFacts` | table-owned-fact | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
+| battle-hole-family | `BattleSpellConditionCountedEndTurnSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS`, `BATTLE.TABLE.HOLE_FACT_BOUNDARIES` | _none_ |
 | battle-hole-family | `BattleSlowActivePenaltiesEndTurnSavingThrowOutcomeHole` | `savingThrowOutcome` | semantic-frontier | `BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE` | _none_ |
 | battle-hole-family | `BattleSlowSomaticSpellFailureOutcomeHole` | `slowSomaticSpellFailureOutcome` | semantic-frontier | `BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE` | _none_ |
 | battle-hole-family | `BattleSpellCastReactionFactsHole` | `targetSpatialFacts` | table-owned-fact | `BATTLE.TABLE.HOLE_FACT_BOUNDARIES`, `BATTLE.REACTION.OFFER_DECLINE_RESUME` | _none_ |
@@ -358,7 +367,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | Owner | Role | Obligations / profile-scoped rows |
 | --- | --- | --- |
 | `packages/battle-runtime/battle-runtime-chained-spell-attack.qnt` | semantic-core | `BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE` |
-| `packages/battle-runtime/battle-runtime-area-trigger-timing.qnt` | semantic-core | `BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE`, `BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE`, `BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE`, `BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE`, `BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-area-trigger-timing.qnt` | semantic-core | `BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE`, `BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE`, `BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE`, `BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE`, `BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE`, `BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE`, `BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-antimagic-suppression.qnt` | semantic-core | `BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION` |
 | `packages/battle-runtime/battle-runtime-antimagic-field-action-interdiction.mbt.qnt` | mbt-fixture | `BATTLE.SPELL.ANTIMAGIC_FIELD_ACTION_INTERDICTION` |
 | `packages/battle-runtime/battle-runtime-slow-active-penalties.mbt.qnt` | mbt-fixture | `BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE` |
@@ -381,9 +390,9 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-feather-fall.qnt` | semantic-core | `BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-feature-turn-end-effects.qnt` | semantic-core | `BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING`<br>profile-scoped: `unit-feature.attack-action-attack-count-scaling` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/battle-runtime/battle-runtime-ground-command-tests.qnt` | proof-only | `BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD` |
-| `packages/battle-runtime/battle-runtime-cunning-strike.qnt` | proof-only | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-cunning-strike.qnt` | proof-only | profile-scoped: `unit-feature.cunning-strike-option-grant` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/battle-runtime/battle-runtime-rogue-steady-aim.mbt.qnt` | mbt-fixture | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
-| `packages/battle-runtime/battle-runtime-ground-command.qnt` | semantic-core | `BATTLE.COMMAND.OPTION_AND_NEXT_TURN`, `BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE`, `BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE`, `BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE`, `BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE`, `BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE` |
+| `packages/battle-runtime/battle-runtime-ground-command.qnt` | semantic-core | `BATTLE.COMMAND.OPTION_AND_NEXT_TURN`, `BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE`, `BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE`, `BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE`, `BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE`, `BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE`, `BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE`, `BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-haste-lethargy-lifecycle.mbt.qnt` | mbt-fixture | `BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-gust-of-wind.qnt` | semantic-core | `BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE` |
 | `packages/battle-runtime/battle-runtime-hit-points.qnt` | semantic-core | `BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE`, `BATTLE.PROTOCOL.ZERO_HIT_POINT_MID_RESOLUTION`, `BATTLE.SPELL.MAKE_STABLE_LIFECYCLE` |
@@ -497,7 +506,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/shared-algebras/proofs/rule-core/spell-hit-point-restoration-core.qnt` | semantic-core | `BATTLE.SPELL.HIT_POINT_RESTORATION` |
 | `packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/shared-algebras/proofs/rule-core/spell-save-condition-projection-core.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
-| `packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt` | semantic-core | `BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE`, `BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE`, `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/shared-algebras/proofs/rule-core/spell-save-gate.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/shared-algebras/proofs/rule-core/spell-scalar-buff-projection-core.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/shared-algebras/proofs/rule-core/spell-sleep-repeat-save-lifecycle-core.qnt` | semantic-core | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` |
@@ -571,7 +580,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-attack-facts.qnt` | proof-only | `BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING` |
 | `packages/battle-runtime/battle-runtime-combat-holes.qnt` | proof-only | `BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING` |
 | `packages/battle-runtime/battle-runtime-combatant-side.qnt` | proof-only | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
-| `packages/battle-runtime/battle-runtime-feature-bridge.qnt` | bridge | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
+| `packages/battle-runtime/battle-runtime-feature-bridge.qnt` | bridge | profile-scoped: `unit-feature.brutal-strike` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`), `unit-feature.fighter-tactical-master` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`), `unit-feature.magic-action-save-gated-condition` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`), `unit-feature.weapon-mastery-push` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`), `unit-feature.weapon-mastery-slow` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/battle-runtime/battle-runtime-fighter-ongoing-features.qnt` | proof-only | `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS` |
 | `packages/battle-runtime/battle-runtime-hidden.qnt` | proof-only | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` |
 | `packages/battle-runtime/battle-runtime-hide-search-fixture.qnt` | proof-only | `BATTLE.ABILITY_CHECK.CHOICE_AND_SEARCH_HOLES` |
@@ -607,7 +616,7 @@ Generated from `plans/rules-kernel-coverage/obligations.jsonl`, `battle-hole-fro
 | `packages/battle-runtime/battle-runtime-exact-damage-details.route.mbt.qnt` | mbt-fixture | `BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR` |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-breath-weapon-core.qnt` | semantic-core | profile-scoped: `unit-feature.attack-action-area-save-damage-replacement` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-breath-weapon-core-examples.qnt` | proof-only | _none_ |
-| `packages/shared-algebras/proofs/rule-core/unit-feature-cunning-strike-core.qnt` | semantic-core | profile-scoped: `unit-feature.cunning-strike` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `packages/shared-algebras/proofs/rule-core/unit-feature-cunning-strike-core.qnt` | semantic-core | profile-scoped: `unit-feature.cunning-strike` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`), `unit-feature.cunning-strike-option-grant` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-cunning-strike-core-examples.qnt` | proof-only | _none_ |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-dark-ones-blessing-core.qnt` | semantic-core | profile-scoped: `unit-feature.enemy-zero-hit-point-temporary-hit-points` (`BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `packages/shared-algebras/proofs/rule-core/unit-feature-dark-ones-blessing-core-examples.qnt` | proof-only | _none_ |
@@ -914,11 +923,14 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `unit-feature.bardic-inspiration-grant` | `packages/battle-runtime/battle-runtime-bardic-inspiration.qnt` (proof-only; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.bonus-action-dash-temporary-hit-points` | `packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`)<br>`packages/battle-runtime/battle-runtime-movement.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.bonus-action-ongoing-rage` | `packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.brutal-strike` | `packages/battle-runtime/battle-runtime-feature-bridge.qnt` (bridge; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.creature-space-movement-permission` | `packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt` (semantic-core; `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND`) |
 | `unit-feature.cunning-strike` | `packages/shared-algebras/proofs/rule-core/unit-feature-cunning-strike-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.cunning-strike-option-grant` | `packages/shared-algebras/proofs/rule-core/unit-feature-cunning-strike-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`)<br>`packages/battle-runtime/battle-runtime-cunning-strike.qnt` (proof-only; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.d20-test-natural-one-reroll` | `packages/shared-algebras/proofs/rule-core/unit-feature-d20-test-natural-one-reroll-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.enemy-zero-hit-point-temporary-hit-points` | `packages/shared-algebras/proofs/rule-core/unit-feature-dark-ones-blessing-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.failed-ability-check-resource-boost` | `packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.fighter-tactical-master` | `packages/battle-runtime/battle-runtime-feature-bridge.qnt` (bridge; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.first-attack-roll-reckless-advantage` | `packages/shared-algebras/proofs/rule-core/unit-feature-rage-reckless-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.grappler` | `packages/shared-algebras/proofs/rule-core/unit-feature-grappler-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.hide-action-obscurement-permission` | `packages/shared-algebras/proofs/rule-core/unit-feature-hide-obscurement-permission-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
@@ -927,6 +939,7 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `unit-feature.innate-sorcery-activation` | `packages/shared-algebras/proofs/rule-core/unit-feature-pool-cost-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.magic-action-area-save-damage-healing` | `packages/shared-algebras/proofs/rule-core/unit-feature-lands-aid-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.magic-action-healing-pool` | `packages/shared-algebras/proofs/rule-core/unit-feature-preserve-life-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.magic-action-save-gated-condition` | `packages/battle-runtime/battle-runtime-feature-bridge.qnt` (bridge; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.martial-arts-attack-projection` | `packages/shared-algebras/proofs/rule-core/unit-feature-martial-arts-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.monk-focus-battle-options` | `packages/battle-runtime/battle-runtime-monk-focus.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.open-hand-technique` | `packages/shared-algebras/proofs/rule-core/unit-feature-open-hand-technique-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
@@ -948,7 +961,9 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | `unit-feature.weapon-critical-range-19` | `packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.weapon-damage-dice-roll-choice` | `packages/shared-algebras/proofs/rule-core/unit-feature-attack-rider-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.weapon-mastery-cleave` | `packages/battle-runtime/battle-runtime-weapon-attacks.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.weapon-mastery-push` | `packages/battle-runtime/battle-runtime-feature-bridge.qnt` (bridge; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.weapon-mastery-sap` | `packages/battle-runtime/battle-runtime-weapon-attacks.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`)<br>`packages/battle-runtime/battle-runtime-timed-effects.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
+| `unit-feature.weapon-mastery-slow` | `packages/battle-runtime/battle-runtime-feature-bridge.qnt` (bridge; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.weapon-mastery-topple` | `packages/battle-runtime/battle-runtime-weapon-attacks.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 | `unit-feature.zero-hit-point-replacement` | `packages/shared-algebras/proofs/rule-core/unit-feature-zero-hit-point-core.qnt` (semantic-core; `BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS`) |
 
@@ -958,6 +973,8 @@ Rows here are derived from `plans/unit-profile-coverage/profiles.jsonl` for prof
 | --- | --- | --- | --- | --- |
 | `SHARED.HIT_POINTS.POSITIVE_DAMAGE` | generation-subset-clean | `variant`, `record`, `pure-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `implies`, `all-block` |  |  |
 | `BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `filter`, `fold`, `exists`, `set-operators`, `membership` |  |  |
+| `BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `filter`, `fold`, `exists`, `set-operators`, `membership` |  |  |
+| `BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `pattern-match`, `set`, `map`, `filter`, `fold`, `exists`, `set-operators`, `membership` |  |  |
 | `BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND` | generation-subset-clean | `import`, `variant`, `record`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `range`, `map`, `set-operators`, `membership` |  |  |
 | `BATTLE.REACTION.OFFER_DECLINE_RESUME` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `map`, `set-operators`, `membership`, `list` |  |  |
 | `BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS` | generation-subset-clean | `import`, `variant`, `record`, `record-update`, `pure-def`, `constant-def`, `constant-val`, `int`, `bool`, `if-expression`, `let-binding`, `arithmetic`, `comparison`, `boolean-connective`, `all-block`, `pattern-match`, `set`, `membership` |  |  |

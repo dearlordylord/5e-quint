@@ -906,6 +906,7 @@ describe("character creation hole discovery", () => {
           "12:class_ranger:level_1:maximum_hit_die",
           "12:class_ranger|12:class_ranger|12:class_ranger:level_3:fixed_hp_gain",
           "12:class_ranger|12:class_ranger:level_2:fixed_hp_gain",
+          "12:class_ranger|12:class_ranger|12:class_ranger|12:class_ranger|12:class_ranger|12:class_ranger|12:class_ranger|12:class_ranger|12:class_ranger:level_9:fixed_hp_gain",
           "11:class_rogue:level_1:maximum_hit_die",
           "11:class_rogue|11:class_rogue|11:class_rogue:level_3:fixed_hp_gain",
           "11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue:level_6:fixed_hp_gain",
@@ -1554,10 +1555,7 @@ describe("character creation hole discovery", () => {
           CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
         ),
       ),
-    ).toMatchObject({
-      kind: "choice",
-      cardinality: { tag: "exactly", count: 1 },
-    });
+    ).toBeUndefined();
     expect(
       holeById(
         initialRangerHoles,

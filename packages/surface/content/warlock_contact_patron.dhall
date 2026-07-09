@@ -10,14 +10,25 @@
 --    Once you cast the spell with this feature, you can't do so in this
 --    way again until you finish a Long Rest."
 --
--- The existing passive class-feature surface cleanly covers:
---   • always prepared
---   • one free cast per long rest
---
--- The grant-scoped rider "you automatically succeed on the spell's
--- saving throw" does NOT fit the current `grant_spell_access` shape.
--- It is intentionally omitted here and recorded in
--- `proposal-warlock_contact_patron.md`.
+-- The passive class-feature surface records:
+--   • always-prepared Spell Access
+--   • a separate feature free-cast resource that resets on a Long Rest
+-- The sheet/session owner applies the feature-scoped automatic success on
+-- Contact Other Plane's Intelligence saving throw when this free-cast route
+-- is used to contact the patron.
+
+let ContactPatronGrant : Type =
+      { kind : Text
+      , spellId : Text
+      , mode : Optional Text
+      , count : Optional Natural
+      , resetCadence : Optional Text
+      , scaling :
+          Optional
+            { axis : Text
+            , tiers : List { atLevel : Natural, count : Natural }
+            }
+      }
 
 let contactPatron =
       { kind = "class_feature"
@@ -36,13 +47,27 @@ let contactPatron =
           , grants =
               [ { kind = "grant_spell_access"
                 , spellId = "contact_other_plane"
-                , mode = "prepared"
+                , mode = Some "prepared"
+                , count = None Natural
+                , resetCadence = None Text
+                , scaling =
+                    None
+                      { axis : Text
+                      , tiers : List { atLevel : Natural, count : Natural }
+                      }
                 }
-              , { kind = "grant_spell_access"
+              , { kind = "grant_spell_free_casts"
                 , spellId = "contact_other_plane"
-                , mode = "once_per_long_rest"
+                , mode = None Text
+                , count = Some 1
+                , resetCadence = Some "long_rest"
+                , scaling =
+                    None
+                      { axis : Text
+                      , tiers : List { atLevel : Natural, count : Natural }
+                      }
                 }
-              ]
+              ] : List ContactPatronGrant
           }
       }
 

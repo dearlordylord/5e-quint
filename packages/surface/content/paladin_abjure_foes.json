@@ -1,0 +1,57 @@
+{
+  "acquiredAtLevel": 9,
+  "className": "paladin",
+  "description": "As a Magic action, expend one use of Channel Divinity to target visible creatures within 60 feet up to your Charisma modifier, minimum one. Each target must succeed on a Wisdom saving throw or have the Frightened condition for 1 minute or until it takes any damage. While Frightened in this way, a target can do only one of move, action, or Bonus Action on its turns.",
+  "id": "paladin_abjure_foes",
+  "kind": "class_feature",
+  "mechanics": {
+    "activationCost": {
+      "action": "magic",
+      "kind": "standard_action"
+    },
+    "family": "abjure_foes",
+    "onFail": {
+      "condition": "frightened",
+      "duration": {
+        "amount": 1,
+        "endsOn": [
+          "target_takes_any_damage"
+        ],
+        "unit": "minute"
+      },
+      "kind": "apply_condition",
+      "turnRestriction": {
+        "kind": "choose_only_one",
+        "options": [
+          "move",
+          "action",
+          "bonus_action"
+        ]
+      }
+    },
+    "save": {
+      "ability": "wis",
+      "dc": {
+        "kind": "class_spellcasting_spell_save_dc"
+      }
+    },
+    "spends": {
+      "amount": 1,
+      "resourceUnitId": "paladin_channel_divinity"
+    },
+    "targetSelection": {
+      "count": {
+        "ability": "cha",
+        "kind": "ability_modifier",
+        "minimum": 1
+      },
+      "kind": "visible_creatures_within_range",
+      "rangeFeet": 60
+    }
+  },
+  "name": "Abjure Foes",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Paladin.md:144-146"
+  }
+}

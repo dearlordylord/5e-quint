@@ -20,6 +20,7 @@ const ultraGoldenScopeFields = Object.freeze([
   { scopeId: "level-1-6", reportField: "level16FullSupport" },
   { scopeId: "level-1-7", reportField: "level17FullSupport" },
   { scopeId: "level-1-8", reportField: "level18FullSupport" },
+  { scopeId: "level-1-9", reportField: "level19FullSupport" },
 ]);
 const ultraGoldenScopeIds = Object.freeze(
   ultraGoldenScopeFields.map((scope) => scope.scopeId),
@@ -36,7 +37,7 @@ const layerDefinitions = [
     id: layerId.supportCompleteness,
     label: "Support completeness",
     criterion:
-      "The strict level-support claim has no open strict rows, selected-identity blockers, or SRD-authored product-readiness blockers; diagnostic product-readiness rows do not block unless promoted into that blocker set.",
+      "The strict level-support claim has no open strict rows, selected-identity blockers, SRD-authored product-readiness blockers, or strict level-9 final-support blockers; diagnostic product-readiness rows do not block unless promoted into that blocker set.",
   },
   {
     id: layerId.qntGeneratorReadiness,
@@ -190,15 +191,17 @@ function validateStringArray(value, context) {
   );
 }
 
-function mcpMissingFlowIdsByScope(manifest) {
+function mcpFlowCoverageByScope(manifest) {
   const evidenceRows = Array.isArray(manifest.evidence)
     ? manifest.evidence.filter(isRecord)
     : [];
   const flowIdsByCoveredScope = new Map();
+  const flowIdsWithEvidence = new Set();
   for (const row of evidenceRows) {
     if (!isNonEmptyString(row.flowId) || !Array.isArray(row.scopeIds)) {
       continue;
     }
+    flowIdsWithEvidence.add(row.flowId);
     for (const scopeId of row.scopeIds) {
       const coveredForScope = flowIdsByCoveredScope.get(scopeId) ?? new Set();
       coveredForScope.add(row.flowId);
@@ -206,6 +209,31 @@ function mcpMissingFlowIdsByScope(manifest) {
     }
   }
 
+  for (const decision of Array.isArray(manifest.scopeAuditDecisions)
+    ? manifest.scopeAuditDecisions.filter(isRecord)
+    : []) {
+    if (
+      decision.result !== "reuse-existing-evidence" ||
+      !isNonEmptyString(decision.scopeId) ||
+      !Array.isArray(decision.reusedFlowIds)
+    ) {
+      continue;
+    }
+    const coveredForScope =
+      flowIdsByCoveredScope.get(decision.scopeId) ?? new Set();
+    for (const flowId of decision.reusedFlowIds) {
+      if (isNonEmptyString(flowId) && flowIdsWithEvidence.has(flowId)) {
+        coveredForScope.add(flowId);
+      }
+    }
+    flowIdsByCoveredScope.set(decision.scopeId, coveredForScope);
+  }
+
+  return { flowIdsByCoveredScope, flowIdsWithEvidence };
+}
+
+function mcpMissingFlowIdsByScope(manifest) {
+  const { flowIdsByCoveredScope } = mcpFlowCoverageByScope(manifest);
   const missingByScope = new Map();
   const requiredFlows = Array.isArray(manifest.requiredFlows)
     ? manifest.requiredFlows.filter(isRecord)
@@ -245,6 +273,10 @@ function validateMcpScopeAuditDecisions(manifest, context) {
       requiredFlowIdsByScope.set(scopeId, requiredForScope);
     }
   }
+  const { flowIdsWithEvidence } = mcpFlowCoverageByScope({
+    ...manifest,
+    scopeAuditDecisions: [],
+  });
   const missingByScope = mcpMissingFlowIdsByScope(manifest);
   const decisions = manifest.scopeAuditDecisions;
   if (!Array.isArray(decisions)) {
@@ -312,9 +344,6 @@ function validateMcpScopeAuditDecisions(manifest, context) {
     );
     if (Array.isArray(decision.reusedFlowIds)) {
       const seen = new Set();
-      const missingFlowIdsForScope = new Set(
-        missingByScope.get(decision.scopeId) ?? [],
-      );
       for (const flowId of decision.reusedFlowIds) {
         if (seen.has(flowId)) {
           issues.push(
@@ -327,9 +356,9 @@ function validateMcpScopeAuditDecisions(manifest, context) {
             `${decisionContext}.reusedFlowIds references flow ${flowId}, which is not required by ${decision.scopeId}.`,
           );
         }
-        if (isNonEmptyString(flowId) && missingFlowIdsForScope.has(flowId)) {
+        if (isNonEmptyString(flowId) && !flowIdsWithEvidence.has(flowId)) {
           issues.push(
-            `${decisionContext}.reusedFlowIds must not include missing flow ${flowId}.`,
+            `${decisionContext}.reusedFlowIds references flow ${flowId}, which has no MCP scenario evidence row to reuse.`,
           );
         }
       }
@@ -357,6 +386,14 @@ function validateMcpScopeAuditDecisions(manifest, context) {
     ) {
       issues.push(
         `${decisionContext}.result must require a new scenario while the scope has missing MCP flows.`,
+      );
+    }
+    if (
+      decision.scopeId === "level-1-9" &&
+      decision.result === "reuse-existing-evidence"
+    ) {
+      issues.push(
+        `${decisionContext}.result must not reuse existing evidence for level-1-9; executable level-1-9 MCP scenario evidence is required.`,
       );
     }
 
@@ -661,6 +698,10 @@ function buildSupportCompletenessLayer(levelReport) {
       count: levelReport.claimGate.authoredReadinessBlockerCount,
       kind: "srd-authored-readiness-blocker",
     },
+    {
+      count: levelReport.claimGate.strictFinalSupportBlockerCount ?? 0,
+      kind: "strict-level-9-final-support-blocker",
+    },
   ].filter((blocker) => blocker.count > 0);
   return stable({
     id: layerId.supportCompleteness,
@@ -673,6 +714,7 @@ function buildSupportCompletenessLayer(levelReport) {
     evidence: {
       claimGate: levelReport.claimGate,
       strictTargetClosure: levelReport.metrics.strictTargetClosure,
+      strictFinalSupport: levelReport.metrics.strictFinalSupport,
       selectedIdentityReadiness: levelReport.selectedIdentityReadiness.metrics,
       srdAuthoredProductReadiness:
         levelReport.srdAuthoredProductReadiness.metrics,
@@ -786,13 +828,21 @@ function buildMcpScenarioEvidenceLayer(scopeId, mcpScenarioEvidence) {
   const evidenceRows = (mcpScenarioEvidence.evidence ?? []).filter((row) =>
     row.scopeIds.includes(scopeId),
   );
+  const auditDecision = (mcpScenarioEvidence.scopeAuditDecisions ?? []).find(
+    (decision) => decision.scopeId === scopeId,
+  );
+  const { flowIdsByCoveredScope } = mcpFlowCoverageByScope(
+    mcpScenarioEvidence,
+  );
+  const coveredFlowIds =
+    flowIdsByCoveredScope.get(scopeId) ??
+    new Set(evidenceRows.map((row) => row.flowId));
   const evidenceRowsByFlowId = evidenceRows.reduce((groups, row) => {
     const current = groups.get(row.flowId) ?? [];
     current.push(row);
     groups.set(row.flowId, current);
     return groups;
   }, new Map());
-  const coveredFlowIds = new Set(evidenceRows.map((row) => row.flowId));
   const missingEvidenceRows = requiredFlows
     .filter((flow) => !coveredFlowIds.has(flow.flowId))
     .map((flow) => ({
@@ -801,9 +851,7 @@ function buildMcpScenarioEvidenceLayer(scopeId, mcpScenarioEvidence) {
       followUpTaskId: flow.followUpTaskIdsByScope[scopeId],
     }));
   return stable({
-    auditDecision: (mcpScenarioEvidence.scopeAuditDecisions ?? []).find(
-      (decision) => decision.scopeId === scopeId,
-    ),
+    auditDecision,
     id: layerId.mcpScenarioEvidence,
     status: statusFor(missingEvidenceRows.length),
     blockingCount: missingEvidenceRows.length,
@@ -831,6 +879,12 @@ function buildMcpScenarioEvidenceLayer(scopeId, mcpScenarioEvidence) {
     ),
     missingEvidenceRows,
     requiredFlows: requiredFlows.map((flow) => ({
+      coverageKind:
+        (evidenceRowsByFlowId.get(flow.flowId) ?? []).length > 0
+          ? mcpScenarioWitnessKind
+          : coveredFlowIds.has(flow.flowId)
+            ? "scope-audit-decision"
+            : "missing",
       description: flow.description,
       flowId: flow.flowId,
       followUpTaskId: flow.followUpTaskIdsByScope[scopeId],
@@ -1075,6 +1129,7 @@ function buildSelectedIdentityEvidenceAudit({
   level16FullSupport,
   level17FullSupport,
   level18FullSupport,
+  level19FullSupport,
   mcpScenarioEvidence,
   rulesKernelMatrix,
   selectedIdentityReplayEvidenceTag,
@@ -1090,6 +1145,7 @@ function buildSelectedIdentityEvidenceAudit({
     level16FullSupport,
     level17FullSupport,
     level18FullSupport,
+    level19FullSupport,
   };
   return stable({
     criteria: {
@@ -1151,6 +1207,7 @@ function buildUltraGoldenGate({
   level16FullSupport,
   level17FullSupport,
   level18FullSupport,
+  level19FullSupport,
   mcpScenarioEvidence,
   rulesKernelMatrix,
   selectedIdentityReplayEvidenceTag,
@@ -1165,6 +1222,7 @@ function buildUltraGoldenGate({
     level16FullSupport,
     level17FullSupport,
     level18FullSupport,
+    level19FullSupport,
   };
   const scopes = ultraGoldenScopeFields.map(({ reportField, scopeId }) =>
     buildScopeGate({
@@ -1184,6 +1242,7 @@ function buildUltraGoldenGate({
     level16FullSupport,
     level17FullSupport,
     level18FullSupport,
+    level19FullSupport,
     mcpScenarioEvidence,
     rulesKernelMatrix,
     selectedIdentityReplayEvidenceTag,
@@ -1207,6 +1266,8 @@ function buildUltraGoldenGate({
         "plans/unit-profile-coverage/level1-7-full-support.json",
       level18FullSupport:
         "plans/unit-profile-coverage/level1-8-full-support.json",
+      level19FullSupport:
+        "plans/unit-profile-coverage/level1-9-full-support.json",
       mcpScenarioEvidence: mcpScenarioEvidenceSourcePath,
       rulesKernelMatrix: "plans/rules-kernel-coverage/matrix.json",
       unitMatrix: "plans/unit-profile-coverage/unit-matrix.json",
@@ -1285,17 +1346,25 @@ function renderMcpScenarioEvidenceRow({ flow, includeScope, mcpLayer, scope }) {
   const evidenceRows = (mcpLayer.evidenceRows ?? []).filter(
     (row) => row.flowId === flow.flowId,
   );
+  const isAuditCovered = flow.coverageKind === "scope-audit-decision";
   const scenarioIds =
-    evidenceRows.length === 0
+    isAuditCovered
+      ? "_reused by audit decision_"
+      : evidenceRows.length === 0
       ? "_missing_"
       : evidenceRows.map((row) => `\`${row.scenarioId}\``).join(", ");
   const witnessKinds =
-    evidenceRows.length === 0
+    isAuditCovered
+      ? "_audit decision_"
+      : evidenceRows.length === 0
       ? "_missing_"
       : evidenceRows.map((row) => `\`${row.kind}\``).join(", ");
   const followUp =
-    evidenceRows.length === 0 ? `\`${flow.followUpTaskId}\`` : "_none_";
-  const status = evidenceRows.length === 0 ? blockedStatus : passStatus;
+    evidenceRows.length === 0 && !isAuditCovered
+      ? `\`${flow.followUpTaskId}\``
+      : "_none_";
+  const status =
+    evidenceRows.length === 0 && !isAuditCovered ? blockedStatus : passStatus;
   const scopeCells = includeScope ? `${scope.scopeId} | ` : "";
   return `| ${scopeCells}${flow.flowId} | ${status} | ${witnessKinds} | ${scenarioIds} | ${followUp} |`;
 }

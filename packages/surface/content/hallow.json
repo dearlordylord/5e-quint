@@ -1,0 +1,56 @@
+{
+  "description": "You touch a point and infuse an area around it with holy or unholy power. The radius can be up to 60 feet, and the spell fails if the radius includes an area already under Hallow. Choose Aberration, Celestial, Elemental, Fey, Fiend, or Undead creature types for Hallowed Ward; chosen types can't willingly enter, and creatures possessed by or Charmed or Frightened by them aren't possessed, Charmed, or Frightened by them while in the area. You also bind one extra effect: Courage, Darkness, Daylight, Peaceful Rest, Extradimensional Interference, Fear, Resistance, Silence, Tongues, or Vulnerability.",
+  "id": "hallow",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "amount": 24,
+      "kind": "hours",
+      "ritual": false
+    },
+    "components": {
+      "m": "incense worth 1,000+ GP, which the spell consumes",
+      "materialConsumed": true,
+      "materialCostGp": 1000,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "endsOn": [
+        "dispel"
+      ],
+      "kind": "permanent"
+    },
+    "family": "activation",
+    "level": 5,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "area",
+          "origin": {
+            "kind": "point_within_range"
+          },
+          "shape": {
+            "kind": "sphere",
+            "radiusFeet": 60
+          }
+        },
+        "effects": [
+          {
+            "kind": "none"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "kind": "touch"
+    },
+    "school": "abjuration"
+  },
+  "name": "Hallow",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Hallow"
+  }
+}

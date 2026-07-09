@@ -241,7 +241,11 @@ export function battleSpeedChanges(
 ): readonly SpeedChange[] {
   const passiveFeatureDelta = passiveSpeedBonusDelta(combatant);
   const activeEffectDelta = combatant.activeEffects
-    .filter((effect) => effect.kind === "speedDelta")
+    .filter(
+      (effect) =>
+        effect.kind === "speedDelta" ||
+        effect.kind === "unitFeatureSpeedDelta",
+    )
     .reduce((total, effect) => total + effect.deltaFeet, 0);
   return [
     {

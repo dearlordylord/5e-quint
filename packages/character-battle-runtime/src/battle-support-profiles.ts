@@ -1,5 +1,6 @@
 import {
   battleUnitRefWithSupportProfiles,
+  TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
   type CharacterBattleCreatureInit,
   type BattleUnitRef,
   type BattleUnitSupportProfileSourceFacts,
@@ -19,7 +20,7 @@ import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either, Option } from "effect";
 
 // KERNEL-COVERAGE: runtime-owner CHARACTER.BATTLE.HANDOFF.INIT_PROJECTION
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.hunters-prey unit-feature.passive-damage-resistance
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.hunters-prey unit-feature.passive-damage-resistance unit-feature.fighter-tactical-master unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow
 
 type CharacterBattleWeaponMasterySelection = NonNullable<
   CharacterBattleCreatureInit["weaponMasteries"]
@@ -29,9 +30,17 @@ const BATTLE_SUPPORTED_MASTERY_UNIT_IDS: Partial<
   Record<WeaponMasteryName, UnitRecord["id"]>
 > = {
   cleave: "mastery_cleave",
+  push: "mastery_push",
   sap: "mastery_sap",
+  slow: "mastery_slow",
   topple: "mastery_topple",
 };
+
+const TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE_MASTERY_UNIT_IDS = [
+  "mastery_push",
+  "mastery_sap",
+  "mastery_slow",
+] as const satisfies ReadonlyArray<UnitRecord["id"]>;
 
 export function characterUnitRefsWithBattleSupportProfiles(
   build: CharacterBuild,
@@ -72,11 +81,19 @@ export function characterUnitRefsWithBattleSupportProfiles(
     return buildUnitRefs;
   }
 
+  const replacementMasteryUnitIds = buildUnitRefs.right.some(
+    battleUnitRefHasTacticalMasterReplacementSupport,
+  )
+    ? TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE_MASTERY_UNIT_IDS
+    : [];
   const battleMasteryUnitRefs = traverseValidation(
-    battleSupportedMasteryUnitIdsForSelectedWeapons(
-      selectedWeaponMasteries.right,
-      unitLibrary,
-    ).map((unitId) => ({ unitId })),
+    [
+      ...battleSupportedMasteryUnitIdsForSelectedWeapons(
+        selectedWeaponMasteries.right,
+        unitLibrary,
+      ),
+      ...replacementMasteryUnitIds,
+    ].map((unitId) => ({ unitId })),
     (unitRef) =>
       withBattleSupportProfiles(
         unitRef,
@@ -296,4 +313,14 @@ function battleSupportProfileKey(
   profile: BattleUnitRef["supportProfiles"][number],
 ): string {
   return typeof profile === "object" ? profile.kind : profile;
+}
+
+function battleUnitRefHasTacticalMasterReplacementSupport(
+  unitRef: BattleUnitRef,
+): boolean {
+  return unitRef.supportProfiles.some(
+    (profile) =>
+      typeof profile === "object" &&
+      profile.kind === TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
+  );
 }

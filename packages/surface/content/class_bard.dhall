@@ -7,6 +7,7 @@
   , { level = 2, unitId = "bard_expertise" }
   , { level = 2, unitId = "bard_jack_of_all_trades" }
   , { level = 4, unitId = "bard_ability_score_improvement_l4" }
+  , { level = 9, unitId = "bard_expertise" }
   ]
 , hitPointDie = 8
 , id = "class_bard"

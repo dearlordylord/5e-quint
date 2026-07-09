@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bardic-inspiration-failed-d20-test unit-feature.grappler unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.invocation-independent-attack-sequence spell.invocation-condition-save spell.invocation-damage-save-or-attack spell.invocation-fog-cloud-obscurement spell.invocation-grease-ground-hazard spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bardic-inspiration-failed-d20-test unit-feature.grappler unit-feature.innate-sorcery-activation unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow unit-feature.fighter-tactical-master spell.invocation-independent-attack-sequence spell.invocation-condition-save spell.invocation-damage-save-or-attack spell.invocation-fog-cloud-obscurement spell.invocation-grease-ground-hazard spell.invocation-make-stable spell.invocation-marked-damage-rider spell.invocation-sleep-repeat-save-lifecycle spell.invocation-sleep-target-admission spell.invocation-weapon-damage-rider
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV72B bard_bardic_inspiration
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV75B sorcerer_innate_sorcery
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84C spare_the_dying
@@ -25,8 +25,12 @@ import {
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
+  WEAPON_MASTERY_PUSH_SUPPORT_PROFILE,
   WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
+  WEAPON_MASTERY_SLOW_SUPPORT_PROFILE,
   WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
+  TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
+  TACTICAL_MASTER_REPLACEMENT_MASTERY_PROPERTIES,
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
   BattleFillSchema,
   BattleHoleSchema,
@@ -413,6 +417,8 @@ export function subjectName(
   | "greaseGroundHazardSave"
   | "webRestraintSave"
   | "sleetStormAreaHazardSave"
+  | "insectPlagueAreaHazardSave"
+  | "cloudkillAreaHazardSave"
   | "webRestrainedNoLongerInArea"
   | "webAreaRemoved"
   | "gustOfWindLineSave"
@@ -430,6 +436,7 @@ export function subjectName(
   | "commandApproach"
   | "commandFlee"
   | "disperseFogCloud"
+  | "disperseCloudkill"
   | "wardingBondSeparation"
   | "shakeAwakeFromHypnoticPattern"
   | "protectionRelevantEffectSave"
@@ -603,6 +610,35 @@ export function masteryCleaveUnitRefs(): Extract<
     {
       unitId: "mastery_cleave",
       supportProfiles: [WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE],
+    },
+  ];
+}
+
+export function tacticalMasterReplacementUnitRefs(): Extract<
+  BattleCreatureInit["creatureInit"],
+  { readonly kind: "character" }
+>["characterUnitRefs"] {
+  return [
+    {
+      unitId: "fighter_tactical_master",
+      supportProfiles: [
+        {
+          kind: TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
+          replacementProperties: TACTICAL_MASTER_REPLACEMENT_MASTERY_PROPERTIES,
+        },
+      ],
+    },
+    {
+      unitId: "mastery_push",
+      supportProfiles: [WEAPON_MASTERY_PUSH_SUPPORT_PROFILE],
+    },
+    {
+      unitId: "mastery_sap",
+      supportProfiles: [WEAPON_MASTERY_SAP_SUPPORT_PROFILE],
+    },
+    {
+      unitId: "mastery_slow",
+      supportProfiles: [WEAPON_MASTERY_SLOW_SUPPORT_PROFILE],
     },
   ];
 }
@@ -1803,6 +1839,10 @@ export function movementFill(
       BattleFill,
       { readonly kind: "movement" }
     >["value"]["areaDifficultTerrain"];
+    readonly acrobaticMovement?: Extract<
+      BattleFill,
+      { readonly kind: "movement" }
+    >["value"]["acrobaticMovement"];
     readonly grappleDrag?: Extract<
       BattleFill,
       { readonly kind: "movement" }
@@ -1826,6 +1866,9 @@ export function movementFill(
       ...(value.areaDifficultTerrain === undefined
         ? {}
         : { areaDifficultTerrain: value.areaDifficultTerrain }),
+      ...(value.acrobaticMovement === undefined
+        ? {}
+        : { acrobaticMovement: value.acrobaticMovement }),
       ...(value.grappleDrag === undefined
         ? {}
         : { grappleDrag: value.grappleDrag }),

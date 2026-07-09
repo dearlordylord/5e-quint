@@ -2,6 +2,7 @@
 
 // KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.cunning-strike
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.cunning-strike-option-grant
 module battleRuntimeCunningStrike {
   import creatureSizeOrder.* from "../shared-algebras/proofs/rule-core/creature-size-order"
 
@@ -18,8 +19,12 @@ module battleRuntimeCunningStrike {
   //   smaller targets, then uses a Dexterity Saving Throw before Prone.
   // - .references/srd-5.2.1/Classes/Rogue.md:125: Withdraw moves up to half
   //   Speed immediately after the attack without provoking Opportunity Attacks.
+  // - .references/srd-5.2.1/Classes/Rogue.md:175-179: Supreme Sneak grants
+  //   Stealth Attack, costing 1d6 and preserving the Hide action's Invisible
+  //   condition only if the Rogue ends the turn behind Three-Quarters Cover or
+  //   Total Cover.
   // UBIQUITOUS_LANGUAGE.md: Saving Throw, Condition, Size, Speed, Movement,
-  // Opportunity Attack, Equipment.
+  // Opportunity Attack, Equipment, Hide, Invisible, Cover.
   type CunningStrikeCost =
     | OneSneakAttackD6Cost
 
@@ -60,6 +65,15 @@ module battleRuntimeCunningStrike {
   type CunningStrikePostDamageMovementSemantics =
     | HalfSpeedMovementWithoutOpportunityAttacks
 
+  type CunningStrikeCoverDegree =
+    | NoCover
+    | HalfCover
+    | ThreeQuartersCover
+    | TotalCover
+
+  type CunningStrikeHideInvisibleEndSuppressionSemantics =
+    | HideInvisiblePreservedBehindThreeQuartersOrTotalCover
+
   type CunningStrikeProjection =
     | EquipmentGatedConditionSaveProjection({
         cost: CunningStrikeCost,
@@ -75,6 +89,11 @@ module battleRuntimeCunningStrike {
         cost: CunningStrikeCost,
         timing: CunningStrikeTiming,
         semantics: CunningStrikePostDamageMovementSemantics,
+      })
+    | HideInvisibleEndSuppressionProjection({
+        cost: CunningStrikeCost,
+        timing: CunningStrikeTiming,
+        semantics: CunningStrikeHideInvisibleEndSuppressionSemantics,
       })
 
   pure def costDice(cost: CunningStrikeCost): int =
@@ -174,6 +193,7 @@ module battleRuntimeCunningStrike {
       | EquipmentGatedConditionSaveProjection(data) => data.cost
       | SizeGatedConditionSaveProjection(data) => data.cost
       | PostDamageMovementProjection(data) => data.cost
+      | HideInvisibleEndSuppressionProjection(data) => data.cost
     }
 
   pure def projectionTiming(projection: CunningStrikeProjection): CunningStrikeTiming =
@@ -181,6 +201,7 @@ module battleRuntimeCunningStrike {
       | EquipmentGatedConditionSaveProjection(data) => data.timing
       | SizeGatedConditionSaveProjection(data) => data.timing
       | PostDamageMovementProjection(data) => data.timing
+      | HideInvisibleEndSuppressionProjection(data) => data.timing
     }
 
   pure def happensImmediatelyAfterDamage(projection: CunningStrikeProjection): bool =
@@ -216,6 +237,22 @@ module battleRuntimeCunningStrike {
       | HalfSpeedMovementWithoutOpportunityAttacks => false
     }
 
+  pure def stealthAttackRequiresHideActionInvisible(
+    semantics: CunningStrikeHideInvisibleEndSuppressionSemantics,
+  ): bool =
+    match semantics {
+      | HideInvisiblePreservedBehindThreeQuartersOrTotalCover => true
+    }
+
+  pure def stealthAttackPreservesHideInvisible(
+    semantics: CunningStrikeHideInvisibleEndSuppressionSemantics,
+    cover: CunningStrikeCoverDegree,
+  ): bool =
+    match semantics {
+      | HideInvisiblePreservedBehindThreeQuartersOrTotalCover =>
+          cover == ThreeQuartersCover or cover == TotalCover
+    }
+
   pure val commonSavingThrowDc: CunningStrikeSaveDc =
     DexterityBasedSaveDcBaseEight
 
@@ -238,5 +275,12 @@ module battleRuntimeCunningStrike {
       cost: OneSneakAttackD6Cost,
       timing: ImmediatelyAfterAttackDamage,
       semantics: HalfSpeedMovementWithoutOpportunityAttacks,
+    })
+
+  pure val stealthAttackProjection: CunningStrikeProjection =
+    HideInvisibleEndSuppressionProjection({
+      cost: OneSneakAttackD6Cost,
+      timing: ImmediatelyAfterAttackDamage,
+      semantics: HideInvisiblePreservedBehindThreeQuartersOrTotalCover,
     })
 }

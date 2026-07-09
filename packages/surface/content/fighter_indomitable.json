@@ -1,0 +1,46 @@
+{
+  "acquiredAtLevel": 9,
+  "className": "fighter",
+  "description": "If you fail a saving throw, you can reroll it with a bonus equal to your Fighter level. You must use the new roll. You can't use this feature again until you finish a Long Rest; the uses increase at Fighter levels 13 and 17.",
+  "id": "fighter_indomitable",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "failed_saving_throw_reroll",
+    "reroll": {
+      "bonus": {
+        "className": "fighter",
+        "kind": "class_level"
+      },
+      "mustUseNewRoll": true
+    },
+    "resetCadence": {
+      "kind": "long_rest"
+    },
+    "resource": {
+      "cap": {
+        "axis": "class",
+        "base": 1,
+        "kind": "threshold_tiers",
+        "tiers": [
+          {
+            "atLevel": 13,
+            "value": 2
+          },
+          {
+            "atLevel": 17,
+            "value": 3
+          }
+        ]
+      },
+      "kind": "use_count"
+    },
+    "trigger": {
+      "kind": "failed_saving_throw"
+    }
+  },
+  "name": "Indomitable",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Fighter.md:102-106"
+  }
+}

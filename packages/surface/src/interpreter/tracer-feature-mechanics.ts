@@ -297,6 +297,85 @@ export function traceClassFeatureMechanics(
       });
       return [cunningId];
     }
+    case "brutal_strike": {
+      const brutalId = ids("brutal-strike");
+      nodes.push({
+        id: brutalId,
+        category: "procedure",
+        atomKind: "brutal_strike",
+        label:
+          `brutal_strike\n${m.trigger.kind}:${m.trigger.prerequisiteUnitId}\n` +
+          `${m.damage.dice.dice}d${m.damage.dice.dieSize} ${m.damage.damageType}\n` +
+          m.options.map((option) => option.id).join(" | "),
+      });
+      return [brutalId];
+    }
+    case "failed_saving_throw_reroll": {
+      const indomitableId = ids("indomitable");
+      nodes.push({
+        id: indomitableId,
+        category: "resource",
+        atomKind: "failed_saving_throw_reroll",
+        label:
+          `failed_saving_throw_reroll\n${m.trigger.kind}\n` +
+          `bonus ${m.reroll.bonus.className} ${m.reroll.bonus.kind}\n` +
+          `must use new roll ${m.reroll.mustUseNewRoll}\n` +
+          `reset ${m.resetCadence.kind}`,
+      });
+      return [indomitableId];
+    }
+    case "weapon_mastery_property_replacement": {
+      const tacticalId = ids("tactical-master");
+      nodes.push({
+        id: tacticalId,
+        category: "procedure",
+        atomKind: "weapon_mastery_property_replacement",
+        label:
+          `weapon_mastery_property_replacement\n${m.trigger.kind}\n` +
+          `${m.replacement.timing}\n` +
+          m.replacement.chooseOne.join(" | "),
+      });
+      return [tacticalId];
+    }
+    case "abjure_foes": {
+      const abjureId = ids("abjure-foes");
+      nodes.push({
+        id: abjureId,
+        category: "procedure",
+        atomKind: "abjure_foes",
+        label:
+          `abjure_foes\n${m.activationCost.kind}:${m.activationCost.action}\n` +
+          `spend ${m.spends.amount} ${m.spends.resourceUnitId}\n` +
+          `${m.targetSelection.count.ability} targets min ${m.targetSelection.count.minimum}\n` +
+          `${m.save.ability} save\n${m.onFail.condition}`,
+      });
+      return [abjureId];
+    }
+    case "acrobatic_movement": {
+      const acrobaticId = ids("acrobatic-movement");
+      nodes.push({
+        id: acrobaticId,
+        category: "effect",
+        atomKind: "acrobatic_movement",
+        label:
+          `acrobatic_movement\n${m.movement.timing}\n` +
+          `${m.movement.verticalSurfaces.path}\n${m.movement.liquids.path}`,
+      });
+      return [acrobaticId];
+    }
+    case "cunning_strike_option_grant": {
+      const optionId = ids("cunning-strike-option");
+      nodes.push({
+        id: optionId,
+        category: "procedure",
+        atomKind: "cunning_strike_option_grant",
+        label:
+          `cunning_strike_option_grant\n${m.sourceUnitId}\n` +
+          `${m.option.id}\n` +
+          `${m.option.cost.dice}d${m.option.cost.dieSize}`,
+      });
+      return [optionId];
+    }
     case "sacred_weapon": {
       const sacredWeaponId = ids("sacred-weapon");
       nodes.push({

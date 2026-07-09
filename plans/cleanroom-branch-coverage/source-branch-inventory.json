@@ -1844,7 +1844,7 @@
       "decisionSource": "branch-decision",
       "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt#step:doResolveBlindnessDeafnessBlindedSavingThrow",
-      "qntFileSha256": "eaffed9f09ee7c80f7e15bc5caffdca80cc9d2062a5a8fa82493bd97cc43fad7",
+      "qntFileSha256": "c807472ef605e929e0df706776d1251df07efcb8d70175a5eba53e465f9e1a50",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -1865,7 +1865,7 @@
       "decisionSource": "branch-decision",
       "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt#step:doResolveBlindnessDeafnessDeafenedSavingThrow",
-      "qntFileSha256": "eaffed9f09ee7c80f7e15bc5caffdca80cc9d2062a5a8fa82493bd97cc43fad7",
+      "qntFileSha256": "c807472ef605e929e0df706776d1251df07efcb8d70175a5eba53e465f9e1a50",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -1886,7 +1886,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt#step:doResolveColorSprayFailedSavingThrow",
-      "qntFileSha256": "eaffed9f09ee7c80f7e15bc5caffdca80cc9d2062a5a8fa82493bd97cc43fad7",
+      "qntFileSha256": "c807472ef605e929e0df706776d1251df07efcb8d70175a5eba53e465f9e1a50",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -1905,7 +1905,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt#step:doResolveEntangleFailedSavingThrow",
-      "qntFileSha256": "eaffed9f09ee7c80f7e15bc5caffdca80cc9d2062a5a8fa82493bd97cc43fad7",
+      "qntFileSha256": "c807472ef605e929e0df706776d1251df07efcb8d70175a5eba53e465f9e1a50",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -1924,7 +1924,45 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt#step:doResolveHideousLaughterRepeatSavingThrowSuccess",
-      "qntFileSha256": "eaffed9f09ee7c80f7e15bc5caffdca80cc9d2062a5a8fa82493bd97cc43fad7",
+      "qntFileSha256": "c807472ef605e929e0df706776d1251df07efcb8d70175a5eba53e465f9e1a50",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doResolveHoldMonsterFailedSavingThrow",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doResolveHoldMonsterFailedSavingThrow"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt#step:doResolveHoldMonsterFailedSavingThrow",
+      "qntFileSha256": "c807472ef605e929e0df706776d1251df07efcb8d70175a5eba53e465f9e1a50",
+      "replay": {
+        "stepAction": "step",
+        "tag": "observable-from-step"
+      },
+      "scope": {
+        "tag": "in-scope"
+      }
+    },
+    {
+      "branchAction": "doResolveHoldMonsterRepeatSavingThrowSuccess",
+      "branchFamily": "step",
+      "branchPath": [
+        "step",
+        "doResolveHoldMonsterRepeatSavingThrowSuccess"
+      ],
+      "decisionSource": "default",
+      "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
+      "obligationId": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt#step:doResolveHoldMonsterRepeatSavingThrowSuccess",
+      "qntFileSha256": "c807472ef605e929e0df706776d1251df07efcb8d70175a5eba53e465f9e1a50",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -1943,7 +1981,7 @@
       "decisionSource": "branch-decision",
       "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt#step:doResolveHoldPersonFailedSavingThrow",
-      "qntFileSha256": "eaffed9f09ee7c80f7e15bc5caffdca80cc9d2062a5a8fa82493bd97cc43fad7",
+      "qntFileSha256": "c807472ef605e929e0df706776d1251df07efcb8d70175a5eba53e465f9e1a50",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -1964,7 +2002,7 @@
       "decisionSource": "branch-decision",
       "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt#step:doResolveHoldPersonRepeatSavingThrowSuccess",
-      "qntFileSha256": "eaffed9f09ee7c80f7e15bc5caffdca80cc9d2062a5a8fa82493bd97cc43fad7",
+      "qntFileSha256": "c807472ef605e929e0df706776d1251df07efcb8d70175a5eba53e465f9e1a50",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -1985,7 +2023,7 @@
       "decisionSource": "branch-decision",
       "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt#step:doResolveHypnoticPatternFailedSavingThrow",
-      "qntFileSha256": "eaffed9f09ee7c80f7e15bc5caffdca80cc9d2062a5a8fa82493bd97cc43fad7",
+      "qntFileSha256": "c807472ef605e929e0df706776d1251df07efcb8d70175a5eba53e465f9e1a50",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -2006,7 +2044,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-condition-saving-throw-selected-identity.mbt.qnt#step:doResolveSleepRepeatSavingThrowFailure",
-      "qntFileSha256": "eaffed9f09ee7c80f7e15bc5caffdca80cc9d2062a5a8fa82493bd97cc43fad7",
+      "qntFileSha256": "c807472ef605e929e0df706776d1251df07efcb8d70175a5eba53e465f9e1a50",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"

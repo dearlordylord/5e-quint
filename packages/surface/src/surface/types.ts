@@ -989,6 +989,24 @@ export type StunningStrikeMechanics = Schema.Schema.Type<
 export type CunningStrikeMechanics = Schema.Schema.Type<
   typeof SurfaceSchema.CunningStrikeMechanicsSchema
 >;
+export type BrutalStrikeMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.BrutalStrikeMechanicsSchema
+>;
+export type IndomitableMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.IndomitableMechanicsSchema
+>;
+export type TacticalMasterMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.TacticalMasterMechanicsSchema
+>;
+export type AbjureFoesMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.AbjureFoesMechanicsSchema
+>;
+export type AcrobaticMovementMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.AcrobaticMovementMechanicsSchema
+>;
+export type SupremeSneakMechanics = Schema.Schema.Type<
+  typeof SurfaceSchema.SupremeSneakMechanicsSchema
+>;
 export type RogueCunningStrikeClassFeatureRecord = Omit<
   Schema.Schema.Type<typeof SurfaceSchema.RogueClassFeatureRecordSchema>,
   "mechanics"
@@ -1257,10 +1275,16 @@ export const FAVORED_ENEMY_HUNTERS_MARK_SPELL_ID =
   "hunters_mark" satisfies SpellRecord["id"];
 export const PALADINS_SMITE_DIVINE_SMITE_SPELL_ID =
   "divine_smite" satisfies SpellRecord["id"];
+export const CONTACT_PATRON_CONTACT_OTHER_PLANE_SPELL_ID =
+  "contact_other_plane" satisfies SpellRecord["id"];
+export const CONTACT_PATRON_CONTACT_OTHER_PLANE_FREE_CAST_RESOURCE_TAG =
+  "contactPatronContactOtherPlaneFreeCast" as const;
 
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-spell-free-cast-resource
 export const SUPPORTED_CLASS_FEATURE_SPELL_FREE_CAST_RESOURCE_TAGS = [
   "favoredEnemyHuntersMarkFreeCasts",
   "paladinsSmiteDivineSmiteFreeCast",
+  CONTACT_PATRON_CONTACT_OTHER_PLANE_FREE_CAST_RESOURCE_TAG,
 ] as const;
 export type SupportedClassFeatureSpellFreeCastResourceTag =
   (typeof SUPPORTED_CLASS_FEATURE_SPELL_FREE_CAST_RESOURCE_TAGS)[number];
@@ -1285,6 +1309,17 @@ const SUPPORTED_CLASS_FEATURE_SPELL_FREE_CAST_PROFILES = [
     acquiredAtLevel: 2,
     provenanceSection: "Classes/Paladin#Paladin's Smite",
     spellId: PALADINS_SMITE_DIVINE_SMITE_SPELL_ID,
+    count: 1,
+    resetCadence: "long_rest",
+  },
+  {
+    resourceTag: CONTACT_PATRON_CONTACT_OTHER_PLANE_FREE_CAST_RESOURCE_TAG,
+    unitId: "warlock_contact_patron",
+    unitName: "Contact Patron",
+    className: "warlock",
+    acquiredAtLevel: 9,
+    provenanceSection: "Classes/Warlock#Contact Patron",
+    spellId: CONTACT_PATRON_CONTACT_OTHER_PLANE_SPELL_ID,
     count: 1,
     resetCadence: "long_rest",
   },

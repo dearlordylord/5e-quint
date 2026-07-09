@@ -21,7 +21,7 @@ let fighter =
           }
       , className = "fighter"
       , description =
-          "Minimum SRD Fighter class creation facts plus early progression through the level 5 Extra Attack grant."
+          "SRD Fighter class creation facts plus level 1-9 progression, including level 5 Extra Attack and level 9 Indomitable and Tactical Master grants."
       , featureGrants =
         [ { level = 1, unitId = "fighter_fighting_style" }
         , { level = 1, unitId = "fighter_second_wind" }
@@ -30,6 +30,8 @@ let fighter =
         , { level = 2, unitId = "fighter_tactical_mind" }
         , { level = 4, unitId = "fighter_ability_score_improvement_l4" }
         , { level = 5, unitId = "fighter_extra_attack" }
+        , { level = 9, unitId = "fighter_indomitable" }
+        , { level = 9, unitId = "fighter_tactical_master" }
         ]
       , hitPointDie = 10
       , id = "class_fighter"

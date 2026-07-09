@@ -1,0 +1,32 @@
+{
+  "acquiredAtLevel": 9,
+  "className": "ranger",
+  "description": "Choose two of your skill proficiencies with which you lack Expertise; you gain Expertise in those skills.",
+  "id": "ranger_expertise",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "choiceCount": {
+          "kind": "class_level_total_choices",
+          "levels": [
+            {
+              "atLevel": 9,
+              "total": 2
+            }
+          ]
+        },
+        "kind": "grant_expertise",
+        "skills": {
+          "kind": "owned_skill_proficiencies_without_expertise"
+        }
+      }
+    ]
+  },
+  "name": "Expertise",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Ranger.md:118-120"
+  }
+}

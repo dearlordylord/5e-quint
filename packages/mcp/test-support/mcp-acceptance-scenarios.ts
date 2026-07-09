@@ -75,6 +75,37 @@ const levelSixRogueExpertiseSkills = [
   "perception",
   "stealth",
 ] as const satisfies ReadonlyArray<Skill>;
+const levelNineRangerExpertiseDraftId =
+  "draft:stdio-level-nine-orc-soldier-ranger-expertise";
+const levelNineRangerExpertiseBattleId =
+  "battle:stdio-level-nine-ranger-expertise";
+const levelNineRangerExpertiseCombatantId = "ranger-level-9";
+const levelNineRangerProgressionOptionId =
+  "12:class_ranger|12:class_ranger|12:class_ranger|12:class_ranger|12:class_ranger|12:class_ranger|12:class_ranger|12:class_ranger|12:class_ranger:level_9:fixed_hp_gain";
+const levelNineRangerExpertiseSkills = [
+  "athletics",
+  "perception",
+  "survival",
+] as const satisfies ReadonlyArray<Skill>;
+const levelNineRangerPreparedSpells = [
+  "cure_wounds",
+  "ensnaring_strike",
+  "hunters_mark",
+  "aid",
+  "barkskin",
+  "lesser_restoration",
+  "magic_weapon",
+  "protection_from_energy",
+  "dispel_magic",
+] as const;
+const levelNineRangerSpellSlots = [
+  { count: 4, spellLevel: 1 },
+  { count: 3, spellLevel: 2 },
+  { count: 2, spellLevel: 3 },
+] as const;
+const levelNineRangerUnexpendedSpellSlots = levelNineRangerSpellSlots.map(
+  (slot) => ({ ...slot, expended: 0 }),
+);
 
 const agentConversationScenarios = [
   {
@@ -177,6 +208,19 @@ const agentConversationScenarios = [
     executableCoverage: "verifyLevelSixRogueSteadyAimBattleHandoff",
     insufficiency:
       "This is a known-good MCP scenario for level 6. It proves durable Rogue 6 sheet state, Expertise projection, and Steady Aim battle handoff while keeping character and battle ids caller-owned.",
+  },
+  {
+    id: "create-level-nine-ranger-expertise-and-battle-handoff",
+    name: "Create a level 9 Ranger with Expertise and start battle",
+    userSays:
+      "Create an Orc Soldier Ranger 9 with Expertise, then show the sheet and start battle.",
+    agentReads:
+      "MCP catalog discovery exposes class_ranger and ranger_expertise. Creation discovery returns the Ranger 9 progression, skill, Deft Explorer, Fighting Style, Hunter subclass, prepared spell, Ability Score Improvement, Expertise, equipment, and loadout holes with draft revisions.",
+    agentDecision:
+      "It fills only returned hole ids with returned option ids, including Ranger level-9 Expertise choices, finalizes after no holes remain, reads the durable Character Sheet, starts battle from the returned character id, and discovers battle acts from the returned battle state.",
+    executableCoverage: "verifyLevelNineRangerExpertiseBattleHandoff",
+    insufficiency:
+      "This is a known-good MCP scenario for level 9. It proves durable Ranger 9 sheet state, level-9 Expertise projection, returned-state sequencing, and battle handoff; level-5 full-caster MCP creation remains a separate Surface creation expansion because Wizard creation facts are currently authored only through level 5.",
   },
   {
     id: "select-monsters",
@@ -1472,6 +1516,145 @@ export async function verifyLevelSixRogueSteadyAimBattleHandoff(
   );
 }
 
+export async function verifyLevelNineRangerExpertiseSheetScenario(
+  client: Client,
+) {
+  const workflow = await callTool(client, "describe_mcp_workflow", {});
+  assert.equal(get(workflow, "resultPaths.creationHoles"), "holes");
+  assert.equal(
+    get(workflow, "resultPaths.draftRevision"),
+    "draft.revision or storedDraft.revision",
+  );
+
+  const units = await callTool(client, "list_catalog_units", {});
+  assert.ok(
+    unitSummaries(units, "class").some((unit) => unit.id === "class_ranger"),
+  );
+  assert.ok(
+    unitSummaries(units, "class_feature").some(
+      (unit) => unit.id === "ranger_expertise",
+    ),
+  );
+
+  const finalizedRanger = await createAndFinalizeOrcRangerNineWithExpertise(
+    client,
+    levelNineRangerExpertiseDraftId,
+  );
+  assert.equal(get(finalizedRanger, "finalization.tag"), "ready");
+  assert.equal(
+    get(finalizedRanger, "finalization.build.species"),
+    "species_orc",
+  );
+  assert.deepEqual(
+    get(
+      finalizedRanger,
+      "finalization.build.spellcasting.slotPools.spellcasting.slots",
+    ),
+    levelNineRangerSpellSlots,
+  );
+  assert.deepEqual(
+    stringArrayAt(
+      finalizedRanger,
+      "finalization.build.spellcasting.sources.0.preparedSpells",
+    ),
+    [...levelNineRangerPreparedSpells],
+  );
+  assertLevelNineRangerExpertiseBuild(
+    finalizedRanger,
+    "finalization.build.proficiencyChoices",
+  );
+
+  const listedBeforeBattle = await callTool(client, "list_characters", {});
+  const ranger = characterRow(
+    listedBeforeBattle,
+    testCharacterId(levelNineRangerExpertiseDraftId),
+  );
+  assert.equal(get(ranger, "status"), "available");
+  assert.equal(get(ranger, "displayName"), "Orc Soldier Ranger 9");
+  assertLevelNineRangerExpertiseBuild(ranger, "build.proficiencyChoices");
+  assert.deepEqual(get(ranger, "spellSlots"), levelNineRangerUnexpendedSpellSlots);
+}
+
+export async function verifyLevelNineRangerExpertiseBattleHandoff(
+  client: Client,
+) {
+  const finalizedRanger = await createAndFinalizeOrcRangerNineWithExpertise(
+    client,
+    levelNineRangerExpertiseDraftId,
+  );
+  assert.equal(get(finalizedRanger, "finalization.tag"), "ready");
+  const returnedCharacterIds = stringArrayAt(
+    finalizedRanger,
+    "session.characterIds",
+  );
+  assert.equal(returnedCharacterIds.length, 1);
+  const [characterId] = returnedCharacterIds;
+  assert.ok(characterId, "finalize_character must return a characterId");
+
+  const listedBeforeBattle = await callTool(client, "list_characters", {});
+  const rangerSheet = characterRow(listedBeforeBattle, characterId);
+  assertLevelNineRangerExpertiseBuild(
+    rangerSheet,
+    "build.proficiencyChoices",
+  );
+
+  const selected = await callTool(client, "select_stat_block", {
+    statBlockId: "stat_block_goblin_warrior",
+  });
+  assert.equal(
+    get(selected, "selectedStatBlock.statBlock.displayName"),
+    "Goblin Warrior",
+  );
+
+  const started = await callTool(client, "start_battle", {
+    battleId: levelNineRangerExpertiseBattleId,
+    initialCombatants: [
+      {
+        kind: "characterSession",
+        characterId,
+        combatantId: levelNineRangerExpertiseCombatantId,
+        initiative: 16,
+        side: "party",
+      },
+      statBlockCombatant("goblin", "stat_block_goblin_warrior", 8),
+    ],
+  });
+  assert.equal(
+    get(started, "snapshot.battleId"),
+    levelNineRangerExpertiseBattleId,
+  );
+  assert.deepEqual(get(started, "snapshot.turnOrder"), [
+    levelNineRangerExpertiseCombatantId,
+    "goblin",
+  ]);
+  assert.equal(
+    get(started, "snapshot.currentActorId"),
+    levelNineRangerExpertiseCombatantId,
+  );
+  assert.deepEqual(
+    wizardSpellSlotsFor(started, levelNineRangerExpertiseCombatantId),
+    levelNineRangerUnexpendedSpellSlots,
+  );
+
+  const rangerActs = await callTool(client, "discover_battle_acts", {});
+  assert.equal(
+    get(rangerActs, "snapshot.currentActorId"),
+    levelNineRangerExpertiseCombatantId,
+  );
+  assert.ok(battleActByLabel(rangerActs, "Attack"), "Missing Ranger Attack act");
+  assert.ok(
+    battleActByLabel(rangerActs, "Hunter's Mark"),
+    "Missing Ranger Hunter's Mark act",
+  );
+  assert.equal(
+    get(
+      battleCombatant(rangerActs, levelNineRangerExpertiseCombatantId),
+      "origin.characterId",
+    ),
+    characterId,
+  );
+}
+
 async function createAndFinalizeFighterTwo(client: Client, draftId: string) {
   await callTool(client, "create_character_draft", { draftId });
   await fillBaseOrcSoldier(
@@ -2062,6 +2245,40 @@ async function createAndFinalizeOrcRogueSixWithExpertise(
   return callTool(client, "finalize_character", { draftId });
 }
 
+async function createAndFinalizeOrcRangerNineWithExpertise(
+  client: Client,
+  draftId: string,
+) {
+  const created = await callTool(client, "create_character_draft", { draftId });
+  let current = await callTool(client, "fill_creation_holes", {
+    draftId,
+    expectedRevision: returnedDraftRevision(created),
+    fills: creationFillsForReturnedHoles(created),
+  });
+  assert.equal(get(current, "result.tag"), "accepted");
+
+  for (let pass = 0; pass < 12; pass += 1) {
+    const holes = await callTool(client, "discover_creation_holes", {
+      draftId,
+    });
+    if (holeIds(holes).length === 0) {
+      return callTool(client, "finalize_character", { draftId });
+    }
+    current = await callTool(client, "fill_creation_holes", {
+      draftId,
+      expectedRevision: returnedDraftRevision(holes),
+      fills: creationFillsForReturnedHoles(holes),
+    });
+    assert.equal(
+      get(current, "result.tag"),
+      "accepted",
+      JSON.stringify(current),
+    );
+  }
+
+  assert.fail("Ranger 9 creation still has holes after iterative fills.");
+}
+
 async function createAndFinalizeElfSoldierWizardWithAsi(
   client: Client,
   draftId: string,
@@ -2284,6 +2501,140 @@ async function createAndFinalizeElfSoldierWizardWithAsi(
   assert.equal(returnedDraftRevision(complete), afterLoadoutRevision);
   assert.deepEqual(holeIds(complete), []);
   return callTool(client, "finalize_character", { draftId });
+}
+
+function creationFillsForReturnedHoles(payload: JsonObject) {
+  return jsonObjectArrayAt(payload, "holes").map((hole) =>
+    creationFillForReturnedHole(payload, hole),
+  );
+}
+
+function creationFillForReturnedHole(payload: JsonObject, hole: JsonObject) {
+  const holeId = parseString(hole.holeId, "creation holeId");
+  if (hole.kind === "abilityScores") {
+    return abilityScoresFillFromReturnedHole(payload, holeId, {
+      str: 13,
+      dex: 15,
+      con: 14,
+      int: 8,
+      wis: 12,
+      cha: 10,
+    });
+  }
+  if (hole.kind !== "choice") {
+    assert.fail(`Unsupported Ranger 9 creation hole kind: ${hole.kind}`);
+  }
+  return choiceFillFromReturnedHole(
+    payload,
+    holeId,
+    ...rangerNineOptionIdsForReturnedHole(hole),
+  );
+}
+
+function rangerNineOptionIdsForReturnedHole(hole: JsonObject) {
+  const holeId = parseString(hole.holeId, "choice holeId");
+  const preferred = rangerNinePreferredOptionIds(holeId);
+  if (preferred !== undefined) return preferred;
+
+  const options = jsonObjectArrayAt(hole, "options").map((option, index) =>
+    parseString(option.optionId, `${holeId}.options.${index}.optionId`),
+  );
+  const max = choiceCardinalityMax(hole);
+  assert.ok(
+    options.length >= max,
+    `Expected at least ${max} options for ${holeId}`,
+  );
+  return options.slice(0, max);
+}
+
+function rangerNinePreferredOptionIds(holeId: string): readonly string[] | undefined {
+  const choices: Readonly<Record<string, readonly string[]>> = {
+    "cc:draft:draft.progression.initial": [
+      levelNineRangerProgressionOptionId,
+    ],
+    "cc:draft:draft.background": ["background_soldier"],
+    "cc:draft:draft.species": ["species_orc"],
+    "cc:draft:draft.languages": ["Dwarvish", "Goblin"],
+    "cc:draft:draft.alignment": ["lawful_good"],
+    [unitHoleId("class_ranger", "class_skill_proficiency_choice")]: [
+      "animal_handling",
+      "perception",
+      "survival",
+    ],
+    [unitHoleId("class_ranger", "class_subclass_choice")]: [
+      "subclass_ranger_hunter",
+    ],
+    [unitHoleId("class_ranger", "class_equipment_choice")]: ["option_b"],
+    [unitHoleId("class_ranger", "class_prepared_spell_choices")]:
+      levelNineRangerPreparedSpells,
+    [unitHoleId("ranger_weapon_mastery", "weapon_mastery_options")]: [
+      "weapon_longsword",
+      "weapon_spear",
+    ],
+    [unitHoleId("ranger_deft_explorer", "class_feature_proficiency_choice")]: [
+      "athletics",
+    ],
+    [unitHoleId("ranger_deft_explorer", "class_feature_language_choice")]: [
+      "Elvish",
+      "Gnomish",
+    ],
+    [unitHoleId("ranger_fighting_style", "ranger_fighting_style")]: [
+      "druidic_warrior",
+    ],
+    [unitHoleId("ranger_fighting_style", "class_cantrip_choices")]: [
+      "guidance",
+      "starry_wisp",
+    ],
+    [unitHoleId("ranger_hunters_prey", "hunters_prey")]: [
+      "colossus_slayer",
+    ],
+    [unitHoleId("ranger_ability_score_improvement_l4", "class_feature_feat_choice")]:
+      ["feat_ability_score_improvement"],
+    [unitHoleId(
+      "ranger_ability_score_improvement_l4",
+      "class_feature_ability_score_increase_choice",
+    )]: ["ability_score:dex:+2:max20"],
+    [unitHoleId("ranger_ability_score_improvement_l8", "class_feature_feat_choice")]:
+      ["feat_ability_score_improvement"],
+    [unitHoleId(
+      "ranger_ability_score_improvement_l8",
+      "class_feature_ability_score_increase_choice",
+    )]: ["ability_score:wis:+2:max20"],
+    [unitHoleId("ranger_expertise", "class_feature_proficiency_choice")]: [
+      "perception",
+      "survival",
+    ],
+    [unitHoleId("background_soldier", "background_ability_score_increase")]: [
+      "two_and_one:dex:con",
+    ],
+    [unitHoleId("background_soldier", "background_tool_choice")]: [
+      "tool_dice_set",
+    ],
+    [unitHoleId("background_soldier", "background_equipment_choice")]: [
+      "option_b",
+    ],
+  };
+  return choices[holeId];
+}
+
+function choiceCardinalityMax(hole: JsonObject): number {
+  const cardinality = get(hole, "cardinality");
+  assert.ok(isJsonObject(cardinality), "choice cardinality must be an object");
+  if (cardinality.tag === "exactly") {
+    const count = get(cardinality, "count");
+    if (typeof count !== "number") {
+      assert.fail("choice cardinality count must be a number");
+    }
+    return count;
+  }
+  if (cardinality.tag === "range" || cardinality.tag === "between") {
+    const max = get(cardinality, "max");
+    if (typeof max !== "number") {
+      assert.fail("choice cardinality max must be a number");
+    }
+    return max;
+  }
+  assert.fail(`Unsupported choice cardinality: ${JSON.stringify(cardinality)}`);
 }
 
 async function fillBaseOrcSoldier(
@@ -2770,6 +3121,15 @@ function assertLevelSixRogueExpertiseBuild(payload: JsonObject, path: string) {
   }
 }
 
+function assertLevelNineRangerExpertiseBuild(payload: JsonObject, path: string) {
+  const expertise = proficiencyChoiceSkills(payload, path, "skill_expertise");
+  assert.deepEqual(
+    [...expertise].sort(),
+    [...levelNineRangerExpertiseSkills].sort(),
+  );
+  assert.equal(new Set(expertise).size, levelNineRangerExpertiseSkills.length);
+}
+
 function proficiencyChoiceSkills(
   payload: JsonObject,
   path: string,
@@ -2822,7 +3182,7 @@ function parseString(value: unknown, context: string) {
 }
 
 export function verifyAgentConversationScenarios() {
-  assert.equal(agentConversationScenarios.length, 17);
+  assert.equal(agentConversationScenarios.length, 18);
   const scenarioIds = new Set<string>();
   for (const scenario of agentConversationScenarios) {
     assert.match(scenario.id, /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/);

@@ -1,0 +1,83 @@
+{
+  "description": "You mentally contact a demigod, the spirit of a long-dead sage, or some other knowledgeable entity from another plane. When you cast this spell, make a DC 15 Intelligence saving throw. On a successful save, you can ask the entity up to five questions before the spell ends. The GM answers each question with one word, using unclear if the entity doesn't know; if a one-word answer would be misleading, the GM might offer a short phrase. On a failed save, you take 6d6 Psychic damage and have the Incapacitated condition until you finish a Long Rest. Greater Restoration ends this effect.",
+  "id": "contact_other_plane",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "amount": 1,
+      "kind": "minutes",
+      "ritual": true
+    },
+    "components": {
+      "m": false,
+      "s": false,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "activation",
+    "level": 5,
+    "phases": [
+      {
+        "ability": "int",
+        "attachment": {
+          "kind": "self"
+        },
+        "dc": {
+          "dc": 15,
+          "kind": "fixed"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "effects": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 6,
+                  "dieSize": 6
+                },
+                "kind": "fixed"
+              },
+              "damageType": "psychic",
+              "kind": "damage"
+            },
+            {
+              "condition": "incapacitated",
+              "duration": "until_long_rest_or_greater_restoration",
+              "kind": "apply_condition"
+            }
+          ],
+          "kind": "composite"
+        },
+        "onSuccess": {
+          "answer": {
+            "fallback": "short_phrase_if_one_word_misleading",
+            "primary": "one_word",
+            "unknown": "unclear"
+          },
+          "kind": "planar_entity_answers",
+          "questionCount": 5,
+          "questionWindow": {
+            "amount": 1,
+            "unit": "minute"
+          },
+          "source": "other_planar_knowledgeable_entity"
+        }
+      }
+    ],
+    "range": {
+      "kind": "self"
+    },
+    "school": "divination"
+  },
+  "name": "Contact Other Plane",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Contact Other Plane"
+  }
+}

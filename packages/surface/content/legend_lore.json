@@ -1,0 +1,45 @@
+{
+  "description": "Name or describe a famous person, place, or object. The spell brings to your mind a brief GM-described summary of significant lore about that famous thing. The information is accurate but might be figurative or poetic, and the more you already know, the more precise and detailed the information is. If the chosen thing isn't actually famous, the spell fails.",
+  "id": "legend_lore",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "amount": 10,
+      "kind": "minutes",
+      "ritual": false
+    },
+    "components": {
+      "m": "incense worth 250+ GP, which the spell consumes, and four ivory strips worth 50+ GP each",
+      "materialCostGp": 450,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 5,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "self"
+        },
+        "effects": [
+          {
+            "kind": "none"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "kind": "self"
+    },
+    "school": "divination"
+  },
+  "name": "Legend Lore",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Legend Lore"
+  }
+}

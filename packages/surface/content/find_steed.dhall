@@ -37,8 +37,10 @@ let findSteed =
           , range = { kind = "point", feet = 30 }
           , components = { v = True, s = True, m = False }
           , duration = { kind = "instantaneous" }
-          , statBlock =
-              { displayName = "Otherworldly Steed"
+          , creature =
+              { kind = "inline"
+              , statBlock =
+                  { displayName = "Otherworldly Steed"
               , size = "large"
               , creatureType =
                   { kind = "choice"
@@ -105,6 +107,7 @@ let findSteed =
                         }
                     }
                   ]
+                  }
               }
           , mode =
               { label = "creature type"

@@ -431,6 +431,474 @@
       "tests": [
         "packages/character-sheet-runtime/src/armor-class.test.ts:draconicResilienceArmorClassProjectionTestName"
       ]
+    },
+    "srd521:classes/bard:spell-level-5:spell-unit-pressure:bard_spell_list_greater_restoration": {
+      "taskId": "L19E-06-L5-RESTORATION-DEATH",
+      "profile": "Character Sheet restoration/death spell session runtime",
+      "summary": "Greater Restoration is consumed from its installed Surface Spell record by typed direct remove-condition shape. The Character Sheet/session runtime requires a living caster, level-5-or-higher Spell Slot expenditure, caller-witnessed consumed 100 GP material component, completed touch targeting, and removes only the supported Charmed/Petrified condition branch from existing Character Sheet condition state. Exhaustion, curses, ability-score reductions, and Hit Point maximum reductions remain deferred.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/restoration-death-spells.ts:castGreaterRestorationOnSheet",
+        "packages/character-sheet-runtime/src/restoration-death-spells.ts:greaterRestorationProfileForSpell",
+        "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/restoration-death-spells.test.ts:greaterRestorationSheetSessionTestName"
+      ]
+    },
+    "srd521:classes/cleric:spell-level-5:spell-unit-pressure:cleric_spell_list_greater_restoration": {
+      "taskId": "L19E-06-L5-RESTORATION-DEATH",
+      "profile": "Character Sheet restoration/death spell session runtime",
+      "summary": "Greater Restoration is consumed from its installed Surface Spell record by typed direct remove-condition shape. The Character Sheet/session runtime requires a living caster, level-5-or-higher Spell Slot expenditure, caller-witnessed consumed 100 GP material component, completed touch targeting, and removes only the supported Charmed/Petrified condition branch from existing Character Sheet condition state. Exhaustion, curses, ability-score reductions, and Hit Point maximum reductions remain deferred.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/restoration-death-spells.ts:castGreaterRestorationOnSheet",
+        "packages/character-sheet-runtime/src/restoration-death-spells.ts:greaterRestorationProfileForSpell",
+        "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/restoration-death-spells.test.ts:greaterRestorationSheetSessionTestName"
+      ]
+    },
+    "srd521:classes/druid:spell-level-5:spell-unit-pressure:druid_spell_list_greater_restoration": {
+      "taskId": "L19E-06-L5-RESTORATION-DEATH",
+      "profile": "Character Sheet restoration/death spell session runtime",
+      "summary": "Greater Restoration is consumed from its installed Surface Spell record by typed direct remove-condition shape. The Character Sheet/session runtime requires a living caster, level-5-or-higher Spell Slot expenditure, caller-witnessed consumed 100 GP material component, completed touch targeting, and removes only the supported Charmed/Petrified condition branch from existing Character Sheet condition state. Exhaustion, curses, ability-score reductions, and Hit Point maximum reductions remain deferred.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/restoration-death-spells.ts:castGreaterRestorationOnSheet",
+        "packages/character-sheet-runtime/src/restoration-death-spells.ts:greaterRestorationProfileForSpell",
+        "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/restoration-death-spells.test.ts:greaterRestorationSheetSessionTestName"
+      ]
+    },
+    "srd521:classes/bard:spell-level-5:spell-unit-pressure:bard_spell_list_raise_dead": {
+      "taskId": "L19E-06-L5-RESTORATION-DEATH",
+      "profile": "Character Sheet restoration/death spell session runtime",
+      "summary": "Raise Dead is consumed from its installed Surface Spell record by typed direct dead-creature revival shape. The Character Sheet/session runtime requires a living caster, level-5-or-higher Spell Slot expenditure, caller-witnessed consumed 500 GP material component, completed touch targeting, no-more-than-10-days dead eligibility, not-Undead-at-death witness, integral body parts, and spirit consent. It changes the target from dead zero-HP lifecycle to 1 current HP and removes Poisoned from existing condition state. The D20 Test recovery penalty plus dead-glossary exhaustion/attunement cleanup remain deferred.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/restoration-death-spells.ts:castRaiseDeadOnSheet",
+        "packages/character-sheet-runtime/src/restoration-death-spells.ts:raiseDeadProfileForSpell",
+        "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/restoration-death-spells.test.ts:raiseDeadSheetSessionTestName"
+      ]
+    },
+    "srd521:classes/cleric:spell-level-5:spell-unit-pressure:cleric_spell_list_raise_dead": {
+      "taskId": "L19E-06-L5-RESTORATION-DEATH",
+      "profile": "Character Sheet restoration/death spell session runtime",
+      "summary": "Raise Dead is consumed from its installed Surface Spell record by typed direct dead-creature revival shape. The Character Sheet/session runtime requires a living caster, level-5-or-higher Spell Slot expenditure, caller-witnessed consumed 500 GP material component, completed touch targeting, no-more-than-10-days dead eligibility, not-Undead-at-death witness, integral body parts, and spirit consent. It changes the target from dead zero-HP lifecycle to 1 current HP and removes Poisoned from existing condition state. The D20 Test recovery penalty plus dead-glossary exhaustion/attunement cleanup remain deferred.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/restoration-death-spells.ts:castRaiseDeadOnSheet",
+        "packages/character-sheet-runtime/src/restoration-death-spells.ts:raiseDeadProfileForSpell",
+        "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/restoration-death-spells.test.ts:raiseDeadSheetSessionTestName"
+      ]
+    },
+    "srd521:classes/cleric:spell-level-5:spell-unit-pressure:cleric_spell_list_hallow": {
+      "taskId": "L19E-04-L5-BARRIER-WALL",
+      "profile": "Character Sheet Hallow durable area session runtime",
+      "summary": "Hallow is read from the installed SRD level-5 Spell record and invoked through prepared Character Sheet Spell Access. The runtime validates completed 24-hour touch casting, caller-witnessed consumed 1,000 GP incense, a non-overlapping area radius up to 60 feet, unique Hallowed Ward creature-type choices, and a selected extra effect before spending one ordinary level-5 Spell Slot. It returns an until-dispelled table-facing hallowed-area contract with willing-entry blocking, possession/Charmed/Frightened suppression, and the selected extra-effect facts. Map geometry, creature membership, live effect application, generic dispel targeting, inventory stock mutation, and persistent world storage remain table/session or equipment-owned facts.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/hallow.ts:castHallow",
+        "packages/character-sheet-runtime/src/hallow.ts:completedHallowCasting",
+        "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/hallow.test.ts:Character Sheet runtime / Hallow"
+      ]
+    },
+    "srd521:classes/druid:spell-level-5:spell-unit-pressure:druid_spell_list_reincarnate": {
+      "taskId": "L19E-06-L5-RESTORATION-DEATH",
+      "profile": "Character Sheet restoration/death spell session runtime",
+      "summary": "Reincarnate is consumed from its installed Surface Spell record by typed direct dead-Humanoid target shape. The Character Sheet/session runtime requires prepared class Spell Access, a living caster, level-5-or-higher Spell Slot expenditure, caller-witnessed consumed 1,000 GP rare oils, completed touch targeting, no-more-than-10-days dead eligibility, a dead Humanoid or piece-of-one remains witness, and soul consent. It spends the caster slot and returns a table-facing species replacement/current Hit Point contract instead of randomizing species or inventing Reincarnate Hit Points; species determination, species trait replacement, species choices, and Reincarnate's omitted current Hit Point value remain deferred to table/session and character-creation owners.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/restoration-death-spells.ts:castReincarnateOnSheet",
+        "packages/character-sheet-runtime/src/restoration-death-spells.ts:reincarnateProfileForSpell",
+        "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/restoration-death-spells.test.ts:reincarnateSheetSessionTestName"
+      ]
+    },
+    "srd521:classes/sorcerer:spell-level-5:spell-unit-pressure:sorcerer_spell_list_arcane_hand": {
+      "taskId": "L19E-05-L5-SUMMONED-OBJECT-LIFECYCLE",
+      "profile": "Character Sheet Arcane Hand force-hand object session runtime",
+      "summary": "Arcane Hand is read from the installed SRD level-5 Spell record and invoked through prepared Character Sheet Spell Access. The runtime validates a visible unoccupied space witness, derives the hand Hit Points from the caster's existing Character Sheet Hit Point maximum projection, spends one ordinary level-5 Spell Slot, and returns a table-facing Large force-hand object and command contract with AC 20, no occupied space, zero-HP spell ending, one-minute Concentration duration, 60-foot command movement, Clenched Fist, Forceful Hand, Grasping Hand, and Interposing Hand facts. Actual map placement, attack/save/damage resolution, forced movement, Grappled lifecycle, cover, terrain, object damage, and cleanup remain table/battle-owned facts.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/arcane-hand.ts:castArcaneHand",
+        "packages/character-sheet-runtime/src/arcane-hand.ts:arcaneHandInvocationFromSpell",
+        "packages/character-sheet-runtime/src/hit-points.ts:characterSheetHitPointMaximum",
+        "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/arcane-hand.test.ts:Character Sheet runtime / Arcane Hand"
+      ]
+    },
+    "srd521:classes/wizard:spell-level-5:spell-unit-pressure:wizard_spell_list_arcane_hand": {
+      "taskId": "L19E-05-L5-SUMMONED-OBJECT-LIFECYCLE",
+      "profile": "Character Sheet Arcane Hand force-hand object session runtime",
+      "summary": "Arcane Hand is read from the installed SRD level-5 Spell record and invoked through prepared Character Sheet Spell Access. The runtime validates a visible unoccupied space witness, derives the hand Hit Points from the caster's existing Character Sheet Hit Point maximum projection, spends one ordinary level-5 Spell Slot, and returns a table-facing Large force-hand object and command contract with AC 20, no occupied space, zero-HP spell ending, one-minute Concentration duration, 60-foot command movement, Clenched Fist, Forceful Hand, Grasping Hand, and Interposing Hand facts. Actual map placement, attack/save/damage resolution, forced movement, Grappled lifecycle, cover, terrain, object damage, and cleanup remain table/battle-owned facts.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/arcane-hand.ts:castArcaneHand",
+        "packages/character-sheet-runtime/src/arcane-hand.ts:arcaneHandInvocationFromSpell",
+        "packages/character-sheet-runtime/src/hit-points.ts:characterSheetHitPointMaximum",
+        "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/arcane-hand.test.ts:Character Sheet runtime / Arcane Hand"
+      ]
+    },
+    "srd521:classes/wizard:spell-level-5:spell-unit-pressure:wizard_spell_list_wall_of_force": {
+      "taskId": "L19E-04-L5-BARRIER-WALL",
+      "profile": "Character Sheet Wall of Force barrier session runtime",
+      "summary": "Wall of Force is read from the installed SRD level-5 Spell record and invoked through prepared Character Sheet Spell Access. The runtime validates the SRD force-barrier Surface profile, a caller-supplied barrier placement witness, and a selected flat-panel or globe/dome shape before spending one ordinary level-5 Spell Slot. It returns a table-facing invisible force-barrier contract with 120-foot range, 10-minute Concentration duration, physical-passage blocking, all-damage immunity, Dispel Magic exclusion, Disintegrate destruction without harming inside contents, Ethereal Plane travel blocking, and explicit table ownership for geometry, containment/side choice, and effect-blocking adjudication.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/wall-of-force.ts:castWallOfForce",
+        "packages/character-sheet-runtime/src/wall-of-force.ts:wallOfForceInvocationFromSpell",
+        "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/wall-of-force.test.ts:Character Sheet runtime / Wall of Force"
+      ]
+    },
+    "srd521:classes/bard:spell-level-5:spell-unit-pressure:bard_spell_list_scrying": {
+      "taskId": "L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION",
+      "profile": "Character Sheet Scrying session runtime",
+      "summary": "Scrying is consumed from its installed Surface Spell record by a typed level-5 Divination session owner. The Character Sheet runtime requires prepared class Spell Access, spends an ordinary level-5 Spell Slot, requires the non-consumed 1,000 GP focus material component contract, records Concentration up to 10 minutes, and returns either a same-plane creature Wisdom Saving Throw contract with SRD knowledge/connection modifiers and 24-hour success lockout or a seen-location stationary sensor contract. Remote contents, target location, special-sense visibility, and map placement remain table-owned facts.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/scrying.ts:castScrying",
+        "packages/character-sheet-runtime/src/scrying.ts:scryingInvocationFromSpell",
+        "packages/character-sheet-runtime/src/scrying.ts:scryingSavingThrowModifier",
+        "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/scrying.test.ts"
+      ]
+    },
+    "srd521:classes/cleric:spell-level-5:spell-unit-pressure:cleric_spell_list_scrying": {
+      "taskId": "L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION",
+      "profile": "Character Sheet Scrying session runtime",
+      "summary": "Scrying is consumed from its installed Surface Spell record by a typed level-5 Divination session owner. The Character Sheet runtime requires prepared class Spell Access, spends an ordinary level-5 Spell Slot, requires the non-consumed 1,000 GP focus material component contract, records Concentration up to 10 minutes, and returns either a same-plane creature Wisdom Saving Throw contract with SRD knowledge/connection modifiers and 24-hour success lockout or a seen-location stationary sensor contract. Remote contents, target location, special-sense visibility, and map placement remain table-owned facts.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/scrying.ts:castScrying",
+        "packages/character-sheet-runtime/src/scrying.ts:scryingInvocationFromSpell",
+        "packages/character-sheet-runtime/src/scrying.ts:scryingSavingThrowModifier",
+        "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/scrying.test.ts"
+      ]
+    },
+    "srd521:classes/druid:spell-level-5:spell-unit-pressure:druid_spell_list_scrying": {
+      "taskId": "L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION",
+      "profile": "Character Sheet Scrying session runtime",
+      "summary": "Scrying is consumed from its installed Surface Spell record by a typed level-5 Divination session owner. The Character Sheet runtime requires prepared class Spell Access, spends an ordinary level-5 Spell Slot, requires the non-consumed 1,000 GP focus material component contract, records Concentration up to 10 minutes, and returns either a same-plane creature Wisdom Saving Throw contract with SRD knowledge/connection modifiers and 24-hour success lockout or a seen-location stationary sensor contract. Remote contents, target location, special-sense visibility, and map placement remain table-owned facts.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/scrying.ts:castScrying",
+        "packages/character-sheet-runtime/src/scrying.ts:scryingInvocationFromSpell",
+        "packages/character-sheet-runtime/src/scrying.ts:scryingSavingThrowModifier",
+        "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/scrying.test.ts"
+      ]
+    },
+    "srd521:classes/warlock:spell-level-5:spell-unit-pressure:warlock_spell_list_scrying": {
+      "taskId": "L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION",
+      "profile": "Character Sheet Scrying session runtime",
+      "summary": "Scrying is consumed from its installed Surface Spell record by a typed level-5 Divination session owner. The Character Sheet runtime requires prepared class Spell Access, spends an ordinary level-5 Spell Slot, requires the non-consumed 1,000 GP focus material component contract, records Concentration up to 10 minutes, and returns either a same-plane creature Wisdom Saving Throw contract with SRD knowledge/connection modifiers and 24-hour success lockout or a seen-location stationary sensor contract. Remote contents, target location, special-sense visibility, and map placement remain table-owned facts.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/scrying.ts:castScrying",
+        "packages/character-sheet-runtime/src/scrying.ts:scryingInvocationFromSpell",
+        "packages/character-sheet-runtime/src/scrying.ts:scryingSavingThrowModifier",
+        "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/scrying.test.ts"
+      ]
+    },
+    "srd521:classes/wizard:spell-level-5:spell-unit-pressure:wizard_spell_list_scrying": {
+      "taskId": "L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION",
+      "profile": "Character Sheet Scrying session runtime",
+      "summary": "Scrying is consumed from its installed Surface Spell record by a typed level-5 Divination session owner. The Character Sheet runtime requires prepared class Spell Access, spends an ordinary level-5 Spell Slot, requires the non-consumed 1,000 GP focus material component contract, records Concentration up to 10 minutes, and returns either a same-plane creature Wisdom Saving Throw contract with SRD knowledge/connection modifiers and 24-hour success lockout or a seen-location stationary sensor contract. Remote contents, target location, special-sense visibility, and map placement remain table-owned facts.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/scrying.ts:castScrying",
+        "packages/character-sheet-runtime/src/scrying.ts:scryingInvocationFromSpell",
+        "packages/character-sheet-runtime/src/scrying.ts:scryingSavingThrowModifier",
+        "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/scrying.test.ts"
+      ]
+    },
+    "srd521:classes/bard:spell-level-5:spell-unit-pressure:bard_spell_list_dream": {
+      "taskId": "L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION",
+      "profile": "Character Sheet Dream session runtime",
+      "summary": "Dream is consumed from its installed Surface Spell record by a typed level-5 Illusion session owner. The Character Sheet runtime requires prepared class Spell Access, spends an ordinary level-5 Spell Slot, requires the handful-of-sand Material component proof, records 1-minute casting and 8-hour duration, and returns same-plane known-creature target facts, messenger trance facts, conversation contracts, and nightmare Wisdom Saving Throw outcomes. Target sleep state, world location, actual dream content, Long Rest mutation, and target damage application remain table/session-owned facts.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/dream.ts:castDream",
+        "packages/character-sheet-runtime/src/dream.ts:dreamInvocationFromSpell",
+        "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/dream.test.ts"
+      ]
+    },
+    "srd521:classes/warlock:spell-level-5:spell-unit-pressure:warlock_spell_list_dream": {
+      "taskId": "L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION",
+      "profile": "Character Sheet Dream session runtime",
+      "summary": "Dream is consumed from its installed Surface Spell record by a typed level-5 Illusion session owner. The Character Sheet runtime requires prepared class Spell Access, spends an ordinary level-5 Spell Slot, requires the handful-of-sand Material component proof, records 1-minute casting and 8-hour duration, and returns same-plane known-creature target facts, messenger trance facts, conversation contracts, and nightmare Wisdom Saving Throw outcomes. Target sleep state, world location, actual dream content, Long Rest mutation, and target damage application remain table/session-owned facts.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/dream.ts:castDream",
+        "packages/character-sheet-runtime/src/dream.ts:dreamInvocationFromSpell",
+        "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/dream.test.ts"
+      ]
+    },
+    "srd521:classes/wizard:spell-level-5:spell-unit-pressure:wizard_spell_list_dream": {
+      "taskId": "L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION",
+      "profile": "Character Sheet Dream session runtime",
+      "summary": "Dream is consumed from its installed Surface Spell record by a typed level-5 Illusion session owner. The Character Sheet runtime requires prepared class Spell Access, spends an ordinary level-5 Spell Slot, requires the handful-of-sand Material component proof, records 1-minute casting and 8-hour duration, and returns same-plane known-creature target facts, messenger trance facts, conversation contracts, and nightmare Wisdom Saving Throw outcomes. Target sleep state, world location, actual dream content, Long Rest mutation, and target damage application remain table/session-owned facts.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/dream.ts:castDream",
+        "packages/character-sheet-runtime/src/dream.ts:dreamInvocationFromSpell",
+        "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/dream.test.ts"
+      ]
+    },
+    "srd521:classes/bard:spell-level-5:spell-unit-pressure:bard_spell_list_seeming": {
+      "taskId": "L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION",
+      "profile": "Character Sheet Seeming session illusion invocation",
+      "summary": "Seeming is read from the installed SRD level-5 Spell record and invoked through prepared Character Sheet Spell Access. The runtime validates caller-supplied visible within-range creature targets, willing/unwilling target facts, Charisma Saving Throw outcomes for unwilling targets, and apparent appearance constraints, spends one ordinary level-5 Spell Slot, and returns table-facing eight-hour illusion, physical-inspection, and Study reveal facts.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/seeming.ts:castSeeming",
+        "packages/character-sheet-runtime/src/seeming.ts:seemingInvocationFromSpell",
+        "packages/character-sheet-runtime/src/seeming.ts:seemingTargetOutcome"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/seeming.test.ts:Character Sheet runtime / Seeming"
+      ]
+    },
+    "srd521:classes/sorcerer:spell-level-5:spell-unit-pressure:sorcerer_spell_list_seeming": {
+      "taskId": "L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION",
+      "profile": "Character Sheet Seeming session illusion invocation",
+      "summary": "Seeming is read from the installed SRD level-5 Spell record and invoked through prepared Character Sheet Spell Access. The runtime validates caller-supplied visible within-range creature targets, willing/unwilling target facts, Charisma Saving Throw outcomes for unwilling targets, and apparent appearance constraints, spends one ordinary level-5 Spell Slot, and returns table-facing eight-hour illusion, physical-inspection, and Study reveal facts.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/seeming.ts:castSeeming",
+        "packages/character-sheet-runtime/src/seeming.ts:seemingInvocationFromSpell",
+        "packages/character-sheet-runtime/src/seeming.ts:seemingTargetOutcome"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/seeming.test.ts:Character Sheet runtime / Seeming"
+      ]
+    },
+    "srd521:classes/wizard:spell-level-5:spell-unit-pressure:wizard_spell_list_seeming": {
+      "taskId": "L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION",
+      "profile": "Character Sheet Seeming session illusion invocation",
+      "summary": "Seeming is read from the installed SRD level-5 Spell record and invoked through prepared Character Sheet Spell Access. The runtime validates caller-supplied visible within-range creature targets, willing/unwilling target facts, Charisma Saving Throw outcomes for unwilling targets, and apparent appearance constraints, spends one ordinary level-5 Spell Slot, and returns table-facing eight-hour illusion, physical-inspection, and Study reveal facts.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/seeming.ts:castSeeming",
+        "packages/character-sheet-runtime/src/seeming.ts:seemingInvocationFromSpell",
+        "packages/character-sheet-runtime/src/seeming.ts:seemingTargetOutcome"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/seeming.test.ts:Character Sheet runtime / Seeming"
+      ]
+    },
+    "srd521:classes/bard:spell-level-5:spell-unit-pressure:bard_spell_list_geas": {
+      "taskId": "L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION",
+      "profile": "Character Sheet Geas session command invocation",
+      "summary": "Geas is read from the installed SRD level-5 Spell record and invoked through prepared Character Sheet Spell Access. The runtime validates caller-supplied visible within-range creature target facts, command text, target comprehension, and Wisdom Saving Throw outcomes, spends one ordinary level-5 Spell Slot, and returns table-facing Charmed command-compulsion, no-effect, suicidal-command ending, once-per-day Psychic violation damage, and named-spell cleanup facts.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/geas.ts:castGeas",
+        "packages/character-sheet-runtime/src/geas.ts:geasInvocationFromSpell",
+        "packages/character-sheet-runtime/src/geas.ts:geasOutcome",
+        "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/geas.test.ts:Character Sheet runtime / Geas"
+      ]
+    },
+    "srd521:classes/cleric:spell-level-5:spell-unit-pressure:cleric_spell_list_geas": {
+      "taskId": "L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION",
+      "profile": "Character Sheet Geas session command invocation",
+      "summary": "Geas is read from the installed SRD level-5 Spell record and invoked through prepared Character Sheet Spell Access. The runtime validates caller-supplied visible within-range creature target facts, command text, target comprehension, and Wisdom Saving Throw outcomes, spends one ordinary level-5 Spell Slot, and returns table-facing Charmed command-compulsion, no-effect, suicidal-command ending, once-per-day Psychic violation damage, and named-spell cleanup facts.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/geas.ts:castGeas",
+        "packages/character-sheet-runtime/src/geas.ts:geasInvocationFromSpell",
+        "packages/character-sheet-runtime/src/geas.ts:geasOutcome",
+        "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/geas.test.ts:Character Sheet runtime / Geas"
+      ]
+    },
+    "srd521:classes/druid:spell-level-5:spell-unit-pressure:druid_spell_list_geas": {
+      "taskId": "L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION",
+      "profile": "Character Sheet Geas session command invocation",
+      "summary": "Geas is read from the installed SRD level-5 Spell record and invoked through prepared Character Sheet Spell Access. The runtime validates caller-supplied visible within-range creature target facts, command text, target comprehension, and Wisdom Saving Throw outcomes, spends one ordinary level-5 Spell Slot, and returns table-facing Charmed command-compulsion, no-effect, suicidal-command ending, once-per-day Psychic violation damage, and named-spell cleanup facts.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/geas.ts:castGeas",
+        "packages/character-sheet-runtime/src/geas.ts:geasInvocationFromSpell",
+        "packages/character-sheet-runtime/src/geas.ts:geasOutcome",
+        "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/geas.test.ts:Character Sheet runtime / Geas"
+      ]
+    },
+    "srd521:classes/wizard:spell-level-5:spell-unit-pressure:wizard_spell_list_geas": {
+      "taskId": "L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION",
+      "profile": "Character Sheet Geas session command invocation",
+      "summary": "Geas is read from the installed SRD level-5 Spell record and invoked through prepared Character Sheet Spell Access. The runtime validates caller-supplied visible within-range creature target facts, command text, target comprehension, and Wisdom Saving Throw outcomes, spends one ordinary level-5 Spell Slot, and returns table-facing Charmed command-compulsion, no-effect, suicidal-command ending, once-per-day Psychic violation damage, and named-spell cleanup facts.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/geas.ts:castGeas",
+        "packages/character-sheet-runtime/src/geas.ts:geasInvocationFromSpell",
+        "packages/character-sheet-runtime/src/geas.ts:geasOutcome",
+        "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/geas.test.ts:Character Sheet runtime / Geas"
+      ]
+    },
+    "srd521:classes/bard:spell-level-5:spell-unit-pressure:bard_spell_list_modify_memory": {
+      "taskId": "L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION",
+      "profile": "Character Sheet Modify Memory session memory-edit invocation",
+      "summary": "Modify Memory is read from the installed SRD level-5 Spell record and invoked through prepared Character Sheet Spell Access. The runtime validates caller-supplied visible within-range creature target facts, fighting-target save Advantage facts, Wisdom Saving Throw outcomes, target language comprehension, completed-description state, and level-5 memory-window facts, spends one ordinary level-5 Spell Slot, and returns table-facing Charmed, Incapacitated, memory-edit, early-ending, and restoration facts.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/modify-memory.ts:castModifyMemory",
+        "packages/character-sheet-runtime/src/modify-memory.ts:modifyMemoryInvocationFromSpell",
+        "packages/character-sheet-runtime/src/modify-memory.ts:modifyMemoryOutcome",
+        "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/modify-memory.test.ts:Character Sheet runtime / Modify Memory"
+      ]
+    },
+    "srd521:classes/wizard:spell-level-5:spell-unit-pressure:wizard_spell_list_modify_memory": {
+      "taskId": "L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION",
+      "profile": "Character Sheet Modify Memory session memory-edit invocation",
+      "summary": "Modify Memory is read from the installed SRD level-5 Spell record and invoked through prepared Character Sheet Spell Access. The runtime validates caller-supplied visible within-range creature target facts, fighting-target save Advantage facts, Wisdom Saving Throw outcomes, target language comprehension, completed-description state, and level-5 memory-window facts, spends one ordinary level-5 Spell Slot, and returns table-facing Charmed, Incapacitated, memory-edit, early-ending, and restoration facts.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/modify-memory.ts:castModifyMemory",
+        "packages/character-sheet-runtime/src/modify-memory.ts:modifyMemoryInvocationFromSpell",
+        "packages/character-sheet-runtime/src/modify-memory.ts:modifyMemoryOutcome",
+        "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/modify-memory.test.ts:Character Sheet runtime / Modify Memory"
+      ]
+    },
+    "srd521:classes/bard:spell-level-5:spell-unit-pressure:bard_spell_list_mislead": {
+      "taskId": "L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION",
+      "profile": "Character Sheet Mislead session invisible-double invocation",
+      "summary": "Mislead is read from the installed SRD level-5 Spell record and invoked through prepared Character Sheet Spell Access. The runtime validates caller-supplied caster Speed, spends one ordinary level-5 Spell Slot, and returns table-facing Invisible, illusory-double, Magic-action movement, behavior-control, intangibility, invulnerability, and remote sight/hearing facts.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/mislead.ts:castMislead",
+        "packages/character-sheet-runtime/src/mislead.ts:misleadInvocationFromSpell",
+        "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/mislead.test.ts:Character Sheet runtime / Mislead"
+      ]
+    },
+    "srd521:classes/warlock:spell-level-5:spell-unit-pressure:warlock_spell_list_mislead": {
+      "taskId": "L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION",
+      "profile": "Character Sheet Mislead session invisible-double invocation",
+      "summary": "Mislead is read from the installed SRD level-5 Spell record and invoked through prepared Character Sheet Spell Access. The runtime validates caller-supplied caster Speed, spends one ordinary level-5 Spell Slot, and returns table-facing Invisible, illusory-double, Magic-action movement, behavior-control, intangibility, invulnerability, and remote sight/hearing facts.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/mislead.ts:castMislead",
+        "packages/character-sheet-runtime/src/mislead.ts:misleadInvocationFromSpell",
+        "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/mislead.test.ts:Character Sheet runtime / Mislead"
+      ]
+    },
+    "srd521:classes/wizard:spell-level-5:spell-unit-pressure:wizard_spell_list_mislead": {
+      "taskId": "L19E-07-L5-DIVINATION-SOCIAL-EXPLORATION",
+      "profile": "Character Sheet Mislead session invisible-double invocation",
+      "summary": "Mislead is read from the installed SRD level-5 Spell record and invoked through prepared Character Sheet Spell Access. The runtime validates caller-supplied caster Speed, spends one ordinary level-5 Spell Slot, and returns table-facing Invisible, illusory-double, Magic-action movement, behavior-control, intangibility, invulnerability, and remote sight/hearing facts.",
+      "runtimeProjection": [
+        "packages/character-sheet-runtime/src/mislead.ts:castMislead",
+        "packages/character-sheet-runtime/src/mislead.ts:misleadInvocationFromSpell",
+        "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
+      ],
+      "tests": [
+        "packages/character-sheet-runtime/src/mislead.test.ts:Character Sheet runtime / Mislead"
+      ]
     }
+  },
+  "srd521:classes/sorcerer:spell-level-5:spell-unit-pressure:sorcerer_spell_list_telekinesis": {
+    "taskId": "L19E-02-L5-SAVE-CONDITION-CONTROL",
+    "profile": "Character Sheet Telekinesis sustained force-control session runtime",
+    "summary": "Telekinesis is read from the installed SRD level-5 Spell record and invoked through prepared Character Sheet Spell Access. The runtime validates the SRD sustained force-control Surface profile, a caller-supplied visible creature or object target witness, and the initial mode facts before spending one ordinary level-5 Spell Slot. It returns a table-facing Concentration force-control contract with 60-foot range, 10-minute duration, creature Strength Saving Throw outcomes, 30-foot forced movement, Restrained and lifted suspension facts, unattended-object movement, worn-or-carried-object carrier-save branches, fine object manipulation, and later-turn Magic Action reapplication. Actual map movement, object state, carrier possession, remote target mutation, falling, and repeated-turn target choice remain table/session-owned facts.",
+    "runtimeProjection": [
+      "packages/character-sheet-runtime/src/telekinesis.ts:castTelekinesis",
+      "packages/character-sheet-runtime/src/telekinesis.ts:telekinesisInvocationFromSpell",
+      "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
+    ],
+    "tests": [
+      "packages/character-sheet-runtime/src/telekinesis.test.ts:Character Sheet runtime / Telekinesis"
+    ]
+  },
+  "srd521:classes/wizard:spell-level-5:spell-unit-pressure:wizard_spell_list_telekinesis": {
+    "taskId": "L19E-02-L5-SAVE-CONDITION-CONTROL",
+    "profile": "Character Sheet Telekinesis sustained force-control session runtime",
+    "summary": "Telekinesis is read from the installed SRD level-5 Spell record and invoked through prepared Character Sheet Spell Access. The runtime validates the SRD sustained force-control Surface profile, a caller-supplied visible creature or object target witness, and the initial mode facts before spending one ordinary level-5 Spell Slot. It returns a table-facing Concentration force-control contract with 60-foot range, 10-minute duration, creature Strength Saving Throw outcomes, 30-foot forced movement, Restrained and lifted suspension facts, unattended-object movement, worn-or-carried-object carrier-save branches, fine object manipulation, and later-turn Magic Action reapplication. Actual map movement, object state, carrier possession, remote target mutation, falling, and repeated-turn target choice remain table/session-owned facts.",
+    "runtimeProjection": [
+      "packages/character-sheet-runtime/src/telekinesis.ts:castTelekinesis",
+      "packages/character-sheet-runtime/src/telekinesis.ts:telekinesisInvocationFromSpell",
+      "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
+    ],
+    "tests": [
+      "packages/character-sheet-runtime/src/telekinesis.test.ts:Character Sheet runtime / Telekinesis"
+    ]
+  },
+  "srd521:classes/bard:spell-level-5:spell-unit-pressure:bard_spell_list_dominate_person": {
+    "taskId": "L19E-02-L5-SAVE-CONDITION-CONTROL",
+    "profile": "Character Sheet Dominate Person mental-control session runtime",
+    "summary": "Dominate Person is read from the installed SRD level-5 Spell record and invoked through prepared Character Sheet Spell Access. The runtime validates a visible Humanoid target within 60 feet, the Wisdom save-gated Surface profile, and caller-supplied save outcome before spending one ordinary level-5 Spell Slot. It returns a table-facing Charmed command-control contract with one-minute Concentration duration, fighting-target save Advantage fact, telepathic command link, and target-takes-damage repeat-save facts. Actual command interpretation, target behavior, damage event observation, repeat-save rolling, and remote target state mutation remain table/session-owned facts.",
+    "runtimeProjection": [
+      "packages/character-sheet-runtime/src/dominate-person.ts:castDominatePerson",
+      "packages/character-sheet-runtime/src/dominate-person.ts:dominatePersonInvocationFromSpell",
+      "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
+    ],
+    "tests": [
+      "packages/character-sheet-runtime/src/dominate-person.test.ts:Character Sheet runtime / Dominate Person"
+    ]
+  },
+  "srd521:classes/sorcerer:spell-level-5:spell-unit-pressure:sorcerer_spell_list_dominate_person": {
+    "taskId": "L19E-02-L5-SAVE-CONDITION-CONTROL",
+    "profile": "Character Sheet Dominate Person mental-control session runtime",
+    "summary": "Dominate Person is read from the installed SRD level-5 Spell record and invoked through prepared Character Sheet Spell Access. The runtime validates a visible Humanoid target within 60 feet, the Wisdom save-gated Surface profile, and caller-supplied save outcome before spending one ordinary level-5 Spell Slot. It returns a table-facing Charmed command-control contract with one-minute Concentration duration, fighting-target save Advantage fact, telepathic command link, and target-takes-damage repeat-save facts. Actual command interpretation, target behavior, damage event observation, repeat-save rolling, and remote target state mutation remain table/session-owned facts.",
+    "runtimeProjection": [
+      "packages/character-sheet-runtime/src/dominate-person.ts:castDominatePerson",
+      "packages/character-sheet-runtime/src/dominate-person.ts:dominatePersonInvocationFromSpell",
+      "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
+    ],
+    "tests": [
+      "packages/character-sheet-runtime/src/dominate-person.test.ts:Character Sheet runtime / Dominate Person"
+    ]
+  },
+  "srd521:classes/wizard:spell-level-5:spell-unit-pressure:wizard_spell_list_dominate_person": {
+    "taskId": "L19E-02-L5-SAVE-CONDITION-CONTROL",
+    "profile": "Character Sheet Dominate Person mental-control session runtime",
+    "summary": "Dominate Person is read from the installed SRD level-5 Spell record and invoked through prepared Character Sheet Spell Access. The runtime validates a visible Humanoid target within 60 feet, the Wisdom save-gated Surface profile, and caller-supplied save outcome before spending one ordinary level-5 Spell Slot. It returns a table-facing Charmed command-control contract with one-minute Concentration duration, fighting-target save Advantage fact, telepathic command link, and target-takes-damage repeat-save facts. Actual command interpretation, target behavior, damage event observation, repeat-save rolling, and remote target state mutation remain table/session-owned facts.",
+    "runtimeProjection": [
+      "packages/character-sheet-runtime/src/dominate-person.ts:castDominatePerson",
+      "packages/character-sheet-runtime/src/dominate-person.ts:dominatePersonInvocationFromSpell",
+      "packages/character-sheet-runtime/src/spell-slots.ts:spendCharacterSheetSpellSlot"
+    ],
+    "tests": [
+      "packages/character-sheet-runtime/src/dominate-person.test.ts:Character Sheet runtime / Dominate Person"
+    ]
   }
 }

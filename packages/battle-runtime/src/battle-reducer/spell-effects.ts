@@ -67,11 +67,18 @@ export function spellDamageComponents(
   critical = false,
   spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
 ): readonly (AttackDamageComponent & { readonly flat: number })[] {
-  const baseDice =
-    invocation.procedure === "repeatedDamageAllocation"
-      ? invocation.damage.expr.dice * invocation.targeting.repeatedEffectCount
-      : invocation.damage.expr.dice *
-        ((invocation.procedure === "heldLightHurl" ||
+  const damageComponents =
+    invocation.procedure === "saveGatedDamage"
+      ? [invocation.damage, ...invocation.additionalDamageComponents]
+      : [invocation.damage];
+  return [
+    ...damageComponents.map((damage, index) => {
+      const repeatedEffectCount =
+        invocation.procedure === "repeatedDamageAllocation" && index === 0
+          ? invocation.targeting.repeatedEffectCount
+          : 1;
+      const criticalMultiplier =
+        (invocation.procedure === "heldLightHurl" ||
           invocation.procedure === "spellAttackSequence" ||
           invocation.procedure === "spellAttackDamage" ||
           invocation.procedure === "spellCreatedHeldObjectAttack" ||
@@ -80,18 +87,16 @@ export function spellDamageComponents(
           invocation.procedure === "attackBurstSaveDamage") &&
         critical
           ? 2
-          : 1);
-  const baseFlat =
-    (invocation.damage.expr.flat ?? 0) *
-    (invocation.procedure === "repeatedDamageAllocation"
-      ? invocation.targeting.repeatedEffectCount
-      : 1);
-  return [
-    {
-      expr: { dice: baseDice, dieSize: invocation.damage.expr.dieSize },
-      damageType: invocation.damage.damageType,
-      flat: baseFlat,
-    },
+          : 1;
+      return {
+        expr: {
+          dice: damage.expr.dice * repeatedEffectCount * criticalMultiplier,
+          dieSize: damage.expr.dieSize,
+        },
+        damageType: damage.damageType,
+        flat: (damage.expr.flat ?? 0) * repeatedEffectCount,
+      };
+    }),
     ...spellMarkedDamageRiders.map((rider) => ({
       expr: {
         ...rider.damage.expr,

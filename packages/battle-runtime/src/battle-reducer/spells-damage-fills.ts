@@ -803,7 +803,8 @@ export function spellRollModifierTargetAbilityChoicesHole(
 export function spellAbilityChoiceHoleId(
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "markedDamageRider"; readonly action: "cast" }
+    | { readonly procedure: "markedDamageRider"; readonly action: "cast" }
+    | { readonly procedure: "saveGatedDamage" }
   >,
 ): BattleHoleId {
   return holeId(`battle:spell:ability-choice:${invocation.spell.id}`);
@@ -812,7 +813,8 @@ export function spellAbilityChoiceHoleId(
 export function spellAbilityChoiceHole(
   invocation: Extract<
     SupportedSpellInvocation,
-    { readonly procedure: "markedDamageRider"; readonly action: "cast" }
+    | { readonly procedure: "markedDamageRider"; readonly action: "cast" }
+    | { readonly procedure: "saveGatedDamage" }
   >,
 ): BattleSpellAbilityChoiceHole {
   return {
@@ -824,7 +826,9 @@ export function spellAbilityChoiceHole(
     label: `${invocation.spell.name} ability`,
     spell: invocation,
     choices:
-      invocation.abilityCheckBehavior.kind === "chosenAbilityDisadvantage"
+      invocation.procedure === "saveGatedDamage"
+        ? (invocation.failedSaveAbilityChoices ?? [])
+        : invocation.abilityCheckBehavior.kind === "chosenAbilityDisadvantage"
         ? invocation.abilityCheckBehavior.choices
         : [],
   };
@@ -1144,6 +1148,7 @@ export function savingThrowRollModeProjections(
     ...passiveRollModeProjections,
     ...activeAbilityD20TestSavingThrowRollModeProjections(state, ability),
     ...activeSavingThrowRollModeProjections(state, ability),
+    ...activeCountedConditionSavingThrowRollModeProjections(state, ability),
     ...creatureSizeChangeSavingThrowRollModeProjections(state, ability),
     ...conditionSavingThrowRollModeProjections(
       state,
@@ -1283,6 +1288,20 @@ function activeSavingThrowRollModeProjections(
   );
 }
 
+function activeCountedConditionSavingThrowRollModeProjections(
+  state: BattleState,
+  ability: Ability,
+): readonly BattleSavingThrowRollModeProjection[] {
+  return [...state.combatants].flatMap(([targetId, target]) =>
+    target.activeEffects.flatMap((effect) =>
+      effect.kind === "spellConditionCountedEndTurnSave" &&
+      effect.savingThrowDisadvantageAbility === ability
+        ? [{ targetId, rollMode: "disadvantage" as const }]
+        : [],
+    ),
+  );
+}
+
 function activeAbilityD20TestSavingThrowRollModeProjections(
   state: BattleState,
   ability: Ability,
@@ -1416,7 +1435,11 @@ export function validateSpellDamageFill(
       ? "Critical hit spell damage must use the critical spell damage hole."
       : "Spell damage must use the selected action-time spell act damage hole.";
   }
-  if (spellMarkedDamageRiders.length > 0) {
+  const usesComponentDamageGroups =
+    spellMarkedDamageRiders.length > 0 ||
+    (invocation.procedure === "saveGatedDamage" &&
+      invocation.additionalDamageComponents.length > 0);
+  if (usesComponentDamageGroups) {
     const spellDamageRerollIssue = spellDamageRerollUnsupportedIssue(fill);
     if (spellDamageRerollIssue !== null) {
       return spellDamageRerollIssue;
@@ -1907,7 +1930,11 @@ export function spellDamageByTypeForTarget(
   spellMarkedDamageRiders: readonly SpellMarkedDamageRider[] = [],
   critical = false,
 ): ReadonlyMap<DamageType, number> {
-  if (spellMarkedDamageRiders.length > 0) {
+  if (
+    spellMarkedDamageRiders.length > 0 ||
+    (invocation.procedure === "saveGatedDamage" &&
+      invocation.additionalDamageComponents.length > 0)
+  ) {
     const components = spellDamageComponents(
       invocation,
       critical,
@@ -1926,7 +1953,11 @@ export function spellDamageByTypeForTarget(
         0,
       );
       const unadjusted = diceTotal + component.flat;
-      return addDamageAmountForType(totals, component.damageType, unadjusted);
+      return addDamageAmountForType(
+        totals,
+        component.damageType,
+        applySaveDamageResult(unadjusted, saveDamageResult),
+      );
     }, new Map());
     return damageByType;
   }

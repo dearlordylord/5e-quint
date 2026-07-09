@@ -10,7 +10,7 @@ let WeaponProficiency : Type =
 let monk =
       { armorTraining = { kind = "none" }
       , className = "monk"
-      , description = "SRD Monk class creation facts plus early progression through level 5."
+      , description = "SRD Monk class creation facts plus level 1-9 progression, including the level 9 Acrobatic Movement grant."
       , featureGrants =
         [ { level = 1, unitId = "monk_martial_arts" }
         , { level = 1, unitId = "monk_unarmored_defense" }
@@ -21,6 +21,7 @@ let monk =
         , { level = 4, unitId = "monk_slow_fall" }
         , { level = 5, unitId = "monk_extra_attack" }
         , { level = 5, unitId = "monk_stunning_strike" }
+        , { level = 9, unitId = "monk_acrobatic_movement" }
         ]
       , hitPointDie = 8
       , id = "class_monk"

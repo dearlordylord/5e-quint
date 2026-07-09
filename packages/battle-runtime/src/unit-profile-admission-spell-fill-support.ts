@@ -7,8 +7,12 @@ import {
 import type { Ability, Size } from "@dnd/surface/surface/types";
 import { expect } from "vitest";
 import {
+  insectPlagueAreaHazardSavingThrowOutcomeHole,
+  cloudkillAreaHazardSavingThrowOutcomeHole,
   sleetStormAreaHazardSavingThrowOutcomeHole,
   type BattleActiveEffect,
+  type BattleCloudkillAreaHazardTrigger,
+  type BattleInsectPlagueAreaHazardTrigger,
   type BattleSleetStormAreaHazardTrigger,
   type SupportedDamageSpellInvocation,
 } from "./battle-reducer.ts";
@@ -46,6 +50,10 @@ import {
   gustOfWindAreaId,
   gustOfWindEastDirectionId,
   gustOfWindNorthDirectionId,
+  insectPlagueAreaId,
+  insectPlagueUnitId,
+  cloudkillAreaId,
+  cloudkillUnitId,
   moonbeamAreaId,
   sleetStormAreaId,
   sleetStormUnitId,
@@ -61,6 +69,14 @@ import { requireCombatant } from "./unit-profile-admission-creature-fixture-supp
 type SleetStormAreaHazardEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "sleetStormAreaHazard" }
+>;
+type InsectPlagueAreaHazardEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "insectPlagueAreaHazard" }
+>;
+type CloudkillAreaHazardEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "cloudkillAreaHazard" }
 >;
 const tableSelectedPointAreaOriginAnchor = {
   kind: "tableSelectedPoint",
@@ -1034,6 +1050,28 @@ export function sleetStormAreaFill(
   };
 }
 
+export function insectPlagueAreaFill(
+  hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>,
+  areaId = insectPlagueAreaId,
+): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
+  return {
+    kind: "spellAreaChoice",
+    holeId: hole.holeId,
+    value: { kind: "insectPlagueSphereArea", areaId },
+  };
+}
+
+export function cloudkillAreaFill(
+  hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>,
+  areaId = cloudkillAreaId,
+): Extract<BattleFill, { readonly kind: "spellAreaChoice" }> {
+  return {
+    kind: "spellAreaChoice",
+    holeId: hole.holeId,
+    value: { kind: "cloudkillSphereArea", areaId },
+  };
+}
+
 export function webAreaFill(
   hole: Extract<BattleHole, { readonly kind: "spellAreaChoice" }>,
   areaId = webAreaId,
@@ -1261,6 +1299,158 @@ export function sleetStormAreaHazardSaveAct(
       ),
     ],
   };
+}
+
+export function insectPlagueAreaHazardSaveAct(
+  state: BattleState,
+  actorId: CombatantId,
+  trigger: BattleInsectPlagueAreaHazardTrigger,
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "insectPlagueAreaHazardSave";
+    }
+  >;
+} {
+  const effect = activeInsectPlagueAreaHazardEffect(state);
+  if (effect === undefined) {
+    throw new Error("Expected active Insect Plague area hazard.");
+  }
+  const subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "insectPlagueAreaHazardSave";
+    }
+  > = {
+    tag: "runtimeCommand",
+    actorId,
+    command: "insectPlagueAreaHazardSave",
+    areaMembershipTrigger: {
+      kind:
+        trigger === "appearsInArea"
+          ? "appearsInArea"
+          : trigger === "entersArea"
+            ? "firstEntryOnTurn"
+            : "turnEndInArea",
+      sourceCombatantId: effect.sourceCombatantId,
+      sourceSpellId: spellId(effect.sourceSpellId),
+      areaId: effect.areaId,
+    },
+  };
+  return {
+    subject,
+    label:
+      trigger === "appearsInArea"
+        ? "Insect Plague Appears"
+        : trigger === "entersArea"
+          ? "Enter Insect Plague"
+          : "End Turn in Insect Plague",
+    summary:
+      "Resolve the caller-supplied Insect Plague Constitution Saving Throw and Piercing damage.",
+    initialHoles: [
+      insectPlagueAreaHazardSavingThrowOutcomeHole(
+        state,
+        actorId,
+        effect,
+        trigger,
+      ),
+    ],
+  };
+}
+
+export function cloudkillAreaHazardSaveAct(
+  state: BattleState,
+  actorId: CombatantId,
+  trigger: BattleCloudkillAreaHazardTrigger,
+): AvailableBattleAct & {
+  readonly subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "cloudkillAreaHazardSave";
+    }
+  >;
+} {
+  const effect = activeCloudkillAreaHazardEffect(state);
+  if (effect === undefined) {
+    throw new Error("Expected active Cloudkill area hazard.");
+  }
+  const subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "cloudkillAreaHazardSave";
+    }
+  > = {
+    tag: "runtimeCommand",
+    actorId,
+    command: "cloudkillAreaHazardSave",
+    areaMembershipTrigger: {
+      kind:
+        trigger === "appearsInArea"
+          ? "appearsInArea"
+          : trigger === "movesIntoSpace"
+            ? "areaMovesIntoSpace"
+            : trigger === "entersArea"
+              ? "firstEntryOnTurn"
+              : "turnEndInArea",
+      sourceCombatantId: effect.sourceCombatantId,
+      sourceSpellId: spellId(effect.sourceSpellId),
+      areaId: effect.areaId,
+    },
+  };
+  return {
+    subject,
+    label:
+      trigger === "appearsInArea"
+        ? "Cloudkill Appears"
+        : trigger === "movesIntoSpace"
+          ? "Cloudkill Moves Into Space"
+          : trigger === "entersArea"
+            ? "Enter Cloudkill"
+            : "End Turn in Cloudkill",
+    summary:
+      "Resolve the caller-supplied Cloudkill Constitution Saving Throw and Poison damage.",
+    initialHoles: [
+      cloudkillAreaHazardSavingThrowOutcomeHole(
+        state,
+        actorId,
+        effect,
+        trigger,
+      ),
+    ],
+  };
+}
+
+function activeInsectPlagueAreaHazardEffect(
+  state: BattleState,
+): InsectPlagueAreaHazardEffect | undefined {
+  return [...state.combatants.values()]
+    .flatMap((combatant) => combatant.activeEffects)
+    .find(
+      (effect): effect is InsectPlagueAreaHazardEffect =>
+        effect.kind === "insectPlagueAreaHazard" &&
+        effect.sourceCombatantId === spellCasterId &&
+        effect.sourceSpellId === insectPlagueUnitId &&
+        effect.areaId === insectPlagueAreaId,
+    );
+}
+
+function activeCloudkillAreaHazardEffect(
+  state: BattleState,
+): CloudkillAreaHazardEffect | undefined {
+  return [...state.combatants.values()]
+    .flatMap((combatant) => combatant.activeEffects)
+    .find(
+      (effect): effect is CloudkillAreaHazardEffect =>
+        effect.kind === "cloudkillAreaHazard" &&
+        effect.sourceCombatantId === spellCasterId &&
+        effect.sourceSpellId === cloudkillUnitId &&
+        effect.areaId === cloudkillAreaId,
+    );
 }
 
 function activeSleetStormAreaHazardEffect(

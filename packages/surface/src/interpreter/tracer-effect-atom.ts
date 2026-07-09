@@ -277,6 +277,7 @@ export function traceEffectAtom(
     case "object_location_sense":
     case "block_divination_targeting_and_scrying_perception":
     case "divination_omen":
+    case "planar_entity_answers":
     case "assign_courier_task":
     case "negate_triggering_spell":
     case "reflect_triggering_spell":

@@ -9,6 +9,7 @@ This strict view tracks executable SRD character-level-1 through character-level
 Full-support claim: **pass**.
 
 Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
+Strict level-9 final-support blockers: 0.
 
 ## Metrics
 
@@ -17,7 +18,8 @@ Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
 | Strict runtime/profile support | 147/210 (70%) |
 | Strict target closure | 210/210 (100%) |
 | Selected identity readiness | 169/169 (100%) |
-| Diagnostic product readiness | 632/632 (100%) |
+| Diagnostic product readiness | 635/635 (100%) |
+| Strict level-9 final support | 225/225 (100%) |
 | SRD authored product readiness | 105/105 (100%) |
 | Rules-kernel profile join | 108/108 (100%) |
 | Rules-kernel covered profile join | 108/108 (100%) |
@@ -25,7 +27,7 @@ Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
-The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 632/632 (100%) while the claim gate reports **pass** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
+The full-support claim gate uses strict target closure, selected identity readiness, SRD-authored product readiness, and strict level-9 final-support blockers. Diagnostic product readiness is a source-row accounting view, so it can report 635/635 (100%) while the claim gate reports **pass** only when level-9 and spell-level-5 rows have no unsupported, catalog-only, missing-authored, future-owner, or audit-only closure.
 
 ### Diagnostic Product Readiness Accounting
 
@@ -34,7 +36,7 @@ Diagnostic product readiness keeps lower-layer planning pressure visible. Rows i
 | Status | Rows |
 | --- | ---: |
 | accepted | 448 |
-| accepted-no-battle-effect | 184 |
+| accepted-no-battle-effect | 187 |
 
 ### Selected Identity Replay Accounting
 
@@ -59,8 +61,17 @@ This is the selected-identity gate layer for the strict denominator. `witness-pr
 | Strict runtime/profile closure | pass | 210/210 (100%) | _none_ |
 | Selected identity readiness | pass | 169/169 (100%) | _none_ |
 | SRD authored product readiness | pass | 105/105 (100%) | _none_ |
+| Strict level-9 final support | pass | 225/225 (100%) | _none_ |
 
 Every gate row must pass for a full level-support claim. A 100% result in one layer does not satisfy another layer, failed gates are not combined into a weighted completion percentage, and diagnostic product-readiness rows are intentionally absent from this gate unless they enter the SRD-authored blocker set.
+
+### Strict Level-9 Final-Support Blockers
+
+These rows are forbidden as final level-1-9 support for `level-9` and `spell-level-5` SRD pressure. They may remain only while implementation tasks are in progress.
+
+| Unit | Blocker kind | Reasons | Level bands | Source rows |
+| --- | --- | --- | --- | --- |
+| _none_ | _none_ | _none_ | _none_ | _none_ |
 
 ## SRD-Authored Product Readiness
 
@@ -93,9 +104,9 @@ This gate checks authored records and retained Unit references that must resolve
 
 | Scope fact | Count |
 | --- | ---: |
-| Candidate Unit ids before exclusions | 237 |
+| Candidate Unit ids before exclusions | 238 |
 | Companion-worktree exclusions | 1 |
-| SRD pressure with no Unit matrix row | 14 |
+| SRD pressure with no Unit matrix row | 15 |
 | Non-executable class containers | 12 |
 | Strict executable denominator | 210 |
 | Non-supported frontier | 63 |
@@ -234,6 +245,7 @@ This gate checks authored records and retained Unit references that must resolve
 | `mage_hand` | 4 | The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | catalog-only/dead-for-now | not-recorded | Remote hand creation, object manipulation, carry limit, repeated Magic action control, and distance/recast expiry are exploration object-control effects outside promoted runtime owners. | `plans/unit-profile-coverage/frontier-decisions/mage_hand.md` | Bard spell list Mage Hand; Sorcerer spell list Mage Hand; Warlock spell list Mage Hand; Wizard spell list Mage Hand |
 | `mending` | 5 | The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | catalog-only/dead-for-now | not-recorded | Object repair without restoring magic is equipment/exploration state outside promoted runtime owners. | `plans/unit-profile-coverage/frontier-decisions/mending.md` | Bard spell list Mending; Cleric spell list Mending; Druid spell list Mending; Sorcerer spell list Mending; Wizard spell list Mending |
 | `message` | 4 | The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | catalog-only/dead-for-now | not-recorded | Private communication and barrier/silence blocking are exploration communication effects outside promoted runtime owners. | `plans/unit-profile-coverage/frontier-decisions/message.md` | Bard spell list Message; Druid spell list Message; Sorcerer spell list Message; Wizard spell list Message |
+| `phantasmal_force` | 3 | The SRD row has spell-level-2 spell-list Unit pressure, but no Unit matrix row exists yet. | missing-authored-runtime-closed | outside-battle-runtime: future single-target phantasm illusion Spell Effect plus Study/disbelief and recurring Psychic damage owner | Target-specific mental phantasm state, initial Intelligence save, Study/Investigation disbelief, caster-turn Psychic damage, and dangerous phantasm/hazard adjudication require a future single-target phantasm illusion owner. | _none_ | Bard spell list Phantasmal Force; Sorcerer spell list Phantasmal Force; Wizard spell list Phantasmal Force |
 | `prestidigitation` | 4 | The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | catalog-only/dead-for-now | not-recorded | Minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners. | `plans/unit-profile-coverage/frontier-decisions/prestidigitation.md` | Bard spell list Prestidigitation; Sorcerer spell list Prestidigitation; Warlock spell list Prestidigitation; Wizard spell list Prestidigitation |
 | `purify_food_and_drink` | 3 | The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | catalog-only/dead-for-now | not-recorded | Removing poison and rot from nonmagical food and drink is exploration/inventory state outside promoted runtime owners. | `plans/unit-profile-coverage/frontier-decisions/purify_food_and_drink.md` | Cleric spell list Purify Food and Drink; Druid spell list Purify Food and Drink; Paladin spell list Purify Food and Drink |
 | `ranger_hunters_lore` | 1 | The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet. | catalog-only/dead-for-now | not-recorded | Hunter's Lore reveals whether a Hunter's Mark target has Immunities, Resistances, or Vulnerabilities and what they are. That disclosure is table/stat-block knowledge, not promoted battle state; the runtime must not duplicate Stat Block facts into Ranger feature state. | _none_ | Ranger Hunter's Lore |

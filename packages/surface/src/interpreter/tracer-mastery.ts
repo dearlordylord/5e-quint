@@ -133,6 +133,18 @@ export function traceOnHitRiderEffect(
   ids: IdGen,
 ): void {
   switch (e.kind) {
+    case "push_creature": {
+      const pushId = ids("push");
+      nodes.push({
+        id: pushId,
+        category: "effect",
+        atomKind: "push_creature",
+        label: `push_creature\nup to ${e.maxDistanceFeet} ft\n${e.direction}\nmax size ${e.maximumTargetSize}`,
+      });
+      edges.push({ from: winId, to: pushId, relation: "grants" });
+      edges.push({ from: pushId, to: targetId, relation: "attaches_to" });
+      return;
+    }
     case "modify_roll_advantage": {
       const effId = ids("eff");
       nodes.push({
@@ -237,6 +249,19 @@ export function traceOnHitRiderEffect(
       edges.push({ from: damageId, to: targetId, relation: "attaches_to" });
       return;
     }
+    case "speed_delta": {
+      const speedId = ids("spd");
+      nodes.push({
+        id: speedId,
+        category: "effect",
+        atomKind: "speed_delta",
+        label: `speed_delta\n${e.deltaFeet} ft\nmax reduction ${e.maximumReductionFeet} ft`,
+      });
+      edges.push({ from: winId, to: speedId, relation: "grants" });
+      edges.push({ from: speedId, to: targetId, relation: "attaches_to" });
+      traceRiderExpiry(e.expiresOn, speedId, nodes, edges, ids);
+      return;
+    }
     default: {
       const _: never = e;
       throw new Error(`unhandled on-hit rider effect: ${String(_)}`);
@@ -306,6 +331,14 @@ export function traceRiderExpiry(
         category: "window",
         atomKind: "turn_start_window",
         label: "turn_start_window\n(caster's next turn)",
+      });
+      break;
+    case "start_of_attacker_next_turn":
+      nodes.push({
+        id: winId,
+        category: "window",
+        atomKind: "turn_start_window",
+        label: "turn_start_window\n(attacker's next turn)",
       });
       break;
     default: {

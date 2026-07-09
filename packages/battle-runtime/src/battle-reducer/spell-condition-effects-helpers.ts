@@ -462,6 +462,8 @@ function activeEffectSourcesCondition(
       effect.condition === condition) ||
     (effect.kind === "spellConditionEndTurnSave" &&
       effect.condition === condition) ||
+    (effect.kind === "spellConditionCountedEndTurnSave" &&
+      effect.condition === condition) ||
     (effect.kind === "sleepUnconscious" &&
       (condition === "unconscious" || condition === "prone")) ||
     activeEffectDirectlyAppliesCondition(effect, condition)
@@ -483,6 +485,8 @@ function activeEffectDirectlyAppliesCondition(
     (effect.kind === "spellConditionRepeatSave" &&
       effect.condition === condition) ||
     (effect.kind === "spellConditionEndTurnSave" &&
+      effect.condition === condition) ||
+    (effect.kind === "spellConditionCountedEndTurnSave" &&
       effect.condition === condition) ||
     (effect.kind === "sleepPendingRepeatSave" &&
       condition === "incapacitated") ||
@@ -589,7 +593,8 @@ export function removeSpellConditionEffect(
       readonly kind:
         | "spellCondition"
         | "spellConditionRepeatSave"
-        | "spellConditionEndTurnSave";
+        | "spellConditionEndTurnSave"
+        | "spellConditionCountedEndTurnSave";
     }
   >,
 ): BattleState {

@@ -1,8 +1,9 @@
-// UNIT-IDENTITY-EVIDENCE: selected-identity-replay condition-saving-throw-lifecycle blindness_deafness color_spray entangle hideous_laughter hold_person hypnotic_pattern sleep
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay condition-saving-throw-lifecycle blindness_deafness color_spray entangle hideous_laughter hold_monster hold_person hypnotic_pattern sleep
 // UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle blindness_deafness doResolveBlindnessDeafnessBlindedSavingThrow doResolveBlindnessDeafnessDeafenedSavingThrow
 // UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle color_spray doResolveColorSprayFailedSavingThrow
 // UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle entangle doResolveEntangleFailedSavingThrow
 // UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle hideous_laughter doResolveHideousLaughterRepeatSavingThrowSuccess
+// UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle hold_monster doResolveHoldMonsterFailedSavingThrow doResolveHoldMonsterRepeatSavingThrowSuccess
 // UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle hold_person doResolveHoldPersonFailedSavingThrow doResolveHoldPersonRepeatSavingThrowSuccess
 // UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle hypnotic_pattern doResolveHypnoticPatternFailedSavingThrow
 // UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle sleep doResolveSleepRepeatSavingThrowFailure
@@ -70,12 +71,14 @@ type ConditionSavingThrowSelectedIdentityProjection = {
   readonly firstLevelSlotsExpended: number;
   readonly secondLevelSlotsExpended: number;
   readonly thirdLevelSlotsExpended: number;
+  readonly fifthLevelSlotsExpended: number;
   readonly lastResult: "init" | "resolved";
 };
 const conditionSavingThrowSpellUnitIds = [
   "blindness_deafness",
   "color_spray",
   "entangle",
+  "hold_monster",
   "hold_person",
   "hideous_laughter",
   "hypnotic_pattern",
@@ -135,7 +138,15 @@ it("observes selected condition-saving-throw qRoute through public reducer event
   expect(resolveHoldPersonFailedSavingThrowRoute()).toEqual(
     saveGatedConditionTargetListRoute(),
   );
+  expect(resolveHoldMonsterFailedSavingThrowRoute()).toEqual(
+    saveGatedConditionTargetListRoute(),
+  );
   expect(resolveHoldPersonRepeatSavingThrowSuccessRoute()).toEqual(
+    repeatSaveSuccessCleanupRoute({
+      initialRoute: saveGatedConditionTargetListRoute(),
+    }),
+  );
+  expect(resolveHoldMonsterRepeatSavingThrowSuccessRoute()).toEqual(
     repeatSaveSuccessCleanupRoute({
       initialRoute: saveGatedConditionTargetListRoute(),
     }),
@@ -177,6 +188,7 @@ defineSelectedIdentityReplayAndQntReplay({
     firstLevelSlotsExpended: "int",
     secondLevelSlotsExpended: "int",
     thirdLevelSlotsExpended: "int",
+    fifthLevelSlotsExpended: "int",
     lastResult: "str",
   },
   quintStateField: "qState",
@@ -241,6 +253,21 @@ defineSelectedIdentityReplayAndQntReplay({
             resolvedProjection(
               resolveHideousLaughterRepeatSavingThrowSuccess(),
             ),
+        },
+      ],
+    },
+    {
+      unitId: "hold_monster",
+      procedures: [
+        {
+          actionName: "doResolveHoldMonsterFailedSavingThrow",
+          discover: () =>
+            resolvedProjection(resolveHoldMonsterFailedSavingThrow()),
+        },
+        {
+          actionName: "doResolveHoldMonsterRepeatSavingThrowSuccess",
+          discover: () =>
+            resolvedProjection(resolveHoldMonsterRepeatSavingThrowSuccess()),
         },
       ],
     },
@@ -364,10 +391,21 @@ function resolveBlindnessDeafnessFailedSavingThrow(
 }
 
 function resolveHoldPersonFailedSavingThrow(): BattleResolutionResult {
-  const state = conditionSpellBattle(srdSpellRecord("hold_person"), "wizard");
-  const act = spellAct({ state, spellId: "hold_person", slotLevel: 2 });
+  return resolveHoldSpellFailedSavingThrow("hold_person", 2);
+}
+
+function resolveHoldMonsterFailedSavingThrow(): BattleResolutionResult {
+  return resolveHoldSpellFailedSavingThrow("hold_monster", 5);
+}
+
+function resolveHoldSpellFailedSavingThrow(
+  spellId: Extract<ConditionSavingThrowSpellUnitId, "hold_monster" | "hold_person">,
+  slotLevel: 2 | 5,
+): BattleResolutionResult {
+  const state = conditionSpellBattle(srdSpellRecord(spellId), "wizard");
+  const act = spellAct({ state, spellId, slotLevel });
   const target = requireHole(act.initialHoles, "spellTargetList");
-  const targetFill = spellTargetListFill(target, "hold_person", [targetId]);
+  const targetFill = spellTargetListFill(target, spellId, [targetId]);
   const initialSave = requireResultHole(
     resolveBattleSubject({
       state,
@@ -387,9 +425,25 @@ function resolveHoldPersonFailedSavingThrow(): BattleResolutionResult {
 }
 
 function resolveHoldPersonRepeatSavingThrowSuccess(): BattleResolutionResult {
-  const cast = resolveHoldPersonFailedSavingThrow();
+  return resolveHoldSpellRepeatSavingThrowSuccess(
+    resolveHoldPersonFailedSavingThrow(),
+    "Hold Person",
+  );
+}
+
+function resolveHoldMonsterRepeatSavingThrowSuccess(): BattleResolutionResult {
+  return resolveHoldSpellRepeatSavingThrowSuccess(
+    resolveHoldMonsterFailedSavingThrow(),
+    "Hold Monster",
+  );
+}
+
+function resolveHoldSpellRepeatSavingThrowSuccess(
+  cast: BattleResolutionResult,
+  spellName: "Hold Monster" | "Hold Person",
+): BattleResolutionResult {
   if (cast.tag !== "resolved") {
-    throw new Error("Expected Hold Person cast to resolve.");
+    throw new Error(`Expected ${spellName} cast to resolve.`);
   }
   const targetTurn = endTurn({ state: cast.state, actorId: casterId });
   if (targetTurn.tag !== "resolved") {
@@ -584,10 +638,21 @@ function resolveBlindnessDeafnessFailedSavingThrowRoute(
 }
 
 function resolveHoldPersonFailedSavingThrowRoute(): readonly BattleReducerRouteEvent[] {
-  const state = conditionSpellBattle(srdSpellRecord("hold_person"), "wizard");
-  const act = spellAct({ state, spellId: "hold_person", slotLevel: 2 });
+  return resolveHoldSpellFailedSavingThrowRoute("hold_person", 2);
+}
+
+function resolveHoldMonsterFailedSavingThrowRoute(): readonly BattleReducerRouteEvent[] {
+  return resolveHoldSpellFailedSavingThrowRoute("hold_monster", 5);
+}
+
+function resolveHoldSpellFailedSavingThrowRoute(
+  spellId: Extract<ConditionSavingThrowSpellUnitId, "hold_monster" | "hold_person">,
+  slotLevel: 2 | 5,
+): readonly BattleReducerRouteEvent[] {
+  const state = conditionSpellBattle(srdSpellRecord(spellId), "wizard");
+  const act = spellAct({ state, spellId, slotLevel });
   const target = requireHole(act.initialHoles, "spellTargetList");
-  const targetFill = spellTargetListFill(target, "hold_person", [targetId]);
+  const targetFill = spellTargetListFill(target, spellId, [targetId]);
   const awaitingSave = requireNeedsHolesResult(
     resolveBattleSubject({
       state,
@@ -615,7 +680,24 @@ function resolveHoldPersonFailedSavingThrowRoute(): readonly BattleReducerRouteE
 }
 
 function resolveHoldPersonRepeatSavingThrowSuccessRoute(): readonly BattleReducerRouteEvent[] {
-  const cast = requireResolvedResult(resolveHoldPersonFailedSavingThrow());
+  return resolveHoldSpellRepeatSavingThrowSuccessRoute(
+    resolveHoldPersonFailedSavingThrow(),
+    resolveHoldPersonFailedSavingThrowRoute(),
+  );
+}
+
+function resolveHoldMonsterRepeatSavingThrowSuccessRoute(): readonly BattleReducerRouteEvent[] {
+  return resolveHoldSpellRepeatSavingThrowSuccessRoute(
+    resolveHoldMonsterFailedSavingThrow(),
+    resolveHoldMonsterFailedSavingThrowRoute(),
+  );
+}
+
+function resolveHoldSpellRepeatSavingThrowSuccessRoute(
+  castResult: BattleResolutionResult,
+  initialRoute: readonly BattleReducerRouteEvent[],
+): readonly BattleReducerRouteEvent[] {
+  const cast = requireResolvedResult(castResult);
   const targetTurn = requireResolvedResult(
     endTurn({ state: cast.state, actorId: casterId }),
   );
@@ -638,7 +720,7 @@ function resolveHoldPersonRepeatSavingThrowSuccessRoute(): readonly BattleReduce
     }),
   );
   return [
-    ...resolveHoldPersonFailedSavingThrowRoute(),
+    ...initialRoute,
     ...optionalRouteEventsOf(targetTurn),
     ...routeEventsOf(repeat),
     ...routeEventsOf(resolved),
@@ -897,6 +979,10 @@ function repeatSaveSuccessCleanupRoute(input: {
 }): readonly BattleReducerRouteEvent[] {
   return [
     ...input.initialRoute,
+    routeResolveSubjectWithoutFill({
+      subject: "battleAction",
+      owner: "battleActionEconomy",
+    }),
     routeDiscoverBattleActs({
       subject: "repeatSaveConditionEffect",
       holes: ["savingThrowOutcome"],
@@ -1046,6 +1132,7 @@ function expectedProjection(
     firstLevelSlotsExpended: 0,
     secondLevelSlotsExpended: 0,
     thirdLevelSlotsExpended: 0,
+    fifthLevelSlotsExpended: 0,
     lastResult: "init",
     ...overrides,
   };
@@ -1096,6 +1183,8 @@ function conditionSpellBattle(
           spellSlots:
             spell.id === "hold_person" || spell.id === "blindness_deafness"
               ? [{ spellLevel: 2, count: 1 }]
+              : spell.id === "hold_monster"
+                ? [{ spellLevel: 5, count: 1 }]
               : spell.id === "hypnotic_pattern"
                 ? [{ spellLevel: 3, count: 1 }]
                 : [{ spellLevel: 1, count: 1 }],
@@ -1353,6 +1442,7 @@ function projectConditionSavingThrowSelectedIdentityState(
     firstLevelSlotsExpended: expendedSlotsForSpellLevel(state, casterId, 1),
     secondLevelSlotsExpended: expendedSlotsForSpellLevel(state, casterId, 2),
     thirdLevelSlotsExpended: expendedSlotsForSpellLevel(state, casterId, 3),
+    fifthLevelSlotsExpended: expendedSlotsForSpellLevel(state, casterId, 5),
     lastResult,
   };
 }

@@ -104,6 +104,7 @@ import {
   spellDamageByTypeForTarget,
   spellDamageHole,
   heightenedSpellTargetChoiceHole,
+  spellAbilityChoiceHole,
   spellObjectDamageByType,
   spellObjectDamageOutcomeFromDamageByType,
   spellSavingThrowOutcomeHole,
@@ -1231,6 +1232,14 @@ export function resolveSaveGateDamageSpellAct(input: {
       "Save-gate damage spells do not use an attack roll.",
     );
   }
+  if (
+    input.invocation.failedSaveAbilityChoices !== null &&
+    input.fillSet.abilityChoice === undefined
+  ) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      spellAbilityChoiceHole(input.invocation),
+    ]);
+  }
   if (input.opensSpellCastReactionWindow !== false) {
     const spellCastReactionWindow = maybeOpenInterruptWindow(
       input.input.state,
@@ -1400,10 +1409,18 @@ export function resolveSaveGateDamageSpellAct(input: {
       failedTargets,
       input.invocation,
     );
+    const conditioned = applySaveGatedDamageFailedSaveConditionEffects(
+      effected,
+      input.actorId,
+      failedTargets,
+      input.invocation,
+      input.fillSet.abilityChoice,
+      metamagicSelections.heightenedSpellTargetId,
+    );
     const spentResources = withFailedSaveConcentrationDuration(
       resolveSaveGateDamageSpellCastResources(input, {
         state: extendSavingThrowOngoingFeatures(
-          effected,
+          conditioned,
           input.actorId,
           selectedTargetIds,
         ),
@@ -1901,8 +1918,16 @@ export function resolveSaveGateDamageSpellAct(input: {
     failedTargets,
     input.invocation,
   );
-  const extended = extendSavingThrowOngoingFeatures(
+  const conditioned = applySaveGatedDamageFailedSaveConditionEffects(
     effected,
+    input.actorId,
+    failedTargets,
+    input.invocation,
+    input.fillSet.abilityChoice,
+    metamagicSelections.heightenedSpellTargetId,
+  );
+  const extended = extendSavingThrowOngoingFeatures(
+    conditioned,
     input.actorId,
     selectedTargetIds,
   );
@@ -1962,6 +1987,33 @@ export function resolveSaveGateDamageSpellAct(input: {
     droppedObjects: [],
     handledInterruptTrigger: input.input.handledInterruptTrigger,
   });
+}
+
+function applySaveGatedDamageFailedSaveConditionEffects(
+  state: BattleState,
+  actorId: CombatantId,
+  failedTargets: readonly CombatantId[],
+  invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "saveGatedDamage" }
+  >,
+  abilityChoice: Extract<SpellFillSet, { readonly tag: "ok" }>["abilityChoice"],
+  heightenedSpellTargetId: CombatantId | undefined,
+): BattleState {
+  return invocation.failedSaveConditionEffects.reduce((nextState, effect) => {
+    const selected = selectFailedSaveConditionEffect(effect, null);
+    return selected.tag !== "selected"
+      ? nextState
+      : applyFailedSaveSpellConditionEffects(
+          nextState,
+          actorId,
+          failedTargets,
+          invocation,
+          selected.effect,
+          abilityChoice,
+          heightenedSpellTargetId,
+        );
+  }, state);
 }
 
 function withObjectIgnitions(
@@ -2477,6 +2529,7 @@ export function resolveSaveGateConditionSpellAct(input: {
     failedTargets,
     input.invocation,
     selectedEffect.effect,
+    undefined,
     metamagicSelections.heightenedSpellTargetId,
   );
   const nextState = extendSavingThrowOngoingFeatures(

@@ -3,6 +3,8 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dragons-breath-initial
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-insect-plague-area-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-cloudkill-area-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy spell.invocation-glyph-stored-summon-object-placement
@@ -20,6 +22,8 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.ANTIMAGIC_FIELD_ONGOING_SUPPRESSION BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING
@@ -31,7 +35,11 @@ import {
   hasCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { movementFeet, type DifficultyClass } from "@dnd/shared/types";
+import {
+  movementFeet,
+  type Ability,
+  type DifficultyClass,
+} from "@dnd/shared/types";
 import type { DamageType, SpellRecord } from "@dnd/surface/surface/types";
 import {
   battleDancingLightId,
@@ -83,6 +91,7 @@ import {
   type SelfTransformationModeEffectPayload,
   type SelfTransformationModeKind,
   type SpellActiveEffectPostDamageRider,
+  type SpellConditionCountedRepeatSave,
   type SpellFailedSaveConditionChoiceEffect,
   type SpellFailedSaveConditionEffect,
   type SpellFailedSavePostDamageRider,
@@ -910,6 +919,36 @@ export function battleObscurementZones(
                         expiresAt: effect.expiresAt,
                       },
                     ]
+                  : effect.kind === "insectPlagueAreaHazard"
+                    ? [
+                        {
+                          kind: "spellObscurementZone",
+                          sourceSpellId: effect.sourceSpellId,
+                          sourceCombatantId: effect.sourceCombatantId,
+                          obscurement: "lightlyObscured",
+                          area: {
+                            kind: "pointOriginSphere",
+                            areaId: effect.areaId,
+                            radiusFeet: effect.radiusFeet,
+                          },
+                          expiresAt: effect.expiresAt,
+                        },
+                      ]
+                    : effect.kind === "cloudkillAreaHazard"
+                      ? [
+                          {
+                            kind: "spellObscurementZone",
+                            sourceSpellId: effect.sourceSpellId,
+                            sourceCombatantId: effect.sourceCombatantId,
+                            obscurement: "heavilyObscured",
+                            area: {
+                              kind: "pointOriginSphere",
+                              areaId: effect.areaId,
+                              radiusFeet: effect.radiusFeet,
+                            },
+                            expiresAt: effect.expiresAt,
+                          },
+                        ]
                   : [],
       ),
   );
@@ -1467,10 +1506,14 @@ export function applyFailedSaveSpellConditionEffects(
   invocation: Extract<
     SupportedSpellInvocation,
     {
-      readonly procedure: "afterHitSaveGatedCondition" | "saveGatedCondition";
+      readonly procedure:
+        | "afterHitSaveGatedCondition"
+        | "saveGatedCondition"
+        | "saveGatedDamage";
     }
   >,
   appliedEffect: SpellSelectedFailedSaveConditionEffect,
+  savingThrowDisadvantageAbilityChoice?: Ability | undefined,
   heightenedSpellTargetId: CombatantId | undefined = undefined,
 ): BattleState {
   const combatants = new Map(state.combatants);
@@ -1492,7 +1535,8 @@ export function applyFailedSaveSpellConditionEffects(
     const replacing = target.activeEffects.filter(
       (activeEffect) =>
         (activeEffect.kind === "spellCondition" ||
-          activeEffect.kind === "spellConditionEndTurnSave") &&
+          activeEffect.kind === "spellConditionEndTurnSave" ||
+          activeEffect.kind === "spellConditionCountedEndTurnSave") &&
         activeEffect.sourceSpellId === invocation.spell.id &&
         activeEffect.sourceCombatantId === actorId &&
         activeEffect.condition === appliedEffect.condition,
@@ -1503,7 +1547,7 @@ export function applyFailedSaveSpellConditionEffects(
       target.combatantId,
       appliedEffect.expiresAt,
     );
-    const nextEffect =
+    const nextEffect: BattleActiveEffect =
       appliedEffect.repeatSave === null
         ? {
             kind: "spellCondition" as const,
@@ -1519,6 +1563,28 @@ export function applyFailedSaveSpellConditionEffects(
             turnStartDamage: appliedEffect.turnStartDamage,
             expiresAt,
           }
+        : isCountedSpellConditionRepeatSave(appliedEffect.repeatSave)
+          ? {
+              kind: "spellConditionCountedEndTurnSave" as const,
+              sourceSpellId: invocation.spell.id,
+              sourceCombatantId: actorId,
+              condition: appliedEffect.condition,
+              conditionHadNonSpellSource:
+                conditionHadNonSpellSourceBeforeSpellEffect(
+                  target,
+                  appliedEffect.condition,
+                ),
+              save: appliedEffect.repeatSave.save,
+              successes: 0,
+              failures: 0,
+              successThreshold: appliedEffect.repeatSave.successThreshold,
+              failureThreshold: appliedEffect.repeatSave.failureThreshold,
+              savingThrowDisadvantageAbility:
+                savingThrowDisadvantageAbilityChoice ??
+                appliedEffect.repeatSave.savingThrowDisadvantageAbilities[0],
+              lockedIn: false,
+              expiresAt,
+            }
         : {
             kind: "spellConditionEndTurnSave" as const,
             sourceSpellId: invocation.spell.id,
@@ -1592,6 +1658,7 @@ function clearSourceConcentrationIfRepeatSaveConditionSpellHasNoEffects(
 ): BattleState {
   if (
     appliedEffect.repeatSave === null ||
+    isCountedSpellConditionRepeatSave(appliedEffect.repeatSave) ||
     typeof appliedEffect.expiresAt !== "object" ||
     appliedEffect.expiresAt.kind !== "concentration"
   ) {
@@ -1607,6 +1674,16 @@ function clearSourceConcentrationIfRepeatSaveConditionSpellHasNoEffects(
       },
     ),
   };
+}
+
+function isCountedSpellConditionRepeatSave(
+  repeatSave: SpellSelectedFailedSaveConditionEffect["repeatSave"],
+): repeatSave is SpellConditionCountedRepeatSave {
+  return (
+    repeatSave !== null &&
+    "kind" in repeatSave &&
+    repeatSave.kind === "counted"
+  );
 }
 
 export function applySleepPendingRepeatSaveEffects(
@@ -2230,6 +2307,98 @@ export function applySleetStormAreaHazardCastEffect(input: {
   return { ...input.state, combatants };
 }
 
+export function applyInsectPlagueAreaHazardCastEffect(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly areaId: BattleAreaId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "insectPlagueAreaHazard" }
+  >;
+}): BattleState {
+  const combatants = new Map(input.state.combatants);
+  const caster = combatants.get(input.actorId);
+  if (caster === undefined) {
+    return input.state;
+  }
+  const replacing = caster.activeEffects.filter(
+    (effect) =>
+      effect.kind === "insectPlagueAreaHazard" &&
+      effect.sourceSpellId === input.invocation.spell.id &&
+      effect.sourceCombatantId === input.actorId &&
+      effect.areaId === input.areaId,
+  );
+  const activeEffects = [
+    ...caster.activeEffects.filter((effect) => !replacing.includes(effect)),
+    {
+      kind: "insectPlagueAreaHazard" as const,
+      sourceSpellId: input.invocation.spell.id,
+      sourceCombatantId: input.actorId,
+      areaId: input.areaId,
+      radiusFeet: input.invocation.targeting.radiusFeet,
+      save: {
+        ability: input.invocation.ability,
+        dc: input.invocation.dc,
+      },
+      damage: input.invocation.damage,
+      savedThisTurn: [],
+      expiresAt: {
+        kind: "concentration" as const,
+        combatantId: input.actorId,
+        durationTicks: input.invocation.durationTicks,
+      },
+    },
+  ];
+  combatants.set(input.actorId, { ...caster, activeEffects });
+  return { ...input.state, combatants };
+}
+
+export function applyCloudkillAreaHazardCastEffect(input: {
+  readonly state: BattleState;
+  readonly actorId: CombatantId;
+  readonly areaId: BattleAreaId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "cloudkillAreaHazard" }
+  >;
+}): BattleState {
+  const combatants = new Map(input.state.combatants);
+  const caster = combatants.get(input.actorId);
+  if (caster === undefined) {
+    return input.state;
+  }
+  const replacing = caster.activeEffects.filter(
+    (effect) =>
+      effect.kind === "cloudkillAreaHazard" &&
+      effect.sourceSpellId === input.invocation.spell.id &&
+      effect.sourceCombatantId === input.actorId &&
+      effect.areaId === input.areaId,
+  );
+  const activeEffects = [
+    ...caster.activeEffects.filter((effect) => !replacing.includes(effect)),
+    {
+      kind: "cloudkillAreaHazard" as const,
+      sourceSpellId: input.invocation.spell.id,
+      sourceCombatantId: input.actorId,
+      areaId: input.areaId,
+      radiusFeet: input.invocation.targeting.radiusFeet,
+      save: {
+        ability: input.invocation.ability,
+        dc: input.invocation.dc,
+      },
+      damage: input.invocation.damage,
+      savedThisTurn: [],
+      expiresAt: {
+        kind: "concentration" as const,
+        combatantId: input.actorId,
+        durationTicks: input.invocation.durationTicks,
+      },
+    },
+  ];
+  combatants.set(input.actorId, { ...caster, activeEffects });
+  return { ...input.state, combatants };
+}
+
 export function applyGustOfWindLineCastEffect(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
@@ -2391,6 +2560,55 @@ export function resetAllSleetStormSavedThisTurn(
   return next;
 }
 
+export function resetAllInsectPlagueSavedThisTurn(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  const next = new Map(combatants);
+  for (const [id, combatant] of next) {
+    const activeEffects = combatant.activeEffects.map((effect) =>
+      effect.kind === "insectPlagueAreaHazard" &&
+      effect.savedThisTurn.length > 0
+        ? {
+            ...effect,
+            savedThisTurn: [] as readonly CombatantId[],
+          }
+        : effect,
+    );
+    if (
+      activeEffects.some(
+        (effect, index) => effect !== combatant.activeEffects[index],
+      )
+    ) {
+      next.set(id, { ...combatant, activeEffects });
+    }
+  }
+  return next;
+}
+
+export function resetAllCloudkillSavedThisTurn(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  const next = new Map(combatants);
+  for (const [id, combatant] of next) {
+    const activeEffects = combatant.activeEffects.map((effect) =>
+      effect.kind === "cloudkillAreaHazard" && effect.savedThisTurn.length > 0
+        ? {
+            ...effect,
+            savedThisTurn: [] as readonly CombatantId[],
+          }
+        : effect,
+    );
+    if (
+      activeEffects.some(
+        (effect, index) => effect !== combatant.activeEffects[index],
+      )
+    ) {
+      next.set(id, { ...combatant, activeEffects });
+    }
+  }
+  return next;
+}
+
 export function markMoonbeamSavedThisTurn(
   state: BattleState,
   targetId: CombatantId,
@@ -2530,6 +2748,64 @@ export function markSleetStormAreaHazardSavedThisTurn(
   effect: Extract<
     BattleActiveEffect,
     { readonly kind: "sleetStormAreaHazard" }
+  >,
+): BattleState {
+  const caster = state.combatants.get(effect.sourceCombatantId);
+  if (caster === undefined || effect.savedThisTurn.includes(targetId)) {
+    return state;
+  }
+  const activeEffects = caster.activeEffects.map((current) =>
+    current === effect
+      ? {
+          ...current,
+          savedThisTurn: [...current.savedThisTurn, targetId],
+        }
+      : current,
+  );
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(effect.sourceCombatantId, {
+      ...caster,
+      activeEffects,
+    }),
+  };
+}
+
+export function markInsectPlagueAreaHazardSavedThisTurn(
+  state: BattleState,
+  targetId: CombatantId,
+  effect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "insectPlagueAreaHazard" }
+  >,
+): BattleState {
+  const caster = state.combatants.get(effect.sourceCombatantId);
+  if (caster === undefined || effect.savedThisTurn.includes(targetId)) {
+    return state;
+  }
+  const activeEffects = caster.activeEffects.map((current) =>
+    current === effect
+      ? {
+          ...current,
+          savedThisTurn: [...current.savedThisTurn, targetId],
+        }
+      : current,
+  );
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(effect.sourceCombatantId, {
+      ...caster,
+      activeEffects,
+    }),
+  };
+}
+
+export function markCloudkillAreaHazardSavedThisTurn(
+  state: BattleState,
+  targetId: CombatantId,
+  effect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "cloudkillAreaHazard" }
   >,
 ): BattleState {
   const caster = state.combatants.get(effect.sourceCombatantId);

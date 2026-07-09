@@ -8,6 +8,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line unit-feature.metamagic-heightened-save-disadvantage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-cloudkill-area-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
@@ -635,6 +636,11 @@ export type BattleActiveEffect =
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleUnitFeatureEffectBase & {
+      readonly kind: "unitFeatureSpeedDelta";
+      readonly deltaFeet: MovementDeltaFeet;
+      readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleUnitFeatureEffectBase & {
       readonly kind: "speedHalved";
       readonly expiresAt: Extract<
         BattleActiveEffectExpiration,
@@ -726,6 +732,10 @@ export type BattleActiveEffect =
       readonly kind: "unitFeatureCondition";
       readonly condition: Condition;
       readonly conditionHadNonSpellSource: boolean;
+      readonly earlyEnd: null | { readonly kind: "targetTakesAnyDamage" };
+      readonly turnRestriction: null | {
+        readonly kind: "moveActionOrBonusAction";
+      };
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleUnitFeatureEffectBase & {
@@ -754,6 +764,19 @@ export type BattleActiveEffect =
       readonly conditionHadNonSpellSource: boolean;
       readonly heightenedSpellTargetDisadvantage: CombatantOwnedSpellEffectHeightenedRepeatSaveRider;
       readonly save: SpellConditionRepeatSave;
+      readonly expiresAt: BattleActiveEffectExpiration;
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "spellConditionCountedEndTurnSave";
+      readonly condition: Condition;
+      readonly conditionHadNonSpellSource: boolean;
+      readonly save: SpellConditionRepeatSave;
+      readonly successes: number;
+      readonly failures: number;
+      readonly successThreshold: number;
+      readonly failureThreshold: number;
+      readonly savingThrowDisadvantageAbility: Ability;
+      readonly lockedIn: boolean;
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {
@@ -867,6 +890,42 @@ export type BattleActiveEffect =
       readonly save: {
         readonly ability: Extract<Ability, "dex">;
         readonly dc: DcSource;
+      };
+      readonly savedThisTurn: readonly CombatantId[];
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "concentration" }
+      > & { readonly durationTicks: ElapsedTimeTicks };
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "insectPlagueAreaHazard";
+      readonly areaId: BattleAreaId;
+      readonly radiusFeet: MovementFeet;
+      readonly save: {
+        readonly ability: Extract<Ability, "con">;
+        readonly dc: DcSource;
+      };
+      readonly damage: {
+        readonly expr: DiceExpr;
+        readonly damageType: Extract<DamageType, "piercing">;
+      };
+      readonly savedThisTurn: readonly CombatantId[];
+      readonly expiresAt: Extract<
+        BattleActiveEffectExpiration,
+        { readonly kind: "concentration" }
+      > & { readonly durationTicks: ElapsedTimeTicks };
+    })
+  | (BattleSpellEffectBase & {
+      readonly kind: "cloudkillAreaHazard";
+      readonly areaId: BattleAreaId;
+      readonly radiusFeet: MovementFeet;
+      readonly save: {
+        readonly ability: Extract<Ability, "con">;
+        readonly dc: DcSource;
+      };
+      readonly damage: {
+        readonly expr: DiceExpr;
+        readonly damageType: Extract<DamageType, "poison">;
       };
       readonly savedThisTurn: readonly CombatantId[];
       readonly expiresAt: Extract<
@@ -1060,7 +1119,7 @@ export type BattleActiveEffect =
       readonly attackRollMode: "disadvantage";
       readonly protectedAgainstCreatureTypes: readonly CreatureType[];
       readonly preventedConditions: readonly ProtectionFromEvilAndGoodPreventedCondition[];
-      readonly preventsPossession: true;
+      readonly preventsPossession: boolean;
       readonly expiresAt: BattleActiveEffectExpiration;
     })
   | (BattleSpellEffectBase & {

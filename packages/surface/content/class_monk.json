@@ -3,7 +3,7 @@
     "kind": "none"
   },
   "className": "monk",
-  "description": "SRD Monk class creation facts plus early progression through level 5.",
+  "description": "SRD Monk class creation facts plus level 1-9 progression, including the level 9 Acrobatic Movement grant.",
   "featureGrants": [
     {
       "level": 1,
@@ -40,6 +40,10 @@
     {
       "level": 5,
       "unitId": "monk_stunning_strike"
+    },
+    {
+      "level": 9,
+      "unitId": "monk_acrobatic_movement"
     }
   ],
   "hitPointDie": 8,

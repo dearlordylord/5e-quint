@@ -1,0 +1,46 @@
+{
+  "description": "You gain the ability to enter a living tree at least your size and move from inside it to inside another living tree of the same kind within 500 feet. You use 5 feet of movement to enter a tree. You instantly know the location of all other trees of the same kind within 500 feet and, as part of the move used to enter, can either pass into one of them or step out of the tree you're in. You appear within 5 feet of the destination tree, using another 5 feet of movement; if you have no movement left, you appear within 5 feet of the tree you entered. You can use this transportation once on each of your turns and must end each turn outside a tree.",
+  "id": "tree_stride",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "activation",
+    "level": 5,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "self"
+        },
+        "effects": [
+          {
+            "kind": "none"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "kind": "self"
+    },
+    "school": "conjuration"
+  },
+  "name": "Tree Stride",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Tree Stride"
+  }
+}

@@ -163,6 +163,21 @@ export const DivinationOmenEffectSchema = strictStruct({
   }),
 });
 
+export const PlanarEntityAnswersEffectSchema = strictStruct({
+  kind: Schema.Literal("planar_entity_answers"),
+  source: Schema.Literal("other_planar_knowledgeable_entity"),
+  questionCount: Schema.Literal(5),
+  answer: strictStruct({
+    primary: Schema.Literal("one_word"),
+    unknown: Schema.Literal("unclear"),
+    fallback: Schema.Literal("short_phrase_if_one_word_misleading"),
+  }),
+  questionWindow: strictStruct({
+    unit: Schema.Literal("minute"),
+    amount: Schema.Literal(1),
+  }),
+});
+
 const MentalMessageRecipientBlockDurationSchema = strictStruct({
   unit: Schema.Literal("hour"),
   amount: Schema.Literal(8),
@@ -927,7 +942,8 @@ type EffectAtom =
         | "current_turn"
         | "end_of_next_turn"
         | "end_of_caster_next_turn"
-        | "spell_duration";
+        | "spell_duration"
+        | "until_long_rest_or_greater_restoration";
     }
   | {
       readonly kind: "apply_condition_while_in_area_or_until_escape";
@@ -1265,7 +1281,7 @@ type EffectAtom =
   | {
       readonly kind: "revive_dead_creature";
       readonly deathWindow: {
-        readonly unit: "minute";
+        readonly unit: "minute" | "day";
         readonly amount: number;
       };
       readonly hitPoints: number;
@@ -1345,6 +1361,7 @@ type EffectAtom =
     }
   | { readonly kind: "block_divination_targeting_and_scrying_perception" }
   | Schema.Schema.Type<typeof DivinationOmenEffectSchema>
+  | Schema.Schema.Type<typeof PlanarEntityAnswersEffectSchema>
   | CourierTaskEffect
   | Schema.Schema.Type<typeof EtherealPhaseEffectSchema>
   | {
@@ -3192,6 +3209,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
             "end_of_next_turn",
             "end_of_caster_next_turn",
             "spell_duration",
+            "until_long_rest_or_greater_restoration",
           ),
         ),
       }),
@@ -3612,7 +3630,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       strictStruct({
         kind: Schema.Literal("revive_dead_creature"),
         deathWindow: strictStruct({
-          unit: Schema.Literal("minute"),
+          unit: Schema.Literal("minute", "day"),
           amount: PositiveIntegerSchema,
         }),
         hitPoints: PositiveIntegerSchema,
@@ -3915,6 +3933,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         ),
       }),
       DivinationOmenEffectSchema,
+      PlanarEntityAnswersEffectSchema,
       CourierTaskEffectSchema,
       EtherealPhaseEffectSchema,
       Schema.Struct({
@@ -4297,6 +4316,9 @@ export const RepeatSaveSpecSchema = Schema.Struct({
   rollMode: optionalExact(Schema.Literal("advantage")),
   onSuccess: Schema.Literal("ends_on_target"),
   onFailAgain: optionalExact(EffectAtomSchema),
+  successesRequired: optionalExact(Schema.Number),
+  failuresRequired: optionalExact(Schema.Number),
+  onFailureThreshold: optionalExact(Schema.Literal("locks_duration")),
 });
 
 export const RandomTableRollSchema = Schema.Struct({

@@ -1041,6 +1041,100 @@ module battleRuntimeSaveSpellTests {
     }
   }
 
+  run test_hold_monster_creature_wisdom_save_paralyzed_concentration_and_repeat_save = {
+    val paralyzed = HoldPersonParalyzed({
+      source: Fighter,
+      hadIncapacitated: false,
+      heightenedRepeatSaveDisadvantage: false,
+      durationTicks: holdPersonDurationTicks,
+    })
+    val illegalLevelFour = resolveHoldMonster(
+      initialState,
+      4,
+      false,
+      HumanoidCreature,
+      true,
+      true,
+      HumanoidCreature,
+      false,
+    )
+    val illegalTwoTargetsLevelFive = resolveHoldMonster(
+      initialState,
+      5,
+      true,
+      BeastCreature,
+      false,
+      true,
+      UndeadCreature,
+      false,
+    )
+    val paralyzedBeast = resolveHoldMonster(
+      initialState,
+      5,
+      false,
+      HumanoidCreature,
+      true,
+      true,
+      BeastCreature,
+      false,
+    )
+    val paralyzedUndead = resolveHoldMonster(
+      initialState,
+      5,
+      false,
+      HumanoidCreature,
+      true,
+      true,
+      UndeadCreature,
+      false,
+    )
+    val twoTargetsLevelSix = resolveHoldMonster(
+      initialState,
+      6,
+      true,
+      BeastCreature,
+      false,
+      true,
+      UndeadCreature,
+      false,
+    )
+    val allSuccess = resolveHoldMonster(
+      initialState,
+      5,
+      false,
+      HumanoidCreature,
+      true,
+      true,
+      BeastCreature,
+      true,
+    )
+    val goblinTurn = endTurn(paralyzedBeast)
+    val successfulRepeat = endTurnWithHoldPersonRepeatSave(goblinTurn, Fighter, true)
+    all {
+      assert(saveGatedConditionSavingThrowAbility(HoldMonsterSaveGate) == WisAbility),
+      assert(saveGatedTargetMaxTargets(saveGatedConditionTargeting(HoldMonsterSaveGate), 5) == 1),
+      assert(saveGatedTargetMaxTargets(saveGatedConditionTargeting(HoldMonsterSaveGate), 6) == 2),
+      assert(saveGatedConditionTargetCountIsLegal(HoldMonsterSaveGate, 6, true, true)),
+      assert(saveGatedConditionTargetCreatureTypeIsLegal(HoldMonsterSaveGate, BeastCreature)),
+      assert(saveGatedConditionTargetCreatureTypeIsLegal(HoldMonsterSaveGate, UndeadCreature)),
+      assert(illegalLevelFour == initialState),
+      assert(illegalTwoTargetsLevelFive == initialState),
+      assert(paralyzedBeast.fighter.concentrating),
+      assert(paralyzedBeast.goblin.incapacitated),
+      assert(paralyzedBeast.goblin.activeEffects.contains(paralyzed)),
+      assert(paralyzedUndead.goblin.incapacitated),
+      assert(battleActorHasCommittedSpellSlotUse(twoTargetsLevelSix, Fighter)),
+      assert(not(twoTargetsLevelSix.actionAvailable)),
+      assert(not(allSuccess.fighter.concentrating)),
+      assert(not(activeEffectsContainHoldPersonFrom(allSuccess.goblin.activeEffects, Fighter))),
+      assert(battleActorHasCommittedSpellSlotUse(allSuccess, Fighter)),
+      assert(not(allSuccess.actionAvailable)),
+      assert(not(successfulRepeat.fighter.concentrating)),
+      assert(not(successfulRepeat.goblin.incapacitated)),
+      assert(not(activeEffectsContainHoldPersonFrom(successfulRepeat.goblin.activeEffects, Fighter))),
+    }
+  }
+
   run test_heightened_save_gated_condition_repeat_save_roll_modes = {
     val heightenedHoldPersonGoblinFailed = resolveHoldPersonWithHeightenedTarget(
       initialState,

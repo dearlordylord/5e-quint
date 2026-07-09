@@ -3,17 +3,24 @@ const { stable } = require("./unit-profile-coverage-report.cjs");
 
 const maxLevelOneSevenAuditCharacterLevel = 7;
 const maxLevelOneEightAuditCharacterLevel = 8;
+const maxLevelOneNineAuditCharacterLevel = 9;
 const levelOneSevenMiningAuditLevelBands = characterLevelBands(
   maxLevelOneSevenAuditCharacterLevel,
 );
 const levelOneEightMiningAuditLevelBands = characterLevelBands(
   maxLevelOneEightAuditCharacterLevel,
 );
+const levelOneNineMiningAuditLevelBands = characterLevelBands(
+  maxLevelOneNineAuditCharacterLevel,
+);
 const levelOneSevenMiningAuditLevelBandSet = new Set(
   levelOneSevenMiningAuditLevelBands,
 );
 const levelOneEightMiningAuditLevelBandSet = new Set(
   levelOneEightMiningAuditLevelBands,
+);
+const levelOneNineMiningAuditLevelBandSet = new Set(
+  levelOneNineMiningAuditLevelBands,
 );
 
 function countValues(values) {
@@ -133,7 +140,11 @@ function battleReadinessClosureSnapshotLabel(battleReadinessClosure) {
     : battleReadinessClosure.state;
 }
 
-const auditedSpellPressureLevelBands = ["spell-level-3", "spell-level-4"];
+const auditedSpellPressureLevelBands = [
+  "spell-level-3",
+  "spell-level-4",
+  "spell-level-5",
+];
 const auditedSpellPressureLevelBandSet = new Set(
   auditedSpellPressureLevelBands,
 );
@@ -229,7 +240,9 @@ function buildMiningAudit({
       supportGate:
         "non-blocking mining frontier; runtime admission and support snapshots are reported but do not pass or fail level 1-4 full-support gates",
       axisRule:
-        `Character level and spell level are separate axes. Character level 5 opens spell-level-3 pressure for full casters and Warlock Pact Magic; character level 7 opens spell-level-4 pressure for those same table-derived owners. Paladin and Ranger spell-level-3 and spell-level-4 list sections are not counted in this level-${maxCharacterLevel} frontier because their SRD class tables do not grant matching slots by character level ${maxCharacterLevel}.`,
+        maxCharacterLevel >= 9
+          ? "Character level and spell level are separate axes. Character level 5 opens spell-level-3 pressure for full casters and Warlock Pact Magic; character level 7 opens spell-level-4 pressure for those same table-derived owners; character level 9 opens spell-level-5 pressure for full casters and Warlock Pact Magic. Paladin and Ranger class level 9 opens their spell-level-3 list sections inside this accounting without duplicating the global spell-level-3 denominator."
+          : `Character level and spell level are separate axes. Character level 5 opens spell-level-3 pressure for full casters and Warlock Pact Magic; character level 7 opens spell-level-4 pressure for those same table-derived owners. Paladin and Ranger spell-level-3 and spell-level-4 list sections are not counted in this level-${maxCharacterLevel} frontier because their SRD class tables do not grant matching slots by character level ${maxCharacterLevel}.`,
     },
     metrics: {
       minedDenominatorRows: rows.length,
@@ -293,6 +306,16 @@ function buildLevelOneEightMiningAudit(srdUnitInventory) {
     levelBands: levelOneEightMiningAuditLevelBands,
     levelBandSet: levelOneEightMiningAuditLevelBandSet,
     title: "Character Levels 1-8 Mining Audit",
+  });
+}
+
+function buildLevelOneNineMiningAudit(srdUnitInventory) {
+  return buildMiningAudit({
+    srdUnitInventory,
+    maxCharacterLevel: maxLevelOneNineAuditCharacterLevel,
+    levelBands: levelOneNineMiningAuditLevelBands,
+    levelBandSet: levelOneNineMiningAuditLevelBandSet,
+    title: "Character Levels 1-9 Mining Audit",
   });
 }
 
@@ -522,8 +545,10 @@ function renderLevelOneSevenMiningAudit(report) {
 
 module.exports = {
   buildLevelOneEightMiningAudit,
+  buildLevelOneNineMiningAudit,
   buildLevelOneSevenMiningAudit,
   levelOneEightMiningAuditLevelBands,
+  levelOneNineMiningAuditLevelBands,
   levelOneSevenMiningAuditLevelBands,
   renderLevelOneSevenMiningAudit,
 };

@@ -1,6 +1,7 @@
 // Attack replay fill parser extracted from attack-resolution.ts.
 // Owns classification of attack fills and the uniqueness invariant for attack target range facts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.brutal-strike
 
 import {
   ATTACK_DAMAGE_DISPOSITION_HOLE_ID,
@@ -24,6 +25,8 @@ import {
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SAVE_HOLE_ID,
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_TARGET_HOLE_ID,
   WEAPON_MASTERY_TOPPLE_SAVE_HOLE_ID,
+  BRUTAL_STRIKE_DECISION_HOLE_ID,
+  TACTICAL_MASTER_REPLACEMENT_DECISION_HOLE_ID,
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_DECISION_HOLE_ID,
   REMARKABLE_ATHLETE_CRITICAL_HIT_MOVEMENT_HOLE_ID,
   WEAPON_MASTERY_CLEAVE_ATTACK_ROLL_HOLE_ID,
@@ -40,6 +43,7 @@ import {
   OPEN_HAND_TECHNIQUE_DECISION_HOLE_ID,
   OPEN_HAND_TECHNIQUE_SAVE_HOLE_ID,
   CUNNING_STRIKE_MOVEMENT_HOLE_ID,
+  CUNNING_STRIKE_END_TURN_COVER_HOLE_ID,
   CUNNING_STRIKE_SAVE_HOLE_ID,
   CUNNING_STRIKE_TOOL_POSSESSION_HOLE_ID,
   STUNNING_STRIKE_DECISION_HOLE_ID,
@@ -86,6 +90,12 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
   let weaponMasteryToppleSavingThrow:
     | Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>
     | undefined;
+  let tacticalMasterReplacementDecision:
+    | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
+    | undefined;
+  let brutalStrikeDecision:
+    | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
+    | undefined;
   let openHandTechniqueDecision:
     | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
     | undefined;
@@ -106,6 +116,9 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     | undefined;
   let cunningStrikeToolPossession:
     | Extract<BattleFill, { readonly kind: "toolPossessionFacts" }>
+    | undefined;
+  let cunningStrikeEndTurnCover:
+    | Extract<BattleFill, { readonly kind: "cunningStrikeEndTurnCoverFacts" }>
     | undefined;
   const hideousLaughterDamageRepeatSaves: Extract<
     BattleFill,
@@ -279,6 +292,34 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
         };
       }
       huntersPreyHordeBreakerTarget = fill;
+      continue;
+    }
+
+    if (
+      fill.kind === "unitFeatureDecision" &&
+      fill.holeId === TACTICAL_MASTER_REPLACEMENT_DECISION_HOLE_ID
+    ) {
+      if (tacticalMasterReplacementDecision !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Tactical Master replacement decision was filled twice.",
+        };
+      }
+      tacticalMasterReplacementDecision = fill;
+      continue;
+    }
+
+    if (
+      fill.kind === "unitFeatureDecision" &&
+      fill.holeId === BRUTAL_STRIKE_DECISION_HOLE_ID
+    ) {
+      if (brutalStrikeDecision !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Brutal Strike decision was filled twice.",
+        };
+      }
+      brutalStrikeDecision = fill;
       continue;
     }
 
@@ -525,6 +566,20 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     }
 
     if (
+      fill.kind === "cunningStrikeEndTurnCoverFacts" &&
+      fill.holeId === CUNNING_STRIKE_END_TURN_COVER_HOLE_ID
+    ) {
+      if (cunningStrikeEndTurnCover !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Cunning Strike end-turn cover facts were filled twice.",
+        };
+      }
+      cunningStrikeEndTurnCover = fill;
+      continue;
+    }
+
+    if (
       fill.kind === "savingThrowOutcome" &&
       isHideousLaughterDamageRepeatSaveFill(fill)
     ) {
@@ -721,6 +776,8 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     attackDamageReductionRedirectSave,
     attackDamageReductionRedirectDamage,
     weaponMasteryToppleSavingThrow,
+    tacticalMasterReplacementDecision,
+    brutalStrikeDecision,
     openHandTechniqueDecision,
     openHandTechniqueSavingThrow,
     stunningStrikeDecision,
@@ -728,6 +785,7 @@ export function attackFillSet(fills: readonly BattleFill[]): AttackFillSet {
     cunningStrikeSavingThrow,
     cunningStrikeMovement,
     cunningStrikeToolPossession,
+    cunningStrikeEndTurnCover,
     weaponMasteryCleaveDecision,
     weaponMasteryCleaveTarget,
     weaponMasteryCleaveAttackRoll,

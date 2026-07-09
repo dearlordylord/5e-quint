@@ -1,3 +1,4 @@
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.fighter-tactical-master unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow
 import {
   startBattleRight,
   requireResolved,
@@ -5,6 +6,7 @@ import {
   masterySapUnitRefs,
   masteryToppleUnitRefs,
   masteryCleaveUnitRefs,
+  tacticalMasterReplacementUnitRefs,
   longswordWeaponMasterySelections,
   greataxeWeaponMasterySelections,
   longbowWeaponMasterySelections,
@@ -27,6 +29,7 @@ import {
   savingThrowOutcomeFill,
   damageRollFill,
   attackDamageDispositionFill,
+  battleTablePositionId,
   characterSeed,
   testShortswordAttack,
   testQuarterstaffAttack,
@@ -52,6 +55,8 @@ import {
   hasCondition,
   holeId,
   Hp,
+  movementDeltaFeet,
+  movementFeet,
   resolveBattleInterrupt,
   resolveBattleSubject,
 } from "./battle-runtime-test-support.ts";
@@ -455,6 +460,200 @@ describe("battle runtime: Weapon Mastery", () => {
     expect(
       selectedNonSapWeapon.combatants.get(goblinId)?.activeEffects,
     ).toEqual([]);
+  });
+
+  test("Fighter Tactical Master can replace Longsword Sap with Push for one attack", () => {
+    const state = fighterVsGoblinBattle({
+      characterUnitRefs: tacticalMasterReplacementUnitRefs(),
+      weaponMasteries: longswordWeaponMasterySelections(),
+    });
+    const subject = fighterAttackSubject();
+    const targetHole = attackInitialTargetHole(state, subject);
+    const pushDisposition = {
+      kind: "pushed" as const,
+      distanceFeet: movementFeet(10),
+      destinationId: battleTablePositionId("tactical-master-push-destination"),
+      provokesOpportunityAttacks: false as const,
+    };
+    const target = attackTargetFill(
+      targetHole,
+      subject.actorId,
+      goblinId,
+      subject.attackName,
+      [
+        {
+          kind: "weaponMasteryPushDisposition" as const,
+          attackerId: subject.actorId,
+          targetId: goblinId,
+          attackName: subject.attackName,
+          disposition: pushDisposition,
+        },
+      ],
+    );
+    const replacementHole = requireHole(
+      resolveBattleSubject({ state, subject, fills: [target] }),
+      "unitFeatureDecision",
+    );
+
+    expect(replacementHole).toMatchObject({
+      label: "Tactical Master mastery replacement",
+      unitFeature: {
+        unitId: "fighter_tactical_master",
+        label: "Tactical Master",
+      },
+      choices: ["push", "sap", "slow", "decline"],
+    });
+
+    const replacement = unitFeatureDecisionFill(replacementHole, "push");
+    const rollHole = requireHole(
+      resolveBattleSubject({ state, subject, fills: [target, replacement] }),
+      "attackRoll",
+    );
+    const damageHole = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          target,
+          replacement,
+          attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    const hit = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          target,
+          replacement,
+          attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+          damageRollFill(damageHole, 1),
+        ],
+      }),
+    );
+
+    expect(hit.shovePushes).toEqual([
+      { targetId: goblinId, disposition: pushDisposition },
+    ]);
+    expect(hit.state.combatants.get(goblinId)?.activeEffects).not.toContainEqual(
+      expect.objectContaining({ sourceUnitId: "mastery_sap" }),
+    );
+  });
+
+  test("Fighter Tactical Master can replace Longsword Sap with Slow after damage", () => {
+    const state = fighterVsGoblinBattle({
+      characterUnitRefs: tacticalMasterReplacementUnitRefs(),
+      weaponMasteries: longswordWeaponMasterySelections(),
+    });
+    const subject = fighterAttackSubject();
+    const targetHole = attackInitialTargetHole(state, subject);
+    const target = attackTargetFill(
+      targetHole,
+      subject.actorId,
+      goblinId,
+      subject.attackName,
+    );
+    const replacementHole = requireHole(
+      resolveBattleSubject({ state, subject, fills: [target] }),
+      "unitFeatureDecision",
+    );
+    const replacement = unitFeatureDecisionFill(replacementHole, "slow");
+    const rollHole = requireHole(
+      resolveBattleSubject({ state, subject, fills: [target, replacement] }),
+      "attackRoll",
+    );
+    const damageHole = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          target,
+          replacement,
+          attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    const hit = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          target,
+          replacement,
+          attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+          damageRollFill(damageHole, 1),
+        ],
+      }),
+    );
+
+    expect(hit.state.combatants.get(goblinId)?.activeEffects).toContainEqual({
+      kind: "unitFeatureSpeedDelta",
+      sourceUnitId: "mastery_slow",
+      sourceCombatantId: fighterId,
+      deltaFeet: movementDeltaFeet(-10),
+      expiresAt: { kind: "startOfTurn", combatantId: fighterId },
+    });
+    expect(hit.state.combatants.get(goblinId)?.activeEffects).not.toContainEqual(
+      expect.objectContaining({ sourceUnitId: "mastery_sap" }),
+    );
+  });
+
+  test("Fighter Tactical Master decline preserves the attack's original mastery", () => {
+    const state = fighterVsGoblinBattle({
+      characterUnitRefs: tacticalMasterReplacementUnitRefs(),
+      weaponMasteries: longswordWeaponMasterySelections(),
+    });
+    const subject = fighterAttackSubject();
+    const targetHole = attackInitialTargetHole(state, subject);
+    const target = attackTargetFill(
+      targetHole,
+      subject.actorId,
+      goblinId,
+      subject.attackName,
+    );
+    const replacementHole = requireHole(
+      resolveBattleSubject({ state, subject, fills: [target] }),
+      "unitFeatureDecision",
+    );
+    const replacement = unitFeatureDecisionFill(replacementHole, "decline");
+    const rollHole = requireHole(
+      resolveBattleSubject({ state, subject, fills: [target, replacement] }),
+      "attackRoll",
+    );
+    const damageHole = requireHole(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          target,
+          replacement,
+          attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+        ],
+      }),
+      "rolledDice",
+    );
+    const hit = requireResolved(
+      resolveBattleSubject({
+        state,
+        subject,
+        fills: [
+          target,
+          replacement,
+          attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+          damageRollFill(damageHole, 1),
+        ],
+      }),
+    );
+
+    expect(hit.state.combatants.get(goblinId)?.activeEffects).toContainEqual(
+      expect.objectContaining({
+        kind: "nextAttackRollBySelf",
+        sourceUnitId: "mastery_sap",
+      }),
+    );
   });
 
   test("Weapon Mastery Topple opens an optional Constitution save on a selected Topple weapon hit", () => {

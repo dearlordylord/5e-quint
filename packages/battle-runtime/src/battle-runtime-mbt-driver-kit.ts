@@ -18517,6 +18517,11 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
             "Battle runtime MBT does not model attack damage disposition holes.",
           );
         }),
+        Match.when({ kind: "cunningStrikeEndTurnCoverFacts" }, () => {
+          throw new Error(
+            "Battle runtime MBT does not model Cunning Strike end-turn cover fact holes.",
+          );
+        }),
         Match.exhaustive,
       ),
   ];

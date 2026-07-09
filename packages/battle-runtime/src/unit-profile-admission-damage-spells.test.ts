@@ -8,6 +8,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-MIND-SPIKE mind_spike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-SPELL-LIGHTNING-BOLT-RUNTIME-SURVEY lightning_bolt
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-ACID-ARROW-DELAYED-RUNTIME-SUPPORT acid_arrow
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19E-01-L5-AREA-SAVE-DAMAGE cone_of_cold flame_strike
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-damage-save-or-attack spell.invocation-acid-arrow-attack-timing
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ACID_ARROW_ATTACK_TIMING
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -17,7 +18,9 @@ import {
   acidSplashUnitId,
   burningHandsUnitId,
   chillTouchUnitId,
+  coneOfColdUnitId,
   fireballUnitId,
+  flameStrikeUnitId,
   guidingBoltUnitId,
   inflictWoundsUnitId,
   lightningBoltUnitId,
@@ -1431,6 +1434,178 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
         areaChoices: [],
       }),
     ]);
+  });
+  test("cone_of_cold is admitted as a level-5 self-origin Cone save-gated slot damage spell", () => {
+    const spell = spellRecord(coneOfColdUnitId);
+    const act = spellAct({
+      state: spellBattle({
+        preparedSpells: [spell],
+        spellSlots: [{ spellLevel: 5, count: 1 }],
+      }),
+      spellId: coneOfColdUnitId,
+      slotLevel: 5,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(
+        coneOfColdUnitId,
+        5,
+        "saveGatedDamage",
+      ),
+      mode: { tag: "cast" },
+    });
+    const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+    expect(savingThrow).toEqual(
+      expect.objectContaining({
+        label: "Cone of Cold self-origin Cone Saving Throw outcomes",
+        ability: "con",
+        dc: { kind: "caster_spell_save_dc" },
+      }),
+    );
+    expect(spellHoleInvocation([savingThrow])).toEqual(
+      expect.objectContaining({
+        procedure: "saveGatedDamage",
+        spell,
+        resource: { tag: "spellSlot", slotLevel: 5 },
+        ability: "con",
+        targeting: { kind: "selfOriginCone", lengthFeet: 60 },
+        damage: {
+          expr: { dice: 8, dieSize: 8 },
+          damageType: "cold",
+        },
+        successDamage: "half",
+        rangeFeet: 0,
+        failedSavePostDamageRiders: [],
+      }),
+    );
+    expect(act.initialHoles).toEqual([
+      expect.objectContaining({
+        kind: "savingThrowOutcome",
+        areaChoices: [],
+      }),
+    ]);
+  });
+  test("flame_strike is admitted as point-origin Cylinder save-gated slot damage with fire and radiant components", () => {
+    const spell = spellRecord(flameStrikeUnitId);
+    const act = spellAct({
+      state: spellBattle({
+        preparedSpells: [spell],
+        spellSlots: [{ spellLevel: 5, count: 1 }],
+      }),
+      spellId: flameStrikeUnitId,
+      slotLevel: 5,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(
+        flameStrikeUnitId,
+        5,
+        "saveGatedDamage",
+      ),
+      mode: { tag: "cast" },
+    });
+    const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+    expect(savingThrow).toEqual(
+      expect.objectContaining({
+        label: "Flame Strike point-origin Cylinder Saving Throw outcomes",
+        ability: "dex",
+        dc: { kind: "caster_spell_save_dc" },
+      }),
+    );
+    expect(spellHoleInvocation([savingThrow])).toEqual(
+      expect.objectContaining({
+        procedure: "saveGatedDamage",
+        spell,
+        resource: { tag: "spellSlot", slotLevel: 5 },
+        ability: "dex",
+        targeting: {
+          kind: "pointOriginCylinder",
+          radiusFeet: 10,
+          heightFeet: 40,
+        },
+        damage: {
+          expr: { dice: 5, dieSize: 6 },
+          damageType: "fire",
+        },
+        additionalDamageComponents: [
+          {
+            expr: { dice: 5, dieSize: 6 },
+            damageType: "radiant",
+          },
+        ],
+        successDamage: "half",
+        rangeFeet: 60,
+        failedSavePostDamageRiders: [],
+      }),
+    );
+  });
+  test("flame_strike applies full and half damage for each damage component in the Cylinder", () => {
+    const secondTargetId = combatantId("unit-profile-flame-strike-target-2");
+    const spell = spellRecord(flameStrikeUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 5, count: 1 }],
+      targetHp: 40,
+      targetMaxHp: 40,
+      extraTargetIds: [secondTargetId],
+      extraTargetHp: 40,
+      extraTargetMaxHp: 40,
+    });
+    const act = spellAct({
+      state,
+      spellId: flameStrikeUnitId,
+      slotLevel: 5,
+    });
+    const savingThrow = requireHole(act.initialHoles, "savingThrowOutcome");
+    const saveFill = savingThrowOutcomeFill(savingThrow, [
+      { targetId: spellTargetId, succeeded: false },
+      { targetId: secondTargetId, succeeded: true },
+    ]);
+    const damageRoll = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [saveFill],
+      }),
+      "rolledDice",
+    );
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        saveFill,
+        damageRollFillWithGroups(damageRoll, [
+          [1, 1, 1, 1, 1],
+          [2, 2, 2, 2, 2],
+        ]),
+      ],
+    });
+
+    if (resolved.tag !== "resolved") {
+      throw new Error(
+        `Expected Flame Strike to resolve: ${JSON.stringify(resolved)}`,
+      );
+    }
+    expect(Number(requireCombatant(resolved.state, spellTargetId).hp)).toBe(25);
+    expect(Number(requireCombatant(resolved.state, secondTargetId).hp)).toBe(33);
+    expect(
+      snapshotBattle(resolved.state).combatants.find(
+        (combatant) => combatant.combatantId === spellCasterId,
+      )?.origin,
+    ).toEqual(
+      expect.objectContaining({
+        spellcasting: expect.objectContaining({
+          spellSlots: expect.arrayContaining([
+            expect.objectContaining({ spellLevel: 5, expended: 1 }),
+          ]),
+        }),
+      }),
+    );
   });
   test("lightning_bolt resolves caller-supplied Line targets with full and half damage", () => {
     const secondTargetId = combatantId("unit-profile-lightning-bolt-target-2");

@@ -38,202 +38,205 @@
       "kind": "point"
     },
     "school": "conjuration",
-    "statBlock": {
-      "abilityScores": {
-        "cha": 14,
-        "con": 17,
-        "dex": 14,
-        "int": 10,
-        "str": 19,
-        "wis": 14
-      },
-      "ac": {
-        "axis": "slot",
-        "base": 14,
-        "kind": "linear_per_level",
-        "perLevel": 1,
-        "startingAtLevel": 5
-      },
-      "actions": {
-        "attacks": [
-          {
-            "attackBonus": {
-              "kind": "caster_derived",
-              "source": "spell_attack_mod"
-            },
-            "attackType": "melee",
-            "name": "Rend",
-            "onHit": [
-              {
-                "amount": {
-                  "axis": "slot",
-                  "base": {
-                    "dice": 1,
-                    "dieSize": 6,
-                    "flat": 4
-                  },
-                  "kind": "linear_per_level",
-                  "perLevel": {
-                    "flat": 1
-                  },
-                  "startingAtLevel": 5
-                },
-                "damageType": "piercing",
-                "kind": "damage"
-              }
-            ],
-            "reachFeet": 10
-          }
-        ],
-        "multiattacks": [
-          {
-            "dispatches": [
-              {
-                "count": {
-                  "axis": "slot",
-                  "base": 2,
-                  "kind": "linear_per_level",
-                  "perLevel": 1,
-                  "startingAtLevel": 5
-                },
-                "name": "Rend"
+    "creature": {
+      "kind": "inline",
+      "statBlock": {
+        "abilityScores": {
+          "cha": 14,
+          "con": 17,
+          "dex": 14,
+          "int": 10,
+          "str": 19,
+          "wis": 14
+        },
+        "ac": {
+          "axis": "slot",
+          "base": 14,
+          "kind": "linear_per_level",
+          "perLevel": 1,
+          "startingAtLevel": 5
+        },
+        "actions": {
+          "attacks": [
+            {
+              "attackBonus": {
+                "kind": "caster_derived",
+                "source": "spell_attack_mod"
               },
-              {
-                "count": {
-                  "axis": "slot",
-                  "base": 1,
-                  "kind": "linear_per_level",
-                  "perLevel": 0,
-                  "startingAtLevel": 5
-                },
-                "name": "Breath Weapon"
-              }
-            ],
-            "name": "Multiattack"
-          }
-        ],
-        "saves": [
-          {
-            "ability": "dex",
-            "area": {
-              "kind": "cone",
-              "lengthFeet": 30
-            },
-            "dc": {
-              "kind": "caster_spell_save_dc"
-            },
-            "name": "Breath Weapon",
-            "onFail": {
-              "amount": {
-                "expr": {
-                  "dice": 2,
-                  "dieSize": 6
-                },
-                "kind": "fixed"
-              },
-              "damageType": {
-                "holeId": "summon_dragon_damage_type",
-                "kind": "hole",
-                "label": "breath-weapon damage type (shared with Shared Resistances)",
-                "value": {
-                  "kind": "choice",
-                  "label": "breath-weapon damage type (shared with Shared Resistances)",
-                  "options": [
-                    "acid",
-                    "cold",
-                    "fire",
-                    "lightning",
-                    "poison"
-                  ]
+              "attackType": "melee",
+              "name": "Rend",
+              "onHit": [
+                {
+                  "amount": {
+                    "axis": "slot",
+                    "base": {
+                      "dice": 1,
+                      "dieSize": 6,
+                      "flat": 4
+                    },
+                    "kind": "linear_per_level",
+                    "perLevel": {
+                      "flat": 1
+                    },
+                    "startingAtLevel": 5
+                  },
+                  "damageType": "piercing",
+                  "kind": "damage"
                 }
-              },
-              "kind": "damage"
-            },
-            "onSuccess": {
-              "kind": "half_damage"
+              ],
+              "reachFeet": 10
             }
+          ],
+          "multiattacks": [
+            {
+              "dispatches": [
+                {
+                  "count": {
+                    "axis": "slot",
+                    "base": 2,
+                    "kind": "linear_per_level",
+                    "perLevel": 1,
+                    "startingAtLevel": 5
+                  },
+                  "name": "Rend"
+                },
+                {
+                  "count": {
+                    "axis": "slot",
+                    "base": 1,
+                    "kind": "linear_per_level",
+                    "perLevel": 0,
+                    "startingAtLevel": 5
+                  },
+                  "name": "Breath Weapon"
+                }
+              ],
+              "name": "Multiattack"
+            }
+          ],
+          "saves": [
+            {
+              "ability": "dex",
+              "area": {
+                "kind": "cone",
+                "lengthFeet": 30
+              },
+              "dc": {
+                "kind": "caster_spell_save_dc"
+              },
+              "name": "Breath Weapon",
+              "onFail": {
+                "amount": {
+                  "expr": {
+                    "dice": 2,
+                    "dieSize": 6
+                  },
+                  "kind": "fixed"
+                },
+                "damageType": {
+                  "holeId": "summon_dragon_damage_type",
+                  "kind": "hole",
+                  "label": "breath-weapon damage type (shared with Shared Resistances)",
+                  "value": {
+                    "kind": "choice",
+                    "label": "breath-weapon damage type (shared with Shared Resistances)",
+                    "options": [
+                      "acid",
+                      "cold",
+                      "fire",
+                      "lightning",
+                      "poison"
+                    ]
+                  }
+                },
+                "kind": "damage"
+              },
+              "onSuccess": {
+                "kind": "half_damage"
+              }
+            }
+          ]
+        },
+        "creatureType": "dragon",
+        "displayName": "Draconic Spirit",
+        "hp": {
+          "axis": "slot",
+          "base": 50,
+          "kind": "linear_per_level",
+          "perLevel": 10,
+          "startingAtLevel": 5
+        },
+        "immunities": {
+          "conditions": [
+            "charmed",
+            "frightened",
+            "poisoned"
+          ]
+        },
+        "languages": "caster_languages",
+        "resistances": {
+          "kind": "choose_one_from",
+          "options": [
+            "acid",
+            "cold",
+            "fire",
+            "lightning",
+            "poison"
+          ]
+        },
+        "saveProficiencies": [
+          "str",
+          "dex",
+          "con",
+          "int",
+          "wis",
+          "cha"
+        ],
+        "senses": [
+          {
+            "kind": "blindsight",
+            "rangeFeet": 30
+          },
+          {
+            "kind": "darkvision",
+            "rangeFeet": 60
+          }
+        ],
+        "size": "large",
+        "speeds": [
+          {
+            "feet": {
+              "kind": "literal",
+              "value": 30
+            },
+            "kind": "walk"
+          },
+          {
+            "feet": {
+              "kind": "literal",
+              "value": 60
+            },
+            "kind": "fly"
+          },
+          {
+            "feet": {
+              "kind": "literal",
+              "value": 30
+            },
+            "kind": "swim"
+          }
+        ],
+        "traits": [
+          {
+            "description": "When you summon the spirit, choose one of its Resistances. You have Resistance to the chosen damage type until the spell ends.",
+            "effect": {
+              "chosenFrom": "resistances_list",
+              "kind": "caster_shared_resistance"
+            },
+            "name": "Shared Resistances"
           }
         ]
-      },
-      "creatureType": "dragon",
-      "displayName": "Draconic Spirit",
-      "hp": {
-        "axis": "slot",
-        "base": 50,
-        "kind": "linear_per_level",
-        "perLevel": 10,
-        "startingAtLevel": 5
-      },
-      "immunities": {
-        "conditions": [
-          "charmed",
-          "frightened",
-          "poisoned"
-        ]
-      },
-      "languages": "caster_languages",
-      "resistances": {
-        "kind": "choose_one_from",
-        "options": [
-          "acid",
-          "cold",
-          "fire",
-          "lightning",
-          "poison"
-        ]
-      },
-      "saveProficiencies": [
-        "str",
-        "dex",
-        "con",
-        "int",
-        "wis",
-        "cha"
-      ],
-      "senses": [
-        {
-          "kind": "blindsight",
-          "rangeFeet": 30
-        },
-        {
-          "kind": "darkvision",
-          "rangeFeet": 60
-        }
-      ],
-      "size": "large",
-      "speeds": [
-        {
-          "feet": {
-            "kind": "literal",
-            "value": 30
-          },
-          "kind": "walk"
-        },
-        {
-          "feet": {
-            "kind": "literal",
-            "value": 60
-          },
-          "kind": "fly"
-        },
-        {
-          "feet": {
-            "kind": "literal",
-            "value": 30
-          },
-          "kind": "swim"
-        }
-      ],
-      "traits": [
-        {
-          "description": "When you summon the spirit, choose one of its Resistances. You have Resistance to the chosen damage type until the spell ends.",
-          "effect": {
-            "chosenFrom": "resistances_list",
-            "kind": "caster_shared_resistance"
-          },
-          "name": "Shared Resistances"
-        }
-      ]
+      }
     }
   },
   "name": "Summon Dragon",

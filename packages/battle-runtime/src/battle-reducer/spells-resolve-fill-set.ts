@@ -789,6 +789,8 @@ export function spellFillSet(
         invocation.procedure !== "spikeGrowthMovementHazard" &&
         invocation.procedure !== "moonbeam" &&
         invocation.procedure !== "sleetStormAreaHazard" &&
+        invocation.procedure !== "insectPlagueAreaHazard" &&
+        invocation.procedure !== "cloudkillAreaHazard" &&
         invocation.procedure !== "webRestraintHazard"
       ) {
         return {
@@ -1225,6 +1227,35 @@ export function spellFillSet(
           };
         }
         if (!invocation.abilityChoices.includes(fill.value)) {
+          return {
+            tag: "invalid",
+            message: "Spell ability choice is not available for this spell.",
+          };
+        }
+        if (abilityChoice !== undefined) {
+          return {
+            tag: "invalid",
+            message: "Spell ability choice was filled twice.",
+          };
+        }
+        abilityChoice = fill.value;
+        continue;
+      }
+      if (invocation.procedure === "saveGatedDamage") {
+        if (invocation.failedSaveAbilityChoices === null) {
+          return {
+            tag: "invalid",
+            message: "Spell ability choice does not match this spell act.",
+          };
+        }
+        if (fill.holeId !== spellAbilityChoiceHoleId(invocation)) {
+          return {
+            tag: "invalid",
+            message:
+              "Spell ability choice must use the selected spell act ability-choice hole.",
+          };
+        }
+        if (!invocation.failedSaveAbilityChoices.includes(fill.value)) {
           return {
             tag: "invalid",
             message: "Spell ability choice is not available for this spell.",

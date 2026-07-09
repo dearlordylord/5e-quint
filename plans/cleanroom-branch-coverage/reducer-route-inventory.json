@@ -276,8 +276,8 @@
       "excludedSpellLevels": [4, 5],
       "sourceBranchInventory": {
         "driverFiles": 107,
-        "branchObligations": 738,
-        "currentInScopeBranchObligations": 677,
+        "branchObligations": 740,
+        "currentInScopeBranchObligations": 679,
         "currentOutOfScopeBranchObligations": 61,
         "sampledInputs": 24,
         "baselineWitnessDriverFiles": 1,

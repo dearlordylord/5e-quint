@@ -1,6 +1,7 @@
 // Cunning Strike Rogue damage-exchange rider.
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike-option-grant
 
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { difficultyClass, movementFeet, SIZES } from "@dnd/shared/types";
@@ -16,6 +17,7 @@ import type {
   BattleCunningStrikeSelectedOption,
   BattleFill,
   BattleHole,
+  BattleCunningStrikeEndTurnCoverFactsHole,
   BattleMovementHole,
   BattleState,
   BattleToolPossessionFactsHole,
@@ -24,12 +26,18 @@ import type {
 import type { CombatantId } from "../identity.ts";
 import type {
   CunningStrikeEquipmentGatedConditionSaveEffect,
+  CunningStrikeHideInvisibleEndSuppressionEffect,
+  CunningStrikeEndTurnCoverDegree,
   CunningStrikeOption,
   CunningStrikeOptionEffect,
   CunningStrikePostDamageMovementEffect,
+  CunningStrikeQualifyingCoverDegree,
   CunningStrikeSizeGatedConditionSaveEffect,
 } from "../unit-feature-support.ts";
-import { CUNNING_STRIKE_SUPPORT_PROFILE } from "../unit-feature-support.ts";
+import {
+  CUNNING_STRIKE_OPTION_GRANT_SUPPORT_PROFILE,
+  CUNNING_STRIKE_SUPPORT_PROFILE,
+} from "../unit-feature-support.ts";
 import { extendSavingThrowOngoingFeatures } from "./attack-roll.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state.ts";
 import { scoreModifier } from "./domain-helpers.ts";
@@ -37,6 +45,8 @@ import { combatantEffectiveSize } from "./druid-wild-shape.ts";
 import {
   CUNNING_STRIKE_MOVEMENT_HOLE_ID,
   CUNNING_STRIKE_MOVEMENT_HOLE_INSTANCE,
+  CUNNING_STRIKE_END_TURN_COVER_HOLE_ID,
+  CUNNING_STRIKE_END_TURN_COVER_HOLE_INSTANCE,
   CUNNING_STRIKE_SAVE_HOLE_ID,
   CUNNING_STRIKE_SAVE_HOLE_INSTANCE,
   CUNNING_STRIKE_TOOL_POSSESSION_HOLE_ID,
@@ -77,6 +87,9 @@ type CunningStrikeAfterDamageFills = {
   readonly toolPossession:
     | Extract<BattleFill, { readonly kind: "toolPossessionFacts" }>
     | undefined;
+  readonly endTurnCover:
+    | Extract<BattleFill, { readonly kind: "cunningStrikeEndTurnCoverFacts" }>
+    | undefined;
 };
 
 export type CunningStrikeAfterDamageResult =
@@ -89,6 +102,7 @@ export function eligibleCunningStrikeContexts(input: {
   readonly attackerId: CombatantId;
   readonly targetId: CombatantId;
   readonly eligibleAttackDamageRiders: readonly AttackDamageRider[];
+  readonly hiddenBeforeAttack: CunningStrikeContext["hiddenBeforeAttack"];
 }): readonly CunningStrikeContext[] {
   const attacker = input.state.combatants.get(input.attackerId);
   const target = input.state.combatants.get(input.targetId);
@@ -100,23 +114,51 @@ export function eligibleCunningStrikeContexts(input: {
     return [];
   }
   const targetSize = combatantEffectiveSize(target);
+  const baseCunningStrikeProfiles = attacker.origin.characterUnitRefs.flatMap(
+    (unitRef) =>
+      unitRef.supportProfiles.flatMap((supportProfile) =>
+        typeof supportProfile === "object" &&
+        supportProfile.kind === CUNNING_STRIKE_SUPPORT_PROFILE
+          ? [{ unitId: unitRef.unitId, supportProfile }]
+          : [],
+      ),
+  );
   return attacker.origin.characterUnitRefs.flatMap((unitRef) =>
     unitRef.supportProfiles.flatMap((supportProfile) => {
       if (
         typeof supportProfile !== "object" ||
-        supportProfile.kind !== CUNNING_STRIKE_SUPPORT_PROFILE
+        (supportProfile.kind !== CUNNING_STRIKE_SUPPORT_PROFILE &&
+          supportProfile.kind !== CUNNING_STRIKE_OPTION_GRANT_SUPPORT_PROFILE)
       ) {
+        return [];
+      }
+      const baseProfile =
+        supportProfile.kind === CUNNING_STRIKE_SUPPORT_PROFILE
+          ? supportProfile
+          : baseCunningStrikeProfiles.find(
+              (candidate) =>
+                candidate.unitId === supportProfile.optionGrant.sourceUnitId,
+            )?.supportProfile;
+      if (baseProfile === undefined) {
         return [];
       }
       const sourceRider = input.eligibleAttackDamageRiders.find(
         (rider) =>
-          rider.unitId === supportProfile.cunningStrike.trigger.sourceUnitId,
+          rider.unitId === baseProfile.cunningStrike.trigger.sourceUnitId,
       );
       if (sourceRider === undefined) {
         return [];
       }
-      return supportProfile.cunningStrike.options.flatMap((option) =>
-        cunningStrikeOptionEligibleForTarget(option, targetSize)
+      const options =
+        supportProfile.kind === CUNNING_STRIKE_SUPPORT_PROFILE
+          ? supportProfile.cunningStrike.options
+          : [supportProfile.optionGrant.option];
+      return options.flatMap((option) =>
+        cunningStrikeOptionEligibleForTarget(
+          option,
+          targetSize,
+          input.hiddenBeforeAttack,
+        )
           ? [
               {
                 attackerId: input.attackerId,
@@ -124,8 +166,9 @@ export function eligibleCunningStrikeContexts(input: {
                 unitId: unitRef.unitId,
                 label: supportProfile.unit.name,
                 sourceDamageRiderUnitId: sourceRider.unitId,
-                support: supportProfile,
+                support: baseProfile,
                 option,
+                hiddenBeforeAttack: input.hiddenBeforeAttack,
               },
             ]
           : [],
@@ -223,11 +266,15 @@ export function resolveCunningStrikeAfterAttackDamage(input: {
   readonly toolPossession:
     | Extract<BattleFill, { readonly kind: "toolPossessionFacts" }>
     | undefined;
+  readonly endTurnCover:
+    | Extract<BattleFill, { readonly kind: "cunningStrikeEndTurnCoverFacts" }>
+    | undefined;
 }): CunningStrikeAfterDamageResult {
   if (input.selected === null) {
     return input.savingThrow === undefined &&
       input.movement === undefined &&
-      input.toolPossession === undefined
+      input.toolPossession === undefined &&
+      input.endTurnCover === undefined
       ? { tag: "ok", state: input.state }
       : {
           tag: "invalid",
@@ -246,6 +293,7 @@ export function resolveCunningStrikeAfterAttackDamage(input: {
           savingThrow: input.savingThrow,
           toolPossession: input.toolPossession,
           movement: input.movement,
+          endTurnCover: input.endTurnCover,
         },
       ),
     ),
@@ -258,6 +306,7 @@ export function resolveCunningStrikeAfterAttackDamage(input: {
           savingThrow: input.savingThrow,
           toolPossession: input.toolPossession,
           movement: input.movement,
+          endTurnCover: input.endTurnCover,
         },
       ),
     ),
@@ -266,7 +315,21 @@ export function resolveCunningStrikeAfterAttackDamage(input: {
         savingThrow: input.savingThrow,
         toolPossession: input.toolPossession,
         movement: input.movement,
+        endTurnCover: input.endTurnCover,
       }),
+    ),
+    byCunningStrikeEffectKind("hideInvisibleEndSuppression", (effect) =>
+      resolveCunningStrikeHideInvisibleEndSuppression(
+        input.state,
+        selected,
+        effect,
+        {
+          savingThrow: input.savingThrow,
+          toolPossession: input.toolPossession,
+          movement: input.movement,
+          endTurnCover: input.endTurnCover,
+        },
+      ),
     ),
     Match.exhaustive,
   );
@@ -294,10 +357,21 @@ function attackDamageRiderWithCunningStrikeCost(
 function cunningStrikeOptionEligibleForTarget(
   option: CunningStrikeOption,
   targetSize: Size,
+  hiddenBeforeAttack: CunningStrikeContext["hiddenBeforeAttack"],
 ): boolean {
-  return option.effect.kind !== "sizeGatedConditionSave"
-    ? true
-    : SIZES.indexOf(targetSize) <= SIZES.indexOf(option.effect.target.maxSize);
+  return Match.value(option.effect).pipe(
+    byCunningStrikeEffectKind("equipmentGatedConditionSave", () => true),
+    byCunningStrikeEffectKind("postDamageMovement", () => true),
+    byCunningStrikeEffectKind("hideInvisibleEndSuppression", () =>
+      hiddenBeforeAttack !== null
+    ),
+    byCunningStrikeEffectKind(
+      "sizeGatedConditionSave",
+      (effect) =>
+        SIZES.indexOf(targetSize) <= SIZES.indexOf(effect.target.maxSize),
+    ),
+    Match.exhaustive,
+  );
 }
 
 function resolveCunningStrikeEquipmentGatedConditionSave(
@@ -306,11 +380,11 @@ function resolveCunningStrikeEquipmentGatedConditionSave(
   effect: CunningStrikeEquipmentGatedConditionSaveEffect,
   fills: CunningStrikeAfterDamageFills,
 ): CunningStrikeAfterDamageResult {
-  if (fills.movement !== undefined) {
+  if (fills.movement !== undefined || fills.endTurnCover !== undefined) {
     return {
       tag: "invalid",
       message:
-        "Cunning Strike equipment-gated condition effect does not accept movement fills.",
+        "Cunning Strike equipment-gated condition effect does not accept movement or cover fills.",
     };
   }
   if (fills.toolPossession === undefined) {
@@ -378,7 +452,11 @@ function resolveCunningStrikeSizeGatedConditionSave(
   effect: CunningStrikeSizeGatedConditionSaveEffect,
   fills: CunningStrikeAfterDamageFills,
 ): CunningStrikeAfterDamageResult {
-  if (fills.movement !== undefined || fills.toolPossession !== undefined) {
+  if (
+    fills.movement !== undefined ||
+    fills.toolPossession !== undefined ||
+    fills.endTurnCover !== undefined
+  ) {
     return {
       tag: "invalid",
       message:
@@ -426,7 +504,11 @@ function resolveCunningStrikePostDamageMovement(
   effect: CunningStrikePostDamageMovementEffect,
   fills: CunningStrikeAfterDamageFills,
 ): CunningStrikeAfterDamageResult {
-  if (fills.savingThrow !== undefined || fills.toolPossession !== undefined) {
+  if (
+    fills.savingThrow !== undefined ||
+    fills.toolPossession !== undefined ||
+    fills.endTurnCover !== undefined
+  ) {
     return {
       tag: "invalid",
       message:
@@ -475,6 +557,70 @@ function resolveCunningStrikePostDamageMovement(
     return { tag: "invalid", message: movement.message };
   }
   return { tag: "ok", state: applyBattleMovement(state, movement.movement) };
+}
+
+function resolveCunningStrikeHideInvisibleEndSuppression(
+  state: BattleState,
+  context: CunningStrikeContext,
+  effect: CunningStrikeHideInvisibleEndSuppressionEffect,
+  fills: CunningStrikeAfterDamageFills,
+): CunningStrikeAfterDamageResult {
+  if (
+    fills.savingThrow !== undefined ||
+    fills.movement !== undefined ||
+    fills.toolPossession !== undefined
+  ) {
+    return {
+      tag: "invalid",
+      message:
+        "Cunning Strike Stealth Attack only accepts end-turn cover facts.",
+    };
+  }
+  if (context.hiddenBeforeAttack === null) {
+    return {
+      tag: "invalid",
+      message:
+        "Cunning Strike Stealth Attack requires the Hide action's Invisible condition before the attack.",
+    };
+  }
+  if (fills.endTurnCover === undefined) {
+    return {
+      tag: "needsHoles",
+      holes: [cunningStrikeEndTurnCoverHole(context, effect)],
+    };
+  }
+  if (fills.endTurnCover.holeId !== CUNNING_STRIKE_END_TURN_COVER_HOLE_ID) {
+    return {
+      tag: "invalid",
+      message: "Cunning Strike Stealth Attack cover facts use the wrong hole.",
+    };
+  }
+  const endTurnCover = fills.endTurnCover.value.cover;
+  if (
+    !isCunningStrikeQualifyingCoverDegree(endTurnCover) ||
+    !effect.ifTurnEndsBehindCover.includes(endTurnCover)
+  ) {
+    return { tag: "ok", state };
+  }
+  const attacker = state.combatants.get(context.attackerId);
+  return attacker === undefined
+    ? { tag: "ok", state }
+    : {
+        tag: "ok",
+        state: {
+          ...state,
+          combatants: new Map(state.combatants).set(context.attackerId, {
+            ...attacker,
+            hidden: context.hiddenBeforeAttack,
+          }),
+        },
+      };
+}
+
+function isCunningStrikeQualifyingCoverDegree(
+  cover: CunningStrikeEndTurnCoverDegree,
+): cover is CunningStrikeQualifyingCoverDegree {
+  return cover === "threeQuarters" || cover === "total";
 }
 
 function cunningStrikeSavingThrowHole(
@@ -534,6 +680,20 @@ function cunningStrikeMovementHole(
     actorId,
     movementBudgetFeet: movementBudget.movementBudgetFeet,
     speedKinds: movementBudget.speedKinds,
+  };
+}
+
+function cunningStrikeEndTurnCoverHole(
+  context: CunningStrikeContext,
+  effect: CunningStrikeHideInvisibleEndSuppressionEffect,
+): BattleCunningStrikeEndTurnCoverFactsHole {
+  return {
+    kind: "cunningStrikeEndTurnCoverFacts",
+    holeId: CUNNING_STRIKE_END_TURN_COVER_HOLE_ID,
+    holeInstanceKey: CUNNING_STRIKE_END_TURN_COVER_HOLE_INSTANCE,
+    label: "Cunning Strike Stealth Attack end-turn cover",
+    actorId: context.attackerId,
+    coverDegrees: ["none", "half", ...effect.ifTurnEndsBehindCover],
   };
 }
 
@@ -633,6 +793,10 @@ function cunningStrikeOptionLabel(effect: CunningStrikeOptionEffect): string {
     byCunningStrikeEffectKind(
       "postDamageMovement",
       () => "post-damage movement",
+    ),
+    byCunningStrikeEffectKind(
+      "hideInvisibleEndSuppression",
+      () => "hide Invisible end suppression",
     ),
     Match.exhaustive,
   );

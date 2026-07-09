@@ -122,6 +122,17 @@ export const OPEN_HAND_TECHNIQUE_DECISION_CHOICES = [
 ] as const;
 export type OpenHandTechniqueDecisionChoice =
   (typeof OPEN_HAND_TECHNIQUE_DECISION_CHOICES)[number];
+export const TACTICAL_MASTER_REPLACEMENT_DECISION_HOLE_ID = holeId(
+  "battle:unit-feature:tactical-master:replacement",
+);
+export const TACTICAL_MASTER_REPLACEMENT_DECISION_HOLE_INSTANCE =
+  holeInstanceKey("battle:unit-feature:tactical-master:replacement");
+export const BRUTAL_STRIKE_DECISION_HOLE_ID = holeId(
+  "battle:unit-feature:brutal-strike:decision",
+);
+export const BRUTAL_STRIKE_DECISION_HOLE_INSTANCE = holeInstanceKey(
+  "battle:unit-feature:brutal-strike:decision",
+);
 export const OPEN_HAND_TECHNIQUE_SAVE_HOLE_ID = holeId(
   "battle:unit-feature:open-hand-technique:save",
 );
@@ -157,6 +168,12 @@ export const CUNNING_STRIKE_TOOL_POSSESSION_HOLE_ID = holeId(
 );
 export const CUNNING_STRIKE_TOOL_POSSESSION_HOLE_INSTANCE = holeInstanceKey(
   "battle:unit-feature:cunning-strike:tool-possession",
+);
+export const CUNNING_STRIKE_END_TURN_COVER_HOLE_ID = holeId(
+  "battle:unit-feature:cunning-strike:end-turn-cover",
+);
+export const CUNNING_STRIKE_END_TURN_COVER_HOLE_INSTANCE = holeInstanceKey(
+  "battle:unit-feature:cunning-strike:end-turn-cover",
 );
 export const UNIT_FEATURE_CONDITION_END_TURN_SAVE_HOLE_KEY_PREFIX =
   "battle:unit-feature-condition-end-turn-save:";
@@ -306,6 +323,13 @@ export const HUNTERS_PREY_HORDE_BREAKER_DAMAGE_DISPOSITION_HOLE_INSTANCE =
   holeInstanceKey("battle:hunters-prey:horde-breaker:damage-disposition");
 export const PROTECTION_FROM_EVIL_AND_GOOD_CREATURE_TYPES = [
   "aberration",
+  "celestial",
+  "elemental",
+  "fey",
+  "fiend",
+  "undead",
+] as const satisfies ReadonlyArray<CreatureType>;
+export const DISPEL_EVIL_AND_GOOD_CREATURE_TYPES = [
   "celestial",
   "elemental",
   "fey",

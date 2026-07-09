@@ -1,0 +1,44 @@
+{
+  "description": "You commune with nature spirits and learn three facts about the surrounding area: outdoors within 3 miles, or in caves and other natural underground settings within 300 feet. The spell doesn't function where nature has been replaced by construction. The facts can include settlements, portals to other planes, one CR 10+ Celestial, Elemental, Fey, Fiend, or Undead, the prevalent kind of plant, mineral, or Beast, or bodies of water.",
+  "id": "commune_with_nature",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "amount": 1,
+      "kind": "minutes",
+      "ritual": true
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 5,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "self"
+        },
+        "effects": [
+          {
+            "kind": "none"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "kind": "self"
+    },
+    "school": "divination"
+  },
+  "name": "Commune with Nature",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Commune with Nature"
+  }
+}

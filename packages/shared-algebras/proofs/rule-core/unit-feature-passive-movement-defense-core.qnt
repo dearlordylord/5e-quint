@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.passive-armor-class-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.acrobatic-movement unit-feature.passive-armor-class-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants
 // KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 
 module unitFeaturePassiveMovementDefenseCore {

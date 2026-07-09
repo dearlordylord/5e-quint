@@ -11,7 +11,9 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-HALFLING-BRAVE-RUNTIME species_halfling_brave
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME species_halfling_nimbleness
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV73A monk_martial_arts
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-05-FIGHTER-TACTICAL-MASTER fighter_tactical_master mastery_push mastery_slow
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.creature-space-movement-permission unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.passive-ability-check-roll-mode unit-feature.passive-damage-resistance unit-feature.passive-saving-throw-roll-mode unit-feature.reaction-roll-or-damage-reduction unit-feature.stunning-strike
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.fighter-tactical-master unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow
 import { decodeSpeciesRecordSync } from "@dnd/surface/surface/schema";
 import { describe, expect, test } from "vitest";
 import speciesDragonbornInput from "../../surface/content/species_dragonborn.json";
@@ -22,6 +24,7 @@ import {
   barbarianRageUnitId,
   fighterActionSurgeUnitId,
   fighterImprovedCriticalUnitId,
+  fighterTacticalMasterUnitId,
   monkDeflectAttacksUnitId,
   monkMartialArtsUnitId,
   monkMonksFocusUnitId,
@@ -76,6 +79,15 @@ import {
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   STUNNING_STRIKE_SUPPORT_PROFILE,
 } from "./unit-profile-admission-test-support.ts";
+import {
+  battleTacticalMasterReplacementSupportForUnit,
+  battleWeaponMasteryPushSupportForUnit,
+  battleWeaponMasterySlowSupportForUnit,
+  TACTICAL_MASTER_REPLACEMENT_MASTERY_PROPERTIES,
+  TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
+  WEAPON_MASTERY_PUSH_SUPPORT_PROFILE,
+  WEAPON_MASTERY_SLOW_SUPPORT_PROFILE,
+} from "./unit-feature-support.ts";
 import { characterCreature } from "./unit-profile-admission-creature-fixture-support.ts";
 import {
   grappleOutcomeFill,
@@ -1536,6 +1548,72 @@ describe("QMBT8 deterministic Unit feature admission expansion", () => {
       Either.right({
         unitId: fighterImprovedCriticalUnitId,
         supportProfiles: [WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE],
+      }),
+    );
+  });
+
+  test("fighter_tactical_master admits a level-gated mastery replacement support profile", () => {
+    const unit = unitLibrary.requireUnit(fighterTacticalMasterUnitId);
+
+    expect(battleTacticalMasterReplacementSupportForUnit(unit)).toEqual({
+      kind: TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
+      replacementProperties: TACTICAL_MASTER_REPLACEMENT_MASTERY_PROPERTIES,
+    });
+    expect(
+      battleUnitRefWithSupportProfiles({
+        unitRef: { unitId: unit.id },
+        unit,
+        classLevels: [{ className: "fighter", level: 8 }],
+      }),
+    ).toEqual(
+      Either.right({
+        unitId: fighterTacticalMasterUnitId,
+        supportProfiles: [],
+      }),
+    );
+    expect(
+      battleUnitRefWithSupportProfiles({
+        unitRef: { unitId: unit.id },
+        unit,
+        classLevels: [{ className: "fighter", level: 9 }],
+      }),
+    ).toEqual(
+      Either.right({
+        unitId: fighterTacticalMasterUnitId,
+        supportProfiles: [
+          {
+            kind: TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
+            replacementProperties: TACTICAL_MASTER_REPLACEMENT_MASTERY_PROPERTIES,
+          },
+        ],
+      }),
+    );
+  });
+
+  test("Push and Slow mastery records are admitted through typed mastery mechanics", () => {
+    const push = unitLibrary.requireUnit("mastery_push");
+    const slow = unitLibrary.requireUnit("mastery_slow");
+
+    expect(battleWeaponMasteryPushSupportForUnit(push)).toBe(
+      WEAPON_MASTERY_PUSH_SUPPORT_PROFILE,
+    );
+    expect(battleWeaponMasterySlowSupportForUnit(slow)).toBe(
+      WEAPON_MASTERY_SLOW_SUPPORT_PROFILE,
+    );
+    expect(
+      battleUnitRefWithSupportProfiles({ unitRef: { unitId: push.id }, unit: push }),
+    ).toEqual(
+      Either.right({
+        unitId: "mastery_push",
+        supportProfiles: [WEAPON_MASTERY_PUSH_SUPPORT_PROFILE],
+      }),
+    );
+    expect(
+      battleUnitRefWithSupportProfiles({ unitRef: { unitId: slow.id }, unit: slow }),
+    ).toEqual(
+      Either.right({
+        unitId: "mastery_slow",
+        supportProfiles: [WEAPON_MASTERY_SLOW_SUPPORT_PROFILE],
       }),
     );
   });

@@ -9243,6 +9243,53 @@ describe("SRD Unit catalog boundary", () => {
     }
   });
 
+  test("installs Insect Plague as a level-5 ongoing area spell", () => {
+    const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+
+    expect(result.tag).toBe("ok");
+    if (result.tag === "ok") {
+      const insectPlague = result.catalog.requireUnit("insect_plague");
+
+      expect(insectPlague).toMatchObject({
+        id: "insect_plague",
+        kind: "spell",
+        mechanics: {
+          family: "ongoing_effect",
+          level: 5,
+          school: "conjuration",
+          range: { kind: "point", feet: 300 },
+          duration: {
+            kind: "concentration",
+            upTo: { amount: 10, unit: "minute" },
+          },
+        },
+      });
+      if (
+        insectPlague.kind !== "spell" ||
+        insectPlague.mechanics.family !== "ongoing_effect"
+      ) {
+        throw new Error("Expected Insect Plague ongoing spell record.");
+      }
+      expect(insectPlague.mechanics.initialPhase).toMatchObject({
+        kind: "save_gate",
+        ability: "con",
+        onFail: {
+          kind: "damage",
+          amount: {
+            kind: "linear_per_level",
+            axis: "slot",
+            startingAtLevel: 5,
+            base: { dice: 4, dieSize: 10 },
+            perLevel: { dice: 1 },
+          },
+          damageType: "piercing",
+        },
+        onSuccess: { kind: "half_damage" },
+      });
+      expect(insectPlague.mechanics.operations).toHaveLength(3);
+    }
+  });
+
   test("rejects class subclass choices that point at a different class subclass", () => {
     const fighter = srdUnitCollection.units.find(
       (unit) => unit.id === "class_fighter",

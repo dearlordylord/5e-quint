@@ -39,6 +39,7 @@ export type CompositeAndCountermagicEffectAtom = Extract<
       | "object_location_sense"
       | "block_divination_targeting_and_scrying_perception"
       | "divination_omen"
+      | "planar_entity_answers"
       | "assign_courier_task"
       | "negate_triggering_spell"
       | "reflect_triggering_spell"
@@ -623,6 +624,22 @@ export function traceCompositeAndCountermagicEffectAtom(
           `changed circumstances: ${e.changedCircumstances}`,
           `repeat casting: ${e.repeatCasting.noAnswerChance.percent}% ${e.repeatCasting.noAnswerChance.kind} until ${e.repeatCasting.resetBy}`,
           `repeat result: ${e.repeatCasting.noAnswerChance.result}`,
+        ].join("\n"),
+      });
+      return id;
+    }
+    case "planar_entity_answers": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "planar_entity_answers",
+        label: [
+          "planar_entity_answers",
+          `source: ${e.source}`,
+          `questions: ${e.questionCount}`,
+          `answer: ${e.answer.primary}; unknown=${e.answer.unknown}; fallback=${e.answer.fallback}`,
+          `window: ${e.questionWindow.amount} ${e.questionWindow.unit}`,
         ].join("\n"),
       });
       return id;

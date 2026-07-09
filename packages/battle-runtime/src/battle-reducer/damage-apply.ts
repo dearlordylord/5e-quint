@@ -1186,11 +1186,13 @@ export function removeSpellConditionEffectsFromTargetDamagedByCasterOrAlly(
       effect,
     ): effect is Extract<
       BattleActiveEffect,
-      { readonly kind: "spellCondition" }
+      { readonly kind: "spellCondition" | "unitFeatureCondition" }
     > =>
-      effect.kind === "spellCondition" &&
-      effect.escape?.kind === "targetDamagedByCasterOrAlly" &&
-      combatantsAreAllies(state, damageSourceId, effect.sourceCombatantId),
+      (effect.kind === "spellCondition" &&
+        effect.escape?.kind === "targetDamagedByCasterOrAlly" &&
+        combatantsAreAllies(state, damageSourceId, effect.sourceCombatantId)) ||
+      (effect.kind === "unitFeatureCondition" &&
+        effect.earlyEnd?.kind === "targetTakesAnyDamage"),
   );
   if (expiring.length === 0) {
     return state;

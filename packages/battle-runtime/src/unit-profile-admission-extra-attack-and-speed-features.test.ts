@@ -4,16 +4,19 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT40 barbarian_fast_movement
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT44 ranger_roving
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-AUTHOR-MONK-UNARMORED-MOVEMENT monk_unarmored_movement
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-07-MONK-ACROBATIC-MOVEMENT monk_acrobatic_movement
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection CRPI-READY-028 rogue_second_story_work
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.acrobatic-movement
 import { describe, expect, test } from "vitest";
 import {
   barbarianExtraAttackUnitId,
   barbarianFastMovementUnitId,
   extraAttackSupportProfile,
   fighterExtraAttackUnitId,
+  monkAcrobaticMovementUnitId,
   monkExtraAttackUnitId,
   monkUnarmoredMovementUnitId,
+  oppositionSide,
   paladinExtraAttackUnitId,
   rangerExtraAttackUnitId,
   rangerRovingUnitId,
@@ -51,11 +54,14 @@ import {
   shieldLoadout,
 } from "./unit-profile-admission-feature-fixture-support.ts";
 import {
+  ACROBATIC_MOVEMENT_SUPPORT_PROFILE,
+  battleAcrobaticMovementSupportForUnit,
   battlePassiveSpeedKindGrantsSupportForUnit,
   battleUnitRefWithSupportProfiles,
   battleId,
   classLevel,
   combatantId,
+  decodeUnitRecordSync,
   difficultyClass,
   discoverBattleActs,
   Either,
@@ -835,6 +841,177 @@ describe("L12G-AUTHOR-MONK-UNARMORED-MOVEMENT deterministic admission", () => {
   });
 });
 
+describe("L19D-07-MONK-ACROBATIC-MOVEMENT deterministic admission", () => {
+  test("monk_acrobatic_movement is admitted as unarmored and unshielded table-spatial traversal", () => {
+    const unit = unitLibrary.requireUnit(monkAcrobaticMovementUnitId);
+    const profile = parseSupportedUnitFeatureProfile(unit, [
+      { className: "monk", level: classLevel(9) },
+    ]);
+
+    expect(
+      battleUnitRefWithSupportProfiles({
+        unitRef: { unitId: unit.id },
+        unit,
+      }),
+    ).toEqual(
+      Either.right({
+        unitId: monkAcrobaticMovementUnitId,
+        supportProfiles: [acrobaticMovementSupportProfile()],
+      }),
+    );
+    expect(profile).toEqual(
+      expect.objectContaining({
+        kind: "acrobaticMovement",
+        unit,
+        acrobaticMovement: acrobaticMovementSupportProfile()
+          .acrobaticMovement,
+      }),
+    );
+  });
+
+  test("Acrobatic Movement accepts a vertical and liquid path witness on the Monk's turn", () => {
+    const state = acrobaticMovementBattle();
+    const moved = resolveBattleSubject({
+      state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: spellCasterId,
+        command: "move",
+      },
+      fills: [
+        movementFill(acrobaticMovementHole(state), {
+          movementCostFeet: 20,
+          provokedOpportunityAttacks: [],
+          acrobaticMovement: {
+            kind: "acrobaticMovement",
+            paths: ["alongVerticalSurface", "acrossLiquid"],
+            withoutFallingDuringMovement: true,
+          },
+        }),
+      ],
+    });
+
+    expect(moved).toMatchObject({ tag: "resolved" });
+    if (moved.tag !== "resolved") {
+      throw new Error("Expected Acrobatic Movement to resolve.");
+    }
+    expect(moved.snapshot.combatants).toContainEqual(
+      expect.objectContaining({
+        combatantId: spellCasterId,
+        movement: expect.objectContaining({
+          spentFeet: 20,
+          remainingFeet: 10,
+        }),
+      }),
+    );
+  });
+
+  test("Acrobatic Movement rejects the path witness while armored or shielded", () => {
+    const armored = acrobaticMovementBattle({ armorClass: lightArmorClassState() });
+    expect(
+      resolveBattleSubject({
+        state: armored,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: spellCasterId,
+          command: "move",
+        },
+        fills: [
+          movementFill(acrobaticMovementHole(armored), {
+            movementCostFeet: 10,
+            provokedOpportunityAttacks: [],
+            acrobaticMovement: {
+              kind: "acrobaticMovement",
+              paths: ["alongVerticalSurface"],
+              withoutFallingDuringMovement: true,
+            },
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+
+    const shielded = acrobaticMovementBattle({
+      armorClass: shieldArmorClassState(),
+      selectedLoadout: shieldLoadout(),
+    });
+    expect(
+      resolveBattleSubject({
+        state: shielded,
+        subject: {
+          tag: "runtimeCommand",
+          actorId: spellCasterId,
+          command: "move",
+        },
+        fills: [
+          movementFill(acrobaticMovementHole(shielded), {
+            movementCostFeet: 10,
+            provokedOpportunityAttacks: [],
+            acrobaticMovement: {
+              kind: "acrobaticMovement",
+              paths: ["acrossLiquid"],
+              withoutFallingDuringMovement: true,
+            },
+          }),
+        ],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+  });
+
+  test("Acrobatic Movement support gate rejects adjacent movement shapes", () => {
+    const unit = unitLibrary.requireUnit(monkAcrobaticMovementUnitId);
+    if (
+      unit.kind !== "class_feature" ||
+      unit.mechanics.family !== "acrobatic_movement"
+    ) {
+      throw new Error("Expected Acrobatic Movement class feature.");
+    }
+    const adjacentUnits = [
+      decodeUnitRecordSync({
+        ...unit,
+        id: "test_acrobatic_movement_missing_shield_predicate",
+        mechanics: {
+          ...unit.mechanics,
+          condition: {
+            kind: "not_wearing_armor",
+            categories: ["light", "medium", "heavy"],
+          },
+        },
+      }),
+      decodeUnitRecordSync({
+        ...unit,
+        id: "test_acrobatic_movement_heavy_only_with_shield_predicate",
+        mechanics: {
+          ...unit.mechanics,
+          condition: {
+            kind: "all_of",
+            predicates: [
+              { kind: "not_wearing_armor", categories: ["heavy"] },
+              { kind: "not_wielding_shield" },
+            ],
+          },
+        },
+      }),
+    ] as const;
+
+    for (const adjacentUnit of adjacentUnits) {
+      expect(battleAcrobaticMovementSupportForUnit(adjacentUnit)).toBe(
+        "unsupported",
+      );
+      expect(
+        parseSupportedUnitFeatureProfile(adjacentUnit, [
+          { className: "monk", level: classLevel(9) },
+        ]),
+      ).toBeNull();
+    }
+  });
+});
+
 describe("CRPI-READY-028 deterministic Second-Story Work admission", () => {
   test("rogue_second_story_work is admitted as a linked Climb Speed grant", () => {
     const unit = unitLibrary.requireUnit(rogueSecondStoryWorkUnitId);
@@ -1127,6 +1304,96 @@ describe("QMBT44 deterministic Roving admission", () => {
     }
   });
 });
+
+function acrobaticMovementSupportProfile() {
+  return {
+    kind: ACROBATIC_MOVEMENT_SUPPORT_PROFILE,
+    acrobaticMovement: {
+      condition: { kind: "unarmoredUnshielded" },
+      timing: "onYourTurn",
+      paths: [
+        {
+          kind: "verticalSurface",
+          path: "alongVerticalSurface",
+          withoutFallingDuringMovement: true,
+        },
+        {
+          kind: "liquid",
+          path: "acrossLiquid",
+          withoutFallingDuringMovement: true,
+        },
+      ],
+    },
+  } as const;
+}
+
+function acrobaticMovementBattle(input: {
+  readonly armorClass?: Parameters<typeof characterCreature>[0]["armorClass"];
+  readonly selectedLoadout?: Parameters<
+    typeof characterCreature
+  >[0]["selectedLoadout"];
+} = {}): BattleState {
+  const unit = unitLibrary.requireUnit(monkAcrobaticMovementUnitId);
+  const unitRef = battleUnitRefWithSupportProfiles({
+    unitRef: { unitId: unit.id },
+    unit,
+  });
+  expect(unitRef).toEqual(
+    Either.right({
+      unitId: monkAcrobaticMovementUnitId,
+      supportProfiles: [acrobaticMovementSupportProfile()],
+    }),
+  );
+  if (Either.isLeft(unitRef)) {
+    throw new Error(unitRef.left.message);
+  }
+
+  const result = startBattle({
+    battleId: battleId("unit-profile-acrobatic-movement-admission"),
+    combatants: [
+      characterCreature({
+        combatantId: spellCasterId,
+        displayName: "Acrobatic Movement Monk",
+        initiative: 20,
+        side: partySide,
+        characterUnitRefs: [unitRef.right],
+        classLevels: [{ className: "monk", level: classLevel(9) }],
+        ...(input.armorClass === undefined
+          ? {}
+          : { armorClass: input.armorClass }),
+        ...(input.selectedLoadout === undefined
+          ? {}
+          : { selectedLoadout: input.selectedLoadout }),
+      }),
+      characterCreature({
+        combatantId: spellTargetId,
+        displayName: "Target",
+        initiative: 10,
+        side: oppositionSide,
+      }),
+    ],
+  });
+  expect(Either.isRight(result)).toBe(true);
+  if (Either.isLeft(result)) {
+    throw new Error(result.left.message);
+  }
+  return result.right;
+}
+
+function acrobaticMovementHole(
+  state: BattleState,
+): Extract<ReturnType<typeof requireHole>, { readonly kind: "movement" }> {
+  const act = discoverBattleActs(state).find(
+    (candidate) =>
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.actorId === spellCasterId &&
+      candidate.subject.command === "move",
+  );
+  if (act === undefined) {
+    throw new Error("Expected Acrobatic Movement Movement act.");
+  }
+  return requireHole(act.initialHoles, "movement");
+}
 
 function secondStoryWorkSupportProfile() {
   return {

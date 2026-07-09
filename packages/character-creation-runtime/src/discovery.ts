@@ -238,15 +238,16 @@ export function discoverClassGrantedHoles(input: {
       }),
     ),
     ...classToolProficiencyChoiceHoles(input.draft, classUnitId, facts.value),
-    ...facts.value.featureGrants.flatMap((grant) =>
-      grant.level <= classLevel
-        ? discoverClassFeatureGrantHoles(
-            grant.unitId,
-            classLevel,
-            input.draft,
-            input.unitLibrary,
-          )
-        : [],
+    ...discoverClassFeatureGrantHolesInLevelOrder(
+      facts.value.featureGrants,
+      classLevel,
+      input.draft,
+      input.unitLibrary,
+      !hasUnitChoiceSelection(
+        input.draft,
+        classUnitId,
+        CLASS_SKILL_PROFICIENCY_CHOICE_KEY,
+      ),
     ),
     ...discoverSubclassHoles(classUnitId, classLevel, facts.value, input),
     ...discoverSelectedSubclassFeatureGrantHoles(
@@ -559,15 +560,12 @@ function discoverAdditionalClassGrantedHoles(
   }
 
   return [
-    ...facts.value.featureGrants.flatMap((grant) =>
-      grant.level <= classLevel
-        ? discoverClassFeatureGrantHoles(
-            grant.unitId,
-            classLevel,
-            draft,
-            unitLibrary,
-          )
-        : [],
+    ...discoverClassFeatureGrantHolesInLevelOrder(
+      facts.value.featureGrants,
+      classLevel,
+      draft,
+      unitLibrary,
+      false,
     ),
     ...proficiencyGrantChoiceHoles(
       classUnitId,
@@ -581,6 +579,78 @@ function discoverAdditionalClassGrantedHoles(
       unitLibrary,
     }).flatMap((hole) => unselectedUnitChoiceHole(draft, hole)),
   ];
+}
+
+function discoverClassFeatureGrantHolesInLevelOrder(
+  featureGrants: ReadableClassCreationFacts["featureGrants"],
+  classLevel: number,
+  draft: CharacterDraft,
+  unitLibrary: UnitCatalog,
+  deferOwnedSkillExpertiseChoices: boolean,
+): readonly CreationHole[] {
+  const holes: CreationHole[] = [];
+  let deferLaterOwnedSkillExpertiseChoices = deferOwnedSkillExpertiseChoices;
+
+  for (const grant of featureGrants) {
+    if (grant.level > classLevel) {
+      continue;
+    }
+
+    holes.push(
+      ...discoverClassFeatureGrantHoles(
+        grant.unitId,
+        classLevel,
+        draft,
+        unitLibrary,
+        {
+          deferOwnedSkillExpertiseChoices:
+            deferLaterOwnedSkillExpertiseChoices,
+        },
+      ),
+    );
+
+    if (
+      classFeatureHasOwnedSkillExpertiseChoice(grant.unitId, unitLibrary) &&
+      !hasUnitChoiceSelection(
+        draft,
+        grant.unitId,
+        CLASS_FEATURE_PROFICIENCY_CHOICE_KEY,
+      )
+    ) {
+      deferLaterOwnedSkillExpertiseChoices = true;
+    }
+  }
+
+  return holes;
+}
+
+function classFeatureHasOwnedSkillExpertiseChoice(
+  featureUnitId: UnitRecord["id"],
+  unitLibrary: UnitCatalog,
+): boolean {
+  const feature = requireClassFeature(unitLibrary, featureUnitId);
+  if (feature === undefined || feature.mechanics.family !== "passive") {
+    return false;
+  }
+
+  return feature.mechanics.grants.some(
+    (grant) =>
+      grant.kind === "grant_expertise" &&
+      grant.skills.kind === "owned_skill_proficiencies_without_expertise",
+  );
+}
+
+function hasUnitChoiceSelection(
+  draft: CharacterDraft,
+  unitId: UnitRecord["id"],
+  choiceKey: UnitChoiceKey,
+): boolean {
+  return draft.selections.choices.some(
+    (selection) =>
+      selection.kind === "unitChoice" &&
+      selection.source.unitId === unitId &&
+      selection.source.choiceKey === choiceKey,
+  );
 }
 
 type GrantSpellAccessChoice = Extract<
@@ -1519,9 +1589,14 @@ export function discoverClassFeatureGrantHoles(
   classLevel: number,
   draft: CharacterDraft,
   unitLibrary: UnitCatalog,
+  input: {
+    readonly deferOwnedSkillExpertiseChoices?: boolean;
+  } = {},
 ): readonly CreationHole[] {
   return classFeatureGrantChoiceHoles(featureUnitId, unitLibrary, {
     classLevel,
+    deferOwnedSkillExpertiseChoices:
+      input.deferOwnedSkillExpertiseChoices ?? false,
     ownedSkillExpertise: draftOwnedSkillExpertise(
       draft,
       featureUnitId,
@@ -1544,6 +1619,7 @@ export function classFeatureGrantChoiceHoles(
   unitLibrary: UnitCatalog,
   input: {
     readonly classLevel?: number;
+    readonly deferOwnedSkillExpertiseChoices?: boolean;
     readonly ownedSkillExpertise?: readonly Skill[];
     readonly ownedSkillProficiencies?: readonly Skill[];
     readonly ownedToolProficiencies?: readonly ToolProficiencyId[];
@@ -1822,6 +1898,7 @@ export function passiveGrantChoiceHoles(
   unitLibrary: UnitCatalog,
   input: {
     readonly classLevel?: number;
+    readonly deferOwnedSkillExpertiseChoices?: boolean;
     readonly ownedSkillExpertise?: readonly Skill[];
     readonly ownedSkillProficiencies?: readonly Skill[];
     readonly ownedToolProficiencies?: readonly ToolProficiencyId[];
@@ -1849,6 +1926,12 @@ export function passiveGrantChoiceHoles(
     );
   }
   if (grant.kind === "grant_expertise") {
+    if (
+      input.deferOwnedSkillExpertiseChoices === true &&
+      grant.skills.kind === "owned_skill_proficiencies_without_expertise"
+    ) {
+      return [];
+    }
     return expertiseGrantChoiceHole(
       featureUnitId,
       classLevelChoiceCountAtLevel(grant.choiceCount, input.classLevel ?? 1),

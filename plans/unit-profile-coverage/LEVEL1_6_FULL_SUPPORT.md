@@ -9,6 +9,7 @@ This strict view tracks executable SRD character-level-1 through character-level
 Full-support claim: **pass**.
 
 Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
+Strict level-9 final-support blockers: 0.
 
 ## Metrics
 
@@ -17,15 +18,16 @@ Blockers: strict=0, selected-identity=0, SRD-authored-readiness=0.
 | Strict runtime/profile support | 166/263 (63.1%) |
 | Strict target closure | 263/263 (100%) |
 | Selected identity readiness | 192/192 (100%) |
-| Diagnostic product readiness | 795/795 (100%) |
-| SRD authored product readiness | 115/115 (100%) |
+| Diagnostic product readiness | 816/816 (100%) |
+| Strict level-9 final support | 295/295 (100%) |
+| SRD authored product readiness | 116/116 (100%) |
 | Rules-kernel profile join | 117/117 (100%) |
 | Rules-kernel covered profile join | 117/117 (100%) |
 | Supported Unit rules-kernel chain | 164/164 (100%) |
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
-The full-support claim gate uses strict target closure, selected identity readiness, and SRD-authored product readiness. Diagnostic product readiness is a source-row accounting view, so it can report 795/795 (100%) while the claim gate reports **pass** when every non-green diagnostic row is outside those gate blockers or is represented by an explicit follow-up/accounting owner.
+The full-support claim gate uses strict target closure, selected identity readiness, SRD-authored product readiness, and strict level-9 final-support blockers. Diagnostic product readiness is a source-row accounting view, so it can report 816/816 (100%) while the claim gate reports **pass** only when level-9 and spell-level-5 rows have no unsupported, catalog-only, missing-authored, future-owner, or audit-only closure.
 
 ### Diagnostic Product Readiness Accounting
 
@@ -33,8 +35,8 @@ Diagnostic product readiness keeps lower-layer planning pressure visible. Rows i
 
 | Status | Rows |
 | --- | ---: |
-| accepted | 497 |
-| accepted-no-battle-effect | 298 |
+| accepted | 500 |
+| accepted-no-battle-effect | 316 |
 
 ### Selected Identity Replay Accounting
 
@@ -58,9 +60,18 @@ This is the selected-identity gate layer for the strict denominator. `witness-pr
 | --- | --- | ---: | --- |
 | Strict runtime/profile closure | pass | 263/263 (100%) | _none_ |
 | Selected identity readiness | pass | 192/192 (100%) | _none_ |
-| SRD authored product readiness | pass | 115/115 (100%) | _none_ |
+| SRD authored product readiness | pass | 116/116 (100%) | _none_ |
+| Strict level-9 final support | pass | 295/295 (100%) | _none_ |
 
 Every gate row must pass for a full level-support claim. A 100% result in one layer does not satisfy another layer, failed gates are not combined into a weighted completion percentage, and diagnostic product-readiness rows are intentionally absent from this gate unless they enter the SRD-authored blocker set.
+
+### Strict Level-9 Final-Support Blockers
+
+These rows are forbidden as final level-1-9 support for `level-9` and `spell-level-5` SRD pressure. They may remain only while implementation tasks are in progress.
+
+| Unit | Blocker kind | Reasons | Level bands | Source rows |
+| --- | --- | --- | --- | --- |
+| _none_ | _none_ | _none_ | _none_ | _none_ |
 
 ## SRD-Authored Product Readiness
 
@@ -73,7 +84,7 @@ This gate checks authored records and retained Unit references that must resolve
 | SRD background concrete equipment refs | complete | 4/4 (100%) | Every concrete Unit ref in SRD background starting equipment must resolve through the Unit catalog. |
 | SRD species records | complete | 9/9 (100%) | Every SRD species selectable at character creation must be installed. |
 | SRD species trait refs | complete | 21/21 (100%) | Every finalized species trait ref must resolve through the Unit catalog before character-to-battle admission can be claimed. |
-| SRD class feature grants through level 6 | complete | 69/69 (100%) | Every level-scoped class feature grant retained by finalization must resolve through the Unit catalog. |
+| SRD class feature grants through level 6 | complete | 70/70 (100%) | Every level-scoped class feature grant retained by finalization must resolve through the Unit catalog. |
 | SRD class concrete equipment refs | complete | 0/0 (n/a) | Every concrete Unit ref in SRD class starting equipment must resolve through the Unit catalog. |
 | Unique SRD concrete equipment refs | complete | 4/4 (100%) | Unique concrete weapon, armor, and shield Unit refs reachable from SRD starting equipment. |
 
@@ -93,9 +104,9 @@ This gate checks authored records and retained Unit references that must resolve
 
 | Scope fact | Count |
 | --- | ---: |
-| Candidate Unit ids before exclusions | 307 |
+| Candidate Unit ids before exclusions | 308 |
 | Companion-worktree exclusions | 1 |
-| SRD pressure with no Unit matrix row | 31 |
+| SRD pressure with no Unit matrix row | 32 |
 | Non-executable class containers | 12 |
 | Strict executable denominator | 263 |
 | Non-supported frontier | 97 |
@@ -280,6 +291,7 @@ This gate checks authored records and retained Unit references that must resolve
 | `monk_wholeness_of_body` | 1 | The SRD row has level-6 class-feature pressure, but no Unit matrix row exists yet. | catalog-only/dead-for-now | character-fact-and-runtime-detached-split: future-owner-before-SDK character-sheet-runtime and battle-runtime Wholeness of Body feature-resource self-healing owner plus selected Warrior of the Open Hand feature admission owner | SRD Wholeness of Body lets the selected Monk use a Bonus Action to roll the Martial Arts die and regain Hit Points equal to the roll plus Wisdom modifier, with a minimum of 1 Hit Point regained, a Wisdom-modifier use count with a minimum of one use, and Long Rest recovery. Existing Martial Arts support owns the die-size projection, existing character facts own Wisdom ability scores, and existing Hit Point recovery owners apply positive healing. The current battle self-bonus-action-healing profile is admitted for Second Wind's class-level formula and partial Short Rest/full Long Rest reset, while the current Character Sheet use-count owner is limited to typed resource profiles such as Wild Shape and Monk's Focus rather than arbitrary feature ids. A future owner must consume typed Surface facts for the selected Wholeness of Body feature, derive the Martial Arts die, Wisdom modifier, Long Rest use state, and Bonus Action spend from existing owners, then apply self Hit Point healing without duplicating Hit Point state, Martial Arts progression, Wisdom ability state, use-count expenditure state, subclass selection state, action-economy state, or dispatching on Monk, Warrior of the Open Hand, or Wholeness of Body authored identity. | _none_ | Monk Wholeness of Body |
 | `paladin_aura_of_protection` | 1 | The SRD row has level-6 class-feature pressure, but no Unit matrix row exists yet. | catalog-only/dead-for-now | table-spatial-derivation: future-owner-before-SDK battle-runtime passive class-feature aura and Saving Throw modifier owner plus table/spatial aura-membership witness owner | SRD Aura of Protection creates a 10-foot Emanation from the Paladin, inactive while the Paladin has the Incapacitated condition, and grants the Paladin and allies in the aura a Saving Throw bonus equal to the Paladin's Charisma modifier with a minimum of +1, while overlapping Paladin auras require the affected creature to choose one. Existing character facts own Paladin level and Charisma ability state, existing condition state owns Incapacitated, existing save procedure owners resolve Saving Throws, and spell aura support consumes caller/table-supplied area membership for spell-specific occurrences. The current promoted owners do not admit a selected passive class-feature aura with ally membership, source Charisma bonus projection, inactive gating, or overlapping-aura choice. A future owner must consume typed Surface facts for the selected Aura of Protection feature, existing character and condition state, explicit aura membership/choice witnesses, and the shared Saving Throw roll modifier boundary without duplicating Character Sheet ability state, condition state, table position state, Saving Throw result state, aura membership state, or dispatching on Paladin or Aura of Protection authored identity. | _none_ | Paladin Aura of Protection |
 | `paladin_faithful_steed` | 1 | The SRD row has level-5 class-feature pressure, but no Unit matrix row exists yet. | catalog-only/dead-for-now | character-fact-and-runtime-detached-split: future character-sheet-runtime Paladin Faithful Steed prepared Spell Access and once-per-Long-Rest casting owner plus existing Find Steed companion-control boundary | SRD Faithful Steed grants a Paladin Find Steed as always prepared and one casting without expending a Spell Slot, recovered on a Long Rest. A future Character Sheet owner should derive the prepared Spell Access and Long Rest-cleared casting marker from the Paladin level-5 feature and existing Spell Slot and rest state, while the existing find_steed Unit remains closed at the companion-control boundary for summoned steed lifecycle, rider/control state, stat-block projection and actions, disappearance, and item-drop handling. Paladin class state must not copy steed identity, companion lifecycle, or mount execution state, and generic runtime code must not dispatch on Paladin or Faithful Steed authored identity. | _none_ | Paladin Faithful Steed |
+| `phantasmal_force` | 3 | The SRD row has spell-level-2 spell-list Unit pressure, but no Unit matrix row exists yet. | missing-authored-runtime-closed | outside-battle-runtime: future single-target phantasm illusion Spell Effect plus Study/disbelief and recurring Psychic damage owner | Target-specific mental phantasm state, initial Intelligence save, Study/Investigation disbelief, caster-turn Psychic damage, and dangerous phantasm/hazard adjudication require a future single-target phantasm illusion owner. | _none_ | Bard spell list Phantasmal Force; Sorcerer spell list Phantasmal Force; Wizard spell list Phantasmal Force |
 | `prestidigitation` | 4 | The SRD row has spell-level-0 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | catalog-only/dead-for-now | not-recorded | Minor sensory, cleaning, flavoring, marking, and trinket effects are noncombat utility effects outside promoted runtime owners. | `plans/unit-profile-coverage/frontier-decisions/prestidigitation.md` | Bard spell list Prestidigitation; Sorcerer spell list Prestidigitation; Warlock spell list Prestidigitation; Wizard spell list Prestidigitation |
 | `purify_food_and_drink` | 3 | The SRD row has spell-level-1 spell-list Unit pressure and an adopted no-matrix frontier decision artifact; no Unit matrix row exists. | catalog-only/dead-for-now | not-recorded | Removing poison and rot from nonmagical food and drink is exploration/inventory state outside promoted runtime owners. | `plans/unit-profile-coverage/frontier-decisions/purify_food_and_drink.md` | Cleric spell list Purify Food and Drink; Druid spell list Purify Food and Drink; Paladin spell list Purify Food and Drink |
 | `ranger_hunters_lore` | 1 | The SRD row has level-3 class-feature pressure, but no Unit matrix row exists yet. | catalog-only/dead-for-now | not-recorded | Hunter's Lore reveals whether a Hunter's Mark target has Immunities, Resistances, or Vulnerabilities and what they are. That disclosure is table/stat-block knowledge, not promoted battle state; the runtime must not duplicate Stat Block facts into Ranger feature state. | _none_ | Ranger Hunter's Lore |

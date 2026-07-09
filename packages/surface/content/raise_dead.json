@@ -1,0 +1,74 @@
+{
+  "description": "With a touch, you revive a dead creature if it has been dead no longer than 10 days and wasn't Undead when it died. The creature returns to life with 1 Hit Point, and the spell neutralizes poisons that affected it at death. The spell closes mortal wounds but doesn't restore missing body parts; if the creature lacks body parts or organs integral for survival, the spell fails. The target takes a -4 penalty to D20 Tests; each time it finishes a Long Rest, the penalty is reduced by 1 until it becomes 0.",
+  "id": "raise_dead",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "amount": 1,
+      "kind": "hours",
+      "ritual": false
+    },
+    "components": {
+      "m": "a diamond worth 500+ GP, which the spell consumes",
+      "materialConsumed": true,
+      "materialCostGp": 500,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 5,
+    "phases": [
+      {
+        "attachment": {
+          "holeId": "raise_dead_target",
+          "kind": "hole",
+          "label": "dead creature",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "mode": "one",
+              "stateFilter": ["dead"],
+              "targetKinds": ["creature"]
+            }
+          }
+        },
+        "effects": [
+          {
+            "deathWindow": {
+              "amount": 10,
+              "unit": "day"
+            },
+            "excludedDeathCauses": ["old_age"],
+            "hitPoints": 1,
+            "kind": "revive_dead_creature",
+            "missingBodyParts": "not_restored",
+            "returningOngoingEffects": {
+              "attunement": "ends",
+              "conditions": "preserve_if_duration_ongoing",
+              "curses": "preserve_if_duration_ongoing",
+              "exhaustion": {
+                "amount": 1,
+                "kind": "reduce_by"
+              },
+              "magicalContagions": "preserve_if_duration_ongoing"
+            },
+            "spiritConsent": "can_refuse"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "kind": "touch"
+    },
+    "school": "necromancy"
+  },
+  "name": "Raise Dead",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-Q-R#Raise Dead"
+  }
+}

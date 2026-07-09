@@ -1,5 +1,6 @@
 // -*- mode: Bluespec; -*-
 // UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.cunning-strike
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.cunning-strike-option-grant
 
 module battleRuntimeCunningStrikeTests {
   import creatureSizeOrder.* from "../shared-algebras/proofs/rule-core/creature-size-order"
@@ -69,6 +70,21 @@ module battleRuntimeCunningStrikeTests {
       assert(movementDistanceDivisor(HalfSpeedMovementWithoutOpportunityAttacks) == 2),
       assert(not(movementSpendsTurnMovement(HalfSpeedMovementWithoutOpportunityAttacks))),
       assert(not(movementProvokesOpportunityAttacks(HalfSpeedMovementWithoutOpportunityAttacks))),
+    }
+  }
+
+  run test_cunning_strike_stealth_attack_projection = {
+    all {
+      assert(stealthAttackProjection == HideInvisibleEndSuppressionProjection({
+        cost: OneSneakAttackD6Cost,
+        timing: ImmediatelyAfterAttackDamage,
+        semantics: HideInvisiblePreservedBehindThreeQuartersOrTotalCover,
+      })),
+      assert(stealthAttackRequiresHideActionInvisible(HideInvisiblePreservedBehindThreeQuartersOrTotalCover)),
+      assert(not(stealthAttackPreservesHideInvisible(HideInvisiblePreservedBehindThreeQuartersOrTotalCover, NoCover))),
+      assert(not(stealthAttackPreservesHideInvisible(HideInvisiblePreservedBehindThreeQuartersOrTotalCover, HalfCover))),
+      assert(stealthAttackPreservesHideInvisible(HideInvisiblePreservedBehindThreeQuartersOrTotalCover, ThreeQuartersCover)),
+      assert(stealthAttackPreservesHideInvisible(HideInvisiblePreservedBehindThreeQuartersOrTotalCover, TotalCover)),
     }
   }
 }

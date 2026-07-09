@@ -1,6 +1,7 @@
 // -*- mode: Bluespec; -*-
 // KERNEL-COVERAGE: qnt-owner BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.innate-sorcery-activation unit-feature.passive-ability-check-roll-mode unit-feature.passive-saving-throw-roll-mode
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof unit-feature.brutal-strike unit-feature.fighter-tactical-master unit-feature.innate-sorcery-activation unit-feature.magic-action-save-gated-condition unit-feature.passive-ability-check-roll-mode unit-feature.passive-saving-throw-roll-mode unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow
+// UNIT-PROFILE-COVERAGE: qnt-owner unit-feature.brutal-strike unit-feature.fighter-tactical-master unit-feature.magic-action-save-gated-condition unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow
 
 module battleRuntimeFeatureBridge {
   import actionTurnProcedures.* from "../shared-algebras/proofs/rule-core/action-turn-procedures"
@@ -21,6 +22,26 @@ module battleRuntimeFeatureBridge {
     piercing: bool,
     slashing: bool,
   }
+
+  type WeaponMasteryRuntimeProperty =
+    | RuntimeMasteryPush
+    | RuntimeMasterySap
+    | RuntimeMasterySlow
+    | RuntimeMasteryOther
+
+  type TacticalMasterReplacementDecision =
+    | TacticalMasterReplacePush
+    | TacticalMasterReplaceSap
+    | TacticalMasterReplaceSlow
+    | TacticalMasterDeclineReplacement
+
+  type TacticalMasterCreatureSize =
+    | TacticalMasterTiny
+    | TacticalMasterSmall
+    | TacticalMasterMedium
+    | TacticalMasterLarge
+    | TacticalMasterHuge
+    | TacticalMasterGargantuan
 
   pure def battleRuntimeRageState(active: bool): RageState = {
     turn: initialTurnProcedureState,
@@ -53,6 +74,42 @@ module battleRuntimeFeatureBridge {
       else
         StandardAttackCriticalThresholdProfile
     )
+
+  pure def battleRuntimeTacticalMasterEligible(
+    fighterLevel: int,
+    weaponMasteryPropertyCanBeUsed: bool
+  ): bool =
+    fighterLevel >= 9 and weaponMasteryPropertyCanBeUsed
+
+  pure def battleRuntimeTacticalMasterReplacementResult(
+    originalProperty: WeaponMasteryRuntimeProperty,
+    decision: TacticalMasterReplacementDecision
+  ): WeaponMasteryRuntimeProperty =
+    match decision {
+      | TacticalMasterReplacePush => RuntimeMasteryPush
+      | TacticalMasterReplaceSap => RuntimeMasterySap
+      | TacticalMasterReplaceSlow => RuntimeMasterySlow
+      | TacticalMasterDeclineReplacement => originalProperty
+    }
+
+  pure def battleRuntimeWeaponMasteryPushDistanceValid(distanceFeet: int): bool =
+    distanceFeet >= 0 and distanceFeet <= 10
+
+  pure def battleRuntimeWeaponMasteryPushTargetSizeEligible(
+    creatureSize: TacticalMasterCreatureSize
+  ): bool =
+    match creatureSize {
+      | TacticalMasterTiny => true
+      | TacticalMasterSmall => true
+      | TacticalMasterMedium => true
+      | TacticalMasterLarge => true
+      | TacticalMasterHuge => false
+      | TacticalMasterGargantuan => false
+    }
+
+  pure def battleRuntimeWeaponMasterySlowDeltaFeet: int = -10
+
+  pure def battleRuntimeWeaponMasterySlowMaximumReductionFeet: int = 10
 
   pure def battleRuntimeExtraAttackSlotsAfterAttackAction(
     actionAvailable: bool,

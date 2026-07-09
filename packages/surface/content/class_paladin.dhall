@@ -2,7 +2,7 @@
   { categories = [ "light", "medium", "heavy", "shield" ], kind = "trained" }
 , className = "paladin"
 , description =
-    "SRD Paladin class creation and level 1-5 Spellcasting facts, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, the level 4 Ability Score Improvement feature grant, and the level 5 Extra Attack feature grant."
+    "SRD Paladin class creation and level 1-9 Spellcasting facts, including class-list prepared Spell Access, Spell Slots, spellcasting focus facts, the level 4 Ability Score Improvement feature grant, the level 5 Extra Attack feature grant, and the level 9 Abjure Foes grant."
 , featureGrants =
   [ { level = 1, unitId = "paladin_lay_on_hands" }
   , { level = 1, unitId = "paladin_weapon_mastery" }
@@ -11,6 +11,7 @@
   , { level = 3, unitId = "paladin_channel_divinity" }
   , { level = 4, unitId = "paladin_ability_score_improvement_l4" }
   , { level = 5, unitId = "paladin_extra_attack" }
+  , { level = 9, unitId = "paladin_abjure_foes" }
   ]
 , hitPointDie = 10
 , id = "class_paladin"

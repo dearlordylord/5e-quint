@@ -13,9 +13,12 @@ import {
   actionResourceAllowsAdditionalAttacks,
   canSpendAction,
   canSpendBonusAction,
+  canSpendMovement,
   enableActionOrBonusActionExclusion,
+  enableMovementActionBonusActionExclusion,
   grantSpellEffectActionResource,
   grantUnitActionResource,
+  markMovementSpentForMovementActionBonusActionExclusion,
   resetTurnActionEconomy,
   spendAction,
   spendActivationResource,
@@ -187,6 +190,38 @@ describe("action-economy-algebra", () => {
     expect(canSpendBonusAction(restricted)).toBe(false);
   });
 
+  it("restricts a turn to one of Movement, an Action, or a Bonus Action", () => {
+    const restricted = enableMovementActionBonusActionExclusion(
+      resetTurnActionEconomy(emptyActionEconomyState()),
+      false,
+    );
+
+    expect(canSpendMovement(restricted)).toBe(true);
+    expect(canSpendAction(restricted, "attack")).toBe(true);
+    expect(canSpendBonusAction(restricted)).toBe(true);
+
+    const spentAction = spendAction(restricted, "attack");
+    expect(Either.isRight(spentAction)).toBe(true);
+    if (Either.isLeft(spentAction)) return;
+    expect(spentAction.right.movementActionBonusActionExclusion).toEqual({
+      kind: "restricted",
+      choice: "action",
+    });
+    expect(canSpendMovement(spentAction.right)).toBe(false);
+    expect(canSpendAction(spentAction.right, "attack")).toBe(false);
+    expect(canSpendBonusAction(spentAction.right)).toBe(false);
+
+    const spentMovement =
+      markMovementSpentForMovementActionBonusActionExclusion(restricted);
+    expect(spentMovement.movementActionBonusActionExclusion).toEqual({
+      kind: "restricted",
+      choice: "movement",
+    });
+    expect(canSpendMovement(spentMovement)).toBe(false);
+    expect(canSpendAction(spentMovement, "attack")).toBe(false);
+    expect(canSpendBonusAction(spentMovement)).toBe(false);
+  });
+
   it("rejects duplicate unit-granted action resources by owner and unit id", () => {
     const granted = grantTestUnitActionResource();
 
@@ -219,9 +254,9 @@ describe("action-economy-algebra", () => {
     const [spellEffectResource] = ordinaryActionSpent.right.actionResources;
     expect(spellEffectResource).toBeDefined();
     if (spellEffectResource === undefined) return;
-    expect(
-      actionResourceAllowsAdditionalAttacks(spellEffectResource),
-    ).toBe(false);
+    expect(actionResourceAllowsAdditionalAttacks(spellEffectResource)).toBe(
+      false,
+    );
   });
 
   it("does not treat allow-only non-attack resources as additional Attack resources", () => {
@@ -242,9 +277,9 @@ describe("action-economy-algebra", () => {
     );
     expect(spellEffectResource).toBeDefined();
     if (spellEffectResource === undefined) return;
-    expect(
-      actionResourceAllowsAdditionalAttacks(spellEffectResource),
-    ).toBe(false);
+    expect(actionResourceAllowsAdditionalAttacks(spellEffectResource)).toBe(
+      false,
+    );
   });
 
   it("rejects duplicate spell-effect action resources by owner and spell id", () => {
@@ -394,6 +429,7 @@ function emptyActionEconomyState(): ActionEconomyState {
     actionResources: [],
     currentHasBonusAction: false,
     actionOrBonusActionExclusion: { kind: "notRestricted" },
+    movementActionBonusActionExclusion: { kind: "notRestricted" },
   };
 }
 

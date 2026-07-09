@@ -229,6 +229,7 @@ describe("character-creation Surface records", () => {
         featureGrants: expect.arrayContaining([
           { level: 4, unitId: "ranger_ability_score_improvement_l4" },
           { level: 5, unitId: "ranger_extra_attack" },
+          { level: 9, unitId: "ranger_expertise" },
         ]),
       },
     });

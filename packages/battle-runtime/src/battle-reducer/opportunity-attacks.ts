@@ -2,6 +2,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike-option-grant
 
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { attackRollResultIsValid } from "@dnd/shared-algebras/attack-roll-algebra";
@@ -225,6 +226,8 @@ export function resolveOpportunityAttackCommand(
   const effectiveAttackRoll = effectiveD20TestNaturalOneRerollAttackRoll(
     fillSet.attackRoll,
   );
+  const hiddenBeforeAttack =
+    input.state.combatants.get(subject.reactorId)?.hidden ?? null;
   let attackRolledState = consumeHelpAttackForAttackRoll(
     recordAttackRollOngoingFeatures(
       revealHidden(input.state, subject.reactorId),
@@ -297,6 +300,7 @@ export function resolveOpportunityAttackCommand(
         attackerId: subject.reactorId,
         targetId: subject.targetId,
         eligibleAttackDamageRiders: eligibleDamageRiders,
+        hiddenBeforeAttack,
       })
     : [];
   const selectedCunningStrike = selectedCunningStrikeContext(
@@ -849,6 +853,7 @@ export function resolveOpportunityAttackCommand(
     savingThrow: fillSet.cunningStrikeSavingThrow,
     movement: fillSet.cunningStrikeMovement,
     toolPossession: fillSet.cunningStrikeToolPossession,
+    endTurnCover: fillSet.cunningStrikeEndTurnCover,
   });
   if (cunningStrike.tag === "needsHoles") {
     return needsHolesResult(spellReducedState, input.subject, [

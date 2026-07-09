@@ -2,6 +2,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-insect-plague-area-hazard spell.invocation-cloudkill-area-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-cast-governor-quickened
@@ -10,7 +11,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spiritual-weapon-attack-proxy
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.SPELL_CREATED_HELD_OBJECT_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION
-// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_QUICKENED_CAST_GOVERNOR BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_TRANSMUTED_DAMAGE_TYPE_SUBSTITUTION
 
 import { Match, Schema } from "effect";
@@ -84,6 +85,9 @@ export const BATTLE_RUNTIME_COMMANDS = [
   "greaseGroundHazardSave",
   "webRestraintSave",
   "sleetStormAreaHazardSave",
+  "insectPlagueAreaHazardSave",
+  "cloudkillAreaHazardSave",
+  "disperseCloudkill",
   "webRestrainedNoLongerInArea",
   "webAreaRemoved",
   "gustOfWindLineSave",
@@ -149,6 +153,58 @@ export const BattleSleetStormAreaMembershipTriggerSchema = Schema.Union(
 export type BattleSleetStormAreaMembershipTrigger =
   typeof BattleSleetStormAreaMembershipTriggerSchema.Type;
 
+export const BattleInsectPlagueAreaMembershipTriggerSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("appearsInArea"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: SpellId,
+    areaId: BattleAreaId,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("firstEntryOnTurn"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: SpellId,
+    areaId: BattleAreaId,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("turnEndInArea"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: SpellId,
+    areaId: BattleAreaId,
+  }),
+);
+export type BattleInsectPlagueAreaMembershipTrigger =
+  typeof BattleInsectPlagueAreaMembershipTriggerSchema.Type;
+
+export const BattleCloudkillAreaMembershipTriggerSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("appearsInArea"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: SpellId,
+    areaId: BattleAreaId,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("areaMovesIntoSpace"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: SpellId,
+    areaId: BattleAreaId,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("firstEntryOnTurn"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: SpellId,
+    areaId: BattleAreaId,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("turnEndInArea"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: SpellId,
+    areaId: BattleAreaId,
+  }),
+);
+export type BattleCloudkillAreaMembershipTrigger =
+  typeof BattleCloudkillAreaMembershipTriggerSchema.Type;
+
 export const CANTRIP_SPELL_PROCEDURES = [
   "heldLight",
   "objectLight",
@@ -197,6 +253,8 @@ export const SPELL_SLOT_PROCEDURES = [
   "spikeGrowthMovementHazard",
   "moonbeam",
   "sleetStormAreaHazard",
+  "insectPlagueAreaHazard",
+  "cloudkillAreaHazard",
   "objectContactDamage",
   "spellCreatedHeldObject",
   "command",
@@ -761,6 +819,26 @@ export const BattleSubjectSchema = Schema.Union(
     actorId: CombatantId,
     command: Schema.Literal("sleetStormAreaHazardSave"),
     areaMembershipTrigger: BattleSleetStormAreaMembershipTriggerSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("insectPlagueAreaHazardSave"),
+    areaMembershipTrigger: BattleInsectPlagueAreaMembershipTriggerSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("cloudkillAreaHazardSave"),
+    areaMembershipTrigger: BattleCloudkillAreaMembershipTriggerSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("disperseCloudkill"),
+    sourceCombatantId: CombatantId,
+    sourceSpellId: SpellId,
+    areaId: BattleSubjectTextSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),

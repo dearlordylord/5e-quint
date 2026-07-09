@@ -1,0 +1,36 @@
+{
+  "acquiredAtLevel": 9,
+  "className": "rogue",
+  "description": "You gain the Stealth Attack Cunning Strike option. If you have the Hide action's Invisible condition, this attack doesn't end that condition on you if you end the turn behind Three-Quarters Cover or Total Cover.",
+  "id": "rogue_supreme_sneak",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "cunning_strike_option_grant",
+    "option": {
+      "cost": {
+        "dice": 1,
+        "dieSize": 6,
+        "kind": "sneak_attack_damage_dice"
+      },
+      "displayName": "Stealth Attack",
+      "effect": {
+        "conditionSource": "hide_action",
+        "ifTurnEndsBehindCover": [
+          "three_quarters",
+          "total"
+        ],
+        "kind": "suppress_attack_end_of_invisible_condition"
+      },
+      "id": "stealth_attack",
+      "prerequisite": {
+        "kind": "hide_action_invisible_condition"
+      }
+    },
+    "sourceUnitId": "rogue_cunning_strike"
+  },
+  "name": "Supreme Sneak",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Rogue.md:175-179"
+  }
+}

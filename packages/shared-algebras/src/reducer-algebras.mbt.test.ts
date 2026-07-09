@@ -434,6 +434,7 @@ function initialActionEconomyState(): ActionEconomyState {
     actionResources: [],
     currentHasBonusAction: false,
     actionOrBonusActionExclusion: { kind: "notRestricted" },
+    movementActionBonusActionExclusion: { kind: "notRestricted" },
   });
 }
 
@@ -616,7 +617,9 @@ function normalizeInitiativeLastInsert(raw: unknown): InitiativeLastInsert {
       listValue(variant.value, "qLastInsert.value").map(stringValue),
     );
   }
-  throw new Error(`Unknown Quint initiative last insert variant ${variant.tag}.`);
+  throw new Error(
+    `Unknown Quint initiative last insert variant ${variant.tag}.`,
+  );
 }
 
 function initiativeLastInsert(

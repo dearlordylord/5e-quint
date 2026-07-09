@@ -1,5 +1,6 @@
 // RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-damage-die-floor unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-delegated-standard-actions unit-feature.bonus-action-ongoing-rage unit-feature.creature-space-movement-permission unit-feature.cunning-strike unit-feature.druid-wild-shape-known-form unit-feature.enemy-zero-hit-point-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.grappler unit-feature.hide-action-obscurement-permission unit-feature.hunters-prey unit-feature.initiative-proficiency-and-swap unit-feature.innate-sorcery-activation unit-feature.light-extra-attack-damage-ability-modifier unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.open-hand-technique unit-feature.paladin-sacred-weapon unit-feature.passive-ability-check-roll-mode unit-feature.passive-armor-class-bonus unit-feature.passive-damage-resistance unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.potent-cantrip unit-feature.reaction-roll-or-damage-reduction unit-feature.remarkable-athlete unit-feature.rogue-steady-aim unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.spell-slot-healing-modifier unit-feature.stunning-strike unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.alternate-action-cost unit-feature.action-surge-resource unit-feature.acrobatic-movement unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-damage-die-floor unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-grant unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-delegated-standard-actions unit-feature.bonus-action-ongoing-rage unit-feature.brutal-strike unit-feature.creature-space-movement-permission unit-feature.cunning-strike unit-feature.druid-wild-shape-known-form unit-feature.enemy-zero-hit-point-temporary-hit-points unit-feature.failed-ability-check-resource-boost unit-feature.failed-saving-throw-reroll unit-feature.first-attack-roll-reckless-advantage unit-feature.grappler unit-feature.hide-action-obscurement-permission unit-feature.hunters-prey unit-feature.initiative-proficiency-and-swap unit-feature.innate-sorcery-activation unit-feature.light-extra-attack-damage-ability-modifier unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.magic-action-save-gated-condition unit-feature.martial-arts-attack-projection unit-feature.monk-focus-battle-options unit-feature.open-hand-technique unit-feature.paladin-sacred-weapon unit-feature.passive-ability-check-roll-mode unit-feature.passive-armor-class-bonus unit-feature.passive-damage-resistance unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-saving-throw-roll-mode unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.potent-cantrip unit-feature.reaction-roll-or-damage-reduction unit-feature.remarkable-athlete unit-feature.rogue-steady-aim unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.spell-slot-healing-modifier unit-feature.stunning-strike unit-feature.weapon-critical-range-19 unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow unit-feature.fighter-tactical-master unit-feature.zero-hit-point-replacement
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike-option-grant
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 import { Match } from "effect";
 import * as Either from "effect/Either";
@@ -36,11 +37,14 @@ import type {
   EquipmentPredicate,
   CreatureType,
   CunningStrikeMechanics,
+  SupremeSneakMechanics,
   DragonbornSpeciesRecord,
   StandardActionKind,
   UnitRecord,
+  WeaponMasteryName,
   WeaponRecord,
 } from "@dnd/surface/surface/types";
+import { CUNNING_STRIKE_OPTION_SELECTION_IDS as BASE_CUNNING_STRIKE_OPTION_SELECTION_IDS } from "@dnd/surface/surface/schema";
 import { isEffectAtom } from "@dnd/surface/surface/types";
 import {
   druidWildShapeKnownFormRosterFromPhase,
@@ -91,6 +95,7 @@ export const PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE =
 export const PASSIVE_SPEED_BONUS_SUPPORT_PROFILE = "passiveSpeedBonus";
 export const PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE =
   "passiveSpeedKindGrants";
+export const ACROBATIC_MOVEMENT_SUPPORT_PROFILE = "acrobaticMovement";
 export const CREATURE_SPACE_MOVEMENT_PERMISSION_SUPPORT_PROFILE =
   "creatureSpaceMovementPermission";
 export const HIDE_ACTION_OBSCUREMENT_PERMISSION_SUPPORT_PROFILE =
@@ -111,6 +116,8 @@ export const BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE =
   "bonusActionDashTemporaryHitPoints";
 export const FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE =
   "failedAbilityCheckResourceBoost";
+export const FAILED_SAVING_THROW_REROLL_SUPPORT_PROFILE =
+  "failedSavingThrowReroll";
 export const BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE =
   "bardicInspirationGrant";
 export const MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE =
@@ -126,6 +133,8 @@ export const MAGIC_ACTION_HEALING_POOL_SUPPORT_PROFILE =
   "magicActionHealingPool";
 export const MAGIC_ACTION_AREA_SAVE_DAMAGE_HEALING_SUPPORT_PROFILE =
   "magicActionAreaSaveDamageHealing";
+export const MAGIC_ACTION_SAVE_GATED_CONDITION_SUPPORT_PROFILE =
+  "magicActionSaveGatedCondition";
 export const ENEMY_ZERO_HIT_POINT_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE =
   "enemyZeroHitPointTemporaryHitPoints";
 export const BONUS_ACTION_DELEGATED_STANDARD_ACTIONS_SUPPORT_PROFILE =
@@ -134,14 +143,34 @@ export const REMARKABLE_ATHLETE_SUPPORT_PROFILE = "remarkableAthlete";
 export const OPEN_HAND_TECHNIQUE_SUPPORT_PROFILE = "openHandTechnique";
 export const STUNNING_STRIKE_SUPPORT_PROFILE = "stunningStrike";
 export const CUNNING_STRIKE_SUPPORT_PROFILE = "cunningStrike";
+export const CUNNING_STRIKE_OPTION_GRANT_SUPPORT_PROFILE =
+  "cunningStrikeOptionGrant";
 export const PALADIN_SACRED_WEAPON_SUPPORT_PROFILE = "paladinSacredWeapon";
 export const HUNTERS_PREY_SUPPORT_PROFILE = "huntersPrey";
 export const ROGUE_STEADY_AIM_SUPPORT_PROFILE = "rogueSteadyAim";
 export const POTENT_CANTRIP_SUPPORT_PROFILE = "potentCantrip";
 export const GRAPPLER_SUPPORT_PROFILE = "grappler";
+export const BRUTAL_STRIKE_SUPPORT_PROFILE = "brutalStrike";
 export const WEAPON_MASTERY_SAP_SUPPORT_PROFILE = "weaponMasterySap";
 export const WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE = "weaponMasteryTopple";
 export const WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE = "weaponMasteryCleave";
+export const WEAPON_MASTERY_PUSH_SUPPORT_PROFILE = "weaponMasteryPush";
+export const WEAPON_MASTERY_SLOW_SUPPORT_PROFILE = "weaponMasterySlow";
+export const TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE =
+  "tacticalMasterReplacement";
+export const TACTICAL_MASTER_REPLACEMENT_MASTERY_PROPERTIES = [
+  "push",
+  "sap",
+  "slow",
+] as const satisfies ReadonlyArray<WeaponMasteryName>;
+export type TacticalMasterReplacementMasteryProperty =
+  (typeof TACTICAL_MASTER_REPLACEMENT_MASTERY_PROPERTIES)[number];
+export const TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES = [
+  ...TACTICAL_MASTER_REPLACEMENT_MASTERY_PROPERTIES,
+  "decline",
+] as const;
+export type TacticalMasterReplacementDecision =
+  (typeof TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES)[number];
 const BARDIC_INSPIRATION_RANGE_FEET = 60;
 const BARDIC_INSPIRATION_BASE_DIE_SIZE = 6;
 const CLERIC_CHANNEL_DIVINITY_RESOURCE_UNIT_ID =
@@ -211,6 +240,7 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   PASSIVE_DAMAGE_RESISTANCE_SUPPORT_PROFILE,
   PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
   PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE,
+  ACROBATIC_MOVEMENT_SUPPORT_PROFILE,
   CREATURE_SPACE_MOVEMENT_PERMISSION_SUPPORT_PROFILE,
   HIDE_ACTION_OBSCUREMENT_PERMISSION_SUPPORT_PROFILE,
   WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE,
@@ -223,24 +253,31 @@ export const BATTLE_UNIT_SUPPORT_PROFILES = [
   DRUID_WILD_COMPANION_SPELL_CAST_SUPPORT_PROFILE,
   BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
   FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE,
+  FAILED_SAVING_THROW_REROLL_SUPPORT_PROFILE,
   MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE,
   SPELL_SLOT_HEALING_MODIFIER_SUPPORT_PROFILE,
   MAGIC_ACTION_HEALING_POOL_SUPPORT_PROFILE,
   MAGIC_ACTION_AREA_SAVE_DAMAGE_HEALING_SUPPORT_PROFILE,
+  MAGIC_ACTION_SAVE_GATED_CONDITION_SUPPORT_PROFILE,
   ENEMY_ZERO_HIT_POINT_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
   BONUS_ACTION_DELEGATED_STANDARD_ACTIONS_SUPPORT_PROFILE,
   REMARKABLE_ATHLETE_SUPPORT_PROFILE,
   OPEN_HAND_TECHNIQUE_SUPPORT_PROFILE,
   STUNNING_STRIKE_SUPPORT_PROFILE,
   CUNNING_STRIKE_SUPPORT_PROFILE,
+  CUNNING_STRIKE_OPTION_GRANT_SUPPORT_PROFILE,
   PALADIN_SACRED_WEAPON_SUPPORT_PROFILE,
   HUNTERS_PREY_SUPPORT_PROFILE,
   ROGUE_STEADY_AIM_SUPPORT_PROFILE,
   POTENT_CANTRIP_SUPPORT_PROFILE,
   GRAPPLER_SUPPORT_PROFILE,
+  BRUTAL_STRIKE_SUPPORT_PROFILE,
   WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
   WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
   WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
+  WEAPON_MASTERY_PUSH_SUPPORT_PROFILE,
+  WEAPON_MASTERY_SLOW_SUPPORT_PROFILE,
+  TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
   ZERO_HIT_POINT_REPLACEMENT_SUPPORT_PROFILE,
 ] as const;
 export type BattlePassiveSpeedBonusSupportProfile = {
@@ -437,6 +474,25 @@ export type BattleFailedAbilityCheckResourceBoostSupportProfile = {
   readonly kind: typeof FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE;
   readonly abilityCheck: FailedAbilityCheckResourceBoostProfile;
 };
+export type FailedSavingThrowRerollProfile = {
+  readonly trigger: "failedSavingThrow";
+  readonly reroll: {
+    readonly use: "newRoll";
+    readonly bonus: {
+      readonly kind: "classLevel";
+      readonly className: "fighter";
+    };
+  };
+  readonly spends: {
+    readonly resourceUnitId: UnitRecord["id"];
+    readonly amount: 1;
+  };
+  readonly resetCadence: "longRest";
+};
+export type BattleFailedSavingThrowRerollSupportProfile = {
+  readonly kind: typeof FAILED_SAVING_THROW_REROLL_SUPPORT_PROFILE;
+  readonly savingThrow: FailedSavingThrowRerollProfile;
+};
 export type SpellSlotHealingModifierProfile = {
   readonly trigger: {
     readonly kind: "casterSpellSlotRestoresHitPoints";
@@ -523,6 +579,39 @@ export type BattleMagicActionAreaSaveDamageHealingSupportProfile = {
   readonly kind: typeof MAGIC_ACTION_AREA_SAVE_DAMAGE_HEALING_SUPPORT_PROFILE;
   readonly damageHealing: MagicActionAreaSaveDamageHealingProfile;
 };
+export type MagicActionSaveGatedConditionProfile = {
+  readonly activationCost: {
+    readonly kind: "standardAction";
+    readonly action: "magic";
+  };
+  readonly spends: {
+    readonly resourceUnitId: UnitRecord["id"];
+    readonly amount: 1;
+  };
+  readonly targetSelection: {
+    readonly kind: "visibleCreaturesWithinRange";
+    readonly rangeFeet: MovementFeet;
+    readonly count: {
+      readonly kind: "abilityModifier";
+      readonly ability: "cha";
+      readonly minimum: 1;
+    };
+  };
+  readonly save: {
+    readonly ability: "wis";
+    readonly dc: "classSpellcastingSpellSaveDc";
+  };
+  readonly onFail: {
+    readonly condition: "frightened";
+    readonly durationTicks: ElapsedTimeTicks;
+    readonly earlyEnd: "targetTakesAnyDamage";
+    readonly turnRestriction: "moveActionOrBonusAction";
+  };
+};
+export type BattleMagicActionSaveGatedConditionSupportProfile = {
+  readonly kind: typeof MAGIC_ACTION_SAVE_GATED_CONDITION_SUPPORT_PROFILE;
+  readonly condition: MagicActionSaveGatedConditionProfile;
+};
 export type EnemyZeroHitPointTemporaryHitPointsProfile = {
   readonly trigger: {
     readonly kind: "enemyReducedToZeroHitPoints";
@@ -566,6 +655,10 @@ export type BattlePassiveSpeedKindGrantsSupportProfile = {
   readonly kind: typeof PASSIVE_SPEED_KIND_GRANTS_SUPPORT_PROFILE;
   readonly speed?: PassiveSpeedBonusProfile;
   readonly grants: PassiveSpeedKindGrantProfiles;
+};
+export type BattleAcrobaticMovementSupportProfile = {
+  readonly kind: typeof ACROBATIC_MOVEMENT_SUPPORT_PROFILE;
+  readonly acrobaticMovement: AcrobaticMovementProfile;
 };
 export type CreatureSpaceMovementPermissionProfile = {
   readonly moveThrough: {
@@ -714,7 +807,27 @@ export type CunningStrikeDieCost = {
 };
 export type CunningStrikeSurfaceOption =
   CunningStrikeMechanics["options"][number];
-export type CunningStrikeOptionSelectionId = CunningStrikeSurfaceOption["id"];
+export type CunningStrikeOptionGrantSurfaceOption =
+  SupremeSneakMechanics["option"];
+export type CunningStrikeOptionSelectionId =
+  | CunningStrikeSurfaceOption["id"]
+  | CunningStrikeOptionGrantSurfaceOption["id"];
+export const BATTLE_CUNNING_STRIKE_OPTION_SELECTION_IDS = [
+  ...BASE_CUNNING_STRIKE_OPTION_SELECTION_IDS,
+  "stealth_attack",
+] as const satisfies ReadonlyArray<CunningStrikeOptionSelectionId>;
+export const CUNNING_STRIKE_END_TURN_COVER_DEGREES = [
+  "none",
+  "half",
+  "threeQuarters",
+  "total",
+] as const;
+export type CunningStrikeEndTurnCoverDegree =
+  (typeof CUNNING_STRIKE_END_TURN_COVER_DEGREES)[number];
+export type CunningStrikeQualifyingCoverDegree = Extract<
+  CunningStrikeEndTurnCoverDegree,
+  "threeQuarters" | "total"
+>;
 export type CunningStrikeEquipmentGatedConditionSaveEffect = {
   readonly kind: "equipmentGatedConditionSave";
   readonly requires: {
@@ -752,10 +865,22 @@ export type CunningStrikePostDamageMovementEffect = {
     readonly opportunityAttacks: "doesNotProvoke";
   };
 };
+export type CunningStrikeHideInvisibleEndSuppressionEffect = {
+  readonly kind: "hideInvisibleEndSuppression";
+  readonly prerequisite: {
+    readonly kind: "hideActionInvisibleCondition";
+  };
+  readonly conditionSource: "hideAction";
+  readonly ifTurnEndsBehindCover: readonly [
+    CunningStrikeQualifyingCoverDegree,
+    CunningStrikeQualifyingCoverDegree,
+  ];
+};
 export type CunningStrikeOptionEffect =
   | CunningStrikeEquipmentGatedConditionSaveEffect
   | CunningStrikeSizeGatedConditionSaveEffect
-  | CunningStrikePostDamageMovementEffect;
+  | CunningStrikePostDamageMovementEffect
+  | CunningStrikeHideInvisibleEndSuppressionEffect;
 export type CunningStrikeOption = {
   readonly selectionId: CunningStrikeOptionSelectionId;
   readonly cost: CunningStrikeDieCost;
@@ -781,6 +906,15 @@ export type BattleCunningStrikeSupportProfile = {
   readonly kind: typeof CUNNING_STRIKE_SUPPORT_PROFILE;
   readonly unit: UnitRecord;
   readonly cunningStrike: CunningStrikeProfile;
+};
+export type CunningStrikeOptionGrantProfile = {
+  readonly sourceUnitId: UnitRecord["id"];
+  readonly option: CunningStrikeOption;
+};
+export type BattleCunningStrikeOptionGrantSupportProfile = {
+  readonly kind: typeof CUNNING_STRIKE_OPTION_GRANT_SUPPORT_PROFILE;
+  readonly unit: UnitRecord;
+  readonly optionGrant: CunningStrikeOptionGrantProfile;
 };
 export type PaladinSacredWeaponProfile = {
   readonly activationCost: {
@@ -908,6 +1042,50 @@ export type BattleGrapplerSupportProfile = {
   readonly kind: typeof GRAPPLER_SUPPORT_PROFILE;
   readonly grappler: GrapplerProfile;
 };
+export const BRUTAL_STRIKE_OPTION_IDS = [
+  "forceful_blow",
+  "hamstring_blow",
+] as const;
+export type BrutalStrikeOptionId = (typeof BRUTAL_STRIKE_OPTION_IDS)[number];
+export const BRUTAL_STRIKE_DECISION_CHOICES = [
+  ...BRUTAL_STRIKE_OPTION_IDS,
+  "decline",
+] as const;
+export type BrutalStrikeDecisionChoice =
+  (typeof BRUTAL_STRIKE_DECISION_CHOICES)[number];
+export type BrutalStrikeProfile = {
+  readonly trigger: {
+    readonly kind: "recklessAttackStrengthAttackHit";
+    readonly advantageForgone: true;
+    readonly attackMustNotHaveDisadvantage: true;
+  };
+  readonly damage: {
+    readonly dice: 1;
+    readonly dieSize: 10;
+    readonly damageType: "sameAsAttack";
+  };
+  readonly options: readonly [
+    {
+      readonly id: "forceful_blow";
+      readonly pushFeet: MovementFeet;
+      readonly selfMovement: {
+        readonly kind: "moveTowardTarget";
+        readonly distance: "halfSpeed";
+        readonly opportunityAttacks: "doesNotProvoke";
+      };
+    },
+    {
+      readonly id: "hamstring_blow";
+      readonly deltaFeet: MovementDeltaFeet;
+      readonly stacking: "mostRecentOnly";
+      readonly expires: "startOfYourNextTurn";
+    },
+  ];
+};
+export type BattleBrutalStrikeSupportProfile = {
+  readonly kind: typeof BRUTAL_STRIKE_SUPPORT_PROFILE;
+  readonly brutalStrike: BrutalStrikeProfile;
+};
 export type BattleMonkFocusBattleOptionsSupportProfile = {
   readonly kind: typeof MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE;
   readonly effectSaveDc: {
@@ -951,6 +1129,10 @@ export type SupportedDruidWildShapeKnownFormProfile =
   BattleDruidWildShapeKnownFormSupportProfile & {
     readonly unit: UnitRecord;
   };
+export type BattleTacticalMasterReplacementSupportProfile = {
+  readonly kind: typeof TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE;
+  readonly replacementProperties: typeof TACTICAL_MASTER_REPLACEMENT_MASTERY_PROPERTIES;
+};
 export type BattleUnitSupportProfile =
   | BattleAlternateActionCostSupportProfile
   | BattleBonusActionDelegatedStandardActionsSupportProfile
@@ -965,25 +1147,31 @@ export type BattleUnitSupportProfile =
   | BattlePassiveDamageResistanceSupportProfile
   | BattlePassiveSpeedBonusSupportProfile
   | BattlePassiveSpeedKindGrantsSupportProfile
+  | BattleAcrobaticMovementSupportProfile
   | BattleCreatureSpaceMovementPermissionSupportProfile
   | BattleHideActionObscurementPermissionSupportProfile
   | BattleAttackActionAttackCountScalingSupportProfile
   | BattleBonusActionDashTemporaryHitPointsSupportProfile
   | BattleFailedAbilityCheckResourceBoostSupportProfile
+  | BattleFailedSavingThrowRerollSupportProfile
   | BattleSpellSlotHealingModifierSupportProfile
   | BattleMagicActionHealingPoolSupportProfile
   | BattleMagicActionAreaSaveDamageHealingSupportProfile
+  | BattleMagicActionSaveGatedConditionSupportProfile
   | BattleEnemyZeroHitPointTemporaryHitPointsSupportProfile
   | BattleDruidWildShapeKnownFormSupportProfile
   | BattleRemarkableAthleteSupportProfile
   | BattleOpenHandTechniqueSupportProfile
   | BattleStunningStrikeSupportProfile
   | BattleCunningStrikeSupportProfile
+  | BattleCunningStrikeOptionGrantSupportProfile
   | BattlePaladinSacredWeaponSupportProfile
   | BattleHuntersPreySupportProfile
   | BattleRogueSteadyAimSupportProfile
   | BattlePotentCantripSupportProfile
   | BattleGrapplerSupportProfile
+  | BattleBrutalStrikeSupportProfile
+  | BattleTacticalMasterReplacementSupportProfile
   | BattleLightExtraAttackDamageAbilityModifierSupportProfile
   | Exclude<
       (typeof BATTLE_UNIT_SUPPORT_PROFILES)[number],
@@ -1000,25 +1188,31 @@ export type BattleUnitSupportProfile =
       | "passiveDamageResistance"
       | "passiveSpeedBonus"
       | "passiveSpeedKindGrants"
+      | "acrobaticMovement"
       | "creatureSpaceMovementPermission"
       | "hideActionObscurementPermission"
       | "attackActionAttackCountScaling"
       | "bonusActionDashTemporaryHitPoints"
       | "failedAbilityCheckResourceBoost"
+      | "failedSavingThrowReroll"
       | "spellSlotHealingModifier"
       | "magicActionHealingPool"
       | "magicActionAreaSaveDamageHealing"
+      | "magicActionSaveGatedCondition"
       | "enemyZeroHitPointTemporaryHitPoints"
       | "druidWildShapeKnownForm"
       | "remarkableAthlete"
       | "openHandTechnique"
       | "stunningStrike"
       | "cunningStrike"
+      | "cunningStrikeOptionGrant"
       | "paladinSacredWeapon"
       | "huntersPrey"
       | "rogueSteadyAim"
       | "potentCantrip"
+      | "brutalStrike"
       | "grappler"
+      | "tacticalMasterReplacement"
       | "lightExtraAttackDamageAbilityModifier"
     >;
 
@@ -1269,6 +1463,18 @@ export function battleUnitSupportProfilesForUnit(input: {
     supportProfiles.push(passiveSpeedKindGrantsSupport);
   }
 
+  const acrobaticMovementSupport = battleAcrobaticMovementSupportForUnit(
+    input.unit,
+  );
+  if (acrobaticMovementSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Acrobatic Movement Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (acrobaticMovementSupport !== null) {
+    supportProfiles.push(acrobaticMovementSupport);
+  }
+
   const creatureSpaceMovementPermissionSupport =
     battleCreatureSpaceMovementPermissionSupportForUnit(input.unit);
   if (creatureSpaceMovementPermissionSupport === "unsupported") {
@@ -1391,6 +1597,17 @@ export function battleUnitSupportProfilesForUnit(input: {
     supportProfiles.push(failedAbilityCheckResourceBoostSupport);
   }
 
+  const failedSavingThrowRerollSupport =
+    battleFailedSavingThrowRerollSupportForUnit(input.unit);
+  if (failedSavingThrowRerollSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle failed Saving Throw reroll Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (failedSavingThrowRerollSupport !== null) {
+    supportProfiles.push(failedSavingThrowRerollSupport);
+  }
+
   const spellSlotHealingModifierSupport =
     battleSpellSlotHealingModifierSupportForUnit(input.unit);
   if (spellSlotHealingModifierSupport === "unsupported") {
@@ -1425,6 +1642,20 @@ export function battleUnitSupportProfilesForUnit(input: {
   }
   if (magicActionAreaSaveDamageHealingSupport !== null) {
     supportProfiles.push(magicActionAreaSaveDamageHealingSupport);
+  }
+
+  const magicActionSaveGatedConditionSupport =
+    battleMagicActionSaveGatedConditionSupportForUnit(
+      input.unit,
+      input.classLevels,
+    );
+  if (magicActionSaveGatedConditionSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Magic Action save-gated condition Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (magicActionSaveGatedConditionSupport !== null) {
+    supportProfiles.push(magicActionSaveGatedConditionSupport);
   }
 
   const enemyZeroHitPointTemporaryHitPointsSupport =
@@ -1482,6 +1713,17 @@ export function battleUnitSupportProfilesForUnit(input: {
     supportProfiles.push(cunningStrikeSupport);
   }
 
+  const cunningStrikeOptionGrantSupport =
+    battleCunningStrikeOptionGrantSupportForUnit(input.unit);
+  if (cunningStrikeOptionGrantSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Cunning Strike option-grant Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (cunningStrikeOptionGrantSupport !== null) {
+    supportProfiles.push(cunningStrikeOptionGrantSupport);
+  }
+
   const paladinSacredWeaponSupport = battlePaladinSacredWeaponSupportForUnit(
     input.unit,
   );
@@ -1532,6 +1774,16 @@ export function battleUnitSupportProfilesForUnit(input: {
     supportProfiles.push(grapplerSupport);
   }
 
+  const brutalStrikeSupport = battleBrutalStrikeSupportForUnit(input.unit);
+  if (brutalStrikeSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Brutal Strike Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (brutalStrikeSupport !== null) {
+    supportProfiles.push(brutalStrikeSupport);
+  }
+
   const bardicInspirationGrantSupport =
     battleBardicInspirationGrantSupportForUnit(input.unit);
   if (bardicInspirationGrantSupport === "unsupported") {
@@ -1570,6 +1822,34 @@ export function battleUnitSupportProfilesForUnit(input: {
     supportProfiles.push(druidWildCompanionSpellCastSupport);
   }
 
+  const tacticalMasterReplacementSupport =
+    input.classLevels === undefined
+      ? battleTacticalMasterReplacementSupportForUnit(input.unit)
+      : battleTacticalMasterReplacementSupportForUnitAtClassLevels(
+          input.unit,
+          input.classLevels,
+        );
+  if (tacticalMasterReplacementSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Tactical Master Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (tacticalMasterReplacementSupport !== null) {
+    supportProfiles.push(tacticalMasterReplacementSupport);
+  }
+
+  const weaponMasteryPushSupport = battleWeaponMasteryPushSupportForUnit(
+    input.unit,
+  );
+  if (weaponMasteryPushSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Weapon Mastery Push Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (weaponMasteryPushSupport !== null) {
+    supportProfiles.push(weaponMasteryPushSupport);
+  }
+
   const weaponMasterySapSupport = battleWeaponMasterySapSupportForUnit(
     input.unit,
   );
@@ -1604,6 +1884,18 @@ export function battleUnitSupportProfilesForUnit(input: {
   }
   if (weaponMasteryCleaveSupport !== null) {
     supportProfiles.push(weaponMasteryCleaveSupport);
+  }
+
+  const weaponMasterySlowSupport = battleWeaponMasterySlowSupportForUnit(
+    input.unit,
+  );
+  if (weaponMasterySlowSupport === "unsupported") {
+    return battleUnitSupportProfileIssue(
+      `Unsupported battle Weapon Mastery Slow Unit hook: ${input.unit.id}.`,
+    );
+  }
+  if (weaponMasterySlowSupport !== null) {
+    supportProfiles.push(weaponMasterySlowSupport);
   }
 
   return Either.right(supportProfiles);
@@ -1961,6 +2253,31 @@ export type PassiveSpeedKindGrantsProfile = {
   readonly grants: PassiveSpeedKindGrantProfiles;
 };
 
+export const ACROBATIC_MOVEMENT_PATHS = [
+  "alongVerticalSurface",
+  "acrossLiquid",
+] as const;
+export type AcrobaticMovementPath = (typeof ACROBATIC_MOVEMENT_PATHS)[number];
+export type AcrobaticMovementProfile = {
+  readonly condition: Extract<
+    PassiveSpeedBonusCondition,
+    { readonly kind: "unarmoredUnshielded" }
+  >;
+  readonly timing: "onYourTurn";
+  readonly paths: readonly [
+    {
+      readonly kind: "verticalSurface";
+      readonly path: "alongVerticalSurface";
+      readonly withoutFallingDuringMovement: true;
+    },
+    {
+      readonly kind: "liquid";
+      readonly path: "acrossLiquid";
+      readonly withoutFallingDuringMovement: true;
+    },
+  ];
+};
+
 export type WeaponDamageDiceRollChoiceProfile = {
   readonly optional: true;
   readonly trigger: "weaponHit";
@@ -2136,6 +2453,11 @@ export type SupportedUnitFeatureProfile =
       readonly speedKindGrants: PassiveSpeedKindGrantsProfile;
     }
   | {
+      readonly kind: "acrobaticMovement";
+      readonly unit: UnitRecord;
+      readonly acrobaticMovement: AcrobaticMovementProfile;
+    }
+  | {
       readonly kind: "creatureSpaceMovementPermission";
       readonly unit: UnitRecord;
       readonly permission: CreatureSpaceMovementPermissionProfile;
@@ -2202,6 +2524,11 @@ export type SupportedUnitFeatureProfile =
       readonly abilityCheck: FailedAbilityCheckResourceBoostProfile;
     }
   | {
+      readonly kind: "failedSavingThrowReroll";
+      readonly unit: UnitRecord;
+      readonly savingThrow: FailedSavingThrowRerollProfile;
+    }
+  | {
       readonly kind: "spellSlotHealingModifier";
       readonly unit: UnitRecord;
       readonly healingModifier: SpellSlotHealingModifierProfile;
@@ -2215,6 +2542,11 @@ export type SupportedUnitFeatureProfile =
       readonly kind: "magicActionAreaSaveDamageHealing";
       readonly unit: UnitRecord;
       readonly damageHealing: MagicActionAreaSaveDamageHealingProfile;
+    }
+  | {
+      readonly kind: "magicActionSaveGatedCondition";
+      readonly unit: UnitRecord;
+      readonly condition: MagicActionSaveGatedConditionProfile;
     }
   | {
       readonly kind: "enemyZeroHitPointTemporaryHitPoints";
@@ -2242,6 +2574,7 @@ export type SupportedUnitFeatureProfile =
       readonly stunningStrike: StunningStrikeProfile;
     }
   | BattleCunningStrikeSupportProfile
+  | BattleCunningStrikeOptionGrantSupportProfile
   | {
       readonly kind: "paladinSacredWeapon";
       readonly unit: UnitRecord;
@@ -2289,6 +2622,10 @@ export type BattleMagicActionAreaSaveDamageHealingSupport =
   | BattleMagicActionAreaSaveDamageHealingSupportProfile
   | "unsupported"
   | null;
+export type BattleMagicActionSaveGatedConditionSupport =
+  | BattleMagicActionSaveGatedConditionSupportProfile
+  | "unsupported"
+  | null;
 export type BattleEnemyZeroHitPointTemporaryHitPointsSupport =
   | BattleEnemyZeroHitPointTemporaryHitPointsSupportProfile
   | "unsupported"
@@ -2311,6 +2648,10 @@ export type BattleStunningStrikeSupport =
   | null;
 export type BattleCunningStrikeSupport =
   | BattleCunningStrikeSupportProfile
+  | "unsupported"
+  | null;
+export type BattleCunningStrikeOptionGrantSupport =
+  | BattleCunningStrikeOptionGrantSupportProfile
   | "unsupported"
   | null;
 export type BattlePaladinSacredWeaponSupport =
@@ -2926,6 +3267,11 @@ export type BattlePassiveSpeedKindGrantsSupport =
   | "unsupported"
   | null;
 
+export type BattleAcrobaticMovementSupport =
+  | BattleAcrobaticMovementSupportProfile
+  | "unsupported"
+  | null;
+
 export type BattleCreatureSpaceMovementPermissionSupport =
   | BattleCreatureSpaceMovementPermissionSupportProfile
   | "unsupported"
@@ -2976,8 +3322,18 @@ export type BattleFailedAbilityCheckResourceBoostSupport =
   | "unsupported"
   | null;
 
+export type BattleFailedSavingThrowRerollSupport =
+  | BattleFailedSavingThrowRerollSupportProfile
+  | "unsupported"
+  | null;
+
 export type BattleDruidWildShapeKnownFormSupport =
   | BattleDruidWildShapeKnownFormSupportProfile
+  | "unsupported"
+  | null;
+
+export type BattleTacticalMasterReplacementSupport =
+  | BattleTacticalMasterReplacementSupportProfile
   | "unsupported"
   | null;
 
@@ -2993,6 +3349,16 @@ export type BattleWeaponMasteryToppleSupport =
 
 export type BattleWeaponMasteryCleaveSupport =
   | typeof WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE
+  | "unsupported"
+  | null;
+
+export type BattleWeaponMasteryPushSupport =
+  | typeof WEAPON_MASTERY_PUSH_SUPPORT_PROFILE
+  | "unsupported"
+  | null;
+
+export type BattleWeaponMasterySlowSupport =
+  | typeof WEAPON_MASTERY_SLOW_SUPPORT_PROFILE
   | "unsupported"
   | null;
 
@@ -3159,6 +3525,21 @@ export function battlePassiveSpeedKindGrantsSupportForUnit(
       };
 }
 
+export function battleAcrobaticMovementSupportForUnit(
+  unit: UnitRecord,
+): BattleAcrobaticMovementSupport {
+  if (!hasAcrobaticMovementMechanics(unit)) {
+    return null;
+  }
+  const acrobaticMovement = acrobaticMovementProfileForUnit(unit);
+  return acrobaticMovement === null
+    ? "unsupported"
+    : {
+        kind: ACROBATIC_MOVEMENT_SUPPORT_PROFILE,
+        acrobaticMovement,
+      };
+}
+
 export function battleCreatureSpaceMovementPermissionSupportForUnit(
   unit: UnitRecord,
 ): BattleCreatureSpaceMovementPermissionSupport {
@@ -3294,6 +3675,21 @@ export function battleFailedAbilityCheckResourceBoostSupportForUnit(
       };
 }
 
+export function battleFailedSavingThrowRerollSupportForUnit(
+  unit: UnitRecord,
+): BattleFailedSavingThrowRerollSupport {
+  if (!hasFailedSavingThrowRerollMechanics(unit)) {
+    return null;
+  }
+  const profile = failedSavingThrowRerollProfileForUnit(unit);
+  return profile === null
+    ? "unsupported"
+    : {
+        kind: FAILED_SAVING_THROW_REROLL_SUPPORT_PROFILE,
+        savingThrow: profile.savingThrow,
+      };
+}
+
 export function battleSpellSlotHealingModifierSupportForUnit(
   unit: UnitRecord,
 ): BattleSpellSlotHealingModifierSupport {
@@ -3419,6 +3815,22 @@ export function battleCunningStrikeSupportForUnit(
       };
 }
 
+export function battleCunningStrikeOptionGrantSupportForUnit(
+  unit: UnitRecord,
+): BattleCunningStrikeOptionGrantSupport {
+  if (!hasClassFeatureMechanicsFamily(unit, "cunning_strike_option_grant")) {
+    return null;
+  }
+  const profile = cunningStrikeOptionGrantProfileForUnit(unit);
+  return profile === null
+    ? "unsupported"
+    : {
+        kind: CUNNING_STRIKE_OPTION_GRANT_SUPPORT_PROFILE,
+        unit,
+        optionGrant: profile.optionGrant,
+      };
+}
+
 export function battlePaladinSacredWeaponSupportForUnit(
   unit: UnitRecord,
 ): BattlePaladinSacredWeaponSupport {
@@ -3522,6 +3934,10 @@ function hasClassFeatureMechanicsFamily(
   family: string,
 ): boolean {
   return unit.kind === "class_feature" && unit.mechanics.family === family;
+}
+
+function hasFailedSavingThrowRerollMechanics(unit: UnitRecord): boolean {
+  return hasClassFeatureMechanicsFamily(unit, "failed_saving_throw_reroll");
 }
 
 type D20TestNaturalOneRerollUnit = Extract<
@@ -3682,6 +4098,13 @@ function hasPassiveSpeedKindGrantsMechanics(unit: UnitRecord): boolean {
   );
 }
 
+function hasAcrobaticMovementMechanics(unit: UnitRecord): boolean {
+  return (
+    unit.kind === "class_feature" &&
+    unit.mechanics.family === "acrobatic_movement"
+  );
+}
+
 function hasCreatureSpaceMovementPermissionMechanics(
   unit: UnitRecord,
 ): boolean {
@@ -3801,6 +4224,12 @@ function hasMagicActionAreaSaveDamageHealingMechanics(
   );
 }
 
+function hasMagicActionSaveGatedConditionMechanics(unit: UnitRecord): boolean {
+  return (
+    unit.kind === "class_feature" && unit.mechanics.family === "abjure_foes"
+  );
+}
+
 function hasEnemyZeroHitPointTemporaryHitPointsMechanics(
   unit: UnitRecord,
 ): boolean {
@@ -3903,6 +4332,58 @@ export function failedAbilityCheckResourceBoostProfileForUnit(
       bonus: { dice: 1, dieSize: 10 },
       spends: { resourceUnitId: mechanics.spends.resourceUnitId },
       refundSpendOnStillFailed: true,
+    },
+  };
+}
+
+export function failedSavingThrowRerollProfileForUnit(
+  unit: UnitRecord,
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "failedSavingThrowReroll" }
+> | null {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.mechanics.family !== "failed_saving_throw_reroll"
+  ) {
+    return null;
+  }
+  const mechanics = unit.mechanics;
+  if (
+    mechanics.trigger.kind !== "failed_saving_throw" ||
+    mechanics.reroll.mustUseNewRoll !== true ||
+    mechanics.reroll.bonus.kind !== "class_level" ||
+    mechanics.reroll.bonus.className !== "fighter" ||
+    mechanics.resource.kind !== "use_count" ||
+    mechanics.resource.cap.kind !== "threshold_tiers" ||
+    mechanics.resource.cap.axis !== "class" ||
+    mechanics.resource.cap.base !== 1 ||
+    mechanics.resource.cap.tiers.length !== 2 ||
+    mechanics.resource.cap.tiers[0]?.atLevel !== 13 ||
+    mechanics.resource.cap.tiers[0]?.value !== 2 ||
+    mechanics.resource.cap.tiers[1]?.atLevel !== 17 ||
+    mechanics.resource.cap.tiers[1]?.value !== 3 ||
+    mechanics.resetCadence.kind !== "long_rest"
+  ) {
+    return null;
+  }
+  return {
+    kind: "failedSavingThrowReroll",
+    unit,
+    savingThrow: {
+      trigger: "failedSavingThrow",
+      reroll: {
+        use: "newRoll",
+        bonus: {
+          kind: "classLevel",
+          className: "fighter",
+        },
+      },
+      spends: {
+        resourceUnitId: unit.id,
+        amount: 1,
+      },
+      resetCadence: "longRest",
     },
   };
 }
@@ -4071,6 +4552,107 @@ export function magicActionAreaSaveDamageHealingProfileForUnit(
       },
     },
   };
+}
+
+export function magicActionSaveGatedConditionProfileForUnit(
+  unit: UnitRecord,
+  classLevels?: readonly CharacterBattleClassLevel[],
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "magicActionSaveGatedCondition" }
+> | null {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.mechanics.family !== "abjure_foes"
+  ) {
+    return null;
+  }
+  const mechanics = unit.mechanics;
+  const durationTicks = elapsedTimeTicksFromTimeSpanDuration({
+    unit: mechanics.onFail.duration.unit,
+    amount: mechanics.onFail.duration.amount,
+  });
+  if (
+    mechanics.activationCost.kind !== "standard_action" ||
+    mechanics.activationCost.action !== "magic" ||
+    mechanics.spends.resourceUnitId !==
+      PALADIN_CHANNEL_DIVINITY_RESOURCE_UNIT_ID ||
+    mechanics.spends.amount !== 1 ||
+    mechanics.targetSelection.kind !== "visible_creatures_within_range" ||
+    mechanics.targetSelection.rangeFeet !== 60 ||
+    mechanics.targetSelection.count.kind !== "ability_modifier" ||
+    mechanics.targetSelection.count.ability !== "cha" ||
+    mechanics.targetSelection.count.minimum !== 1 ||
+    mechanics.save.ability !== "wis" ||
+    mechanics.save.dc.kind !== "class_spellcasting_spell_save_dc" ||
+    mechanics.onFail.kind !== "apply_condition" ||
+    mechanics.onFail.condition !== "frightened" ||
+    mechanics.onFail.duration.unit !== "minute" ||
+    mechanics.onFail.duration.amount !== 1 ||
+    !sameStringSet(mechanics.onFail.duration.endsOn, [
+      "target_takes_any_damage",
+    ]) ||
+    mechanics.onFail.turnRestriction.kind !== "choose_only_one" ||
+    !sameStringSet(mechanics.onFail.turnRestriction.options, [
+      "move",
+      "action",
+      "bonus_action",
+    ]) ||
+    Either.isLeft(durationTicks)
+  ) {
+    return null;
+  }
+  const paladinLevel =
+    classLevels === undefined
+      ? classLevel(unit.acquiredAtLevel)
+      : findCharacterClassLevel(classLevels, unit.className);
+  if (paladinLevel === undefined || paladinLevel < unit.acquiredAtLevel) {
+    return null;
+  }
+  return {
+    kind: "magicActionSaveGatedCondition",
+    unit,
+    condition: {
+      activationCost: { kind: "standardAction", action: "magic" },
+      spends: {
+        resourceUnitId: PALADIN_CHANNEL_DIVINITY_RESOURCE_UNIT_ID,
+        amount: 1,
+      },
+      targetSelection: {
+        kind: "visibleCreaturesWithinRange",
+        rangeFeet: movementFeet(60),
+        count: {
+          kind: "abilityModifier",
+          ability: "cha",
+          minimum: 1,
+        },
+      },
+      save: { ability: "wis", dc: "classSpellcastingSpellSaveDc" },
+      onFail: {
+        condition: "frightened",
+        durationTicks: durationTicks.right,
+        earlyEnd: "targetTakesAnyDamage",
+        turnRestriction: "moveActionOrBonusAction",
+      },
+    },
+  };
+}
+
+export function battleMagicActionSaveGatedConditionSupportForUnit(
+  unit: UnitRecord,
+  classLevels?: readonly CharacterBattleClassLevel[],
+): BattleMagicActionSaveGatedConditionSupport {
+  const profile = magicActionSaveGatedConditionProfileForUnit(
+    unit,
+    classLevels,
+  );
+  if (profile !== null) {
+    return {
+      kind: MAGIC_ACTION_SAVE_GATED_CONDITION_SUPPORT_PROFILE,
+      condition: profile.condition,
+    };
+  }
+  return hasMagicActionSaveGatedConditionMechanics(unit) ? "unsupported" : null;
 }
 
 export function enemyZeroHitPointTemporaryHitPointsProfileForUnit(
@@ -4802,6 +5384,49 @@ export function passiveSpeedKindGrantsProfileForUnit(
   return speed === null || grants === null ? null : { speed, grants };
 }
 
+export function acrobaticMovementProfileForUnit(
+  unit: UnitRecord,
+): AcrobaticMovementProfile | null {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.className !== "monk" ||
+    unit.mechanics.family !== "acrobatic_movement"
+  ) {
+    return null;
+  }
+  const condition = passiveSpeedBonusConditionForEquipmentPredicate(
+    unit.mechanics.condition,
+  );
+  if (
+    condition?.kind !== "unarmoredUnshielded" ||
+    unit.mechanics.movement.timing !== "on_your_turn" ||
+    unit.mechanics.movement.verticalSurfaces.path !==
+      "along_vertical_surfaces" ||
+    unit.mechanics.movement.verticalSurfaces.withoutFallingDuringMovement !==
+      true ||
+    unit.mechanics.movement.liquids.path !== "across_liquids" ||
+    unit.mechanics.movement.liquids.withoutFallingDuringMovement !== true
+  ) {
+    return null;
+  }
+  return {
+    condition,
+    timing: "onYourTurn",
+    paths: [
+      {
+        kind: "verticalSurface",
+        path: "alongVerticalSurface",
+        withoutFallingDuringMovement: true,
+      },
+      {
+        kind: "liquid",
+        path: "acrossLiquid",
+        withoutFallingDuringMovement: true,
+      },
+    ],
+  };
+}
+
 export function creatureSpaceMovementPermissionProfileForUnit(
   unit: UnitRecord,
 ): CreatureSpaceMovementPermissionProfile | null {
@@ -5384,6 +6009,7 @@ export function parseSupportedUnitFeatureProfile(
     parsePassiveAbilityCheckRollModeUnitFeatureProfile(unit) ??
     parsePassiveSpeedBonusUnitFeatureProfile(unit) ??
     parsePassiveSpeedKindGrantsUnitFeatureProfile(unit) ??
+    parseAcrobaticMovementUnitFeatureProfile(unit) ??
     parseCreatureSpaceMovementPermissionUnitFeatureProfile(unit) ??
     parseHideActionObscurementPermissionUnitFeatureProfile(unit) ??
     parseWeaponDamageDiceRollChoiceUnitFeatureProfile(unit) ??
@@ -5396,15 +6022,18 @@ export function parseSupportedUnitFeatureProfile(
     zeroHitPointReplacementProfileForUnit(unit) ??
     bonusActionDashTemporaryHitPointsProfileForUnit(unit) ??
     failedAbilityCheckResourceBoostProfileForUnit(unit) ??
+    failedSavingThrowRerollProfileForUnit(unit) ??
     spellSlotHealingModifierProfileForUnit(unit) ??
     magicActionHealingPoolProfileForUnit(unit) ??
     magicActionAreaSaveDamageHealingProfileForUnit(unit, classLevels) ??
+    magicActionSaveGatedConditionProfileForUnit(unit, classLevels) ??
     enemyZeroHitPointTemporaryHitPointsProfileForUnit(unit) ??
     bonusActionDelegatedStandardActionsProfileForUnit(unit) ??
     remarkableAthleteProfileForUnit(unit) ??
     openHandTechniqueProfileForUnit(unit) ??
     stunningStrikeProfileForUnit(unit) ??
     cunningStrikeProfileForUnit(unit, classLevels) ??
+    cunningStrikeOptionGrantProfileForUnit(unit) ??
     paladinSacredWeaponProfileForUnit(unit) ??
     rogueSteadyAimProfileForUnit(unit) ??
     potentCantripProfileForUnit(unit) ??
@@ -5645,9 +6274,9 @@ function stunningStrikeProfileForUnit(
   };
 }
 
-function cunningStrikeCostForSurfaceOption(
-  option: CunningStrikeSurfaceOption,
-): CunningStrikeDieCost | null {
+function cunningStrikeCostForSurfaceOption(option: {
+  readonly cost: CunningStrikeSurfaceOption["cost"];
+}): CunningStrikeDieCost | null {
   return option.cost.kind === "sneak_attack_damage_dice" &&
     option.cost.dice === 1 &&
     option.cost.dieSize === 6
@@ -5729,6 +6358,23 @@ function cunningStrikeEffectForSurfaceOption(
   return null;
 }
 
+function cunningStrikeEffectForOptionGrantSurfaceOption(
+  option: CunningStrikeOptionGrantSurfaceOption,
+): CunningStrikeOptionEffect | null {
+  return option.prerequisite.kind === "hide_action_invisible_condition" &&
+    option.effect.kind === "suppress_attack_end_of_invisible_condition" &&
+    option.effect.conditionSource === "hide_action" &&
+    option.effect.ifTurnEndsBehindCover[0] === "three_quarters" &&
+    option.effect.ifTurnEndsBehindCover[1] === "total"
+    ? {
+        kind: "hideInvisibleEndSuppression",
+        prerequisite: { kind: "hideActionInvisibleCondition" },
+        conditionSource: "hideAction",
+        ifTurnEndsBehindCover: ["threeQuarters", "total"],
+      }
+    : null;
+}
+
 function cunningStrikeOptionForSurfaceOption(
   option: CunningStrikeSurfaceOption,
 ): CunningStrikeOption | null {
@@ -5737,6 +6383,23 @@ function cunningStrikeOptionForSurfaceOption(
     return null;
   }
   const effect = cunningStrikeEffectForSurfaceOption(option);
+  return effect === null
+    ? null
+    : {
+        selectionId: option.id,
+        cost,
+        effect,
+      };
+}
+
+function cunningStrikeOptionForOptionGrantSurfaceOption(
+  option: CunningStrikeOptionGrantSurfaceOption,
+): CunningStrikeOption | null {
+  const cost = cunningStrikeCostForSurfaceOption(option);
+  if (cost === null) {
+    return null;
+  }
+  const effect = cunningStrikeEffectForOptionGrantSurfaceOption(option);
   return effect === null
     ? null
     : {
@@ -5812,6 +6475,33 @@ function cunningStrikeProfileForUnit(
       options,
     },
   };
+}
+
+function cunningStrikeOptionGrantProfileForUnit(
+  unit: UnitRecord,
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "cunningStrikeOptionGrant" }
+> | null {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.mechanics.family !== "cunning_strike_option_grant"
+  ) {
+    return null;
+  }
+  const option = cunningStrikeOptionForOptionGrantSurfaceOption(
+    unit.mechanics.option,
+  );
+  return option === null
+    ? null
+    : {
+        kind: CUNNING_STRIKE_OPTION_GRANT_SUPPORT_PROFILE,
+        unit,
+        optionGrant: {
+          sourceUnitId: unit.mechanics.sourceUnitId,
+          option,
+        },
+      };
 }
 
 function paladinSacredWeaponProfileForUnit(
@@ -6087,6 +6777,81 @@ export function battleGrapplerSupportForUnit(
     : null;
 }
 
+export function battleBrutalStrikeSupportForUnit(
+  unit: UnitRecord,
+): BattleBrutalStrikeSupportProfile | "unsupported" | null {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.mechanics.family !== "brutal_strike"
+  ) {
+    return null;
+  }
+  const mechanics = unit.mechanics;
+  const forceful = mechanics.options.find(
+    (option) => option.id === "forceful_blow",
+  );
+  const hamstring = mechanics.options.find(
+    (option) => option.id === "hamstring_blow",
+  );
+  if (
+    mechanics.trigger.kind !== "reckless_attack_strength_attack_hit" ||
+    mechanics.trigger.advantageForgone !== true ||
+    mechanics.trigger.attackMustNotHaveDisadvantage !== true ||
+    mechanics.damage.kind !== "add_attack_damage_dice" ||
+    mechanics.damage.damageType !== "same_as_attack" ||
+    mechanics.damage.dice.dice !== 1 ||
+    mechanics.damage.dice.dieSize !== 10 ||
+    mechanics.optionChoice.kind !== "choose_one" ||
+    mechanics.optionChoice.maxOptions !== 1 ||
+    mechanics.options.length !== 2 ||
+    forceful === undefined ||
+    hamstring === undefined ||
+    forceful.forcedMovement?.kind !== "push" ||
+    forceful.forcedMovement.feet !== 15 ||
+    forceful.forcedMovement.direction !== "straight_away_from_you" ||
+    forceful.selfMovement?.kind !== "move_toward_target" ||
+    forceful.selfMovement.distance.kind !== "half_speed" ||
+    forceful.selfMovement.opportunityAttacks !== "does_not_provoke" ||
+    hamstring.speedPenalty?.feet !== 15 ||
+    hamstring.speedPenalty.stacking !== "most_recent_only" ||
+    hamstring.speedPenalty.until !== "start_of_your_next_turn"
+  ) {
+    return "unsupported";
+  }
+  return {
+    kind: BRUTAL_STRIKE_SUPPORT_PROFILE,
+    brutalStrike: {
+      trigger: {
+        kind: "recklessAttackStrengthAttackHit",
+        advantageForgone: true,
+        attackMustNotHaveDisadvantage: true,
+      },
+      damage: {
+        dice: 1,
+        dieSize: 10,
+        damageType: "sameAsAttack",
+      },
+      options: [
+        {
+          id: "forceful_blow",
+          pushFeet: movementFeet(forceful.forcedMovement.feet),
+          selfMovement: {
+            kind: "moveTowardTarget",
+            distance: "halfSpeed",
+            opportunityAttacks: "doesNotProvoke",
+          },
+        },
+        {
+          id: "hamstring_blow",
+          deltaFeet: movementDeltaFeet(-hamstring.speedPenalty.feet),
+          stacking: "mostRecentOnly",
+          expires: "startOfYourNextTurn",
+        },
+      ],
+    },
+  };
+}
+
 export function battleBardicInspirationGrantSupportForUnit(
   unit: UnitRecord,
 ): typeof BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE | "unsupported" | null {
@@ -6191,6 +6956,53 @@ function battleDruidWildShapeKnownFormSupportForUnitAtClassLevels(
     return null;
   }
   return "unsupported";
+}
+
+function battleTacticalMasterReplacementSupportForUnitAtClassLevels(
+  unit: UnitRecord,
+  classLevels: readonly CharacterBattleClassLevel[],
+): BattleTacticalMasterReplacementSupport {
+  if (unit.kind !== "class_feature") {
+    return null;
+  }
+  const support = battleTacticalMasterReplacementSupportForUnit(unit);
+  if (support === null || support === "unsupported") {
+    return support;
+  }
+  const actualClassLevel = findCharacterClassLevel(classLevels, unit.className);
+  return actualClassLevel === undefined ||
+    Number(actualClassLevel) < unit.acquiredAtLevel
+    ? null
+    : support;
+}
+
+export function battleTacticalMasterReplacementSupportForUnit(
+  unit: UnitRecord,
+): BattleTacticalMasterReplacementSupport {
+  if (
+    unit.kind !== "class_feature" ||
+    unit.className !== "fighter" ||
+    unit.mechanics.family !== "weapon_mastery_property_replacement" ||
+    !("replacement" in unit.mechanics)
+  ) {
+    return null;
+  }
+  const mechanics = unit.mechanics;
+  const supported =
+    mechanics.trigger.kind ===
+      "attack_with_weapon_mastery_property_you_can_use" &&
+    mechanics.replacement.timing === "for_that_attack" &&
+    TACTICAL_MASTER_REPLACEMENT_MASTERY_PROPERTIES.length ===
+      mechanics.replacement.chooseOne.length &&
+    TACTICAL_MASTER_REPLACEMENT_MASTERY_PROPERTIES.every(
+      (property, index) => mechanics.replacement.chooseOne[index] === property,
+    );
+  return supported
+    ? {
+        kind: TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
+        replacementProperties: TACTICAL_MASTER_REPLACEMENT_MASTERY_PROPERTIES,
+      }
+    : "unsupported";
 }
 
 function parseBattleUnitSupportClassLevels(
@@ -6306,6 +7118,29 @@ export function battleWeaponMasterySapSupportForUnit(
     : null;
 }
 
+export function battleWeaponMasteryPushSupportForUnit(
+  unit: UnitRecord,
+): BattleWeaponMasteryPushSupport {
+  if (unit.kind !== "mastery") {
+    return null;
+  }
+  const supported =
+    unit.mechanics.family === "on_hit_trigger" &&
+    unit.mechanics.trigger.kind === "weapon_hit" &&
+    unit.mechanics.optional === true &&
+    unit.mechanics.effect.kind === "push_creature" &&
+    unit.mechanics.effect.maxDistanceFeet === 10 &&
+    unit.mechanics.effect.direction === "straight_away_from_self" &&
+    unit.mechanics.effect.maximumTargetSize === "large";
+  if (supported) {
+    return WEAPON_MASTERY_PUSH_SUPPORT_PROFILE;
+  }
+  return unit.mechanics.family === "on_hit_trigger" &&
+    unit.mechanics.effect.kind === "push_creature"
+    ? "unsupported"
+    : null;
+}
+
 export function battleWeaponMasteryToppleSupportForUnit(
   unit: UnitRecord,
 ): BattleWeaponMasteryToppleSupport {
@@ -6328,6 +7163,29 @@ export function battleWeaponMasteryToppleSupportForUnit(
   }
   return unit.mechanics.family === "on_hit_trigger" &&
     unit.mechanics.effect.kind === "save_gate"
+    ? "unsupported"
+    : null;
+}
+
+export function battleWeaponMasterySlowSupportForUnit(
+  unit: UnitRecord,
+): BattleWeaponMasterySlowSupport {
+  if (unit.kind !== "mastery") {
+    return null;
+  }
+  const supported =
+    unit.mechanics.family === "on_hit_trigger" &&
+    unit.mechanics.trigger.kind === "weapon_hit_with_damage" &&
+    unit.mechanics.optional === true &&
+    unit.mechanics.effect.kind === "speed_delta" &&
+    unit.mechanics.effect.deltaFeet === -10 &&
+    unit.mechanics.effect.maximumReductionFeet === 10 &&
+    unit.mechanics.effect.expiresOn.kind === "start_of_attacker_next_turn";
+  if (supported) {
+    return WEAPON_MASTERY_SLOW_SUPPORT_PROFILE;
+  }
+  return unit.mechanics.family === "on_hit_trigger" &&
+    unit.mechanics.effect.kind === "speed_delta"
     ? "unsupported"
     : null;
 }
@@ -6904,6 +7762,22 @@ function parsePassiveSpeedKindGrantsUnitFeatureProfile(
         kind: "passiveSpeedKindGrants",
         unit,
         speedKindGrants,
+      };
+}
+
+function parseAcrobaticMovementUnitFeatureProfile(
+  unit: UnitRecord,
+): Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "acrobaticMovement" }
+> | null {
+  const acrobaticMovement = acrobaticMovementProfileForUnit(unit);
+  return acrobaticMovement === null
+    ? null
+    : {
+        kind: "acrobaticMovement",
+        unit,
+        acrobaticMovement,
       };
 }
 

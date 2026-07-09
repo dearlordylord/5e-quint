@@ -1,0 +1,67 @@
+{
+  "description": "You can see and hear a chosen creature on the same plane. The target makes a Wisdom saving throw modified by how well you know it and what physical connection you have to it. The target knows only that it feels uneasy. On a successful save, it isn't affected and you can't use this spell on it again for 24 hours. On a failed save, an Invisible, intangible sensor appears within 10 feet of the target, and you can see and hear through it. The sensor moves with the target, remaining within 10 feet. If something can see it, it appears as a luminous orb about the size of your fist. Instead of a creature, you can target a location you have seen; the sensor appears there and doesn't move.",
+  "id": "scrying",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "amount": 10,
+      "kind": "minutes",
+      "ritual": false
+    },
+    "components": {
+      "m": "a focus worth 1,000+ GP, such as a crystal ball, mirror, or water-filled font",
+      "materialCostGp": 1000,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 10,
+        "unit": "minute"
+      }
+    },
+    "family": "activation",
+    "level": 5,
+    "phases": [
+      {
+        "ability": "wis",
+        "attachment": {
+          "holeId": "scrying_target",
+          "kind": "hole",
+          "label": "creature on same plane",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "mode": "one",
+              "targetKinds": [
+                "creature"
+              ]
+            }
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "durability": "invulnerable",
+          "kind": "create_sensor",
+          "visibility": "invisible"
+        },
+        "onSuccess": {
+          "kind": "none"
+        }
+      }
+    ],
+    "range": {
+      "kind": "self"
+    },
+    "school": "divination"
+  },
+  "name": "Scrying",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Scrying"
+  }
+}

@@ -3,6 +3,8 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV38A sleep
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-BLINDNESS-DEAFNESS blindness_deafness
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-HOLD-PERSON hold_person
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19E-02-L5-SAVE-CONDITION-CONTROL hold_monster
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19E-02-L5-SAVE-CONDITION-CONTROL contagion
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-LESSER-RESTORATION lesser_restoration
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-condition-save spell.invocation-sleep-target-admission spell.invocation-direct-condition-removal
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
@@ -14,8 +16,11 @@ import {
   type ActionSpellAct,
   blindnessDeafnessUnitId,
   colorSprayUnitId,
+  contagionUnitId,
   entangleUnitId,
   heroismUnitId,
+  holdMonsterDurationTicks,
+  holdMonsterUnitId,
   holdPersonDurationTicks,
   holdPersonUnitId,
   lesserRestorationUnitId,
@@ -27,6 +32,7 @@ import {
 import { HEIGHTENED_METAMAGIC_EFFECT_KIND } from "./battle-reducer/metamagic.ts";
 import {
   requireCombatant,
+  damageRollFillWithGroups,
   requireHole,
   requireResultHole,
   statBlockWithCreatureType,
@@ -35,6 +41,7 @@ import { tickDurationEffects } from "./battle-reducer/turn-end-movement.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle-support.ts";
 import {
   bonusSpellAct,
+  abilityChoiceFill,
   savingThrowOutcomeFill,
   spellConditionChoiceFill,
   spellAct,
@@ -561,6 +568,331 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       conditions: expect.not.objectContaining({ paralyzed: true }),
       activeEffects: [],
     });
+  });
+
+  test("hold_monster is admitted as a level-5 creature Paralyzed lifecycle without Humanoid filtering", () => {
+    const spell = spellRecord(holdMonsterUnitId);
+    const beastId = combatantId("unit-profile-hold-monster-beast");
+    const undeadId = combatantId("unit-profile-hold-monster-undead");
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 5, count: 1 }],
+      statBlockTargets: [
+        {
+          combatantId: beastId,
+          statBlock: statBlockWithCreatureType("beast"),
+          initiative: 8,
+        },
+        {
+          combatantId: undeadId,
+          statBlock: statBlockWithCreatureType("undead"),
+          initiative: 7,
+        },
+      ],
+    });
+    const act = spellAct({
+      state,
+      spellId: holdMonsterUnitId,
+      slotLevel: 5,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(
+        holdMonsterUnitId,
+        5,
+        "saveGatedCondition",
+      ),
+      mode: { tag: "cast" },
+    });
+    const targetHole = requireHole(act.initialHoles, "spellTargetList");
+    expect(targetHole).toEqual(
+      expect.objectContaining({
+        minTargets: 1,
+        maxTargets: 1,
+      }),
+    );
+    expect(targetHole.choices).toEqual(
+      expect.arrayContaining([spellTargetId, beastId, undeadId]),
+    );
+    expect(spellHoleInvocation([targetHole])).toEqual(
+      expect.objectContaining({
+        procedure: "saveGatedCondition",
+        spell,
+        resource: { tag: "spellSlot", slotLevel: 5 },
+        ability: "wis",
+        targeting: { kind: "targetList", minTargets: 1, maxTargets: 1 },
+        targetCreatureTypes: null,
+        effect: {
+          kind: "fixed",
+          condition: "paralyzed",
+          expiresAt: {
+            kind: "concentration",
+            durationTicks: holdMonsterDurationTicks,
+          },
+          escape: null,
+          turnStartDamage: null,
+          repeatSave: {
+            ability: "wis",
+            dc: { kind: "caster_spell_save_dc" },
+          },
+        },
+        rangeFeet: 90,
+      }),
+    );
+
+    const sixthLevelState = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 6, count: 1 }],
+    });
+    const sixthLevelAct = spellAct({
+      state: sixthLevelState,
+      spellId: holdMonsterUnitId,
+      slotLevel: 6,
+    });
+    expect(requireHole(sixthLevelAct.initialHoles, "spellTargetList"))
+      .toEqual(expect.objectContaining({ minTargets: 1, maxTargets: 2 }));
+  });
+
+  test("contagion is admitted as touch save damage with counted Poisoned lifecycle", () => {
+    const spell = spellRecord(contagionUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 5, count: 1 }],
+    });
+    const act = spellAct({
+      state,
+      spellId: contagionUnitId,
+      slotLevel: 5,
+    });
+
+    expect(act.subject).toEqual({
+      tag: "actionSpell",
+      actorId: spellCasterId,
+      invocation: spellSlotInvocationRef(
+        contagionUnitId,
+        5,
+        "saveGatedDamage",
+      ),
+      mode: { tag: "cast" },
+    });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const abilityHole = requireHole(act.initialHoles, "abilityChoice");
+    expect(abilityHole.choices).toEqual([
+      "str",
+      "dex",
+      "con",
+      "int",
+      "wis",
+      "cha",
+    ]);
+    expect(spellHoleInvocation([abilityHole])).toEqual(
+      expect.objectContaining({
+        procedure: "saveGatedDamage",
+        spell,
+        resource: { tag: "spellSlot", slotLevel: 5 },
+        castingTime: { kind: "action" },
+        ability: "con",
+        targeting: { kind: "singleCombatant" },
+        damage: {
+          expr: { dice: 11, dieSize: 8 },
+          damageType: "necrotic",
+        },
+        successDamage: "none",
+        rangeFeet: 5,
+        failedSaveConditionEffects: [
+          {
+            kind: "fixed",
+            condition: "poisoned",
+            expiresAt: { kind: "duration", durationTicks: 100800 },
+            escape: null,
+            turnStartDamage: null,
+            repeatSave: {
+              kind: "counted",
+              save: { ability: "con", dc: { kind: "caster_spell_save_dc" } },
+              successThreshold: 3,
+              failureThreshold: 3,
+              savingThrowDisadvantageAbilities: [
+                "str",
+                "dex",
+                "con",
+                "int",
+                "wis",
+                "cha",
+              ],
+            },
+          },
+        ],
+        failedSaveAbilityChoices: ["str", "dex", "con", "int", "wis", "cha"],
+      }),
+    );
+
+    const targetFill = spellTargetFill(
+      targetHole,
+      contagionUnitId,
+      spellCasterId,
+      spellTargetId,
+    );
+    const abilityFill = abilityChoiceFill(abilityHole, "wis");
+    const needsSave = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [targetFill, abilityFill],
+    });
+    const initialSave = requireResultHole(needsSave, "savingThrowOutcome");
+    const needsDamage = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        abilityFill,
+        savingThrowOutcomeFill(initialSave, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+    const damage = requireResultHole(needsDamage, "rolledDice");
+    const resolved = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        abilityFill,
+        savingThrowOutcomeFill(initialSave, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+        damageRollFillWithGroups(damage, [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]),
+      ],
+    });
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected Contagion to resolve.");
+    }
+
+    const poisonedTarget = requireCombatant(resolved.state, spellTargetId);
+    expect(hasCondition(poisonedTarget.conditions, "poisoned")).toBe(true);
+    expect(poisonedTarget.activeEffects).toContainEqual(
+      expect.objectContaining({
+        kind: "spellConditionCountedEndTurnSave",
+        sourceSpellId: contagionUnitId,
+        sourceCombatantId: spellCasterId,
+        condition: "poisoned",
+        save: { ability: "con", dc: { kind: "caster_spell_save_dc" } },
+        successes: 0,
+        failures: 0,
+        successThreshold: 3,
+        failureThreshold: 3,
+        savingThrowDisadvantageAbility: "wis",
+        lockedIn: false,
+        expiresAt: { kind: "duration", durationTicks: 100800 },
+      }),
+    );
+
+    let successState = resolved.state;
+    successState = advanceToContagionTargetTurn(successState);
+    successState = resolveContagionTargetEndTurnSave(successState, true);
+    expect(contagionEffect(successState)).toEqual(
+      expect.objectContaining({ successes: 1, failures: 0, lockedIn: false }),
+    );
+    successState = advanceToContagionTargetTurn(successState);
+    successState = resolveContagionTargetEndTurnSave(successState, true);
+    expect(contagionEffect(successState)).toEqual(
+      expect.objectContaining({ successes: 2, failures: 0, lockedIn: false }),
+    );
+    successState = advanceToContagionTargetTurn(successState);
+    successState = resolveContagionTargetEndTurnSave(successState, true);
+    expect(
+      hasCondition(
+        requireCombatant(successState, spellTargetId).conditions,
+        "poisoned",
+      ),
+    ).toBe(false);
+    expect(contagionEffect(successState)).toBeUndefined();
+  });
+
+  test("contagion locks in after three failed repeated saves", () => {
+    const spell = spellRecord(contagionUnitId);
+    const state = spellBattle({
+      preparedSpells: [spell],
+      spellSlots: [{ spellLevel: 5, count: 1 }],
+    });
+    const act = spellAct({
+      state,
+      spellId: contagionUnitId,
+      slotLevel: 5,
+    });
+    const targetHole = requireHole(act.initialHoles, "targetChoice");
+    const abilityHole = requireHole(act.initialHoles, "abilityChoice");
+    const targetFill = spellTargetFill(
+      targetHole,
+      contagionUnitId,
+      spellCasterId,
+      spellTargetId,
+    );
+    const abilityFill = abilityChoiceFill(abilityHole, "con");
+    const initialSave = requireResultHole(
+      resolveBattleSubject({
+        state,
+        subject: act.subject,
+        fills: [targetFill, abilityFill],
+      }),
+      "savingThrowOutcome",
+    );
+    const needsDamage = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        abilityFill,
+        savingThrowOutcomeFill(initialSave, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+      ],
+    });
+    const damage = requireResultHole(needsDamage, "rolledDice");
+    const cast = resolveBattleSubject({
+      state,
+      subject: act.subject,
+      fills: [
+        targetFill,
+        abilityFill,
+        savingThrowOutcomeFill(initialSave, [
+          { targetId: spellTargetId, succeeded: false },
+        ]),
+        damageRollFillWithGroups(damage, [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]),
+      ],
+    });
+    if (cast.tag !== "resolved") {
+      throw new Error("Expected Contagion to resolve.");
+    }
+
+    let lockedState = cast.state;
+    lockedState = advanceToContagionTargetTurn(lockedState);
+    lockedState = resolveContagionTargetEndTurnSave(lockedState, false);
+    lockedState = advanceToContagionTargetTurn(lockedState);
+    lockedState = resolveContagionTargetEndTurnSave(lockedState, false);
+    lockedState = advanceToContagionTargetTurn(lockedState);
+    lockedState = resolveContagionTargetEndTurnSave(lockedState, false);
+
+    expect(contagionEffect(lockedState)).toEqual(
+      expect.objectContaining({
+        successes: 0,
+        failures: 3,
+        lockedIn: true,
+      }),
+    );
+    expect(
+      hasCondition(
+        requireCombatant(lockedState, spellTargetId).conditions,
+        "poisoned",
+      ),
+    ).toBe(true);
+    const nextTargetTurn = endTurn({
+      state: advanceToContagionTargetTurn(lockedState),
+      actorId: spellTargetId,
+    });
+    expect(nextTargetTurn).toMatchObject({ tag: "resolved" });
   });
 
   test("blindness_deafness is admitted with condition choice and end-turn save lifecycle", () => {
@@ -1189,4 +1521,72 @@ function heightenedSaveGatedConditionAct(
     throw new Error("Expected Heightened save-gated condition act.");
   }
   return act;
+}
+
+function advanceToContagionTargetTurn(state: BattleState): BattleState {
+  const targetTurn = endTurn({ state, actorId: spellCasterId });
+  expect(targetTurn).toMatchObject({ tag: "resolved" });
+  if (targetTurn.tag !== "resolved") {
+    throw new Error("Expected caster End Turn before Contagion target turn.");
+  }
+  return targetTurn.state;
+}
+
+function resolveContagionTargetEndTurnSave(
+  state: BattleState,
+  succeeded: boolean,
+): BattleState {
+  const activeEffect = contagionEffect(state);
+  const needsSave = endTurn({ state, actorId: spellTargetId });
+  const repeatSave = requireResultHole(needsSave, "savingThrowOutcome");
+  expect(repeatSave).toEqual(
+    expect.objectContaining({
+      spellConditionCountedEndTurnSave: expect.objectContaining({
+        targetId: spellTargetId,
+        sourceSpellId: contagionUnitId,
+        sourceCombatantId: spellCasterId,
+        condition: "poisoned",
+      }),
+      ability: "con",
+    }),
+  );
+  if (
+    activeEffect?.kind === "spellConditionCountedEndTurnSave" &&
+    activeEffect.savingThrowDisadvantageAbility === "con"
+  ) {
+    expect(repeatSave.targetRollModes).toContainEqual({
+      targetId: spellTargetId,
+      rollMode: "disadvantage",
+    });
+  } else {
+    expect(repeatSave.targetRollModes).not.toContainEqual({
+      targetId: spellTargetId,
+      rollMode: "disadvantage",
+    });
+  }
+  const ended = endTurn({
+    state,
+    actorId: spellTargetId,
+    fills: [
+      savingThrowOutcomeFill(repeatSave, [
+        { targetId: spellTargetId, succeeded },
+      ]),
+    ],
+  });
+  if (ended.tag !== "resolved") {
+    throw new Error(
+      `Expected Contagion target End Turn to resolve: ${JSON.stringify(ended)}`,
+    );
+  }
+  return ended.state;
+}
+
+function contagionEffect(state: BattleState) {
+  return requireCombatant(state, spellTargetId).activeEffects.find(
+    (effect) =>
+      effect.kind === "spellConditionCountedEndTurnSave" &&
+      effect.sourceSpellId === contagionUnitId &&
+      effect.sourceCombatantId === spellCasterId &&
+      effect.condition === "poisoned",
+  );
 }

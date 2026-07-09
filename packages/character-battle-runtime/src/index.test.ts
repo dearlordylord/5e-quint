@@ -1,4 +1,4 @@
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.invocation-marked-damage-rider
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow unit-feature.fighter-tactical-master spell.invocation-marked-damage-rider
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-use-count-resource unit-feature.druid-wild-shape-known-form
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.monk-uncanny-metabolism-initiative-recovery
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.font-of-magic-sorcery-points-to-spell-slot
@@ -9,6 +9,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.passive-damage-resistance
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.passive-saving-throw-roll-mode
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV91B mastery_sap mastery_topple mastery_cleave
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-05-FIGHTER-TACTICAL-MASTER fighter_tactical_master mastery_push mastery_sap mastery_slow
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME alert
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-MONK-UNCANNY-METABOLISM-RUNTIME monk_uncanny_metabolism
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-SORCERER-FONT-BONUS-ACTION-BATTLE-SOURCE sorcerer_font_of_magic
@@ -3689,6 +3690,43 @@ describe("Character Build battle projection", () => {
     });
   });
 
+  test("projects Tactical Master replacement and replacement mastery refs into battle support", () => {
+    const refs = expectRight(
+      characterUnitRefsWithBattleSupportProfiles(
+        weaponMasteryLongswordLevel9FighterBuild(),
+        unitLibrary,
+        undefined,
+        [{ className: "fighter", level: 9 }],
+      ),
+    );
+
+    expect(refs).toEqual(
+      expect.arrayContaining([
+        {
+          unitId: "fighter_tactical_master",
+          supportProfiles: [
+            {
+              kind: "tacticalMasterReplacement",
+              replacementProperties: ["push", "sap", "slow"],
+            },
+          ],
+        },
+        {
+          unitId: "mastery_push",
+          supportProfiles: ["weaponMasteryPush"],
+        },
+        {
+          unitId: "mastery_sap",
+          supportProfiles: ["weaponMasterySap"],
+        },
+        {
+          unitId: "mastery_slow",
+          supportProfiles: ["weaponMasterySlow"],
+        },
+      ]),
+    );
+  });
+
   test("projects selected Weapon Mastery Topple into battle save holes", () => {
     const fighterId = combatantId("weapon-mastery-topple-fighter");
     const targetId = combatantId("weapon-mastery-topple-target");
@@ -5112,6 +5150,19 @@ function weaponMasteryLongswordFighterBuild(): CharacterBuild {
           grip: "one_handed",
         },
       },
+    },
+  };
+}
+
+function weaponMasteryLongswordLevel9FighterBuild(): CharacterBuild {
+  return {
+    ...weaponMasteryLongswordFighterBuild(),
+    progression: {
+      startingClass: classUnitId("class_fighter"),
+      advancements: Array.from({ length: 8 }, () => ({
+        classUnitId: classUnitId("class_fighter"),
+        hitPointRule: { tag: "fixedHigherLevelGain" as const },
+      })),
     },
   };
 }

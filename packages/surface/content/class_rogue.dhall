@@ -20,7 +20,7 @@ let rogueSkills =
 let rogue =
       { armorTraining = { categories = [ "light" ], kind = "trained" }
       , className = "rogue"
-      , description = "SRD Rogue class creation facts, subclass selection, Steady Aim, and level 4-5 feature grants."
+      , description = "SRD Rogue class creation facts, subclass selection, Steady Aim, level 4-5 feature grants, and the level 9 Supreme Sneak grant."
       , featureGrants =
         [ { level = 1, unitId = "rogue_expertise" }
         , { level = 1, unitId = "rogue_sneak_attack" }
@@ -30,6 +30,7 @@ let rogue =
         , { level = 4, unitId = "rogue_ability_score_improvement_l4" }
         , { level = 5, unitId = "rogue_cunning_strike" }
         , { level = 5, unitId = "rogue_uncanny_dodge" }
+        , { level = 9, unitId = "rogue_supreme_sneak" }
         ]
       , hitPointDie = 8
       , id = "class_rogue"

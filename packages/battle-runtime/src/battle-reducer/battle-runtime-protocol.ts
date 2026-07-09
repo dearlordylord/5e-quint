@@ -41,6 +41,7 @@ export const INITIAL_TURN_RESOURCES = resetTurnActionEconomy({
   actionResources: [],
   currentHasBonusAction: false,
   actionOrBonusActionExclusion: { kind: "notRestricted" },
+  movementActionBonusActionExclusion: { kind: "notRestricted" },
   commandHalt: null,
   jumpDistanceMultiplier: null,
   spellSlotUsesThisTurn: [],
@@ -254,6 +255,12 @@ export type AttackFillSet =
       readonly weaponMasteryToppleSavingThrow:
         | Extract<BattleFill, { readonly kind: "savingThrowOutcome" }>
         | undefined;
+      readonly tacticalMasterReplacementDecision:
+        | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
+        | undefined;
+      readonly brutalStrikeDecision:
+        | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
+        | undefined;
       readonly openHandTechniqueDecision:
         | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
         | undefined;
@@ -274,6 +281,12 @@ export type AttackFillSet =
         | undefined;
       readonly cunningStrikeToolPossession:
         | Extract<BattleFill, { readonly kind: "toolPossessionFacts" }>
+        | undefined;
+      readonly cunningStrikeEndTurnCover:
+        | Extract<
+            BattleFill,
+            { readonly kind: "cunningStrikeEndTurnCoverFacts" }
+          >
         | undefined;
       readonly weaponMasteryCleaveDecision:
         | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>

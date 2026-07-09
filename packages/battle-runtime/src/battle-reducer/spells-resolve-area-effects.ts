@@ -3,9 +3,13 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-gust-of-wind-line
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-insect-plague-area-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-cloudkill-area-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.metamagic-heightened-save-disadvantage
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MAGICAL_DARKNESS_POINT_ORIGIN_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
@@ -34,6 +38,8 @@ import {
   applyFogCloudObscurementCastEffect,
   applyGustOfWindLineCastEffect,
   applyMagicalDarknessPointOriginCastEffect,
+  applyCloudkillAreaHazardCastEffect,
+  applyInsectPlagueAreaHazardCastEffect,
   applyMoonbeamCastEffect,
   applySleetStormAreaHazardCastEffect,
   applyWebRestraintHazardCastEffect,
@@ -815,6 +821,156 @@ export function resolveSleetStormAreaHazardSpellAct(input: {
     return resourced;
   }
   const nextState = applySleetStormAreaHazardCastEffect({
+    state: resourced.state,
+    actorId: input.actorId,
+    areaId: input.fillSet.areaChoice.areaId,
+    invocation: input.invocation,
+  });
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+export function resolveInsectPlagueAreaHazardSpellAct(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "insectPlagueAreaHazard" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly releaseResource?: AreaOngoingSpellReleaseResource;
+}): BattleResolutionResult {
+  if (
+    input.fillSet.targetId !== undefined ||
+    input.fillSet.objectTarget !== undefined ||
+    input.fillSet.targetAllocation !== undefined ||
+    input.fillSet.targetList !== undefined ||
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.savingThrowOutcomes !== undefined ||
+    input.fillSet.skillChoice !== undefined ||
+    input.fillSet.targetAbilityChoices !== undefined ||
+    input.fillSet.abilityChoice !== undefined ||
+    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.damageTypeChoice !== undefined ||
+    input.fillSet.concentrationSavingThrows.length > 0 ||
+    input.fillSet.damageDispositions.length > 0 ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.movement !== undefined ||
+    input.fillSet.spellDamageReductionRolls.length > 0 ||
+    input.fillSet.attackBurstDamageRoll !== undefined ||
+    input.fillSet.healingRoll !== undefined
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Insect Plague uses one table-supplied sphere area fill.",
+    );
+  }
+  if (input.fillSet.areaChoice === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      spellAreaChoiceHole(input.invocation),
+    ]);
+  }
+  if (
+    input.fillSet.areaChoice.kind !== "insectPlagueSphereArea" ||
+    input.fillSet.areaChoice.areaId.length === 0
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Insect Plague area id must be a non-empty sphere area.",
+    );
+  }
+
+  const resourced = areaOngoingSpellReleaseResourceState({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+    resource: input.releaseResource ?? ordinarySpellCastResource(),
+  });
+  if (resourced.tag === "invalid") {
+    return resourced;
+  }
+  const nextState = applyInsectPlagueAreaHazardCastEffect({
+    state: resourced.state,
+    actorId: input.actorId,
+    areaId: input.fillSet.areaChoice.areaId,
+    invocation: input.invocation,
+  });
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+export function resolveCloudkillAreaHazardSpellAct(input: {
+  readonly input: ActionSpellBattleResolutionInput;
+  readonly actorId: CombatantId;
+  readonly invocation: Extract<
+    SupportedSpellInvocation,
+    { readonly procedure: "cloudkillAreaHazard" }
+  >;
+  readonly fillSet: Extract<SpellFillSet, { readonly tag: "ok" }>;
+  readonly releaseResource?: AreaOngoingSpellReleaseResource;
+}): BattleResolutionResult {
+  if (
+    input.fillSet.targetId !== undefined ||
+    input.fillSet.objectTarget !== undefined ||
+    input.fillSet.targetAllocation !== undefined ||
+    input.fillSet.targetList !== undefined ||
+    input.fillSet.attackRoll !== undefined ||
+    input.fillSet.savingThrowOutcomes !== undefined ||
+    input.fillSet.skillChoice !== undefined ||
+    input.fillSet.targetAbilityChoices !== undefined ||
+    input.fillSet.abilityChoice !== undefined ||
+    input.fillSet.commandOptionChoice !== undefined ||
+    input.fillSet.damageTypeChoice !== undefined ||
+    input.fillSet.concentrationSavingThrows.length > 0 ||
+    input.fillSet.damageDispositions.length > 0 ||
+    input.fillSet.damageRoll !== undefined ||
+    input.fillSet.movement !== undefined ||
+    input.fillSet.spellDamageReductionRolls.length > 0 ||
+    input.fillSet.attackBurstDamageRoll !== undefined ||
+    input.fillSet.healingRoll !== undefined
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Cloudkill uses one table-supplied sphere area fill.",
+    );
+  }
+  if (input.fillSet.areaChoice === undefined) {
+    return needsHolesResult(input.input.state, input.input.subject, [
+      spellAreaChoiceHole(input.invocation),
+    ]);
+  }
+  if (
+    input.fillSet.areaChoice.kind !== "cloudkillSphereArea" ||
+    input.fillSet.areaChoice.areaId.length === 0
+  ) {
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      "Cloudkill area id must be a non-empty sphere area.",
+    );
+  }
+
+  const resourced = areaOngoingSpellReleaseResourceState({
+    state: input.input.state,
+    actorId: input.actorId,
+    invocation: input.invocation,
+    errorState: input.input.state,
+    resource: input.releaseResource ?? ordinarySpellCastResource(),
+  });
+  if (resourced.tag === "invalid") {
+    return resourced;
+  }
+  const nextState = applyCloudkillAreaHazardCastEffect({
     state: resourced.state,
     actorId: input.actorId,
     areaId: input.fillSet.areaChoice.areaId,

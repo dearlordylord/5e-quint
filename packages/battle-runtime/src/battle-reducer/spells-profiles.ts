@@ -16,6 +16,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spike-growth-movement-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-insect-plague-area-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-magical-darkness-point-origin
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
@@ -37,6 +38,7 @@ import {
 import { supportedDamageAmountExpr } from "./spells-profile-shared.ts";
 import { hasSaveGateRepeatSaves } from "./spell-procedure-profiles/_save-gate-helpers.ts";
 import { chainedSpellAttackDamageProfile } from "./spell-procedure-profiles/chained-spell-attack-damage.ts";
+import { cloudkillAreaHazardProfile } from "./spell-procedure-profiles/cloudkill-area-hazard.ts";
 import { attackBurstSaveDamageProfile } from "./spell-procedure-profiles/attack-burst-save-damage.ts";
 import { spellHostedWeaponAttackProfile } from "./spell-procedure-profiles/spell-hosted-weapon-attack.ts";
 import { weaponAttackOverrideProfile } from "./spell-procedure-profiles/weapon-attack-override.ts";
@@ -88,6 +90,7 @@ import { fogCloudObscurementProfile } from "./spell-procedure-profiles/fog-cloud
 import { greaseGroundHazardProfile } from "./spell-procedure-profiles/grease-ground-hazard.ts";
 import { gustOfWindLineProfile } from "./spell-procedure-profiles/gust-of-wind-line.ts";
 import { hastePositiveProfile } from "./spell-procedure-profiles/haste-positive.ts";
+import { insectPlagueAreaHazardProfile } from "./spell-procedure-profiles/insect-plague-area-hazard.ts";
 import { jumpMovementReplacementProfile } from "./spell-procedure-profiles/jump-movement-replacement.ts";
 import { levitatedCreatureProfile } from "./spell-procedure-profiles/levitated-creature.ts";
 import { magicalDarknessPointOriginProfile } from "./spell-procedure-profiles/magical-darkness-point-origin.ts";
@@ -256,6 +259,12 @@ export function supportedSpellActs(
     ),
     ...preparedSpells.flatMap((spell) =>
       sleetStormAreaHazardProfile.admit(spell, admissionContext),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      insectPlagueAreaHazardProfile.admit(spell, admissionContext),
+    ),
+    ...preparedSpells.flatMap((spell) =>
+      cloudkillAreaHazardProfile.admit(spell, admissionContext),
     ),
     ...preparedSpells.flatMap((spell) =>
       objectContactDamageProfile.admit(spell, admissionContext),
@@ -511,9 +520,12 @@ export function supportedPreparedHellishRebukeReactionSpellProfile(
               expr: damageExpr,
               damageType: "fire",
             },
+            additionalDamageComponents: [],
             successDamage: "half" as const,
             rangeFeet: movementFeet(rangeFeet),
             failedSavePostDamageRiders: [],
+            failedSaveConditionEffects: [],
+            failedSaveAbilityChoices: null,
             saveRollModeRule: null,
           },
         ];

@@ -12,6 +12,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.brutal-strike
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.METAMAGIC_SEEKING_SPELL_ATTACK_REROLL BATTLE.FEATURE.METAMAGIC_EMPOWERED_DAMAGE_DICE_REROLL
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
 // Extracted from ../battle-reducer.ts; this module owns Effect Schema values,
@@ -36,7 +37,10 @@ import type {
   Skill,
   StatBlockRecord,
 } from "@dnd/surface/surface/types";
-import { CUNNING_STRIKE_OPTION_SELECTION_IDS } from "@dnd/surface/surface/schema";
+import {
+  BATTLE_CUNNING_STRIKE_OPTION_SELECTION_IDS,
+  CUNNING_STRIKE_END_TURN_COVER_DEGREES,
+} from "../unit-feature-support.ts";
 import { Schema } from "effect";
 import type { StatBlockPartSection } from "../battle-action-options.ts";
 import {
@@ -125,6 +129,10 @@ import {
 } from "./codec-building-blocks.ts";
 import { REGISTERED_SPELL_PROCEDURE_PROFILES } from "./spell-procedure-profiles/registry.ts";
 import { BattleSpellEffectLevel } from "./spells-effective-level.ts";
+import {
+  BRUTAL_STRIKE_DECISION_CHOICES,
+  TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES,
+} from "../unit-feature-support.ts";
 const FindFamiliarFormSelectionSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("normalNamedForm"),
@@ -617,6 +625,13 @@ const BattleTargetSpatialFactSchema = Schema.Union(
     secondTargetId: CombatantId,
   }),
   Schema.Struct({
+    kind: Schema.Literal("weaponMasteryPushDisposition"),
+    attackerId: CombatantId,
+    targetId: CombatantId,
+    attackName: Schema.String,
+    disposition: BattleThunderwavePushDispositionSchema,
+  }),
+  Schema.Struct({
     kind: Schema.Literal("attackTargetInRangedRange"),
     actorId: CombatantId,
     targetId: CombatantId,
@@ -650,6 +665,13 @@ const BattleTargetSpatialFactSchema = Schema.Union(
     casterId: CombatantId,
     targetId: CombatantId,
     spellId: Schema.String,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("unitFeatureVisibleTargetWithinRange"),
+    actorId: CombatantId,
+    targetId: CombatantId,
+    unitId: Schema.String,
+    rangeFeet: MovementFeet,
   }),
   Schema.Struct({
     kind: Schema.Literal("findFamiliarTouchSpellTarget"),
@@ -1251,6 +1273,14 @@ export const BattleHoleSchema = Schema.Union(
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
+    kind: Schema.Literal("cunningStrikeEndTurnCoverFacts"),
+    actorId: CombatantId,
+    coverDegrees: Schema.Array(
+      Schema.Literal(...CUNNING_STRIKE_END_TURN_COVER_DEGREES),
+    ),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
     kind: Schema.Literal("findFamiliarConnection"),
     ownerId: CombatantId,
     companionId: CombatantId,
@@ -1557,6 +1587,18 @@ export const BattleHoleSchema = Schema.Union(
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("rolledDice"),
+    insectPlagueAreaHazard: BattleRuntimeObjectSchema,
+    critical: Schema.Literal(false),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("rolledDice"),
+    cloudkillAreaHazard: BattleRuntimeObjectSchema,
+    critical: Schema.Literal(false),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("rolledDice"),
     spell: SupportedSpellInvocationSchema,
   }),
   Schema.Struct({
@@ -1743,6 +1785,28 @@ export const BattleHoleSchema = Schema.Union(
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("savingThrowOutcome"),
     label: Schema.String,
+    insectPlagueAreaHazard: BattleRuntimeObjectSchema,
+    ability: Schema.Literal("con"),
+    dc: DcSourceSchema,
+    areaChoices: Schema.Array(BattleRuntimeObjectSchema),
+    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("savingThrowOutcome"),
+    label: Schema.String,
+    cloudkillAreaHazard: BattleRuntimeObjectSchema,
+    ability: Schema.Literal("con"),
+    dc: DcSourceSchema,
+    areaChoices: Schema.Array(BattleRuntimeObjectSchema),
+    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("savingThrowOutcome"),
+    label: Schema.String,
     gustOfWindLine: BattleRuntimeObjectSchema,
     ability: Schema.Literal("str"),
     dc: DcSourceSchema,
@@ -1765,6 +1829,17 @@ export const BattleHoleSchema = Schema.Union(
     kind: Schema.Literal("savingThrowOutcome"),
     label: Schema.String,
     spellConditionEndTurnSave: BattleRuntimeObjectSchema,
+    ability: AbilitySchema,
+    dc: DcSourceSchema,
+    areaChoices: Schema.Array(BattleRuntimeObjectSchema),
+    targetRollModes: Schema.Array(BattleSavingThrowRollModeProjectionSchema),
+    targetFlatBonuses: Schema.Array(BattleSavingThrowFlatBonusProjectionSchema),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("savingThrowOutcome"),
+    label: Schema.String,
+    spellConditionCountedEndTurnSave: BattleRuntimeObjectSchema,
     ability: AbilitySchema,
     dc: DcSourceSchema,
     areaChoices: Schema.Array(BattleRuntimeObjectSchema),
@@ -1931,6 +2006,17 @@ export const BattleHoleSchema = Schema.Union(
     choices: Schema.Union(
       Schema.Tuple(Schema.Literal("use"), Schema.Literal("decline")),
       Schema.Tuple(Schema.Literal("attempt"), Schema.Literal("decline")),
+      Schema.Tuple(
+        Schema.Literal(BRUTAL_STRIKE_DECISION_CHOICES[0]),
+        Schema.Literal(BRUTAL_STRIKE_DECISION_CHOICES[1]),
+        Schema.Literal(BRUTAL_STRIKE_DECISION_CHOICES[2]),
+      ),
+      Schema.Tuple(
+        Schema.Literal(TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES[0]),
+        Schema.Literal(TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES[1]),
+        Schema.Literal(TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES[2]),
+        Schema.Literal(TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES[3]),
+      ),
       Schema.Tuple(
         Schema.Literal(OPEN_HAND_TECHNIQUE_DECISION_CHOICES[0]),
         Schema.Literal(OPEN_HAND_TECHNIQUE_DECISION_CHOICES[1]),
@@ -2786,6 +2872,14 @@ type BattleFillEncoded =
             readonly areaId: string;
           }
         | {
+            readonly kind: "insectPlagueSphereArea";
+            readonly areaId: string;
+          }
+        | {
+            readonly kind: "cloudkillSphereArea";
+            readonly areaId: string;
+          }
+        | {
             readonly kind: "flamingSphereArea";
             readonly areaId: string;
             readonly originAnchor:
@@ -3055,7 +3149,9 @@ type BattleFillEncoded =
       readonly value:
         | "use"
         | "attempt"
-        | (typeof OPEN_HAND_TECHNIQUE_DECISION_CHOICES)[number];
+        | (typeof BRUTAL_STRIKE_DECISION_CHOICES)[number]
+        | (typeof OPEN_HAND_TECHNIQUE_DECISION_CHOICES)[number]
+        | (typeof TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES)[number];
     }
   | {
       readonly kind: "hitPointHealingDistribution";
@@ -3080,6 +3176,13 @@ type BattleFillEncoded =
       readonly holeId: string;
       readonly value: {
         readonly toolIdsOnPerson: readonly "poisoners_kit"[];
+      };
+    }
+  | {
+      readonly kind: "cunningStrikeEndTurnCoverFacts";
+      readonly holeId: string;
+      readonly value: {
+        readonly cover: (typeof CUNNING_STRIKE_END_TURN_COVER_DEGREES)[number];
       };
     }
   | {
@@ -3113,7 +3216,7 @@ type BattleFillEncoded =
       readonly selectedAttackDamageRiderUnitIds?: readonly string[];
       readonly cunningStrikeOption?: {
         readonly unitId: string;
-        readonly optionId: (typeof CUNNING_STRIKE_OPTION_SELECTION_IDS)[number];
+        readonly optionId: (typeof BATTLE_CUNNING_STRIKE_OPTION_SELECTION_IDS)[number];
       };
       readonly weaponDamageDiceRollChoice?: WeaponDamageDiceRollChoiceFillEncoded;
       readonly attackDamageDieFloorChoice?: AttackDamageDieFloorChoiceFillEncoded;
@@ -3274,6 +3377,14 @@ type BattleFillEncoded =
           readonly reactorId: string;
           readonly attackName: string;
         }[];
+        readonly acrobaticMovement?: {
+          readonly kind: "acrobaticMovement";
+          readonly paths: readonly [
+            "alongVerticalSurface" | "acrossLiquid",
+            ...("alongVerticalSurface" | "acrossLiquid")[],
+          ];
+          readonly withoutFallingDuringMovement: true;
+        };
         readonly areaDifficultTerrain?: {
           readonly kind: "areaDifficultTerrain";
           readonly sources: readonly (
@@ -3291,6 +3402,12 @@ type BattleFillEncoded =
               }
             | {
                 readonly kind: "sleetStormHazard";
+                readonly sourceCombatantId: string;
+                readonly sourceSpellId: string;
+                readonly areaId: string;
+              }
+            | {
+                readonly kind: "insectPlagueHazard";
                 readonly sourceCombatantId: string;
                 readonly sourceSpellId: string;
                 readonly areaId: string;
@@ -3793,6 +3910,14 @@ export const BattleFillSchema: Schema.Schema<
           areaId: BattleAreaId,
         }),
         Schema.Struct({
+          kind: Schema.Literal("insectPlagueSphereArea"),
+          areaId: BattleAreaId,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("cloudkillSphereArea"),
+          areaId: BattleAreaId,
+        }),
+        Schema.Struct({
           kind: Schema.Literal("flamingSphereArea"),
           areaId: BattleAreaId,
           originAnchor: BattleSpellAreaOriginAnchorSchema,
@@ -3945,7 +4070,9 @@ export const BattleFillSchema: Schema.Schema<
       value: Schema.Literal(
         "use",
         "attempt",
+        ...BRUTAL_STRIKE_DECISION_CHOICES,
         ...OPEN_HAND_TECHNIQUE_DECISION_CHOICES,
+        ...TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES,
       ),
     }),
     Schema.Struct({
@@ -3960,6 +4087,13 @@ export const BattleFillSchema: Schema.Schema<
       holeId: BattleHoleIdSchema,
       value: Schema.Struct({
         toolIdsOnPerson: Schema.Array(Schema.Literal("poisoners_kit")),
+      }),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("cunningStrikeEndTurnCoverFacts"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Struct({
+        cover: Schema.Literal(...CUNNING_STRIKE_END_TURN_COVER_DEGREES),
       }),
     }),
     Schema.Struct({
@@ -3997,7 +4131,9 @@ export const BattleFillSchema: Schema.Schema<
       cunningStrikeOption: Schema.optionalWith(
         Schema.Struct({
           unitId: Schema.String,
-          optionId: Schema.Literal(...CUNNING_STRIKE_OPTION_SELECTION_IDS),
+          optionId: Schema.Literal(
+            ...BATTLE_CUNNING_STRIKE_OPTION_SELECTION_IDS,
+          ),
         }),
         { exact: true },
       ),
@@ -4152,6 +4288,16 @@ export const BattleFillSchema: Schema.Schema<
             attackName: Schema.String,
           }),
         ),
+        acrobaticMovement: Schema.optionalWith(
+          Schema.Struct({
+            kind: Schema.Literal("acrobaticMovement"),
+            paths: Schema.NonEmptyArray(
+              Schema.Literal("alongVerticalSurface", "acrossLiquid"),
+            ),
+            withoutFallingDuringMovement: Schema.Literal(true),
+          }),
+          { exact: true },
+        ),
         areaDifficultTerrain: Schema.optionalWith(
           Schema.Struct({
             kind: Schema.Literal("areaDifficultTerrain"),
@@ -4171,6 +4317,12 @@ export const BattleFillSchema: Schema.Schema<
                 }),
                 Schema.Struct({
                   kind: Schema.Literal("sleetStormHazard"),
+                  sourceCombatantId: CombatantId,
+                  sourceSpellId: Schema.String,
+                  areaId: BattleAreaId,
+                }),
+                Schema.Struct({
+                  kind: Schema.Literal("insectPlagueHazard"),
                   sourceCombatantId: CombatantId,
                   sourceSpellId: Schema.String,
                   areaId: BattleAreaId,

@@ -1,5 +1,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.cunning-strike
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.cunning-strike-option-grant
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME rogue_cunning_strike
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-08-ROGUE-SUPREME-SNEAK rogue_supreme_sneak
 import { describe, expect, test } from "vitest";
 
 import {
@@ -46,8 +48,10 @@ import {
   testCharacterD20Statistics,
   testDaggerAttack,
   testShortswordAttack,
+  unitLibrary,
 } from "./battle-runtime-test-support.ts";
 import { difficultyClass, movementFeet } from "@dnd/shared/types";
+import { battleCunningStrikeOptionGrantSupportForUnit } from "./unit-feature-support.ts";
 
 describe("battle runtime: Cunning Strike", () => {
   test("exposes typed Cunning Strike options from an eligible Sneak Attack damage rider", () => {
@@ -82,6 +86,79 @@ describe("battle runtime: Cunning Strike", () => {
         }),
       ],
     });
+  });
+
+  test("exposes Supreme Sneak Stealth Attack from the option-grant Surface profile", () => {
+    const window = cunningStrikeDamageWindow("stealth_attack", {
+      withSupremeSneak: true,
+    });
+
+    expect(window.damage).toMatchObject({
+      kind: "rolledDice",
+      attackDamageRiders: [
+        expect.objectContaining({
+          unitId: "rogue_sneak_attack",
+          damage: { dice: 5, dieSize: 6, damageType: "piercing" },
+        }),
+      ],
+      cunningStrikeOptions: expect.arrayContaining([
+        expect.objectContaining({
+          unitId: "rogue_supreme_sneak",
+          optionId: "stealth_attack",
+          sourceDamageRiderUnitId: "rogue_sneak_attack",
+          dieCost: { dice: 1, dieSize: 6 },
+        }),
+      ]),
+    });
+  });
+
+  test("Stealth Attack preserves Hide invisibility only with qualifying end-turn cover", () => {
+    const window = cunningStrikeDamageWindow("stealth_attack", {
+      withSupremeSneak: true,
+    });
+    const needsCover = resolveBattleSubject({
+      state: window.state,
+      subject: window.subject,
+      fills: window.damageAppliedFills,
+    });
+    const cover = requireHole(
+      needsCover,
+      "cunningStrikeEndTurnCoverFacts",
+    );
+    if (needsCover.tag !== "needsHoles") {
+      throw new Error("Expected Cunning Strike Stealth Attack cover witness.");
+    }
+    expect(needsCover.state.combatants.get(fighterId)?.hidden).toBeNull();
+    expect(cover).toMatchObject({
+      actorId: fighterId,
+      coverDegrees: ["none", "half", "threeQuarters", "total"],
+    });
+
+    const totalCover = requireResolved(
+      resolveBattleSubject({
+        state: window.state,
+        subject: window.subject,
+        fills: [
+          ...window.damageAppliedFills,
+          cunningStrikeEndTurnCoverFactsFill(cover, "total"),
+        ],
+      }),
+    ).state;
+    expect(totalCover.combatants.get(fighterId)?.hidden).toEqual({
+      discoveryDc: difficultyClass(16),
+    });
+
+    const halfCover = requireResolved(
+      resolveBattleSubject({
+        state: window.state,
+        subject: window.subject,
+        fills: [
+          ...window.damageAppliedFills,
+          cunningStrikeEndTurnCoverFactsFill(cover, "half"),
+        ],
+      }),
+    ).state;
+    expect(halfCover.combatants.get(fighterId)?.hidden).toBeNull();
   });
 
   test("rolled-dice fill equality includes the selected Cunning Strike option", () => {
@@ -420,9 +497,37 @@ type CunningStrikeBattleInput = {
   readonly targetStatBlock?: ReturnType<typeof statBlockRecord>;
   readonly withOffHandAttack?: boolean;
   readonly withSneakAttackAlly?: boolean;
+  readonly withSupremeSneak?: boolean;
 };
 
 const cunningStrikeAllyId = combatantId("cunning-strike-ally");
+
+function supremeSneakFeature(): NonNullable<
+  Parameters<typeof characterSeed>[0]["unitFeatures"]
+>[number] {
+  return { unit: unitLibrary.requireUnit("rogue_supreme_sneak") };
+}
+
+function supremeSneakUnitRefs(): ReturnType<typeof cunningStrikeUnitRefs> {
+  const unit = unitLibrary.requireUnit("rogue_supreme_sneak");
+  const support = battleCunningStrikeOptionGrantSupportForUnit(unit);
+  if (support === null || support === "unsupported") {
+    throw new Error("Expected Supreme Sneak option-grant support profile.");
+  }
+  return [
+    ...cunningStrikeUnitRefs(),
+    {
+      unitId: unit.id,
+      supportProfiles: [support],
+    },
+  ];
+}
+
+function cunningStrikeOptionUnitId(optionId: CunningStrikeOptionId): string {
+  return optionId === "stealth_attack"
+    ? "rogue_supreme_sneak"
+    : "rogue_cunning_strike";
+}
 
 function cunningStrikeDamagePreview(input: CunningStrikeBattleInput = {}): {
   readonly state: BattleState;
@@ -482,6 +587,9 @@ function cunningStrikeDamageWindow(
       ],
       damage,
       optionId,
+      optionUnitId: cunningStrikeOptionUnitId(optionId),
+      sneakAttackResultsAfterCost:
+        optionId === "stealth_attack" ? [6, 5, 4, 3] : [6, 5],
     }),
   };
 }
@@ -658,15 +766,20 @@ function cunningStrikeDamageAppliedFills(input: {
   readonly prefixFills: readonly BattleFill[];
   readonly damage: BattleHole;
   readonly optionId: CunningStrikeOptionId;
+  readonly optionUnitId?: string;
+  readonly sneakAttackResultsAfterCost?: readonly number[];
 }): readonly BattleFill[] {
   const throughDamageRoll = [
     ...input.prefixFills,
     damageRollFillWithGroups(
       input.damage,
-      [[4], [6, 5]],
+      [[4], [...(input.sneakAttackResultsAfterCost ?? [6, 5])]],
       ["rogue_sneak_attack"],
       undefined,
-      { unitId: "rogue_cunning_strike", optionId: input.optionId },
+      {
+        unitId: input.optionUnitId ?? "rogue_cunning_strike",
+        optionId: input.optionId,
+      },
     ),
   ];
   const afterDamageRoll = resolveBattleSubject({
@@ -744,10 +857,19 @@ function cunningStrikeBattle(
       characterSeed({
         displayName: "Cunning Strike Rogue",
         initiative: 20,
-        classLevels: [{ className: "rogue", level: 5 }],
+        classLevels: [
+          { className: "rogue", level: input.withSupremeSneak === true ? 9 : 5 },
+        ],
         d20Statistics: testCharacterD20Statistics({ dex: 16 }),
-        unitFeatures: [sneakAttackFeature(), cunningStrikeFeature()],
-        characterUnitRefs: cunningStrikeUnitRefs(),
+        unitFeatures: [
+          sneakAttackFeature(),
+          cunningStrikeFeature(),
+          ...(input.withSupremeSneak === true ? [supremeSneakFeature()] : []),
+        ],
+        characterUnitRefs:
+          input.withSupremeSneak === true
+            ? supremeSneakUnitRefs()
+            : cunningStrikeUnitRefs(),
         attack,
         ...(input.withOffHandAttack === true
           ? {
@@ -876,6 +998,23 @@ function toolPossessionFactsFill(
     kind: "toolPossessionFacts",
     holeId: hole.holeId,
     value: { toolIdsOnPerson },
+  };
+}
+
+function cunningStrikeEndTurnCoverFactsFill(
+  hole: BattleHole,
+  cover: Extract<
+    BattleFill,
+    { readonly kind: "cunningStrikeEndTurnCoverFacts" }
+  >["value"]["cover"],
+): Extract<BattleFill, { readonly kind: "cunningStrikeEndTurnCoverFacts" }> {
+  if (hole.kind !== "cunningStrikeEndTurnCoverFacts") {
+    throw new Error("Expected Cunning Strike end-turn cover facts hole.");
+  }
+  return {
+    kind: "cunningStrikeEndTurnCoverFacts",
+    holeId: hole.holeId,
+    value: { cover },
   };
 }
 

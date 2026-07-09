@@ -52,11 +52,15 @@ let summonDragon =
               { kind = "concentration"
               , upTo = { unit = "hour", amount = 1 }
               }
-          , statBlock =
-              { displayName = "Draconic Spirit"
-              , size = "large"
-              , creatureType = "dragon"
-              , ac =
+          , creature =
+              { kind = "inline"
+          , creature =
+              { kind = "inline"
+              , statBlock =
+                  { displayName = "Draconic Spirit"
+                , size = "large"
+                , creatureType = "dragon"
+                , ac =
                   { kind = "linear_per_level", axis = "slot"
                   , base = 14
                   , perLevel = 1
@@ -175,16 +179,18 @@ let summonDragon =
                         }
                       ]
                   }
-              , traits =
-                  [ { name = "Shared Resistances"
-                    , description =
-                        "When you summon the spirit, choose one of its Resistances. You have Resistance to the chosen damage type until the spell ends."
-                    , effect =
-                        { kind = "caster_shared_resistance"
-                        , chosenFrom = "resistances_list"
-                        }
-                    }
-                  ]
+                , traits =
+                    [ { name = "Shared Resistances"
+                      , description =
+                          "When you summon the spirit, choose one of its Resistances. You have Resistance to the chosen damage type until the spell ends."
+                      , effect =
+                          { kind = "caster_shared_resistance"
+                          , chosenFrom = "resistances_list"
+                          }
+                      }
+                    ]
+                }
+                  }
               }
           , control =
               { initiative = "shared_with_caster"

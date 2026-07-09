@@ -618,6 +618,10 @@ export function movementFill(
       BattleFill,
       { readonly kind: "movement" }
     >["value"]["areaDifficultTerrain"];
+    readonly acrobaticMovement?: Extract<
+      BattleFill,
+      { readonly kind: "movement" }
+    >["value"]["acrobaticMovement"];
     readonly gustOfWindLineMovement?: Extract<
       BattleFill,
       { readonly kind: "movement" }
@@ -640,6 +644,9 @@ export function movementFill(
       ...(value.areaDifficultTerrain === undefined
         ? {}
         : { areaDifficultTerrain: value.areaDifficultTerrain }),
+      ...(value.acrobaticMovement === undefined
+        ? {}
+        : { acrobaticMovement: value.acrobaticMovement }),
       ...(value.gustOfWindLineMovement === undefined
         ? {}
         : { gustOfWindLineMovement: value.gustOfWindLineMovement }),

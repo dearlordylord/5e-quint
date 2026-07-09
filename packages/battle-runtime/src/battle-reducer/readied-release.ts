@@ -5,6 +5,7 @@ import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import { sameBattleSubject, type BattleSubject } from "../battle-subjects.ts";
 import { movementFeet } from "@dnd/shared/types";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
+import { markMovementSpentForMovementActionBonusActionExclusion } from "@dnd/shared-algebras/action-economy-algebra";
 import { needsHolesResult } from "./hole-helpers.ts";
 import { invalidResult } from "./result-helpers.ts";
 import {
@@ -30,7 +31,10 @@ import {
 } from "./turn-end-movement.ts";
 import { updateLevitatedCreatureAltitude } from "./levitate-creature.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./creature-state.ts";
-import { normalizeBattleGrapples } from "./creature-state-leaves.ts";
+import {
+  currentActorId,
+  normalizeBattleGrapples,
+} from "./creature-state-leaves.ts";
 import { breakBattleConcentration } from "./damage-apply.ts";
 import {
   currentInterruptCheckpoint,
@@ -96,6 +100,12 @@ export function applyBattleMovement(
   );
   const movedState = normalizeBattleGrapples({
     ...state,
+    currentTurnResources:
+      movement.spendsTurnMovement && movement.moverId === currentActorId(state)
+        ? markMovementSpentForMovementActionBonusActionExclusion(
+            state.currentTurnResources,
+          )
+        : state.currentTurnResources,
     combatants,
   });
   const levitatedMovement = movement.levitatedMovement;
@@ -227,7 +237,9 @@ export function resolveReleaseReadiedMovementCommand(
   >,
 ): BattleResolutionResult {
   const readiedMovementActorId = input.subject.readiedMovementActorId;
-  const activeInterrupt = currentInterruptCheckpoint(input.state)?.activeInterrupt;
+  const activeInterrupt = currentInterruptCheckpoint(
+    input.state,
+  )?.activeInterrupt;
   if (
     activeInterrupt === undefined ||
     activeInterrupt.responderId !== readiedMovementActorId ||

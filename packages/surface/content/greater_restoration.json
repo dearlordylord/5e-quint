@@ -1,0 +1,62 @@
+{
+  "description": "You touch a creature and magically remove one of these effects from it: 1 Exhaustion level, the Charmed or Petrified condition, a curse including the target's Attunement to a cursed magic item, any reduction to one of the target's ability scores, or any reduction to the target's Hit Point maximum.",
+  "id": "greater_restoration",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "diamond dust worth 100+ GP, which the spell consumes",
+      "materialConsumed": true,
+      "materialCostGp": 100,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 5,
+    "phases": [
+      {
+        "attachment": {
+          "holeId": "greater_restoration_target",
+          "kind": "hole",
+          "label": "target creature",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "mode": "one",
+              "targetKinds": [
+                "creature"
+              ]
+            }
+          }
+        },
+        "effects": [
+          {
+            "condition": {
+              "from": [
+                "charmed",
+                "petrified"
+              ],
+              "kind": "choose"
+            },
+            "kind": "remove_condition"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "kind": "touch"
+    },
+    "school": "abjuration"
+  },
+  "name": "Greater Restoration",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Greater Restoration"
+  }
+}

@@ -27,6 +27,11 @@
       "v": true
     },
     "duration": {
+      "earlyEnd": [
+        {
+          "kind": "area_dispersed_by_strong_wind"
+        }
+      ],
       "kind": "concentration",
       "upTo": {
         "amount": 10,
@@ -79,6 +84,14 @@
     "operations": [
       {
         "effect": {
+          "kind": "area_is_heavily_obscured"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
           "ability": "con",
           "dc": {
             "kind": "caster_spell_save_dc"
@@ -106,6 +119,74 @@
         },
         "trigger": {
           "kind": "on_attached_turn_start"
+        }
+      },
+      {
+        "effect": {
+          "ability": "con",
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "kind": "save_gate",
+          "onFail": {
+            "amount": {
+              "axis": "slot",
+              "base": {
+                "dice": 5,
+                "dieSize": 8
+              },
+              "kind": "linear_per_level",
+              "perLevel": {
+                "dice": 1
+              },
+              "startingAtLevel": 5
+            },
+            "damageType": "poison",
+            "kind": "damage"
+          },
+          "onSuccess": {
+            "kind": "half_damage"
+          }
+        },
+        "trigger": {
+          "kind": "on_creature_enters_area"
+        },
+        "usageLimit": {
+          "kind": "once_per_turn"
+        }
+      },
+      {
+        "effect": {
+          "ability": "con",
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "kind": "save_gate",
+          "onFail": {
+            "amount": {
+              "axis": "slot",
+              "base": {
+                "dice": 5,
+                "dieSize": 8
+              },
+              "kind": "linear_per_level",
+              "perLevel": {
+                "dice": 1
+              },
+              "startingAtLevel": 5
+            },
+            "damageType": "poison",
+            "kind": "damage"
+          },
+          "onSuccess": {
+            "kind": "half_damage"
+          }
+        },
+        "trigger": {
+          "kind": "on_creature_ends_turn_in_area"
+        },
+        "usageLimit": {
+          "kind": "once_per_turn"
         }
       }
     ],

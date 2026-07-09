@@ -1,0 +1,118 @@
+{
+  "description": "You attempt to bind a Celestial, Elemental, Fey, or Fiend to your service. The creature must remain within range for the entire casting. At the completion, it makes a Charisma saving throw. On a failed save, it is bound to serve you for the duration. If it was summoned or created by another spell, that spell's duration extends to match this spell. A bound creature follows your commands to the best of its ability, though Hostile creatures try to twist commands. When it completes the command before the spell ends, it reports to you if on the same plane, or returns to the binding place if you are on another plane. Higher-level slots increase duration to 10 days, 30 days, 180 days, or 366 days.",
+  "id": "planar_binding",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "amount": 1,
+      "kind": "hours",
+      "ritual": false
+    },
+    "components": {
+      "m": "a jewel worth 1,000+ GP, which the spell consumes",
+      "materialConsumed": true,
+      "materialCostGp": 1000,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "base": {
+        "kind": "timed",
+        "value": {
+          "amount": 24,
+          "unit": "hour"
+        }
+      },
+      "kind": "slot_tiered",
+      "tiers": [
+        {
+          "atSlot": 6,
+          "duration": {
+            "kind": "timed",
+            "value": {
+              "amount": 10,
+              "unit": "day"
+            }
+          }
+        },
+        {
+          "atSlot": 7,
+          "duration": {
+            "kind": "timed",
+            "value": {
+              "amount": 30,
+              "unit": "day"
+            }
+          }
+        },
+        {
+          "atSlot": 8,
+          "duration": {
+            "kind": "timed",
+            "value": {
+              "amount": 180,
+              "unit": "day"
+            }
+          }
+        },
+        {
+          "atSlot": 9,
+          "duration": {
+            "kind": "timed",
+            "value": {
+              "amount": 366,
+              "unit": "day"
+            }
+          }
+        }
+      ]
+    },
+    "family": "activation",
+    "level": 5,
+    "phases": [
+      {
+        "ability": "cha",
+        "attachment": {
+          "holeId": "planar_binding_target",
+          "kind": "hole",
+          "label": "Celestial, Elemental, Fey, or Fiend target",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "mode": "one",
+              "targetKinds": [
+                "creature"
+              ],
+              "typeFilter": [
+                "celestial",
+                "elemental",
+                "fey",
+                "fiend"
+              ]
+            }
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "kind": "none"
+        },
+        "onSuccess": {
+          "kind": "none"
+        }
+      }
+    ],
+    "range": {
+      "feet": 60,
+      "kind": "point"
+    },
+    "school": "abjuration"
+  },
+  "name": "Planar Binding",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-M-P#Planar Binding"
+  }
+}

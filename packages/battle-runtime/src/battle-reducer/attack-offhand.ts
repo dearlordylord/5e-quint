@@ -5,6 +5,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike-option-grant
 
 import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
 
@@ -366,6 +367,8 @@ function resolveBonusActionAttack(
   const effectiveAttackRoll = effectiveD20TestNaturalOneRerollAttackRoll(
     fillSet.attackRoll,
   );
+  const hiddenBeforeAttack =
+    input.state.combatants.get(input.subject.actorId)?.hidden ?? null;
   const criticalThreshold = criticalThresholdForAttack(
     input.state.combatants.get(input.subject.actorId),
     attack,
@@ -441,6 +444,7 @@ function resolveBonusActionAttack(
         attackerId: input.subject.actorId,
         targetId: target.combatantId,
         eligibleAttackDamageRiders: eligibleDamageRiders,
+        hiddenBeforeAttack,
       })
     : [];
   const selectedCunningStrike = selectedCunningStrikeContext(
@@ -790,6 +794,7 @@ function resolveBonusActionAttack(
       savingThrow: fillSet.cunningStrikeSavingThrow,
       movement: fillSet.cunningStrikeMovement,
       toolPossession: fillSet.cunningStrikeToolPossession,
+      endTurnCover: fillSet.cunningStrikeEndTurnCover,
     });
     if (cunningStrike.tag === "needsHoles") {
       return needsHolesResult(spellReducedState, input.subject, [

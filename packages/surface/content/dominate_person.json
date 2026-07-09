@@ -15,13 +15,7 @@
       "kind": "concentration",
       "upTo": {
         "amount": 1,
-        "unit": "minute",
-        "upcastTiers": [
-          {
-            "amount": 10,
-            "atSlot": 6
-          }
-        ]
+        "unit": "minute"
       }
     },
     "family": "activation",
@@ -37,6 +31,9 @@
             "kind": "target",
             "selection": {
               "mode": "one",
+              "targetKinds": [
+                "creature"
+              ],
               "typeFilter": [
                 "humanoid"
               ]

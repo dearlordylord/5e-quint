@@ -5,6 +5,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard spell.invocation-spike-growth-movement-hazard spell.invocation-sleet-storm-area-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-cloudkill-area-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dragons-breath-granted-action
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-antimagic-field-action-interdiction
@@ -17,12 +18,14 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.monk-focus-battle-options
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike-option-grant
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-after-hit-damage-illumination spell.invocation-after-hit-timed-damage-save spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route spell.invocation-command-halt-grovel spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.invocation-feather-fall-mitigation spell.invocation-mirror-image-hit-interception spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-counterspell spell.reaction-hellish-rebuke spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE BATTLE.SPELL.REACTION_CASTING_TIME BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner CHARACTER.LIFECYCLE.LAYER_PROJECTION BATTLE.COMPOSITION.REDUCER_SPINE_CONTRACT BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
@@ -356,6 +359,8 @@ import {
   resolveMoonbeamRepositionCommand,
   resolveMoonbeamSaveCommand,
   resolveGreaseGroundHazardSaveCommand,
+  resolveCloudkillAreaHazardSaveCommand,
+  resolveInsectPlagueAreaHazardSaveCommand,
   resolveSleetStormAreaHazardSaveCommand,
   resolveWebAreaRemovedCommand,
   resolveWebRestrainedNoLongerInAreaCommand,
@@ -845,7 +850,9 @@ export function resolveBattleSubjectInternal(
   if (
     actorId !== currentActorId(input.state) &&
     !isLegendaryAttackSubject(input.subject) &&
-    !isReleaseGrappleSubject(input.subject)
+    !isReleaseGrappleSubject(input.subject) &&
+    !isInsectPlagueAppearanceSaveSubject(input.subject) &&
+    !isCloudkillAppearanceSaveSubject(input.subject)
   ) {
     return invalidResult(
       input.state,
@@ -1510,6 +1517,26 @@ export function resolveBattleSubjectInternal(
     }
     if (
       subject.tag === "runtimeCommand" &&
+      subject.command === "insectPlagueAreaHazardSave"
+    ) {
+      return resolveInsectPlagueAreaHazardSaveCommand({
+        ...input,
+        subject,
+        handledInterruptTrigger: options.handledInterruptTrigger,
+      });
+    }
+    if (
+      subject.tag === "runtimeCommand" &&
+      subject.command === "cloudkillAreaHazardSave"
+    ) {
+      return resolveCloudkillAreaHazardSaveCommand({
+        ...input,
+        subject,
+        handledInterruptTrigger: options.handledInterruptTrigger,
+      });
+    }
+    if (
+      subject.tag === "runtimeCommand" &&
       subject.command === "webRestrainedNoLongerInArea"
     ) {
       return resolveWebRestrainedNoLongerInAreaCommand({ ...input, subject });
@@ -1618,6 +1645,12 @@ export function resolveBattleSubjectInternal(
       subject.command === "disperseFogCloud"
     ) {
       return resolveDisperseFogCloudCommand({ ...input, subject });
+    }
+    if (
+      subject.tag === "runtimeCommand" &&
+      subject.command === "disperseCloudkill"
+    ) {
+      return resolveDisperseCloudkillCommand({ ...input, subject });
     }
     if (
       subject.tag === "runtimeCommand" &&
@@ -2080,6 +2113,50 @@ function resolveDisperseFogCloudCommand(
       input.state,
       "staleSubject",
       "Fog Cloud area is no longer active.",
+    );
+  }
+  const nextState = breakBattleConcentration(
+    input.state,
+    input.subject.sourceCombatantId,
+  );
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function resolveDisperseCloudkillCommand(
+  input: BattleResolutionInput & {
+    readonly subject: Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "disperseCloudkill";
+      }
+    >;
+  },
+): BattleResolutionResult {
+  if (input.fills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Cloudkill strong-wind dispersal uses no fills.",
+    );
+  }
+  const source = input.state.combatants.get(input.subject.sourceCombatantId);
+  const cloudkill = source?.activeEffects.find(
+    (effect) =>
+      effect.kind === "cloudkillAreaHazard" &&
+      effect.sourceSpellId === input.subject.sourceSpellId &&
+      effect.sourceCombatantId === input.subject.sourceCombatantId &&
+      effect.areaId === input.subject.areaId,
+  );
+  if (cloudkill === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Cloudkill area is no longer active.",
     );
   }
   const nextState = breakBattleConcentration(
@@ -2613,6 +2690,38 @@ export function isReleaseGrappleSubject(
 > {
   return (
     subject.tag === "runtimeCommand" && subject.command === "releaseGrapple"
+  );
+}
+
+function isInsectPlagueAppearanceSaveSubject(
+  subject: BattleSubject,
+): subject is Extract<
+  BattleSubject,
+  {
+    readonly tag: "runtimeCommand";
+    readonly command: "insectPlagueAreaHazardSave";
+  }
+> {
+  return (
+    subject.tag === "runtimeCommand" &&
+    subject.command === "insectPlagueAreaHazardSave" &&
+    subject.areaMembershipTrigger.kind === "appearsInArea"
+  );
+}
+
+function isCloudkillAppearanceSaveSubject(
+  subject: BattleSubject,
+): subject is Extract<
+  BattleSubject,
+  {
+    readonly tag: "runtimeCommand";
+    readonly command: "cloudkillAreaHazardSave";
+  }
+> {
+  return (
+    subject.tag === "runtimeCommand" &&
+    subject.command === "cloudkillAreaHazardSave" &&
+    subject.areaMembershipTrigger.kind === "appearsInArea"
   );
 }
 
@@ -4891,6 +5000,7 @@ export function resolveAttackDamageContinuationCunningStrike(input: {
     savingThrow: fillSet.savingThrow,
     movement: fillSet.movement,
     toolPossession: fillSet.toolPossession,
+    endTurnCover: fillSet.endTurnCover,
   });
   if (resolved.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", resolved.message);
@@ -5556,7 +5666,8 @@ function isCunningStrikeContinuationFill(
   return (
     fill.kind === "savingThrowOutcome" ||
     fill.kind === "movement" ||
-    fill.kind === "toolPossessionFacts"
+    fill.kind === "toolPossessionFacts" ||
+    fill.kind === "cunningStrikeEndTurnCoverFacts"
   );
 }
 
@@ -5574,6 +5685,12 @@ function attackDamageContinuationCunningStrikeFillSet(
       readonly toolPossession:
         | Extract<BattleFill, { readonly kind: "toolPossessionFacts" }>
         | undefined;
+      readonly endTurnCover:
+        | Extract<
+            BattleFill,
+            { readonly kind: "cunningStrikeEndTurnCoverFacts" }
+          >
+        | undefined;
     }
   | { readonly tag: "invalid"; readonly message: string } {
   let savingThrow:
@@ -5582,6 +5699,9 @@ function attackDamageContinuationCunningStrikeFillSet(
   let movement: Extract<BattleFill, { readonly kind: "movement" }> | undefined;
   let toolPossession:
     | Extract<BattleFill, { readonly kind: "toolPossessionFacts" }>
+    | undefined;
+  let endTurnCover:
+    | Extract<BattleFill, { readonly kind: "cunningStrikeEndTurnCoverFacts" }>
     | undefined;
   for (const fill of fills) {
     if (fill.kind === "savingThrowOutcome") {
@@ -5604,6 +5724,16 @@ function attackDamageContinuationCunningStrikeFillSet(
       movement = fill;
       continue;
     }
+    if (fill.kind === "cunningStrikeEndTurnCoverFacts") {
+      if (endTurnCover !== undefined) {
+        return {
+          tag: "invalid",
+          message: "Cunning Strike end-turn cover facts were filled twice.",
+        };
+      }
+      endTurnCover = fill;
+      continue;
+    }
     if (toolPossession !== undefined) {
       return {
         tag: "invalid",
@@ -5612,7 +5742,7 @@ function attackDamageContinuationCunningStrikeFillSet(
     }
     toolPossession = fill;
   }
-  return { tag: "ok", savingThrow, movement, toolPossession };
+  return { tag: "ok", savingThrow, movement, toolPossession, endTurnCover };
 }
 
 export function battleFillEquals(a: BattleFill, b: BattleFill): boolean {
@@ -5668,6 +5798,12 @@ export function battleFillEquals(a: BattleFill, b: BattleFill): boolean {
   }
   if (a.kind === "toolPossessionFacts" && b.kind === "toolPossessionFacts") {
     return arrayValuesEqual(a.value.toolIdsOnPerson, b.value.toolIdsOnPerson);
+  }
+  if (
+    a.kind === "cunningStrikeEndTurnCoverFacts" &&
+    b.kind === "cunningStrikeEndTurnCoverFacts"
+  ) {
+    return a.value.cover === b.value.cover;
   }
   if (a.kind === "deathSavingThrow" && b.kind === "deathSavingThrow") {
     return (
@@ -5860,10 +5996,25 @@ function movementFillValuesEqual(
   return (
     a.speedKind === b.speedKind &&
     a.movementCostFeet === b.movementCostFeet &&
+    acrobaticMovementFactsEqual(a.acrobaticMovement, b.acrobaticMovement) &&
     opportunityAttackThreatsEqual(
       a.provokedOpportunityAttacks,
       b.provokedOpportunityAttacks,
     )
+  );
+}
+
+function acrobaticMovementFactsEqual(
+  a: Extract<BattleFill, { readonly kind: "movement" }>["value"]["acrobaticMovement"],
+  b: Extract<BattleFill, { readonly kind: "movement" }>["value"]["acrobaticMovement"],
+): boolean {
+  if (a === undefined || b === undefined) {
+    return a === b;
+  }
+  return (
+    a.kind === b.kind &&
+    a.withoutFallingDuringMovement === b.withoutFallingDuringMovement &&
+    arrayValuesEqual(a.paths, b.paths)
   );
 }
 

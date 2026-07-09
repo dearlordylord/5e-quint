@@ -32,6 +32,7 @@ import {
 } from "./character-class-level.ts";
 import {
   battleBardicInspirationGrantSupportForUnit,
+  battleFailedSavingThrowRerollSupportForUnit,
   battleReactionRollOrDamageReductionSupportForUnit,
   bonusActionDashTemporaryHitPointsProfileForUnit,
   requireCharacterClassLevel,
@@ -44,7 +45,7 @@ import {
 import * as Either from "effect/Either";
 
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.attack-action-area-save-damage-replacement unit-feature.magic-action-healing-pool
-// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.metamagic-battle-resource-bridge unit-feature.paladin-sacred-weapon
+// UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.metamagic-battle-resource-bridge unit-feature.failed-saving-throw-reroll unit-feature.paladin-sacred-weapon
 
 export { SORCERER_METAMAGIC_EFFECT_KINDS as CHARACTER_BATTLE_METAMAGIC_EFFECT_KINDS } from "@dnd/surface/surface/schema";
 
@@ -739,6 +740,7 @@ function characterBattleResourceForUnitOrNull(
   if (
     unit.kind !== "class_feature" ||
     (unit.mechanics.family !== "activation" &&
+      unit.mechanics.family !== "failed_saving_throw_reroll" &&
       unit.mechanics.family !== "reaction_roll_or_damage_reduction") ||
     !("resource" in unit.mechanics) ||
     unit.mechanics.resource === undefined
@@ -897,9 +899,13 @@ function unitHasSupportedAbilityModifierBattleResourceProfile(
   }
   const bardicInspirationSupport =
     battleBardicInspirationGrantSupportForUnit(unit);
+  const failedSavingThrowRerollSupport =
+    battleFailedSavingThrowRerollSupportForUnit(unit);
   return (
-    bardicInspirationSupport !== null &&
-    bardicInspirationSupport !== "unsupported"
+    (bardicInspirationSupport !== null &&
+      bardicInspirationSupport !== "unsupported") ||
+    (failedSavingThrowRerollSupport !== null &&
+      failedSavingThrowRerollSupport !== "unsupported")
   );
 }
 

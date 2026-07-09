@@ -110,8 +110,8 @@ const levelFourFollowUpRequiredDisposition = "level-4-follow-up-required";
 const classProgressionFollowUpRequiredDisposition =
   "class-progression-follow-up-required";
 const subclassSelectionLevel = 3;
-const maxLevelOneEightMiningCharacterLevel = 8;
-const maxInventoriedClassFeatureLevel = maxLevelOneEightMiningCharacterLevel;
+const maxLevelOneNineMiningCharacterLevel = 9;
+const maxInventoriedClassFeatureLevel = maxLevelOneNineMiningCharacterLevel;
 const inventoriedClassFeatureLevels = Array.from(
   { length: maxInventoriedClassFeatureLevel },
   (_, index) => index + 1,
@@ -121,8 +121,13 @@ const classProgressionFrontierLevelBands = new Set([
   "level-6",
   "level-7",
   "level-8",
+  "level-9",
 ]);
-const classTableSummaryClosureLevelBands = new Set(["level-7", "level-8"]);
+const classTableSummaryClosureLevelBands = new Set([
+  "level-7",
+  "level-8",
+  "level-9",
+]);
 const expectedLevelEightProgressionDeltaSignatures = new Map([
   ["Barbarian", []],
   [
@@ -163,6 +168,102 @@ const expectedDruidLevelEightWildShapeThreshold = {
   level: 8,
   maxCr: "1",
 };
+const expectedLevelNineProgressionDeltaSignatures = new Map([
+  [
+    "Barbarian",
+    [
+      "class-table-column:Proficiency Bonus:+3->+4",
+      "class-table-column:Rage Damage:+2->+3",
+    ],
+  ],
+  [
+    "Bard",
+    [
+      "class-table-column:Prepared Spells:12->14",
+      "class-table-column:Proficiency Bonus:+3->+4",
+      "spell-slot-count:4:2->3",
+      "spell-slot-count:5:—->1",
+    ],
+  ],
+  [
+    "Cleric",
+    [
+      "class-table-column:Prepared Spells:12->14",
+      "class-table-column:Proficiency Bonus:+3->+4",
+      "spell-slot-count:4:2->3",
+      "spell-slot-count:5:—->1",
+    ],
+  ],
+  [
+    "Druid",
+    [
+      "class-table-column:Prepared Spells:12->14",
+      "class-table-column:Proficiency Bonus:+3->+4",
+      "spell-slot-count:4:2->3",
+      "spell-slot-count:5:—->1",
+    ],
+  ],
+  ["Fighter", ["class-table-column:Proficiency Bonus:+3->+4"]],
+  [
+    "Monk",
+    [
+      "class-table-column:Focus Points:8->9",
+      "class-table-column:Proficiency Bonus:+3->+4",
+    ],
+  ],
+  [
+    "Paladin",
+    [
+      "class-table-column:Prepared Spells:7->9",
+      "class-table-column:Proficiency Bonus:+3->+4",
+      "spell-slot-count:3:—->2",
+    ],
+  ],
+  [
+    "Ranger",
+    [
+      "class-table-column:Favored Enemy:3->4",
+      "class-table-column:Prepared Spells:7->9",
+      "class-table-column:Proficiency Bonus:+3->+4",
+      "spell-slot-count:3:—->2",
+    ],
+  ],
+  [
+    "Rogue",
+    [
+      "class-table-column:Proficiency Bonus:+3->+4",
+      "class-table-column:Sneak Attack:4d6->5d6",
+    ],
+  ],
+  [
+    "Sorcerer",
+    [
+      "class-table-column:Prepared Spells:12->14",
+      "class-table-column:Proficiency Bonus:+3->+4",
+      "class-table-column:Sorcery Points:8->9",
+      "spell-slot-count:4:2->3",
+      "spell-slot-count:5:—->1",
+    ],
+  ],
+  [
+    "Warlock",
+    [
+      "class-table-column:Eldritch Invocations:6->7",
+      "class-table-column:Prepared Spells:9->10",
+      "class-table-column:Proficiency Bonus:+3->+4",
+      "class-table-column:Slot Level:4->5",
+    ],
+  ],
+  [
+    "Wizard",
+    [
+      "class-table-column:Prepared Spells:12->14",
+      "class-table-column:Proficiency Bonus:+3->+4",
+      "spell-slot-count:4:2->3",
+      "spell-slot-count:5:—->1",
+    ],
+  ],
+]);
 const subclassSpellAccessFeatureNames = new Set([
   "Circle of the Land Spells",
   "Draconic Spells",
@@ -364,9 +465,11 @@ const levelOneSpellPressureLevels = [0, 1];
 const spellPressureLevels = [0, 1, 2];
 const levelThreeSpellPressureLevels = [3];
 const levelFourSpellPressureLevels = [4];
+const levelFiveSpellPressureLevels = [5];
 const laterFrontierSpellPressureLevels = [
   ...levelThreeSpellPressureLevels,
   ...levelFourSpellPressureLevels,
+  ...levelFiveSpellPressureLevels,
 ];
 const inventoriedSpellPressureLevels = [
   ...spellPressureLevels,
@@ -382,6 +485,9 @@ const levelThreeSpellPressureLevelBands = new Set(
 const levelFourSpellPressureLevelBands = new Set(
   levelFourSpellPressureLevels.map(spellLevelBand),
 );
+const levelFiveSpellPressureLevelBands = new Set(
+  levelFiveSpellPressureLevels.map(spellLevelBand),
+);
 const laterFrontierSpellPressureLevelBands = new Set(
   laterFrontierSpellPressureLevels.map(spellLevelBand),
 );
@@ -392,6 +498,11 @@ const inventoriedSpellPressureLevelBands = new Set([
 const rowBattleReadinessLevelBands = new Set([
   ...levelOneFourBattleReadinessLevelBands,
   ...laterFrontierSpellPressureLevelBands,
+  "level-5",
+  "level-6",
+  "level-7",
+  "level-8",
+  "level-9",
 ]);
 const authoredNotInstalledSpellReviewRequiredLevelBands = new Set([
   ...levelOneSpellPressureLevelBands,
@@ -610,6 +721,14 @@ const spellUnitMissingClassifications = new Map([
       kind: missingAuthoredRuntimeClosureKind,
       reason:
         "Single-target fear illusion, initial and repeat Wisdom saves, Psychic damage, Ability Check and attack-roll Disadvantage, and end-turn cleanup require a future repeating-save illusion Spell Effect owner.",
+    },
+  ],
+  [
+    "phantasmal_force",
+    {
+      kind: missingAuthoredRuntimeClosureKind,
+      reason:
+        "Target-specific mental phantasm state, initial Intelligence save, Study/Investigation disbelief, caster-turn Psychic damage, and dangerous phantasm/hazard adjudication require a future single-target phantasm illusion owner.",
     },
   ],
   [
@@ -863,6 +982,36 @@ function spellListEntries(lines, className, spellLevel) {
     .filter((entry) => entry.name.length > 0);
 }
 
+const supplementalSpellDescriptionPressureEntries = [
+  {
+    className: "Bard",
+    spellLevel: 2,
+    name: "Phantasmal Force",
+    school: "Illusion",
+    special: "C",
+    lineNumber: 522,
+    sourcePath: ".references/srd-5.2.1/Spells/Descriptions-M-P.md",
+  },
+  {
+    className: "Sorcerer",
+    spellLevel: 2,
+    name: "Phantasmal Force",
+    school: "Illusion",
+    special: "C",
+    lineNumber: 522,
+    sourcePath: ".references/srd-5.2.1/Spells/Descriptions-M-P.md",
+  },
+  {
+    className: "Wizard",
+    spellLevel: 2,
+    name: "Phantasmal Force",
+    school: "Illusion",
+    special: "C",
+    lineNumber: 522,
+    sourcePath: ".references/srd-5.2.1/Spells/Descriptions-M-P.md",
+  },
+];
+
 function numericTableCell(cell) {
   const value = Number(cell);
   return Number.isInteger(value) ? value : undefined;
@@ -910,7 +1059,7 @@ function inventoriedSpellListEntries(lines, className, spellLevel) {
     lines,
     className,
     spellLevel,
-    maxLevelOneEightMiningCharacterLevel,
+    maxLevelOneNineMiningCharacterLevel,
   )
     ? entries
     : [];
@@ -2337,7 +2486,7 @@ function classRows(root, className) {
           lineStart: featureTable.row.line,
           candidateUnitId: `class_${classSlug}`,
           progressionDeltas:
-            level === 8
+            level === 8 || level === 9
               ? classTableProgressionDeltas({
                   className,
                   currentFeatureTable: featureTable,
@@ -2444,12 +2593,36 @@ function classRows(root, className) {
     }
   }
 
-  for (const spell of inventoriedSpellPressureLevels.flatMap((spellLevel) =>
-    inventoriedSpellListEntries(lines, className, spellLevel),
-  )) {
+  const inventoriedClassSpellEntries = inventoriedSpellPressureLevels.flatMap(
+    (spellLevel) => inventoriedSpellListEntries(lines, className, spellLevel),
+  );
+  const inventoriedClassSpellUnitIds = new Set(
+    inventoriedClassSpellEntries.map((spell) => slug(spell.name)),
+  );
+  const supplementalSpellEntries =
+    supplementalSpellDescriptionPressureEntries.filter(
+      (spell) =>
+        spell.className === className &&
+        inventoriedSpellPressureLevels.includes(spell.spellLevel) &&
+        classSpellLevelIsReachableByCharacterLevel(
+          lines,
+          className,
+          spell.spellLevel,
+          maxLevelOneNineMiningCharacterLevel,
+        ) &&
+        !inventoriedClassSpellUnitIds.has(slug(spell.name)),
+    );
+
+  for (const spell of [
+    ...inventoriedClassSpellEntries.map((spell) => ({
+      ...spell,
+      sourcePath,
+    })),
+    ...supplementalSpellEntries,
+  ]) {
     rows.push(
       makeRow({
-        sourcePath,
+        sourcePath: spell.sourcePath,
         className,
         levelBand: `spell-level-${spell.spellLevel}`,
         rowKind: "spell-unit-pressure",
@@ -4944,6 +5117,9 @@ function buildSrdUnitInventory({
   const levelEightClassRows = rows.filter(
     (row) => row.levelBand === "level-8",
   );
+  const levelNineClassRows = rows.filter(
+    (row) => row.levelBand === "level-9",
+  );
   const spellPressureRows = rows.filter((row) =>
     spellPressureLevelBands.has(row.levelBand),
   );
@@ -4953,6 +5129,9 @@ function buildSrdUnitInventory({
   const levelFourSpellPressureRows = rows.filter((row) =>
     levelFourSpellPressureLevelBands.has(row.levelBand),
   );
+  const levelFiveSpellPressureRows = rows.filter((row) =>
+    levelFiveSpellPressureLevelBands.has(row.levelBand),
+  );
   const levelThreeInstalledSpellPressureRows =
     levelThreeSpellPressureRows.filter(
       (row) => row.catalogAdmission.state === "installed",
@@ -4961,11 +5140,15 @@ function buildSrdUnitInventory({
     levelFourSpellPressureRows.filter(
       (row) => row.catalogAdmission.state === "installed",
     );
+  const levelFiveInstalledSpellPressureRows =
+    levelFiveSpellPressureRows.filter(
+      (row) => row.catalogAdmission.state === "installed",
+    );
   return {
     generatedBy: "scripts/unit-profile-coverage-check.cjs",
     sourceCorpus: ".references/srd-5.2.1/Classes",
     scope:
-      "SRD 5.2.1 class-derived Unit/catalog backlog rows, prioritized by character level. Character levels 1-2 include cantrips and spell-level-1 pressure; character level 3 adds class/subclass level-3 rows and spell-level-2 pressure; character level 4 adds level-4 class-feature pressure while continuing to exclude spell-level-3 pressure. Character levels 5-8 are mined as a non-blocking audit frontier for class-table, class-feature, subclass-feature, repeated progression rows, and later-frontier spell-list pressure. Spell-level-3 pressure starts at character level 5 for full casters and Warlock Pact Magic; spell-level-4 pressure starts at character level 7 for the same table-derived owners. Paladin and Ranger spell-level-3 and spell-level-4 lists are excluded from this level-8 frontier because their SRD class tables do not grant matching slots by character level 8.",
+      "SRD 5.2.1 class-derived Unit/catalog backlog rows, prioritized by character level. Character levels 1-2 include cantrips and spell-level-1 pressure; character level 3 adds class/subclass level-3 rows and spell-level-2 pressure; character level 4 adds level-4 class-feature pressure while continuing to exclude spell-level-3 pressure. Character levels 5-9 are mined as a non-blocking audit frontier for class-table, class-feature, subclass-feature, repeated progression rows, and later-frontier spell-list pressure. Spell-level-3 pressure starts at character level 5 for full casters and Warlock Pact Magic and at class level 9 for Paladin and Ranger; spell-level-4 pressure starts at character level 7 for full casters and Warlock Pact Magic; spell-level-5 pressure starts at character level 9 for full casters and Warlock Pact Magic.",
     evidenceArtifacts: {
       characterCreationOwnerEvidence: summarizeCharacterCreationOwnerEvidence(
         root,
@@ -4990,6 +5173,7 @@ function buildSrdUnitInventory({
       levelSixClassRows: levelSixClassRows.length,
       levelSevenClassRows: levelSevenClassRows.length,
       levelEightClassRows: levelEightClassRows.length,
+      levelNineClassRows: levelNineClassRows.length,
       spellPressureRows: spellPressureRows.length,
       levelThreeSpellPressureRows: levelThreeSpellPressureRows.length,
       levelThreeInstalledSpellPressureRows:
@@ -4997,6 +5181,9 @@ function buildSrdUnitInventory({
       levelFourSpellPressureRows: levelFourSpellPressureRows.length,
       levelFourInstalledSpellPressureRows:
         levelFourInstalledSpellPressureRows.length,
+      levelFiveSpellPressureRows: levelFiveSpellPressureRows.length,
+      levelFiveInstalledSpellPressureRows:
+        levelFiveInstalledSpellPressureRows.length,
       levelOneBattleReadiness: countBattleReadiness(
         rows,
         levelOneBattleReadinessLevelBands,
@@ -5029,6 +5216,10 @@ function buildSrdUnitInventory({
         rows,
         levelFourSpellPressureLevelBands,
       ),
+      levelFiveSpellBattleReadiness: countBattleReadiness(
+        rows,
+        levelFiveSpellPressureLevelBands,
+      ),
       levelOneClassContainers: levelOneRows.filter(
         (row) => row.rowKind === "class-container",
       ).length,
@@ -5060,10 +5251,15 @@ function buildSrdUnitInventory({
         levelEightClassRows,
         "finalDisposition",
       ),
+      levelNineClassRowsByDisposition: countBy(
+        levelNineClassRows,
+        "finalDisposition",
+      ),
       levelFiveClassRowsByCategory: countBy(levelFiveClassRows, "category"),
       levelSixClassRowsByCategory: countBy(levelSixClassRows, "category"),
       levelSevenClassRowsByCategory: countBy(levelSevenClassRows, "category"),
       levelEightClassRowsByCategory: countBy(levelEightClassRows, "category"),
+      levelNineClassRowsByCategory: countBy(levelNineClassRows, "category"),
       allRowsByDisposition: countBy(rows, "finalDisposition"),
       spellPressureRowsByDisposition: countBy(
         spellPressureRows,
@@ -5083,6 +5279,14 @@ function buildSrdUnitInventory({
       ),
       levelFourInstalledSpellPressureRowsByDisposition: countBy(
         levelFourInstalledSpellPressureRows,
+        "finalDisposition",
+      ),
+      levelFiveSpellPressureRowsByDisposition: countBy(
+        levelFiveSpellPressureRows,
+        "finalDisposition",
+      ),
+      levelFiveInstalledSpellPressureRowsByDisposition: countBy(
+        levelFiveInstalledSpellPressureRows,
         "finalDisposition",
       ),
       levelOneRowsByCategory: countBy(levelOneRows, "category"),
@@ -5404,6 +5608,7 @@ function validateSrdUnitInventory(report) {
     ["level-6", 25],
     ["level-7", 24],
     ["level-8", 24],
+    ["level-9", 21],
   ]);
   for (const [levelBand, expectedCount] of classProgressionExpectedCounts) {
     const levelRows = report.rows.filter((row) => row.levelBand === levelBand);
@@ -5510,6 +5715,52 @@ function validateSrdUnitInventory(report) {
       "Druid level-8 class-table-summary row must carry the exact Wild Shape Beast Shapes threshold for known forms, Max CR, and Fly Speed eligibility.",
     );
   }
+  const levelNineTableRows = report.rows.filter(
+    (row) => row.levelBand === "level-9" && row.rowKind === "class-table-summary",
+  );
+  if (levelNineTableRows.length !== 12) {
+    issues.push(
+      `Level-9 mining inventory must contain 12 class-table-summary rows; got ${levelNineTableRows.length}.`,
+    );
+  }
+  for (const row of levelNineTableRows) {
+    if (
+      row.battleReadinessClosure?.source !==
+        classTableSummaryClosureSource("level-9") ||
+      row.battleReadinessClosure.kind !==
+        battleReadinessClosureKind.outsideBattleRuntime ||
+      row.battleReadinessClosure.owner !== "class-progression-accounting"
+    ) {
+      issues.push(
+        `${row.id} lacks the generated level-9 class-table summary closure.`,
+      );
+    }
+    if (!Array.isArray(row.progressionDeltas)) {
+      issues.push(`${row.id} lacks generated level-9 progression deltas.`);
+    }
+  }
+  for (const row of levelNineTableRows) {
+    const expectedSignatures =
+      expectedLevelNineProgressionDeltaSignatures.get(row.className);
+    if (expectedSignatures === undefined) {
+      issues.push(
+        `Level-9 progression delta validation has no expected signatures for ${row.className}.`,
+      );
+      continue;
+    }
+    const actualSignatures = (row.progressionDeltas ?? [])
+      .map(progressionDeltaSignature)
+      .sort();
+    const sortedExpectedSignatures = [...expectedSignatures].sort();
+    if (
+      JSON.stringify(actualSignatures) !==
+      JSON.stringify(sortedExpectedSignatures)
+    ) {
+      issues.push(
+        `${row.id} has unexpected level-9 progression deltas: expected ${sortedExpectedSignatures.join(", ")}; got ${actualSignatures.join(", ")}.`,
+      );
+    }
+  }
   const classProgressionFeatureCandidateIds = new Map(
     report.rows
       .filter(
@@ -5529,7 +5780,6 @@ function validateSrdUnitInventory(report) {
     ["level-8", "fighter_ability_score_improvement_l8"],
     ["level-8", "monk_ability_score_improvement_l8"],
     ["level-8", "paladin_ability_score_improvement_l8"],
-    ["level-8", "ranger_ability_score_improvement_l8"],
     ["level-8", "rogue_ability_score_improvement_l8"],
     ["level-8", "sorcerer_ability_score_improvement_l8"],
     ["level-8", "warlock_ability_score_improvement_l8"],
@@ -5782,11 +6032,17 @@ function renderSrdUnitInventory(report) {
   const levelEightClass = report.rows.filter(
     (row) => row.levelBand === "level-8",
   );
+  const levelNineClass = report.rows.filter(
+    (row) => row.levelBand === "level-9",
+  );
   const levelThreeSpellPressure = report.rows.filter(
     (row) => row.levelBand === "spell-level-3",
   );
   const levelFourSpellPressure = report.rows.filter(
     (row) => row.levelBand === "spell-level-4",
+  );
+  const levelFiveSpellPressure = report.rows.filter(
+    (row) => row.levelBand === "spell-level-5",
   );
   const missingClassContainers = levelOne
     .filter(
@@ -5806,7 +6062,7 @@ function renderSrdUnitInventory(report) {
     "",
     "This is a Unit/catalog backlog denominator, not RAW span coverage and not an MBT queue.",
     "",
-    "Character level and spell level are separate axes. Character levels 1-2 include cantrips and spell-level-1 pressure; spell-level-2 pressure first enters the character-level-3 readiness metric for full casters, spell-level-3 pressure starts at character level 5 for full casters and Warlock Pact Magic, and spell-level-4 pressure starts at character level 7 for the same table-derived owners. Paladin and Ranger spell-level-3 and spell-level-4 lists stay outside this level-8 mining frontier because their SRD class tables do not grant matching slots by character level 8.",
+    "Character level and spell level are separate axes. Character levels 1-2 include cantrips and spell-level-1 pressure; spell-level-2 pressure first enters the character-level-3 readiness metric for full casters, spell-level-3 pressure starts at character level 5 for full casters and Warlock Pact Magic and at class level 9 for Paladin and Ranger, spell-level-4 pressure starts at character level 7 for full casters and Warlock Pact Magic, and spell-level-5 pressure starts at character level 9 for full casters and Warlock Pact Magic.",
     "",
     "## Metrics",
     "",
@@ -5819,11 +6075,14 @@ function renderSrdUnitInventory(report) {
     `- Level-6 class/subclass mining rows: ${report.metrics.levelSixClassRows}`,
     `- Level-7 class/subclass mining rows: ${report.metrics.levelSevenClassRows}`,
     `- Level-8 class/subclass mining rows: ${report.metrics.levelEightClassRows}`,
+    `- Level-9 class/subclass mining rows: ${report.metrics.levelNineClassRows}`,
     `- Spell-list pressure rows for cantrips and spell levels 1-2: ${report.metrics.spellPressureRows}`,
     `- Spell-level-3 pressure rows (character-level-5 frontier): ${report.metrics.levelThreeSpellPressureRows}`,
     `- Spell-level-3 installed SRD Surface pressure rows (later character-level-5 frontier): ${report.metrics.levelThreeInstalledSpellPressureRows}`,
     `- Spell-level-4 pressure rows (character-level-7 frontier): ${report.metrics.levelFourSpellPressureRows}`,
     `- Spell-level-4 installed SRD Surface pressure rows (later character-level-7 frontier): ${report.metrics.levelFourInstalledSpellPressureRows}`,
+    `- Spell-level-5 pressure rows (character-level-9 frontier): ${report.metrics.levelFiveSpellPressureRows}`,
+    `- Spell-level-5 installed SRD Surface pressure rows (later character-level-9 frontier): ${report.metrics.levelFiveInstalledSpellPressureRows}`,
     `- Missing level-1 class containers: ${report.metrics.missingClassContainers}${missingClassContainerDetail}`,
     "",
     "### Default Progress Metric: Level-1 Battle Readiness",
@@ -5922,6 +6181,18 @@ function renderSrdUnitInventory(report) {
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, count]) => `- ${key}: ${count}`),
     "",
+    "### Spell-Level-5 Battle Readiness",
+    "",
+    "This metric is a separate seed for spell-level-5 pressure only. It belongs to the later character-level-9 frontier for full casters and Warlock Pact Magic. Paladin and Ranger spell-level-5 lists remain outside this character-level-9 frontier because their SRD class tables do not grant matching slots by class level 9.",
+    "",
+    `- Accepted: ${report.metrics.levelFiveSpellBattleReadiness.numerator}/${report.metrics.levelFiveSpellBattleReadiness.denominator} (${report.metrics.levelFiveSpellBattleReadiness.percent})`,
+    "",
+    "#### Spell-Level-5 Battle Readiness by Status",
+    "",
+    ...Object.entries(report.metrics.levelFiveSpellBattleReadiness.rowsByStatus)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, count]) => `- ${key}: ${count}`),
+    "",
     "### Level-1 Rows by Disposition",
     "",
     ...Object.entries(report.metrics.levelOneRowsByDisposition)
@@ -5970,6 +6241,12 @@ function renderSrdUnitInventory(report) {
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, count]) => `- ${key}: ${count}`),
     "",
+    "### Level-9 Class/Subclass Mining Rows by Disposition",
+    "",
+    ...Object.entries(report.metrics.levelNineClassRowsByDisposition)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, count]) => `- ${key}: ${count}`),
+    "",
     "### Level-3 Class/Subclass Rows by Category",
     "",
     ...Object.entries(report.metrics.levelThreeClassRowsByCategory)
@@ -6003,6 +6280,12 @@ function renderSrdUnitInventory(report) {
     "### Level-8 Class/Subclass Mining Rows by Category",
     "",
     ...Object.entries(report.metrics.levelEightClassRowsByCategory)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, count]) => `- ${key}: ${count}`),
+    "",
+    "### Level-9 Class/Subclass Mining Rows by Category",
+    "",
+    ...Object.entries(report.metrics.levelNineClassRowsByCategory)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, count]) => `- ${key}: ${count}`),
     "",
@@ -6048,6 +6331,20 @@ function renderSrdUnitInventory(report) {
     "",
     ...Object.entries(
       report.metrics.levelFourInstalledSpellPressureRowsByDisposition,
+    )
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, count]) => `- ${key}: ${count}`),
+    "",
+    "### Spell-Level-5 Unit Pressure by Disposition",
+    "",
+    ...Object.entries(report.metrics.levelFiveSpellPressureRowsByDisposition)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, count]) => `- ${key}: ${count}`),
+    "",
+    "### Spell-Level-5 Installed Unit Pressure by Disposition",
+    "",
+    ...Object.entries(
+      report.metrics.levelFiveInstalledSpellPressureRowsByDisposition,
     )
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, count]) => `- ${key}: ${count}`),
@@ -6307,6 +6604,35 @@ function renderSrdUnitInventory(report) {
         .replace(/$/, "|"),
     ),
     "",
+    "## Level-9 Class/Subclass Mining Rows",
+    "",
+    "| Row | Category | Surface | Authored | Catalog | Unit profile | Disposition | Battle readiness | Readiness closure | Owner evidence | Next action | Source |",
+    "|---|---|---|---|---|---|---|---|---|---|---|---|",
+    ...levelNineClass.map((row) =>
+      [
+        row.concept,
+        row.category,
+        row.surface.state,
+        row.authoredContent.state,
+        row.catalogAdmission.state,
+        row.unitProfileDisposition ?? "",
+        row.finalDisposition,
+        row.battleReadinessStatus ?? "",
+        row.battleReadinessClosure === undefined
+          ? ""
+          : `${row.battleReadinessClosure.kind}: ${row.battleReadinessClosure.owner}`,
+        row.ownerEvidence
+          .map((evidence) => `${evidence.owner}: ${evidence.status}`)
+          .join("; "),
+        row.nextAction,
+        `${row.source.path}:${row.source.lineStart}`,
+      ]
+        .map((cell) => String(cell).replace(/\|/g, "\\|"))
+        .join("|")
+        .replace(/^/, "|")
+        .replace(/$/, "|"),
+    ),
+    "",
     "## Spell-Level-3 Pressure Rows",
     "",
     "| Row | Category | Surface | Authored | Catalog | Unit profile | Disposition | Battle readiness | Readiness closure | Owner evidence | Next action | Source |",
@@ -6341,6 +6667,35 @@ function renderSrdUnitInventory(report) {
     "| Row | Category | Surface | Authored | Catalog | Unit profile | Disposition | Battle readiness | Readiness closure | Owner evidence | Next action | Source |",
     "|---|---|---|---|---|---|---|---|---|---|---|---|",
     ...levelFourSpellPressure.map((row) =>
+      [
+        row.concept,
+        row.category,
+        row.surface.state,
+        row.authoredContent.state,
+        row.catalogAdmission.state,
+        row.unitProfileDisposition ?? "",
+        row.finalDisposition,
+        row.battleReadinessStatus ?? "",
+        row.battleReadinessClosure === undefined
+          ? ""
+          : `${row.battleReadinessClosure.kind}: ${row.battleReadinessClosure.owner}`,
+        row.ownerEvidence
+          .map((evidence) => `${evidence.owner}: ${evidence.status}`)
+          .join("; "),
+        row.nextAction,
+        `${row.source.path}:${row.source.lineStart}`,
+      ]
+        .map((cell) => String(cell).replace(/\|/g, "\\|"))
+        .join("|")
+        .replace(/^/, "|")
+        .replace(/$/, "|"),
+    ),
+    "",
+    "## Spell-Level-5 Pressure Rows",
+    "",
+    "| Row | Category | Surface | Authored | Catalog | Unit profile | Disposition | Battle readiness | Readiness closure | Owner evidence | Next action | Source |",
+    "|---|---|---|---|---|---|---|---|---|---|---|---|",
+    ...levelFiveSpellPressure.map((row) =>
       [
         row.concept,
         row.category,

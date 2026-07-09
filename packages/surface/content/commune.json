@@ -1,0 +1,48 @@
+{
+  "description": "You contact a deity or divine proxy and ask up to three yes-or-no questions before the spell ends. You receive a correct answer for each question, though an answer can be unclear if the information is beyond the deity's knowledge, and the GM might offer a short phrase if a one-word answer would mislead or conflict with the deity's interests. Repeated castings before a Long Rest carry a cumulative 25 percent chance of no answer after the first.",
+  "id": "commune",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "amount": 1,
+      "kind": "minutes",
+      "ritual": true
+    },
+    "components": {
+      "m": "incense",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "activation",
+    "level": 5,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "self"
+        },
+        "effects": [
+          {
+            "kind": "none"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "kind": "self"
+    },
+    "school": "divination"
+  },
+  "name": "Commune",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Commune"
+  }
+}

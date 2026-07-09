@@ -66,6 +66,7 @@ module battleRuntimeSpellBridge {
     | BattleRuntimeAnimalFriendshipSaveCondition
     | BattleRuntimeCharmPersonSaveCondition
     | BattleRuntimeBlindnessDeafnessSaveCondition
+    | BattleRuntimeHoldMonsterSaveCondition
     | BattleRuntimeHoldPersonSaveCondition
     | BattleRuntimeFaerieFireSaveAttackRollAdvantage
 
@@ -99,6 +100,7 @@ module battleRuntimeSpellBridge {
     | BattleRuntimeCharmPersonCharmedEffect({ durationTicks: int })
     | BattleRuntimeBlindnessDeafnessBlindedEffect({ durationTicks: int })
     | BattleRuntimeBlindnessDeafnessDeafenedEffect({ durationTicks: int })
+    | BattleRuntimeHoldMonsterParalyzedEffect({ durationTicks: int })
     | BattleRuntimeHoldPersonParalyzedEffect({ durationTicks: int })
     | BattleRuntimeFaerieFireOutlineEffect
 
@@ -277,6 +279,7 @@ module battleRuntimeSpellBridge {
       | BattleRuntimeAnimalFriendshipSaveCondition => AnimalFriendshipSaveConditionProfile
       | BattleRuntimeCharmPersonSaveCondition => CharmPersonSaveConditionProfile
       | BattleRuntimeBlindnessDeafnessSaveCondition => BlindnessDeafnessSaveConditionProfile
+      | BattleRuntimeHoldMonsterSaveCondition => HoldMonsterSaveConditionProfile
       | BattleRuntimeHoldPersonSaveCondition => HoldPersonSaveConditionProfile
       | BattleRuntimeFaerieFireSaveAttackRollAdvantage => FaerieFireSaveAttackRollAdvantageProfile
     }
@@ -372,6 +375,7 @@ module battleRuntimeSpellBridge {
       | CharmPersonCharmedEffect(data) => BattleRuntimeCharmPersonCharmedEffect({ durationTicks: data.durationTicks })
       | BlindnessDeafnessBlindedEffect(data) => BattleRuntimeBlindnessDeafnessBlindedEffect({ durationTicks: data.durationTicks })
       | BlindnessDeafnessDeafenedEffect(data) => BattleRuntimeBlindnessDeafnessDeafenedEffect({ durationTicks: data.durationTicks })
+      | HoldMonsterParalyzedEffect(data) => BattleRuntimeHoldMonsterParalyzedEffect({ durationTicks: data.durationTicks })
       | HoldPersonParalyzedEffect(data) => BattleRuntimeHoldPersonParalyzedEffect({ durationTicks: data.durationTicks })
       | FaerieFireOutlineEffect => BattleRuntimeFaerieFireOutlineEffect
     }

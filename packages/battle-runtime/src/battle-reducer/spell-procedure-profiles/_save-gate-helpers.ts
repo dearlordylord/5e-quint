@@ -5,10 +5,13 @@
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
+  ABILITIES,
+  DAMAGE_TYPES,
   movementFeet,
   spellSlotLevel,
   type Ability,
   type Condition,
+  type DamageType,
   type MovementFeet,
   type SpellSlotLevel,
 } from "@dnd/shared/types";
@@ -98,6 +101,7 @@ const FIREBALL_AREA_RADIUS_FEET = 20;
 const FIREBALL_BASE_DAMAGE_DICE = 8;
 const FIREBALL_DAMAGE_DIE_SIZE = 6;
 const FIREBALL_SLOT_DAMAGE_DICE_INCREMENT = 1;
+const LEVEL5_SELF_CONE_SAVE_GATE_LENGTH_FEET = 60;
 const LIGHTNING_BOLT_LINE_LENGTH_FEET = 100;
 const LIGHTNING_BOLT_LINE_WIDTH_FEET = 5;
 const SHATTER_BASE_SPELL_LEVEL = 2;
@@ -119,6 +123,8 @@ const HOLD_PERSON_FAILED_SAVE_CONDITION =
 const HOLD_PERSON_TARGET_CREATURE_TYPES = [
   "humanoid",
 ] as const satisfies readonly [CreatureType, ...CreatureType[]];
+const HOLD_MONSTER_BASE_SPELL_LEVEL = 5;
+const HOLD_MONSTER_RANGE_FEET = 90;
 const CALM_EMOTIONS_BASE_SPELL_LEVEL = 2;
 const CALM_EMOTIONS_RANGE_FEET = 60;
 const CALM_EMOTIONS_AREA_RADIUS_FEET = 20;
@@ -212,6 +218,7 @@ export function supportedSaveGateConditionSpell(
     blindnessDeafnessSaveGateConditionSpell(spell) ??
     charmPersonSaveGateConditionSpell(spell) ??
     holdPersonSaveGateConditionSpell(spell) ??
+    holdMonsterSaveGateConditionSpell(spell) ??
     colorSpraySaveGateConditionSpell(spell) ??
     entangleSaveGateConditionSpell(spell)
   );
@@ -801,6 +808,32 @@ export function blindnessDeafnessSaveGateConditionSpell(
 export function holdPersonSaveGateConditionSpell(
   spell: SpellRecord,
 ): SaveGateConditionSpell | null {
+  return paralyzedTargetListSaveGateConditionSpell({
+    spell,
+    baseSpellLevel: HOLD_PERSON_BASE_SPELL_LEVEL,
+    rangeFeet: HOLD_PERSON_RANGE_FEET,
+    targetCreatureTypes: HOLD_PERSON_TARGET_CREATURE_TYPES,
+  });
+}
+
+export function holdMonsterSaveGateConditionSpell(
+  spell: SpellRecord,
+): SaveGateConditionSpell | null {
+  return paralyzedTargetListSaveGateConditionSpell({
+    spell,
+    baseSpellLevel: HOLD_MONSTER_BASE_SPELL_LEVEL,
+    rangeFeet: HOLD_MONSTER_RANGE_FEET,
+    targetCreatureTypes: null,
+  });
+}
+
+function paralyzedTargetListSaveGateConditionSpell(input: {
+  readonly spell: SpellRecord;
+  readonly baseSpellLevel: number;
+  readonly rangeFeet: number;
+  readonly targetCreatureTypes: readonly CreatureType[] | null;
+}): SaveGateConditionSpell | null {
+  const spell = input.spell;
   if (spell.mechanics.family !== "activation") {
     return null;
   }
@@ -820,10 +853,10 @@ export function holdPersonSaveGateConditionSpell(
       ? elapsedTimeTicksFromTimeSpanDuration(spell.mechanics.duration.upTo)
       : null;
   if (
-    spell.mechanics.level !== HOLD_PERSON_BASE_SPELL_LEVEL ||
+    spell.mechanics.level !== input.baseSpellLevel ||
     !spellHasActionCastingTime(spell) ||
     spell.mechanics.range.kind !== "point" ||
-    spell.mechanics.range.feet !== HOLD_PERSON_RANGE_FEET ||
+    spell.mechanics.range.feet !== input.rangeFeet ||
     spell.mechanics.duration.kind !== "concentration" ||
     spell.mechanics.duration.upTo.unit !== "minute" ||
     spell.mechanics.duration.upTo.amount !== 1 ||
@@ -835,10 +868,7 @@ export function holdPersonSaveGateConditionSpell(
     targetSelection === null ||
     targetSelection.mode !== "choose_up_to" ||
     targetSelection.count === undefined ||
-    !sameStringSet(
-      targetSelection.typeFilter ?? [],
-      HOLD_PERSON_TARGET_CREATURE_TYPES,
-    ) ||
+    !matchesOptionalCreatureTypeFilter(targetSelection, input.targetCreatureTypes) ||
     failedEffect?.kind !== "apply_condition" ||
     failedEffect.condition !== HOLD_PERSON_FAILED_SAVE_CONDITION ||
     repeatSave === undefined ||
@@ -869,7 +899,7 @@ export function holdPersonSaveGateConditionSpell(
       minTargets: 1,
       maxTargets: targetCountBySlot(slotLevel),
     }),
-    targetCreatureTypes: HOLD_PERSON_TARGET_CREATURE_TYPES,
+    targetCreatureTypes: input.targetCreatureTypes,
     effect: {
       kind: "fixed",
       condition: HOLD_PERSON_FAILED_SAVE_CONDITION,
@@ -884,6 +914,17 @@ export function holdPersonSaveGateConditionSpell(
     saveRollModeRule: null,
     rangeFeet: movementFeet(spell.mechanics.range.feet),
   };
+}
+
+function matchesOptionalCreatureTypeFilter(
+  targetSelection: TargetSelection,
+  targetCreatureTypes: readonly CreatureType[] | null,
+): boolean {
+  const typeFilter =
+    "typeFilter" in targetSelection ? targetSelection.typeFilter : undefined;
+  return targetCreatureTypes === null
+    ? typeFilter === undefined
+    : sameStringSet(typeFilter ?? [], targetCreatureTypes);
 }
 
 function creatureTypeCharmedSaveGateConditionSpell(input: {
@@ -1138,18 +1179,34 @@ export function supportedSaveGateDamageProfile(
     targeting === null ||
     (phase.onSuccess.kind !== "none" &&
       phase.onSuccess.kind !== "half_damage") ||
-    failedSaveEffects === null ||
-    typeof failedSaveEffects.damage.damageType !== "string"
+    failedSaveEffects === null
   ) {
     return [];
   }
-  const damageExpr = supportedDamageAmountExpr({
-    amount: failedSaveEffects.damage.amount,
-    spellLevel: spell.mechanics.level,
-    slotLevel: input.slotLevel,
-    characterLevel: input.characterLevel,
-  });
-  if (damageExpr == null) {
+  const damageComponents: {
+    readonly expr: NonNullable<ReturnType<typeof supportedDamageAmountExpr>>;
+    readonly damageType: DamageType;
+  }[] = [];
+  for (const damage of [
+    failedSaveEffects.damage,
+    ...failedSaveEffects.additionalDamageComponents,
+  ]) {
+    if (!isDamageType(damage.damageType)) {
+      return [];
+    }
+    const expr = supportedDamageAmountExpr({
+      amount: damage.amount,
+      spellLevel: spell.mechanics.level,
+      slotLevel: input.slotLevel,
+      characterLevel: input.characterLevel,
+    });
+    if (expr === null) {
+      return [];
+    }
+    damageComponents.push({ expr, damageType: damage.damageType });
+  }
+  const [primaryDamage, ...additionalDamageComponents] = damageComponents;
+  if (primaryDamage === undefined) {
     return [];
   }
 
@@ -1161,19 +1218,29 @@ export function supportedSaveGateDamageProfile(
     dc: phase.dc,
     targeting,
     damage: {
-      expr: damageExpr,
-      damageType: failedSaveEffects.damage.damageType,
+      expr: primaryDamage.expr,
+      damageType: primaryDamage.damageType,
     },
+    additionalDamageComponents,
     successDamage: (phase.onSuccess.kind === "half_damage"
       ? "half"
       : "none") as "half" | "none",
     rangeFeet,
     failedSavePostDamageRiders: failedSaveEffects.postDamageRiders,
+    failedSaveConditionEffects: failedSaveEffects.conditionEffects,
+    failedSaveAbilityChoices: failedSaveEffects.abilityChoices,
     saveRollModeRule,
     ...(postSaveAreaEffect === null ? {} : { postSaveAreaEffect }),
   };
 
   return [{ ...damageSpellSource(input), ...saveGatedInvocation }];
+}
+
+function isDamageType(value: unknown): value is DamageType {
+  return (
+    typeof value === "string" &&
+    DAMAGE_TYPES.includes(value as (typeof DAMAGE_TYPES)[number])
+  );
 }
 
 export function saveGateTargeting(
@@ -1187,6 +1254,19 @@ export function saveGateTargeting(
       sameStringSet(value.selection.targetKinds, ["creature"]))
   ) {
     return { kind: "singleCombatant" };
+  }
+  if (
+    value.kind === "area" &&
+    value.origin.kind === "point_within_range" &&
+    value.shape.kind === "cylinder" &&
+    typeof value.shape.radiusFeet === "number" &&
+    typeof value.shape.heightFeet === "number"
+  ) {
+    return {
+      kind: "pointOriginCylinder",
+      radiusFeet: movementFeet(value.shape.radiusFeet),
+      heightFeet: movementFeet(value.shape.heightFeet),
+    };
   }
   if (
     value.kind === "area" &&
@@ -1254,9 +1334,32 @@ function saveGatedDamageTargeting(
 ): SpellTargeting | null {
   return (
     saveGateTargeting(attachment) ??
+    level5SelfOriginConeTargeting(spell, attachment) ??
     fireballPointOriginSphereTargeting(spell, attachment) ??
     shatterPointOriginSphereTargeting(spell, attachment)
   );
+}
+
+function level5SelfOriginConeTargeting(
+  spell: SpellRecord,
+  attachment: Attachment,
+): Extract<SpellTargeting, { readonly kind: "selfOriginCone" }> | null {
+  const value = attachment.kind === "hole" ? attachment.value : attachment;
+  if (
+    spell.mechanics.level === 5 &&
+    spellHasActionCastingTime(spell) &&
+    spell.mechanics.range.kind === "self" &&
+    value.kind === "area" &&
+    value.origin.kind === "self" &&
+    value.shape.kind === "cone" &&
+    value.shape.lengthFeet === LEVEL5_SELF_CONE_SAVE_GATE_LENGTH_FEET
+  ) {
+    return {
+      kind: "selfOriginCone",
+      lengthFeet: movementFeet(value.shape.lengthFeet),
+    };
+  }
+  return null;
 }
 
 function fireballPointOriginSphereTargeting(
@@ -1357,21 +1460,42 @@ export function supportedSaveGateFailedSaveEffects(
   postSaveAreaEffect: SpellPostSaveAreaEffect | null = null,
 ): {
   readonly damage: Extract<SaveGateFailureEffect, { readonly kind: "damage" }>;
+  readonly additionalDamageComponents: readonly Extract<
+    SaveGateFailureEffect,
+    { readonly kind: "damage" }
+  >[];
   readonly postDamageRiders: readonly SpellFailedSavePostDamageRider[];
+  readonly conditionEffects: readonly SpellFailedSaveConditionEffect[];
+  readonly abilityChoices: readonly Ability[] | null;
 } | null {
   if (postSaveAreaEffect?.kind === "thunderwave" && effect.kind === "damage") {
     return null;
   }
   if (effect.kind === "damage") {
-    return { damage: effect, postDamageRiders: [] };
+    return {
+      damage: effect,
+      additionalDamageComponents: [],
+      postDamageRiders: [],
+      conditionEffects: [],
+      abilityChoices: null,
+    };
   }
   if (effect.kind !== "composite") {
     return null;
   }
-  const [damage, ...riders] = effect.effects;
+  const [damage, ...remainingEffects] = effect.effects;
   if (damage?.kind !== "damage") {
     return null;
   }
+  const additionalDamageComponents = remainingEffects.filter(
+    (component): component is Extract<
+      SaveGateFailureEffect,
+      { readonly kind: "damage" }
+    > => component.kind === "damage",
+  );
+  const riders = remainingEffects.filter(
+    (component) => component.kind !== "damage",
+  );
   if (
     postSaveAreaEffect?.kind === "thunderwave" &&
     !isThunderwaveFailedSaveDamageShape(damage)
@@ -1397,13 +1521,203 @@ export function supportedSaveGateFailedSaveEffects(
   ) {
     return null;
   }
-  const postDamageRiders = supportedFailedSavePostDamageRiders(
+  const conditionSupport = supportedFailedSaveConditionEffects(
     spell,
     phase,
     riders,
+  );
+  if (conditionSupport === null) {
+    return null;
+  }
+  const postDamageRiderCandidates = riders.filter(
+    (rider) => !conditionSupport.consumedEffects.includes(rider),
+  );
+  const postDamageRiders = supportedFailedSavePostDamageRiders(
+    spell,
+    phase,
+    postDamageRiderCandidates,
     postSaveAreaEffect,
   );
-  return postDamageRiders === null ? null : { damage, postDamageRiders };
+  return postDamageRiders === null
+    ? null
+    : {
+        damage,
+        additionalDamageComponents,
+        postDamageRiders,
+        conditionEffects: conditionSupport.conditionEffects,
+        abilityChoices: conditionSupport.abilityChoices,
+      };
+}
+
+type FailedSaveConditionSupport = {
+  readonly conditionEffects: readonly SpellFailedSaveConditionEffect[];
+  readonly abilityChoices: readonly Ability[] | null;
+  readonly consumedEffects: readonly SaveGateFailureEffect[];
+};
+
+function supportedFailedSaveConditionEffects(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
+  effects: readonly SaveGateFailureEffect[],
+): FailedSaveConditionSupport | null {
+  const contagion = contagionFailedSaveConditionSupport(spell, phase, effects);
+  if (contagion !== null) {
+    return contagion;
+  }
+  return { conditionEffects: [], abilityChoices: null, consumedEffects: [] };
+}
+
+function contagionFailedSaveConditionSupport(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
+  effects: readonly SaveGateFailureEffect[],
+): FailedSaveConditionSupport | null {
+  const poisoned = effects.find(
+    (effect) =>
+      effect.kind === "apply_condition" && effect.condition === "poisoned",
+  );
+  const disadvantage = effects.find(isContagionChosenAbilitySaveDisadvantage);
+  if (poisoned === undefined && disadvantage === undefined) {
+    return null;
+  }
+  if (
+    poisoned === undefined ||
+    disadvantage === undefined ||
+    !isContagionSaveGateSpellShape(spell, phase)
+  ) {
+    return null;
+  }
+  const abilityChoices = chosenAbilitySaveDisadvantageChoices(disadvantage);
+  if (abilityChoices === null) {
+    return null;
+  }
+  const repeatSave = phase.repeatSaves?.[0];
+  if (
+    repeatSave === undefined ||
+    phase.repeatSaves?.length !== 1 ||
+    repeatSave.cadence !== "end_of_target_turn" ||
+    repeatSave.onSuccess !== "ends_on_target" ||
+    repeatSave.successesRequired !== 3 ||
+    repeatSave.failuresRequired !== 3 ||
+    repeatSave.onFailureThreshold !== "locks_duration"
+  ) {
+    return null;
+  }
+  if (spell.mechanics.duration.kind !== "timed") {
+    return null;
+  }
+  const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
+    spell.mechanics.duration.value,
+  );
+  if (Either.isLeft(durationTicks)) {
+    return null;
+  }
+  return {
+    conditionEffects: [
+      {
+        kind: "fixed",
+        condition: "poisoned",
+        expiresAt: { kind: "duration", durationTicks: durationTicks.right },
+        escape: null,
+        turnStartDamage: null,
+        repeatSave: {
+          kind: "counted",
+          save: { ability: phase.ability, dc: phase.dc },
+          successThreshold: repeatSave.successesRequired,
+          failureThreshold: repeatSave.failuresRequired,
+          savingThrowDisadvantageAbilities: abilityChoices,
+        },
+      },
+    ],
+    abilityChoices,
+    consumedEffects: [poisoned, disadvantage],
+  };
+}
+
+function isContagionSaveGateSpellShape(
+  spell: SpellRecord,
+  phase: Extract<SpellActivationPhase, { readonly kind: "save_gate" }>,
+): boolean {
+  return (
+    spell.mechanics.level === 5 &&
+    spellHasActionCastingTime(spell) &&
+    spell.mechanics.range.kind === "touch" &&
+    spell.mechanics.duration.kind === "timed" &&
+    spell.mechanics.duration.value.amount === 7 &&
+    spell.mechanics.duration.value.unit === "day" &&
+    phase.ability === "con" &&
+    phase.dc.kind === "caster_spell_save_dc" &&
+    phase.onSuccess.kind === "none"
+  );
+}
+
+function isContagionChosenAbilitySaveDisadvantage(
+  effect: SaveGateFailureEffect,
+): effect is ModifyRollAdvantageEffect {
+  return (
+    effect.kind === "modify_roll_advantage" &&
+    effect.mode === "disadvantage" &&
+    (effect.affects ?? "self_roll") === "self_roll" &&
+    sameStringSet(effect.on ?? [], ["saving_throw"]) &&
+    chosenAbilitySaveDisadvantageChoices(effect) !== null
+  );
+}
+
+function chosenAbilitySaveDisadvantageChoices(
+  effect: ModifyRollAdvantageEffect,
+): readonly [Ability, ...Ability[]] | null {
+  const filter: unknown = effect.saveAbilityFilter;
+  if (!isAbilityChoiceHoleFilter(filter)) {
+    return null;
+  }
+  const choices = filter.value.options;
+  if (
+    choices.length === 0 ||
+    choices.some((choice) => !isAbility(choice))
+  ) {
+    return null;
+  }
+  return choices as readonly [Ability, ...Ability[]];
+}
+
+type AbilityChoiceHoleFilter = {
+  readonly kind: "hole";
+  readonly value: {
+    readonly kind: "choice";
+    readonly options: readonly unknown[];
+  };
+};
+
+function isAbilityChoiceHoleFilter(
+  value: unknown,
+): value is AbilityChoiceHoleFilter {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return false;
+  }
+  const candidate = value as {
+    readonly kind?: unknown;
+    readonly value?: unknown;
+  };
+  if (
+    candidate.kind !== "hole" ||
+    typeof candidate.value !== "object" ||
+    candidate.value === null ||
+    Array.isArray(candidate.value)
+  ) {
+    return false;
+  }
+  const choice = candidate.value as {
+    readonly kind?: unknown;
+    readonly options?: unknown;
+  };
+  return choice.kind === "choice" && Array.isArray(choice.options);
+}
+
+function isAbility(value: unknown): value is Ability {
+  return (
+    typeof value === "string" &&
+    ABILITIES.includes(value as (typeof ABILITIES)[number])
+  );
 }
 
 export function supportedFailedSavePostDamageRiders(

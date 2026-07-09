@@ -49,6 +49,10 @@ export const fighterActionSurgeUnitId = "fighter_action_surge";
 
 export const fighterTacticalMindUnitId = "fighter_tactical_mind";
 
+export const fighterTacticalMasterUnitId = "fighter_tactical_master";
+
+export const fighterIndomitableUnitId = "fighter_indomitable";
+
 export const fighterImprovedCriticalUnitId = "fighter_improved_critical";
 
 export const fighterRemarkableAthleteUnitId = "fighter_remarkable_athlete";
@@ -146,6 +150,8 @@ export const monkExtraAttackUnitId = "monk_extra_attack";
 
 export const monkUnarmoredMovementUnitId = "monk_unarmored_movement";
 
+export const monkAcrobaticMovementUnitId = "monk_acrobatic_movement";
+
 export const monkOpenHandTechniqueUnitId = "monk_open_hand_technique";
 
 export const subclassMonkWarriorOfTheOpenHandUnitId =
@@ -179,9 +185,12 @@ export const colorSprayUnitId = "color_spray";
 
 export const continualFlameUnitId = "continual_flame";
 
+export const contagionUnitId = "contagion";
+
 export const counterspellUnitId = "counterspell";
 
 export const dispelMagicUnitId = "dispel_magic";
+export const dispelEvilAndGoodUnitId = "dispel_evil_and_good";
 
 export const entangleUnitId = "entangle";
 
@@ -234,6 +243,10 @@ export const hypnoticPatternDurationTicks = elapsedTimeTicks(10);
 export const holdPersonUnitId = "hold_person";
 
 export const holdPersonDurationTicks = elapsedTimeTicks(10);
+
+export const holdMonsterUnitId = "hold_monster";
+
+export const holdMonsterDurationTicks = elapsedTimeTicks(10);
 
 export const invisibilityUnitId = "invisibility";
 
@@ -301,6 +314,10 @@ export const fireBoltUnitId = "fire_bolt";
 
 export const fireballUnitId = "fireball";
 
+export const coneOfColdUnitId = "cone_of_cold";
+
+export const flameStrikeUnitId = "flame_strike";
+
 export const shatterUnitId = "shatter";
 
 export const falseLifeUnitId = "false_life";
@@ -321,6 +338,10 @@ export const moonbeamUnitId = "moonbeam";
 export const webUnitId = "web";
 
 export const sleetStormUnitId = "sleet_storm";
+
+export const insectPlagueUnitId = "insect_plague";
+
+export const cloudkillUnitId = "cloudkill";
 
 export const slowUnitId = "slow";
 
@@ -460,6 +481,12 @@ export const moonbeamAreaId = battleAreaId("unit-profile-moonbeam-area");
 export const webAreaId = battleAreaId("unit-profile-web-area");
 
 export const sleetStormAreaId = battleAreaId("unit-profile-sleet-storm-area");
+
+export const insectPlagueAreaId = battleAreaId(
+  "unit-profile-insect-plague-area",
+);
+
+export const cloudkillAreaId = battleAreaId("unit-profile-cloudkill-area");
 
 export const gustOfWindAreaId = battleAreaId(
   "unit-profile-gust-of-wind-line-area",

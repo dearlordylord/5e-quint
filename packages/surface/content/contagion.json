@@ -1,0 +1,113 @@
+{
+  "description": "Your touch inflicts a magical contagion. The target makes a Constitution saving throw. On a failed save, it takes 11d8 Necrotic damage and has the Poisoned condition. Choose one ability when you cast the spell; while Poisoned, the target has Disadvantage on saving throws with that ability. The target repeats the saving throw at the end of each turn until three successes or failures. Three successes end the spell on the target; three failures make it last for 7 days. Whenever an effect would end the Poisoned condition, the target must succeed on a Constitution saving throw or the Poisoned condition doesn't end.",
+  "id": "contagion",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 7,
+        "unit": "day"
+      }
+    },
+    "family": "activation",
+    "level": 5,
+    "phases": [
+      {
+        "ability": "con",
+        "attachment": {
+          "holeId": "contagion_target",
+          "kind": "hole",
+          "label": "target creature",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "mode": "one",
+              "targetKinds": [
+                "creature"
+              ]
+            }
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "effects": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 11,
+                  "dieSize": 8
+                },
+                "kind": "fixed"
+              },
+              "damageType": "necrotic",
+              "kind": "damage"
+            },
+            {
+              "condition": "poisoned",
+              "kind": "apply_condition"
+            },
+            {
+              "affects": "self_roll",
+              "kind": "modify_roll_advantage",
+              "mode": "disadvantage",
+              "on": [
+                "saving_throw"
+              ],
+              "saveAbilityFilter": {
+                "holeId": "contagion_chosen_ability",
+                "kind": "hole",
+                "label": "chosen ability",
+                "value": {
+                  "kind": "choice",
+                  "label": "chosen ability",
+                  "options": [
+                    "str",
+                    "dex",
+                    "con",
+                    "int",
+                    "wis",
+                    "cha"
+                  ]
+                }
+              }
+            }
+          ],
+          "kind": "composite"
+        },
+        "onSuccess": {
+          "kind": "none"
+        },
+        "repeatSaves": [
+          {
+            "cadence": "end_of_target_turn",
+            "failuresRequired": 3,
+            "onFailureThreshold": "locks_duration",
+            "onSuccess": "ends_on_target",
+            "successesRequired": 3
+          }
+        ]
+      }
+    ],
+    "range": {
+      "kind": "touch"
+    },
+    "school": "necromancy"
+  },
+  "name": "Contagion",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Contagion"
+  }
+}

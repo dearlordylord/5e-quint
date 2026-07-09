@@ -59,6 +59,7 @@ export const BATTLE_TRACE_HOLE_KINDS = [
   "shoveOutcome",
   "sanctuaryInterdictionOutcome",
   "attackDamageDisposition",
+  "cunningStrikeEndTurnCoverFacts",
 ] as const satisfies ReadonlyArray<BattleHole["kind"]>;
 
 export type BattleTraceHoleKind = (typeof BATTLE_TRACE_HOLE_KINDS)[number];

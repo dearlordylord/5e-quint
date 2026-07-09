@@ -6,7 +6,7 @@
     "kind": "trained"
   },
   "className": "warlock",
-  "description": "SRD Warlock class creation and level 1-5 progression facts, including Pact Magic progression, the level-2 Magical Cunning feature grant, and level-3 subclass selection.",
+  "description": "SRD Warlock class creation and level 1-9 progression facts, including Pact Magic progression, the level-2 Magical Cunning feature grant, level-3 subclass selection, and level-9 Contact Patron feature grant.",
   "featureGrants": [
     {
       "level": 1,
@@ -23,6 +23,10 @@
     {
       "level": 4,
       "unitId": "warlock_ability_score_improvement_l4"
+    },
+    {
+      "level": 9,
+      "unitId": "warlock_contact_patron"
     }
   ],
   "hitPointDie": 8,
@@ -46,7 +50,7 @@
   },
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Classes/Warlock.md:3-24,31-45,68-102,332-390"
+    "section": "Classes/Warlock.md:3-24,31-45,68-104,332-406"
   },
   "savingThrowProficiencies": [
     "wis",
@@ -373,6 +377,10 @@
         {
           "spellId": "vampiric_touch",
           "spellLevel": 3
+        },
+        {
+          "spellId": "contact_other_plane",
+          "spellLevel": 5
         }
       ]
     },

@@ -1,0 +1,65 @@
+{
+  "acquiredAtLevel": 9,
+  "className": "barbarian",
+  "description": "If you use Reckless Attack, you can forgo Advantage on one eligible Strength-based attack roll on your turn. On a hit, the target takes an extra 1d10 damage of the same type dealt by the weapon or Unarmed Strike, and you choose Forceful Blow or Hamstring Blow.",
+  "id": "barbarian_brutal_strike",
+  "kind": "class_feature",
+  "mechanics": {
+    "damage": {
+      "damageType": "same_as_attack",
+      "dice": {
+        "dice": 1,
+        "dieSize": 10
+      },
+      "kind": "add_attack_damage_dice"
+    },
+    "family": "brutal_strike",
+    "optionChoice": {
+      "kind": "choose_one",
+      "maxOptions": 1
+    },
+    "options": [
+      {
+        "forcedMovement": {
+          "direction": "straight_away_from_you",
+          "feet": 15,
+          "kind": "push"
+        },
+        "id": "forceful_blow",
+        "selfMovement": {
+          "distance": {
+            "kind": "half_speed"
+          },
+          "kind": "move_toward_target",
+          "opportunityAttacks": "does_not_provoke"
+        },
+        "target": {
+          "kind": "hit_target"
+        }
+      },
+      {
+        "id": "hamstring_blow",
+        "speedPenalty": {
+          "feet": 15,
+          "stacking": "most_recent_only",
+          "until": "start_of_your_next_turn"
+        },
+        "target": {
+          "kind": "hit_target"
+        }
+      }
+    ],
+    "trigger": {
+      "advantageForgone": true,
+      "attackMustNotHaveDisadvantage": true,
+      "kind": "reckless_attack_strength_attack_hit",
+      "prerequisiteUnitId": "barbarian_reckless_attack",
+      "timing": "on_your_turn"
+    }
+  },
+  "name": "Brutal Strike",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Barbarian.md:128-134"
+  }
+}

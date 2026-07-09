@@ -612,6 +612,8 @@ export function spellAreaChoiceHole(
         | "spikeGrowthMovementHazard"
         | "moonbeam"
         | "sleetStormAreaHazard"
+        | "insectPlagueAreaHazard"
+        | "cloudkillAreaHazard"
         | "webRestraintHazard";
     }
   >,
@@ -639,6 +641,8 @@ export function spellAreaChoiceHoleId(
         | "spikeGrowthMovementHazard"
         | "moonbeam"
         | "sleetStormAreaHazard"
+        | "insectPlagueAreaHazard"
+        | "cloudkillAreaHazard"
         | "webRestraintHazard";
     }
   >,

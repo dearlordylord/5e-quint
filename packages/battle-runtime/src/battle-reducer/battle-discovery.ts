@@ -1,7 +1,7 @@
 // Battle act discovery extracted from ../battle-reducer.ts.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-self-transformation-mode spell.invocation-spell-created-held-object
-// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard spell.invocation-sleet-storm-area-hazard spell.invocation-spike-growth-movement-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard spell.invocation-sleet-storm-area-hazard spell.invocation-spike-growth-movement-hazard spell.invocation-cloudkill-area-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-glyph-stored-concentration-full-duration
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-dragons-breath-granted-action
@@ -14,6 +14,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.DRAGONS_BREATH_GRANTED_ACTION
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING CHARACTER.LIFECYCLE.LAYER_PROJECTION BATTLE.COMPOSITION.REDUCER_SPINE_CONTRACT BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
@@ -26,6 +27,7 @@ import {
   actionResourceAllows,
   canSpendAction,
   canSpendBonusAction,
+  canSpendMovement,
   canSpendUnarmedStrikeActionResource,
   spendActionResourceAtIndex,
 } from "@dnd/shared-algebras/action-economy-algebra";
@@ -194,6 +196,10 @@ type FogCloudObscurementEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "fogCloudObscurement" }
 >;
+type CloudkillAreaHazardEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "cloudkillAreaHazard" }
+>;
 import {
   SELF_TRANSFORMATION_MODE_KINDS,
   SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS,
@@ -329,6 +335,7 @@ function discoverBattleActsWithoutRouteEvents(
     acts.push(...flamingSphereEndTurnSaveActs(state, actorId));
     acts.push(...moonbeamEndTurnSaveActs(state, actorId));
     acts.push(...fogCloudStrongWindDispersalActs(state, actorId));
+    acts.push(...cloudkillStrongWindDispersalActs(state, actorId));
     acts.push(...webAreaRemovalActs(state, actorId));
     acts.push(...wardingBondSeparationActs(state, actorId));
     acts.push(endTurnAct(actorId));
@@ -664,6 +671,7 @@ function discoverBattleActsWithoutRouteEvents(
   acts.push(...flamingSphereEndTurnSaveActs(state, actorId));
   acts.push(...moonbeamEndTurnSaveActs(state, actorId));
   acts.push(...fogCloudStrongWindDispersalActs(state, actorId));
+  acts.push(...cloudkillStrongWindDispersalActs(state, actorId));
   acts.push(...webAreaRemovalActs(state, actorId));
   acts.push(...wardingBondSeparationActs(state, actorId));
   acts.push(...endConcentrationActs(state, actorId));
@@ -1641,6 +1649,38 @@ function fogCloudStrongWindDispersalAct(
   };
 }
 
+function cloudkillStrongWindDispersalActs(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly AvailableBattleAct[] {
+  return [...state.combatants.values()].flatMap((combatant) =>
+    combatant.activeEffects.flatMap((effect): readonly AvailableBattleAct[] =>
+      effect.kind === "cloudkillAreaHazard"
+        ? [cloudkillStrongWindDispersalAct(actorId, effect)]
+        : [],
+    ),
+  );
+}
+
+function cloudkillStrongWindDispersalAct(
+  actorId: CombatantId,
+  effect: CloudkillAreaHazardEffect,
+): AvailableBattleAct {
+  return {
+    subject: {
+      tag: "runtimeCommand",
+      actorId,
+      command: "disperseCloudkill",
+      sourceCombatantId: effect.sourceCombatantId,
+      sourceSpellId: spellId(effect.sourceSpellId),
+      areaId: effect.areaId,
+    },
+    label: "Disperse Cloudkill",
+    summary: "End the table-supplied Cloudkill area because of strong wind.",
+    initialHoles: [],
+  };
+}
+
 function wardingBondSeparationActs(
   state: BattleState,
   actorId: CombatantId,
@@ -1689,6 +1729,7 @@ export function movementActs(
   if (
     !combatantCanMoveInState(state, actorId) ||
     state.combatants.size <= 1 ||
+    !canSpendMovement(state.currentTurnResources) ||
     !movementHoleHasRemainingBudget(movementHoleForActor)
   ) {
     return [];

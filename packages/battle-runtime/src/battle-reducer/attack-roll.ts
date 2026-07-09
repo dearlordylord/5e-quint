@@ -3,7 +3,7 @@
 // battle-reducer.ts. Cluster T (attack_roll). Mechanical extraction — no
 // behavior change. Cycle #20 resolved by importing the shared ongoing-feature
 // helpers from ./ongoing-feature-helpers.ts instead of cycling through J.
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.grappler unit-feature.hunters-prey unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave spell.invocation-object-contact-damage
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.grappler unit-feature.hunters-prey unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow unit-feature.fighter-tactical-master spell.invocation-object-contact-damage
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
 
@@ -17,6 +17,8 @@ import type { AttackRollMode } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
   abilityModifier,
   difficultyClass,
+  movementDeltaFeet,
+  SIZES,
   type Ability,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
@@ -39,10 +41,15 @@ import type {
 } from "../unit-feature-support.ts";
 import {
   HUNTERS_PREY_SUPPORT_PROFILE,
+  TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES,
+  TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
   WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
   WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
   WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
+  WEAPON_MASTERY_PUSH_SUPPORT_PROFILE,
+  WEAPON_MASTERY_SLOW_SUPPORT_PROFILE,
   type BattleUnitSupportProfile,
+  type TacticalMasterReplacementMasteryProperty,
 } from "../unit-feature-support.ts";
 import {
   ATTACK_ROLL_HOLE_ID,
@@ -55,6 +62,7 @@ import {
   type BattleAttackRollResult,
   type BattleCreatureState,
   type BattleFill,
+  type BattleShovePushOutcome,
   type BattleTargetChoiceHole,
   type BattleUnitFeatureSavingThrowOutcomeHole,
   type BattleUnitFeatureDecisionHole,
@@ -120,6 +128,8 @@ import {
   WEAPON_MASTERY_CLEAVE_DECISION_HOLE_INSTANCE,
   WEAPON_MASTERY_CLEAVE_TARGET_HOLE_ID,
   WEAPON_MASTERY_CLEAVE_TARGET_HOLE_INSTANCE,
+  TACTICAL_MASTER_REPLACEMENT_DECISION_HOLE_ID,
+  TACTICAL_MASTER_REPLACEMENT_DECISION_HOLE_INSTANCE,
   HUNTERS_PREY_HORDE_BREAKER_ATTACK_ROLL_HOLE_ID,
   HUNTERS_PREY_HORDE_BREAKER_ATTACK_ROLL_HOLE_INSTANCE,
   HUNTERS_PREY_HORDE_BREAKER_DAMAGE_HOLE_ID,
@@ -135,9 +145,12 @@ import {
   savingThrowRollModeProjections,
 } from "./spells-damage-fills.ts";
 import { weaponAttackDamageExpression } from "./statblock-attacks.ts";
+import { combatantEffectiveSize } from "./druid-wild-shape.ts";
 
 const WEAPON_MASTERY_PROPERTY_SUPPORT_PROFILES = [
+  WEAPON_MASTERY_PUSH_SUPPORT_PROFILE,
   WEAPON_MASTERY_SAP_SUPPORT_PROFILE,
+  WEAPON_MASTERY_SLOW_SUPPORT_PROFILE,
   WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
   WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
 ] as const satisfies ReadonlyArray<BattleUnitSupportProfile>;
@@ -892,6 +905,196 @@ export function applyWeaponMasterySapOnHit(
   };
 }
 
+type TacticalMasterReplacementSelection = {
+  readonly unitId: UnitRecord["id"];
+  readonly replacementProperties: readonly TacticalMasterReplacementMasteryProperty[];
+};
+
+export function tacticalMasterReplacementDecisionHole(
+  state: BattleState,
+  attackerId: CombatantId,
+  attack: SupportedAttackActionOption,
+): BattleUnitFeatureDecisionHole | null {
+  const selection = tacticalMasterReplacementSelection(state, attackerId, attack);
+  return selection === null
+    ? null
+    : {
+        kind: "unitFeatureDecision",
+        holeId: TACTICAL_MASTER_REPLACEMENT_DECISION_HOLE_ID,
+        holeInstanceKey: TACTICAL_MASTER_REPLACEMENT_DECISION_HOLE_INSTANCE,
+        label: "Tactical Master mastery replacement",
+        unitFeature: {
+          unitId: selection.unitId,
+          label: "Tactical Master",
+        },
+        choices: TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES,
+      };
+}
+
+export function tacticalMasterAttackWithReplacement(input: {
+  readonly state: BattleState;
+  readonly attackerId: CombatantId;
+  readonly attack: SupportedAttackActionOption;
+  readonly decision:
+    | Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>
+    | undefined;
+}):
+  | { readonly tag: "ok"; readonly attack: SupportedAttackActionOption }
+  | { readonly tag: "invalid"; readonly message: string } {
+  const selection = tacticalMasterReplacementSelection(
+    input.state,
+    input.attackerId,
+    input.attack,
+  );
+  if (selection === null) {
+    return input.decision === undefined
+      ? { tag: "ok", attack: input.attack }
+      : {
+          tag: "invalid",
+          message:
+            "Tactical Master replacement is only valid for an eligible weapon mastery attack.",
+        };
+  }
+  if (input.decision === undefined || input.decision.value === "decline") {
+    return { tag: "ok", attack: input.attack };
+  }
+  if (!isTacticalMasterReplacementMasteryProperty(input.decision.value)) {
+    return {
+      tag: "invalid",
+      message: "Tactical Master replacement choice is not Push, Sap, or Slow.",
+    };
+  }
+  if (!selection.replacementProperties.includes(input.decision.value)) {
+    return {
+      tag: "invalid",
+      message:
+        "Tactical Master replacement choice is not admitted by the feature profile.",
+    };
+  }
+  return {
+    tag: "ok",
+    attack: weaponAttackWithMasteryProperty(input.attack, input.decision.value),
+  };
+}
+
+export function applyWeaponMasteryPushOnHit(input: {
+  readonly state: BattleState;
+  readonly attackerId: CombatantId;
+  readonly targetId: CombatantId;
+  readonly attack: SupportedAttackActionOption;
+  readonly targetSpatialFacts: readonly BattleTargetSpatialFact[];
+}):
+  | {
+      readonly tag: "ok";
+      readonly state: BattleState;
+      readonly shovePushes: readonly BattleShovePushOutcome[];
+    }
+  | { readonly tag: "invalid"; readonly message: string } {
+  const selection = selectedWeaponMasteryProperty({
+    state: input.state,
+    attackerId: input.attackerId,
+    attack: input.attack,
+    property: "push",
+    supportProfile: WEAPON_MASTERY_PUSH_SUPPORT_PROFILE,
+  });
+  if (selection === null) {
+    return { tag: "ok", state: input.state, shovePushes: [] };
+  }
+  const target = input.state.combatants.get(input.targetId);
+  if (target === undefined) {
+    return { tag: "ok", state: input.state, shovePushes: [] };
+  }
+  if (!creatureSizeIsAtMost(combatantEffectiveSize(target), "large")) {
+    return {
+      tag: "invalid",
+      message: "Weapon Mastery Push target must be Large or smaller.",
+    };
+  }
+  const pushDisposition = input.targetSpatialFacts.find(
+    (fact): fact is Extract<
+      BattleTargetSpatialFact,
+      { readonly kind: "weaponMasteryPushDisposition" }
+    > =>
+      fact.kind === "weaponMasteryPushDisposition" &&
+      fact.attackerId === input.attackerId &&
+      fact.targetId === input.targetId &&
+      fact.attackName === attackActionOptionName(input.attack),
+  )?.disposition;
+  if (pushDisposition === undefined) {
+    return {
+      tag: "invalid",
+      message:
+        "Weapon Mastery Push requires caller-supplied straight-away push disposition.",
+    };
+  }
+  if (
+    Number(pushDisposition.distanceFeet) < 0 ||
+    Number(pushDisposition.distanceFeet) > 10
+  ) {
+    return {
+      tag: "invalid",
+      message: "Weapon Mastery Push distance must be from 0 to 10 feet.",
+    };
+  }
+  return {
+    tag: "ok",
+    state: input.state,
+    shovePushes: [
+      {
+        targetId: input.targetId,
+        disposition: pushDisposition,
+      },
+    ],
+  };
+}
+
+export function applyWeaponMasterySlowAfterDamage(input: {
+  readonly state: BattleState;
+  readonly attackerId: CombatantId;
+  readonly targetId: CombatantId;
+  readonly attack: SupportedAttackActionOption;
+  readonly damageAmount: number;
+}): BattleState {
+  if (input.damageAmount <= 0) {
+    return input.state;
+  }
+  const selection = selectedWeaponMasteryProperty({
+    state: input.state,
+    attackerId: input.attackerId,
+    attack: input.attack,
+    property: "slow",
+    supportProfile: WEAPON_MASTERY_SLOW_SUPPORT_PROFILE,
+  });
+  const target = input.state.combatants.get(input.targetId);
+  if (selection === null || target === undefined) {
+    return input.state;
+  }
+  const activeEffects = [
+    ...target.activeEffects.filter(
+      (effect) =>
+        !(
+          effect.kind === "unitFeatureSpeedDelta" &&
+          "sourceUnitId" in effect &&
+          effect.sourceUnitId === selection.unitId
+        ),
+    ),
+    {
+      kind: "unitFeatureSpeedDelta",
+      sourceUnitId: selection.unitId,
+      sourceCombatantId: input.attackerId,
+      deltaFeet: movementDeltaFeet(-10),
+      expiresAt: { kind: "startOfTurn", combatantId: input.attackerId },
+    } as const,
+  ];
+  return {
+    ...input.state,
+    combatants: new Map(input.state.combatants).set(input.targetId, {
+      ...target,
+      activeEffects,
+    }),
+  };
+}
+
 export function weaponMasteryToppleSavingThrowHole(
   state: BattleState,
   attackerId: CombatantId,
@@ -1406,6 +1609,78 @@ function weaponMasteryCleaveSelection(
     property: "cleave",
     supportProfile: WEAPON_MASTERY_CLEAVE_SUPPORT_PROFILE,
   });
+}
+
+function tacticalMasterReplacementSelection(
+  state: BattleState,
+  attackerId: CombatantId,
+  attack: SupportedAttackActionOption,
+): TacticalMasterReplacementSelection | null {
+  if (
+    attack.kind !== "weapon" ||
+    currentActorId(state) !== attackerId
+  ) {
+    return null;
+  }
+  const attacker = state.combatants.get(attackerId);
+  if (!isCharacterBattleCreatureState(attacker)) {
+    return null;
+  }
+  if (
+    !attacker.origin.weaponMasteries.some(
+      (mastery) => mastery.weaponUnitId === attack.weapon.id,
+    )
+  ) {
+    return null;
+  }
+  const unitRef = attacker.origin.characterUnitRefs.find((candidate) =>
+    candidate.supportProfiles.some(
+      (profile) =>
+        typeof profile === "object" &&
+        profile.kind === TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
+    ),
+  );
+  const supportProfile = unitRef?.supportProfiles.find(
+    (profile) =>
+      typeof profile === "object" &&
+      profile.kind === TACTICAL_MASTER_REPLACEMENT_SUPPORT_PROFILE,
+  );
+  return unitRef === undefined ||
+    supportProfile === undefined ||
+    typeof supportProfile !== "object"
+    ? null
+    : {
+        unitId: unitRef.unitId,
+        replacementProperties: supportProfile.replacementProperties,
+      };
+}
+
+function weaponAttackWithMasteryProperty(
+  attack: SupportedAttackActionOption,
+  property: TacticalMasterReplacementMasteryProperty,
+): SupportedAttackActionOption {
+  return attack.kind !== "weapon"
+    ? attack
+    : {
+        ...attack,
+        weapon: {
+          ...attack.weapon,
+          mastery: property,
+        },
+      };
+}
+
+function isTacticalMasterReplacementMasteryProperty(
+  value: Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>["value"],
+): value is TacticalMasterReplacementMasteryProperty {
+  return value === "push" || value === "sap" || value === "slow";
+}
+
+function creatureSizeIsAtMost(
+  actual: (typeof SIZES)[number],
+  maximum: (typeof SIZES)[number],
+): boolean {
+  return SIZES.indexOf(actual) <= SIZES.indexOf(maximum);
 }
 
 function selectedWeaponMasteryProperty(input: {

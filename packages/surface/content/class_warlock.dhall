@@ -1,12 +1,13 @@
 { armorTraining = { categories = [ "light" ], kind = "trained" }
 , className = "warlock"
 , description =
-    "SRD Warlock class creation and level 1-5 progression facts, including Pact Magic progression, the level-2 Magical Cunning feature grant, and level-3 subclass selection."
+    "SRD Warlock class creation and level 1-9 progression facts, including Pact Magic progression, the level-2 Magical Cunning feature grant, level-3 subclass selection, and level-9 Contact Patron feature grant."
 , featureGrants =
   [ { level = 1, unitId = "warlock_eldritch_invocations" }
   , { level = 1, unitId = "warlock_pact_magic" }
   , { level = 2, unitId = "warlock_magical_cunning" }
   , { level = 4, unitId = "warlock_ability_score_improvement_l4" }
+  , { level = 9, unitId = "warlock_contact_patron" }
   ]
 , hitPointDie = 8
 , id = "class_warlock"
@@ -19,7 +20,7 @@
 , primaryAbilities = { abilities = [ "cha" ], kind = "all_of" }
 , provenance =
   { kind = "srd-5.2.1"
-  , section = "Classes/Warlock.md:3-24,31-45,68-102,332-390"
+  , section = "Classes/Warlock.md:3-24,31-45,68-104,332-406"
   }
 , savingThrowProficiencies = [ "wis", "cha" ]
 , skillProficiencyChoice =
@@ -217,6 +218,7 @@
       , { spellId = "remove_curse", spellLevel = 3 }
       , { spellId = "tongues", spellLevel = 3 }
       , { spellId = "vampiric_touch", spellLevel = 3 }
+      , { spellId = "contact_other_plane", spellLevel = 5 }
       ]
     }
   , spellcastingAbility = "cha"

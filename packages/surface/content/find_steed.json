@@ -62,7 +62,9 @@
       "kind": "point"
     },
     "school": "conjuration",
-    "statBlock": {
+    "creature": {
+      "kind": "inline",
+      "statBlock": {
       "abilityScores": {
         "cha": 8,
         "con": 14,
@@ -156,6 +158,7 @@
           "name": "Life Bond"
         }
       ]
+      }
     }
   },
   "name": "Find Steed",

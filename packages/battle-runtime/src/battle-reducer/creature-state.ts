@@ -77,6 +77,7 @@ import {
   FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE,
   MAGIC_ACTION_AREA_SAVE_DAMAGE_HEALING_SUPPORT_PROFILE,
   MAGIC_ACTION_HEALING_POOL_SUPPORT_PROFILE,
+  MAGIC_ACTION_SAVE_GATED_CONDITION_SUPPORT_PROFILE,
   PALADIN_SACRED_WEAPON_SUPPORT_PROFILE,
   PASSIVE_ABILITY_CHECK_ROLL_MODE_SUPPORT_PROFILE,
   PASSIVE_SAVING_THROW_ROLL_MODE_SUPPORT_PROFILE,
@@ -319,6 +320,13 @@ export function battleCreatureStateFromInit(
         ),
         magicActionAreaSaveDamageHealingProfiles:
           characterMagicActionAreaSaveDamageHealingProfiles(
+            creatureInit.resources ?? [],
+            creatureInit.unitFeatures ?? [],
+            creatureInit.characterUnitRefs,
+            classLevels,
+          ),
+        magicActionSaveGatedConditionProfiles:
+          characterMagicActionSaveGatedConditionProfiles(
             creatureInit.resources ?? [],
             creatureInit.unitFeatures ?? [],
             creatureInit.characterUnitRefs,
@@ -1522,6 +1530,37 @@ export function characterMagicActionAreaSaveDamageHealingProfiles(
           unitRefs,
           unit.id,
           MAGIC_ACTION_AREA_SAVE_DAMAGE_HEALING_SUPPORT_PROFILE,
+        )
+        ? [[unit.id, profile] as const]
+        : [];
+    }),
+  );
+}
+
+export function characterMagicActionSaveGatedConditionProfiles(
+  resources: readonly CharacterBattleResourceInit[],
+  features: readonly CharacterBattleFeatureInit[],
+  unitRefs: readonly BattleUnitRef[],
+  classLevels: readonly CharacterBattleClassLevel[],
+): ReadonlyMap<
+  UnitRecord["id"],
+  Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "magicActionSaveGatedCondition" }
+  >
+> {
+  const units = [
+    ...resources.map((resource) => resource.unit),
+    ...features.map((feature) => feature.unit),
+  ];
+  return new Map(
+    units.flatMap((unit) => {
+      const profile = parseSupportedUnitFeatureProfile(unit, classLevels);
+      return profile?.kind === "magicActionSaveGatedCondition" &&
+        unitRefSupportsProfileKind(
+          unitRefs,
+          unit.id,
+          MAGIC_ACTION_SAVE_GATED_CONDITION_SUPPORT_PROFILE,
         )
         ? [[unit.id, profile] as const]
         : [];

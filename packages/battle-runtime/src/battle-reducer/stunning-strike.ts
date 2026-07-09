@@ -267,6 +267,8 @@ function applyStunningStrikeFailure(
       target,
       hit.profile.stunningStrike.onFail.condition,
     ),
+    earlyEnd: null,
+    turnRestriction: null,
     expiresAt: { kind: "startOfTurn", combatantId: hit.actorId },
   };
   return {

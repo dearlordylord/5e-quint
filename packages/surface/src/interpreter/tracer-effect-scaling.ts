@@ -357,6 +357,8 @@ export function traceEffectAtomScaling(
         }
       }
       return;
+    case "planar_entity_answers":
+      return;
     default: {
       const _exhaustive: never = e;
       throw new Error(`unhandled effect atom scaling: ${String(_exhaustive)}`);

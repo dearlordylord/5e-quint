@@ -11,18 +11,22 @@
 // feature holes. Mechanical move; no behavior change intended.
 
 // RAW-COVERAGE: runtime-owner RAW-QCORE7-MOVEMENT-GRAPPLE-001 RAW-PTG-REACTIONS-002 RAW-PTG-REACTIONS-004 RAW-PTG-REACTIONS-005 RAW-PTG-REACTIONS-006 RAW-QCORE9-UNIT-FEATURE-PROFILES-001 RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.paladin-sacred-weapon unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.rogue-steady-aim unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-area-save-damage-replacement unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bardic-inspiration-failed-d20-test unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.magic-action-area-save-damage-healing unit-feature.magic-action-healing-pool unit-feature.magic-action-save-gated-condition unit-feature.paladin-sacred-weapon unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.rogue-steady-aim unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.weapon-damage-dice-roll-choice unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 
 import {
   canSpendAction,
   canSpendBonusAction,
+  enableMovementActionBonusActionExclusion,
   grantUnitActionResource,
   spendActivationResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 
-import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
+import {
+  applyCondition,
+  hasCondition,
+} from "@dnd/shared-algebras/conditions-algebra";
 
 import { attackRollResultIsValid } from "@dnd/shared-algebras/attack-roll-algebra";
 
@@ -69,12 +73,14 @@ import {
 
 import {
   combatantCanSee,
+  currentActorId,
   normalizeBattleGrapples,
   combatantWearingArmorCategory,
 } from "./creature-state-leaves.ts";
 
 import {
   activeOngoingFeatureOccurrencesForCombatant,
+  battleCreatureStateWithKnockOutPreservedConditions,
   combatantCanTakeActions,
   combatantCanTakeReactions,
   isCharacterBattleCreatureState,
@@ -297,6 +303,7 @@ export function supportedUnitFeatureActs(
     ...attackActionAreaSaveDamageReplacementActs(state, actor),
     ...magicActionHealingPoolActs(state, actor),
     ...magicActionAreaSaveDamageHealingActs(state, actor),
+    ...magicActionSaveGatedConditionActs(state, actor),
     ...paladinSacredWeaponActs(state, actor),
     ...noActionActs,
     ...rogueSteadyAimActs(state, actor),
@@ -424,6 +431,55 @@ function magicActionAreaSaveDamageHealingActs(
               actor.combatantId,
               unitFeature,
             ),
+          },
+        ]
+      : [];
+  });
+}
+
+function magicActionSaveGatedConditionActs(
+  state: BattleState,
+  actor: CharacterBattleCreatureState,
+): readonly AvailableBattleAct[] {
+  if (
+    !canSpendAction(state.currentTurnResources, "magic") ||
+    spellSaveDcForCaster(state, actor.combatantId) === null ||
+    combatantInsideActiveAntimagicFieldAura(state, actor.combatantId)
+  ) {
+    return [];
+  }
+  return [
+    ...actor.origin.magicActionSaveGatedConditionProfiles.values(),
+  ].flatMap((unitFeature): readonly AvailableBattleAct[] => {
+    const resource = actor.origin.resources.find(
+      (candidate) =>
+        candidate.unit.id === unitFeature.condition.spends.resourceUnitId,
+    );
+    const choices = magicActionSaveGatedConditionTargetChoices(
+      state,
+      actor.combatantId,
+      unitFeature,
+    );
+    return resource !== undefined &&
+      resourceHasUsesRemaining(resource) &&
+      choices.length > 0
+      ? [
+          {
+            subject: {
+              tag: "unitFeature" as const,
+              actorId: actor.combatantId,
+              unitId: unitFeature.unit.id,
+            },
+            label: unitFeature.unit.name,
+            summary:
+              "Spend a Magic Action and one resource use to force Wisdom Saving Throws and apply Frightened on failures.",
+            initialHoles: [
+              magicActionSaveGatedConditionSavingThrowHole(
+                state,
+                actor.combatantId,
+                unitFeature,
+              ),
+            ],
           },
         ]
       : [];
@@ -783,6 +839,16 @@ export function resolveUnitFeature(
         input,
         actor,
         magicActionAreaSaveDamageHealing,
+      );
+    }
+
+    const magicActionSaveGatedCondition =
+      actor.origin.magicActionSaveGatedConditionProfiles.get(subject.unitId);
+    if (magicActionSaveGatedCondition !== undefined) {
+      return resolveMagicActionSaveGatedConditionUnitFeature(
+        input,
+        actor,
+        magicActionSaveGatedCondition,
       );
     }
   }
@@ -1290,6 +1356,101 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
     tag: "resolved",
     state: stateAfterHealing,
     snapshot: snapshotBattle(stateAfterHealing),
+  };
+}
+
+function resolveMagicActionSaveGatedConditionUnitFeature(
+  input: UnitFeatureBattleResolutionInput,
+  actor: CharacterBattleCreatureState,
+  unitFeature: Extract<
+    SupportedUnitFeatureProfile,
+    { readonly kind: "magicActionSaveGatedCondition" }
+  >,
+): BattleResolutionResult {
+  const resource = actor.origin.resources.find(
+    (candidate) =>
+      candidate.unit.id === unitFeature.condition.spends.resourceUnitId,
+  );
+  if (resource === undefined || !resourceHasUsesRemaining(resource)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      `${unitFeature.unit.name} has no resource uses remaining.`,
+    );
+  }
+  if (spellSaveDcForCaster(input.state, actor.combatantId) === null) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      `${unitFeature.unit.name} requires a spell save DC.`,
+    );
+  }
+  const fills = magicActionSaveGatedConditionFills(input.fills, unitFeature);
+  if (fills.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", fills.message);
+  }
+  if (fills.value.savingThrows === undefined) {
+    return needsHolesResult(input.state, input.subject, [
+      magicActionSaveGatedConditionSavingThrowHole(
+        input.state,
+        actor.combatantId,
+        unitFeature,
+      ),
+    ]);
+  }
+  const validation = validateMagicActionSaveGatedCondition({
+    state: input.state,
+    actor,
+    unitFeature,
+    savingThrows: fills.value.savingThrows,
+  });
+  if (validation.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", validation.message);
+  }
+  const spent = spendActivationResource(input.state.currentTurnResources, {
+    kind: "action",
+    action: "magic",
+  });
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      `${unitFeature.unit.name} Magic Action is no longer available.`,
+    );
+  }
+  const actorAfterResourceSpend: CharacterBattleCreatureState = {
+    ...actor,
+    origin: {
+      ...actor.origin,
+      resources: actor.origin.resources.map((candidate) =>
+        candidate.unit.id === unitFeature.condition.spends.resourceUnitId &&
+        resourceHasUsesRemaining(candidate)
+          ? spendCharacterResourceUse(candidate)
+          : candidate,
+      ),
+    },
+  };
+  const stateAfterSpend: BattleState = {
+    ...input.state,
+    currentTurnResources: spent.right,
+    combatants: new Map(input.state.combatants).set(
+      actor.combatantId,
+      actorAfterResourceSpend,
+    ),
+  };
+  const failedTargetIds = validation.outcomes.flatMap((outcome) =>
+    outcome.succeeded ? [] : [outcome.targetId],
+  );
+  const stateAfterConditions = applyMagicActionSaveGatedConditionFailures(
+    stateAfterSpend,
+    actor.combatantId,
+    unitFeature,
+    failedTargetIds,
+  );
+  return {
+    tag: "resolved",
+    state: stateAfterConditions,
+    snapshot: snapshotBattle(stateAfterConditions),
   };
 }
 
@@ -2730,6 +2891,304 @@ type MagicActionAreaSaveDamageHealingFillSet = {
   readonly damageRoll: MagicActionAreaSaveDamageHealingRollFill | undefined;
   readonly healingRoll: MagicActionAreaSaveDamageHealingRollFill | undefined;
 };
+type MagicActionSaveGatedConditionProfile = Extract<
+  SupportedUnitFeatureProfile,
+  { readonly kind: "magicActionSaveGatedCondition" }
+>;
+type MagicActionSaveGatedConditionSavingThrowFill = Extract<
+  BattleFill,
+  { readonly kind: "savingThrowOutcome" }
+>;
+type MagicActionSaveGatedConditionFillSet = {
+  readonly savingThrows:
+    | MagicActionSaveGatedConditionSavingThrowFill
+    | undefined;
+};
+
+function magicActionSaveGatedConditionFills(
+  fills: readonly BattleFill[],
+  unitFeature: MagicActionSaveGatedConditionProfile,
+):
+  | {
+      readonly tag: "ok";
+      readonly value: MagicActionSaveGatedConditionFillSet;
+    }
+  | { readonly tag: "invalid"; readonly message: string } {
+  let savingThrows: MagicActionSaveGatedConditionSavingThrowFill | undefined;
+  for (const fill of fills) {
+    if (
+      fill.kind === "savingThrowOutcome" &&
+      fill.holeId ===
+        magicActionSaveGatedConditionSavingThrowHoleId(unitFeature)
+    ) {
+      if (savingThrows !== undefined) {
+        return {
+          tag: "invalid",
+          message: `${unitFeature.unit.name} Saving Throw outcomes were filled twice.`,
+        };
+      }
+      savingThrows = fill;
+      continue;
+    }
+    return {
+      tag: "invalid",
+      message: `Fill ${fill.kind} does not match the ${unitFeature.unit.name} replay holes.`,
+    };
+  }
+  return { tag: "ok", value: { savingThrows } };
+}
+
+function magicActionSaveGatedConditionProtocolId(
+  unitFeature: MagicActionSaveGatedConditionProfile,
+  hole: "saving-throws",
+): string {
+  return `battle:unit-feature:${unitFeature.unit.id}:save-gated-condition:${hole}`;
+}
+
+function magicActionSaveGatedConditionSavingThrowHoleId(
+  unitFeature: MagicActionSaveGatedConditionProfile,
+): BattleHoleId {
+  return holeId(
+    magicActionSaveGatedConditionProtocolId(unitFeature, "saving-throws"),
+  );
+}
+
+function magicActionSaveGatedConditionSavingThrowHoleInstanceKey(
+  unitFeature: MagicActionSaveGatedConditionProfile,
+): HoleInstanceKey {
+  return holeInstanceKey(
+    magicActionSaveGatedConditionProtocolId(unitFeature, "saving-throws"),
+  );
+}
+
+function validateMagicActionSaveGatedCondition(input: {
+  readonly state: BattleState;
+  readonly actor: CharacterBattleCreatureState;
+  readonly unitFeature: MagicActionSaveGatedConditionProfile;
+  readonly savingThrows: MagicActionSaveGatedConditionSavingThrowFill;
+}):
+  | {
+      readonly tag: "ok";
+      readonly outcomes: readonly BattleSavingThrowOutcome[];
+    }
+  | { readonly tag: "invalid"; readonly message: string } {
+  const hole = magicActionSaveGatedConditionSavingThrowHole(
+    input.state,
+    input.actor.combatantId,
+    input.unitFeature,
+  );
+  if (input.savingThrows.holeId !== hole.holeId) {
+    return {
+      tag: "invalid",
+      message: `${input.unitFeature.unit.name} Saving Throw fill must use the selected feature hole.`,
+    };
+  }
+  if (!("outcomes" in input.savingThrows.value)) {
+    return {
+      tag: "invalid",
+      message: `${input.unitFeature.unit.name} uses target Saving Throw outcomes.`,
+    };
+  }
+  const maxTargets = magicActionSaveGatedConditionMaxTargets(
+    input.actor,
+    input.unitFeature,
+  );
+  const outcomes = input.savingThrows.value.outcomes;
+  if (outcomes.length < 1 || outcomes.length > maxTargets) {
+    return {
+      tag: "invalid",
+      message: `${input.unitFeature.unit.name} requires between 1 and ${maxTargets} selected targets.`,
+    };
+  }
+  const choices = new Set(
+    magicActionSaveGatedConditionTargetChoices(
+      input.state,
+      input.actor.combatantId,
+      input.unitFeature,
+    ),
+  );
+  const seen = new Set<CombatantId>();
+  for (const outcome of outcomes) {
+    if (seen.has(outcome.targetId)) {
+      return {
+        tag: "invalid",
+        message: `${input.unitFeature.unit.name} Saving Throw outcomes must not duplicate targets.`,
+      };
+    }
+    seen.add(outcome.targetId);
+    if (!choices.has(outcome.targetId)) {
+      return {
+        tag: "invalid",
+        message: `${input.unitFeature.unit.name} target must be a visible creature within range.`,
+      };
+    }
+    if (
+      !magicActionSaveGatedConditionHasTargetSpatialFact(
+        input.savingThrows.spatialFacts ?? [],
+        input.actor.combatantId,
+        outcome.targetId,
+        input.unitFeature,
+      )
+    ) {
+      return {
+        tag: "invalid",
+        message: `${input.unitFeature.unit.name} target requires table-supplied visibility and 60-foot range evidence.`,
+      };
+    }
+  }
+  return { tag: "ok", outcomes };
+}
+
+function magicActionSaveGatedConditionSavingThrowHole(
+  state: BattleState,
+  actorId: CombatantId,
+  unitFeature: MagicActionSaveGatedConditionProfile,
+): BattleUnitFeatureSavingThrowOutcomeHole {
+  const dc = spellSaveDcForCaster(state, actorId);
+  if (dc === null) {
+    throw new Error(
+      `${unitFeature.unit.name} save hole requires a spell save DC.`,
+    );
+  }
+  const targetIds = magicActionSaveGatedConditionTargetChoices(
+    state,
+    actorId,
+    unitFeature,
+  );
+  return {
+    kind: "savingThrowOutcome",
+    holeId: magicActionSaveGatedConditionSavingThrowHoleId(unitFeature),
+    holeInstanceKey:
+      magicActionSaveGatedConditionSavingThrowHoleInstanceKey(unitFeature),
+    label: `${unitFeature.unit.name} Wisdom Saving Throws`,
+    unitFeature: {
+      unitId: unitFeature.unit.id,
+      label: unitFeature.unit.name,
+    },
+    ability: unitFeature.condition.save.ability,
+    dc: { kind: "fixed", dc },
+    targetIds,
+    targetRollModes: savingThrowRollModeProjections(
+      state,
+      unitFeature.condition.save.ability,
+    ).filter((projection) => targetIds.includes(projection.targetId)),
+    targetFlatBonuses: savingThrowFlatBonusProjections(
+      state,
+      unitFeature.condition.save.ability,
+    ).filter((projection) => targetIds.includes(projection.targetId)),
+  };
+}
+
+function magicActionSaveGatedConditionTargetChoices(
+  state: BattleState,
+  actorId: CombatantId,
+  unitFeature: MagicActionSaveGatedConditionProfile,
+): readonly CombatantId[] {
+  return [...state.combatants.keys()].filter(
+    (targetId) =>
+      combatantCanSee(state, actorId, targetId) &&
+      magicalEffectTargetsInterdictionMessage({
+        state,
+        source: OTHER_MAGICAL_EFFECT_SOURCE,
+        targetIds: [targetId],
+      }) === null &&
+      Number(unitFeature.condition.targetSelection.rangeFeet) === 60,
+  );
+}
+
+function magicActionSaveGatedConditionMaxTargets(
+  actor: CharacterBattleCreatureState,
+  unitFeature: MagicActionSaveGatedConditionProfile,
+): number {
+  const modifier = scoreModifier(
+    actor.origin.d20Statistics.abilityScores[
+      unitFeature.condition.targetSelection.count.ability
+    ],
+  );
+  return Math.max(
+    unitFeature.condition.targetSelection.count.minimum,
+    modifier,
+  );
+}
+
+function magicActionSaveGatedConditionHasTargetSpatialFact(
+  facts: readonly BattleTargetSpatialFact[],
+  actorId: CombatantId,
+  targetId: CombatantId,
+  unitFeature: MagicActionSaveGatedConditionProfile,
+): boolean {
+  return facts.some(
+    (fact) =>
+      fact.kind === "unitFeatureVisibleTargetWithinRange" &&
+      fact.actorId === actorId &&
+      fact.targetId === targetId &&
+      fact.unitId === unitFeature.unit.id &&
+      fact.rangeFeet === unitFeature.condition.targetSelection.rangeFeet,
+  );
+}
+
+function applyMagicActionSaveGatedConditionFailures(
+  state: BattleState,
+  actorId: CombatantId,
+  unitFeature: MagicActionSaveGatedConditionProfile,
+  targetIds: readonly CombatantId[],
+): BattleState {
+  const combatants = new Map(state.combatants);
+  let currentTurnResources = state.currentTurnResources;
+  for (const targetId of targetIds) {
+    const target = combatants.get(targetId);
+    if (target === undefined) continue;
+    const activeEffect = {
+      kind: "unitFeatureCondition" as const,
+      sourceUnitId: unitFeature.unit.id,
+      sourceCombatantId: actorId,
+      condition: unitFeature.condition.onFail.condition,
+      conditionHadNonSpellSource: hasCondition(
+        target.conditions,
+        unitFeature.condition.onFail.condition,
+      ),
+      earlyEnd: { kind: "targetTakesAnyDamage" as const },
+      turnRestriction: { kind: "moveActionOrBonusAction" as const },
+      expiresAt: {
+        kind: "duration" as const,
+        durationTicks: unitFeature.condition.onFail.durationTicks,
+      },
+    };
+    const nextTarget = {
+      ...battleCreatureStateWithKnockOutPreservedConditions(
+        target,
+        applyCondition(
+          target.conditions,
+          unitFeature.condition.onFail.condition,
+        ),
+      ),
+      activeEffects: [
+        ...target.activeEffects.filter(
+          (candidate) =>
+            !(
+              candidate.kind === "unitFeatureCondition" &&
+              candidate.sourceUnitId === unitFeature.unit.id &&
+              candidate.sourceCombatantId === actorId &&
+              candidate.condition === unitFeature.condition.onFail.condition
+            ),
+        ),
+        activeEffect,
+      ],
+    };
+    combatants.set(targetId, nextTarget);
+    if (targetId === currentActorId(state)) {
+      currentTurnResources = enableMovementActionBonusActionExclusion(
+        currentTurnResources,
+        Number(target.movementSpentFeet) > 0,
+      );
+    }
+  }
+  return {
+    ...state,
+    currentTurnResources,
+    combatants,
+  };
+}
 
 function magicActionAreaSaveDamageHealingFills(
   fills: readonly BattleFill[],

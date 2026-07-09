@@ -172,8 +172,10 @@ import {
   type SupportedSpellInvocation,
 } from "./index.ts";
 import {
+  ACROBATIC_MOVEMENT_SUPPORT_PROFILE,
   ALTERNATE_ACTION_COST_ACTIONS,
   ATTACK_ACTION_AREA_SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
+  battleAcrobaticMovementSupportForUnit,
   battleAttackActionAreaSaveDamageReplacementSupportForUnit,
   battleBonusActionDelegatedStandardActionsSupportForUnit,
   battleD20TestNaturalOneRerollSupportForUnit,
@@ -183,6 +185,7 @@ import {
   battleHuntersPreySupportForUnit,
   battleMagicActionAreaSaveDamageHealingSupportForUnit,
   battleMagicActionHealingPoolSupportForUnit,
+  battleMagicActionSaveGatedConditionSupportForUnit,
   battleMartialArtsAttackProjectionSupportForUnit,
   battleMonkFocusBattleOptionsSupportForUnit,
   battleOpenHandTechniqueSupportForUnit,
@@ -204,6 +207,7 @@ import {
   HUNTERS_PREY_SUPPORT_PROFILE,
   MAGIC_ACTION_AREA_SAVE_DAMAGE_HEALING_SUPPORT_PROFILE,
   MAGIC_ACTION_HEALING_POOL_SUPPORT_PROFILE,
+  MAGIC_ACTION_SAVE_GATED_CONDITION_SUPPORT_PROFILE,
   MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE,
   OPEN_HAND_TECHNIQUE_SUPPORT_PROFILE,
   parseSupportedUnitFeatureProfile,
@@ -226,6 +230,7 @@ export * from "./unit-profile-admission-spell-fill-support.ts";
 export * from "./unit-profile-admission-spell-record-support.ts";
 export {
   abilityModifier,
+  ACROBATIC_MOVEMENT_SUPPORT_PROFILE,
   ALTERNATE_ACTION_COST_ACTIONS,
   applyBattleHitPointDamage,
   applyCondition,
@@ -247,6 +252,7 @@ export {
   finishInitialInitiativeSetup,
   BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE,
   battleAreaId,
+  battleAcrobaticMovementSupportForUnit,
   battleBardicInspirationGrantSupportForUnit,
   battleBonusActionDelegatedStandardActionsSupportForUnit,
   battleCombatantSide,
@@ -263,6 +269,7 @@ export {
   battleLightEmitterProjection,
   battleMagicActionAreaSaveDamageHealingSupportForUnit,
   battleMagicActionHealingPoolSupportForUnit,
+  battleMagicActionSaveGatedConditionSupportForUnit,
   battleMartialArtsAttackProjectionSupportForUnit,
   battleMonkFocusBattleOptionsSupportForUnit,
   battleOpenHandTechniqueSupportForUnit,
@@ -325,6 +332,7 @@ export {
   initiativeScore,
   MAGIC_ACTION_AREA_SAVE_DAMAGE_HEALING_SUPPORT_PROFILE,
   MAGIC_ACTION_HEALING_POOL_SUPPORT_PROFILE,
+  MAGIC_ACTION_SAVE_GATED_CONDITION_SUPPORT_PROFILE,
   MARTIAL_ARTS_ATTACK_PROJECTION_SUPPORT_PROFILE,
   mechanicsOnlyMyceliumStepUnit,
   MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE,

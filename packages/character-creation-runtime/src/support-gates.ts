@@ -198,6 +198,7 @@ const SUPPORTED_PROGRESSIONS = [
   supportedSameClassProgression(PHASE1_CLASS_FIGHTER_UNIT_ID, 5),
   supportedSameClassProgression(WIDTH_CLASS_WIZARD_UNIT_ID, 4),
   supportedSameClassProgression(WIDTH_CLASS_WIZARD_UNIT_ID, 5),
+  supportedSameClassProgression(SRD_RANGER_CLASS_UNIT_ID, 9),
   supportedSameClassProgression(SRD_ROGUE_CLASS_UNIT_ID, 6),
   ...SRD_LEVEL_ONE_CLASS_UNIT_IDS.filter(
     (classUnitId) => classUnitId !== PHASE1_CLASS_FIGHTER_UNIT_ID,

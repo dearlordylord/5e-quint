@@ -36,6 +36,10 @@ export type ConditionApplyingActiveEffect =
     >
   | Extract<BattleActiveEffect, { readonly kind: "spellConditionRepeatSave" }>
   | Extract<BattleActiveEffect, { readonly kind: "spellConditionEndTurnSave" }>
+  | Extract<
+      BattleActiveEffect,
+      { readonly kind: "spellConditionCountedEndTurnSave" }
+    >
   | Extract<BattleActiveEffect, { readonly kind: "sleepPendingRepeatSave" }>
   | Extract<BattleActiveEffect, { readonly kind: "sleepUnconscious" }>
   | Extract<BattleActiveEffect, { readonly kind: "hideousLaughter" }>
@@ -59,6 +63,7 @@ export function isConditionApplyingActiveEffect(
     effect.kind === "targetActionEndedSpellCondition" ||
     effect.kind === "spellConditionRepeatSave" ||
     effect.kind === "spellConditionEndTurnSave" ||
+    effect.kind === "spellConditionCountedEndTurnSave" ||
     effect.kind === "sleepPendingRepeatSave" ||
     effect.kind === "sleepUnconscious" ||
     effect.kind === "hideousLaughter" ||
@@ -75,7 +80,8 @@ export function activeEffectCondition(
     effect.kind === "unitFeatureConditionEndTurnSave" ||
     effect.kind === "targetActionEndedSpellCondition" ||
     effect.kind === "spellConditionRepeatSave" ||
-    effect.kind === "spellConditionEndTurnSave"
+    effect.kind === "spellConditionEndTurnSave" ||
+    effect.kind === "spellConditionCountedEndTurnSave"
   )
     return effect.condition;
   return effect.kind === "sleepPendingRepeatSave"

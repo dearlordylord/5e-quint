@@ -1,5 +1,7 @@
 {"profileId":"unit-feature.alternate-action-cost","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"spell.invocation-sleet-storm-area-hazard","obligationIds":["BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE"]}
+{"profileId":"spell.invocation-insect-plague-area-hazard","obligationIds":["BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE"]}
+{"profileId":"spell.invocation-cloudkill-area-hazard","obligationIds":["BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE"]}
 {"profileId":"spell.invocation-slow-active-penalties","obligationIds":["BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE"]}
 {"profileId":"unit-feature.action-surge-resource","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.attack-action-attack-count-scaling","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
@@ -14,6 +16,7 @@
 {"profileId":"unit-feature.bardic-inspiration-grant","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.bonus-action-dash-temporary-hit-points","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.bonus-action-ongoing-rage","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
+{"profileId":"unit-feature.magic-action-save-gated-condition","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.enemy-zero-hit-point-temporary-hit-points","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.spell-slot-healing-modifier","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.failed-ability-check-resource-boost","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
@@ -167,6 +170,7 @@
 {"profileId":"spell.invocation-glyph-stored-concentration-full-duration","obligationIds":["BATTLE.SPELL.GLYPH_STORED_CONCENTRATION_FULL_DURATION"]}
 {"profileId":"unit-feature.attack-action-area-save-damage-replacement","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.cunning-strike","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
+{"profileId":"unit-feature.cunning-strike-option-grant","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.grappler","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.hunters-prey","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.magic-action-area-save-damage-healing","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
@@ -174,3 +178,7 @@
 {"profileId":"unit-feature.open-hand-technique","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.potent-cantrip","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
 {"profileId":"unit-feature.stunning-strike","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
+{"profileId":"unit-feature.fighter-tactical-master","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
+{"profileId":"unit-feature.brutal-strike","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
+{"profileId":"unit-feature.weapon-mastery-push","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}
+{"profileId":"unit-feature.weapon-mastery-slow","obligationIds":["BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS"]}

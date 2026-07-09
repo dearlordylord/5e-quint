@@ -8,6 +8,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-object-contact-damage
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-web-restraint-hazard
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-sleet-storm-area-hazard
+// UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-insect-plague-area-hazard spell.invocation-cloudkill-area-hazard unit-feature.acrobatic-movement
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-acid-arrow-attack-timing
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-d20-lifecycle
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-levitated-creature
@@ -20,6 +21,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE BATTLE.COMMAND.OPTION_AND_NEXT_TURN BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE BATTLE.SPELL.SLEEP_REPEAT_SAVE_LIFECYCLE BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_D20_LIFECYCLE BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE BATTLE.SPELL.SPIKE_GROWTH_MOVEMENT_HAZARD BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_LETHARGY_LIFECYCLE
@@ -39,7 +41,10 @@
 import { Either, Match } from "effect";
 
 import {
+  canSpendMovement,
   canSpendBonusAction,
+  enableMovementActionBonusActionExclusion,
+  markMovementSpentForMovementActionBonusActionExclusion,
   resetTurnActionEconomy,
   spendAction,
   spendActivationResource,
@@ -75,6 +80,8 @@ import {
 } from "@dnd/shared/types";
 
 import {
+  type BattleInsectPlagueAreaMembershipTrigger,
+  type BattleCloudkillAreaMembershipTrigger,
   type BattleSleetStormAreaMembershipTrigger,
   type BattleMovementSpeedKind,
   type BattleSubject,
@@ -98,7 +105,11 @@ import {
 
 import { attackActionOptionsForActor } from "./attack-damage-apply.ts";
 
-import { currentActorId } from "./creature-state-leaves.ts";
+import {
+  combatantWearingArmor,
+  combatantWieldingShield,
+  currentActorId,
+} from "./creature-state-leaves.ts";
 
 import {
   battleCreatureStateWithKnockOutPreservedConditions,
@@ -193,6 +204,7 @@ import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.t
 
 import {
   applyPreparedSlotSpellDamage,
+  applySaveDamageResult,
   savingThrowFlatBonusProjections,
   savingThrowRollModeProjections,
 } from "./spells-damage-fills.ts";
@@ -202,7 +214,9 @@ import {
   updateActiveDruidWildShapeResources,
 } from "./druid-wild-shape.ts";
 import {
+  ACROBATIC_MOVEMENT_SUPPORT_PROFILE,
   CREATURE_SPACE_MOVEMENT_PERMISSION_SUPPORT_PROFILE,
+  type BattleAcrobaticMovementSupportProfile,
   type BattleCreatureSpaceMovementPermissionSupportProfile,
   type BattleUnitSupportProfile,
 } from "../unit-feature-support.ts";
@@ -217,9 +231,13 @@ import {
   expireBattleLightEmitters,
   addMoonbeamShapeShiftSuppression,
   applySleetStormAreaHazardFailedSaveEffect,
+  markCloudkillAreaHazardSavedThisTurn,
+  markInsectPlagueAreaHazardSavedThisTurn,
   markWebSavedThisTurn,
   markSleetStormAreaHazardSavedThisTurn,
   markMoonbeamSavedThisTurn,
+  resetAllCloudkillSavedThisTurn,
+  resetAllInsectPlagueSavedThisTurn,
   removeMoonbeamShapeShiftSuppression,
   removeWebRestrainedCondition,
   replaceGustOfWindLineDirection,
@@ -243,6 +261,7 @@ import {
 
 import type {
   ActiveOngoingFeatureOccurrence,
+  BattleAcrobaticMovementFact,
   BattleActiveEffect,
   BattleActiveEffectExpiration,
   BattleAttackDamageDispositionHole,
@@ -272,6 +291,12 @@ import type {
   BattleGrappleDragMovementFact,
   BattleGreaseGroundHazardSavingThrowOutcomeHole,
   BattleSpikeGrowthMovementDamageRollHole,
+  BattleInsectPlagueAreaHazardDamageRollHole,
+  BattleInsectPlagueAreaHazardSavingThrowOutcomeHole,
+  BattleInsectPlagueAreaHazardTrigger,
+  BattleCloudkillAreaHazardDamageRollHole,
+  BattleCloudkillAreaHazardSavingThrowOutcomeHole,
+  BattleCloudkillAreaHazardTrigger,
   BattleSleetStormAreaHazardSavingThrowOutcomeHole,
   BattleSleetStormAreaHazardTrigger,
   BattleWebRestraintSavingThrowOutcomeHole,
@@ -289,6 +314,7 @@ import type {
   BattleResolvedMovement,
   BattleSleepRepeatSavingThrowOutcomeHole,
   BattleSpellAreaChoice,
+  BattleSpellConditionCountedEndTurnSavingThrowOutcomeHole,
   BattleSpellConditionEndTurnSavingThrowOutcomeHole,
   BattleUnitFeatureConditionEndTurnSavingThrowOutcomeHole,
   BattleSlowActivePenaltiesEndTurnSavingThrowOutcomeHole,
@@ -325,6 +351,10 @@ export function resolveEndTurn(
     { readonly kind: "savingThrowOutcome" }
   >[] = [],
   spellConditionEndTurnSaves: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[] = [],
+  spellConditionCountedEndTurnSaves: readonly Extract<
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[] = [],
@@ -449,9 +479,15 @@ export function resolveEndTurn(
       currentActorId(state),
       spellConditionEndTurnSaves,
     );
+  const combatantsAfterCountedSpellConditionRepeatSaves =
+    applySpellConditionCountedEndTurnSaveFills(
+      combatantsAfterSpellConditionRepeatSaves,
+      currentActorId(state),
+      spellConditionCountedEndTurnSaves,
+    );
   const combatantsAfterUnitFeatureConditionRepeatSaves =
     applyUnitFeatureConditionEndTurnSaveFills(
-      combatantsAfterSpellConditionRepeatSaves,
+      combatantsAfterCountedSpellConditionRepeatSaves,
       currentActorId(state),
       unitFeatureConditionEndTurnSaves,
     );
@@ -512,8 +548,13 @@ export function resolveEndTurn(
   const combatantsAfterSleetStormSaveReset = resetAllSleetStormSavedThisTurn(
     combatantsAfterWebSaveReset,
   );
+  const combatantsAfterInsectPlagueSaveReset =
+    resetAllInsectPlagueSavedThisTurn(combatantsAfterSleetStormSaveReset);
+  const combatantsAfterCloudkillSaveReset = resetAllCloudkillSavedThisTurn(
+    combatantsAfterInsectPlagueSaveReset,
+  );
   const combatantsAfterStartTurnEffects = applyStartOfTurnActiveEffects(
-    combatantsAfterSleetStormSaveReset,
+    combatantsAfterCloudkillSaveReset,
     nextActorId,
   );
   const combatantsAfterSpellTurnStartDamage = applyStartTurnSpellDamageFills(
@@ -576,6 +617,11 @@ export function resolveEndTurn(
     currentTurnResources,
     combatantsAfterDamageReductionReset.get(nextActorId),
   );
+  const currentTurnResourcesAfterActionRestriction =
+    moveActionBonusActionTurnResources(
+      currentTurnResourcesAfterSlow,
+      combatantsAfterDamageReductionReset.get(nextActorId),
+    );
   const combatantsAfterCommandHalt =
     commandHalt === null
       ? combatantsAfterDamageReductionReset
@@ -590,7 +636,7 @@ export function resolveEndTurn(
       initiative,
       combatants: combatantsAfterCommandHalt,
       lightEmitters: lightEmittersAfterDurationTick,
-      currentTurnResources: currentTurnResourcesAfterSlow,
+      currentTurnResources: currentTurnResourcesAfterActionRestriction,
       readiedSpells,
       readiedMovements,
       helpAttacks,
@@ -645,6 +691,30 @@ function commandHaltTurnResources(
         currentHasBonusAction: false,
         commandHalt,
       };
+}
+
+function moveActionBonusActionTurnResources(
+  resources: BattleTurnResources,
+  actor: BattleCreatureState | undefined,
+): BattleTurnResources {
+  return combatantHasMoveActionBonusActionRestriction(actor)
+    ? enableMovementActionBonusActionExclusion(
+        resources,
+        Number(actor?.movementSpentFeet ?? 0) > 0,
+      )
+    : resources;
+}
+
+function combatantHasMoveActionBonusActionRestriction(
+  combatant: BattleCreatureState | undefined,
+): boolean {
+  return (
+    combatant?.activeEffects.some(
+      (effect) =>
+        effect.kind === "unitFeatureCondition" &&
+        effect.turnRestriction?.kind === "moveActionOrBonusAction",
+    ) ?? false
+  );
 }
 
 function combatantsWithCommandHaltMovementSpent(
@@ -1017,6 +1087,10 @@ type SpellConditionEndTurnSaveEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "spellConditionEndTurnSave" }
 >;
+type SpellConditionCountedEndTurnSaveEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "spellConditionCountedEndTurnSave" }
+>;
 type UnitFeatureConditionEndTurnSaveEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "unitFeatureConditionEndTurnSave" }
@@ -1114,19 +1188,21 @@ export function sleepRepeatSaveSavingThrowHoleIds(
   actorId: CombatantId,
 ): ReadonlySet<BattleHoleId> {
   const actor = state.combatants.get(actorId);
-  return new Set([
-    ...sleepPendingRepeatSaveEffects(
-      actor,
-      actorId,
-      state.initiative.round,
-    ).map((effect) =>
-      sleepRepeatSavingThrowOutcomeHole(
+  return new Set(
+    [
+      ...sleepPendingRepeatSaveEffects(
+        actor,
         actorId,
-        effect,
-        endTurnSavingThrowFlatBonuses(state, actorId, effect.save.ability),
+        state.initiative.round,
+      ).map((effect) =>
+        sleepRepeatSavingThrowOutcomeHole(
+          actorId,
+          effect,
+          endTurnSavingThrowFlatBonuses(state, actorId, effect.save.ability),
+        ),
       ),
-    ),
-  ].map((hole) => hole.holeId));
+    ].map((hole) => hole.holeId),
+  );
 }
 
 export function conditionSpellEndTurnRepeatSaveHoleIds(
@@ -1134,25 +1210,35 @@ export function conditionSpellEndTurnRepeatSaveHoleIds(
   actorId: CombatantId,
 ): ReadonlySet<BattleHoleId> {
   const actor = state.combatants.get(actorId);
-  return new Set([
-    ...hideousLaughterEffects(actor).map((effect) =>
-      hideousLaughterRepeatSavingThrowOutcomeHole(
-        actorId,
-        effect,
-        "endTurn",
-        undefined,
-        endTurnSavingThrowFlatBonuses(state, actorId, effect.save.ability),
+  return new Set(
+    [
+      ...hideousLaughterEffects(actor).map((effect) =>
+        hideousLaughterRepeatSavingThrowOutcomeHole(
+          actorId,
+          effect,
+          "endTurn",
+          undefined,
+          endTurnSavingThrowFlatBonuses(state, actorId, effect.save.ability),
+        ),
       ),
-    ),
-    ...spellConditionEndTurnSaveEffects(actor).map((effect) =>
-      spellConditionEndTurnSavingThrowOutcomeHole(
-        actorId,
-        effect,
-        state,
-        endTurnSavingThrowFlatBonuses(state, actorId, effect.save.ability),
+      ...spellConditionEndTurnSaveEffects(actor).map((effect) =>
+        spellConditionEndTurnSavingThrowOutcomeHole(
+          actorId,
+          effect,
+          state,
+          endTurnSavingThrowFlatBonuses(state, actorId, effect.save.ability),
+        ),
       ),
-    ),
-  ].map((hole) => hole.holeId));
+      ...spellConditionCountedEndTurnSaveEffects(actor).map((effect) =>
+        spellConditionCountedEndTurnSavingThrowOutcomeHole(
+          actorId,
+          effect,
+          state,
+          endTurnSavingThrowFlatBonuses(state, actorId, effect.save.ability),
+        ),
+      ),
+    ].map((hole) => hole.holeId),
+  );
 }
 
 function spellConditionEndTurnSaveEffects(
@@ -1163,6 +1249,18 @@ function spellConditionEndTurnSaveEffects(
     : combatant.activeEffects.filter(
         (effect): effect is SpellConditionEndTurnSaveEffect =>
           effect.kind === "spellConditionEndTurnSave",
+      );
+}
+
+function spellConditionCountedEndTurnSaveEffects(
+  combatant: BattleCreatureState | undefined,
+): readonly SpellConditionCountedEndTurnSaveEffect[] {
+  return combatant === undefined
+    ? []
+    : combatant.activeEffects.filter(
+        (effect): effect is SpellConditionCountedEndTurnSaveEffect =>
+          effect.kind === "spellConditionCountedEndTurnSave" &&
+          !effect.lockedIn,
       );
 }
 
@@ -1229,6 +1327,60 @@ function spellConditionEndTurnSavingThrowOutcomeFor(
     { readonly kind: "savingThrowOutcome" }
   >[],
   hole: BattleSpellConditionEndTurnSavingThrowOutcomeHole,
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
+  return fills.find((fill) => fill.holeId === hole.holeId);
+}
+
+function spellConditionCountedEndTurnSavingThrowOutcomeHole(
+  targetId: CombatantId,
+  effect: SpellConditionCountedEndTurnSaveEffect,
+  state?: BattleState,
+  targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[] = [],
+): BattleSpellConditionCountedEndTurnSavingThrowOutcomeHole {
+  const key = [
+    "battle:spell-condition-counted-end-turn-save",
+    targetId,
+    effect.sourceCombatantId,
+    effect.sourceSpellId,
+    effect.condition,
+  ]
+    .map(String)
+    .join(":");
+  return {
+    kind: "savingThrowOutcome",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${effect.sourceSpellId} ${effect.condition} counted end-turn save`,
+    spellConditionCountedEndTurnSave: {
+      targetId,
+      sourceSpellId: effect.sourceSpellId,
+      sourceCombatantId: effect.sourceCombatantId,
+      condition: effect.condition,
+      save: effect.save,
+      successes: effect.successes,
+      failures: effect.failures,
+      successThreshold: effect.successThreshold,
+      failureThreshold: effect.failureThreshold,
+    },
+    ability: effect.save.ability,
+    dc: effect.save.dc,
+    areaChoices: [],
+    targetRollModes:
+      state === undefined
+        ? []
+        : savingThrowRollModeProjections(state, effect.save.ability).filter(
+            (projection) => projection.targetId === targetId,
+          ),
+    targetFlatBonuses,
+  };
+}
+
+function spellConditionCountedEndTurnSavingThrowOutcomeFor(
+  fills: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[],
+  hole: BattleSpellConditionCountedEndTurnSavingThrowOutcomeHole,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
   return fills.find((fill) => fill.holeId === hole.holeId);
 }
@@ -1467,6 +1619,14 @@ export type WebRestraintHazardEffect = Extract<
 export type SleetStormAreaHazardEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "sleetStormAreaHazard" }
+>;
+export type InsectPlagueAreaHazardEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "insectPlagueAreaHazard" }
+>;
+export type CloudkillAreaHazardEffect = Extract<
+  BattleActiveEffect,
+  { readonly kind: "cloudkillAreaHazard" }
 >;
 export type SlowActivePenaltiesEffect = Extract<
   BattleActiveEffect,
@@ -2756,6 +2916,771 @@ export function resolveSleetStormAreaHazardSaveCommand(
     tag: "resolved",
     state: nextState,
     snapshot: snapshotBattle(nextState),
+  };
+}
+
+function insectPlagueAreaHazardEffectFor(
+  state: BattleState,
+  subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "insectPlagueAreaHazardSave";
+    }
+  >,
+): InsectPlagueAreaHazardEffect | undefined {
+  const source = state.combatants.get(
+    subject.areaMembershipTrigger.sourceCombatantId,
+  );
+  return source?.activeEffects.find(
+    (effect): effect is InsectPlagueAreaHazardEffect =>
+      effect.kind === "insectPlagueAreaHazard" &&
+      effect.sourceSpellId === subject.areaMembershipTrigger.sourceSpellId &&
+      effect.sourceCombatantId ===
+        subject.areaMembershipTrigger.sourceCombatantId &&
+      effect.areaId === subject.areaMembershipTrigger.areaId,
+  );
+}
+
+const byInsectPlagueAreaMembershipTriggerKind = Match.discriminator("kind");
+
+function insectPlagueAreaHazardTriggerFromMembershipFact(
+  trigger: BattleInsectPlagueAreaMembershipTrigger,
+): BattleInsectPlagueAreaHazardTrigger {
+  return Match.value(trigger).pipe(
+    byInsectPlagueAreaMembershipTriggerKind(
+      "appearsInArea",
+      () => "appearsInArea" as const,
+    ),
+    byInsectPlagueAreaMembershipTriggerKind(
+      "firstEntryOnTurn",
+      () => "entersArea" as const,
+    ),
+    byInsectPlagueAreaMembershipTriggerKind(
+      "turnEndInArea",
+      () => "endsTurnInArea" as const,
+    ),
+    Match.exhaustive,
+  );
+}
+
+export function insectPlagueAreaHazardSavingThrowOutcomeHole(
+  state: BattleState,
+  targetId: CombatantId,
+  effect: InsectPlagueAreaHazardEffect,
+  trigger: BattleInsectPlagueAreaHazardTrigger,
+): BattleInsectPlagueAreaHazardSavingThrowOutcomeHole {
+  const key = `battle:insect-plague-area-hazard-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}:${trigger}`;
+  return {
+    kind: "savingThrowOutcome",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${effect.sourceSpellId} ${insectPlagueAreaHazardTriggerLabel(trigger)} CON save`,
+    insectPlagueAreaHazard: {
+      targetId,
+      sourceSpellId: effect.sourceSpellId,
+      sourceCombatantId: effect.sourceCombatantId,
+      areaId: effect.areaId,
+      trigger,
+      save: effect.save,
+    },
+    ability: effect.save.ability,
+    dc: effect.save.dc,
+    areaChoices: [],
+    targetRollModes: savingThrowRollModeProjections(
+      state,
+      effect.save.ability,
+    ).filter((projection) => projection.targetId === targetId),
+    targetFlatBonuses: savingThrowFlatBonusProjections(
+      state,
+      effect.save.ability,
+    ).filter((projection) => projection.targetId === targetId),
+  };
+}
+
+function insectPlagueAreaHazardDamageRollHole(
+  targetId: CombatantId,
+  effect: InsectPlagueAreaHazardEffect,
+  trigger: BattleInsectPlagueAreaHazardTrigger,
+): BattleInsectPlagueAreaHazardDamageRollHole {
+  const expr = `${effect.damage.expr.dice}d${effect.damage.expr.dieSize}`;
+  const key = `battle:insect-plague-area-hazard-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}:${trigger}:${expr}`;
+  return {
+    kind: "rolledDice",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${effect.sourceSpellId} ${insectPlagueAreaHazardTriggerLabel(trigger)} damage (${expr})`,
+    insectPlagueAreaHazard: {
+      targetId,
+      sourceSpellId: effect.sourceSpellId,
+      sourceCombatantId: effect.sourceCombatantId,
+      areaId: effect.areaId,
+      trigger,
+      damage: effect.damage,
+    },
+    critical: false,
+  };
+}
+
+function insectPlagueAreaHazardTriggerLabel(
+  trigger: BattleInsectPlagueAreaHazardTrigger,
+): string {
+  return Match.value(trigger).pipe(
+    Match.when("appearsInArea", () => "appearance"),
+    Match.when("entersArea", () => "entry"),
+    Match.when("endsTurnInArea", () => "end-turn"),
+    Match.exhaustive,
+  );
+}
+
+function validateInsectPlagueAreaHazardSavingThrowOutcome(
+  value: BattleSavingThrowOutcomeValue,
+  targetId: CombatantId,
+): string | null {
+  if ("area" in value) {
+    return "Insect Plague Saving Throw outcome must not include area facts.";
+  }
+  return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
+    ? null
+    : "Insect Plague Saving Throw outcome must match the triggering target.";
+}
+
+function validateInsectPlagueAreaHazardDamageRoll(
+  fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+  hole: BattleInsectPlagueAreaHazardDamageRollHole,
+): string | null {
+  return validateRolledDiceFillForDiceExpr(
+    fill,
+    hole.insectPlagueAreaHazard.damage.expr,
+  );
+}
+
+function insectPlagueAreaHazardSaveAlreadyResolved(
+  effect: InsectPlagueAreaHazardEffect,
+  targetId: CombatantId,
+): boolean {
+  return effect.savedThisTurn.includes(targetId);
+}
+
+function insectPlagueAreaHazardAdjustedDamage(input: {
+  readonly target: BattleCreatureState;
+  readonly effect: InsectPlagueAreaHazardEffect;
+  readonly damageFill: Extract<BattleFill, { readonly kind: "rolledDice" }>;
+  readonly saveSucceeded: boolean;
+}): number {
+  const rolledDamage =
+    rolledDiceTotal(input.damageFill.value) +
+    (input.effect.damage.expr.flat ?? 0);
+  return damageAmountAfterTargetAdjustments(
+    input.target,
+    applySaveDamageResult(rolledDamage, input.saveSucceeded ? "half" : "full"),
+    input.effect.damage.damageType,
+  );
+}
+
+function applyInsectPlagueAreaHazardDamage(input: {
+  readonly state: BattleState;
+  readonly targetId: CombatantId;
+  readonly effect: InsectPlagueAreaHazardEffect;
+  readonly damageFill: Extract<BattleFill, { readonly kind: "rolledDice" }>;
+  readonly saveSucceeded: boolean;
+  readonly concentrationSavingThrow?:
+    | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
+    | undefined;
+}): BattleState {
+  const target = input.state.combatants.get(input.targetId);
+  if (target === undefined) {
+    return input.state;
+  }
+  return applyPreparedSlotSpellDamage(
+    input.state,
+    input.targetId,
+    insectPlagueAreaHazardAdjustedDamage({
+      target,
+      effect: input.effect,
+      damageFill: input.damageFill,
+      saveSucceeded: input.saveSucceeded,
+    }),
+    {
+      damageSourceId: input.effect.sourceCombatantId,
+      concentrationSavingThrow: input.concentrationSavingThrow,
+      spatialFacts: [],
+    },
+  );
+}
+
+export function resolveInsectPlagueAreaHazardSaveCommand(
+  input: BattleResolutionInput & {
+    readonly subject: Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "insectPlagueAreaHazardSave";
+      }
+    >;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+  },
+): BattleResolutionResult {
+  if (
+    input.fills.some(
+      (fill) =>
+        fill.kind !== "savingThrowOutcome" &&
+        fill.kind !== "rolledDice" &&
+        fill.kind !== "concentrationSavingThrow",
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Insect Plague save accepts only save, damage, and Concentration fills.",
+    );
+  }
+  const effect = insectPlagueAreaHazardEffectFor(input.state, input.subject);
+  const target = input.state.combatants.get(input.subject.actorId);
+  if (effect === undefined || target === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Insect Plague save is no longer available.",
+    );
+  }
+  const trigger = insectPlagueAreaHazardTriggerFromMembershipFact(
+    input.subject.areaMembershipTrigger,
+  );
+  if (
+    trigger !== "appearsInArea" &&
+    insectPlagueAreaHazardSaveAlreadyResolved(effect, input.subject.actorId)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Insect Plague save was already resolved for this target this turn.",
+    );
+  }
+  const saveHole = insectPlagueAreaHazardSavingThrowOutcomeHole(
+    input.state,
+    input.subject.actorId,
+    effect,
+    trigger,
+  );
+  const damageHole = insectPlagueAreaHazardDamageRollHole(
+    input.subject.actorId,
+    effect,
+    trigger,
+  );
+  const saveFills = input.fills.filter(
+    (
+      fill,
+    ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+      fill.kind === "savingThrowOutcome" && fill.holeId === saveHole.holeId,
+  );
+  const damageFills = input.fills.filter(
+    (fill): fill is Extract<BattleFill, { readonly kind: "rolledDice" }> =>
+      fill.kind === "rolledDice" && fill.holeId === damageHole.holeId,
+  );
+  if (saveFills.length > 1 || damageFills.length > 1) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Insect Plague save received duplicate fills.",
+    );
+  }
+  const saveFill = savingThrowOutcomeFillForHole(saveFills, saveHole);
+  if (saveFill === undefined) {
+    return needsHolesResult(input.state, input.subject, [saveHole]);
+  }
+  const saveValidation = validateInsectPlagueAreaHazardSavingThrowOutcome(
+    saveFill.value,
+    input.subject.actorId,
+  );
+  if (saveValidation !== null) {
+    return invalidResult(input.state, "invalidFill", saveValidation);
+  }
+  const saveOutcome = saveFill.value.outcomes[0]!;
+  if (!saveOutcome.succeeded) {
+    const saveFailedReactionWindow = maybeOpenInterruptWindow(
+      input.state,
+      {
+        trigger: "saveFailed",
+        targetId: input.subject.actorId,
+        sourceSpellId: effect.sourceSpellId,
+        continuation: {
+          kind: "replay",
+          subject: input.subject,
+          fills: input.fills,
+        },
+      },
+      input.handledInterruptTrigger,
+    );
+    if (saveFailedReactionWindow !== null) {
+      return saveFailedReactionWindow;
+    }
+  }
+  const damageFill = rolledDiceFillForHole(damageFills, damageHole);
+  if (damageFill === undefined) {
+    return needsHolesResult(input.state, input.subject, [damageHole]);
+  }
+  const damageValidation = validateInsectPlagueAreaHazardDamageRoll(
+    damageFill,
+    damageHole,
+  );
+  if (damageValidation !== null) {
+    return invalidResult(input.state, "invalidFill", damageValidation);
+  }
+  const adjustedDamage = insectPlagueAreaHazardAdjustedDamage({
+    target,
+    effect,
+    damageFill,
+    saveSucceeded: saveOutcome.succeeded,
+  });
+  const concentrationHole = concentrationSavingThrowHole(
+    target,
+    adjustedDamage,
+  );
+  const concentrationFills =
+    concentrationHole === null
+      ? []
+      : input.fills.filter(
+          (
+            fill,
+          ): fill is Extract<
+            BattleFill,
+            { readonly kind: "concentrationSavingThrow" }
+          > =>
+            fill.kind === "concentrationSavingThrow" &&
+            fill.holeId === concentrationHole.holeId,
+        );
+  if (concentrationFills.length > 1) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Insect Plague save received duplicate Concentration save fills.",
+    );
+  }
+  const concentrationFill =
+    concentrationHole === null
+      ? undefined
+      : concentrationSavingThrowFillFor(concentrationFills, concentrationHole);
+  if (concentrationHole !== null && concentrationFill === undefined) {
+    return needsHolesResult(input.state, input.subject, [concentrationHole]);
+  }
+  const consumedHoleIds = new Set([
+    saveHole.holeId,
+    damageHole.holeId,
+    ...(concentrationHole === null ? [] : [concentrationHole.holeId]),
+  ]);
+  if (input.fills.some((fill) => !consumedHoleIds.has(fill.holeId))) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Insect Plague save received a fill for an unrelated hole.",
+    );
+  }
+  const afterDamage = applyInsectPlagueAreaHazardDamage({
+    state: input.state,
+    targetId: input.subject.actorId,
+    effect,
+    damageFill,
+    saveSucceeded: saveOutcome.succeeded,
+    concentrationSavingThrow: concentrationFill,
+  });
+  const afterMark =
+    trigger === "appearsInArea"
+      ? afterDamage
+      : markInsectPlagueAreaHazardSavedThisTurn(
+          afterDamage,
+          input.subject.actorId,
+          effect,
+        );
+  return {
+    tag: "resolved",
+    state: afterMark,
+    snapshot: snapshotBattle(afterMark),
+  };
+}
+
+function cloudkillAreaHazardEffectFor(
+  state: BattleState,
+  subject: Extract<
+    BattleSubject,
+    {
+      readonly tag: "runtimeCommand";
+      readonly command: "cloudkillAreaHazardSave";
+    }
+  >,
+): CloudkillAreaHazardEffect | undefined {
+  const source = state.combatants.get(
+    subject.areaMembershipTrigger.sourceCombatantId,
+  );
+  return source?.activeEffects.find(
+    (effect): effect is CloudkillAreaHazardEffect =>
+      effect.kind === "cloudkillAreaHazard" &&
+      effect.sourceSpellId === subject.areaMembershipTrigger.sourceSpellId &&
+      effect.sourceCombatantId ===
+        subject.areaMembershipTrigger.sourceCombatantId &&
+      effect.areaId === subject.areaMembershipTrigger.areaId,
+  );
+}
+
+const byCloudkillAreaMembershipTriggerKind = Match.discriminator("kind");
+
+function cloudkillAreaHazardTriggerFromMembershipFact(
+  trigger: BattleCloudkillAreaMembershipTrigger,
+): BattleCloudkillAreaHazardTrigger {
+  return Match.value(trigger).pipe(
+    byCloudkillAreaMembershipTriggerKind(
+      "appearsInArea",
+      () => "appearsInArea" as const,
+    ),
+    byCloudkillAreaMembershipTriggerKind(
+      "areaMovesIntoSpace",
+      () => "movesIntoSpace" as const,
+    ),
+    byCloudkillAreaMembershipTriggerKind(
+      "firstEntryOnTurn",
+      () => "entersArea" as const,
+    ),
+    byCloudkillAreaMembershipTriggerKind(
+      "turnEndInArea",
+      () => "endsTurnInArea" as const,
+    ),
+    Match.exhaustive,
+  );
+}
+
+export function cloudkillAreaHazardSavingThrowOutcomeHole(
+  state: BattleState,
+  targetId: CombatantId,
+  effect: CloudkillAreaHazardEffect,
+  trigger: BattleCloudkillAreaHazardTrigger,
+): BattleCloudkillAreaHazardSavingThrowOutcomeHole {
+  const key = `battle:cloudkill-area-hazard-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}:${trigger}`;
+  return {
+    kind: "savingThrowOutcome",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${effect.sourceSpellId} ${cloudkillAreaHazardTriggerLabel(trigger)} CON save`,
+    cloudkillAreaHazard: {
+      targetId,
+      sourceSpellId: effect.sourceSpellId,
+      sourceCombatantId: effect.sourceCombatantId,
+      areaId: effect.areaId,
+      trigger,
+      save: effect.save,
+    },
+    ability: effect.save.ability,
+    dc: effect.save.dc,
+    areaChoices: [],
+    targetRollModes: savingThrowRollModeProjections(
+      state,
+      effect.save.ability,
+    ).filter((projection) => projection.targetId === targetId),
+    targetFlatBonuses: savingThrowFlatBonusProjections(
+      state,
+      effect.save.ability,
+    ).filter((projection) => projection.targetId === targetId),
+  };
+}
+
+function cloudkillAreaHazardDamageRollHole(
+  targetId: CombatantId,
+  effect: CloudkillAreaHazardEffect,
+  trigger: BattleCloudkillAreaHazardTrigger,
+): BattleCloudkillAreaHazardDamageRollHole {
+  const expr = `${effect.damage.expr.dice}d${effect.damage.expr.dieSize}`;
+  const key = `battle:cloudkill-area-hazard-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceSpellId}:${effect.areaId}:${trigger}:${expr}`;
+  return {
+    kind: "rolledDice",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: `${effect.sourceSpellId} ${cloudkillAreaHazardTriggerLabel(trigger)} damage (${expr})`,
+    cloudkillAreaHazard: {
+      targetId,
+      sourceSpellId: effect.sourceSpellId,
+      sourceCombatantId: effect.sourceCombatantId,
+      areaId: effect.areaId,
+      trigger,
+      damage: effect.damage,
+    },
+    critical: false,
+  };
+}
+
+function cloudkillAreaHazardTriggerLabel(
+  trigger: BattleCloudkillAreaHazardTrigger,
+): string {
+  return Match.value(trigger).pipe(
+    Match.when("appearsInArea", () => "appearance"),
+    Match.when("movesIntoSpace", () => "cloud-movement"),
+    Match.when("entersArea", () => "entry"),
+    Match.when("endsTurnInArea", () => "end-turn"),
+    Match.exhaustive,
+  );
+}
+
+function validateCloudkillAreaHazardSavingThrowOutcome(
+  value: BattleSavingThrowOutcomeValue,
+  targetId: CombatantId,
+): string | null {
+  if ("area" in value) {
+    return "Cloudkill Saving Throw outcome must not include area facts.";
+  }
+  return value.outcomes.length === 1 && value.outcomes[0]?.targetId === targetId
+    ? null
+    : "Cloudkill Saving Throw outcome must match the triggering target.";
+}
+
+function validateCloudkillAreaHazardDamageRoll(
+  fill: Extract<BattleFill, { readonly kind: "rolledDice" }>,
+  hole: BattleCloudkillAreaHazardDamageRollHole,
+): string | null {
+  return validateRolledDiceFillForDiceExpr(
+    fill,
+    hole.cloudkillAreaHazard.damage.expr,
+  );
+}
+
+function cloudkillAreaHazardSaveAlreadyResolved(
+  effect: CloudkillAreaHazardEffect,
+  targetId: CombatantId,
+): boolean {
+  return effect.savedThisTurn.includes(targetId);
+}
+
+function cloudkillAreaHazardAdjustedDamage(input: {
+  readonly target: BattleCreatureState;
+  readonly effect: CloudkillAreaHazardEffect;
+  readonly damageFill: Extract<BattleFill, { readonly kind: "rolledDice" }>;
+  readonly saveSucceeded: boolean;
+}): number {
+  const rolledDamage =
+    rolledDiceTotal(input.damageFill.value) +
+    (input.effect.damage.expr.flat ?? 0);
+  return damageAmountAfterTargetAdjustments(
+    input.target,
+    applySaveDamageResult(rolledDamage, input.saveSucceeded ? "half" : "full"),
+    input.effect.damage.damageType,
+  );
+}
+
+function applyCloudkillAreaHazardDamage(input: {
+  readonly state: BattleState;
+  readonly targetId: CombatantId;
+  readonly effect: CloudkillAreaHazardEffect;
+  readonly damageFill: Extract<BattleFill, { readonly kind: "rolledDice" }>;
+  readonly saveSucceeded: boolean;
+  readonly concentrationSavingThrow?:
+    | Extract<BattleFill, { readonly kind: "concentrationSavingThrow" }>
+    | undefined;
+}): BattleState {
+  const target = input.state.combatants.get(input.targetId);
+  if (target === undefined) {
+    return input.state;
+  }
+  return applyPreparedSlotSpellDamage(
+    input.state,
+    input.targetId,
+    cloudkillAreaHazardAdjustedDamage({
+      target,
+      effect: input.effect,
+      damageFill: input.damageFill,
+      saveSucceeded: input.saveSucceeded,
+    }),
+    {
+      damageSourceId: input.effect.sourceCombatantId,
+      concentrationSavingThrow: input.concentrationSavingThrow,
+      spatialFacts: [],
+    },
+  );
+}
+
+export function resolveCloudkillAreaHazardSaveCommand(
+  input: BattleResolutionInput & {
+    readonly subject: Extract<
+      BattleSubject,
+      {
+        readonly tag: "runtimeCommand";
+        readonly command: "cloudkillAreaHazardSave";
+      }
+    >;
+    readonly handledInterruptTrigger?: BattleInterruptTrigger | undefined;
+  },
+): BattleResolutionResult {
+  if (
+    input.fills.some(
+      (fill) =>
+        fill.kind !== "savingThrowOutcome" &&
+        fill.kind !== "rolledDice" &&
+        fill.kind !== "concentrationSavingThrow",
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Cloudkill save accepts only save, damage, and Concentration fills.",
+    );
+  }
+  const effect = cloudkillAreaHazardEffectFor(input.state, input.subject);
+  const target = input.state.combatants.get(input.subject.actorId);
+  if (effect === undefined || target === undefined) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Cloudkill save is no longer available.",
+    );
+  }
+  const trigger = cloudkillAreaHazardTriggerFromMembershipFact(
+    input.subject.areaMembershipTrigger,
+  );
+  if (
+    trigger !== "appearsInArea" &&
+    cloudkillAreaHazardSaveAlreadyResolved(effect, input.subject.actorId)
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Cloudkill save was already resolved for this target this turn.",
+    );
+  }
+  const saveHole = cloudkillAreaHazardSavingThrowOutcomeHole(
+    input.state,
+    input.subject.actorId,
+    effect,
+    trigger,
+  );
+  const damageHole = cloudkillAreaHazardDamageRollHole(
+    input.subject.actorId,
+    effect,
+    trigger,
+  );
+  const saveFills = input.fills.filter(
+    (
+      fill,
+    ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+      fill.kind === "savingThrowOutcome" && fill.holeId === saveHole.holeId,
+  );
+  const damageFills = input.fills.filter(
+    (fill): fill is Extract<BattleFill, { readonly kind: "rolledDice" }> =>
+      fill.kind === "rolledDice" && fill.holeId === damageHole.holeId,
+  );
+  if (saveFills.length > 1 || damageFills.length > 1) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Cloudkill save received duplicate fills.",
+    );
+  }
+  const saveFill = savingThrowOutcomeFillForHole(saveFills, saveHole);
+  if (saveFill === undefined) {
+    return needsHolesResult(input.state, input.subject, [saveHole]);
+  }
+  const saveValidation = validateCloudkillAreaHazardSavingThrowOutcome(
+    saveFill.value,
+    input.subject.actorId,
+  );
+  if (saveValidation !== null) {
+    return invalidResult(input.state, "invalidFill", saveValidation);
+  }
+  const saveOutcome = saveFill.value.outcomes[0]!;
+  if (!saveOutcome.succeeded) {
+    const saveFailedReactionWindow = maybeOpenInterruptWindow(
+      input.state,
+      {
+        trigger: "saveFailed",
+        targetId: input.subject.actorId,
+        sourceSpellId: effect.sourceSpellId,
+        continuation: {
+          kind: "replay",
+          subject: input.subject,
+          fills: input.fills,
+        },
+      },
+      input.handledInterruptTrigger,
+    );
+    if (saveFailedReactionWindow !== null) {
+      return saveFailedReactionWindow;
+    }
+  }
+  const damageFill = rolledDiceFillForHole(damageFills, damageHole);
+  if (damageFill === undefined) {
+    return needsHolesResult(input.state, input.subject, [damageHole]);
+  }
+  const damageValidation = validateCloudkillAreaHazardDamageRoll(
+    damageFill,
+    damageHole,
+  );
+  if (damageValidation !== null) {
+    return invalidResult(input.state, "invalidFill", damageValidation);
+  }
+  const adjustedDamage = cloudkillAreaHazardAdjustedDamage({
+    target,
+    effect,
+    damageFill,
+    saveSucceeded: saveOutcome.succeeded,
+  });
+  const concentrationHole = concentrationSavingThrowHole(
+    target,
+    adjustedDamage,
+  );
+  const concentrationFills =
+    concentrationHole === null
+      ? []
+      : input.fills.filter(
+          (
+            fill,
+          ): fill is Extract<
+            BattleFill,
+            { readonly kind: "concentrationSavingThrow" }
+          > =>
+            fill.kind === "concentrationSavingThrow" &&
+            fill.holeId === concentrationHole.holeId,
+        );
+  if (concentrationFills.length > 1) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Cloudkill save received duplicate Concentration save fills.",
+    );
+  }
+  const concentrationFill =
+    concentrationHole === null
+      ? undefined
+      : concentrationSavingThrowFillFor(concentrationFills, concentrationHole);
+  if (concentrationHole !== null && concentrationFill === undefined) {
+    return needsHolesResult(input.state, input.subject, [concentrationHole]);
+  }
+  const consumedHoleIds = new Set([
+    saveHole.holeId,
+    damageHole.holeId,
+    ...(concentrationHole === null ? [] : [concentrationHole.holeId]),
+  ]);
+  if (input.fills.some((fill) => !consumedHoleIds.has(fill.holeId))) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Cloudkill save received a fill for an unrelated hole.",
+    );
+  }
+  const afterDamage = applyCloudkillAreaHazardDamage({
+    state: input.state,
+    targetId: input.subject.actorId,
+    effect,
+    damageFill,
+    saveSucceeded: saveOutcome.succeeded,
+    concentrationSavingThrow: concentrationFill,
+  });
+  const afterMark =
+    trigger === "appearsInArea"
+      ? afterDamage
+      : markCloudkillAreaHazardSavedThisTurn(
+          afterDamage,
+          input.subject.actorId,
+          effect,
+        );
+  return {
+    tag: "resolved",
+    state: afterMark,
+    snapshot: snapshotBattle(afterMark),
   };
 }
 
@@ -4879,6 +5804,57 @@ function applySpellConditionEndTurnSaveFills(
   }, combatants);
 }
 
+function applySpellConditionCountedEndTurnSaveFills(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  actorId: CombatantId,
+  saves: readonly Extract<
+    BattleFill,
+    { readonly kind: "savingThrowOutcome" }
+  >[],
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  const actor = combatants.get(actorId);
+  const effects = spellConditionCountedEndTurnSaveEffects(actor);
+  if (actor === undefined || effects.length === 0) {
+    return combatants;
+  }
+  return effects.reduce((nextCombatants, effect) => {
+    const hole = spellConditionCountedEndTurnSavingThrowOutcomeHole(
+      actorId,
+      effect,
+    );
+    const save = spellConditionCountedEndTurnSavingThrowOutcomeFor(saves, hole);
+    const succeeded = save?.value.outcomes[0]?.succeeded;
+    if (succeeded === undefined) {
+      return nextCombatants;
+    }
+    if (succeeded) {
+      const successes = effect.successes + 1;
+      return successes >= effect.successThreshold
+        ? removeSpellConditionEffectFromCombatants(
+            nextCombatants,
+            actorId,
+            effect,
+          )
+        : updateSpellConditionCountedEndTurnSaveEffect(
+            nextCombatants,
+            actorId,
+            effect,
+            { successes },
+          );
+    }
+    const failures = effect.failures + 1;
+    return updateSpellConditionCountedEndTurnSaveEffect(
+      nextCombatants,
+      actorId,
+      effect,
+      {
+        failures,
+        lockedIn: failures >= effect.failureThreshold,
+      },
+    );
+  }, combatants);
+}
+
 function applyUnitFeatureConditionEndTurnSaveFills(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   actorId: CombatantId,
@@ -5004,7 +5980,9 @@ function removeAbilityD20TestRollModeEffectFromCombatants(
 function removeSpellConditionEffectFromCombatants(
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
   targetId: CombatantId,
-  expiringEffect: SpellConditionEndTurnSaveEffect,
+  expiringEffect:
+    | SpellConditionEndTurnSaveEffect
+    | SpellConditionCountedEndTurnSaveEffect,
 ): ReadonlyMap<CombatantId, BattleCreatureState> {
   const target = combatants.get(targetId);
   if (
@@ -5032,6 +6010,32 @@ function removeSpellConditionEffectFromCombatants(
     new Map(combatants).set(targetId, nextCombatant),
     expiringEffect,
   );
+}
+
+function updateSpellConditionCountedEndTurnSaveEffect(
+  combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
+  targetId: CombatantId,
+  effect: SpellConditionCountedEndTurnSaveEffect,
+  patch: Partial<
+    Pick<
+      SpellConditionCountedEndTurnSaveEffect,
+      "successes" | "failures" | "lockedIn"
+    >
+  >,
+): ReadonlyMap<CombatantId, BattleCreatureState> {
+  const target = combatants.get(targetId);
+  if (
+    target === undefined ||
+    !target.activeEffects.some((candidate) => candidate === effect)
+  ) {
+    return combatants;
+  }
+  return new Map(combatants).set(targetId, {
+    ...target,
+    activeEffects: target.activeEffects.map((candidate) =>
+      candidate === effect ? { ...effect, ...patch } : candidate,
+    ),
+  });
 }
 
 function removeUnitFeatureConditionEndTurnSaveEffectFromCombatants(
@@ -5855,6 +6859,21 @@ export function resolveEndTurnCommand(
   const spellConditionEndTurnSaveHoles = spellConditionEndTurnSaveRequests.map(
     (request) => request.hole,
   );
+  const spellConditionCountedEndTurnSaveRequests =
+    spellConditionCountedEndTurnSaveEffects(actor).map((effect) => ({
+      effect,
+      hole: spellConditionCountedEndTurnSavingThrowOutcomeHole(
+        actorId,
+        effect,
+        input.state,
+        actor === undefined
+          ? []
+          : savingThrowFlatBonusProjections(
+              input.state,
+              effect.save.ability,
+            ).filter((projection) => projection.targetId === actorId),
+      ),
+    }));
   const unitFeatureConditionEndTurnSaveRequests =
     unitFeatureConditionEndTurnSaveEffects(actor).map((effect) => ({
       effect,
@@ -6039,6 +7058,14 @@ export function resolveEndTurnCommand(
       return fill === undefined ? [] : [fill];
     },
   );
+  const spellConditionCountedEndTurnSaves =
+    spellConditionCountedEndTurnSaveRequests.flatMap((request) => {
+      const fill = spellConditionCountedEndTurnSavingThrowOutcomeFor(
+        savingThrowOutcomeFills,
+        request.hole,
+      );
+      return fill === undefined ? [] : [fill];
+    });
   const unitFeatureConditionEndTurnSaves =
     unitFeatureConditionEndTurnSaveRequests.flatMap((request) => {
       const fill = unitFeatureConditionEndTurnSavingThrowOutcomeFor(
@@ -6104,6 +7131,20 @@ export function resolveEndTurnCommand(
   if (missingSpellConditionEndTurnSaveHoles.length > 0) {
     return needsHolesResult(input.state, input.subject, [
       ...missingSpellConditionEndTurnSaveHoles,
+    ]);
+  }
+  const missingSpellConditionCountedEndTurnSaveHoles =
+    spellConditionCountedEndTurnSaveRequests.flatMap((request) =>
+      spellConditionCountedEndTurnSavingThrowOutcomeFor(
+        savingThrowOutcomeFills,
+        request.hole,
+      ) === undefined
+        ? [request.hole]
+        : [],
+    );
+  if (missingSpellConditionCountedEndTurnSaveHoles.length > 0) {
+    return needsHolesResult(input.state, input.subject, [
+      ...missingSpellConditionCountedEndTurnSaveHoles,
     ]);
   }
   const missingUnitFeatureConditionEndTurnSaveHoles =
@@ -6350,6 +7391,9 @@ export function resolveEndTurnCommand(
       ...sleepRepeatSaveHoles,
       ...hideousLaughterRepeatSaveHoles,
       ...spellConditionEndTurnSaveHoles,
+      ...spellConditionCountedEndTurnSaveRequests.map(
+        (request) => request.hole,
+      ),
       ...unitFeatureConditionEndTurnSaveHoles,
       ...slowActivePenaltiesEndTurnSaveHoles,
       ...abilityD20TestEndTurnSaveHoles,
@@ -6376,6 +7420,7 @@ export function resolveEndTurnCommand(
     sleepRepeatSaves.length +
       hideousLaughterRepeatSaves.length +
       spellConditionEndTurnSaves.length +
+      spellConditionCountedEndTurnSaves.length +
       unitFeatureConditionEndTurnSaves.length +
       slowActivePenaltiesEndTurnSaves.length +
       abilityD20TestEndTurnSaves.length +
@@ -6439,6 +7484,22 @@ export function resolveEndTurnCommand(
   }
   for (const request of spellConditionEndTurnSaveRequests) {
     const fill = spellConditionEndTurnSavingThrowOutcomeFor(
+      savingThrowOutcomeFills,
+      request.hole,
+    );
+    if (fill === undefined) {
+      continue;
+    }
+    const validation = validateSpellConditionEndTurnSavingThrowOutcome(
+      fill.value,
+      actorId,
+    );
+    if (validation !== null) {
+      return invalidResult(input.state, "invalidFill", validation);
+    }
+  }
+  for (const request of spellConditionCountedEndTurnSaveRequests) {
+    const fill = spellConditionCountedEndTurnSavingThrowOutcomeFor(
       savingThrowOutcomeFills,
       request.hole,
     );
@@ -6747,6 +7808,7 @@ export function resolveEndTurnCommand(
     sleepRepeatSaves,
     hideousLaughterRepeatSaves,
     spellConditionEndTurnSaves,
+    spellConditionCountedEndTurnSaves,
     unitFeatureConditionEndTurnSaves,
     slowActivePenaltiesEndTurnSaves,
     abilityD20TestEndTurnSaves,
@@ -6799,6 +7861,13 @@ export function statBlockRechargeRollFillMatchesHole(
 export function resolveMoveCommand(
   input: BattleResolutionInput,
 ): BattleResolutionResult {
+  if (!canSpendMovement(input.state.currentTurnResources)) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Movement is no longer available for the current actor.",
+    );
+  }
   if (input.fills.length === 0) {
     return needsHolesResult(input.state, input.subject, [
       movementHole(input.state, input.subject.actorId),
@@ -7049,7 +8118,11 @@ export function resolveStandFromProneCommand(
   }
   const actor = input.state.combatants.get(input.subject.actorId);
   const cost = standFromProneCostFeet(input.state, input.subject.actorId);
-  if (actor === undefined || cost === null) {
+  if (
+    actor === undefined ||
+    cost === null ||
+    !canSpendMovement(input.state.currentTurnResources)
+  ) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -7065,6 +8138,12 @@ export function resolveStandFromProneCommand(
   };
   const nextState = {
     ...input.state,
+    currentTurnResources:
+      input.subject.actorId === currentActorId(input.state)
+        ? markMovementSpentForMovementActionBonusActionExclusion(
+            input.state.currentTurnResources,
+          )
+        : input.state.currentTurnResources,
     combatants: new Map(input.state.combatants).set(
       actor.combatantId,
       nextActor,
@@ -7220,6 +8299,17 @@ export function parseBattleMovement(
       message: movementCostFactValidation,
     };
   }
+  const acrobaticMovementValidation = validateAcrobaticMovementFact(
+    state,
+    mover,
+    fill.value.acrobaticMovement,
+  );
+  if (acrobaticMovementValidation !== null) {
+    return {
+      tag: "invalid",
+      message: acrobaticMovementValidation,
+    };
+  }
   const creatureSpaceTraversalValidation =
     validateCreatureSpaceTraversalMovementFact(
       state,
@@ -7343,6 +8433,9 @@ export function parseBattleMovement(
       movementCostFeet: movementCost.costFeet,
       provokedOpportunityAttacks,
       spendsTurnMovement: options.spendsTurnMovement ?? true,
+      ...(fill.value.acrobaticMovement === undefined
+        ? {}
+        : { acrobaticMovement: fill.value.acrobaticMovement }),
       ...(fill.value.areaDifficultTerrain === undefined
         ? {}
         : { areaDifficultTerrain: fill.value.areaDifficultTerrain }),
@@ -7783,6 +8876,17 @@ function activeAreaDifficultTerrainSourceMatches(
         ) === true,
     ),
     byAreaDifficultTerrainSourceKind(
+      "insectPlagueHazard",
+      (terrainSource) =>
+        sourceCombatant?.activeEffects.some(
+          (effect) =>
+            effect.kind === "insectPlagueAreaHazard" &&
+            effect.sourceCombatantId === terrainSource.sourceCombatantId &&
+            effect.sourceSpellId === terrainSource.sourceSpellId &&
+            effect.areaId === terrainSource.areaId,
+        ) === true,
+    ),
+    byAreaDifficultTerrainSourceKind(
       "spikeGrowthHazard",
       (terrainSource) =>
         sourceCombatant?.activeEffects.some(
@@ -7986,6 +9090,87 @@ type AreaMovementCostFactResult =
       readonly totalDistanceFeet: MovementFeet;
       readonly extraCostFeet: MovementFeet;
     };
+
+const ACROBATIC_MOVEMENT_EMPTY_PATHS_MESSAGE =
+  "Acrobatic Movement requires at least one table-supplied vertical-surface or liquid path.";
+const ACROBATIC_MOVEMENT_REPEATED_PATH_MESSAGE =
+  "Acrobatic Movement path witness repeats a traversal path.";
+const ACROBATIC_MOVEMENT_UNKNOWN_PATH_MESSAGE =
+  "Acrobatic Movement path witness contains an unsupported traversal path.";
+const ACROBATIC_MOVEMENT_MISSING_PROFILE_MESSAGE =
+  "Acrobatic Movement requires a selected Acrobatic Movement support profile.";
+const ACROBATIC_MOVEMENT_EQUIPMENT_MESSAGE =
+  "Acrobatic Movement requires the mover to be unarmored and not wielding a Shield.";
+const ACROBATIC_MOVEMENT_TURN_MESSAGE =
+  "Acrobatic Movement can be used only on the mover's turn.";
+const ACROBATIC_MOVEMENT_FALLING_MESSAGE =
+  "Acrobatic Movement path witness must preserve no-falling-during-movement semantics.";
+
+function validateAcrobaticMovementFact(
+  state: BattleState,
+  mover: BattleCreatureState,
+  fact: BattleAcrobaticMovementFact | undefined,
+): string | null {
+  if (fact === undefined) {
+    return null;
+  }
+  const profile = acrobaticMovementProfileForCombatant(mover);
+  if (profile === null) {
+    return ACROBATIC_MOVEMENT_MISSING_PROFILE_MESSAGE;
+  }
+  if (currentActorId(state) !== mover.combatantId) {
+    return ACROBATIC_MOVEMENT_TURN_MESSAGE;
+  }
+  if (combatantWearingArmor(mover) || combatantWieldingShield(mover)) {
+    return ACROBATIC_MOVEMENT_EQUIPMENT_MESSAGE;
+  }
+  if (fact.withoutFallingDuringMovement !== true) {
+    return ACROBATIC_MOVEMENT_FALLING_MESSAGE;
+  }
+  if (fact.paths.length === 0) {
+    return ACROBATIC_MOVEMENT_EMPTY_PATHS_MESSAGE;
+  }
+  const supportedPaths = new Set(
+    profile.acrobaticMovement.paths.map((path) => path.path),
+  );
+  const seenPaths = new Set<string>();
+  for (const path of fact.paths) {
+    if (!supportedPaths.has(path)) {
+      return ACROBATIC_MOVEMENT_UNKNOWN_PATH_MESSAGE;
+    }
+    if (seenPaths.has(path)) {
+      return ACROBATIC_MOVEMENT_REPEATED_PATH_MESSAGE;
+    }
+    seenPaths.add(path);
+  }
+  return null;
+}
+
+function acrobaticMovementProfileForCombatant(
+  combatant: BattleCreatureState,
+): BattleAcrobaticMovementSupportProfile | null {
+  if (combatant.origin.kind !== "character") {
+    return null;
+  }
+  for (const unitRef of combatant.origin.characterUnitRefs) {
+    const profile = unitRef.supportProfiles.find(
+      isBattleAcrobaticMovementSupportProfile,
+    );
+    if (profile !== undefined) {
+      return profile;
+    }
+  }
+  return null;
+}
+
+function isBattleAcrobaticMovementSupportProfile(
+  profile: BattleUnitSupportProfile,
+): profile is BattleAcrobaticMovementSupportProfile {
+  return (
+    typeof profile === "object" &&
+    profile.kind === ACROBATIC_MOVEMENT_SUPPORT_PROFILE
+  );
+}
 
 const CREATURE_SPACE_TRAVERSAL_WRONG_KIND_MESSAGE =
   "Creature-space traversal movement fact has the wrong kind.";

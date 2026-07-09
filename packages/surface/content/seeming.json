@@ -1,0 +1,68 @@
+{
+  "description": "You give an illusory appearance to each creature of your choice that you can see within range. An unwilling target can make a Charisma saving throw, and on a success it is unaffected. You can give the same or different appearances, changing bodies and equipment, making a target seem 1 foot shorter or taller and heavier or lighter. The new appearance must have the same basic arrangement of limbs. The changes fail physical inspection. A creature that takes the Study action can make an Intelligence (Investigation) check against your spell save DC; on a success, it becomes aware the target is disguised.",
+  "id": "seeming",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 8,
+        "unit": "hour"
+      }
+    },
+    "family": "activation",
+    "level": 5,
+    "phases": [
+      {
+        "ability": "cha",
+        "attachment": {
+          "holeId": "seeming_targets",
+          "kind": "hole",
+          "label": "chosen visible creatures",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "mode": "any_number",
+              "targetKinds": [
+                "creature"
+              ]
+            }
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "channels": [
+            "visual"
+          ],
+          "kind": "create_illusion",
+          "maxSize": "medium"
+        },
+        "onSuccess": {
+          "kind": "none"
+        },
+        "saveAppliesIf": "unwilling_target"
+      }
+    ],
+    "range": {
+      "feet": 30,
+      "kind": "point"
+    },
+    "school": "illusion"
+  },
+  "name": "Seeming",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Seeming"
+  }
+}

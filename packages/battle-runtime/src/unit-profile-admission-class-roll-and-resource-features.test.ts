@@ -1,14 +1,18 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT7 fighter_second_wind barbarian_reckless_attack rogue_evasion monk_evasion
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT62 fighter_tactical_mind
+// UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-04-FIGHTER-INDOMITABLE fighter_indomitable
+// UNIT-IDENTITY-EVIDENCE: selected-identity-replay L19D-04-FIGHTER-INDOMITABLE fighter_indomitable
+// UNIT-IDENTITY-REPLAY: L19D-04-FIGHTER-INDOMITABLE fighter_indomitable doResolveIndomitableFailedSavingThrowReroll
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT65 bard_cutting_words
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV72A bard_bardic_inspiration
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV75A sorcerer_innate_sorcery
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bardic-inspiration-grant unit-feature.failed-ability-check-resource-boost unit-feature.innate-sorcery-activation unit-feature.reaction-roll-or-damage-reduction
-import { describe, expect, test } from "vitest";
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bardic-inspiration-grant unit-feature.failed-ability-check-resource-boost unit-feature.failed-saving-throw-reroll unit-feature.innate-sorcery-activation unit-feature.reaction-roll-or-damage-reduction
+import { describe, expect, it, test } from "vitest";
 import {
   barbarianRecklessAttackUnitId,
   bardBardicInspirationUnitId,
   bardCuttingWordsUnitId,
+  fighterIndomitableUnitId,
   fighterSecondWindUnitId,
   fighterTacticalMindUnitId,
   monkEvasionUnitId,
@@ -24,6 +28,8 @@ import {
   battleReactionRollOrDamageReductionSupportForUnit,
   battleUnitRefWithSupportProfiles,
   classLevel,
+  difficultyClass,
+  DieRollResult,
   Either,
   elapsedTimeTicks,
   FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE,
@@ -33,6 +39,129 @@ import {
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
 } from "./unit-profile-admission-test-support.ts";
 import type { UnitRecord } from "./unit-profile-admission-test-support.ts";
+import {
+  characterBattleResourceIsUseCount,
+  characterBattleResourceMaxUses,
+  characterResourceState,
+} from "./character-battle-resources.ts";
+import { resolveFailedSavingThrowReroll } from "./battle-reducer/failed-saving-throw-reroll.ts";
+import {
+  battleFailedSavingThrowRerollSupportForUnit,
+  FAILED_SAVING_THROW_REROLL_SUPPORT_PROFILE,
+} from "./unit-feature-support.ts";
+
+const indomitableSelectedIdentityDriverSchema = {
+  doResolveIndomitableFailedSavingThrowReroll: {},
+} as const;
+
+type IndomitableSelectedIdentityDriverAction =
+  keyof typeof indomitableSelectedIdentityDriverSchema;
+
+type IndomitableSelectedIdentityProjection = {
+  readonly unitId: "fighter_indomitable";
+  readonly supportProfile: typeof FAILED_SAVING_THROW_REROLL_SUPPORT_PROFILE;
+  readonly resourceUnitId: "fighter_indomitable";
+  readonly resourceMaxUses: number;
+  readonly finalTotal: number;
+  readonly succeeded: boolean;
+  readonly mustUseNewRoll: true;
+  readonly usesRemaining: number;
+};
+
+type SelectedUnitIdentityReplaySequence = {
+  readonly name: string;
+  readonly actions: readonly IndomitableSelectedIdentityDriverAction[];
+  readonly expected: IndomitableSelectedIdentityProjection;
+};
+
+type SelectedUnitIdentityReplay = {
+  readonly taskId: "L19D-04-FIGHTER-INDOMITABLE";
+  readonly unitId: "fighter_indomitable";
+  readonly actions: readonly IndomitableSelectedIdentityDriverAction[];
+  readonly sequences: readonly SelectedUnitIdentityReplaySequence[];
+};
+
+const selectedUnitIdentityReplays = [
+  {
+    taskId: "L19D-04-FIGHTER-INDOMITABLE",
+    unitId: "fighter_indomitable",
+    actions: ["doResolveIndomitableFailedSavingThrowReroll"],
+    sequences: [
+      {
+        name: "selected-fighter-indomitable-rerolls-failed-save-with-fighter-level-bonus",
+        actions: ["doResolveIndomitableFailedSavingThrowReroll"],
+        expected: expectedIndomitableProjection(),
+      },
+    ],
+  },
+] as const satisfies ReadonlyArray<SelectedUnitIdentityReplay>;
+
+const indomitableSelectedIdentityActions = {
+  doResolveIndomitableFailedSavingThrowReroll:
+    (): IndomitableSelectedIdentityProjection => {
+      const unit = unitLibrary.requireUnit(fighterIndomitableUnitId);
+      const profile = battleFailedSavingThrowRerollSupportForUnit(unit);
+      const resource = characterResourceState(
+        { unit },
+        [{ className: "fighter", level: classLevel(9) }],
+      );
+      if (profile === null || profile === "unsupported") {
+        throw new Error("Expected supported Indomitable profile.");
+      }
+      if (!characterBattleResourceIsUseCount(resource)) {
+        throw new Error("Expected Indomitable use-count resource.");
+      }
+      const result = resolveFailedSavingThrowReroll({
+        profile,
+        resource,
+        fighterLevel: classLevel(9),
+        failedSave: {
+          ability: "wis",
+          dc: difficultyClass(15),
+          originalTotal: 12,
+          originalNaturalD20: DieRollResult(8),
+        },
+        replacementRoll: {
+          naturalD20: DieRollResult(3),
+          totalBeforeIndomitableBonus: 6,
+        },
+      });
+      if (result.tag !== "resolved") {
+        throw new Error("Expected resolved Indomitable reroll.");
+      }
+      return {
+        unitId: fighterIndomitableUnitId,
+        supportProfile: profile.kind,
+        resourceUnitId: fighterIndomitableUnitId,
+        resourceMaxUses: Number(
+          characterBattleResourceMaxUses({
+            unit,
+            classLevels: [{ className: "fighter", level: classLevel(9) }],
+          }),
+        ),
+        finalTotal: result.finalTotal,
+        succeeded: result.succeeded,
+        mustUseNewRoll: result.mustUseNewRoll,
+        usesRemaining: Number(result.spentResource.usesRemaining),
+      };
+    },
+} as const satisfies Record<
+  IndomitableSelectedIdentityDriverAction,
+  () => IndomitableSelectedIdentityProjection
+>;
+
+function expectedIndomitableProjection(): IndomitableSelectedIdentityProjection {
+  return {
+    unitId: "fighter_indomitable",
+    supportProfile: FAILED_SAVING_THROW_REROLL_SUPPORT_PROFILE,
+    resourceUnitId: "fighter_indomitable",
+    resourceMaxUses: 1,
+    finalTotal: 15,
+    succeeded: true,
+    mustUseNewRoll: true,
+    usesRemaining: 0,
+  };
+}
 
 describe("QMBT7 deterministic Unit profile admission", () => {
   test("fighter_second_wind is admitted and projected through production feature support", () => {
@@ -209,6 +338,286 @@ describe("QMBT62 Tactical Mind deterministic Unit profile admission", () => {
     ).toBe("unsupported");
     expect(
       battleFailedAbilityCheckResourceBoostSupportForUnit(
+        unitLibrary.requireUnit(fighterSecondWindUnitId),
+      ),
+    ).toBeNull();
+  });
+});
+
+describe("L19D-04 Fighter Indomitable failed Saving Throw reroll", () => {
+  it("replays selected Unit identities deterministically", () => {
+    for (const replay of selectedUnitIdentityReplays) {
+      const replayedActions = new Set<IndomitableSelectedIdentityDriverAction>();
+
+      for (const sequence of replay.sequences) {
+        let projection: IndomitableSelectedIdentityProjection | undefined;
+
+        for (const actionName of sequence.actions) {
+          replayedActions.add(actionName);
+          projection = indomitableSelectedIdentityActions[actionName]();
+        }
+
+        expect(projection, `${replay.unitId}:${sequence.name}`).toEqual(
+          sequence.expected,
+        );
+      }
+
+      expect(replayedActions).toEqual(new Set(replay.actions));
+    }
+  });
+
+  test("fighter_indomitable is admitted from failed Saving Throw reroll mechanics", () => {
+    const unit = unitLibrary.requireUnit(fighterIndomitableUnitId);
+    const supportProfile = {
+      kind: FAILED_SAVING_THROW_REROLL_SUPPORT_PROFILE,
+      savingThrow: {
+        trigger: "failedSavingThrow",
+        reroll: {
+          use: "newRoll",
+          bonus: { kind: "classLevel", className: "fighter" },
+        },
+        spends: { resourceUnitId: fighterIndomitableUnitId, amount: 1 },
+        resetCadence: "longRest",
+      },
+    } as const;
+
+    expect(
+      battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
+    ).toEqual(
+      Either.right({
+        unitId: fighterIndomitableUnitId,
+        supportProfiles: [supportProfile],
+      }),
+    );
+    expect(battleFailedSavingThrowRerollSupportForUnit(unit)).toEqual(
+      supportProfile,
+    );
+    expect(
+      parseSupportedUnitFeatureProfile(unit, [
+        { className: "fighter", level: classLevel(9) },
+      ]),
+    ).toEqual(
+      expect.objectContaining({
+        kind: "failedSavingThrowReroll",
+        unit,
+        savingThrow: supportProfile.savingThrow,
+      }),
+    );
+  });
+
+  test("fighter_indomitable projects Long Rest use-count tiers from class level", () => {
+    const unit = unitLibrary.requireUnit(fighterIndomitableUnitId);
+
+    expect(
+      characterBattleResourceMaxUses({
+        unit,
+        classLevels: [{ className: "fighter", level: classLevel(9) }],
+      }),
+    ).toBe(1);
+    expect(
+      characterBattleResourceMaxUses({
+        unit,
+        classLevels: [{ className: "fighter", level: classLevel(13) }],
+      }),
+    ).toBe(2);
+    expect(
+      characterBattleResourceMaxUses({
+        unit,
+        classLevels: [{ className: "fighter", level: classLevel(17) }],
+      }),
+    ).toBe(3);
+  });
+
+  test("resolver spends a use and adds Fighter level to the mandatory new roll", () => {
+    const unit = unitLibrary.requireUnit(fighterIndomitableUnitId);
+    const profile = battleFailedSavingThrowRerollSupportForUnit(unit);
+    const resource = characterResourceState(
+      { unit },
+      [{ className: "fighter", level: classLevel(9) }],
+    );
+    if (profile === null || profile === "unsupported") {
+      throw new Error("Expected supported Indomitable profile.");
+    }
+    if (!characterBattleResourceIsUseCount(resource)) {
+      throw new Error("Expected Indomitable use-count resource.");
+    }
+
+    expect(
+      resolveFailedSavingThrowReroll({
+        profile,
+        resource,
+        fighterLevel: classLevel(9),
+        failedSave: {
+          ability: "wis",
+          dc: difficultyClass(15),
+          originalTotal: 12,
+          originalNaturalD20: DieRollResult(8),
+        },
+        replacementRoll: {
+          naturalD20: DieRollResult(3),
+          totalBeforeIndomitableBonus: 6,
+        },
+      }),
+    ).toEqual({
+      tag: "resolved",
+      finalTotal: 15,
+      succeeded: true,
+      mustUseNewRoll: true,
+      spentResource: {
+        ...resource,
+        usesRemaining: 0,
+      },
+    });
+  });
+
+  test("resolver still spends the use when the mandatory new roll fails", () => {
+    const unit = unitLibrary.requireUnit(fighterIndomitableUnitId);
+    const profile = battleFailedSavingThrowRerollSupportForUnit(unit);
+    const resource = characterResourceState(
+      { unit },
+      [{ className: "fighter", level: classLevel(9) }],
+    );
+    if (profile === null || profile === "unsupported") {
+      throw new Error("Expected supported Indomitable profile.");
+    }
+    if (!characterBattleResourceIsUseCount(resource)) {
+      throw new Error("Expected Indomitable use-count resource.");
+    }
+
+    expect(
+      resolveFailedSavingThrowReroll({
+        profile,
+        resource,
+        fighterLevel: classLevel(9),
+        failedSave: {
+          ability: "con",
+          dc: difficultyClass(20),
+          originalTotal: 10,
+          originalNaturalD20: DieRollResult(4),
+        },
+        replacementRoll: {
+          naturalD20: DieRollResult(2),
+          totalBeforeIndomitableBonus: 5,
+        },
+      }),
+    ).toEqual({
+      tag: "resolved",
+      finalTotal: 14,
+      succeeded: false,
+      mustUseNewRoll: true,
+      spentResource: {
+        ...resource,
+        usesRemaining: 0,
+      },
+    });
+  });
+
+  test("resolver rejects non-failed saves, exhausted resources, and wrong resources", () => {
+    const unit = unitLibrary.requireUnit(fighterIndomitableUnitId);
+    const profile = battleFailedSavingThrowRerollSupportForUnit(unit);
+    const resource = characterResourceState(
+      { unit },
+      [{ className: "fighter", level: classLevel(9) }],
+    );
+    const exhaustedResource = characterResourceState(
+      { unit, usesRemaining: 0 },
+      [{ className: "fighter", level: classLevel(9) }],
+    );
+    const wrongResource = characterResourceState(
+      { unit: unitLibrary.requireUnit(fighterSecondWindUnitId) },
+      [{ className: "fighter", level: classLevel(9) }],
+    );
+    if (profile === null || profile === "unsupported") {
+      throw new Error("Expected supported Indomitable profile.");
+    }
+    if (
+      !characterBattleResourceIsUseCount(resource) ||
+      !characterBattleResourceIsUseCount(exhaustedResource) ||
+      !characterBattleResourceIsUseCount(wrongResource)
+    ) {
+      throw new Error("Expected use-count resources.");
+    }
+    const baseInput = {
+      profile,
+      fighterLevel: classLevel(9),
+      failedSave: {
+        ability: "dex" as const,
+        dc: difficultyClass(15),
+        originalTotal: 10,
+        originalNaturalD20: DieRollResult(5),
+      },
+      replacementRoll: {
+        naturalD20: DieRollResult(6),
+        totalBeforeIndomitableBonus: 6,
+      },
+    };
+
+    expect(
+      resolveFailedSavingThrowReroll({
+        ...baseInput,
+        resource,
+        failedSave: { ...baseInput.failedSave, originalTotal: 15 },
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        tag: "invalid",
+        issue: expect.objectContaining({
+          reason: "originalSavingThrowDidNotFail",
+        }),
+      }),
+    );
+    expect(
+      resolveFailedSavingThrowReroll({
+        ...baseInput,
+        resource: exhaustedResource,
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        tag: "invalid",
+        issue: expect.objectContaining({ reason: "resourceUnavailable" }),
+      }),
+    );
+    expect(
+      resolveFailedSavingThrowReroll({
+        ...baseInput,
+        resource: wrongResource,
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        tag: "invalid",
+        issue: expect.objectContaining({ reason: "resourceMismatch" }),
+      }),
+    );
+  });
+
+  test("malformed failed-save reroll shapes are unsupported without authored identity dispatch", () => {
+    const unit = unitLibrary.requireUnit(fighterIndomitableUnitId);
+    if (
+      unit.kind !== "class_feature" ||
+      unit.mechanics.family !== "failed_saving_throw_reroll"
+    ) {
+      throw new Error("Expected Indomitable Unit mechanics.");
+    }
+    const malformedBonus = {
+      ...unit,
+      id: "synthetic_failed_save_reroll_fixture",
+      mechanics: {
+        ...unit.mechanics,
+        reroll: {
+          ...unit.mechanics.reroll,
+          bonus: {
+            kind: "class_level" as const,
+            className: "rogue" as const,
+          },
+        },
+      },
+    } as unknown as UnitRecord;
+
+    expect(
+      battleFailedSavingThrowRerollSupportForUnit(malformedBonus),
+    ).toBe("unsupported");
+    expect(
+      battleFailedSavingThrowRerollSupportForUnit(
         unitLibrary.requireUnit(fighterSecondWindUnitId),
       ),
     ).toBeNull();

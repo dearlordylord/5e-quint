@@ -20,6 +20,7 @@ import { blurAttackRollDefenseProfile } from "./blur-attack-roll-defense.ts";
 import { commandProfile } from "./command.ts";
 import { chainedSpellAttackDamageProfile } from "./chained-spell-attack-damage.ts";
 import { chosenDamageResistanceProfile } from "./chosen-damage-resistance.ts";
+import { cloudkillAreaHazardProfile } from "./cloudkill-area-hazard.ts";
 import { conditionImmunityAndTurnStartTemporaryHitPointsProfile } from "./condition-immunity-turn-start-temporary-hit-points.ts";
 import { conditionRemovalProtectionProfile } from "./condition-removal-protection.ts";
 import { counterspellProfile } from "./counterspell.ts";
@@ -48,6 +49,7 @@ import { heldLightProfile } from "./held-light.ts";
 import { hastePositiveProfile } from "./haste-positive.ts";
 import { hideousLaughterProfile } from "./hideous-laughter.ts";
 import { hypnoticPatternProfile } from "./hypnotic-pattern.ts";
+import { insectPlagueAreaHazardProfile } from "./insect-plague-area-hazard.ts";
 import { jumpMovementReplacementProfile } from "./jump-movement-replacement.ts";
 import { levitatedCreatureProfile } from "./levitated-creature.ts";
 import { makeStableProfile } from "./make-stable.ts";
@@ -158,6 +160,8 @@ function registeredSpellProcedureProfiles() {
     spikeGrowthMovementHazardProfile,
     webRestraintHazardProfile,
     sleetStormAreaHazardProfile,
+    insectPlagueAreaHazardProfile,
+    cloudkillAreaHazardProfile,
     magicalDarknessPointOriginProfile,
     antimagicFieldOngoingSpellSuppressionProfile,
     commandProfile,

@@ -42,6 +42,7 @@ import {
   spellSavingThrowOutcomeHole,
   spellSavingThrowTargeting,
   spellTargetHole,
+  spellAbilityChoiceHole,
 } from "../spells-holes-fills.ts";
 import {
   supportedCantripSaveGateDamageProfile,
@@ -58,9 +59,11 @@ import { Schema } from "effect";
 import { spellProcedureInvocationSchema } from "./profile.ts";
 import {
   BattleRuntimeObjectSchema,
+  AbilitySchema,
   ClassCantripSpellAccessSchema,
   MovementFeet,
   NoSpellInvocationResourceSchema,
+  SpellFailedSaveConditionEffectSchema,
   PreparedSpellAccessSchema,
   SpellFailedSavePostDamageRiderSchema,
   SpellPostSaveAreaEffectSchema,
@@ -138,7 +141,7 @@ function discoverSingleTargetSaveGatedDamageCastActs(
   const baseCastAct = saveGatedDamageCastAct(
     actorId,
     invocation,
-    [targetHole],
+    [targetHole, ...saveGatedDamageAbilityChoiceHoles(invocation)],
     invocation.spell.name,
     saveGatedDamageCastSummaryWithSavingThrow(invocation),
   );
@@ -169,7 +172,7 @@ function discoverAreaSaveGatedDamageCastActs(
   const baseCastAct = saveGatedDamageCastAct(
     actorId,
     invocation,
-    [savingThrowHole],
+    [savingThrowHole, ...saveGatedDamageAbilityChoiceHoles(invocation)],
     invocation.spell.name,
     saveGatedDamageCastSummaryWithSavingThrow(invocation),
   );
@@ -255,7 +258,7 @@ function saveGatedDamageMetamagicInitialHoles(
   metamagicApplications: readonly SpellMetamagicApplicationFact[],
 ): readonly BattleHole[] {
   const targeting = spellSavingThrowTargeting(invocation);
-  const holes: BattleHole[] = [];
+  const holes: BattleHole[] = [...saveGatedDamageAbilityChoiceHoles(invocation)];
   if (
     targeting.kind !== "singleCombatant" &&
     metamagicApplications.some(
@@ -274,6 +277,14 @@ function saveGatedDamageMetamagicInitialHoles(
     holes.push(heightenedSpellTargetChoiceHole(state, actorId, invocation));
   }
   return holes;
+}
+
+function saveGatedDamageAbilityChoiceHoles(
+  invocation: SaveGatedDamageSpellInvocation,
+): readonly BattleHole[] {
+  return invocation.failedSaveAbilityChoices === null
+    ? []
+    : [spellAbilityChoiceHole(invocation)];
 }
 
 function readiedSaveGatedDamageActs(
@@ -412,6 +423,10 @@ const SaveGatedDamageInvocationSchema = spellProcedureInvocationSchema<
       failedSavePostDamageRiders: Schema.Array(
         SpellFailedSavePostDamageRiderSchema,
       ),
+      failedSaveConditionEffects: Schema.Array(
+        SpellFailedSaveConditionEffectSchema,
+      ),
+      failedSaveAbilityChoices: Schema.NullOr(Schema.Array(AbilitySchema)),
       saveRollModeRule: Schema.NullOr(SpellSavingThrowRollModeRuleSchema),
       postSaveAreaEffect: Schema.optionalWith(SpellPostSaveAreaEffectSchema, {
         exact: true,
@@ -472,6 +487,10 @@ const SaveGatedDamageInvocationSchema = spellProcedureInvocationSchema<
       failedSavePostDamageRiders: Schema.Array(
         SpellFailedSavePostDamageRiderSchema,
       ),
+      failedSaveConditionEffects: Schema.Array(
+        SpellFailedSaveConditionEffectSchema,
+      ),
+      failedSaveAbilityChoices: Schema.NullOr(Schema.Array(AbilitySchema)),
       saveRollModeRule: Schema.NullOr(SpellSavingThrowRollModeRuleSchema),
       postSaveAreaEffect: Schema.optionalWith(SpellPostSaveAreaEffectSchema, {
         exact: true,

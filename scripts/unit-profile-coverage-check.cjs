@@ -29,6 +29,7 @@ const {
   buildLevel16FullSupport,
   buildLevel17FullSupport,
   buildLevel18FullSupport,
+  buildLevel19FullSupport,
   renderLevel1FullSupport,
   renderLevel12FullSupport,
   renderLevel13FullSupport,
@@ -37,6 +38,7 @@ const {
   renderLevel16FullSupport,
   renderLevel17FullSupport,
   renderLevel18FullSupport,
+  renderLevel19FullSupport,
   validateLevelEightSpellLevelFourCarryForward,
 } = require("./level1-full-support-report.cjs");
 const {
@@ -56,6 +58,7 @@ const {
 } = require("./level12-qnt-mbt-join-report.cjs");
 const {
   buildLevelOneEightMiningAudit,
+  buildLevelOneNineMiningAudit,
   buildLevelOneSevenMiningAudit,
   renderLevelOneSevenMiningAudit,
 } = require("./level1-7-mining-audit-report.cjs");
@@ -332,10 +335,15 @@ function main() {
   const level18FullSupport = buildLevel18FullSupport(matrix, srdUnitInventory, {
     root,
   });
+  const level19FullSupport = buildLevel19FullSupport(matrix, srdUnitInventory, {
+    root,
+  });
   const levelOneSevenMiningAudit =
     buildLevelOneSevenMiningAudit(srdUnitInventory);
   const levelOneEightMiningAudit =
     buildLevelOneEightMiningAudit(srdUnitInventory);
+  const levelOneNineMiningAudit =
+    buildLevelOneNineMiningAudit(srdUnitInventory);
   const ultraGoldenGate = buildUltraGoldenGate({
     level1FullSupport,
     level12FullSupport,
@@ -345,6 +353,7 @@ function main() {
     level16FullSupport,
     level17FullSupport,
     level18FullSupport,
+    level19FullSupport,
     mcpScenarioEvidence,
     rulesKernelMatrix: rulesKernelCoverage.matrix,
     selectedIdentityReplayEvidenceTag,
@@ -534,6 +543,16 @@ function main() {
   );
   writeOrCompare(
     { root, write },
+    paths.level19FullSupport,
+    `${JSON.stringify(level19FullSupport, null, 2)}\n`,
+  );
+  writeOrCompare(
+    { root, write },
+    paths.level19FullSupportReport,
+    renderLevel19FullSupport(level19FullSupport),
+  );
+  writeOrCompare(
+    { root, write },
     paths.levelOneSevenMiningAudit,
     `${JSON.stringify(levelOneSevenMiningAudit, null, 2)}\n`,
   );
@@ -551,6 +570,16 @@ function main() {
     { root, write },
     paths.levelOneEightMiningAuditReport,
     renderLevelOneSevenMiningAudit(levelOneEightMiningAudit),
+  );
+  writeOrCompare(
+    { root, write },
+    paths.levelOneNineMiningAudit,
+    `${JSON.stringify(levelOneNineMiningAudit, null, 2)}\n`,
+  );
+  writeOrCompare(
+    { root, write },
+    paths.levelOneNineMiningAuditReport,
+    renderLevelOneSevenMiningAudit(levelOneNineMiningAudit),
   );
   writeOrCompare(
     { root, write },

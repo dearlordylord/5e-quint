@@ -6,16 +6,21 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.PROTOCOL.CONCENTRATION_BREAK_TEARDOWN
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.AFTER_HIT_DAMAGE_RIDERS BATTLE.SPELL.MARKED_DAMAGE_RIDER_TRANSFER
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION
-// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.grappler unit-feature.hunters-prey unit-feature.open-hand-technique unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.remarkable-athlete unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.stunning-strike unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.action-surge-resource unit-feature.attack-action-attack-count-scaling unit-feature.attack-damage-reduction-zero-damage-redirect unit-feature.attack-damage-rider unit-feature.attack-roll-miss-to-hit-replacement unit-feature.bonus-action-dash-temporary-hit-points unit-feature.bonus-action-ongoing-rage unit-feature.brutal-strike unit-feature.failed-ability-check-resource-boost unit-feature.first-attack-roll-reckless-advantage unit-feature.grappler unit-feature.hunters-prey unit-feature.open-hand-technique unit-feature.passive-ranged-attack-roll-bonus unit-feature.passive-speed-bonus unit-feature.passive-speed-kind-grants unit-feature.reaction-roll-or-damage-reduction unit-feature.remarkable-athlete unit-feature.save-damage-replacement unit-feature.self-bonus-action-healing unit-feature.stunning-strike unit-feature.weapon-damage-dice-roll-choice unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow unit-feature.fighter-tactical-master unit-feature.zero-hit-point-replacement spell.creature-type-protection-and-charm spell.invocation-attack-roll-advantage-save spell.invocation-chained-attack-damage spell.invocation-damage-reduction spell.invocation-damage-save-or-attack spell.invocation-condition-save spell.hit-point-restoration spell.invocation-marked-damage-rider spell.invocation-roll-modifier spell.invocation-weapon-damage-rider spell.reaction-shield spell.readied-action-time-spell spell.scalar-buff stat-block.attack-control
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-ray-of-enfeeblement-damage-penalty
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.d20-test-natural-one-reroll
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike
+// UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.cunning-strike-option-grant
 
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 
 import { attackRollResultIsValid } from "@dnd/shared-algebras/attack-roll-algebra";
 
-import { damageAmount as toDamageAmount } from "@dnd/shared/types";
+import {
+  damageAmount as toDamageAmount,
+  movementDeltaFeet,
+  movementFeet,
+} from "@dnd/shared/types";
 
 import {
   attackActionOptionForSubject,
@@ -52,16 +57,24 @@ import {
   huntersPreyHordeBreakerTargetHole,
   huntersPreyHordeBreakerTargetIsLegal,
   recordHuntersPreyHordeBreakerUsed,
+  applyWeaponMasteryPushOnHit,
+  applyWeaponMasterySlowAfterDamage,
   applyWeaponMasteryToppleSavingThrow,
   applyWeaponMasterySapOnHit,
   consumeHelpAttackForAttackRoll,
   recordWeaponMasteryCleaveUsed,
   recordAttackRollOngoingFeatures,
   requiredAttackRollMode,
+  tacticalMasterAttackWithReplacement,
+  tacticalMasterReplacementDecisionHole,
   weaponMasteryToppleSavingThrowHole,
 } from "./attack-roll.ts";
 
-import { activeEffectArmorClass } from "./creature-state.ts";
+import {
+  activeEffectArmorClass,
+  activeOngoingFeatureOccurrencesForCombatant,
+  ongoingFeatureProfileForSourceKey,
+} from "./creature-state.ts";
 
 import {
   applyAttackDamageAmount,
@@ -112,6 +125,7 @@ import {
   attackHitTriggerKind,
   attackKindForDeflectRedirect,
   attackTargetIsLegal,
+  effectiveWalkSpeed,
   grappleLinkForTarget,
 } from "./movement-speed.ts";
 
@@ -125,6 +139,8 @@ import {
   HUNTERS_PREY_HORDE_BREAKER_DECISION_HOLE_ID,
   HUNTERS_PREY_HORDE_BREAKER_DAMAGE_DISPOSITION_HOLE_ID,
   HUNTERS_PREY_HORDE_BREAKER_DAMAGE_DISPOSITION_HOLE_INSTANCE,
+  BRUTAL_STRIKE_DECISION_HOLE_ID,
+  BRUTAL_STRIKE_DECISION_HOLE_INSTANCE,
 } from "./domain-constants.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
@@ -136,6 +152,7 @@ import { mirrorImageHitInterceptionCheck } from "./mirror-image-hit-interception
 import { resolveOpenHandTechniqueAfterHit } from "./open-hand-technique.ts";
 import { resolveRemarkableAthleteCriticalHitMovement } from "./remarkable-athlete-critical-movement.ts";
 import { resolveStunningStrikeAfterHit } from "./stunning-strike.ts";
+import { ongoingFeatureProfileIsRecklessAttackForFrenzy } from "./barbarian-frenzy.ts";
 import {
   attackDamageRidersAfterCunningStrikeCost,
   cunningStrikeDamageContinuation,
@@ -157,9 +174,15 @@ import {
   recordAttackRollMissToHitReplacementUsed,
   selectedAttackDamageRiders,
   selectedAttackRollMissToHitReplacement,
+  selectedWeaponDamage,
   selectedWeaponDamageDiceRollChoice,
 } from "./statblock-attacks.ts";
 import { currentActorId } from "./creature-state-leaves.ts";
+import {
+  BRUTAL_STRIKE_DECISION_CHOICES,
+  BRUTAL_STRIKE_SUPPORT_PROFILE,
+  type BrutalStrikeDecisionChoice,
+} from "../unit-feature-support.ts";
 
 import {
   ATTACK_ROLL_HOLE_ID,
@@ -173,6 +196,7 @@ import type {
   BattleAttackDamageEvent,
   BattleAfterDamageEvent,
   BattleAttackDamagePrefixFill,
+  AttackDamageRider,
   BattleCreatureState,
   BattleFill,
   BattleGrappleLink,
@@ -185,7 +209,7 @@ import type {
   AttackFillSet,
 } from "../battle-reducer.ts";
 import type { SupportedAttackActionOption } from "../battle-action-options.ts";
-import type { CombatantId } from "../identity.ts";
+import { battleTablePositionId, type CombatantId } from "../identity.ts";
 import {
   attackRollHitsWithCriticalThreshold,
   attackRollIsCriticalHit,
@@ -284,6 +308,229 @@ function grapplerPunchAndGrabUnitFeature(
         unitId: support.unitRef.unitId,
         label: "Punch and Grab",
       };
+}
+
+function brutalStrikeDecisionHoleForAttack(
+  state: BattleState,
+  attackerId: CombatantId,
+  attack: SupportedAttackActionOption,
+): BattleUnitFeatureDecisionHole | null {
+  if (
+    !recklessAttackIsAvailableOrActiveForBrutalStrike(state, attackerId, attack)
+  ) {
+    return null;
+  }
+  const selection = brutalStrikeSelection(state, attackerId, attack);
+  return selection === null
+    ? null
+    : {
+        kind: "unitFeatureDecision",
+        holeId: BRUTAL_STRIKE_DECISION_HOLE_ID,
+        holeInstanceKey: BRUTAL_STRIKE_DECISION_HOLE_INSTANCE,
+        label: "Use Brutal Strike",
+        unitFeature: {
+          unitId: selection.unitId,
+          label: "Brutal Strike",
+        },
+        choices: BRUTAL_STRIKE_DECISION_CHOICES,
+      };
+}
+
+function recklessAttackIsAvailableOrActiveForBrutalStrike(
+  state: BattleState,
+  attackerId: CombatantId,
+  attack: SupportedAttackActionOption,
+): boolean {
+  if (
+    attackRollOngoingFeatureActivations(state, attackerId, attack).length > 0
+  ) {
+    return true;
+  }
+  const attacker = state.combatants.get(attackerId);
+  if (attacker?.origin.kind !== "character") {
+    return false;
+  }
+  return [...activeOngoingFeatureOccurrencesForCombatant(attacker)].some(
+    ([sourceKey]) => {
+      const profile = ongoingFeatureProfileForSourceKey(attacker, sourceKey);
+      return (
+        profile?.kind === "ongoingFeature" &&
+        ongoingFeatureProfileIsRecklessAttackForFrenzy(profile)
+      );
+    },
+  );
+}
+
+function brutalStrikeSelection(
+  state: BattleState,
+  attackerId: CombatantId,
+  attack: SupportedAttackActionOption,
+): {
+  readonly unitId: BattleUnitFeatureDecisionHole["unitFeature"]["unitId"];
+} | null {
+  if (
+    currentActorId(state) !== attackerId ||
+    !attackUsesStrengthWeaponOrUnarmedStrike(attack)
+  ) {
+    return null;
+  }
+  const attacker = state.combatants.get(attackerId);
+  if (attacker?.origin.kind !== "character") {
+    return null;
+  }
+  const unitRef = attacker.origin.characterUnitRefs.find((candidate) =>
+    candidate.supportProfiles.some(
+      (profile) =>
+        typeof profile === "object" &&
+        profile.kind === BRUTAL_STRIKE_SUPPORT_PROFILE,
+    ),
+  );
+  return unitRef === undefined ? null : { unitId: unitRef.unitId };
+}
+
+function isBrutalStrikeDecisionChoice(
+  value: Extract<BattleFill, { readonly kind: "unitFeatureDecision" }>["value"],
+): value is BrutalStrikeDecisionChoice {
+  return BRUTAL_STRIKE_DECISION_CHOICES.some((choice) => choice === value);
+}
+
+function brutalStrikeDamageRiders(input: {
+  readonly state: BattleState;
+  readonly attackerId: CombatantId;
+  readonly attack: SupportedAttackActionOption;
+  readonly choice: BrutalStrikeDecisionChoice | null;
+}): readonly AttackDamageRider[] {
+  if (input.choice === null) return [];
+  const unitId = brutalStrikeSelection(
+    input.state,
+    input.attackerId,
+    input.attack,
+  )?.unitId;
+  const damageType = attackDamageTypeForBrutalStrike(input.attack);
+  return unitId === undefined || damageType === null
+    ? []
+    : [
+        {
+          attackerId: input.attackerId,
+          unitId,
+          label: "Brutal Strike",
+          optional: false,
+          damage: { dice: 1, dieSize: 10, damageType },
+        },
+      ];
+}
+
+function applyBrutalStrikeAfterDamage(input: {
+  readonly state: BattleState;
+  readonly attackerId: CombatantId;
+  readonly targetId: CombatantId;
+  readonly attack: SupportedAttackActionOption;
+  readonly choice: BrutalStrikeDecisionChoice | null;
+}): {
+  readonly state: BattleState;
+  readonly shovePushes: readonly BattleShovePushOutcome[];
+} {
+  const unitId = brutalStrikeSelection(
+    input.state,
+    input.attackerId,
+    input.attack,
+  )?.unitId;
+  if (unitId === undefined || input.choice === null) {
+    return { state: input.state, shovePushes: [] };
+  }
+  if (input.choice === "forceful_blow") {
+    const movedState = spendBrutalStrikeForcefulBlowMovement(
+      input.state,
+      input.attackerId,
+    );
+    return {
+      state: movedState,
+      shovePushes: [
+        {
+          targetId: input.targetId,
+          disposition: {
+            kind: "pushed",
+            distanceFeet: movementFeet(15),
+            destinationId: battleTablePositionId(
+              "brutal-strike-forceful-blow-destination",
+            ),
+            provokesOpportunityAttacks: false,
+          },
+        },
+      ],
+    };
+  }
+  if (input.choice === "hamstring_blow") {
+    const target = input.state.combatants.get(input.targetId);
+    if (target === undefined) {
+      return { state: input.state, shovePushes: [] };
+    }
+    const activeEffects = [
+      ...target.activeEffects.filter(
+        (effect) =>
+          !(
+            effect.kind === "unitFeatureSpeedDelta" &&
+            effect.sourceUnitId === unitId
+          ),
+      ),
+      {
+        kind: "unitFeatureSpeedDelta",
+        sourceUnitId: unitId,
+        sourceCombatantId: input.attackerId,
+        deltaFeet: movementDeltaFeet(-15),
+        expiresAt: { kind: "startOfTurn", combatantId: input.attackerId },
+      } as const,
+    ];
+    return {
+      state: {
+        ...input.state,
+        combatants: new Map(input.state.combatants).set(input.targetId, {
+          ...target,
+          activeEffects,
+        }),
+      },
+      shovePushes: [],
+    };
+  }
+  return { state: input.state, shovePushes: [] };
+}
+
+function spendBrutalStrikeForcefulBlowMovement(
+  state: BattleState,
+  attackerId: CombatantId,
+): BattleState {
+  const attacker = state.combatants.get(attackerId);
+  if (attacker === undefined) return state;
+  const movementSpentFeet = movementFeet(
+    Number(attacker.movementSpentFeet) +
+      Math.floor(Number(effectiveWalkSpeed(attacker)) / 2),
+  );
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(attackerId, {
+      ...attacker,
+      movementSpentFeet,
+    }),
+  };
+}
+
+function attackUsesStrengthWeaponOrUnarmedStrike(
+  attack: SupportedAttackActionOption,
+): boolean {
+  return (
+    (attack.kind === "weapon" && attack.ability === "str") ||
+    (attack.kind === "unarmedStrike" && attack.attackAbility === "str")
+  );
+}
+
+function attackDamageTypeForBrutalStrike(attack: SupportedAttackActionOption) {
+  if (attack.kind === "weapon") {
+    return selectedWeaponDamage(attack.weapon).damageType;
+  }
+  if (attack.kind === "unarmedStrike") {
+    return attack.effect.damage.damageType;
+  }
+  return null;
 }
 
 function grapplerPunchAndGrabDecisionHole(
@@ -454,9 +701,10 @@ function grapplerPunchAndGrabFillIsAbsent(
 
 export function resolveSelectedAttackProcedure(
   input: AttackProcedureResolutionInput,
-  attack: SupportedAttackActionOption,
+  selectedAttack: SupportedAttackActionOption,
   spendAttackProcedure: SpendAttackProcedure,
 ): BattleResolutionResult {
+  let attack = selectedAttack;
   const pendingAttackDamageReductions =
     input.pendingAttackDamageReductions ?? [];
   const pendingAttackDamageAdditions = input.pendingAttackDamageAdditions ?? [];
@@ -468,7 +716,11 @@ export function resolveSelectedAttackProcedure(
   const attackerId = attackProcedureAttackerId(input.subject);
 
   if (fillSet.targetId == null) {
-    if (fillSet.attackRoll != null || fillSet.damageRoll != null) {
+    if (
+      fillSet.tacticalMasterReplacementDecision !== undefined ||
+      fillSet.attackRoll != null ||
+      fillSet.damageRoll != null
+    ) {
       return invalidResult(
         input.state,
         "invalidFill",
@@ -584,6 +836,94 @@ export function resolveSelectedAttackProcedure(
     );
   }
 
+  const tacticalMasterReplacementHole = tacticalMasterReplacementDecisionHole(
+    input.state,
+    attackerId,
+    attack,
+  );
+  if (tacticalMasterReplacementHole === null) {
+    if (fillSet.tacticalMasterReplacementDecision !== undefined) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Tactical Master replacement is only valid for an eligible weapon mastery attack.",
+      );
+    }
+  } else if (fillSet.tacticalMasterReplacementDecision === undefined) {
+    if (fillSet.attackRoll != null || fillSet.damageRoll != null) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Tactical Master replacement must be filled before the attack roll.",
+      );
+    }
+    return needsHolesResult(input.state, input.subject, [
+      tacticalMasterReplacementHole,
+    ]);
+  }
+  const tacticalMasterAttack = tacticalMasterAttackWithReplacement({
+    state: input.state,
+    attackerId,
+    attack,
+    decision: fillSet.tacticalMasterReplacementDecision,
+  });
+  if (tacticalMasterAttack.tag === "invalid") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      tacticalMasterAttack.message,
+    );
+  }
+  attack = tacticalMasterAttack.attack;
+
+  const brutalStrikeDecisionHole = brutalStrikeDecisionHoleForAttack(
+    input.state,
+    attackerId,
+    attack,
+  );
+  const brutalStrikeSupportSelection = brutalStrikeSelection(
+    input.state,
+    attackerId,
+    attack,
+  );
+  if (brutalStrikeDecisionHole === null) {
+    if (
+      fillSet.brutalStrikeDecision !== undefined &&
+      brutalStrikeSupportSelection === null
+    ) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Brutal Strike is only valid for an eligible Reckless Strength attack.",
+      );
+    }
+  } else if (fillSet.brutalStrikeDecision === undefined) {
+    if (fillSet.attackRoll != null || fillSet.damageRoll != null) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Brutal Strike must be chosen or declined before the attack roll.",
+      );
+    }
+    return needsHolesResult(input.state, input.subject, [
+      brutalStrikeDecisionHole,
+    ]);
+  } else if (
+    !isBrutalStrikeDecisionChoice(fillSet.brutalStrikeDecision.value)
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Brutal Strike choice is not an admitted Brutal Strike option.",
+    );
+  }
+  const brutalStrikeChoice: BrutalStrikeDecisionChoice | null =
+    fillSet.brutalStrikeDecision !== undefined &&
+    isBrutalStrikeDecisionChoice(fillSet.brutalStrikeDecision.value) &&
+    fillSet.brutalStrikeDecision.value !== "decline"
+      ? fillSet.brutalStrikeDecision.value
+      : null;
+
   if (fillSet.attackRoll == null) {
     if (
       fillSet.damageRoll != null ||
@@ -600,13 +940,15 @@ export function resolveSelectedAttackProcedure(
       attackRollHole(
         input.state.combatants.get(attackerId),
         attack,
-        requiredAttackRollMode(
-          input.state,
-          attackerId,
-          target.combatantId,
-          attack,
-          fillSet.targetSpatialFacts,
-        ),
+        brutalStrikeChoice === null
+          ? requiredAttackRollMode(
+              input.state,
+              attackerId,
+              target.combatantId,
+              attack,
+              fillSet.targetSpatialFacts,
+            )
+          : undefined,
         attackRollOngoingFeatureActivations(input.state, attackerId, attack),
       ),
     ]);
@@ -652,10 +994,20 @@ export function resolveSelectedAttackProcedure(
     fillSet.targetSpatialFacts,
     fillSet.attackRoll.activatedOngoingFeatureUnitId,
   );
+  const baselineRequiredRollMode = requiredAttackRollMode(
+    input.state,
+    attackerId,
+    target.combatantId,
+    attack,
+    fillSet.targetSpatialFacts,
+  );
+  const resolvedRequiredRollMode =
+    brutalStrikeChoice === null ? requiredRollMode : undefined;
   const attackRollModeWasEstablishedBeforeReplay =
     input.replayingInterruptedProcedure === true;
   if (
     !attackRollModeWasEstablishedBeforeReplay &&
+    brutalStrikeChoice === null &&
     fillSet.attackRoll.activatedOngoingFeatureUnitId !== undefined &&
     fillSet.attackRoll.rollMode !== requiredRollMode
   ) {
@@ -667,6 +1019,35 @@ export function resolveSelectedAttackProcedure(
   }
   if (
     !attackRollModeWasEstablishedBeforeReplay &&
+    brutalStrikeChoice !== null &&
+    fillSet.attackRoll.activatedOngoingFeatureUnitId === undefined &&
+    !recklessAttackIsAvailableOrActiveForBrutalStrike(
+      input.state,
+      attackerId,
+      attack,
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Brutal Strike requires using or already benefiting from Reckless Attack on the chosen attack roll.",
+    );
+  }
+  if (
+    !attackRollModeWasEstablishedBeforeReplay &&
+    brutalStrikeChoice !== null &&
+    (baselineRequiredRollMode === "disadvantage" ||
+      !attackRollModeMatches(fillSet.attackRoll, undefined))
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Brutal Strike forgoes Advantage and cannot be used on an attack roll with Disadvantage.",
+    );
+  }
+  if (
+    !attackRollModeWasEstablishedBeforeReplay &&
+    brutalStrikeChoice === null &&
     !attackRollModeMatches(fillSet.attackRoll, requiredRollMode)
   ) {
     return invalidResult(
@@ -690,7 +1071,7 @@ export function resolveSelectedAttackProcedure(
         attackRollHole(
           attacker,
           attack,
-          requiredRollMode,
+          resolvedRequiredRollMode,
           attackRollOngoingFeatureActivations(input.state, attackerId, attack),
         ),
       ),
@@ -703,7 +1084,7 @@ export function resolveSelectedAttackProcedure(
     rollMode: fillSet.attackRoll.rollMode,
     rolledD20s: fillSet.attackRoll.rolledD20s,
     decision: fillSet.attackRoll.d20TestNaturalOneReroll,
-    requiredRollMode,
+    requiredRollMode: resolvedRequiredRollMode,
     otherD20RerollPresent: fillSet.attackRoll.spellAttackReroll !== undefined,
   });
   if (d20TestNaturalOneRerollIssue !== null) {
@@ -755,6 +1136,8 @@ export function resolveSelectedAttackProcedure(
     input.state,
     attackerId,
   );
+  const hiddenBeforeAttack =
+    attackRollState.combatants.get(attackerId)?.hidden ?? null;
   const attackRolledState = recordAttackRollMissToHitReplacementUsed(
     consumeHelpAttackForAttackRoll(
       recordAttackRollOngoingFeatures(
@@ -826,14 +1209,22 @@ export function resolveSelectedAttackProcedure(
     }
   }
   const eligibleDamageRiders = hit
-    ? eligibleAttackDamageRiders(
-        attackRolledState,
-        attackerId,
-        target.combatantId,
-        attack,
-        effectiveAttackRoll,
-        fillSet.targetSpatialFacts,
-      )
+    ? [
+        ...eligibleAttackDamageRiders(
+          attackRolledState,
+          attackerId,
+          target.combatantId,
+          attack,
+          effectiveAttackRoll,
+          fillSet.targetSpatialFacts,
+        ),
+        ...brutalStrikeDamageRiders({
+          state: attackRolledState,
+          attackerId,
+          attack,
+          choice: brutalStrikeChoice,
+        }),
+      ]
     : [];
   const eligibleDamageDiceChoiceUnitIds = hit
     ? eligibleWeaponDamageDiceRollChoiceUnitIds(
@@ -873,6 +1264,7 @@ export function resolveSelectedAttackProcedure(
         attackerId,
         targetId: target.combatantId,
         eligibleAttackDamageRiders: eligibleDamageRiders,
+        hiddenBeforeAttack,
       })
     : [];
   const selectedCunningStrike = selectedCunningStrikeContext(
@@ -1020,9 +1412,33 @@ export function resolveSelectedAttackProcedure(
       ...openHandTechniqueApplied.holes,
     ]);
   }
+  const weaponMasteryPushApplied = hit
+    ? applyWeaponMasteryPushOnHit({
+        state: openHandTechniqueApplied.state,
+        attackerId,
+        targetId: target.combatantId,
+        attack,
+        targetSpatialFacts: fillSet.targetSpatialFacts,
+      })
+    : ({
+        tag: "ok",
+        state: openHandTechniqueApplied.state,
+        shovePushes: [],
+      } as const);
+  if (weaponMasteryPushApplied.tag === "invalid") {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      weaponMasteryPushApplied.message,
+    );
+  }
+  const shovePushes = [
+    ...openHandTechniqueApplied.shovePushes,
+    ...weaponMasteryPushApplied.shovePushes,
+  ];
   const toppleSaveHole = hit
     ? weaponMasteryToppleSavingThrowHole(
-        openHandTechniqueApplied.state,
+        weaponMasteryPushApplied.state,
         attackerId,
         target.combatantId,
         attack,
@@ -1037,18 +1453,18 @@ export function resolveSelectedAttackProcedure(
       );
     }
   } else if (fillSet.weaponMasteryToppleSavingThrow === undefined) {
-    return needsHolesResult(openHandTechniqueApplied.state, input.subject, [
+    return needsHolesResult(weaponMasteryPushApplied.state, input.subject, [
       toppleSaveHole,
     ]);
   }
   const toppleApplied = fillSet.weaponMasteryToppleSavingThrow
     ? applyWeaponMasteryToppleSavingThrow(
-        openHandTechniqueApplied.state,
+        weaponMasteryPushApplied.state,
         attackerId,
         target.combatantId,
         fillSet.weaponMasteryToppleSavingThrow,
       )
-    : ({ tag: "ok", state: openHandTechniqueApplied.state } as const);
+    : ({ tag: "ok", state: weaponMasteryPushApplied.state } as const);
   if (toppleApplied.tag === "invalid") {
     return invalidResult(input.state, "invalidFill", toppleApplied.message);
   }
@@ -1285,21 +1701,29 @@ export function resolveSelectedAttackProcedure(
         hideousLaughterSaveCheck.message,
       );
     }
+    const fixedDamageAppliedState = applyAttackDamageAmount(
+      grapplerPunchAndGrab.state,
+      attackerId,
+      target.combatantId,
+      toDamageAmount(reducedFixedDamageAmount),
+      critical ? 2 : 1,
+      fillSet.damageDisposition,
+      [],
+      undefined,
+      primaryConcentrationSavingThrow,
+      fillSet.hideousLaughterDamageRepeatSaves,
+      primaryConcentrationSavingThrows,
+      fillSet.targetSpatialFacts,
+    );
+    const fixedDamageWithSlowState = applyWeaponMasterySlowAfterDamage({
+      state: fixedDamageAppliedState,
+      attackerId,
+      targetId: target.combatantId,
+      attack,
+      damageAmount: Number(reducedFixedDamageAmount),
+    });
     const spent = spendAttackProcedure(
-      applyAttackDamageAmount(
-        grapplerPunchAndGrab.state,
-        attackerId,
-        target.combatantId,
-        toDamageAmount(reducedFixedDamageAmount),
-        critical ? 2 : 1,
-        fillSet.damageDisposition,
-        [],
-        undefined,
-        primaryConcentrationSavingThrow,
-        fillSet.hideousLaughterDamageRepeatSaves,
-        primaryConcentrationSavingThrows,
-        fillSet.targetSpatialFacts,
-      ),
+      fixedDamageWithSlowState,
       attackerId,
       attack,
     );
@@ -1343,10 +1767,7 @@ export function resolveSelectedAttackProcedure(
       fills: attackFollowUpFillsAfterPrimaryDamage(input.fills),
       handledInterruptTrigger: input.handledInterruptTrigger,
     });
-    return withOpenHandTechniqueShovePushes(
-      afterPrimaryDamage,
-      openHandTechniqueApplied.shovePushes,
-    );
+    return withOpenHandTechniqueShovePushes(afterPrimaryDamage, shovePushes);
   }
   if (hit && fillSet.damageRoll == null) {
     if (fillSet.sourceDamageRollPenaltyRolls.length > 0) {
@@ -1698,6 +2119,7 @@ export function resolveSelectedAttackProcedure(
       savingThrow: fillSet.cunningStrikeSavingThrow,
       movement: fillSet.cunningStrikeMovement,
       toolPossession: fillSet.cunningStrikeToolPossession,
+      endTurnCover: fillSet.cunningStrikeEndTurnCover,
     });
     if (cunningStrike.tag === "needsHoles") {
       return needsHolesResult(grapplerPunchAndGrab.state, input.subject, [
@@ -1707,7 +2129,25 @@ export function resolveSelectedAttackProcedure(
     if (cunningStrike.tag === "invalid") {
       return invalidResult(input.state, "invalidFill", cunningStrike.message);
     }
-    const spent = spendAttackProcedure(cunningStrike.state, attackerId, attack);
+    const damageWithSlowState = applyWeaponMasterySlowAfterDamage({
+      state: cunningStrike.state,
+      attackerId,
+      targetId: target.combatantId,
+      attack,
+      damageAmount: Number(reducedDamageAmount),
+    });
+    const brutalStrikeApplied = applyBrutalStrikeAfterDamage({
+      state: damageWithSlowState,
+      attackerId,
+      targetId: target.combatantId,
+      attack,
+      choice: brutalStrikeChoice,
+    });
+    const spent = spendAttackProcedure(
+      brutalStrikeApplied.state,
+      attackerId,
+      attack,
+    );
     if (spent.tag === "invalid") {
       return spent;
     }
@@ -1749,7 +2189,7 @@ export function resolveSelectedAttackProcedure(
         fills: attackFollowUpFillsAfterPrimaryDamage(input.fills),
         handledInterruptTrigger: input.handledInterruptTrigger,
       }),
-      openHandTechniqueApplied.shovePushes,
+      [...shovePushes, ...brutalStrikeApplied.shovePushes],
     );
   }
 
@@ -1766,7 +2206,7 @@ export function resolveSelectedAttackProcedure(
       fills: input.fills,
       handledInterruptTrigger: input.handledInterruptTrigger,
     }),
-    openHandTechniqueApplied.shovePushes,
+    shovePushes,
   );
 }
 

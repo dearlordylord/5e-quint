@@ -13,7 +13,7 @@
       "spell-level-0": 0,
       "spell-level-1": 0,
       "spell-level-2": 0,
-      "spell-level-3": 110,
+      "spell-level-3": 128,
       "spell-level-4": 81
     },
     "auditedUniqueSpellIdentitiesByFinalDisposition": {
@@ -25,20 +25,19 @@
       "spell-level-3": 42,
       "spell-level-4": 34
     },
-    "minedDenominatorRows": 924,
+    "minedDenominatorRows": 945,
     "missingMinedLevelBands": [],
     "rowsByAxis": {
       "character-level": 366,
-      "spell-level": 558
+      "spell-level": 579
     },
     "rowsByBattleReadinessStatus": {
-      "accepted": 485,
-      "accepted-no-battle-effect": 338,
-      "not-applicable": 101
+      "accepted": 503,
+      "accepted-no-battle-effect": 442
     },
     "rowsByCatalogAdmission": {
-      "installed": 707,
-      "not-installed": 217
+      "installed": 721,
+      "not-installed": 224
     },
     "rowsByCategory": {
       "character-creation or progression mechanic": 184,
@@ -47,13 +46,13 @@
       "equipment/weapon/armor pressure": 12,
       "mastery pressure": 5,
       "spell access/list pressure": 12,
-      "spell Unit pressure": 558,
+      "spell Unit pressure": 579,
       "subclass selection": 12
     },
     "rowsByFinalDisposition": {
-      "catalog-installed-owner-evidence-present": 503,
-      "catalog-only/dead-for-now": 293,
-      "missing-authored-runtime-closed": 32,
+      "catalog-installed-owner-evidence-present": 507,
+      "catalog-only/dead-for-now": 307,
+      "missing-authored-runtime-closed": 35,
       "non-runtime": 96
     },
     "rowsByLevelBand": {
@@ -67,8 +66,8 @@
       "level-8": 24,
       "spell-level-0": 66,
       "spell-level-1": 145,
-      "spell-level-2": 156,
-      "spell-level-3": 110,
+      "spell-level-2": 159,
+      "spell-level-3": 128,
       "spell-level-4": 81
     },
     "rowsByRowKind": {
@@ -80,15 +79,15 @@
       "mastery-pressure": 5,
       "multiclass-entry": 12,
       "spell-access": 7,
-      "spell-unit-pressure": 558,
+      "spell-unit-pressure": 579,
       "subclass-selection": 12,
       "subclass-spell-access": 5
     },
     "rowsByUnitProfileDisposition": {
       "not-recorded": 39,
-      "profile-subset-supported": 59,
-      "supported-profile": 310,
-      "unsupported-profile": 516
+      "profile-subset-supported": 61,
+      "supported-profile": 312,
+      "unsupported-profile": 533
     }
   },
   "rows": [
@@ -1095,7 +1094,8 @@
           "unitId": "barbarian_extra_attack"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -1138,7 +1138,8 @@
           "unitId": "barbarian_fast_movement"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -1181,7 +1182,8 @@
           "unitId": "class_barbarian"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -1222,7 +1224,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -1269,7 +1272,8 @@
           "unitId": "class_barbarian"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -1310,7 +1314,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -1355,7 +1360,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "resource-option-rider-boundary",
@@ -1402,7 +1408,8 @@
           "unitId": "class_barbarian"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -1457,7 +1464,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
@@ -1505,7 +1513,8 @@
           "unitId": "class_barbarian"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -2526,7 +2535,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "character-fact-and-runtime-detached-split",
@@ -2573,7 +2583,8 @@
           "unitId": "class_bard"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -2614,7 +2625,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "character-fact-and-runtime-detached-split",
@@ -2661,7 +2673,8 @@
           "unitId": "class_bard"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -2702,7 +2715,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -2749,7 +2763,8 @@
           "unitId": "class_bard"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -2804,7 +2819,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
@@ -2885,7 +2901,8 @@
           "unitId": "class_bard"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -7637,7 +7654,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "resource-option-rider-boundary",
@@ -7684,7 +7702,8 @@
           "unitId": "class_cleric"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -7725,7 +7744,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -7772,7 +7792,8 @@
           "unitId": "class_cleric"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -7813,7 +7834,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -7860,7 +7882,8 @@
           "unitId": "class_cleric"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -7915,7 +7938,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
@@ -7996,7 +8020,8 @@
           "unitId": "class_cleric"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -12166,7 +12191,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "character-fact-and-runtime-detached-split",
@@ -12213,7 +12239,8 @@
           "unitId": "class_druid"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -12254,7 +12281,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "character-fact-and-runtime-detached-split",
@@ -12301,7 +12329,8 @@
           "unitId": "class_druid"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -12342,7 +12371,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -12389,7 +12419,8 @@
           "unitId": "class_druid"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -12444,7 +12475,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
@@ -12525,7 +12557,8 @@
           "unitId": "class_druid"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -17296,7 +17329,8 @@
           "unitId": "fighter_extra_attack"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -17337,7 +17371,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "resource-option-rider-boundary",
@@ -17384,7 +17419,8 @@
           "unitId": "class_fighter"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -17435,7 +17471,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
@@ -17482,7 +17519,8 @@
           "unitId": "class_fighter"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -17523,7 +17561,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
@@ -17570,7 +17609,8 @@
           "unitId": "class_fighter"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -17625,7 +17665,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
@@ -17673,7 +17714,8 @@
           "unitId": "class_fighter"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -18784,7 +18826,8 @@
           "unitId": "monk_extra_attack"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -18827,7 +18870,8 @@
           "unitId": "monk_stunning_strike"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -18870,7 +18914,8 @@
           "unitId": "class_monk"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -18911,7 +18956,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -18956,7 +19002,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "character-fact-and-runtime-detached-split",
@@ -19003,7 +19050,8 @@
           "unitId": "class_monk"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -19046,7 +19094,8 @@
           "unitId": "monk_evasion"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -19089,7 +19138,8 @@
           "unitId": "class_monk"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -19144,7 +19194,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
@@ -19209,7 +19260,8 @@
           "unitId": "class_monk"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -20284,7 +20336,8 @@
           "unitId": "paladin_extra_attack"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -20325,7 +20378,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "character-fact-and-runtime-detached-split",
@@ -20372,7 +20426,8 @@
           "unitId": "class_paladin"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -20413,7 +20468,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "table-spatial-derivation",
@@ -20460,7 +20516,8 @@
           "unitId": "class_paladin"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -20501,7 +20558,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "table-spatial-derivation",
@@ -20548,7 +20606,8 @@
           "unitId": "class_paladin"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -20603,7 +20662,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
@@ -20651,7 +20711,8 @@
           "unitId": "class_paladin"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -21765,6 +21826,294 @@
       }
     },
     {
+      "axis": "spell-level",
+      "candidateUnitId": "create_food_and_water",
+      "category": "spell Unit pressure",
+      "className": "Paladin",
+      "concept": "Paladin spell list Create Food and Water",
+      "levelBand": "spell-level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/paladin:spell-level-3:spell-unit-pressure:paladin_spell_list_create_food_and_water",
+        "state": "present"
+      },
+      "nextAction": "Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers.",
+      "rowId": "srd521:classes/paladin:spell-level-3:spell-unit-pressure:paladin_spell_list_create_food_and_water",
+      "rowKind": "spell-unit-pressure",
+      "source": {
+        "lineEnd": 210,
+        "lineStart": 210,
+        "path": ".references/srd-5.2.1/Classes/Paladin.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/create_food_and_water.json",
+          "state": "authored-record-present",
+          "unitId": "create_food_and_water"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
+        },
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "runtime-detached table inventory and survival adjudication owner",
+          "reason": "Create Food and Water's represented runtime behavior is closed outside promoted battle runtime: a future inventory or survival owner must model created provision quantities, placement on the ground or in containers, holder/location state, food spoilage after 24 hours, later consumption, and clean-water/nourishing-food effects on malnutrition and dehydration without duplicating inventory or survival clocks inside battle Spell Invocation reducers.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "not-installed",
+          "unitId": "create_food_and_water"
+        },
+        "finalDisposition": "catalog-only/dead-for-now",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "spell-level",
+      "candidateUnitId": "daylight",
+      "category": "spell Unit pressure",
+      "className": "Paladin",
+      "concept": "Paladin spell list Daylight",
+      "levelBand": "spell-level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/paladin:spell-level-3:spell-unit-pressure:paladin_spell_list_daylight",
+        "state": "present"
+      },
+      "nextAction": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers.",
+      "rowId": "srd521:classes/paladin:spell-level-3:spell-unit-pressure:paladin_spell_list_daylight",
+      "rowKind": "spell-unit-pressure",
+      "source": {
+        "lineEnd": 211,
+        "lineStart": 211,
+        "path": ".references/srd-5.2.1/Classes/Paladin.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/daylight.json",
+          "state": "authored-record-present",
+          "unitId": "daylight"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
+        },
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future sunlight Spell Effect and table/spatial light-overlap owner",
+          "reason": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "not-installed",
+          "unitId": "daylight"
+        },
+        "finalDisposition": "catalog-only/dead-for-now",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "spell-level",
+      "candidateUnitId": "dispel_magic",
+      "category": "spell Unit pressure",
+      "className": "Paladin",
+      "concept": "Paladin spell list Dispel Magic",
+      "levelBand": "spell-level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/paladin:spell-level-3:spell-unit-pressure:paladin_spell_list_dispel_magic",
+        "state": "present"
+      },
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "rowId": "srd521:classes/paladin:spell-level-3:spell-unit-pressure:paladin_spell_list_dispel_magic",
+      "rowKind": "spell-unit-pressure",
+      "source": {
+        "lineEnd": 212,
+        "lineStart": 212,
+        "path": ".references/srd-5.2.1/Classes/Paladin.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/dispel_magic.json",
+          "state": "authored-record-present",
+          "unitId": "dispel_magic"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted"
+        },
+        "battleReadinessClosure": {
+          "kind": "profile-subset-remaining-mechanics-closed",
+          "owner": "broader ongoing Spell Effect occurrence model; table spatial witness and magical-effect identity owner",
+          "reason": "The real battle reducer path enumerates only tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences as Dispel Magic-removable ongoing Spell Effect carriers. Broader creature-attached, area, object, and spell-specific exception families are not represented with stable occurrence identity, source spell level, target association, and cleanup semantics, so Dispel Magic must wait for that shared occurrence owner instead of adding a table-only profile.; The battle runtime consumes typed target-within-range facts supplied by the table boundary; it does not infer map geometry or choose table-visible magical-effect identities automatically.",
+          "source": "deferred-mechanics",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "dispel_magic"
+        },
+        "finalDisposition": "catalog-installed-owner-evidence-present",
+        "unitProfile": {
+          "disposition": "profile-subset-supported",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "spell-level",
+      "candidateUnitId": "magic_circle",
+      "category": "spell Unit pressure",
+      "className": "Paladin",
+      "concept": "Paladin spell list Magic Circle",
+      "levelBand": "spell-level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/paladin:spell-level-3:spell-unit-pressure:paladin_spell_list_magic_circle",
+        "state": "present"
+      },
+      "nextAction": "Magic Circle supplies typed Surface facts for the warded Cylinder, affected creature type choice, direction branch, crossing gates, protected-target Attack Roll Disadvantage, and source-scoped possession/condition prevention. Promoted battle runtime still needs a warded-area effect owner that consumes table-supplied placement, area membership, protected-target location, willing nonmagical entry attempts, nonmagical exit attempts, teleportation or interplanar-travel crossing witnesses, and source-scoped possession/Charmed/Frightened prevention without duplicating battle map state or branching on authored spell id or name.",
+      "rowId": "srd521:classes/paladin:spell-level-3:spell-unit-pressure:paladin_spell_list_magic_circle",
+      "rowKind": "spell-unit-pressure",
+      "source": {
+        "lineEnd": 213,
+        "lineStart": 213,
+        "path": ".references/srd-5.2.1/Classes/Paladin.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/magic_circle.json",
+          "state": "authored-record-present",
+          "unitId": "magic_circle"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
+        },
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "future warded-area Spell Effect owner plus table/spatial crossing and protected-target witness owner",
+          "reason": "Magic Circle supplies typed Surface facts for the warded Cylinder, affected creature type choice, direction branch, crossing gates, protected-target Attack Roll Disadvantage, and source-scoped possession/condition prevention. Promoted battle runtime still needs a warded-area effect owner that consumes table-supplied placement, area membership, protected-target location, willing nonmagical entry attempts, nonmagical exit attempts, teleportation or interplanar-travel crossing witnesses, and source-scoped possession/Charmed/Frightened prevention without duplicating battle map state or branching on authored spell id or name.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "magic_circle"
+        },
+        "finalDisposition": "catalog-only/dead-for-now",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "spell-level",
+      "candidateUnitId": "remove_curse",
+      "category": "spell Unit pressure",
+      "className": "Paladin",
+      "concept": "Paladin spell list Remove Curse",
+      "levelBand": "spell-level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/paladin:spell-level-3:spell-unit-pressure:paladin_spell_list_remove_curse",
+        "state": "present"
+      },
+      "nextAction": "Remove Curse supplies table-facing all-curses-ending and cursed-item Attunement source facts. Bestow Curse supplies a shared curse-occurrence removal boundary, but promoted battle runtime does not yet own generic all-curses-ending cleanup across active curse occurrences, curse persistence on cursed magic items, or Attunement mutation for cursed objects.",
+      "rowId": "srd521:classes/paladin:spell-level-3:spell-unit-pressure:paladin_spell_list_remove_curse",
+      "rowKind": "spell-unit-pressure",
+      "source": {
+        "lineEnd": 214,
+        "lineStart": 214,
+        "path": ".references/srd-5.2.1/Classes/Paladin.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/remove_curse.json",
+          "state": "authored-record-present",
+          "unitId": "remove_curse"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
+        },
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future all-curses-ending cleanup and magic-item Attunement owner",
+          "reason": "Remove Curse supplies table-facing all-curses-ending and cursed-item Attunement source facts. Bestow Curse supplies a shared curse-occurrence removal boundary, but promoted battle runtime does not yet own generic all-curses-ending cleanup across active curse occurrences, curse persistence on cursed magic items, or Attunement mutation for cursed objects.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "remove_curse"
+        },
+        "finalDisposition": "catalog-only/dead-for-now",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "spell-level",
+      "candidateUnitId": "revivify",
+      "category": "spell Unit pressure",
+      "className": "Paladin",
+      "concept": "Paladin spell list Revivify",
+      "levelBand": "spell-level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/paladin:spell-level-3:spell-unit-pressure:paladin_spell_list_revivify",
+        "state": "present"
+      },
+      "nextAction": "Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup.",
+      "rowId": "srd521:classes/paladin:spell-level-3:spell-unit-pressure:paladin_spell_list_revivify",
+      "rowKind": "spell-unit-pressure",
+      "source": {
+        "lineEnd": 215,
+        "lineStart": 215,
+        "path": ".references/srd-5.2.1/Classes/Paladin.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/revivify.json",
+          "state": "authored-record-present",
+          "unitId": "revivify"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
+        },
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future rest/revival workflow owner",
+          "reason": "Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "revivify"
+        },
+        "finalDisposition": "catalog-only/dead-for-now",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
       "axis": "character-level",
       "candidateUnitId": "class_ranger",
       "category": "class container",
@@ -22772,7 +23121,8 @@
           "unitId": "ranger_extra_attack"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -22815,7 +23165,8 @@
           "unitId": "class_ranger"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -22858,7 +23209,8 @@
           "unitId": "ranger_roving"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -22901,7 +23253,8 @@
           "unitId": "class_ranger"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -22942,7 +23295,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -22989,7 +23343,8 @@
           "unitId": "class_ranger"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -23021,7 +23376,7 @@
         "sourceInventoryRowId": "srd521:classes/ranger:level-8:class-feature-grant:ranger_ability_score_improvement",
         "state": "present"
       },
-      "nextAction": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
+      "nextAction": "Owner-specific operational evidence is classified and present.",
       "relatedSources": [
         {
           "kind": "dedicated-rule-text",
@@ -23041,25 +23396,28 @@
       },
       "supportSnapshot": {
         "authoredContent": {
-          "state": "missing-authored-record"
+          "sourceRecordPath": "packages/surface/content/ranger_ability_score_improvement_l8.json",
+          "state": "authored-record-present",
+          "unitId": "ranger_ability_score_improvement_l8"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
-          "owner": "future character-creation repeated ASI grant-occurrence owner plus selected feat Unit profiles",
-          "reason": "The SRD level-4 Ability Score Improvement rule text says the feature is gained again at class level 8, and the level-8 class table row repeats that feature. The Surface/character-creation boundary lacks a catalog-backed grant-occurrence model that can admit this repeated ASI without duplicating the level-4 ASI rule text into a parallel authored record. Keep this row closed as a not-installed repeated selection-grant container until a character-creation owner represents repeated ASI grant occurrences without duplicating derived state; selected feat Units remain the executable owners.",
+          "owner": "character-creation-runtime class-feature feat choice plus selected feat Unit profiles",
+          "reason": "The promoted Character Creation owner now proves this class-feature feat-selection container inside the Ranger level-9 workflow. The selected feat Unit, not the Ranger ASI container, owns any executable battle pressure.",
           "source": "unit-claim",
           "state": "recorded"
         },
         "catalogAdmission": {
-          "state": "not-installed",
+          "state": "installed",
           "unitId": "ranger_ability_score_improvement_l8"
         },
-        "finalDisposition": "catalog-only/dead-for-now",
+        "finalDisposition": "catalog-installed-owner-evidence-present",
         "unitProfile": {
-          "disposition": "unsupported-profile",
+          "disposition": "supported-profile",
           "state": "recorded"
         }
       }
@@ -23092,7 +23450,8 @@
           "unitId": "class_ranger"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -24398,6 +24757,578 @@
       }
     },
     {
+      "axis": "spell-level",
+      "candidateUnitId": "conjure_animals",
+      "category": "spell Unit pressure",
+      "className": "Ranger",
+      "concept": "Ranger spell list Conjure Animals",
+      "levelBand": "spell-level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_conjure_animals",
+        "state": "present"
+      },
+      "nextAction": "Conjure Animals supplies typed Surface facts for the spectral pack occurrence, visible-unoccupied placement and reposition destination, caster-proximity Strength Saving Throw Advantage predicate, caster-movement reposition trigger, optional Dexterity Saving Throw damage application, caster-visible creature trigger eligibility, shared once-per-turn limit, and higher-slot damage scaling. Promoted battle runtime still needs a pack Spell Effect owner that consumes caller/table-spatial pack position, caster proximity, visible-creature membership, and per-turn per-creature trigger witnesses without adding companion-control state or dispatching on the authored spell id or name.",
+      "rowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_conjure_animals",
+      "rowKind": "spell-unit-pressure",
+      "source": {
+        "lineEnd": 202,
+        "lineStart": 202,
+        "path": ".references/srd-5.2.1/Classes/Ranger.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/conjure_animals.json",
+          "state": "authored-record-present",
+          "unitId": "conjure_animals"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
+        },
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "future pack Spell Effect owner plus table/spatial pack-position and visible-creature witness owner",
+          "reason": "Conjure Animals supplies typed Surface facts for the spectral pack occurrence, visible-unoccupied placement and reposition destination, caster-proximity Strength Saving Throw Advantage predicate, caster-movement reposition trigger, optional Dexterity Saving Throw damage application, caster-visible creature trigger eligibility, shared once-per-turn limit, and higher-slot damage scaling. Promoted battle runtime still needs a pack Spell Effect owner that consumes caller/table-spatial pack position, caster proximity, visible-creature membership, and per-turn per-creature trigger witnesses without adding companion-control state or dispatching on the authored spell id or name.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "conjure_animals"
+        },
+        "finalDisposition": "catalog-only/dead-for-now",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "spell-level",
+      "candidateUnitId": "daylight",
+      "category": "spell Unit pressure",
+      "className": "Ranger",
+      "concept": "Ranger spell list Daylight",
+      "levelBand": "spell-level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_daylight",
+        "state": "present"
+      },
+      "nextAction": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers.",
+      "rowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_daylight",
+      "rowKind": "spell-unit-pressure",
+      "source": {
+        "lineEnd": 203,
+        "lineStart": 203,
+        "path": ".references/srd-5.2.1/Classes/Ranger.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/daylight.json",
+          "state": "authored-record-present",
+          "unitId": "daylight"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
+        },
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future sunlight Spell Effect and table/spatial light-overlap owner",
+          "reason": "Daylight's represented battle behavior is closed outside the promoted battle-runtime boundary: a future sunlight Spell Effect owner must model point-origin Sphere sunlight, object-origin Emanation sunlight, object worn/carried admission, opaque-cover suppression, one-hour occurrence cleanup, Bright Light and Dim Light illumination projection, and overlap-triggered dispelling of magical Darkness spell effects of level 3 or lower. Table/spatial ownership must supply area membership, object movement, cover, line of sight, and spell-area overlap facts rather than duplicating map illumination or object state inside generic Spell Invocation reducers.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "not-installed",
+          "unitId": "daylight"
+        },
+        "finalDisposition": "catalog-only/dead-for-now",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "spell-level",
+      "candidateUnitId": "dispel_magic",
+      "category": "spell Unit pressure",
+      "className": "Ranger",
+      "concept": "Ranger spell list Dispel Magic",
+      "levelBand": "spell-level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_dispel_magic",
+        "state": "present"
+      },
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "rowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_dispel_magic",
+      "rowKind": "spell-unit-pressure",
+      "source": {
+        "lineEnd": 204,
+        "lineStart": 204,
+        "path": ".references/srd-5.2.1/Classes/Ranger.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/dispel_magic.json",
+          "state": "authored-record-present",
+          "unitId": "dispel_magic"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted"
+        },
+        "battleReadinessClosure": {
+          "kind": "profile-subset-remaining-mechanics-closed",
+          "owner": "broader ongoing Spell Effect occurrence model; table spatial witness and magical-effect identity owner",
+          "reason": "The real battle reducer path enumerates only tracked spell-light emitters, tracked spellObjectContactDamage active-effect occurrences, and tracked Spiritual Weapon active-effect occurrences as Dispel Magic-removable ongoing Spell Effect carriers. Broader creature-attached, area, object, and spell-specific exception families are not represented with stable occurrence identity, source spell level, target association, and cleanup semantics, so Dispel Magic must wait for that shared occurrence owner instead of adding a table-only profile.; The battle runtime consumes typed target-within-range facts supplied by the table boundary; it does not infer map geometry or choose table-visible magical-effect identities automatically.",
+          "source": "deferred-mechanics",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "dispel_magic"
+        },
+        "finalDisposition": "catalog-installed-owner-evidence-present",
+        "unitProfile": {
+          "disposition": "profile-subset-supported",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "spell-level",
+      "candidateUnitId": "meld_into_stone",
+      "category": "spell Unit pressure",
+      "className": "Ranger",
+      "concept": "Ranger spell list Meld into Stone",
+      "levelBand": "spell-level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_meld_into_stone",
+        "state": "present"
+      },
+      "nextAction": "Meld into Stone supplies typed Surface facts for the stone object-or-surface containment target, hidden merged occupancy, outside-sense limits, time awareness, self-spell permission, Movement-limited voluntary exit, otherwise-no-movement restriction, harmless minor stone damage, destructive/transmuting expulsion damage, closest-unoccupied-space placement, and Prone rider. Promoted battle runtime still needs a merged-state effect owner that consumes table terrain/object witnesses for stone size, shape, material, entry location, damage/destruction/transmutation events, fit-after-shape-change predicates, and closest-unoccupied placement without duplicating battle map/object state or branching on authored spell id or name.",
+      "rowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_meld_into_stone",
+      "rowKind": "spell-unit-pressure",
+      "source": {
+        "lineEnd": 205,
+        "lineStart": 205,
+        "path": ".references/srd-5.2.1/Classes/Ranger.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/meld_into_stone.json",
+          "state": "authored-record-present",
+          "unitId": "meld_into_stone"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
+        },
+        "battleReadinessClosure": {
+          "kind": "table-spatial-derivation",
+          "owner": "future merged-state Spell Effect owner plus table terrain/object occupancy witness owner",
+          "reason": "Meld into Stone supplies typed Surface facts for the stone object-or-surface containment target, hidden merged occupancy, outside-sense limits, time awareness, self-spell permission, Movement-limited voluntary exit, otherwise-no-movement restriction, harmless minor stone damage, destructive/transmuting expulsion damage, closest-unoccupied-space placement, and Prone rider. Promoted battle runtime still needs a merged-state effect owner that consumes table terrain/object witnesses for stone size, shape, material, entry location, damage/destruction/transmutation events, fit-after-shape-change predicates, and closest-unoccupied placement without duplicating battle map/object state or branching on authored spell id or name.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "meld_into_stone"
+        },
+        "finalDisposition": "catalog-only/dead-for-now",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "spell-level",
+      "candidateUnitId": "nondetection",
+      "category": "spell Unit pressure",
+      "className": "Ranger",
+      "concept": "Ranger spell list Nondetection",
+      "levelBand": "spell-level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_nondetection",
+        "state": "present"
+      },
+      "nextAction": "Nondetection supplies a source fact that blocks Divination targeting and magical scrying-sensor perception for a touched creature, place, or object, but promoted battle runtime does not own generic Divination targetability, active remote-sensor perception, place identity, or table/perception disclosure. Those facts should be consumed by a future divination/perception owner without duplicating battle map, sensor, or authored spell identity state in generic Spell Invocation reducers.",
+      "rowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_nondetection",
+      "rowKind": "spell-unit-pressure",
+      "source": {
+        "lineEnd": 206,
+        "lineStart": 206,
+        "path": ".references/srd-5.2.1/Classes/Ranger.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/nondetection.json",
+          "state": "authored-record-present",
+          "unitId": "nondetection"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
+        },
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "future divination targeting and magical scrying-sensor perception owner",
+          "reason": "Nondetection supplies a source fact that blocks Divination targeting and magical scrying-sensor perception for a touched creature, place, or object, but promoted battle runtime does not own generic Divination targetability, active remote-sensor perception, place identity, or table/perception disclosure. Those facts should be consumed by a future divination/perception owner without duplicating battle map, sensor, or authored spell identity state in generic Spell Invocation reducers.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "nondetection"
+        },
+        "finalDisposition": "catalog-only/dead-for-now",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "spell-level",
+      "candidateUnitId": "plant_growth",
+      "category": "spell Unit pressure",
+      "className": "Ranger",
+      "concept": "Ranger spell list Plant Growth",
+      "levelBand": "spell-level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_plant_growth",
+        "state": "present"
+      },
+      "nextAction": "Plant Growth supplies table-facing terrain and agriculture facts, but promoted battle runtime does not own normal-plant area membership, excluded-area geometry, pathfinding or travel-pacing derivation through overgrown terrain, plant-world state, harvest timing, food yield, or settlement economy.",
+      "rowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_plant_growth",
+      "rowKind": "spell-unit-pressure",
+      "source": {
+        "lineEnd": 207,
+        "lineStart": 207,
+        "path": ".references/srd-5.2.1/Classes/Ranger.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/plant_growth.json",
+          "state": "authored-record-present",
+          "unitId": "plant_growth"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
+        },
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table/spatial/exploration/economy owner",
+          "reason": "Plant Growth supplies table-facing terrain and agriculture facts, but promoted battle runtime does not own normal-plant area membership, excluded-area geometry, pathfinding or travel-pacing derivation through overgrown terrain, plant-world state, harvest timing, food yield, or settlement economy.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "plant_growth"
+        },
+        "finalDisposition": "catalog-only/dead-for-now",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "spell-level",
+      "candidateUnitId": "protection_from_energy",
+      "category": "spell Unit pressure",
+      "className": "Ranger",
+      "concept": "Ranger spell list Protection from Energy",
+      "levelBand": "spell-level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_protection_from_energy",
+        "state": "present"
+      },
+      "nextAction": "Owner-specific operational evidence is classified and present.",
+      "rowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_protection_from_energy",
+      "rowKind": "spell-unit-pressure",
+      "source": {
+        "lineEnd": 208,
+        "lineStart": 208,
+        "path": ".references/srd-5.2.1/Classes/Ranger.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/protection_from_energy.json",
+          "state": "authored-record-present",
+          "unitId": "protection_from_energy"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted"
+        },
+        "battleReadinessClosure": {
+          "state": "not-recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "protection_from_energy"
+        },
+        "finalDisposition": "catalog-installed-owner-evidence-present",
+        "unitProfile": {
+          "disposition": "supported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "spell-level",
+      "candidateUnitId": "revivify",
+      "category": "spell Unit pressure",
+      "className": "Ranger",
+      "concept": "Ranger spell list Revivify",
+      "levelBand": "spell-level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_revivify",
+        "state": "present"
+      },
+      "nextAction": "Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup.",
+      "rowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_revivify",
+      "rowKind": "spell-unit-pressure",
+      "source": {
+        "lineEnd": 209,
+        "lineStart": 209,
+        "path": ".references/srd-5.2.1/Classes/Ranger.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/revivify.json",
+          "state": "authored-record-present",
+          "unitId": "revivify"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
+        },
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future rest/revival workflow owner",
+          "reason": "Revivify supplies death-window and return-to-life source facts, but promoted battle runtime does not own dead creature target eligibility, spirit refusal, corpse or missing-body-part state, generic revival transitions, Dead-glossary ongoing effect persistence, Exhaustion adjustment, or magic-item Attunement cleanup.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "revivify"
+        },
+        "finalDisposition": "catalog-only/dead-for-now",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "spell-level",
+      "candidateUnitId": "speak_with_plants",
+      "category": "spell Unit pressure",
+      "className": "Ranger",
+      "concept": "Ranger spell list Speak with Plants",
+      "levelBand": "spell-level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_speak_with_plants",
+        "state": "present"
+      },
+      "nextAction": "Speak with Plants supplies plant communication, plant-command, past-day area information, plant-presence terrain conversion, and no-uprooting source facts, but promoted battle runtime does not own plant-world state, non-creature plant sentience, table information answers, terrain-conversion choice and persistence, immobile area placement, or pathfinding and movement-cost derivation through affected terrain.",
+      "rowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_speak_with_plants",
+      "rowKind": "spell-unit-pressure",
+      "source": {
+        "lineEnd": 210,
+        "lineStart": 210,
+        "path": ".references/srd-5.2.1/Classes/Ranger.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/speak_with_plants.json",
+          "state": "authored-record-present",
+          "unitId": "speak_with_plants"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
+        },
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table/spatial/exploration plant communication and terrain owner",
+          "reason": "Speak with Plants supplies plant communication, plant-command, past-day area information, plant-presence terrain conversion, and no-uprooting source facts, but promoted battle runtime does not own plant-world state, non-creature plant sentience, table information answers, terrain-conversion choice and persistence, immobile area placement, or pathfinding and movement-cost derivation through affected terrain.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "speak_with_plants"
+        },
+        "finalDisposition": "catalog-only/dead-for-now",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "spell-level",
+      "candidateUnitId": "water_breathing",
+      "category": "spell Unit pressure",
+      "className": "Ranger",
+      "concept": "Ranger spell list Water Breathing",
+      "levelBand": "spell-level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_water_breathing",
+        "state": "present"
+      },
+      "nextAction": "Water Breathing supplies a table-facing breathing capability for willing targets, but promoted battle runtime does not own underwater environment membership, breath availability, hold-breath clocks, suffocation turn progression, or restoration cleanup for this spell. Those facts belong to a table/environment hazard owner rather than duplicate spell-local state.",
+      "rowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_water_breathing",
+      "rowKind": "spell-unit-pressure",
+      "source": {
+        "lineEnd": 211,
+        "lineStart": 211,
+        "path": ".references/srd-5.2.1/Classes/Ranger.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/water_breathing.json",
+          "state": "authored-record-present",
+          "unitId": "water_breathing"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
+        },
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table/environment suffocation and underwater-breathing owner",
+          "reason": "Water Breathing supplies a table-facing breathing capability for willing targets, but promoted battle runtime does not own underwater environment membership, breath availability, hold-breath clocks, suffocation turn progression, or restoration cleanup for this spell. Those facts belong to a table/environment hazard owner rather than duplicate spell-local state.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "not-installed",
+          "unitId": "water_breathing"
+        },
+        "finalDisposition": "catalog-only/dead-for-now",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "spell-level",
+      "candidateUnitId": "water_walk",
+      "category": "spell Unit pressure",
+      "className": "Ranger",
+      "concept": "Ranger spell list Water Walk",
+      "levelBand": "spell-level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_water_walk",
+        "state": "present"
+      },
+      "nextAction": "Water Walk supplies willing-target liquid-surface traversal, harmless-solid-ground treatment, lava heat exception, and Bonus Action surface/liquid transition source facts, but promoted battle runtime does not own table liquid-surface classification, map or volume geometry, pathfinding, environmental heat damage, buoyancy or submersion state, or deliberate and falling surface-transition execution.",
+      "rowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_water_walk",
+      "rowKind": "spell-unit-pressure",
+      "source": {
+        "lineEnd": 212,
+        "lineStart": 212,
+        "path": ".references/srd-5.2.1/Classes/Ranger.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/water_walk.json",
+          "state": "authored-record-present",
+          "unitId": "water_walk"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
+        },
+        "battleReadinessClosure": {
+          "kind": "outside-runtime-presentation-exploration",
+          "owner": "runtime-detached table/spatial/environment traversal owner",
+          "reason": "Water Walk supplies willing-target liquid-surface traversal, harmless-solid-ground treatment, lava heat exception, and Bonus Action surface/liquid transition source facts, but promoted battle runtime does not own table liquid-surface classification, map or volume geometry, pathfinding, environmental heat damage, buoyancy or submersion state, or deliberate and falling surface-transition execution.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "installed",
+          "unitId": "water_walk"
+        },
+        "finalDisposition": "catalog-only/dead-for-now",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "spell-level",
+      "candidateUnitId": "wind_wall",
+      "category": "spell Unit pressure",
+      "className": "Ranger",
+      "concept": "Ranger spell list Wind Wall",
+      "levelBand": "spell-level-3",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_wind_wall",
+        "state": "present"
+      },
+      "nextAction": "Wind Wall's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned wall occurrence, resolve the appearance-time Strength Saving Throw and Bludgeoning damage for creatures in the wall's area, project ordinary projectile deflection against targets behind the wall while preserving giant-hurled and siege-engine exceptions, keep fog, smoke, and other gases at bay, block creatures in gaseous form, and block Small-or-smaller flying creatures or objects from passing through. Table/spatial/environment ownership must supply the shaped continuous line geometry, height and thickness placement, area-membership witnesses, behind-wall target relation, projectile ordinariness/source classification, gas or fog overlap, gaseous-form movement attempt, object size and flight facts, and loose lightweight material movement rather than duplicating map, projectile, object, or weather state inside generic Spell Invocation reducers.",
+      "rowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_wind_wall",
+      "rowKind": "spell-unit-pressure",
+      "source": {
+        "lineEnd": 213,
+        "lineStart": 213,
+        "path": ".references/srd-5.2.1/Classes/Ranger.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "sourceRecordPath": "packages/surface/content/wind_wall.json",
+          "state": "authored-record-present",
+          "unitId": "wind_wall"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
+        },
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future active wall-area Spell Effect and table/spatial/environment projectile owner",
+          "reason": "Wind Wall's represented battle behavior is closed outside the promoted battle-runtime boundary: a future active Spell Effect owner must carry the Concentration-owned wall occurrence, resolve the appearance-time Strength Saving Throw and Bludgeoning damage for creatures in the wall's area, project ordinary projectile deflection against targets behind the wall while preserving giant-hurled and siege-engine exceptions, keep fog, smoke, and other gases at bay, block creatures in gaseous form, and block Small-or-smaller flying creatures or objects from passing through. Table/spatial/environment ownership must supply the shaped continuous line geometry, height and thickness placement, area-membership witnesses, behind-wall target relation, projectile ordinariness/source classification, gas or fog overlap, gaseous-form movement attempt, object size and flight facts, and loose lightweight material movement rather than duplicating map, projectile, object, or weather state inside generic Spell Invocation reducers.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "not-installed",
+          "unitId": "wind_wall"
+        },
+        "finalDisposition": "catalog-only/dead-for-now",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
       "axis": "character-level",
       "candidateUnitId": "class_rogue",
       "category": "class container",
@@ -25496,7 +26427,8 @@
           "unitId": "rogue_cunning_strike"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -25539,7 +26471,8 @@
           "unitId": "rogue_uncanny_dodge"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -25582,7 +26515,8 @@
           "unitId": "class_rogue"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -25635,7 +26569,8 @@
           "unitId": "rogue_expertise"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -25678,7 +26613,8 @@
           "unitId": "class_rogue"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -25721,7 +26657,8 @@
           "unitId": "rogue_evasion"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -25762,7 +26699,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "character-fact-and-runtime-detached-split",
@@ -25809,7 +26747,8 @@
           "unitId": "class_rogue"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -25864,7 +26803,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
@@ -25912,7 +26852,8 @@
           "unitId": "class_rogue"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -26899,7 +27840,8 @@
           "unitId": "sorcerer_sorcerous_restoration"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -26942,7 +27884,8 @@
           "unitId": "class_sorcerer"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -26983,7 +27926,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "character-fact-and-runtime-detached-split",
@@ -27030,7 +27974,8 @@
           "unitId": "class_sorcerer"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -27071,7 +28016,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -27118,7 +28064,8 @@
           "unitId": "class_sorcerer"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -27173,7 +28120,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
@@ -27270,7 +28218,8 @@
           "unitId": "class_sorcerer"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -32635,7 +33584,8 @@
           "unitId": "class_warlock"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -32676,7 +33626,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "character-fact-and-runtime-detached-split",
@@ -32723,7 +33674,8 @@
           "unitId": "class_warlock"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -32766,7 +33718,8 @@
           "unitId": "class_warlock"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -32821,7 +33774,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
@@ -32886,7 +33840,8 @@
           "unitId": "class_warlock"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -35937,7 +36892,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "character-fact-and-runtime-detached-split",
@@ -35984,7 +36940,8 @@
           "unitId": "class_wizard"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -36025,7 +36982,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "table-spatial-derivation",
@@ -36072,7 +37030,8 @@
           "unitId": "class_wizard"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "state": "not-recorded"
@@ -36115,7 +37074,8 @@
           "unitId": "class_wizard"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -36170,7 +37130,8 @@
           "state": "missing-authored-record"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "selection-grant-container",
@@ -36251,7 +37212,8 @@
           "unitId": "class_wizard"
         },
         "battleReadiness": {
-          "state": "not-applicable"
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
         },
         "battleReadinessClosure": {
           "kind": "outside-battle-runtime",
@@ -42513,6 +43475,144 @@
           "state": "recorded"
         }
       }
+    },
+    {
+      "axis": "spell-level",
+      "candidateUnitId": "phantasmal_force",
+      "category": "spell Unit pressure",
+      "className": "Bard",
+      "concept": "Bard spell list Phantasmal Force",
+      "levelBand": "spell-level-2",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:spells/descriptions-m-p:spell-level-2:spell-unit-pressure:bard_spell_list_phantasmal_force",
+        "state": "present"
+      },
+      "nextAction": "Target-specific mental phantasm state, initial Intelligence save, Study/Investigation disbelief, caster-turn Psychic damage, and dangerous phantasm/hazard adjudication require a future single-target phantasm illusion owner.",
+      "rowId": "srd521:spells/descriptions-m-p:spell-level-2:spell-unit-pressure:bard_spell_list_phantasmal_force",
+      "rowKind": "spell-unit-pressure",
+      "source": {
+        "lineEnd": 522,
+        "lineStart": 522,
+        "path": ".references/srd-5.2.1/Spells/Descriptions-M-P.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
+        },
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future single-target phantasm illusion Spell Effect plus Study/disbelief and recurring Psychic damage owner",
+          "reason": "A future owner must carry target-specific perceived-only illusion state, initial Intelligence save, Study action Intelligence (Investigation) disbelief, caster-turn damage timing, dangerous phantasm/hazard table witness, and Psychic damage application without dispatching on authored spell identity.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "not-installed",
+          "unitId": "phantasmal_force"
+        },
+        "finalDisposition": "missing-authored-runtime-closed",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "spell-level",
+      "candidateUnitId": "phantasmal_force",
+      "category": "spell Unit pressure",
+      "className": "Sorcerer",
+      "concept": "Sorcerer spell list Phantasmal Force",
+      "levelBand": "spell-level-2",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:spells/descriptions-m-p:spell-level-2:spell-unit-pressure:sorcerer_spell_list_phantasmal_force",
+        "state": "present"
+      },
+      "nextAction": "Target-specific mental phantasm state, initial Intelligence save, Study/Investigation disbelief, caster-turn Psychic damage, and dangerous phantasm/hazard adjudication require a future single-target phantasm illusion owner.",
+      "rowId": "srd521:spells/descriptions-m-p:spell-level-2:spell-unit-pressure:sorcerer_spell_list_phantasmal_force",
+      "rowKind": "spell-unit-pressure",
+      "source": {
+        "lineEnd": 522,
+        "lineStart": 522,
+        "path": ".references/srd-5.2.1/Spells/Descriptions-M-P.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
+        },
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future single-target phantasm illusion Spell Effect plus Study/disbelief and recurring Psychic damage owner",
+          "reason": "A future owner must carry target-specific perceived-only illusion state, initial Intelligence save, Study action Intelligence (Investigation) disbelief, caster-turn damage timing, dangerous phantasm/hazard table witness, and Psychic damage application without dispatching on authored spell identity.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "not-installed",
+          "unitId": "phantasmal_force"
+        },
+        "finalDisposition": "missing-authored-runtime-closed",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
+    },
+    {
+      "axis": "spell-level",
+      "candidateUnitId": "phantasmal_force",
+      "category": "spell Unit pressure",
+      "className": "Wizard",
+      "concept": "Wizard spell list Phantasmal Force",
+      "levelBand": "spell-level-2",
+      "minedDenominator": {
+        "sourceInventory": "plans/unit-profile-coverage/srd-unit-inventory.json",
+        "sourceInventoryRowId": "srd521:spells/descriptions-m-p:spell-level-2:spell-unit-pressure:wizard_spell_list_phantasmal_force",
+        "state": "present"
+      },
+      "nextAction": "Target-specific mental phantasm state, initial Intelligence save, Study/Investigation disbelief, caster-turn Psychic damage, and dangerous phantasm/hazard adjudication require a future single-target phantasm illusion owner.",
+      "rowId": "srd521:spells/descriptions-m-p:spell-level-2:spell-unit-pressure:wizard_spell_list_phantasmal_force",
+      "rowKind": "spell-unit-pressure",
+      "source": {
+        "lineEnd": 522,
+        "lineStart": 522,
+        "path": ".references/srd-5.2.1/Spells/Descriptions-M-P.md"
+      },
+      "supportSnapshot": {
+        "authoredContent": {
+          "state": "missing-authored-record"
+        },
+        "battleReadiness": {
+          "state": "recorded",
+          "status": "accepted-no-battle-effect"
+        },
+        "battleReadinessClosure": {
+          "kind": "outside-battle-runtime",
+          "owner": "future single-target phantasm illusion Spell Effect plus Study/disbelief and recurring Psychic damage owner",
+          "reason": "A future owner must carry target-specific perceived-only illusion state, initial Intelligence save, Study action Intelligence (Investigation) disbelief, caster-turn damage timing, dangerous phantasm/hazard table witness, and Psychic damage application without dispatching on authored spell identity.",
+          "source": "unit-claim",
+          "state": "recorded"
+        },
+        "catalogAdmission": {
+          "state": "not-installed",
+          "unitId": "phantasmal_force"
+        },
+        "finalDisposition": "missing-authored-runtime-closed",
+        "unitProfile": {
+          "disposition": "unsupported-profile",
+          "state": "recorded"
+        }
+      }
     }
   ],
   "scope": {
@@ -42924,7 +44024,7 @@
     {
       "axis": "spell-level",
       "candidateUnitId": "conjure_animals",
-      "classListRowCount": 1,
+      "classListRowCount": 2,
       "classListRows": [
         {
           "className": "Druid",
@@ -42934,10 +44034,20 @@
             "lineStart": 254,
             "path": ".references/srd-5.2.1/Classes/Druid.md"
           }
+        },
+        {
+          "className": "Ranger",
+          "rowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_conjure_animals",
+          "source": {
+            "lineEnd": 202,
+            "lineStart": 202,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
         }
       ],
       "classNames": [
-        "Druid"
+        "Druid",
+        "Ranger"
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
@@ -43042,7 +44152,7 @@
     {
       "axis": "spell-level",
       "candidateUnitId": "create_food_and_water",
-      "classListRowCount": 1,
+      "classListRowCount": 2,
       "classListRows": [
         {
           "className": "Cleric",
@@ -43052,10 +44162,20 @@
             "lineStart": 208,
             "path": ".references/srd-5.2.1/Classes/Cleric.md"
           }
+        },
+        {
+          "className": "Paladin",
+          "rowId": "srd521:classes/paladin:spell-level-3:spell-unit-pressure:paladin_spell_list_create_food_and_water",
+          "source": {
+            "lineEnd": 210,
+            "lineStart": 210,
+            "path": ".references/srd-5.2.1/Classes/Paladin.md"
+          }
         }
       ],
       "classNames": [
-        "Cleric"
+        "Cleric",
+        "Paladin"
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
@@ -43093,7 +44213,7 @@
     {
       "axis": "spell-level",
       "candidateUnitId": "daylight",
-      "classListRowCount": 3,
+      "classListRowCount": 5,
       "classListRows": [
         {
           "className": "Cleric",
@@ -43114,6 +44234,24 @@
           }
         },
         {
+          "className": "Paladin",
+          "rowId": "srd521:classes/paladin:spell-level-3:spell-unit-pressure:paladin_spell_list_daylight",
+          "source": {
+            "lineEnd": 211,
+            "lineStart": 211,
+            "path": ".references/srd-5.2.1/Classes/Paladin.md"
+          }
+        },
+        {
+          "className": "Ranger",
+          "rowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_daylight",
+          "source": {
+            "lineEnd": 203,
+            "lineStart": 203,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
+        },
+        {
           "className": "Sorcerer",
           "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_daylight",
           "source": {
@@ -43126,6 +44264,8 @@
       "classNames": [
         "Cleric",
         "Druid",
+        "Paladin",
+        "Ranger",
         "Sorcerer"
       ],
       "levelBand": "spell-level-3",
@@ -43164,7 +44304,7 @@
     {
       "axis": "spell-level",
       "candidateUnitId": "dispel_magic",
-      "classListRowCount": 6,
+      "classListRowCount": 8,
       "classListRows": [
         {
           "className": "Bard",
@@ -43191,6 +44331,24 @@
             "lineEnd": 256,
             "lineStart": 256,
             "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        },
+        {
+          "className": "Paladin",
+          "rowId": "srd521:classes/paladin:spell-level-3:spell-unit-pressure:paladin_spell_list_dispel_magic",
+          "source": {
+            "lineEnd": 212,
+            "lineStart": 212,
+            "path": ".references/srd-5.2.1/Classes/Paladin.md"
+          }
+        },
+        {
+          "className": "Ranger",
+          "rowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_dispel_magic",
+          "source": {
+            "lineEnd": 204,
+            "lineStart": 204,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
           }
         },
         {
@@ -43225,6 +44383,8 @@
         "Bard",
         "Cleric",
         "Druid",
+        "Paladin",
+        "Ranger",
         "Sorcerer",
         "Warlock",
         "Wizard"
@@ -43819,7 +44979,7 @@
     {
       "axis": "spell-level",
       "candidateUnitId": "magic_circle",
-      "classListRowCount": 3,
+      "classListRowCount": 4,
       "classListRows": [
         {
           "className": "Cleric",
@@ -43828,6 +44988,15 @@
             "lineEnd": 212,
             "lineStart": 212,
             "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        },
+        {
+          "className": "Paladin",
+          "rowId": "srd521:classes/paladin:spell-level-3:spell-unit-pressure:paladin_spell_list_magic_circle",
+          "source": {
+            "lineEnd": 213,
+            "lineStart": 213,
+            "path": ".references/srd-5.2.1/Classes/Paladin.md"
           }
         },
         {
@@ -43851,6 +45020,7 @@
       ],
       "classNames": [
         "Cleric",
+        "Paladin",
         "Warlock",
         "Wizard"
       ],
@@ -44028,7 +45198,7 @@
     {
       "axis": "spell-level",
       "candidateUnitId": "meld_into_stone",
-      "classListRowCount": 2,
+      "classListRowCount": 3,
       "classListRows": [
         {
           "className": "Cleric",
@@ -44047,11 +45217,21 @@
             "lineStart": 257,
             "path": ".references/srd-5.2.1/Classes/Druid.md"
           }
+        },
+        {
+          "className": "Ranger",
+          "rowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_meld_into_stone",
+          "source": {
+            "lineEnd": 205,
+            "lineStart": 205,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
         }
       ],
       "classNames": [
         "Cleric",
-        "Druid"
+        "Druid",
+        "Ranger"
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
@@ -44089,7 +45269,7 @@
     {
       "axis": "spell-level",
       "candidateUnitId": "nondetection",
-      "classListRowCount": 2,
+      "classListRowCount": 3,
       "classListRows": [
         {
           "className": "Bard",
@@ -44098,6 +45278,15 @@
             "lineEnd": 225,
             "lineStart": 225,
             "path": ".references/srd-5.2.1/Classes/Bard.md"
+          }
+        },
+        {
+          "className": "Ranger",
+          "rowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_nondetection",
+          "source": {
+            "lineEnd": 206,
+            "lineStart": 206,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
           }
         },
         {
@@ -44112,6 +45301,7 @@
       ],
       "classNames": [
         "Bard",
+        "Ranger",
         "Wizard"
       ],
       "levelBand": "spell-level-3",
@@ -44201,7 +45391,7 @@
     {
       "axis": "spell-level",
       "candidateUnitId": "plant_growth",
-      "classListRowCount": 2,
+      "classListRowCount": 3,
       "classListRows": [
         {
           "className": "Bard",
@@ -44220,11 +45410,21 @@
             "lineStart": 258,
             "path": ".references/srd-5.2.1/Classes/Druid.md"
           }
+        },
+        {
+          "className": "Ranger",
+          "rowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_plant_growth",
+          "source": {
+            "lineEnd": 207,
+            "lineStart": 207,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
         }
       ],
       "classNames": [
         "Bard",
-        "Druid"
+        "Druid",
+        "Ranger"
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
@@ -44262,7 +45462,7 @@
     {
       "axis": "spell-level",
       "candidateUnitId": "protection_from_energy",
-      "classListRowCount": 4,
+      "classListRowCount": 5,
       "classListRows": [
         {
           "className": "Cleric",
@@ -44280,6 +45480,15 @@
             "lineEnd": 259,
             "lineStart": 259,
             "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        },
+        {
+          "className": "Ranger",
+          "rowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_protection_from_energy",
+          "source": {
+            "lineEnd": 208,
+            "lineStart": 208,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
           }
         },
         {
@@ -44304,6 +45513,7 @@
       "classNames": [
         "Cleric",
         "Druid",
+        "Ranger",
         "Sorcerer",
         "Wizard"
       ],
@@ -44339,7 +45549,7 @@
     {
       "axis": "spell-level",
       "candidateUnitId": "remove_curse",
-      "classListRowCount": 3,
+      "classListRowCount": 4,
       "classListRows": [
         {
           "className": "Cleric",
@@ -44348,6 +45558,15 @@
             "lineEnd": 216,
             "lineStart": 216,
             "path": ".references/srd-5.2.1/Classes/Cleric.md"
+          }
+        },
+        {
+          "className": "Paladin",
+          "rowId": "srd521:classes/paladin:spell-level-3:spell-unit-pressure:paladin_spell_list_remove_curse",
+          "source": {
+            "lineEnd": 214,
+            "lineStart": 214,
+            "path": ".references/srd-5.2.1/Classes/Paladin.md"
           }
         },
         {
@@ -44371,6 +45590,7 @@
       ],
       "classNames": [
         "Cleric",
+        "Paladin",
         "Warlock",
         "Wizard"
       ],
@@ -44410,7 +45630,7 @@
     {
       "axis": "spell-level",
       "candidateUnitId": "revivify",
-      "classListRowCount": 2,
+      "classListRowCount": 4,
       "classListRows": [
         {
           "className": "Cleric",
@@ -44429,11 +45649,31 @@
             "lineStart": 260,
             "path": ".references/srd-5.2.1/Classes/Druid.md"
           }
+        },
+        {
+          "className": "Paladin",
+          "rowId": "srd521:classes/paladin:spell-level-3:spell-unit-pressure:paladin_spell_list_revivify",
+          "source": {
+            "lineEnd": 215,
+            "lineStart": 215,
+            "path": ".references/srd-5.2.1/Classes/Paladin.md"
+          }
+        },
+        {
+          "className": "Ranger",
+          "rowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_revivify",
+          "source": {
+            "lineEnd": 209,
+            "lineStart": 209,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
         }
       ],
       "classNames": [
         "Cleric",
-        "Druid"
+        "Druid",
+        "Paladin",
+        "Ranger"
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
@@ -44755,7 +45995,7 @@
     {
       "axis": "spell-level",
       "candidateUnitId": "speak_with_plants",
-      "classListRowCount": 2,
+      "classListRowCount": 3,
       "classListRows": [
         {
           "className": "Bard",
@@ -44774,11 +46014,21 @@
             "lineStart": 262,
             "path": ".references/srd-5.2.1/Classes/Druid.md"
           }
+        },
+        {
+          "className": "Ranger",
+          "rowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_speak_with_plants",
+          "source": {
+            "lineEnd": 210,
+            "lineStart": 210,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
         }
       ],
       "classNames": [
         "Bard",
-        "Druid"
+        "Druid",
+        "Ranger"
       ],
       "levelBand": "spell-level-3",
       "nextActions": [
@@ -45161,7 +46411,7 @@
     {
       "axis": "spell-level",
       "candidateUnitId": "water_breathing",
-      "classListRowCount": 3,
+      "classListRowCount": 4,
       "classListRows": [
         {
           "className": "Druid",
@@ -45170,6 +46420,15 @@
             "lineEnd": 263,
             "lineStart": 263,
             "path": ".references/srd-5.2.1/Classes/Druid.md"
+          }
+        },
+        {
+          "className": "Ranger",
+          "rowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_water_breathing",
+          "source": {
+            "lineEnd": 211,
+            "lineStart": 211,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
           }
         },
         {
@@ -45193,6 +46452,7 @@
       ],
       "classNames": [
         "Druid",
+        "Ranger",
         "Sorcerer",
         "Wizard"
       ],
@@ -45232,7 +46492,7 @@
     {
       "axis": "spell-level",
       "candidateUnitId": "water_walk",
-      "classListRowCount": 3,
+      "classListRowCount": 4,
       "classListRows": [
         {
           "className": "Cleric",
@@ -45253,6 +46513,15 @@
           }
         },
         {
+          "className": "Ranger",
+          "rowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_water_walk",
+          "source": {
+            "lineEnd": 212,
+            "lineStart": 212,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
+        },
+        {
           "className": "Sorcerer",
           "rowId": "srd521:classes/sorcerer:spell-level-3:spell-unit-pressure:sorcerer_spell_list_water_walk",
           "source": {
@@ -45265,6 +46534,7 @@
       "classNames": [
         "Cleric",
         "Druid",
+        "Ranger",
         "Sorcerer"
       ],
       "levelBand": "spell-level-3",
@@ -45303,7 +46573,7 @@
     {
       "axis": "spell-level",
       "candidateUnitId": "wind_wall",
-      "classListRowCount": 1,
+      "classListRowCount": 2,
       "classListRows": [
         {
           "className": "Druid",
@@ -45313,10 +46583,20 @@
             "lineStart": 265,
             "path": ".references/srd-5.2.1/Classes/Druid.md"
           }
+        },
+        {
+          "className": "Ranger",
+          "rowId": "srd521:classes/ranger:spell-level-3:spell-unit-pressure:ranger_spell_list_wind_wall",
+          "source": {
+            "lineEnd": 213,
+            "lineStart": 213,
+            "path": ".references/srd-5.2.1/Classes/Ranger.md"
+          }
         }
       ],
       "classNames": [
-        "Druid"
+        "Druid",
+        "Ranger"
       ],
       "levelBand": "spell-level-3",
       "nextActions": [

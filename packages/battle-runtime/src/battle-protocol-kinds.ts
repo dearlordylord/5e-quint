@@ -40,6 +40,10 @@ export function battleFillKind(fill: BattleFill): BattleFillKind {
       ),
       byBattleFillKind("conditionChoice", () => "conditionChoice" as const),
       byBattleFillKind(
+        "cunningStrikeEndTurnCoverFacts",
+        () => "cunningStrikeEndTurnCoverFacts" as const,
+      ),
+      byBattleFillKind(
         "creatureAttackZeroDamage",
         () => "creatureAttackZeroDamage" as const,
       ),
@@ -342,6 +346,14 @@ function runtimeCommandSubjectKind(
         () => "runtimeSavingThrow" as const,
       ),
       byCommand(
+        "insectPlagueAreaHazardSave",
+        () => "runtimeSavingThrow" as const,
+      ),
+      byCommand(
+        "cloudkillAreaHazardSave",
+        () => "runtimeSavingThrow" as const,
+      ),
+      byCommand(
         "webRestrainedNoLongerInArea",
         () => "runtimeEffectCleanup" as const,
       ),
@@ -374,6 +386,7 @@ function runtimeCommandSubjectKind(
         () => "runtimeProtectionPrevention" as const,
       ),
       byCommand("disperseFogCloud", () => "runtimeEffectCleanup" as const),
+      byCommand("disperseCloudkill", () => "runtimeEffectCleanup" as const),
       byCommand("wardingBondSeparation", () => "runtimeEffectCleanup" as const),
       byCommand("jumpMovementReplacement", () => "runtimeMovement" as const),
       byCommand("dragonsBreathExhale", () => "runtimeAreaEffect" as const),

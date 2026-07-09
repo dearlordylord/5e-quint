@@ -23,6 +23,10 @@
     {
       "level": 4,
       "unitId": "bard_ability_score_improvement_l4"
+    },
+    {
+      "level": 9,
+      "unitId": "bard_expertise"
     }
   ],
   "hitPointDie": 8,
