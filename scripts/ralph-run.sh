@@ -2,6 +2,7 @@
 set -Eeuo pipefail
 
 default_codex_model="gpt-5.6-luna"
+default_review_model="gpt-5.6-sol"
 
 usage() {
   local help_text
@@ -36,6 +37,8 @@ Options:
   --keep-worktrees        Leave temporary worktrees in place.
   --codex-model <model>   Model passed to codex exec --model. Overrides
                           RALPH_CODEX_MODEL. Default: __DEFAULT_CODEX_MODEL__
+  --review-model <model>  Model passed to Codex review calls. Overrides
+                          RALPH_REVIEW_MODEL. Default: __DEFAULT_REVIEW_MODEL__
   --implementation-runner <codex|opencode|claude>
                           Runner for the implementer.
                           Reviews, optional model chooser, and decider use Codex.
@@ -75,6 +78,8 @@ Options:
 Environment:
   RALPH_CODEX_MODEL       Model passed to codex exec --model.
                           Default: __DEFAULT_CODEX_MODEL__.
+  RALPH_REVIEW_MODEL      Model passed to Codex review calls.
+                          Default: __DEFAULT_REVIEW_MODEL__.
   RALPH_IMPLEMENTATION_RUNNER
                           codex, opencode, or claude for the implementer.
   RALPH_CLAUDE_MODEL      Optional model passed to claude --model.
@@ -106,7 +111,8 @@ Environment:
                           attempts landed.
 EOF
   )"
-  printf '%s\n' "${help_text//__DEFAULT_CODEX_MODEL__/$default_codex_model}"
+  help_text="${help_text//__DEFAULT_CODEX_MODEL__/$default_codex_model}"
+  printf '%s\n' "${help_text//__DEFAULT_REVIEW_MODEL__/$default_review_model}"
 }
 
 die() {
@@ -213,6 +219,7 @@ max_task_attempts=3
 keep_worktrees=false
 skip_decider=false
 codex_model="${RALPH_CODEX_MODEL:-$default_codex_model}"
+review_model="${RALPH_REVIEW_MODEL:-$default_review_model}"
 implementation_runner="${RALPH_IMPLEMENTATION_RUNNER:-codex}"
 claude_model="${RALPH_CLAUDE_MODEL:-}"
 claude_effort="${RALPH_CLAUDE_EFFORT:-max}"
@@ -272,6 +279,11 @@ while [[ $# -gt 0 ]]; do
     --codex-model)
       [[ $# -ge 2 ]] || die "--codex-model requires a value"
       codex_model="$2"
+      shift 2
+      ;;
+    --review-model)
+      [[ $# -ge 2 ]] || die "--review-model requires a value"
+      review_model="$2"
       shift 2
       ;;
     --implementation-runner)
@@ -434,6 +446,7 @@ write_state() {
     printf 'TASK_INDEX=%q\n' "$task_index"
     printf 'MAX_TASK_ATTEMPTS=%q\n' "$max_task_attempts"
     printf 'CODEX_MODEL=%q\n' "$codex_model"
+    printf 'REVIEW_MODEL=%q\n' "$review_model"
     printf 'MODEL_CHOOSER=%q\n' "$model_chooser"
     printf 'IMPLEMENTATION_ROUND_LIMIT=%q\n' "$implementation_round_limit"
     printf 'HEARTBEAT_SECONDS=%q\n' "$heartbeat_seconds"
@@ -981,6 +994,7 @@ write_run_report() {
     printf -- '- Base: `%s` `%s`\n' "$base_ref" "$base_sha"
     printf -- '- Output branch: `%s`\n' "$output_branch"
     printf -- '- Codex model: `%s`\n' "$codex_model"
+    printf -- '- Review model: `%s`\n' "$review_model"
     printf -- '- Main worktree clean: `%s`\n' "$clean"
     printf '\n## Last Error\n\n'
     if [[ -s "$last_error_file" ]]; then
@@ -1354,7 +1368,7 @@ run_implementation_pipeline() {
 
     write_review_prompt "Implementation" "$workspace" "$review_report" "$review_prompt" "$task_no" "$task_file" "$task_base_sha" "$context_file"
     local review_status=0
-    run_codex "$workspace" "$review_prompt" "$review_log" "$review_report" || review_status=$?
+    run_codex "$workspace" "$review_prompt" "$review_log" "$review_report" "$review_model" || review_status=$?
     printf '%s\n' "$review_status" >"$review_exit"
     save_full_diff "$workspace" "$after_review_full_diff" "$task_base_sha"
     save_diff "$workspace" "$after_review_diff" "$task_base_sha"
@@ -1435,11 +1449,12 @@ run_codex() {
   local prompt="$2"
   local log_file="$3"
   local output_file="$4"
+  local model="${5:-$codex_model}"
   local status=0
   local -a args=(exec --ephemeral --dangerously-bypass-approvals-and-sandbox -C "$workspace" -o "$output_file")
 
-  if [[ -n "$codex_model" ]]; then
-    args+=("--model" "$codex_model")
+  if [[ -n "$model" ]]; then
+    args+=("--model" "$model")
   fi
 
   log "codex: $(quote_cmd codex "${args[@]}" -)"
@@ -2582,8 +2597,9 @@ iteration=0
 log "base $base_ref is $base_sha"
 log "output branch: $output_branch"
 log "Codex model: $codex_model"
+log "Review model: $review_model"
 log "run state: $run_root"
-note "run" "start base=$base_ref sha=$base_sha output=$output_branch codex_model=$codex_model"
+note "run" "start base=$base_ref sha=$base_sha output=$output_branch codex_model=$codex_model review_model=$review_model"
 write_process_snapshot "$run_root/process-start.md"
 
 kill_stray_mbt_processes

@@ -306,10 +306,11 @@ mismatch; branch repair belongs to the runner or decider, not the task agent.
 
 ## Environment
 
-Ralph passes `gpt-5.6-luna` to every Codex role by default: Codex-backed
-implementation, review, optional model selection, and the decider. The selected
-model is printed at startup and recorded in `state.env`, `events.tsv`, and the
-final `run-report.md`.
+Ralph passes `gpt-5.6-luna` to Codex-backed implementation, optional model
+selection, and the decider by default. Reviews use `gpt-5.6-sol` by default.
+The implementation/chooser/decider model and review model are printed at
+startup and recorded in `state.env`, `events.tsv`, and the final
+`run-report.md`.
 
 Set `RALPH_CODEX_MODEL` when you want to override the default:
 
@@ -321,6 +322,18 @@ The equivalent command-line override is:
 
 ```bash
 scripts/ralph-run.sh plans/some-plan.md --codex-model gpt-5.3-codex-spark
+```
+
+Set the review model independently when needed:
+
+```bash
+RALPH_REVIEW_MODEL=gpt-5.6-sol scripts/ralph-run.sh plans/some-plan.md
+```
+
+The equivalent command-line override is:
+
+```bash
+scripts/ralph-run.sh plans/some-plan.md --review-model gpt-5.6-sol
 ```
 
 For OpenCode-backed implementation:
