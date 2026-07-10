@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+default_codex_model="gpt-5.6-luna"
+
 usage() {
-  cat <<'EOF'
+  local help_text
+  help_text="$(cat <<'EOF'
 Usage: scripts/ralph-run.sh <plan.md> [options]
 
 Runs a Ralph-style fresh-context loop:
@@ -32,7 +35,7 @@ Options:
                           the order provided.
   --keep-worktrees        Leave temporary worktrees in place.
   --codex-model <model>   Model passed to codex exec --model. Overrides
-                          RALPH_CODEX_MODEL.
+                          RALPH_CODEX_MODEL. Default: __DEFAULT_CODEX_MODEL__
   --implementation-runner <codex|opencode|claude>
                           Runner for the implementer.
                           Reviews, optional model chooser, and decider use Codex.
@@ -70,7 +73,8 @@ Options:
   -h, --help              Show this help.
 
 Environment:
-  RALPH_CODEX_MODEL       Optional model passed to codex exec --model.
+  RALPH_CODEX_MODEL       Model passed to codex exec --model.
+                          Default: __DEFAULT_CODEX_MODEL__.
   RALPH_IMPLEMENTATION_RUNNER
                           codex, opencode, or claude for the implementer.
   RALPH_CLAUDE_MODEL      Optional model passed to claude --model.
@@ -101,6 +105,8 @@ Environment:
                           plan has no next task before at least this many task
                           attempts landed.
 EOF
+  )"
+  printf '%s\n' "${help_text//__DEFAULT_CODEX_MODEL__/$default_codex_model}"
 }
 
 die() {
@@ -206,7 +212,7 @@ test_command="pnpm quality"
 max_task_attempts=3
 keep_worktrees=false
 skip_decider=false
-codex_model="${RALPH_CODEX_MODEL:-}"
+codex_model="${RALPH_CODEX_MODEL:-$default_codex_model}"
 implementation_runner="${RALPH_IMPLEMENTATION_RUNNER:-codex}"
 claude_model="${RALPH_CLAUDE_MODEL:-}"
 claude_effort="${RALPH_CLAUDE_EFFORT:-max}"
@@ -427,6 +433,7 @@ write_state() {
     printf 'PLAN_SNAPSHOT=%q\n' "$plan_snapshot"
     printf 'TASK_INDEX=%q\n' "$task_index"
     printf 'MAX_TASK_ATTEMPTS=%q\n' "$max_task_attempts"
+    printf 'CODEX_MODEL=%q\n' "$codex_model"
     printf 'MODEL_CHOOSER=%q\n' "$model_chooser"
     printf 'IMPLEMENTATION_ROUND_LIMIT=%q\n' "$implementation_round_limit"
     printf 'HEARTBEAT_SECONDS=%q\n' "$heartbeat_seconds"
@@ -1034,6 +1041,7 @@ write_run_report() {
     printf -- '- HEAD: `%s`\n' "$head"
     printf -- '- Base: `%s` `%s`\n' "$base_ref" "$base_sha"
     printf -- '- Output branch: `%s`\n' "$output_branch"
+    printf -- '- Codex model: `%s`\n' "$codex_model"
     printf -- '- Main worktree clean: `%s`\n' "$clean"
     printf '\n## Last Error\n\n'
     if [[ -s "$last_error_file" ]]; then
@@ -2633,8 +2641,9 @@ iteration=0
 
 log "base $base_ref is $base_sha"
 log "output branch: $output_branch"
+log "Codex model: $codex_model"
 log "run state: $run_root"
-note "run" "start base=$base_ref sha=$base_sha output=$output_branch"
+note "run" "start base=$base_ref sha=$base_sha output=$output_branch codex_model=$codex_model"
 write_process_snapshot "$run_root/process-start.md"
 
 kill_stray_mbt_processes
