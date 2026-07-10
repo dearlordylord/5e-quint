@@ -349,7 +349,7 @@
     {
       "number": 58,
       "id": "L12CEG-DU-002",
-      "status": "blocked",
+      "status": "todo",
       "title": "Check animal_friendship against latest dirty cleanroom"
     },
     {
@@ -781,7 +781,7 @@
     {
       "number": 130,
       "id": "L12CEG-TG-001-REFRESH-LATEST-DIRTY-TARGET-L12-INPUTS",
-      "status": "todo",
+      "status": "done",
       "title": "Refresh latest dirty cleanroom target L12 input bundle"
     }
   ]
@@ -8716,7 +8716,7 @@ repair.
 
 ### Task 58 - L12CEG-DU-002
 
-Status: `blocked`
+Status: `todo`
 
 Goal:
 
@@ -8832,11 +8832,10 @@ concrete reasons for rejected notes.
 
 Plan Impact:
 
-`update-required`. The named latest dirty cleanroom target lacks the current L12
-copied input bundle and target-side harness validators required by this task, so
-this Unit cannot produce a current hash-bound run reference or compact receipt
-until `L12CEG-TG-001-REFRESH-LATEST-DIRTY-TARGET-L12-INPUTS` refreshes the
-target. Do not mark the listed rows done from this blocker.
+`none`. The named latest dirty cleanroom target has been refreshed by
+`L12CEG-TG-001-REFRESH-LATEST-DIRTY-TARGET-L12-INPUTS`; run this task against
+that target and do not mark the listed rows done from prose, old target files,
+or diagnostic tests.
 
 ### Task 59 - L12CEG-DU-003
 
@@ -17423,7 +17422,7 @@ repair.
 
 ### Task 130 - L12CEG-TG-001-REFRESH-LATEST-DIRTY-TARGET-L12-INPUTS
 
-Status: `todo`
+Status: `done`
 
 Goal:
 
