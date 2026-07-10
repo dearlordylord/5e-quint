@@ -176,7 +176,8 @@ Plan Impact: applied
   replay batch is runnable for source-side closure.
 - Affected task `L12CEG-RP-002`: unblocked with respect to
   `L12CEG-DU-052` and is runnable for source-side closure.
-- Plan edit: `plans/RALPH_L12_CLEANROOM_REPLAY_BATCHES.md` marks
-  `L12CEG-DU-052` done, marks `L12CEG-RP-001` and `L12CEG-RP-002` todo, and
-  replaces stale latest-dirty-target blocker text with this accepted current
-  run reference.
+- Historical plan edit: commit `0c2179faec60feebad38bbcc698a5ce75045ec7e`
+  records `L12CEG-DU-052` as done, records `L12CEG-RP-001` and
+  `L12CEG-RP-002` as runnable, and replaces the stale blocker with this accepted
+  run reference in the now-archived
+  `plans/RALPH_L12_CLEANROOM_REPLAY_BATCHES.md`.
