@@ -23,3 +23,4 @@ Expected outputs:
 - `verifier-gate-spec.json`
 - `exhaustive-task-graph.json`
 - `reviewer-loop-report.md`
+- `task-1-replay-blocker.md`
