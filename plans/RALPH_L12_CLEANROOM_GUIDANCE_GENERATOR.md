@@ -49,7 +49,7 @@
       "number": 7,
       "id": "L12CG-07-ICE-KNIFE-TRACER-REVIEW",
       "status": "todo",
-      "title": "Prove readiness and intake with the Ice Knife tracer",
+      "title": "Reconcile full-corpus machinery with the Ice Knife pilot",
       "dependencies": ["L12CG-06-EXPERIMENT-INTAKE"]
     }
   ]
@@ -85,6 +85,36 @@ agent in the target repository. After this plan lands, normal operation is:
 1. one source export command;
 2. one unattended target `/goal` run over the immutable experiment catalog;
 3. one source intake command.
+
+## Paired Plan Synchronization
+
+This full-corpus plan and
+`plans/RALPH_L12_CLEANROOM_ICE_KNIFE_PILOT.md` are co-authoritative execution
+plans for different scopes. Neither supersedes the other:
+
+- the pilot owns the one-Unit Ice Knife experiment, its real target evidence,
+  handoff behavior, and measured effort;
+- this plan owns exhaustive readiness and expansion across all 72 executable
+  L1-2 Units.
+
+They share one contract for TypeScript calibration, cleanroom-safe inputs,
+atomic Unit acceptance, blocker classification, manifest freshness, target
+isolation, and source/target handoff. A change to any shared invariant, schema,
+blocker class, exact Ice Knife action, freshness rule, or command contract must
+update both plans in the same change unless the difference is explicitly
+scope-backed.
+
+After the pilot lands, Tasks 1-6 extend its landed schemas, commands, and gates.
+They must not build parallel calibration indexes, readiness results, exporters,
+intake models, measurement state, or handoff protocols. Pilot results do not
+change the corpus denominator or imply readiness for another Unit; the
+corpus-wide generated facts in this plan remain independently checked.
+
+Before launching this full plan, reconcile both documents against the real
+pilot intake. Record changed shared decisions in both, record measured scaling
+evidence in this plan, and leave any scope-specific difference named and
+justified. Task 7 is the post-expansion regression against the accepted pilot,
+not a second independent Ice Knife design.
 
 ## Non-Negotiable Boundaries
 
@@ -460,11 +490,17 @@ Success criteria:
 
 Goal:
 
-Use Ice Knife to prove the entire source-readiness, export-boundary, and intake
-contract without implementing Ice Knife in the target during this source task.
+After Tasks 1-6 generalize the pilot machinery, reconcile the full-corpus
+source-readiness, export-boundary, and intake contract against the accepted Ice
+Knife pilot. This source task does not implement or rerun Ice Knife in a target.
 
 Required work:
 
+- Read the pilot plan, its final source manifest, real target receipt, source
+  intake result, measurement report, and documented reviewer dispositions.
+- Prove that Tasks 1-6 extended the pilot's landed schemas and commands rather
+  than creating parallel calibration, readiness, export, intake, measurement,
+  or handoff state.
 - Verify its SRD anchor and all profile-to-obligation joins.
 - Verify its semantic QNT owners are role-classified and TS-integrated.
 - Select the exact direct witness actions
@@ -481,6 +517,8 @@ Required work:
   contains no direct Ice Knife action.
 - Exercise export and intake with synthetic receipts for target conformance,
   source-QNT insufficiency, stale manifest, and target implementation failure.
+- Reconcile every shared contract difference between the two plans. Update both
+  in the same change or document the concrete scope reason for the difference.
 - Run at least two reviewer rounds covering RAW/QNT traceability, ubiquitous
   language, domain modeling, architecture/connascence, cleanroom contamination,
   branch coverage, and code review.
@@ -492,4 +530,8 @@ Success criteria:
 - A source-QNT gap blocks export rather than adding compensating guidance.
 - A target result measures corpus sufficiency without importing TypeScript
   knowledge.
+- The generalized pipeline still reproduces the accepted pilot contract for
+  Ice Knife without duplicating pilot-owned state.
+- Both co-authoritative plans agree on every shared invariant, with any
+  scope-specific difference explicitly justified.
 - No reasonable reviewer finding remains.
