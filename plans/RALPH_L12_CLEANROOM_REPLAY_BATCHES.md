@@ -789,6 +789,426 @@
       "id": "L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS",
       "status": "done",
       "title": "Produce latest dirty target harness acceptance artifacts"
+    },
+    {
+      "number": 132,
+      "id": "L12CEG-UB-DU-023",
+      "status": "ready-for-research",
+      "title": "Unblock faerie_fire latest dirty cleanroom support for L12CEG-DU-023"
+    },
+    {
+      "number": 133,
+      "id": "L12CEG-UB-DU-001",
+      "status": "ready-for-research",
+      "title": "Unblock acid_splash latest dirty cleanroom support for L12CEG-DU-001"
+    },
+    {
+      "number": 134,
+      "id": "L12CEG-UB-DU-003",
+      "status": "ready-for-research",
+      "title": "Unblock bane latest dirty cleanroom support for L12CEG-DU-003"
+    },
+    {
+      "number": 135,
+      "id": "L12CEG-UB-DU-004",
+      "status": "ready-for-research",
+      "title": "Unblock barbarian_danger_sense latest dirty cleanroom support for L12CEG-DU-004"
+    },
+    {
+      "number": 136,
+      "id": "L12CEG-UB-DU-005",
+      "status": "ready-for-research",
+      "title": "Unblock barbarian_rage latest dirty cleanroom support for L12CEG-DU-005"
+    },
+    {
+      "number": 137,
+      "id": "L12CEG-UB-DU-006",
+      "status": "ready-for-research",
+      "title": "Unblock barbarian_reckless_attack latest dirty cleanroom support for L12CEG-DU-006"
+    },
+    {
+      "number": 138,
+      "id": "L12CEG-UB-DU-007",
+      "status": "ready-for-research",
+      "title": "Unblock bard_bardic_inspiration latest dirty cleanroom support for L12CEG-DU-007"
+    },
+    {
+      "number": 139,
+      "id": "L12CEG-UB-DU-008",
+      "status": "ready-for-research",
+      "title": "Unblock bless latest dirty cleanroom support for L12CEG-DU-008"
+    },
+    {
+      "number": 140,
+      "id": "L12CEG-UB-DU-009",
+      "status": "ready-for-research",
+      "title": "Unblock burning_hands latest dirty cleanroom support for L12CEG-DU-009"
+    },
+    {
+      "number": 141,
+      "id": "L12CEG-UB-DU-010",
+      "status": "ready-for-research",
+      "title": "Unblock chill_touch latest dirty cleanroom support for L12CEG-DU-010"
+    },
+    {
+      "number": 142,
+      "id": "L12CEG-UB-DU-011",
+      "status": "ready-for-research",
+      "title": "Unblock chromatic_orb latest dirty cleanroom support for L12CEG-DU-011"
+    },
+    {
+      "number": 143,
+      "id": "L12CEG-UB-DU-012",
+      "status": "ready-for-research",
+      "title": "Unblock color_spray latest dirty cleanroom support for L12CEG-DU-012"
+    },
+    {
+      "number": 144,
+      "id": "L12CEG-UB-DU-013",
+      "status": "ready-for-research",
+      "title": "Unblock command latest dirty cleanroom support for L12CEG-DU-013"
+    },
+    {
+      "number": 145,
+      "id": "L12CEG-UB-DU-014",
+      "status": "ready-for-research",
+      "title": "Unblock cure_wounds latest dirty cleanroom support for L12CEG-DU-014"
+    },
+    {
+      "number": 146,
+      "id": "L12CEG-UB-DU-015",
+      "status": "ready-for-research",
+      "title": "Unblock dancing_lights latest dirty cleanroom support for L12CEG-DU-015"
+    },
+    {
+      "number": 147,
+      "id": "L12CEG-UB-DU-016",
+      "status": "ready-for-research",
+      "title": "Unblock dissonant_whispers latest dirty cleanroom support for L12CEG-DU-016"
+    },
+    {
+      "number": 148,
+      "id": "L12CEG-UB-DU-017",
+      "status": "ready-for-research",
+      "title": "Unblock divine_favor latest dirty cleanroom support for L12CEG-DU-017"
+    },
+    {
+      "number": 149,
+      "id": "L12CEG-UB-DU-018",
+      "status": "ready-for-research",
+      "title": "Unblock divine_smite latest dirty cleanroom support for L12CEG-DU-018"
+    },
+    {
+      "number": 150,
+      "id": "L12CEG-UB-DU-019",
+      "status": "ready-for-research",
+      "title": "Unblock eldritch_blast latest dirty cleanroom support for L12CEG-DU-019"
+    },
+    {
+      "number": 151,
+      "id": "L12CEG-UB-DU-020",
+      "status": "ready-for-research",
+      "title": "Unblock ensnaring_strike latest dirty cleanroom support for L12CEG-DU-020"
+    },
+    {
+      "number": 152,
+      "id": "L12CEG-UB-DU-021",
+      "status": "ready-for-research",
+      "title": "Unblock entangle latest dirty cleanroom support for L12CEG-DU-021"
+    },
+    {
+      "number": 153,
+      "id": "L12CEG-UB-DU-022",
+      "status": "ready-for-research",
+      "title": "Unblock expeditious_retreat latest dirty cleanroom support for L12CEG-DU-022"
+    },
+    {
+      "number": 154,
+      "id": "L12CEG-UB-DU-024",
+      "status": "ready-for-research",
+      "title": "Unblock false_life latest dirty cleanroom support for L12CEG-DU-024"
+    },
+    {
+      "number": 155,
+      "id": "L12CEG-UB-DU-025",
+      "status": "ready-for-research",
+      "title": "Unblock feather_fall latest dirty cleanroom support for L12CEG-DU-025"
+    },
+    {
+      "number": 156,
+      "id": "L12CEG-UB-DU-026",
+      "status": "ready-for-research",
+      "title": "Unblock fighter_action_surge latest dirty cleanroom support for L12CEG-DU-026"
+    },
+    {
+      "number": 157,
+      "id": "L12CEG-UB-DU-027",
+      "status": "ready-for-research",
+      "title": "Unblock fighter_second_wind latest dirty cleanroom support for L12CEG-DU-027"
+    },
+    {
+      "number": 158,
+      "id": "L12CEG-UB-DU-028",
+      "status": "ready-for-research",
+      "title": "Unblock fighter_tactical_mind latest dirty cleanroom support for L12CEG-DU-028"
+    },
+    {
+      "number": 159,
+      "id": "L12CEG-UB-DU-029",
+      "status": "ready-for-research",
+      "title": "Unblock fire_bolt latest dirty cleanroom support for L12CEG-DU-029"
+    },
+    {
+      "number": 160,
+      "id": "L12CEG-UB-DU-030",
+      "status": "ready-for-research",
+      "title": "Unblock fog_cloud latest dirty cleanroom support for L12CEG-DU-030"
+    },
+    {
+      "number": 161,
+      "id": "L12CEG-UB-DU-031",
+      "status": "ready-for-research",
+      "title": "Unblock grease latest dirty cleanroom support for L12CEG-DU-031"
+    },
+    {
+      "number": 162,
+      "id": "L12CEG-UB-DU-032",
+      "status": "ready-for-research",
+      "title": "Unblock guidance latest dirty cleanroom support for L12CEG-DU-032"
+    },
+    {
+      "number": 163,
+      "id": "L12CEG-UB-DU-033",
+      "status": "ready-for-research",
+      "title": "Unblock guiding_bolt latest dirty cleanroom support for L12CEG-DU-033"
+    },
+    {
+      "number": 164,
+      "id": "L12CEG-UB-DU-034",
+      "status": "ready-for-research",
+      "title": "Unblock healing_word latest dirty cleanroom support for L12CEG-DU-034"
+    },
+    {
+      "number": 165,
+      "id": "L12CEG-UB-DU-035",
+      "status": "ready-for-research",
+      "title": "Unblock hellish_rebuke latest dirty cleanroom support for L12CEG-DU-035"
+    },
+    {
+      "number": 166,
+      "id": "L12CEG-UB-DU-036",
+      "status": "ready-for-research",
+      "title": "Unblock heroism latest dirty cleanroom support for L12CEG-DU-036"
+    },
+    {
+      "number": 167,
+      "id": "L12CEG-UB-DU-037",
+      "status": "ready-for-research",
+      "title": "Unblock hex latest dirty cleanroom support for L12CEG-DU-037"
+    },
+    {
+      "number": 168,
+      "id": "L12CEG-UB-DU-038",
+      "status": "ready-for-research",
+      "title": "Unblock hideous_laughter latest dirty cleanroom support for L12CEG-DU-038"
+    },
+    {
+      "number": 169,
+      "id": "L12CEG-UB-DU-039",
+      "status": "ready-for-research",
+      "title": "Unblock hunters_mark latest dirty cleanroom support for L12CEG-DU-039"
+    },
+    {
+      "number": 170,
+      "id": "L12CEG-UB-DU-040",
+      "status": "ready-for-research",
+      "title": "Unblock ice_knife latest dirty cleanroom support for L12CEG-DU-040"
+    },
+    {
+      "number": 171,
+      "id": "L12CEG-UB-DU-041",
+      "status": "ready-for-research",
+      "title": "Unblock inflict_wounds latest dirty cleanroom support for L12CEG-DU-041"
+    },
+    {
+      "number": 172,
+      "id": "L12CEG-UB-DU-042",
+      "status": "ready-for-research",
+      "title": "Unblock jump latest dirty cleanroom support for L12CEG-DU-042"
+    },
+    {
+      "number": 173,
+      "id": "L12CEG-UB-DU-043",
+      "status": "ready-for-research",
+      "title": "Unblock light latest dirty cleanroom support for L12CEG-DU-043"
+    },
+    {
+      "number": 174,
+      "id": "L12CEG-UB-DU-044",
+      "status": "ready-for-research",
+      "title": "Unblock longstrider latest dirty cleanroom support for L12CEG-DU-044"
+    },
+    {
+      "number": 175,
+      "id": "L12CEG-UB-DU-045",
+      "status": "ready-for-research",
+      "title": "Unblock mage_armor latest dirty cleanroom support for L12CEG-DU-045"
+    },
+    {
+      "number": 176,
+      "id": "L12CEG-UB-DU-046",
+      "status": "ready-for-research",
+      "title": "Unblock magic_missile latest dirty cleanroom support for L12CEG-DU-046"
+    },
+    {
+      "number": 177,
+      "id": "L12CEG-UB-DU-047",
+      "status": "ready-for-research",
+      "title": "Unblock monk_martial_arts latest dirty cleanroom support for L12CEG-DU-047"
+    },
+    {
+      "number": 178,
+      "id": "L12CEG-UB-DU-048",
+      "status": "ready-for-research",
+      "title": "Unblock monk_unarmored_movement latest dirty cleanroom support for L12CEG-DU-048"
+    },
+    {
+      "number": 179,
+      "id": "L12CEG-UB-DU-049",
+      "status": "ready-for-research",
+      "title": "Unblock paladin_paladins_smite latest dirty cleanroom support for L12CEG-DU-049"
+    },
+    {
+      "number": 180,
+      "id": "L12CEG-UB-DU-050",
+      "status": "ready-for-research",
+      "title": "Unblock poison_spray latest dirty cleanroom support for L12CEG-DU-050"
+    },
+    {
+      "number": 181,
+      "id": "L12CEG-UB-DU-051",
+      "status": "ready-for-research",
+      "title": "Unblock produce_flame latest dirty cleanroom support for L12CEG-DU-051"
+    },
+    {
+      "number": 182,
+      "id": "L12CEG-UB-DU-053",
+      "status": "ready-for-research",
+      "title": "Unblock ray_of_frost latest dirty cleanroom support for L12CEG-DU-053"
+    },
+    {
+      "number": 183,
+      "id": "L12CEG-UB-DU-054",
+      "status": "ready-for-research",
+      "title": "Unblock ray_of_sickness latest dirty cleanroom support for L12CEG-DU-054"
+    },
+    {
+      "number": 184,
+      "id": "L12CEG-UB-DU-055",
+      "status": "ready-for-research",
+      "title": "Unblock resistance latest dirty cleanroom support for L12CEG-DU-055"
+    },
+    {
+      "number": 185,
+      "id": "L12CEG-UB-DU-056",
+      "status": "ready-for-research",
+      "title": "Unblock rogue_cunning_action latest dirty cleanroom support for L12CEG-DU-056"
+    },
+    {
+      "number": 186,
+      "id": "L12CEG-UB-DU-057",
+      "status": "ready-for-research",
+      "title": "Unblock rogue_sneak_attack latest dirty cleanroom support for L12CEG-DU-057"
+    },
+    {
+      "number": 187,
+      "id": "L12CEG-UB-DU-058",
+      "status": "ready-for-research",
+      "title": "Unblock sacred_flame latest dirty cleanroom support for L12CEG-DU-058"
+    },
+    {
+      "number": 188,
+      "id": "L12CEG-UB-DU-059",
+      "status": "ready-for-research",
+      "title": "Unblock sanctuary latest dirty cleanroom support for L12CEG-DU-059"
+    },
+    {
+      "number": 189,
+      "id": "L12CEG-UB-DU-060",
+      "status": "ready-for-research",
+      "title": "Unblock searing_smite latest dirty cleanroom support for L12CEG-DU-060"
+    },
+    {
+      "number": 190,
+      "id": "L12CEG-UB-DU-061",
+      "status": "ready-for-research",
+      "title": "Unblock shield latest dirty cleanroom support for L12CEG-DU-061"
+    },
+    {
+      "number": 191,
+      "id": "L12CEG-UB-DU-062",
+      "status": "ready-for-research",
+      "title": "Unblock shield_of_faith latest dirty cleanroom support for L12CEG-DU-062"
+    },
+    {
+      "number": 192,
+      "id": "L12CEG-UB-DU-063",
+      "status": "ready-for-research",
+      "title": "Unblock shillelagh latest dirty cleanroom support for L12CEG-DU-063"
+    },
+    {
+      "number": 193,
+      "id": "L12CEG-UB-DU-064",
+      "status": "ready-for-research",
+      "title": "Unblock shocking_grasp latest dirty cleanroom support for L12CEG-DU-064"
+    },
+    {
+      "number": 194,
+      "id": "L12CEG-UB-DU-065",
+      "status": "ready-for-research",
+      "title": "Unblock sleep latest dirty cleanroom support for L12CEG-DU-065"
+    },
+    {
+      "number": 195,
+      "id": "L12CEG-UB-DU-066",
+      "status": "ready-for-research",
+      "title": "Unblock sorcerer_innate_sorcery latest dirty cleanroom support for L12CEG-DU-066"
+    },
+    {
+      "number": 196,
+      "id": "L12CEG-UB-DU-067",
+      "status": "ready-for-research",
+      "title": "Unblock sorcerous_burst latest dirty cleanroom support for L12CEG-DU-067"
+    },
+    {
+      "number": 197,
+      "id": "L12CEG-UB-DU-068",
+      "status": "ready-for-research",
+      "title": "Unblock spare_the_dying latest dirty cleanroom support for L12CEG-DU-068"
+    },
+    {
+      "number": 198,
+      "id": "L12CEG-UB-DU-069",
+      "status": "ready-for-research",
+      "title": "Unblock starry_wisp latest dirty cleanroom support for L12CEG-DU-069"
+    },
+    {
+      "number": 199,
+      "id": "L12CEG-UB-DU-070",
+      "status": "ready-for-research",
+      "title": "Unblock thunderwave latest dirty cleanroom support for L12CEG-DU-070"
+    },
+    {
+      "number": 200,
+      "id": "L12CEG-UB-DU-071",
+      "status": "ready-for-research",
+      "title": "Unblock true_strike latest dirty cleanroom support for L12CEG-DU-071"
+    },
+    {
+      "number": 201,
+      "id": "L12CEG-UB-DU-072",
+      "status": "ready-for-research",
+      "title": "Unblock vicious_mockery latest dirty cleanroom support for L12CEG-DU-072"
     }
   ]
 }
@@ -802,7 +1222,7 @@ This is the runnable Ralph execution plan produced by
 into one Ralph task per future cleanroom harness run batch.
 
 The denominator is still 146 harness-checkable SRD L1-2 rule entries. This plan
-has four task families:
+has five task families:
 
 - `L12CEG-RP-*` tasks group entries by shared route, proof classification,
   profile set, and driver/harness path, then split oversized groups into
@@ -815,6 +1235,10 @@ has four task families:
 - `L12CEG-TG-*` tasks refresh or repair the named latest dirty cleanroom target
   when a dirty-unit check proves that target cannot run the current L12 harness
   contract.
+- `L12CEG-UB-*` tasks are executable unit-specific unblockers. Each one
+  narrows one blocked dirty-unit task into target implementation, target replay
+  evidence, or smaller executable follow-up tasks before the dirty-unit proof
+  task is allowed to auto-unblock.
 
 A row replay batch is done only after the generated cleanroom target produces a
 hash-bound cleanroom run reference or compact receipt that
@@ -862,154 +1286,223 @@ Project terms used by this plan are defined in
 - Latest dirty cleanroom unit proof tasks: 72
 - Cleanroom run reference contract tasks: 1
 - Latest dirty cleanroom target refresh tasks: 2
+- Latest dirty cleanroom unit unblock tasks: 70
 - Latest dirty cleanroom target: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
 - Covered rule entries in this plan: 146
 - Batch status at plan creation: `planned-not-executed`
 - Harness-run status at plan creation: `pending-target-replay`
 - Raw cleanroom logs checked into source: not required and not desired
 
-## DAG
+## DAG / Queue Order
 
-All tasks depend on the completed preparation tasks in
-`plans/RALPH_L12_CLEANROOM_EXHAUSTIVE_GENERATION.md`, especially
-`L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`. The replay batches, dirty unit
-proof tasks, and run-reference contract task are otherwise independent and may
-run in any order unless a target
-implementation task records a concrete dependency through `Plan Impact`.
+All active queue dependencies below are exact `ralph-task-index` ids.
+Historical prep requirements still apply through each task body, but the
+machine-readable queue avoids historical prose dependencies so Ralph can
+auto-unblock blocked tasks only from current indexed task status.
 
-| Task | Depends On |
-| --- | --- |
-| `L12CEG-RP-001` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-DU-052`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-002` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-DU-052`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-003` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-004` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-005` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-006` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-007` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-008` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-009` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-010` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-011` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-012` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-013` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-014` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-015` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-016` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-017` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-018` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-019` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-020` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-021` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-022` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-023` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-024` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-025` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-026` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-027` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-028` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-029` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-030` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-031` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-032` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-033` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-034` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-035` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-036` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-037` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-038` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-039` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-040` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-041` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-042` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-043` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-044` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-045` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-046` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-047` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-048` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-049` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-050` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-051` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-052` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-053` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-054` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-055` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-RP-056` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-001` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-002` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-001-REFRESH-LATEST-DIRTY-TARGET-L12-INPUTS`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-003` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-004` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-005` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-006` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-007` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-008` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-009` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-010` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-011` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-012` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-013` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-014` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-015` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-016` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-017` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-018` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-019` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-020` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-021` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-022` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-023` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-024` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-025` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-026` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-027` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-028` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-029` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-030` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-031` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-032` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-033` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-034` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-035` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-036` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-037` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-038` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-039` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-040` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-041` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-042` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-043` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-044` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-045` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-046` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-047` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-048` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-049` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-050` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-051` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-052` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-001-REFRESH-LATEST-DIRTY-TARGET-L12-INPUTS`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-053` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-054` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-055` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-056` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-057` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-058` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-059` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-060` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-061` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-062` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-063` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-064` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-065` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-066` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-067` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-068` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-069` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-070` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-071` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-DU-072` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
-| `L12CEG-CR-001-CLEANROOM-RUN-REFERENCE-CONTRACT` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-TG-001-REFRESH-LATEST-DIRTY-TARGET-L12-INPUTS` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-CR-001-CLEANROOM-RUN-REFERENCE-CONTRACT` |
-| `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-CR-001-CLEANROOM-RUN-REFERENCE-CONTRACT`; `L12CEG-TG-001-REFRESH-LATEST-DIRTY-TARGET-L12-INPUTS` |
+| # | Task | Status | Depends on | Notes |
+| --: | --- | --- | --- | --- |
+| 1 | L12CEG-RP-001 - Replay spell.creature-type-protection-and-charm chunk 1/2 through catalog-after-substrate | done | none | Already accepted in this plan. |
+| 2 | L12CEG-RP-002 - Replay spell.creature-type-protection-and-charm chunk 2/2 through catalog-after-substrate | done | none | Already accepted in this plan. |
+| 3 | L12CEG-RP-003 - Replay spell.invocation-attack-roll-advantage-save through catalog-after-substrate | blocked | L12CEG-DU-023 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 4 | L12CEG-RP-004 - Replay spell.invocation-condition-immunity-turn-start-temporary-hit-points through catalog-after-substrate | blocked | L12CEG-DU-036 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 5 | L12CEG-RP-005 - Replay spell.invocation-condition-save through catalog-after-substrate | blocked | L12CEG-DU-012, L12CEG-DU-021 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 6 | L12CEG-RP-006 - Replay spell.invocation-damage-reduction through catalog-after-substrate | blocked | L12CEG-DU-055 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 7 | L12CEG-RP-007 - Replay 2-profile set (spell.invocation-damage-save-or-attack, spell.invocation-forced-reaction-movement) through catalog-after-substrate | blocked | L12CEG-DU-016 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 8 | L12CEG-RP-008 - Replay 2-profile set (spell.invocation-damage-save-or-attack, spell.invocation-held-light-emitter) through catalog-after-substrate | blocked | L12CEG-DU-051 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 9 | L12CEG-RP-009 - Replay 2-profile set (spell.invocation-damage-save-or-attack, spell.readied-action-time-spell) chunk 1/5 through catalog-after-substrate | blocked | L12CEG-DU-001, L12CEG-DU-033, L12CEG-DU-041, L12CEG-DU-050, L12CEG-DU-058, L12CEG-DU-072 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 10 | L12CEG-RP-010 - Replay 2-profile set (spell.invocation-damage-save-or-attack, spell.readied-action-time-spell) chunk 2/5 through catalog-after-substrate | blocked | L12CEG-DU-009, L12CEG-DU-010, L12CEG-DU-045, L12CEG-DU-050, L12CEG-DU-053, L12CEG-DU-064 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 11 | L12CEG-RP-011 - Replay 2-profile set (spell.invocation-damage-save-or-attack, spell.readied-action-time-spell) chunk 3/5 through catalog-after-substrate | blocked | L12CEG-DU-001, L12CEG-DU-010, L12CEG-DU-046, L12CEG-DU-050, L12CEG-DU-054 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 12 | L12CEG-RP-012 - Replay 2-profile set (spell.invocation-damage-save-or-attack, spell.readied-action-time-spell) chunk 4/5 through catalog-after-substrate | blocked | L12CEG-DU-009, L12CEG-DU-045, L12CEG-DU-046, L12CEG-DU-050, L12CEG-DU-053, L12CEG-DU-064 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 13 | L12CEG-RP-013 - Replay 2-profile set (spell.invocation-damage-save-or-attack, spell.readied-action-time-spell) chunk 5/5 through catalog-after-substrate | blocked | L12CEG-DU-054 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 14 | L12CEG-RP-014 - Replay spell.invocation-damage-save-or-attack chunk 1/2 through catalog-after-substrate | blocked | L12CEG-DU-029, L12CEG-DU-040, L12CEG-DU-069, L12CEG-DU-070 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 15 | L12CEG-RP-015 - Replay spell.invocation-damage-save-or-attack chunk 2/2 through catalog-after-substrate | blocked | L12CEG-DU-029, L12CEG-DU-040, L12CEG-DU-067, L12CEG-DU-070 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 16 | L12CEG-RP-016 - Replay spell.invocation-grease-ground-hazard through catalog-after-substrate | blocked | L12CEG-DU-031 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 17 | L12CEG-RP-017 - Replay spell.invocation-hideous-laughter-repeat-save-lifecycle through catalog-after-substrate | blocked | L12CEG-DU-038 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 18 | L12CEG-RP-018 - Replay spell.invocation-make-stable through catalog-after-substrate | blocked | L12CEG-DU-068 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 19 | L12CEG-RP-019 - Replay spell.invocation-marked-damage-rider through catalog-after-substrate | blocked | L12CEG-DU-037, L12CEG-DU-039 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 20 | L12CEG-RP-020 - Replay spell.invocation-roll-modifier chunk 1/2 through catalog-after-substrate | blocked | L12CEG-DU-003, L12CEG-DU-008, L12CEG-DU-032 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 21 | L12CEG-RP-021 - Replay spell.invocation-roll-modifier chunk 2/2 through catalog-after-substrate | blocked | L12CEG-DU-003 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 22 | L12CEG-RP-022 - Replay spell.invocation-sanctuary-targeting-interdiction through catalog-after-substrate | blocked | L12CEG-DU-059 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 23 | L12CEG-RP-023 - Replay 2-profile set (spell.invocation-sleep-repeat-save-lifecycle, spell.invocation-sleep-target-admission) through catalog-after-substrate | blocked | L12CEG-DU-065 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 24 | L12CEG-RP-024 - Replay spell.invocation-spell-hosted-weapon-attack through catalog-after-substrate | blocked | L12CEG-DU-071 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 25 | L12CEG-RP-025 - Replay spell.invocation-weapon-attack-override through catalog-after-substrate | blocked | L12CEG-DU-063 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 26 | L12CEG-RP-026 - Replay spell.invocation-weapon-damage-rider through catalog-after-substrate | blocked | L12CEG-DU-017 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 27 | L12CEG-RP-027 - Replay 2-profile set (spell.invocation-damage-save-or-attack, spell.reaction-hellish-rebuke) through catalog-after-substrate | blocked | L12CEG-DU-035 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 28 | L12CEG-RP-028 - Replay spell.scalar-buff chunk 1/2 through catalog-after-substrate | blocked | L12CEG-DU-024, L12CEG-DU-044, L12CEG-DU-062 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 29 | L12CEG-RP-029 - Replay spell.scalar-buff chunk 2/2 through catalog-after-substrate | blocked | L12CEG-DU-024, L12CEG-DU-044 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 30 | L12CEG-RP-030 - Replay unit-feature.first-attack-roll-reckless-advantage through catalog-after-substrate | blocked | L12CEG-DU-006 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 31 | L12CEG-RP-031 - Replay unit-feature.innate-sorcery-activation through catalog-after-substrate | blocked | L12CEG-DU-066 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 32 | L12CEG-RP-032 - Replay unit-feature.passive-saving-throw-roll-mode through catalog-after-substrate | blocked | L12CEG-DU-004 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 33 | L12CEG-RP-033 - Replay unit-feature.passive-speed-bonus through catalog-after-substrate | blocked | L12CEG-DU-048 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 34 | L12CEG-RP-034 - Replay spell.hit-point-restoration chunk 1/2 through reducer-routed | blocked | L12CEG-DU-014, L12CEG-DU-034 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 35 | L12CEG-RP-035 - Replay spell.hit-point-restoration chunk 2/2 through reducer-routed | blocked | L12CEG-DU-014 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 36 | L12CEG-RP-036 - Replay spell.invocation-after-hit-damage through reducer-routed | blocked | L12CEG-DU-018, L12CEG-DU-049 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 37 | L12CEG-RP-037 - Replay spell.invocation-after-hit-restraint-turn-start-damage through reducer-routed | blocked | L12CEG-DU-020 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 38 | L12CEG-RP-038 - Replay spell.invocation-after-hit-timed-damage-save through reducer-routed | blocked | L12CEG-DU-060 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 39 | L12CEG-RP-039 - Replay 2-profile set (spell.invocation-chained-attack-damage, spell.readied-action-time-spell) through reducer-routed | blocked | L12CEG-DU-011 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 40 | L12CEG-RP-040 - Replay 4-profile set (spell.invocation-command-approach-route, spell.invocation-command-drop-held-object, spell.invocation-command-flee-route, spell.invocation-command-halt-grovel) through reducer-routed | blocked | L12CEG-DU-013 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 41 | L12CEG-RP-041 - Replay spell.invocation-dancing-lights-movable-dim-light through reducer-routed | blocked | L12CEG-DU-015 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 42 | L12CEG-RP-042 - Replay spell.invocation-expeditious-retreat-dash through reducer-routed | blocked | L12CEG-DU-022 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 43 | L12CEG-RP-043 - Replay spell.invocation-feather-fall-mitigation through reducer-routed | blocked | L12CEG-DU-025 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 44 | L12CEG-RP-044 - Replay spell.invocation-fog-cloud-obscurement through reducer-routed | blocked | L12CEG-DU-030 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 45 | L12CEG-RP-045 - Replay spell.invocation-independent-attack-sequence through reducer-routed | blocked | L12CEG-DU-019 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 46 | L12CEG-RP-046 - Replay spell.invocation-jump-movement-replacement through reducer-routed | blocked | L12CEG-DU-042 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 47 | L12CEG-RP-047 - Replay spell.invocation-object-light through reducer-routed | blocked | L12CEG-DU-043 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 48 | L12CEG-RP-048 - Replay spell.reaction-shield through reducer-routed | blocked | L12CEG-DU-061 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 49 | L12CEG-RP-049 - Replay unit-feature.action-surge-resource through reducer-routed | blocked | L12CEG-DU-026 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 50 | L12CEG-RP-050 - Replay unit-feature.alternate-action-cost through reducer-routed | blocked | L12CEG-DU-056 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 51 | L12CEG-RP-051 - Replay unit-feature.attack-damage-rider through reducer-routed | blocked | L12CEG-DU-057 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 52 | L12CEG-RP-052 - Replay 2-profile set (unit-feature.bardic-inspiration-failed-d20-test, unit-feature.bardic-inspiration-grant) through reducer-routed | blocked | L12CEG-DU-007 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 53 | L12CEG-RP-053 - Replay unit-feature.bonus-action-ongoing-rage through reducer-routed | blocked | L12CEG-DU-005 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 54 | L12CEG-RP-054 - Replay unit-feature.failed-ability-check-resource-boost through reducer-routed | blocked | L12CEG-DU-028 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 55 | L12CEG-RP-055 - Replay unit-feature.martial-arts-attack-projection through reducer-routed | blocked | L12CEG-DU-047 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 56 | L12CEG-RP-056 - Replay unit-feature.self-bonus-action-healing through reducer-routed | blocked | L12CEG-DU-027 | Replay batch auto-unblocks after related dirty-unit proof tasks close. |
+| 57 | L12CEG-DU-001 - Check acid_splash against latest dirty cleanroom | blocked | L12CEG-UB-DU-001 | Dependency-blocked until L12CEG-UB-DU-001 produces target support/evidence or splits executable follow-ups. |
+| 58 | L12CEG-DU-002 - Check animal_friendship against latest dirty cleanroom | done | none | Already accepted in this plan. |
+| 59 | L12CEG-DU-003 - Check bane against latest dirty cleanroom | blocked | L12CEG-UB-DU-003 | Dependency-blocked until L12CEG-UB-DU-003 produces target support/evidence or splits executable follow-ups. |
+| 60 | L12CEG-DU-004 - Check barbarian_danger_sense against latest dirty cleanroom | blocked | L12CEG-UB-DU-004 | Dependency-blocked until L12CEG-UB-DU-004 produces target support/evidence or splits executable follow-ups. |
+| 61 | L12CEG-DU-005 - Check barbarian_rage against latest dirty cleanroom | blocked | L12CEG-UB-DU-005 | Dependency-blocked until L12CEG-UB-DU-005 produces target support/evidence or splits executable follow-ups. |
+| 62 | L12CEG-DU-006 - Check barbarian_reckless_attack against latest dirty cleanroom | blocked | L12CEG-UB-DU-006 | Dependency-blocked until L12CEG-UB-DU-006 produces target support/evidence or splits executable follow-ups. |
+| 63 | L12CEG-DU-007 - Check bard_bardic_inspiration against latest dirty cleanroom | blocked | L12CEG-UB-DU-007 | Dependency-blocked until L12CEG-UB-DU-007 produces target support/evidence or splits executable follow-ups. |
+| 64 | L12CEG-DU-008 - Check bless against latest dirty cleanroom | blocked | L12CEG-UB-DU-008 | Dependency-blocked until L12CEG-UB-DU-008 produces target support/evidence or splits executable follow-ups. |
+| 65 | L12CEG-DU-009 - Check burning_hands against latest dirty cleanroom | blocked | L12CEG-UB-DU-009 | Dependency-blocked until L12CEG-UB-DU-009 produces target support/evidence or splits executable follow-ups. |
+| 66 | L12CEG-DU-010 - Check chill_touch against latest dirty cleanroom | blocked | L12CEG-UB-DU-010 | Dependency-blocked until L12CEG-UB-DU-010 produces target support/evidence or splits executable follow-ups. |
+| 67 | L12CEG-DU-011 - Check chromatic_orb against latest dirty cleanroom | blocked | L12CEG-UB-DU-011 | Dependency-blocked until L12CEG-UB-DU-011 produces target support/evidence or splits executable follow-ups. |
+| 68 | L12CEG-DU-012 - Check color_spray against latest dirty cleanroom | blocked | L12CEG-UB-DU-012 | Dependency-blocked until L12CEG-UB-DU-012 produces target support/evidence or splits executable follow-ups. |
+| 69 | L12CEG-DU-013 - Check command against latest dirty cleanroom | blocked | L12CEG-UB-DU-013 | Dependency-blocked until L12CEG-UB-DU-013 produces target support/evidence or splits executable follow-ups. |
+| 70 | L12CEG-DU-014 - Check cure_wounds against latest dirty cleanroom | blocked | L12CEG-UB-DU-014 | Dependency-blocked until L12CEG-UB-DU-014 produces target support/evidence or splits executable follow-ups. |
+| 71 | L12CEG-DU-015 - Check dancing_lights against latest dirty cleanroom | blocked | L12CEG-UB-DU-015 | Dependency-blocked until L12CEG-UB-DU-015 produces target support/evidence or splits executable follow-ups. |
+| 72 | L12CEG-DU-016 - Check dissonant_whispers against latest dirty cleanroom | blocked | L12CEG-UB-DU-016 | Dependency-blocked until L12CEG-UB-DU-016 produces target support/evidence or splits executable follow-ups. |
+| 73 | L12CEG-DU-017 - Check divine_favor against latest dirty cleanroom | blocked | L12CEG-UB-DU-017 | Dependency-blocked until L12CEG-UB-DU-017 produces target support/evidence or splits executable follow-ups. |
+| 74 | L12CEG-DU-018 - Check divine_smite against latest dirty cleanroom | blocked | L12CEG-UB-DU-018 | Dependency-blocked until L12CEG-UB-DU-018 produces target support/evidence or splits executable follow-ups. |
+| 75 | L12CEG-DU-019 - Check eldritch_blast against latest dirty cleanroom | blocked | L12CEG-UB-DU-019 | Dependency-blocked until L12CEG-UB-DU-019 produces target support/evidence or splits executable follow-ups. |
+| 76 | L12CEG-DU-020 - Check ensnaring_strike against latest dirty cleanroom | blocked | L12CEG-UB-DU-020 | Dependency-blocked until L12CEG-UB-DU-020 produces target support/evidence or splits executable follow-ups. |
+| 77 | L12CEG-DU-021 - Check entangle against latest dirty cleanroom | blocked | L12CEG-UB-DU-021 | Dependency-blocked until L12CEG-UB-DU-021 produces target support/evidence or splits executable follow-ups. |
+| 78 | L12CEG-DU-022 - Check expeditious_retreat against latest dirty cleanroom | blocked | L12CEG-UB-DU-022 | Dependency-blocked until L12CEG-UB-DU-022 produces target support/evidence or splits executable follow-ups. |
+| 79 | L12CEG-DU-023 - Check faerie_fire against latest dirty cleanroom | blocked | L12CEG-UB-DU-023 | Dependency-blocked until L12CEG-UB-DU-023 produces target support/evidence or splits executable follow-ups. |
+| 80 | L12CEG-DU-024 - Check false_life against latest dirty cleanroom | blocked | L12CEG-UB-DU-024 | Dependency-blocked until L12CEG-UB-DU-024 produces target support/evidence or splits executable follow-ups. |
+| 81 | L12CEG-DU-025 - Check feather_fall against latest dirty cleanroom | blocked | L12CEG-UB-DU-025 | Dependency-blocked until L12CEG-UB-DU-025 produces target support/evidence or splits executable follow-ups. |
+| 82 | L12CEG-DU-026 - Check fighter_action_surge against latest dirty cleanroom | blocked | L12CEG-UB-DU-026 | Dependency-blocked until L12CEG-UB-DU-026 produces target support/evidence or splits executable follow-ups. |
+| 83 | L12CEG-DU-027 - Check fighter_second_wind against latest dirty cleanroom | blocked | L12CEG-UB-DU-027 | Dependency-blocked until L12CEG-UB-DU-027 produces target support/evidence or splits executable follow-ups. |
+| 84 | L12CEG-DU-028 - Check fighter_tactical_mind against latest dirty cleanroom | blocked | L12CEG-UB-DU-028 | Dependency-blocked until L12CEG-UB-DU-028 produces target support/evidence or splits executable follow-ups. |
+| 85 | L12CEG-DU-029 - Check fire_bolt against latest dirty cleanroom | blocked | L12CEG-UB-DU-029 | Dependency-blocked until L12CEG-UB-DU-029 produces target support/evidence or splits executable follow-ups. |
+| 86 | L12CEG-DU-030 - Check fog_cloud against latest dirty cleanroom | blocked | L12CEG-UB-DU-030 | Dependency-blocked until L12CEG-UB-DU-030 produces target support/evidence or splits executable follow-ups. |
+| 87 | L12CEG-DU-031 - Check grease against latest dirty cleanroom | blocked | L12CEG-UB-DU-031 | Dependency-blocked until L12CEG-UB-DU-031 produces target support/evidence or splits executable follow-ups. |
+| 88 | L12CEG-DU-032 - Check guidance against latest dirty cleanroom | blocked | L12CEG-UB-DU-032 | Dependency-blocked until L12CEG-UB-DU-032 produces target support/evidence or splits executable follow-ups. |
+| 89 | L12CEG-DU-033 - Check guiding_bolt against latest dirty cleanroom | blocked | L12CEG-UB-DU-033 | Dependency-blocked until L12CEG-UB-DU-033 produces target support/evidence or splits executable follow-ups. |
+| 90 | L12CEG-DU-034 - Check healing_word against latest dirty cleanroom | blocked | L12CEG-UB-DU-034 | Dependency-blocked until L12CEG-UB-DU-034 produces target support/evidence or splits executable follow-ups. |
+| 91 | L12CEG-DU-035 - Check hellish_rebuke against latest dirty cleanroom | blocked | L12CEG-UB-DU-035 | Dependency-blocked until L12CEG-UB-DU-035 produces target support/evidence or splits executable follow-ups. |
+| 92 | L12CEG-DU-036 - Check heroism against latest dirty cleanroom | blocked | L12CEG-UB-DU-036 | Dependency-blocked until L12CEG-UB-DU-036 produces target support/evidence or splits executable follow-ups. |
+| 93 | L12CEG-DU-037 - Check hex against latest dirty cleanroom | blocked | L12CEG-UB-DU-037 | Dependency-blocked until L12CEG-UB-DU-037 produces target support/evidence or splits executable follow-ups. |
+| 94 | L12CEG-DU-038 - Check hideous_laughter against latest dirty cleanroom | blocked | L12CEG-UB-DU-038 | Dependency-blocked until L12CEG-UB-DU-038 produces target support/evidence or splits executable follow-ups. |
+| 95 | L12CEG-DU-039 - Check hunters_mark against latest dirty cleanroom | blocked | L12CEG-UB-DU-039 | Dependency-blocked until L12CEG-UB-DU-039 produces target support/evidence or splits executable follow-ups. |
+| 96 | L12CEG-DU-040 - Check ice_knife against latest dirty cleanroom | blocked | L12CEG-UB-DU-040 | Dependency-blocked until L12CEG-UB-DU-040 produces target support/evidence or splits executable follow-ups. |
+| 97 | L12CEG-DU-041 - Check inflict_wounds against latest dirty cleanroom | blocked | L12CEG-UB-DU-041 | Dependency-blocked until L12CEG-UB-DU-041 produces target support/evidence or splits executable follow-ups. |
+| 98 | L12CEG-DU-042 - Check jump against latest dirty cleanroom | blocked | L12CEG-UB-DU-042 | Dependency-blocked until L12CEG-UB-DU-042 produces target support/evidence or splits executable follow-ups. |
+| 99 | L12CEG-DU-043 - Check light against latest dirty cleanroom | blocked | L12CEG-UB-DU-043 | Dependency-blocked until L12CEG-UB-DU-043 produces target support/evidence or splits executable follow-ups. |
+| 100 | L12CEG-DU-044 - Check longstrider against latest dirty cleanroom | blocked | L12CEG-UB-DU-044 | Dependency-blocked until L12CEG-UB-DU-044 produces target support/evidence or splits executable follow-ups. |
+| 101 | L12CEG-DU-045 - Check mage_armor against latest dirty cleanroom | blocked | L12CEG-UB-DU-045 | Dependency-blocked until L12CEG-UB-DU-045 produces target support/evidence or splits executable follow-ups. |
+| 102 | L12CEG-DU-046 - Check magic_missile against latest dirty cleanroom | blocked | L12CEG-UB-DU-046 | Dependency-blocked until L12CEG-UB-DU-046 produces target support/evidence or splits executable follow-ups. |
+| 103 | L12CEG-DU-047 - Check monk_martial_arts against latest dirty cleanroom | blocked | L12CEG-UB-DU-047 | Dependency-blocked until L12CEG-UB-DU-047 produces target support/evidence or splits executable follow-ups. |
+| 104 | L12CEG-DU-048 - Check monk_unarmored_movement against latest dirty cleanroom | blocked | L12CEG-UB-DU-048 | Dependency-blocked until L12CEG-UB-DU-048 produces target support/evidence or splits executable follow-ups. |
+| 105 | L12CEG-DU-049 - Check paladin_paladins_smite against latest dirty cleanroom | blocked | L12CEG-UB-DU-049 | Dependency-blocked until L12CEG-UB-DU-049 produces target support/evidence or splits executable follow-ups. |
+| 106 | L12CEG-DU-050 - Check poison_spray against latest dirty cleanroom | blocked | L12CEG-UB-DU-050 | Dependency-blocked until L12CEG-UB-DU-050 produces target support/evidence or splits executable follow-ups. |
+| 107 | L12CEG-DU-051 - Check produce_flame against latest dirty cleanroom | blocked | L12CEG-UB-DU-051 | Dependency-blocked until L12CEG-UB-DU-051 produces target support/evidence or splits executable follow-ups. |
+| 108 | L12CEG-DU-052 - Check protection_from_evil_and_good against latest dirty cleanroom | done | none | Already accepted in this plan. |
+| 109 | L12CEG-DU-053 - Check ray_of_frost against latest dirty cleanroom | blocked | L12CEG-UB-DU-053 | Dependency-blocked until L12CEG-UB-DU-053 produces target support/evidence or splits executable follow-ups. |
+| 110 | L12CEG-DU-054 - Check ray_of_sickness against latest dirty cleanroom | blocked | L12CEG-UB-DU-054 | Dependency-blocked until L12CEG-UB-DU-054 produces target support/evidence or splits executable follow-ups. |
+| 111 | L12CEG-DU-055 - Check resistance against latest dirty cleanroom | blocked | L12CEG-UB-DU-055 | Dependency-blocked until L12CEG-UB-DU-055 produces target support/evidence or splits executable follow-ups. |
+| 112 | L12CEG-DU-056 - Check rogue_cunning_action against latest dirty cleanroom | blocked | L12CEG-UB-DU-056 | Dependency-blocked until L12CEG-UB-DU-056 produces target support/evidence or splits executable follow-ups. |
+| 113 | L12CEG-DU-057 - Check rogue_sneak_attack against latest dirty cleanroom | blocked | L12CEG-UB-DU-057 | Dependency-blocked until L12CEG-UB-DU-057 produces target support/evidence or splits executable follow-ups. |
+| 114 | L12CEG-DU-058 - Check sacred_flame against latest dirty cleanroom | blocked | L12CEG-UB-DU-058 | Dependency-blocked until L12CEG-UB-DU-058 produces target support/evidence or splits executable follow-ups. |
+| 115 | L12CEG-DU-059 - Check sanctuary against latest dirty cleanroom | blocked | L12CEG-UB-DU-059 | Dependency-blocked until L12CEG-UB-DU-059 produces target support/evidence or splits executable follow-ups. |
+| 116 | L12CEG-DU-060 - Check searing_smite against latest dirty cleanroom | blocked | L12CEG-UB-DU-060 | Dependency-blocked until L12CEG-UB-DU-060 produces target support/evidence or splits executable follow-ups. |
+| 117 | L12CEG-DU-061 - Check shield against latest dirty cleanroom | blocked | L12CEG-UB-DU-061 | Dependency-blocked until L12CEG-UB-DU-061 produces target support/evidence or splits executable follow-ups. |
+| 118 | L12CEG-DU-062 - Check shield_of_faith against latest dirty cleanroom | blocked | L12CEG-UB-DU-062 | Dependency-blocked until L12CEG-UB-DU-062 produces target support/evidence or splits executable follow-ups. |
+| 119 | L12CEG-DU-063 - Check shillelagh against latest dirty cleanroom | blocked | L12CEG-UB-DU-063 | Dependency-blocked until L12CEG-UB-DU-063 produces target support/evidence or splits executable follow-ups. |
+| 120 | L12CEG-DU-064 - Check shocking_grasp against latest dirty cleanroom | blocked | L12CEG-UB-DU-064 | Dependency-blocked until L12CEG-UB-DU-064 produces target support/evidence or splits executable follow-ups. |
+| 121 | L12CEG-DU-065 - Check sleep against latest dirty cleanroom | blocked | L12CEG-UB-DU-065 | Dependency-blocked until L12CEG-UB-DU-065 produces target support/evidence or splits executable follow-ups. |
+| 122 | L12CEG-DU-066 - Check sorcerer_innate_sorcery against latest dirty cleanroom | blocked | L12CEG-UB-DU-066 | Dependency-blocked until L12CEG-UB-DU-066 produces target support/evidence or splits executable follow-ups. |
+| 123 | L12CEG-DU-067 - Check sorcerous_burst against latest dirty cleanroom | blocked | L12CEG-UB-DU-067 | Dependency-blocked until L12CEG-UB-DU-067 produces target support/evidence or splits executable follow-ups. |
+| 124 | L12CEG-DU-068 - Check spare_the_dying against latest dirty cleanroom | blocked | L12CEG-UB-DU-068 | Dependency-blocked until L12CEG-UB-DU-068 produces target support/evidence or splits executable follow-ups. |
+| 125 | L12CEG-DU-069 - Check starry_wisp against latest dirty cleanroom | blocked | L12CEG-UB-DU-069 | Dependency-blocked until L12CEG-UB-DU-069 produces target support/evidence or splits executable follow-ups. |
+| 126 | L12CEG-DU-070 - Check thunderwave against latest dirty cleanroom | blocked | L12CEG-UB-DU-070 | Dependency-blocked until L12CEG-UB-DU-070 produces target support/evidence or splits executable follow-ups. |
+| 127 | L12CEG-DU-071 - Check true_strike against latest dirty cleanroom | blocked | L12CEG-UB-DU-071 | Dependency-blocked until L12CEG-UB-DU-071 produces target support/evidence or splits executable follow-ups. |
+| 128 | L12CEG-DU-072 - Check vicious_mockery against latest dirty cleanroom | blocked | L12CEG-UB-DU-072 | Dependency-blocked until L12CEG-UB-DU-072 produces target support/evidence or splits executable follow-ups. |
+| 129 | L12CEG-CR-001-CLEANROOM-RUN-REFERENCE-CONTRACT - Define cleanroom run reference contract | done | none | Already accepted in this plan. |
+| 130 | L12CEG-TG-001-REFRESH-LATEST-DIRTY-TARGET-L12-INPUTS - Refresh latest dirty cleanroom target L12 input bundle | done | none | Already accepted in this plan. |
+| 131 | L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS - Produce latest dirty target harness acceptance artifacts | done | none | Already accepted in this plan. |
+| 132 | L12CEG-UB-DU-023 - Unblock faerie_fire latest dirty cleanroom support for L12CEG-DU-023 | ready-for-research | none | Unblocks L12CEG-DU-023 for Unit `faerie_fire`; prep and latest-target artifact tasks are already complete. |
+| 133 | L12CEG-UB-DU-001 - Unblock acid_splash latest dirty cleanroom support for L12CEG-DU-001 | ready-for-research | none | Unblocks L12CEG-DU-001 for Unit `acid_splash`; prep and latest-target artifact tasks are already complete. |
+| 134 | L12CEG-UB-DU-003 - Unblock bane latest dirty cleanroom support for L12CEG-DU-003 | ready-for-research | none | Unblocks L12CEG-DU-003 for Unit `bane`; prep and latest-target artifact tasks are already complete. |
+| 135 | L12CEG-UB-DU-004 - Unblock barbarian_danger_sense latest dirty cleanroom support for L12CEG-DU-004 | ready-for-research | none | Unblocks L12CEG-DU-004 for Unit `barbarian_danger_sense`; prep and latest-target artifact tasks are already complete. |
+| 136 | L12CEG-UB-DU-005 - Unblock barbarian_rage latest dirty cleanroom support for L12CEG-DU-005 | ready-for-research | none | Unblocks L12CEG-DU-005 for Unit `barbarian_rage`; prep and latest-target artifact tasks are already complete. |
+| 137 | L12CEG-UB-DU-006 - Unblock barbarian_reckless_attack latest dirty cleanroom support for L12CEG-DU-006 | ready-for-research | none | Unblocks L12CEG-DU-006 for Unit `barbarian_reckless_attack`; prep and latest-target artifact tasks are already complete. |
+| 138 | L12CEG-UB-DU-007 - Unblock bard_bardic_inspiration latest dirty cleanroom support for L12CEG-DU-007 | ready-for-research | none | Unblocks L12CEG-DU-007 for Unit `bard_bardic_inspiration`; prep and latest-target artifact tasks are already complete. |
+| 139 | L12CEG-UB-DU-008 - Unblock bless latest dirty cleanroom support for L12CEG-DU-008 | ready-for-research | none | Unblocks L12CEG-DU-008 for Unit `bless`; prep and latest-target artifact tasks are already complete. |
+| 140 | L12CEG-UB-DU-009 - Unblock burning_hands latest dirty cleanroom support for L12CEG-DU-009 | ready-for-research | none | Unblocks L12CEG-DU-009 for Unit `burning_hands`; prep and latest-target artifact tasks are already complete. |
+| 141 | L12CEG-UB-DU-010 - Unblock chill_touch latest dirty cleanroom support for L12CEG-DU-010 | ready-for-research | none | Unblocks L12CEG-DU-010 for Unit `chill_touch`; prep and latest-target artifact tasks are already complete. |
+| 142 | L12CEG-UB-DU-011 - Unblock chromatic_orb latest dirty cleanroom support for L12CEG-DU-011 | ready-for-research | none | Unblocks L12CEG-DU-011 for Unit `chromatic_orb`; prep and latest-target artifact tasks are already complete. |
+| 143 | L12CEG-UB-DU-012 - Unblock color_spray latest dirty cleanroom support for L12CEG-DU-012 | ready-for-research | none | Unblocks L12CEG-DU-012 for Unit `color_spray`; prep and latest-target artifact tasks are already complete. |
+| 144 | L12CEG-UB-DU-013 - Unblock command latest dirty cleanroom support for L12CEG-DU-013 | ready-for-research | none | Unblocks L12CEG-DU-013 for Unit `command`; prep and latest-target artifact tasks are already complete. |
+| 145 | L12CEG-UB-DU-014 - Unblock cure_wounds latest dirty cleanroom support for L12CEG-DU-014 | ready-for-research | none | Unblocks L12CEG-DU-014 for Unit `cure_wounds`; prep and latest-target artifact tasks are already complete. |
+| 146 | L12CEG-UB-DU-015 - Unblock dancing_lights latest dirty cleanroom support for L12CEG-DU-015 | ready-for-research | none | Unblocks L12CEG-DU-015 for Unit `dancing_lights`; prep and latest-target artifact tasks are already complete. |
+| 147 | L12CEG-UB-DU-016 - Unblock dissonant_whispers latest dirty cleanroom support for L12CEG-DU-016 | ready-for-research | none | Unblocks L12CEG-DU-016 for Unit `dissonant_whispers`; prep and latest-target artifact tasks are already complete. |
+| 148 | L12CEG-UB-DU-017 - Unblock divine_favor latest dirty cleanroom support for L12CEG-DU-017 | ready-for-research | none | Unblocks L12CEG-DU-017 for Unit `divine_favor`; prep and latest-target artifact tasks are already complete. |
+| 149 | L12CEG-UB-DU-018 - Unblock divine_smite latest dirty cleanroom support for L12CEG-DU-018 | ready-for-research | none | Unblocks L12CEG-DU-018 for Unit `divine_smite`; prep and latest-target artifact tasks are already complete. |
+| 150 | L12CEG-UB-DU-019 - Unblock eldritch_blast latest dirty cleanroom support for L12CEG-DU-019 | ready-for-research | none | Unblocks L12CEG-DU-019 for Unit `eldritch_blast`; prep and latest-target artifact tasks are already complete. |
+| 151 | L12CEG-UB-DU-020 - Unblock ensnaring_strike latest dirty cleanroom support for L12CEG-DU-020 | ready-for-research | none | Unblocks L12CEG-DU-020 for Unit `ensnaring_strike`; prep and latest-target artifact tasks are already complete. |
+| 152 | L12CEG-UB-DU-021 - Unblock entangle latest dirty cleanroom support for L12CEG-DU-021 | ready-for-research | none | Unblocks L12CEG-DU-021 for Unit `entangle`; prep and latest-target artifact tasks are already complete. |
+| 153 | L12CEG-UB-DU-022 - Unblock expeditious_retreat latest dirty cleanroom support for L12CEG-DU-022 | ready-for-research | none | Unblocks L12CEG-DU-022 for Unit `expeditious_retreat`; prep and latest-target artifact tasks are already complete. |
+| 154 | L12CEG-UB-DU-024 - Unblock false_life latest dirty cleanroom support for L12CEG-DU-024 | ready-for-research | none | Unblocks L12CEG-DU-024 for Unit `false_life`; prep and latest-target artifact tasks are already complete. |
+| 155 | L12CEG-UB-DU-025 - Unblock feather_fall latest dirty cleanroom support for L12CEG-DU-025 | ready-for-research | none | Unblocks L12CEG-DU-025 for Unit `feather_fall`; prep and latest-target artifact tasks are already complete. |
+| 156 | L12CEG-UB-DU-026 - Unblock fighter_action_surge latest dirty cleanroom support for L12CEG-DU-026 | ready-for-research | none | Unblocks L12CEG-DU-026 for Unit `fighter_action_surge`; prep and latest-target artifact tasks are already complete. |
+| 157 | L12CEG-UB-DU-027 - Unblock fighter_second_wind latest dirty cleanroom support for L12CEG-DU-027 | ready-for-research | none | Unblocks L12CEG-DU-027 for Unit `fighter_second_wind`; prep and latest-target artifact tasks are already complete. |
+| 158 | L12CEG-UB-DU-028 - Unblock fighter_tactical_mind latest dirty cleanroom support for L12CEG-DU-028 | ready-for-research | none | Unblocks L12CEG-DU-028 for Unit `fighter_tactical_mind`; prep and latest-target artifact tasks are already complete. |
+| 159 | L12CEG-UB-DU-029 - Unblock fire_bolt latest dirty cleanroom support for L12CEG-DU-029 | ready-for-research | none | Unblocks L12CEG-DU-029 for Unit `fire_bolt`; prep and latest-target artifact tasks are already complete. |
+| 160 | L12CEG-UB-DU-030 - Unblock fog_cloud latest dirty cleanroom support for L12CEG-DU-030 | ready-for-research | none | Unblocks L12CEG-DU-030 for Unit `fog_cloud`; prep and latest-target artifact tasks are already complete. |
+| 161 | L12CEG-UB-DU-031 - Unblock grease latest dirty cleanroom support for L12CEG-DU-031 | ready-for-research | none | Unblocks L12CEG-DU-031 for Unit `grease`; prep and latest-target artifact tasks are already complete. |
+| 162 | L12CEG-UB-DU-032 - Unblock guidance latest dirty cleanroom support for L12CEG-DU-032 | ready-for-research | none | Unblocks L12CEG-DU-032 for Unit `guidance`; prep and latest-target artifact tasks are already complete. |
+| 163 | L12CEG-UB-DU-033 - Unblock guiding_bolt latest dirty cleanroom support for L12CEG-DU-033 | ready-for-research | none | Unblocks L12CEG-DU-033 for Unit `guiding_bolt`; prep and latest-target artifact tasks are already complete. |
+| 164 | L12CEG-UB-DU-034 - Unblock healing_word latest dirty cleanroom support for L12CEG-DU-034 | ready-for-research | none | Unblocks L12CEG-DU-034 for Unit `healing_word`; prep and latest-target artifact tasks are already complete. |
+| 165 | L12CEG-UB-DU-035 - Unblock hellish_rebuke latest dirty cleanroom support for L12CEG-DU-035 | ready-for-research | none | Unblocks L12CEG-DU-035 for Unit `hellish_rebuke`; prep and latest-target artifact tasks are already complete. |
+| 166 | L12CEG-UB-DU-036 - Unblock heroism latest dirty cleanroom support for L12CEG-DU-036 | ready-for-research | none | Unblocks L12CEG-DU-036 for Unit `heroism`; prep and latest-target artifact tasks are already complete. |
+| 167 | L12CEG-UB-DU-037 - Unblock hex latest dirty cleanroom support for L12CEG-DU-037 | ready-for-research | none | Unblocks L12CEG-DU-037 for Unit `hex`; prep and latest-target artifact tasks are already complete. |
+| 168 | L12CEG-UB-DU-038 - Unblock hideous_laughter latest dirty cleanroom support for L12CEG-DU-038 | ready-for-research | none | Unblocks L12CEG-DU-038 for Unit `hideous_laughter`; prep and latest-target artifact tasks are already complete. |
+| 169 | L12CEG-UB-DU-039 - Unblock hunters_mark latest dirty cleanroom support for L12CEG-DU-039 | ready-for-research | none | Unblocks L12CEG-DU-039 for Unit `hunters_mark`; prep and latest-target artifact tasks are already complete. |
+| 170 | L12CEG-UB-DU-040 - Unblock ice_knife latest dirty cleanroom support for L12CEG-DU-040 | ready-for-research | none | Unblocks L12CEG-DU-040 for Unit `ice_knife`; prep and latest-target artifact tasks are already complete. |
+| 171 | L12CEG-UB-DU-041 - Unblock inflict_wounds latest dirty cleanroom support for L12CEG-DU-041 | ready-for-research | none | Unblocks L12CEG-DU-041 for Unit `inflict_wounds`; prep and latest-target artifact tasks are already complete. |
+| 172 | L12CEG-UB-DU-042 - Unblock jump latest dirty cleanroom support for L12CEG-DU-042 | ready-for-research | none | Unblocks L12CEG-DU-042 for Unit `jump`; prep and latest-target artifact tasks are already complete. |
+| 173 | L12CEG-UB-DU-043 - Unblock light latest dirty cleanroom support for L12CEG-DU-043 | ready-for-research | none | Unblocks L12CEG-DU-043 for Unit `light`; prep and latest-target artifact tasks are already complete. |
+| 174 | L12CEG-UB-DU-044 - Unblock longstrider latest dirty cleanroom support for L12CEG-DU-044 | ready-for-research | none | Unblocks L12CEG-DU-044 for Unit `longstrider`; prep and latest-target artifact tasks are already complete. |
+| 175 | L12CEG-UB-DU-045 - Unblock mage_armor latest dirty cleanroom support for L12CEG-DU-045 | ready-for-research | none | Unblocks L12CEG-DU-045 for Unit `mage_armor`; prep and latest-target artifact tasks are already complete. |
+| 176 | L12CEG-UB-DU-046 - Unblock magic_missile latest dirty cleanroom support for L12CEG-DU-046 | ready-for-research | none | Unblocks L12CEG-DU-046 for Unit `magic_missile`; prep and latest-target artifact tasks are already complete. |
+| 177 | L12CEG-UB-DU-047 - Unblock monk_martial_arts latest dirty cleanroom support for L12CEG-DU-047 | ready-for-research | none | Unblocks L12CEG-DU-047 for Unit `monk_martial_arts`; prep and latest-target artifact tasks are already complete. |
+| 178 | L12CEG-UB-DU-048 - Unblock monk_unarmored_movement latest dirty cleanroom support for L12CEG-DU-048 | ready-for-research | none | Unblocks L12CEG-DU-048 for Unit `monk_unarmored_movement`; prep and latest-target artifact tasks are already complete. |
+| 179 | L12CEG-UB-DU-049 - Unblock paladin_paladins_smite latest dirty cleanroom support for L12CEG-DU-049 | ready-for-research | none | Unblocks L12CEG-DU-049 for Unit `paladin_paladins_smite`; prep and latest-target artifact tasks are already complete. |
+| 180 | L12CEG-UB-DU-050 - Unblock poison_spray latest dirty cleanroom support for L12CEG-DU-050 | ready-for-research | none | Unblocks L12CEG-DU-050 for Unit `poison_spray`; prep and latest-target artifact tasks are already complete. |
+| 181 | L12CEG-UB-DU-051 - Unblock produce_flame latest dirty cleanroom support for L12CEG-DU-051 | ready-for-research | none | Unblocks L12CEG-DU-051 for Unit `produce_flame`; prep and latest-target artifact tasks are already complete. |
+| 182 | L12CEG-UB-DU-053 - Unblock ray_of_frost latest dirty cleanroom support for L12CEG-DU-053 | ready-for-research | none | Unblocks L12CEG-DU-053 for Unit `ray_of_frost`; prep and latest-target artifact tasks are already complete. |
+| 183 | L12CEG-UB-DU-054 - Unblock ray_of_sickness latest dirty cleanroom support for L12CEG-DU-054 | ready-for-research | none | Unblocks L12CEG-DU-054 for Unit `ray_of_sickness`; prep and latest-target artifact tasks are already complete. |
+| 184 | L12CEG-UB-DU-055 - Unblock resistance latest dirty cleanroom support for L12CEG-DU-055 | ready-for-research | none | Unblocks L12CEG-DU-055 for Unit `resistance`; prep and latest-target artifact tasks are already complete. |
+| 185 | L12CEG-UB-DU-056 - Unblock rogue_cunning_action latest dirty cleanroom support for L12CEG-DU-056 | ready-for-research | none | Unblocks L12CEG-DU-056 for Unit `rogue_cunning_action`; prep and latest-target artifact tasks are already complete. |
+| 186 | L12CEG-UB-DU-057 - Unblock rogue_sneak_attack latest dirty cleanroom support for L12CEG-DU-057 | ready-for-research | none | Unblocks L12CEG-DU-057 for Unit `rogue_sneak_attack`; prep and latest-target artifact tasks are already complete. |
+| 187 | L12CEG-UB-DU-058 - Unblock sacred_flame latest dirty cleanroom support for L12CEG-DU-058 | ready-for-research | none | Unblocks L12CEG-DU-058 for Unit `sacred_flame`; prep and latest-target artifact tasks are already complete. |
+| 188 | L12CEG-UB-DU-059 - Unblock sanctuary latest dirty cleanroom support for L12CEG-DU-059 | ready-for-research | none | Unblocks L12CEG-DU-059 for Unit `sanctuary`; prep and latest-target artifact tasks are already complete. |
+| 189 | L12CEG-UB-DU-060 - Unblock searing_smite latest dirty cleanroom support for L12CEG-DU-060 | ready-for-research | none | Unblocks L12CEG-DU-060 for Unit `searing_smite`; prep and latest-target artifact tasks are already complete. |
+| 190 | L12CEG-UB-DU-061 - Unblock shield latest dirty cleanroom support for L12CEG-DU-061 | ready-for-research | none | Unblocks L12CEG-DU-061 for Unit `shield`; prep and latest-target artifact tasks are already complete. |
+| 191 | L12CEG-UB-DU-062 - Unblock shield_of_faith latest dirty cleanroom support for L12CEG-DU-062 | ready-for-research | none | Unblocks L12CEG-DU-062 for Unit `shield_of_faith`; prep and latest-target artifact tasks are already complete. |
+| 192 | L12CEG-UB-DU-063 - Unblock shillelagh latest dirty cleanroom support for L12CEG-DU-063 | ready-for-research | none | Unblocks L12CEG-DU-063 for Unit `shillelagh`; prep and latest-target artifact tasks are already complete. |
+| 193 | L12CEG-UB-DU-064 - Unblock shocking_grasp latest dirty cleanroom support for L12CEG-DU-064 | ready-for-research | none | Unblocks L12CEG-DU-064 for Unit `shocking_grasp`; prep and latest-target artifact tasks are already complete. |
+| 194 | L12CEG-UB-DU-065 - Unblock sleep latest dirty cleanroom support for L12CEG-DU-065 | ready-for-research | none | Unblocks L12CEG-DU-065 for Unit `sleep`; prep and latest-target artifact tasks are already complete. |
+| 195 | L12CEG-UB-DU-066 - Unblock sorcerer_innate_sorcery latest dirty cleanroom support for L12CEG-DU-066 | ready-for-research | none | Unblocks L12CEG-DU-066 for Unit `sorcerer_innate_sorcery`; prep and latest-target artifact tasks are already complete. |
+| 196 | L12CEG-UB-DU-067 - Unblock sorcerous_burst latest dirty cleanroom support for L12CEG-DU-067 | ready-for-research | none | Unblocks L12CEG-DU-067 for Unit `sorcerous_burst`; prep and latest-target artifact tasks are already complete. |
+| 197 | L12CEG-UB-DU-068 - Unblock spare_the_dying latest dirty cleanroom support for L12CEG-DU-068 | ready-for-research | none | Unblocks L12CEG-DU-068 for Unit `spare_the_dying`; prep and latest-target artifact tasks are already complete. |
+| 198 | L12CEG-UB-DU-069 - Unblock starry_wisp latest dirty cleanroom support for L12CEG-DU-069 | ready-for-research | none | Unblocks L12CEG-DU-069 for Unit `starry_wisp`; prep and latest-target artifact tasks are already complete. |
+| 199 | L12CEG-UB-DU-070 - Unblock thunderwave latest dirty cleanroom support for L12CEG-DU-070 | ready-for-research | none | Unblocks L12CEG-DU-070 for Unit `thunderwave`; prep and latest-target artifact tasks are already complete. |
+| 200 | L12CEG-UB-DU-071 - Unblock true_strike latest dirty cleanroom support for L12CEG-DU-071 | ready-for-research | none | Unblocks L12CEG-DU-071 for Unit `true_strike`; prep and latest-target artifact tasks are already complete. |
+| 201 | L12CEG-UB-DU-072 - Unblock vicious_mockery latest dirty cleanroom support for L12CEG-DU-072 | ready-for-research | none | Unblocks L12CEG-DU-072 for Unit `vicious_mockery`; prep and latest-target artifact tasks are already complete. |
 
 ## Global Latest-Target Harness Artifact Blocker
 
@@ -1061,7 +1554,9 @@ language, architecture/connascence, cleanroom-authored-identity, Ralph task
 quality, and code-review findings. Fix every reasonable finding; reject only
 with a concrete reason.
 
-## Replay Batch Task Details
+## Task Details
+
+### Replay Batch Task Details
 
 ### Task 1 - L12CEG-RP-001
 
@@ -17771,3 +18266,8442 @@ Plan Impact:
 `applied` only after the source harness contract can verify a hash-bound run
 reference or compact receipt without requiring raw cleanroom logs in source. Use
 `update-required` if this needs a larger artifact-store or ledger redesign.
+
+## Unit Unblock Task Details
+
+### Task 132 - L12CEG-UB-DU-023
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `faerie_fire` so
+`L12CEG-DU-023` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-023` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `faerie_fire`
+- Dependent dirty-unit task: `L12CEG-DU-023`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_faerie_fire`
+- `srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_faerie_fire`
+
+Profiles:
+
+- `spell.invocation-attack-roll-advantage-save`
+
+Replay Batches:
+
+- `L12CEG-RP-003`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `faerie_fire`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-023` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `faerie_fire` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-023` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `faerie_fire`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-023` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+### Task 133 - L12CEG-UB-DU-001
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `acid_splash` so
+`L12CEG-DU-001` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-001` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `acid_splash`
+- Dependent dirty-unit task: `L12CEG-DU-001`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_acid_splash`
+- `srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_acid_splash`
+
+Profiles:
+
+- `spell.invocation-damage-save-or-attack`
+- `spell.readied-action-time-spell`
+
+Replay Batches:
+
+- `L12CEG-RP-009`
+- `L12CEG-RP-011`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `acid_splash`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-001` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `acid_splash` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-001` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `acid_splash`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-001` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 134 - L12CEG-UB-DU-003
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `bane` so
+`L12CEG-DU-003` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-003` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `bane`
+- Dependent dirty-unit task: `L12CEG-DU-003`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_bane`
+- `srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_bane`
+- `srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_bane`
+
+Profiles:
+
+- `spell.invocation-roll-modifier`
+
+Replay Batches:
+
+- `L12CEG-RP-020`
+- `L12CEG-RP-021`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `bane`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-003` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `bane` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-003` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `bane`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-003` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 135 - L12CEG-UB-DU-004
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `barbarian_danger_sense` so
+`L12CEG-DU-004` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-004` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `barbarian_danger_sense`
+- Dependent dirty-unit task: `L12CEG-DU-004`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/barbarian:level-2:class-feature-grant:barbarian_danger_sense`
+
+Profiles:
+
+- `unit-feature.passive-saving-throw-roll-mode`
+
+Replay Batches:
+
+- `L12CEG-RP-032`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `barbarian_danger_sense`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-004` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `barbarian_danger_sense` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-004` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `barbarian_danger_sense`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-004` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 136 - L12CEG-UB-DU-005
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `barbarian_rage` so
+`L12CEG-DU-005` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-005` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `barbarian_rage`
+- Dependent dirty-unit task: `L12CEG-DU-005`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/barbarian:level-1:class-feature-grant:barbarian_rage`
+
+Profiles:
+
+- `unit-feature.bonus-action-ongoing-rage`
+
+Replay Batches:
+
+- `L12CEG-RP-053`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `barbarian_rage`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-005` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `barbarian_rage` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-005` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `barbarian_rage`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-005` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 137 - L12CEG-UB-DU-006
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `barbarian_reckless_attack` so
+`L12CEG-DU-006` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-006` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `barbarian_reckless_attack`
+- Dependent dirty-unit task: `L12CEG-DU-006`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/barbarian:level-2:class-feature-grant:barbarian_reckless_attack`
+
+Profiles:
+
+- `unit-feature.first-attack-roll-reckless-advantage`
+
+Replay Batches:
+
+- `L12CEG-RP-030`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `barbarian_reckless_attack`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-006` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `barbarian_reckless_attack` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-006` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `barbarian_reckless_attack`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-006` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 138 - L12CEG-UB-DU-007
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `bard_bardic_inspiration` so
+`L12CEG-DU-007` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-007` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `bard_bardic_inspiration`
+- Dependent dirty-unit task: `L12CEG-DU-007`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/bard:level-1:class-feature-grant:bard_bardic_inspiration`
+
+Profiles:
+
+- `unit-feature.bardic-inspiration-failed-d20-test`
+- `unit-feature.bardic-inspiration-grant`
+
+Replay Batches:
+
+- `L12CEG-RP-052`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `bard_bardic_inspiration`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-007` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `bard_bardic_inspiration` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-007` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `bard_bardic_inspiration`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-007` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 139 - L12CEG-UB-DU-008
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `bless` so
+`L12CEG-DU-008` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-008` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `bless`
+- Dependent dirty-unit task: `L12CEG-DU-008`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_bless`
+- `srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_bless`
+
+Profiles:
+
+- `spell.invocation-roll-modifier`
+
+Replay Batches:
+
+- `L12CEG-RP-020`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `bless`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-008` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `bless` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-008` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `bless`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-008` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 140 - L12CEG-UB-DU-009
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `burning_hands` so
+`L12CEG-DU-009` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-009` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `burning_hands`
+- Dependent dirty-unit task: `L12CEG-DU-009`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_burning_hands`
+- `srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_burning_hands`
+
+Profiles:
+
+- `spell.invocation-damage-save-or-attack`
+- `spell.readied-action-time-spell`
+
+Replay Batches:
+
+- `L12CEG-RP-010`
+- `L12CEG-RP-012`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `burning_hands`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-009` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `burning_hands` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-009` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `burning_hands`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-009` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 141 - L12CEG-UB-DU-010
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `chill_touch` so
+`L12CEG-DU-010` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-010` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `chill_touch`
+- Dependent dirty-unit task: `L12CEG-DU-010`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_chill_touch`
+- `srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_chill_touch`
+- `srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_chill_touch`
+
+Profiles:
+
+- `spell.invocation-damage-save-or-attack`
+- `spell.readied-action-time-spell`
+
+Replay Batches:
+
+- `L12CEG-RP-010`
+- `L12CEG-RP-011`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `chill_touch`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-010` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `chill_touch` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-010` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `chill_touch`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-010` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 142 - L12CEG-UB-DU-011
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `chromatic_orb` so
+`L12CEG-DU-011` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-011` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `chromatic_orb`
+- Dependent dirty-unit task: `L12CEG-DU-011`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_chromatic_orb`
+- `srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_chromatic_orb`
+
+Profiles:
+
+- `spell.invocation-chained-attack-damage`
+- `spell.readied-action-time-spell`
+
+Replay Batches:
+
+- `L12CEG-RP-039`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `chromatic_orb`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-011` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `chromatic_orb` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-011` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `chromatic_orb`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-011` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 143 - L12CEG-UB-DU-012
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `color_spray` so
+`L12CEG-DU-012` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-012` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `color_spray`
+- Dependent dirty-unit task: `L12CEG-DU-012`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_color_spray`
+- `srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_color_spray`
+- `srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_color_spray`
+
+Profiles:
+
+- `spell.invocation-condition-save`
+
+Replay Batches:
+
+- `L12CEG-RP-005`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `color_spray`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-012` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `color_spray` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-012` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `color_spray`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-012` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 144 - L12CEG-UB-DU-013
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `command` so
+`L12CEG-DU-013` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-013` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `command`
+- Dependent dirty-unit task: `L12CEG-DU-013`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_command`
+- `srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_command`
+- `srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_command`
+
+Profiles:
+
+- `spell.invocation-command-approach-route`
+- `spell.invocation-command-drop-held-object`
+- `spell.invocation-command-flee-route`
+- `spell.invocation-command-halt-grovel`
+
+Replay Batches:
+
+- `L12CEG-RP-040`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `command`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-013` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `command` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-013` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `command`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-013` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 145 - L12CEG-UB-DU-014
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `cure_wounds` so
+`L12CEG-DU-014` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-014` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `cure_wounds`
+- Dependent dirty-unit task: `L12CEG-DU-014`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_cure_wounds`
+- `srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_cure_wounds`
+- `srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_cure_wounds`
+- `srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_cure_wounds`
+- `srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_cure_wounds`
+
+Profiles:
+
+- `spell.hit-point-restoration`
+
+Replay Batches:
+
+- `L12CEG-RP-034`
+- `L12CEG-RP-035`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `cure_wounds`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-014` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `cure_wounds` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-014` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `cure_wounds`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-014` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 146 - L12CEG-UB-DU-015
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `dancing_lights` so
+`L12CEG-DU-015` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-015` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `dancing_lights`
+- Dependent dirty-unit task: `L12CEG-DU-015`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_dancing_lights`
+- `srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_dancing_lights`
+- `srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_dancing_lights`
+
+Profiles:
+
+- `spell.invocation-dancing-lights-movable-dim-light`
+
+Replay Batches:
+
+- `L12CEG-RP-041`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `dancing_lights`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-015` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `dancing_lights` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-015` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `dancing_lights`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-015` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 147 - L12CEG-UB-DU-016
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `dissonant_whispers` so
+`L12CEG-DU-016` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-016` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `dissonant_whispers`
+- Dependent dirty-unit task: `L12CEG-DU-016`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_dissonant_whispers`
+
+Profiles:
+
+- `spell.invocation-damage-save-or-attack`
+- `spell.invocation-forced-reaction-movement`
+
+Replay Batches:
+
+- `L12CEG-RP-007`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `dissonant_whispers`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-016` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `dissonant_whispers` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-016` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `dissonant_whispers`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-016` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 148 - L12CEG-UB-DU-017
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `divine_favor` so
+`L12CEG-DU-017` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-017` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `divine_favor`
+- Dependent dirty-unit task: `L12CEG-DU-017`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_divine_favor`
+
+Profiles:
+
+- `spell.invocation-weapon-damage-rider`
+
+Replay Batches:
+
+- `L12CEG-RP-026`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `divine_favor`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-017` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `divine_favor` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-017` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `divine_favor`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-017` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 149 - L12CEG-UB-DU-018
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `divine_smite` so
+`L12CEG-DU-018` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-018` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `divine_smite`
+- Dependent dirty-unit task: `L12CEG-DU-018`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_divine_smite`
+
+Profiles:
+
+- `spell.invocation-after-hit-damage`
+
+Replay Batches:
+
+- `L12CEG-RP-036`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `divine_smite`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-018` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `divine_smite` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-018` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `divine_smite`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-018` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 150 - L12CEG-UB-DU-019
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `eldritch_blast` so
+`L12CEG-DU-019` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-019` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `eldritch_blast`
+- Dependent dirty-unit task: `L12CEG-DU-019`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_eldritch_blast`
+
+Profiles:
+
+- `spell.invocation-independent-attack-sequence`
+
+Replay Batches:
+
+- `L12CEG-RP-045`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `eldritch_blast`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-019` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `eldritch_blast` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-019` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `eldritch_blast`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-019` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 151 - L12CEG-UB-DU-020
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `ensnaring_strike` so
+`L12CEG-DU-020` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-020` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `ensnaring_strike`
+- Dependent dirty-unit task: `L12CEG-DU-020`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_ensnaring_strike`
+
+Profiles:
+
+- `spell.invocation-after-hit-restraint-turn-start-damage`
+
+Replay Batches:
+
+- `L12CEG-RP-037`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `ensnaring_strike`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-020` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `ensnaring_strike` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-020` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `ensnaring_strike`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-020` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 152 - L12CEG-UB-DU-021
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `entangle` so
+`L12CEG-DU-021` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-021` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `entangle`
+- Dependent dirty-unit task: `L12CEG-DU-021`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_entangle`
+- `srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_entangle`
+
+Profiles:
+
+- `spell.invocation-condition-save`
+
+Replay Batches:
+
+- `L12CEG-RP-005`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `entangle`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-021` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `entangle` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-021` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `entangle`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-021` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 153 - L12CEG-UB-DU-022
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `expeditious_retreat` so
+`L12CEG-DU-022` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-022` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `expeditious_retreat`
+- Dependent dirty-unit task: `L12CEG-DU-022`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_expeditious_retreat`
+- `srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_expeditious_retreat`
+- `srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_expeditious_retreat`
+
+Profiles:
+
+- `spell.invocation-expeditious-retreat-dash`
+
+Replay Batches:
+
+- `L12CEG-RP-042`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `expeditious_retreat`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-022` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `expeditious_retreat` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-022` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `expeditious_retreat`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-022` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 154 - L12CEG-UB-DU-024
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `false_life` so
+`L12CEG-DU-024` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-024` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `false_life`
+- Dependent dirty-unit task: `L12CEG-DU-024`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_false_life`
+- `srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_false_life`
+
+Profiles:
+
+- `spell.scalar-buff`
+
+Replay Batches:
+
+- `L12CEG-RP-028`
+- `L12CEG-RP-029`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `false_life`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-024` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `false_life` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-024` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `false_life`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-024` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 155 - L12CEG-UB-DU-025
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `feather_fall` so
+`L12CEG-DU-025` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-025` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `feather_fall`
+- Dependent dirty-unit task: `L12CEG-DU-025`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_feather_fall`
+- `srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_feather_fall`
+- `srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_feather_fall`
+
+Profiles:
+
+- `spell.invocation-feather-fall-mitigation`
+
+Replay Batches:
+
+- `L12CEG-RP-043`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `feather_fall`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-025` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `feather_fall` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-025` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `feather_fall`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-025` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 156 - L12CEG-UB-DU-026
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `fighter_action_surge` so
+`L12CEG-DU-026` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-026` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `fighter_action_surge`
+- Dependent dirty-unit task: `L12CEG-DU-026`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/fighter:level-2:class-feature-grant:fighter_action_surge`
+
+Profiles:
+
+- `unit-feature.action-surge-resource`
+
+Replay Batches:
+
+- `L12CEG-RP-049`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `fighter_action_surge`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-026` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `fighter_action_surge` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-026` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `fighter_action_surge`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-026` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 157 - L12CEG-UB-DU-027
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `fighter_second_wind` so
+`L12CEG-DU-027` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-027` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `fighter_second_wind`
+- Dependent dirty-unit task: `L12CEG-DU-027`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/fighter:level-1:class-feature-grant:fighter_second_wind`
+
+Profiles:
+
+- `unit-feature.self-bonus-action-healing`
+
+Replay Batches:
+
+- `L12CEG-RP-056`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `fighter_second_wind`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-027` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `fighter_second_wind` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-027` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `fighter_second_wind`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-027` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 158 - L12CEG-UB-DU-028
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `fighter_tactical_mind` so
+`L12CEG-DU-028` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-028` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `fighter_tactical_mind`
+- Dependent dirty-unit task: `L12CEG-DU-028`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/fighter:level-2:class-feature-grant:fighter_tactical_mind`
+
+Profiles:
+
+- `unit-feature.failed-ability-check-resource-boost`
+
+Replay Batches:
+
+- `L12CEG-RP-054`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `fighter_tactical_mind`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-028` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `fighter_tactical_mind` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-028` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `fighter_tactical_mind`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-028` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 159 - L12CEG-UB-DU-029
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `fire_bolt` so
+`L12CEG-DU-029` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-029` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `fire_bolt`
+- Dependent dirty-unit task: `L12CEG-DU-029`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_fire_bolt`
+- `srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_fire_bolt`
+
+Profiles:
+
+- `spell.invocation-damage-save-or-attack`
+
+Replay Batches:
+
+- `L12CEG-RP-014`
+- `L12CEG-RP-015`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `fire_bolt`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-029` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `fire_bolt` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-029` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `fire_bolt`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-029` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 160 - L12CEG-UB-DU-030
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `fog_cloud` so
+`L12CEG-DU-030` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-030` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `fog_cloud`
+- Dependent dirty-unit task: `L12CEG-DU-030`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_fog_cloud`
+- `srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_fog_cloud`
+- `srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_fog_cloud`
+- `srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_fog_cloud`
+
+Profiles:
+
+- `spell.invocation-fog-cloud-obscurement`
+
+Replay Batches:
+
+- `L12CEG-RP-044`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `fog_cloud`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-030` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `fog_cloud` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-030` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `fog_cloud`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-030` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 161 - L12CEG-UB-DU-031
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `grease` so
+`L12CEG-DU-031` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-031` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `grease`
+- Dependent dirty-unit task: `L12CEG-DU-031`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_grease`
+- `srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_grease`
+
+Profiles:
+
+- `spell.invocation-grease-ground-hazard`
+
+Replay Batches:
+
+- `L12CEG-RP-016`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `grease`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-031` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `grease` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-031` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `grease`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-031` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 162 - L12CEG-UB-DU-032
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `guidance` so
+`L12CEG-DU-032` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-032` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `guidance`
+- Dependent dirty-unit task: `L12CEG-DU-032`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_guidance`
+- `srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_guidance`
+
+Profiles:
+
+- `spell.invocation-roll-modifier`
+
+Replay Batches:
+
+- `L12CEG-RP-020`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `guidance`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-032` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `guidance` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-032` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `guidance`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-032` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 163 - L12CEG-UB-DU-033
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `guiding_bolt` so
+`L12CEG-DU-033` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-033` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `guiding_bolt`
+- Dependent dirty-unit task: `L12CEG-DU-033`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_guiding_bolt`
+
+Profiles:
+
+- `spell.invocation-damage-save-or-attack`
+- `spell.readied-action-time-spell`
+
+Replay Batches:
+
+- `L12CEG-RP-009`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `guiding_bolt`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-033` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `guiding_bolt` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-033` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `guiding_bolt`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-033` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 164 - L12CEG-UB-DU-034
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `healing_word` so
+`L12CEG-DU-034` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-034` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `healing_word`
+- Dependent dirty-unit task: `L12CEG-DU-034`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_healing_word`
+- `srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_healing_word`
+- `srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_healing_word`
+
+Profiles:
+
+- `spell.hit-point-restoration`
+
+Replay Batches:
+
+- `L12CEG-RP-034`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `healing_word`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-034` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `healing_word` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-034` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `healing_word`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-034` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 165 - L12CEG-UB-DU-035
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `hellish_rebuke` so
+`L12CEG-DU-035` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-035` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `hellish_rebuke`
+- Dependent dirty-unit task: `L12CEG-DU-035`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hellish_rebuke`
+
+Profiles:
+
+- `spell.invocation-damage-save-or-attack`
+- `spell.reaction-hellish-rebuke`
+
+Replay Batches:
+
+- `L12CEG-RP-027`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `hellish_rebuke`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-035` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `hellish_rebuke` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-035` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `hellish_rebuke`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-035` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 166 - L12CEG-UB-DU-036
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `heroism` so
+`L12CEG-DU-036` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-036` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `heroism`
+- Dependent dirty-unit task: `L12CEG-DU-036`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_heroism`
+- `srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_heroism`
+
+Profiles:
+
+- `spell.invocation-condition-immunity-turn-start-temporary-hit-points`
+
+Replay Batches:
+
+- `L12CEG-RP-004`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `heroism`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-036` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `heroism` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-036` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `heroism`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-036` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 167 - L12CEG-UB-DU-037
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `hex` so
+`L12CEG-DU-037` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-037` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `hex`
+- Dependent dirty-unit task: `L12CEG-DU-037`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hex`
+
+Profiles:
+
+- `spell.invocation-marked-damage-rider`
+
+Replay Batches:
+
+- `L12CEG-RP-019`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `hex`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-037` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `hex` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-037` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `hex`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-037` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 168 - L12CEG-UB-DU-038
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `hideous_laughter` so
+`L12CEG-DU-038` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-038` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `hideous_laughter`
+- Dependent dirty-unit task: `L12CEG-DU-038`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_hideous_laughter`
+- `srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_hideous_laughter`
+- `srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_hideous_laughter`
+
+Profiles:
+
+- `spell.invocation-hideous-laughter-repeat-save-lifecycle`
+
+Replay Batches:
+
+- `L12CEG-RP-017`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `hideous_laughter`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-038` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `hideous_laughter` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-038` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `hideous_laughter`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-038` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 169 - L12CEG-UB-DU-039
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `hunters_mark` so
+`L12CEG-DU-039` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-039` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `hunters_mark`
+- Dependent dirty-unit task: `L12CEG-DU-039`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_hunters_mark`
+
+Profiles:
+
+- `spell.invocation-marked-damage-rider`
+
+Replay Batches:
+
+- `L12CEG-RP-019`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `hunters_mark`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-039` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `hunters_mark` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-039` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `hunters_mark`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-039` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 170 - L12CEG-UB-DU-040
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `ice_knife` so
+`L12CEG-DU-040` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-040` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `ice_knife`
+- Dependent dirty-unit task: `L12CEG-DU-040`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_ice_knife`
+- `srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_ice_knife`
+- `srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_ice_knife`
+
+Profiles:
+
+- `spell.invocation-damage-save-or-attack`
+
+Replay Batches:
+
+- `L12CEG-RP-014`
+- `L12CEG-RP-015`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `ice_knife`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-040` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `ice_knife` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-040` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `ice_knife`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-040` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 171 - L12CEG-UB-DU-041
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `inflict_wounds` so
+`L12CEG-DU-041` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-041` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `inflict_wounds`
+- Dependent dirty-unit task: `L12CEG-DU-041`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_inflict_wounds`
+
+Profiles:
+
+- `spell.invocation-damage-save-or-attack`
+- `spell.readied-action-time-spell`
+
+Replay Batches:
+
+- `L12CEG-RP-009`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `inflict_wounds`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-041` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `inflict_wounds` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-041` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `inflict_wounds`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-041` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 172 - L12CEG-UB-DU-042
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `jump` so
+`L12CEG-DU-042` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-042` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `jump`
+- Dependent dirty-unit task: `L12CEG-DU-042`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_jump`
+- `srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_jump`
+- `srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_jump`
+- `srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_jump`
+
+Profiles:
+
+- `spell.invocation-jump-movement-replacement`
+
+Replay Batches:
+
+- `L12CEG-RP-046`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `jump`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-042` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `jump` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-042` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `jump`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-042` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 173 - L12CEG-UB-DU-043
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `light` so
+`L12CEG-DU-043` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-043` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `light`
+- Dependent dirty-unit task: `L12CEG-DU-043`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_light`
+- `srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_light`
+- `srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_light`
+- `srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_light`
+
+Profiles:
+
+- `spell.invocation-object-light`
+
+Replay Batches:
+
+- `L12CEG-RP-047`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `light`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-043` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `light` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-043` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `light`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-043` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 174 - L12CEG-UB-DU-044
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `longstrider` so
+`L12CEG-DU-044` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-044` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `longstrider`
+- Dependent dirty-unit task: `L12CEG-DU-044`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_longstrider`
+- `srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_longstrider`
+- `srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_longstrider`
+- `srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_longstrider`
+
+Profiles:
+
+- `spell.scalar-buff`
+
+Replay Batches:
+
+- `L12CEG-RP-028`
+- `L12CEG-RP-029`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `longstrider`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-044` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `longstrider` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-044` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `longstrider`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-044` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 175 - L12CEG-UB-DU-045
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `mage_armor` so
+`L12CEG-DU-045` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-045` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `mage_armor`
+- Dependent dirty-unit task: `L12CEG-DU-045`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_mage_armor`
+- `srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_mage_armor`
+
+Profiles:
+
+- `spell.invocation-damage-save-or-attack`
+- `spell.readied-action-time-spell`
+
+Replay Batches:
+
+- `L12CEG-RP-010`
+- `L12CEG-RP-012`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `mage_armor`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-045` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `mage_armor` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-045` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `mage_armor`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-045` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 176 - L12CEG-UB-DU-046
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `magic_missile` so
+`L12CEG-DU-046` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-046` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `magic_missile`
+- Dependent dirty-unit task: `L12CEG-DU-046`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_magic_missile`
+- `srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_magic_missile`
+
+Profiles:
+
+- `spell.invocation-damage-save-or-attack`
+- `spell.readied-action-time-spell`
+
+Replay Batches:
+
+- `L12CEG-RP-011`
+- `L12CEG-RP-012`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `magic_missile`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-046` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `magic_missile` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-046` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `magic_missile`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-046` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 177 - L12CEG-UB-DU-047
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `monk_martial_arts` so
+`L12CEG-DU-047` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-047` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `monk_martial_arts`
+- Dependent dirty-unit task: `L12CEG-DU-047`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/monk:level-1:class-feature-grant:monk_martial_arts`
+
+Profiles:
+
+- `unit-feature.martial-arts-attack-projection`
+
+Replay Batches:
+
+- `L12CEG-RP-055`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `monk_martial_arts`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-047` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `monk_martial_arts` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-047` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `monk_martial_arts`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-047` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 178 - L12CEG-UB-DU-048
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `monk_unarmored_movement` so
+`L12CEG-DU-048` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-048` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `monk_unarmored_movement`
+- Dependent dirty-unit task: `L12CEG-DU-048`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/monk:level-2:class-feature-grant:monk_unarmored_movement`
+
+Profiles:
+
+- `unit-feature.passive-speed-bonus`
+
+Replay Batches:
+
+- `L12CEG-RP-033`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `monk_unarmored_movement`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-048` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `monk_unarmored_movement` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-048` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `monk_unarmored_movement`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-048` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 179 - L12CEG-UB-DU-049
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `paladin_paladins_smite` so
+`L12CEG-DU-049` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-049` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `paladin_paladins_smite`
+- Dependent dirty-unit task: `L12CEG-DU-049`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/paladin:level-2:class-feature-grant:paladin_paladins_smite`
+
+Profiles:
+
+- `spell.invocation-after-hit-damage`
+
+Replay Batches:
+
+- `L12CEG-RP-036`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `paladin_paladins_smite`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-049` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `paladin_paladins_smite` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-049` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `paladin_paladins_smite`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-049` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 180 - L12CEG-UB-DU-050
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `poison_spray` so
+`L12CEG-DU-050` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-050` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `poison_spray`
+- Dependent dirty-unit task: `L12CEG-DU-050`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_poison_spray`
+- `srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_poison_spray`
+- `srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_poison_spray`
+- `srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_poison_spray`
+
+Profiles:
+
+- `spell.invocation-damage-save-or-attack`
+- `spell.readied-action-time-spell`
+
+Replay Batches:
+
+- `L12CEG-RP-009`
+- `L12CEG-RP-010`
+- `L12CEG-RP-011`
+- `L12CEG-RP-012`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `poison_spray`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-050` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `poison_spray` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-050` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `poison_spray`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-050` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 181 - L12CEG-UB-DU-051
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `produce_flame` so
+`L12CEG-DU-051` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-051` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `produce_flame`
+- Dependent dirty-unit task: `L12CEG-DU-051`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_produce_flame`
+
+Profiles:
+
+- `spell.invocation-damage-save-or-attack`
+- `spell.invocation-held-light-emitter`
+
+Replay Batches:
+
+- `L12CEG-RP-008`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `produce_flame`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-051` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `produce_flame` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-051` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `produce_flame`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-051` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 182 - L12CEG-UB-DU-053
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `ray_of_frost` so
+`L12CEG-DU-053` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-053` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `ray_of_frost`
+- Dependent dirty-unit task: `L12CEG-DU-053`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_ray_of_frost`
+- `srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_ray_of_frost`
+
+Profiles:
+
+- `spell.invocation-damage-save-or-attack`
+- `spell.readied-action-time-spell`
+
+Replay Batches:
+
+- `L12CEG-RP-010`
+- `L12CEG-RP-012`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `ray_of_frost`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-053` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `ray_of_frost` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-053` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `ray_of_frost`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-053` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 183 - L12CEG-UB-DU-054
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `ray_of_sickness` so
+`L12CEG-DU-054` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-054` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `ray_of_sickness`
+- Dependent dirty-unit task: `L12CEG-DU-054`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_ray_of_sickness`
+- `srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_ray_of_sickness`
+
+Profiles:
+
+- `spell.invocation-damage-save-or-attack`
+- `spell.readied-action-time-spell`
+
+Replay Batches:
+
+- `L12CEG-RP-011`
+- `L12CEG-RP-013`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `ray_of_sickness`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-054` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `ray_of_sickness` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-054` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `ray_of_sickness`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-054` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 184 - L12CEG-UB-DU-055
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `resistance` so
+`L12CEG-DU-055` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-055` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `resistance`
+- Dependent dirty-unit task: `L12CEG-DU-055`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_resistance`
+- `srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_resistance`
+
+Profiles:
+
+- `spell.invocation-damage-reduction`
+
+Replay Batches:
+
+- `L12CEG-RP-006`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `resistance`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-055` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `resistance` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-055` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `resistance`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-055` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 185 - L12CEG-UB-DU-056
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `rogue_cunning_action` so
+`L12CEG-DU-056` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-056` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `rogue_cunning_action`
+- Dependent dirty-unit task: `L12CEG-DU-056`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/rogue:level-2:class-feature-grant:rogue_cunning_action`
+
+Profiles:
+
+- `unit-feature.alternate-action-cost`
+
+Replay Batches:
+
+- `L12CEG-RP-050`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `rogue_cunning_action`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-056` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `rogue_cunning_action` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-056` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `rogue_cunning_action`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-056` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 186 - L12CEG-UB-DU-057
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `rogue_sneak_attack` so
+`L12CEG-DU-057` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-057` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `rogue_sneak_attack`
+- Dependent dirty-unit task: `L12CEG-DU-057`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/rogue:level-1:class-feature-grant:rogue_sneak_attack`
+
+Profiles:
+
+- `unit-feature.attack-damage-rider`
+
+Replay Batches:
+
+- `L12CEG-RP-051`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `rogue_sneak_attack`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-057` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `rogue_sneak_attack` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-057` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `rogue_sneak_attack`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-057` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 187 - L12CEG-UB-DU-058
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `sacred_flame` so
+`L12CEG-DU-058` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-058` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `sacred_flame`
+- Dependent dirty-unit task: `L12CEG-DU-058`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_sacred_flame`
+
+Profiles:
+
+- `spell.invocation-damage-save-or-attack`
+- `spell.readied-action-time-spell`
+
+Replay Batches:
+
+- `L12CEG-RP-009`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `sacred_flame`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-058` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `sacred_flame` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-058` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `sacred_flame`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-058` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 188 - L12CEG-UB-DU-059
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `sanctuary` so
+`L12CEG-DU-059` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-059` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `sanctuary`
+- Dependent dirty-unit task: `L12CEG-DU-059`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_sanctuary`
+
+Profiles:
+
+- `spell.invocation-sanctuary-targeting-interdiction`
+
+Replay Batches:
+
+- `L12CEG-RP-022`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `sanctuary`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-059` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `sanctuary` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-059` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `sanctuary`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-059` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 189 - L12CEG-UB-DU-060
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `searing_smite` so
+`L12CEG-DU-060` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-060` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `searing_smite`
+- Dependent dirty-unit task: `L12CEG-DU-060`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_searing_smite`
+
+Profiles:
+
+- `spell.invocation-after-hit-timed-damage-save`
+
+Replay Batches:
+
+- `L12CEG-RP-038`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `searing_smite`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-060` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `searing_smite` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-060` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `searing_smite`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-060` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 190 - L12CEG-UB-DU-061
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `shield` so
+`L12CEG-DU-061` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-061` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `shield`
+- Dependent dirty-unit task: `L12CEG-DU-061`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_shield`
+- `srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_shield`
+
+Profiles:
+
+- `spell.reaction-shield`
+
+Replay Batches:
+
+- `L12CEG-RP-048`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `shield`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-061` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `shield` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-061` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `shield`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-061` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 191 - L12CEG-UB-DU-062
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `shield_of_faith` so
+`L12CEG-DU-062` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-062` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `shield_of_faith`
+- Dependent dirty-unit task: `L12CEG-DU-062`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_shield_of_faith`
+- `srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_shield_of_faith`
+
+Profiles:
+
+- `spell.scalar-buff`
+
+Replay Batches:
+
+- `L12CEG-RP-028`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `shield_of_faith`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-062` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `shield_of_faith` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-062` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `shield_of_faith`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-062` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 192 - L12CEG-UB-DU-063
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `shillelagh` so
+`L12CEG-DU-063` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-063` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `shillelagh`
+- Dependent dirty-unit task: `L12CEG-DU-063`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_shillelagh`
+
+Profiles:
+
+- `spell.invocation-weapon-attack-override`
+
+Replay Batches:
+
+- `L12CEG-RP-025`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `shillelagh`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-063` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `shillelagh` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-063` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `shillelagh`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-063` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 193 - L12CEG-UB-DU-064
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `shocking_grasp` so
+`L12CEG-DU-064` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-064` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `shocking_grasp`
+- Dependent dirty-unit task: `L12CEG-DU-064`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_shocking_grasp`
+- `srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_shocking_grasp`
+
+Profiles:
+
+- `spell.invocation-damage-save-or-attack`
+- `spell.readied-action-time-spell`
+
+Replay Batches:
+
+- `L12CEG-RP-010`
+- `L12CEG-RP-012`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `shocking_grasp`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-064` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `shocking_grasp` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-064` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `shocking_grasp`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-064` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 194 - L12CEG-UB-DU-065
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `sleep` so
+`L12CEG-DU-065` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-065` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `sleep`
+- Dependent dirty-unit task: `L12CEG-DU-065`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_sleep`
+- `srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_sleep`
+- `srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_sleep`
+
+Profiles:
+
+- `spell.invocation-sleep-repeat-save-lifecycle`
+- `spell.invocation-sleep-target-admission`
+
+Replay Batches:
+
+- `L12CEG-RP-023`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `sleep`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-065` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `sleep` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-065` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `sleep`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-065` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 195 - L12CEG-UB-DU-066
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `sorcerer_innate_sorcery` so
+`L12CEG-DU-066` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-066` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `sorcerer_innate_sorcery`
+- Dependent dirty-unit task: `L12CEG-DU-066`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/sorcerer:level-1:class-feature-grant:sorcerer_innate_sorcery`
+
+Profiles:
+
+- `unit-feature.innate-sorcery-activation`
+
+Replay Batches:
+
+- `L12CEG-RP-031`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `sorcerer_innate_sorcery`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-066` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `sorcerer_innate_sorcery` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-066` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `sorcerer_innate_sorcery`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-066` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 196 - L12CEG-UB-DU-067
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `sorcerous_burst` so
+`L12CEG-DU-067` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-067` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `sorcerous_burst`
+- Dependent dirty-unit task: `L12CEG-DU-067`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_sorcerous_burst`
+
+Profiles:
+
+- `spell.invocation-damage-save-or-attack`
+
+Replay Batches:
+
+- `L12CEG-RP-015`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `sorcerous_burst`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-067` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `sorcerous_burst` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-067` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `sorcerous_burst`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-067` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 197 - L12CEG-UB-DU-068
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `spare_the_dying` so
+`L12CEG-DU-068` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-068` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `spare_the_dying`
+- Dependent dirty-unit task: `L12CEG-DU-068`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/cleric:spell-level-0:spell-unit-pressure:cleric_spell_list_spare_the_dying`
+- `srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_spare_the_dying`
+
+Profiles:
+
+- `spell.invocation-make-stable`
+
+Replay Batches:
+
+- `L12CEG-RP-018`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `spare_the_dying`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-068` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `spare_the_dying` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-068` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `spare_the_dying`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-068` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 198 - L12CEG-UB-DU-069
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `starry_wisp` so
+`L12CEG-DU-069` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-069` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `starry_wisp`
+- Dependent dirty-unit task: `L12CEG-DU-069`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_starry_wisp`
+- `srd521:classes/druid:spell-level-0:spell-unit-pressure:druid_spell_list_starry_wisp`
+
+Profiles:
+
+- `spell.invocation-damage-save-or-attack`
+
+Replay Batches:
+
+- `L12CEG-RP-014`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `starry_wisp`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-069` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `starry_wisp` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-069` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `starry_wisp`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-069` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 199 - L12CEG-UB-DU-070
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `thunderwave` so
+`L12CEG-DU-070` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-070` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `thunderwave`
+- Dependent dirty-unit task: `L12CEG-DU-070`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/bard:spell-level-1:spell-unit-pressure:bard_spell_list_thunderwave`
+- `srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_thunderwave`
+- `srd521:classes/sorcerer:spell-level-1:spell-unit-pressure:sorcerer_spell_list_thunderwave`
+- `srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_thunderwave`
+
+Profiles:
+
+- `spell.invocation-damage-save-or-attack`
+
+Replay Batches:
+
+- `L12CEG-RP-014`
+- `L12CEG-RP-015`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `thunderwave`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-070` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `thunderwave` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-070` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `thunderwave`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-070` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 200 - L12CEG-UB-DU-071
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `true_strike` so
+`L12CEG-DU-071` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-071` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `true_strike`
+- Dependent dirty-unit task: `L12CEG-DU-071`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_true_strike`
+- `srd521:classes/sorcerer:spell-level-0:spell-unit-pressure:sorcerer_spell_list_true_strike`
+- `srd521:classes/warlock:spell-level-0:spell-unit-pressure:warlock_spell_list_true_strike`
+- `srd521:classes/wizard:spell-level-0:spell-unit-pressure:wizard_spell_list_true_strike`
+
+Profiles:
+
+- `spell.invocation-spell-hosted-weapon-attack`
+
+Replay Batches:
+
+- `L12CEG-RP-024`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `true_strike`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-071` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `true_strike` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-071` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `true_strike`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-071` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
+
+### Task 201 - L12CEG-UB-DU-072
+
+Status: `ready-for-research`
+
+Goal:
+
+Unblock latest dirty cleanroom target support for Unit `vicious_mockery` so
+`L12CEG-DU-072` can produce or verify current hash-bound cleanroom run evidence
+for its L1-2 rows. Prefer landing the smallest generic target support and target
+replay evidence that lets the dependent dirty-unit proof auto-unblock; do not
+ask the owner to manually classify ordinary implementation, evidence, or split
+work.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source dirty-unit task `L12CEG-DU-072` and its copied L1-2 artifact bundle.
+- Related replay batches listed below.
+- Local RAW corpus in `.references/srd-5.2.1/` and copied cleanroom RAW under
+  the target's `cleanroom-input/raw/srd-5.2.1/`.
+- `UBIQUITOUS_LANGUAGE.md` and copied cleanroom domain vocabulary.
+
+Unit Metadata:
+
+- Unit id: `vicious_mockery`
+- Dependent dirty-unit task: `L12CEG-DU-072`
+- Target root: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+
+Rows:
+
+- `srd521:classes/bard:spell-level-0:spell-unit-pressure:bard_spell_list_vicious_mockery`
+
+Profiles:
+
+- `spell.invocation-damage-save-or-attack`
+- `spell.readied-action-time-spell`
+
+Replay Batches:
+
+- `L12CEG-RP-009`
+
+Output:
+
+- A target-side implementation/evidence update for exactly Unit `vicious_mockery`
+  and the profiles/rows listed above, or smaller executable follow-up unblock
+  tasks if this unit must be split further.
+- A current compact receipt or retained-run-artifact handle when the target can
+  produce one, bound to the copied L1-2 artifact hashes.
+- Source-side plan/artifact updates that let `L12CEG-DU-072` auto-unblock through
+  the DAG once this task is done.
+- If and only if the corpus lacks a required modeling fact or the owner must make
+  a real product/scope decision, record `Blocker Type: owner-decision` with the
+  exact question. Do not use owner-decision for normal target implementation,
+  task splitting, or repo research Ralph can perform.
+
+Validation:
+
+From the cleanroom target when target files change:
+
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+- `node scripts/check-cleanroom-harness.cjs`
+
+From the source repo after source artifacts or plan state change:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The Ralph task-base check from `AGENTS.md` passes before implementation work.
+- RAW and ubiquitous-language checks are recorded for every modeled rule fact.
+- The target support routes by typed runtime shape, support-profile facts, and
+  explicit state, not by authored spell, feature, item, class, or Unit identity.
+- Unit `vicious_mockery` is admitted only at catalog/support-profile or
+  source-checkable evidence boundaries.
+- Every listed row is either covered by current target replay evidence for this
+  unit or split into a new executable unblock task with precise dependencies.
+- The dependent dirty-unit task `L12CEG-DU-072` is no longer blocked on missing
+  target implementation/evidence once this task lands.
+- Raw cleanroom logs remain in the target or artifact store; source receives only
+  compact receipts or hash-bound retained artifact references.
+
+One-Agent-Session Scope:
+
+One Unit unblock slice for `vicious_mockery`. If the work fans out into unrelated
+Units, unrelated profiles, or broad target architecture, add narrower executable
+`L12CEG-UB-*` follow-up tasks and wire dependencies instead of widening this
+task or asking the owner for manual unblock decisions.
+
+Forbidden Shortcuts:
+
+- Do not mark `L12CEG-DU-072` or any replay batch done without a current
+  source-checkable receipt that passes the source harness.
+- Do not satisfy the task with source-only strict support, old target artifacts,
+  grouped selected-identity proof, diagnostic tests, or prose claims.
+- Do not check raw cleanroom logs into source.
+- Do not branch production target behavior on authored ids, names, slugs, source
+  headings, page references, official catalog labels, fixture labels, or QNT
+  action names.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, ubiquitous-language, architecture/connascence,
+cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix
+every reasonable finding and document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after this Unit has executable target support/evidence or has
+been split into smaller executable Ralph tasks with updated DAG dependencies. Use
+`update-required` only for a genuine owner-decision blocker, not for ordinary
+implementation, replay, receipt, or task-splitting work.
