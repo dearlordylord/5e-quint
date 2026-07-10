@@ -50,6 +50,16 @@ const mappingProofStatuses = new Set([
   "missing-proof-join",
   "not-required",
 ]);
+const l12CleanroomGenerationArtifactFiles = [
+  "srd-l12-denominator.json",
+  "capability-fact-coverage-matrix.json",
+  "route-proof-inventory.json",
+  "srd-row-generic-fact-map.json",
+  "verifier-gate-spec.json",
+];
+const acceptedReplayBatchStatus = "accepted-source-checkable-cleanroom-replay";
+const acceptedReplayEvidenceStatus = "source-checkable-compact-receipt";
+const acceptedReplayDoneStatus = "accepted";
 
 function argValue(name) {
   const index = process.argv.indexOf(name);
@@ -120,6 +130,35 @@ function validateSourceHashes(root, artifactName, artifact, errors) {
       );
     }
   }
+}
+
+function isRecord(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function validateSha256(value, label, errors) {
+  if (typeof value !== "string" || !/^[0-9a-f]{64}$/i.test(value)) {
+    addError(errors, `${label} must be a sha256 hex digest.`);
+  }
+}
+
+function validateGitCommitSha(value, label, errors) {
+  if (typeof value !== "string" || !/^[0-9a-f]{40}$/i.test(value)) {
+    addError(errors, `${label} must be a git commit sha.`);
+  }
+}
+
+function validateNonEmptyString(value, label, errors) {
+  if (typeof value !== "string" || value.length === 0) {
+    addError(errors, `${label} must be a non-empty string.`);
+  }
+}
+
+function expectedL12ArtifactRefs(artifactDir) {
+  return l12CleanroomGenerationArtifactFiles.map((name) => ({
+    path: `cleanroom-input/l12-cleanroom-generation/${name}`,
+    sha256: sha256File(path.join(artifactDir, name)),
+  }));
 }
 
 function validateDenominator(root, denominator, errors) {
@@ -333,7 +372,112 @@ function validateVerifierSpec(root, verifierSpec, errors) {
   }
 }
 
-function validateTaskGraph(root, taskGraph, denominatorRows, errors) {
+function validateAcceptedReplayEvidence(batch, artifactDir, context, errors) {
+  const evidence = batch.targetReplayEvidence;
+  if (!isRecord(evidence)) {
+    addError(errors, `${context}.targetReplayEvidence must be an object for accepted batches.`);
+    return;
+  }
+  validateNonEmptyString(evidence.targetTaskId, `${context}.targetReplayEvidence.targetTaskId`, errors);
+  validateNonEmptyString(evidence.targetRoot, `${context}.targetReplayEvidence.targetRoot`, errors);
+  validateGitCommitSha(evidence.targetHeadSha, `${context}.targetReplayEvidence.targetHeadSha`, errors);
+  validateNonEmptyString(evidence.runLedgerPath, `${context}.targetReplayEvidence.runLedgerPath`, errors);
+  validateSha256(evidence.runLedgerSha256, `${context}.targetReplayEvidence.runLedgerSha256`, errors);
+  validateNonEmptyString(evidence.receiptPath, `${context}.targetReplayEvidence.receiptPath`, errors);
+  validateSha256(evidence.receiptSha256, `${context}.targetReplayEvidence.receiptSha256`, errors);
+  validateGitCommitSha(
+    evidence.manifestSourceCommitSha,
+    `${context}.targetReplayEvidence.manifestSourceCommitSha`,
+    errors,
+  );
+  validateSha256(
+    evidence.sourceBranchInventorySha256,
+    `${context}.targetReplayEvidence.sourceBranchInventorySha256`,
+    errors,
+  );
+  validateNonEmptyString(evidence.targetProfile, `${context}.targetReplayEvidence.targetProfile`, errors);
+  validateSha256(evidence.targetProfileSha256, `${context}.targetReplayEvidence.targetProfileSha256`, errors);
+  if (evidence.observedProjection !== "qRoute" && evidence.observedProjection !== "qComponentRoute") {
+    addError(
+      errors,
+      `${context}.targetReplayEvidence.observedProjection must be qRoute or qComponentRoute.`,
+    );
+  }
+  if (evidence.harnessCheckResult !== "pass") {
+    addError(errors, `${context}.targetReplayEvidence.harnessCheckResult must be pass.`);
+  }
+  validateNonEmptyString(
+    evidence.harnessCheckCommand,
+    `${context}.targetReplayEvidence.harnessCheckCommand`,
+    errors,
+  );
+
+  const generationEvidence = evidence.l12CleanroomGeneration;
+  if (!isRecord(generationEvidence)) {
+    addError(errors, `${context}.targetReplayEvidence.l12CleanroomGeneration must be an object.`);
+    return;
+  }
+  if (generationEvidence.schema !== "target-l12-cleanroom-generation-evidence.v1") {
+    addError(
+      errors,
+      `${context}.targetReplayEvidence.l12CleanroomGeneration.schema must be target-l12-cleanroom-generation-evidence.v1.`,
+    );
+  }
+
+  const artifactRefs = generationEvidence.artifacts;
+  if (!Array.isArray(artifactRefs)) {
+    addError(errors, `${context}.targetReplayEvidence.l12CleanroomGeneration.artifacts must be an array.`);
+  } else {
+    const refsByPath = new Map();
+    for (const [index, artifact] of artifactRefs.entries()) {
+      const artifactContext = `${context}.targetReplayEvidence.l12CleanroomGeneration.artifacts[${index}]`;
+      if (!isRecord(artifact)) {
+        addError(errors, `${artifactContext} must be an object.`);
+        continue;
+      }
+      validateNonEmptyString(artifact.path, `${artifactContext}.path`, errors);
+      validateSha256(artifact.sha256, `${artifactContext}.sha256`, errors);
+      if (refsByPath.has(artifact.path)) {
+        addError(errors, `${artifactContext}.path duplicates ${artifact.path}.`);
+      }
+      refsByPath.set(artifact.path, artifact.sha256);
+    }
+    const expectedArtifacts = expectedL12ArtifactRefs(artifactDir);
+    for (const expected of expectedArtifacts) {
+      if (refsByPath.get(expected.path) !== expected.sha256) {
+        addError(
+          errors,
+          `${context}.targetReplayEvidence.l12CleanroomGeneration.artifacts must include ${expected.path} with source hash ${expected.sha256}.`,
+        );
+      }
+    }
+    for (const artifactPath of refsByPath.keys()) {
+      if (!expectedArtifacts.some((expected) => expected.path === artifactPath)) {
+        addError(
+          errors,
+          `${context}.targetReplayEvidence.l12CleanroomGeneration.artifacts includes unexpected ${artifactPath}.`,
+        );
+      }
+    }
+  }
+
+  const runArtifact = evidence.cleanroomRunArtifact;
+  if (!isRecord(runArtifact)) {
+    addError(errors, `${context}.targetReplayEvidence.cleanroomRunArtifact must be an object.`);
+  } else {
+    if (runArtifact.tag !== "compact-receipt") {
+      addError(errors, `${context}.targetReplayEvidence.cleanroomRunArtifact.tag must be compact-receipt.`);
+    }
+    if (runArtifact.receiptPath !== evidence.receiptPath) {
+      addError(errors, `${context}.targetReplayEvidence.cleanroomRunArtifact.receiptPath must match receiptPath.`);
+    }
+    if (runArtifact.contentSha256 !== evidence.receiptSha256) {
+      addError(errors, `${context}.targetReplayEvidence.cleanroomRunArtifact.contentSha256 must match receiptSha256.`);
+    }
+  }
+}
+
+function validateTaskGraph(root, artifactDir, taskGraph, denominatorRows, errors) {
   if (taskGraph?.schema !== "l12-cleanroom-exhaustive-task-graph.v1") {
     addError(errors, "exhaustive-task-graph.json has the wrong schema.");
     return;
@@ -382,9 +526,6 @@ function validateTaskGraph(root, taskGraph, denominatorRows, errors) {
   const seen = new Set();
   for (const [batchIndex, batch] of (taskGraph.replayBatches ?? []).entries()) {
     const context = `exhaustive-task-graph.json replayBatches[${batchIndex}]`;
-    if (batch.status !== "planned-not-executed") {
-      addError(errors, `${context}.status must be planned-not-executed.`);
-    }
     if (!Array.isArray(batch.rowIds) || batch.rowIds.length === 0) {
       addError(errors, `${context}.rowIds must be a non-empty array.`);
       continue;
@@ -398,11 +539,22 @@ function validateTaskGraph(root, taskGraph, denominatorRows, errors) {
       }
       seen.add(rowId);
     }
-    if (
-      batch.evidenceStatus !== "pending-target-replay" ||
-      batch.acceptanceStatus !== "not-accepted"
-    ) {
-      addError(errors, `${context} must remain pending and not accepted.`);
+    const isPending =
+      batch.status === "planned-not-executed" &&
+      batch.evidenceStatus === "pending-target-replay" &&
+      batch.acceptanceStatus === "not-accepted";
+    const isAccepted =
+      batch.status === acceptedReplayBatchStatus &&
+      batch.evidenceStatus === acceptedReplayEvidenceStatus &&
+      batch.acceptanceStatus === acceptedReplayDoneStatus;
+    if (!isPending && !isAccepted) {
+      addError(errors, `${context} must be pending or carry accepted compact-receipt evidence.`);
+    }
+    if (isPending && batch.targetReplayEvidence !== undefined) {
+      addError(errors, `${context}.targetReplayEvidence is only valid for accepted batches.`);
+    }
+    if (isAccepted) {
+      validateAcceptedReplayEvidence(batch, artifactDir, context, errors);
     }
   }
   if (seen.size !== executableRowIds.size) {
@@ -491,7 +643,7 @@ function check(root, artifactDir, options = {}) {
   validateRouteProofInventory(root, routeProof, options, errors);
   validateMapping(root, mapping, denominatorRows, capabilityRows, options, errors);
   validateVerifierSpec(root, verifierSpec, errors);
-  validateTaskGraph(root, taskGraph, denominatorRows, errors);
+  validateTaskGraph(root, artifactDir, taskGraph, denominatorRows, errors);
   return errors;
 }
 
@@ -682,7 +834,7 @@ function writeFixture(root, artifactDir, overrides = {}) {
   );
   writeJson(
     path.join(artifactDir, "exhaustive-task-graph.json"),
-    overrides.taskGraph?.(taskGraph) ?? taskGraph,
+    overrides.taskGraph?.(taskGraph, artifactDir) ?? taskGraph,
   );
 }
 
@@ -703,6 +855,44 @@ function assertSelfTest(name, expected, fn) {
 
 function runSelfTest() {
   assertSelfTest("valid", true);
+  assertSelfTest("accepted-compact-receipt", true, {
+    taskGraph: (taskGraph, artifactDir) => ({
+      ...taskGraph,
+      replayBatches: [
+        {
+          ...taskGraph.replayBatches[0],
+          status: acceptedReplayBatchStatus,
+          evidenceStatus: acceptedReplayEvidenceStatus,
+          acceptanceStatus: acceptedReplayDoneStatus,
+          targetReplayEvidence: {
+            targetTaskId: "T001",
+            targetRoot: "/tmp/cleanroom-target",
+            targetHeadSha: "a".repeat(40),
+            runLedgerPath: "tasks/RUN_LEDGER.json",
+            runLedgerSha256: "1".repeat(64),
+            receiptPath: "tasks/target-replay-evidence/T001.json",
+            receiptSha256: "2".repeat(64),
+            cleanroomRunArtifact: {
+              tag: "compact-receipt",
+              receiptPath: "tasks/target-replay-evidence/T001.json",
+              contentSha256: "2".repeat(64),
+            },
+            manifestSourceCommitSha: "b".repeat(40),
+            sourceBranchInventorySha256: "3".repeat(64),
+            targetProfile: "synthetic-alpha",
+            targetProfileSha256: "4".repeat(64),
+            observedProjection: "qRoute",
+            harnessCheckCommand: "node scripts/check-cleanroom-harness.cjs --task-root /tmp/cleanroom-target",
+            harnessCheckResult: "pass",
+            l12CleanroomGeneration: {
+              schema: "target-l12-cleanroom-generation-evidence.v1",
+              artifacts: expectedL12ArtifactRefs(artifactDir),
+            },
+          },
+        },
+      ],
+    }),
+  });
   assertSelfTest("stale-hash", false, {
     denominator: (denominator) => ({
       ...denominator,
