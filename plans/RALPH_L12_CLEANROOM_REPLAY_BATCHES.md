@@ -17583,6 +17583,7 @@ Input:
   - `plans/ralph-artifacts/l12-cleanroom-generation/task-108-protection-from-evil-and-good-dirty-target-inspection.md`
   - `plans/ralph-artifacts/l12-cleanroom-generation/task-1-replay-blocker.md`
   - `plans/ralph-artifacts/l12-cleanroom-generation/task-2-replay-blocker.md`
+  - `plans/ralph-artifacts/l12-cleanroom-generation/task-131-latest-dirty-target-harness-artifact-inspection.md`
 
 Output:
 
@@ -17666,6 +17667,17 @@ artifacts and `node scripts/check-cleanroom-harness.cjs --task-root
 /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29` passes. Use
 `update-required` if the missing artifacts require broader target design or
 artifact-store work before individual replay and dirty-unit tasks can run.
+
+Retry Guidance:
+
+Do not retry by copying scaffold examples or stale source-side receipts into the
+latest dirty target. First inspect the target's active work queue and implement
+or decompose the target-side harness work needed for the queued
+`battle-runtime-creature-type-protection-and-charm-selected-identity` driver to
+emit concrete ledger, gate, manifest, review, decision, history, and compact
+receipt artifacts. If the target needs a separate artifact-store or retained-run
+handle design before those artifacts can be emitted, split that into a concrete
+target task before retrying this acceptance-artifact task.
 
 ## Cleanroom Run Reference Contract Task Details
 
