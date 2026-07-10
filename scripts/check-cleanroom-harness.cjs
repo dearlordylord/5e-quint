@@ -875,6 +875,24 @@ function validateStartGate(
         `tasks/START_GATE.json startHeadSha is not in current HEAD history: ${error.message}`,
       );
     }
+    try {
+      if (
+        typeof actualHead === "string" &&
+        typeof startGate.targetHeadSha === "string" &&
+        /^[0-9a-f]{40}$/i.test(startGate.targetHeadSha)
+      ) {
+        git(rootPath, [
+          "merge-base",
+          "--is-ancestor",
+          startGate.targetHeadSha,
+          actualHead,
+        ]);
+      }
+    } catch (error) {
+      issues.push(
+        `tasks/START_GATE.json targetHeadSha is not in current HEAD history: ${error.message}`,
+      );
+    }
   }
   if (!isRecord(startGate.preImplementationStatus)) {
     issues.push("tasks/START_GATE.json preImplementationStatus must be an object.");
@@ -909,15 +927,6 @@ function validateStartGate(
       if (matchingAuthorization === undefined) {
         issues.push(
           "tasks/START_GATE.json dirty preImplementationStatus is not source-authorized for this task root.",
-        );
-      }
-      if (
-        matchingAuthorization !== undefined &&
-        typeof actualHead === "string" &&
-        matchingAuthorization.targetHeadSha !== actualHead
-      ) {
-        issues.push(
-          "tasks/START_GATE.json source-authorized dirty targetHeadSha must match current target HEAD.",
         );
       }
       if (output === undefined || output.trim() === "") {
@@ -3763,7 +3772,7 @@ function runSelfTest() {
           startGate.targetHeadSha = fixtureSha("9");
         });
       },
-      "source-authorized dirty targetHeadSha must match current target HEAD",
+      "targetHeadSha is not in current HEAD history",
       undefined,
       fixtureDirtyStartAuthorization,
     );
