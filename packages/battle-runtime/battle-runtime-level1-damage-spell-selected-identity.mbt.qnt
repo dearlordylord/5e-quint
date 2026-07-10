@@ -204,6 +204,14 @@ module battleRuntimeLevel1DamageSpellSelectedIdentityMbt {
     ),
   }
 
+  action replayIceKnifeHitBranch = any {
+    doResolveIceKnifeHitAttackDamageAndBurstSavingThrows,
+  }
+
+  action replayIceKnifeMissBranch = any {
+    doResolveIceKnifeMissBurstSavingThrows,
+  }
+
   action step = any {
     doResolveBurningHandsMixedConeSavingThrows,
     doResolveChromaticOrbDuplicateDamageLeap,

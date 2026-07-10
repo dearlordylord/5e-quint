@@ -3450,7 +3450,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt#step:doResolveBurningHandsMixedConeSavingThrows",
-      "qntFileSha256": "d3180d0cc365134d5cc1f008cbc6ff75286c92bfd0e96ea8fbf77a5091bc8b42",
+      "qntFileSha256": "f6cb3dafe7fc50f78e922ed16ca0a46d098c5d777ff982cd44af3138b03eac60",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -3469,7 +3469,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt#step:doResolveChromaticOrbDuplicateDamageLeap",
-      "qntFileSha256": "d3180d0cc365134d5cc1f008cbc6ff75286c92bfd0e96ea8fbf77a5091bc8b42",
+      "qntFileSha256": "f6cb3dafe7fc50f78e922ed16ca0a46d098c5d777ff982cd44af3138b03eac60",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -3488,7 +3488,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt#step:doResolveIceKnifeHitAttackDamageAndBurstSavingThrows",
-      "qntFileSha256": "d3180d0cc365134d5cc1f008cbc6ff75286c92bfd0e96ea8fbf77a5091bc8b42",
+      "qntFileSha256": "f6cb3dafe7fc50f78e922ed16ca0a46d098c5d777ff982cd44af3138b03eac60",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -3507,7 +3507,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt#step:doResolveIceKnifeMissBurstSavingThrows",
-      "qntFileSha256": "d3180d0cc365134d5cc1f008cbc6ff75286c92bfd0e96ea8fbf77a5091bc8b42",
+      "qntFileSha256": "f6cb3dafe7fc50f78e922ed16ca0a46d098c5d777ff982cd44af3138b03eac60",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -3526,7 +3526,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt#step:doResolvePoisonSpraySpellAttackDamage",
-      "qntFileSha256": "d3180d0cc365134d5cc1f008cbc6ff75286c92bfd0e96ea8fbf77a5091bc8b42",
+      "qntFileSha256": "f6cb3dafe7fc50f78e922ed16ca0a46d098c5d777ff982cd44af3138b03eac60",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -3545,7 +3545,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt#step:doResolveRayOfSicknessSpellAttackDamageAndPoisoned",
-      "qntFileSha256": "d3180d0cc365134d5cc1f008cbc6ff75286c92bfd0e96ea8fbf77a5091bc8b42",
+      "qntFileSha256": "f6cb3dafe7fc50f78e922ed16ca0a46d098c5d777ff982cd44af3138b03eac60",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -3564,7 +3564,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt#step:doResolveSacredFlameDexteritySavingThrowRadiantDamage",
-      "qntFileSha256": "d3180d0cc365134d5cc1f008cbc6ff75286c92bfd0e96ea8fbf77a5091bc8b42",
+      "qntFileSha256": "f6cb3dafe7fc50f78e922ed16ca0a46d098c5d777ff982cd44af3138b03eac60",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -3583,7 +3583,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt#step:doResolveSorcerousBurstSpellAttackDamage",
-      "qntFileSha256": "d3180d0cc365134d5cc1f008cbc6ff75286c92bfd0e96ea8fbf77a5091bc8b42",
+      "qntFileSha256": "f6cb3dafe7fc50f78e922ed16ca0a46d098c5d777ff982cd44af3138b03eac60",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -3602,7 +3602,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt#step:doResolveStarryWispObjectSpellAttackDamageAndDimLight",
-      "qntFileSha256": "d3180d0cc365134d5cc1f008cbc6ff75286c92bfd0e96ea8fbf77a5091bc8b42",
+      "qntFileSha256": "f6cb3dafe7fc50f78e922ed16ca0a46d098c5d777ff982cd44af3138b03eac60",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"
@@ -3621,7 +3621,7 @@
       "decisionSource": "default",
       "driverPath": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
       "obligationId": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt#step:doResolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage",
-      "qntFileSha256": "d3180d0cc365134d5cc1f008cbc6ff75286c92bfd0e96ea8fbf77a5091bc8b42",
+      "qntFileSha256": "f6cb3dafe7fc50f78e922ed16ca0a46d098c5d777ff982cd44af3138b03eac60",
       "replay": {
         "stepAction": "step",
         "tag": "observable-from-step"

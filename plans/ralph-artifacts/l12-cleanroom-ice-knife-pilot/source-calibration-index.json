@@ -1,0 +1,538 @@
+{
+  "schema": "source-calibration-index.v1",
+  "generatedBy": "scripts/source-calibration-check.cjs",
+  "scope": {
+    "unitId": "ice_knife",
+    "profileId": "spell.invocation-damage-save-or-attack",
+    "surfaceRecordPath": "packages/surface/content/ice_knife.json",
+    "rawAnchor": ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Ice Knife",
+    "ubiquitousLanguageAnchors": [
+      "UBIQUITOUS_LANGUAGE.md#D20 Rolls",
+      "UBIQUITOUS_LANGUAGE.md#Damage",
+      "UBIQUITOUS_LANGUAGE.md#Spellcasting"
+    ],
+    "ubiquitousLanguageTerms": [
+      "| **Casting Time**",
+      "| **Duration**",
+      "| **Spell Slot**"
+    ],
+    "ubiquitousLanguageGlobalTerms": [
+      "| **Saving Throw**"
+    ]
+  },
+  "sourceHashes": {
+    ".references/srd-5.2.1/Spells/Descriptions-E-L.md": "11631f44ffed126af54e7607b6e1d550185738702b79e044ae34809eab67826b",
+    "UBIQUITOUS_LANGUAGE.md": "92517573b39bcc91edca6316f89a8ef6634929b700b9b37bfa1ddee7ded6bc33",
+    "packages/surface/content/ice_knife.json": "99d18261eb7cfcecd93ee3b5a2fd13748c27c18f35fdacf2c9628b1919b7ab06",
+    "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt": "f6cb3dafe7fc50f78e922ed16ca0a46d098c5d777ff982cd44af3138b03eac60",
+    "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts": "691bcd4462f9b83b23fefb535775854bcbf68932bba2f10330f23125107b07e8",
+    "packages/battle-runtime/src/selected-identity-witness.ts": "da3579fab4e9fbe804190cf83f1dc1c6b412fefd8d77cd8cead3f61693fc393e",
+    "plans/rules-kernel-coverage/qnt-owner-roles.jsonl": "b04e4423f55a0f1ef3ae1e7e78ed68a3803c53ad3be169a4c6b4e31d2439e28a",
+    "plans/rules-kernel-coverage/obligations.jsonl": "95624001f3834c38850cdb8169a864bbe8738d24d3c7d0b3a77d7adf1f61c46a",
+    "plans/rules-kernel-coverage/profile-obligations.jsonl": "3b3010e119643ad8925a20e8510f5b060ee203c620a93e8f2704e35d1d3a4c5f",
+    "scripts/source-calibration-check.cjs": "bdfb33a330eb604946d8ace7f33dd0702990d81bd27bf990d3530cb15683ceec",
+    "plans/ralph-artifacts/l12-cleanroom-ice-knife-pilot/source-calibration-scope.json": "f69dd41281ece1a1b30d9af641af3817326acb327d1d000d0f613803ab36b1f5",
+    "packages/battle-runtime/src/battle-reducer.ts": "4788a4106956cb7879749838ec1a4f1c9471ac0ad929dd6ed2857bb6eb4ce050",
+    "packages/battle-runtime/src/battle-reducer/spells-resolve.ts": "253596efeb4db3c3542e7aa33010034320336594810bd2aee7f4f578fbc3ef10",
+    "packages/battle-runtime/src/battle-reducer/damage-apply.ts": "bc9af4d498096fe7d49cad18c131bdf77c3faacaee30c56237c37068731f73f3",
+    "packages/battle-runtime/src/rule-core-spells.mbt.test.ts": "cd4ae6469a9c382c857b1aca993243021e8a9458529e6b1d1b4719bc99238721",
+    "packages/battle-runtime/rule-core-spell-damage.mbt.qnt": "5ee2698e475037f46d55b5caad238f23ef480239563b06e70980600898322362",
+    "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-burst.ts": "014886201be89fc9a9e08254057997cbdfd3038fb236951c2f0b4a282349b623",
+    "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/attack-burst-save-damage.ts": "d3bc33a82bf1735e2a3258d9de06fe774f2bafd6608f390278e2d6091bca7ac7"
+  },
+  "supportedProfileObligationIds": [
+    "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+    "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES"
+  ],
+  "qntBranchDiscovery": {
+    "driverPath": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
+    "branchFamily": "step",
+    "discoveredActions": [
+      "doResolveBurningHandsMixedConeSavingThrows",
+      "doResolveChromaticOrbDuplicateDamageLeap",
+      "doResolveIceKnifeHitAttackDamageAndBurstSavingThrows",
+      "doResolveIceKnifeMissBurstSavingThrows",
+      "doResolvePoisonSpraySpellAttackDamage",
+      "doResolveRayOfSicknessSpellAttackDamageAndPoisoned",
+      "doResolveSacredFlameDexteritySavingThrowRadiantDamage",
+      "doResolveSorcerousBurstSpellAttackDamage",
+      "doResolveStarryWispObjectSpellAttackDamageAndDimLight",
+      "doResolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage"
+    ],
+    "selectedActions": [
+      "doResolveIceKnifeHitAttackDamageAndBurstSavingThrows",
+      "doResolveIceKnifeMissBurstSavingThrows"
+    ],
+    "deterministicReplayActions": {
+      "replayIceKnifeHitBranch": "doResolveIceKnifeHitAttackDamageAndBurstSavingThrows",
+      "replayIceKnifeMissBranch": "doResolveIceKnifeMissBurstSavingThrows"
+    }
+  },
+  "typescriptBranchDiscovery": {
+    "harnessPath": "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
+    "markerActions": [
+      "doResolveIceKnifeHitAttackDamageAndBurstSavingThrows",
+      "doResolveIceKnifeMissBurstSavingThrows"
+    ],
+    "executableUnitActions": [
+      "doResolveIceKnifeHitAttackDamageAndBurstSavingThrows",
+      "doResolveIceKnifeMissBurstSavingThrows"
+    ],
+    "executableDiscoveryActions": [
+      "doResolveBurningHandsMixedConeSavingThrows",
+      "doResolveChromaticOrbDuplicateDamageLeap",
+      "doResolveIceKnifeHitAttackDamageAndBurstSavingThrows",
+      "doResolveIceKnifeMissBurstSavingThrows",
+      "doResolvePoisonSpraySpellAttackDamage",
+      "doResolveRayOfSicknessSpellAttackDamageAndPoisoned",
+      "doResolveSacredFlameDexteritySavingThrowRadiantDamage",
+      "doResolveSorcerousBurstSpellAttackDamage",
+      "doResolveStarryWispObjectSpellAttackDamageAndDimLight",
+      "doResolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage"
+    ],
+    "qntStepActions": [
+      {
+        "stepAction": "replayIceKnifeHitBranch",
+        "observedAction": "doResolveIceKnifeHitAttackDamageAndBurstSavingThrows"
+      },
+      {
+        "stepAction": "replayIceKnifeMissBranch",
+        "observedAction": "doResolveIceKnifeMissBurstSavingThrows"
+      }
+    ]
+  },
+  "verificationEvidence": {
+    "schema": "source-calibration-verification.v1",
+    "generatedBy": "scripts/source-calibration-check.cjs",
+    "command": "pnpm --filter @dnd/battle-runtime exec vitest run src/level1-damage-spell-selected-identity.mbt.test.ts",
+    "exitCode": 0,
+    "qntFileSha256": "f6cb3dafe7fc50f78e922ed16ca0a46d098c5d777ff982cd44af3138b03eac60",
+    "harnessSha256": "691bcd4462f9b83b23fefb535775854bcbf68932bba2f10330f23125107b07e8",
+    "observationMode": "deterministic-qnt-step-action",
+    "branchActions": [
+      "doResolveIceKnifeHitAttackDamageAndBurstSavingThrows",
+      "doResolveIceKnifeMissBurstSavingThrows"
+    ],
+    "branchObservations": [
+      {
+        "stepAction": "replayIceKnifeHitBranch",
+        "observedAction": "doResolveIceKnifeHitAttackDamageAndBurstSavingThrows"
+      },
+      {
+        "stepAction": "replayIceKnifeMissBranch",
+        "observedAction": "doResolveIceKnifeMissBurstSavingThrows"
+      }
+    ],
+    "branchObservationEvidenceSha256": "bab186e06b82f7ee63adb4ff94c03758986c6137ddf719a0893ff17f35f319a4",
+    "outputMarkers": [
+      "src/level1-damage-spell-selected-identity.mbt.test.ts",
+      "1 passed"
+    ],
+    "outputEvidenceSha256": "054367a5d979c9b86e790be5bf00856e507b8a7f35a02393268b16d08fe66353",
+    "result": "passed"
+  },
+  "obligationCalibrations": [
+    {
+      "obligationId": "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+      "profileId": "spell.invocation-damage-save-or-attack",
+      "qntOwners": [
+        {
+          "path": "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
+          "role": "semantic-core",
+          "applicability": "applicable",
+          "sha256": "329bfb496993d9cfaa4b3260050f9100f48873f0c64247e56d9855648c5f4be3"
+        },
+        {
+          "path": "packages/shared-algebras/proofs/rule-core/spell-slot-expenditure.qnt",
+          "role": "semantic-core",
+          "applicability": "applicable",
+          "sha256": "e4640f12c7bf3b95910ffb75fe4660d7497c044a7c859a529d6215334e0b3290"
+        },
+        {
+          "path": "packages/shared-algebras/proofs/rule-core/spell-invocation-target-cardinality-core.qnt",
+          "role": "semantic-core",
+          "applicability": "applicable",
+          "sha256": "5fcadef89e15338dc208a765ec5cc2a6de67075dc424f7dee8db90ac6eae63ca"
+        },
+        {
+          "path": "packages/shared-algebras/proofs/rule-core/spell-invocation-action-slot-core.qnt",
+          "role": "semantic-core",
+          "applicability": "applicable",
+          "sha256": "f5ee7a2708525d219f51d1aa9a5e6850e459535f79b67bb1cc9de30773275bbb"
+        },
+        {
+          "path": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
+          "role": "semantic-core",
+          "applicability": "applicable",
+          "sha256": "ef27b305de823766e82c11cd3de54cf9c0e9854dba71ca509a9dfe23f7689bc7"
+        },
+        {
+          "path": "packages/shared-algebras/proofs/rule-core/spell-direct-damage-projection-core.qnt",
+          "role": "semantic-core",
+          "applicability": "applicable",
+          "sha256": "263a71350b9438ad194607e45ae075ed3319102c9e1779451525168a520ca938"
+        },
+        {
+          "path": "packages/shared-algebras/proofs/rule-core/spell-save-gate.qnt",
+          "role": "semantic-core",
+          "applicability": "applicable",
+          "sha256": "d8a6a2c1110c922d5396fb7e4d7073687e8d3ab3f0d9d4330cbf9b5b1b06a73f"
+        },
+        {
+          "path": "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt",
+          "role": "semantic-core",
+          "applicability": "applicable",
+          "sha256": "edc452ced26878daaa3ae4e4487ffb831dd93058d18c7ad5ca3d51a1e406c5f7"
+        },
+        {
+          "path": "packages/shared-algebras/proofs/rule-core/spell-save-condition-projection-core.qnt",
+          "role": "semantic-core",
+          "applicability": "not-applicable",
+          "sha256": "b2e71ae4d3cb85bc207013b5470201dde2a3fca39fee7ac7c48680ad7cb6d700"
+        },
+        {
+          "path": "packages/shared-algebras/proofs/rule-core/spell-attack-damage-projection-core.qnt",
+          "role": "semantic-core",
+          "applicability": "applicable",
+          "sha256": "4e224e72d1f99758d4934a56f90b5468a30321068c8f4202eba5037b4cbcf2bd"
+        },
+        {
+          "path": "packages/shared-algebras/proofs/rule-core/spell-defensive-effect-core.qnt",
+          "role": "semantic-core",
+          "applicability": "not-applicable",
+          "sha256": "2d11a58f682650f0c3de7cc3c28a6046ccddeb4f241f8328d78fe177c058373e"
+        },
+        {
+          "path": "packages/shared-algebras/proofs/rule-core/spell-scalar-buff-projection-core.qnt",
+          "role": "semantic-core",
+          "applicability": "not-applicable",
+          "sha256": "bd8aaec67722ba50f34ede675b270f3c64a411b3150293bf39649fe8eb1a9719"
+        },
+        {
+          "path": "packages/shared-algebras/proofs/rule-core/spell-damage-rider-projection-core.qnt",
+          "role": "semantic-core",
+          "applicability": "not-applicable",
+          "sha256": "4569b7fea1220734a903abf4ab5ddd17a8b59df24951ef862ea723e36a1a787a"
+        },
+        {
+          "path": "packages/shared-algebras/proofs/rule-core/spell-chained-attack-damage-projection-core.qnt",
+          "role": "semantic-core",
+          "applicability": "not-applicable",
+          "sha256": "fcd0043a545e71683684b4d84ab9a60cf3b7fa2a7ffce5af9667ab5c477a903b"
+        },
+        {
+          "path": "packages/shared-algebras/proofs/rule-core/spell-independent-attack-sequence-core.qnt",
+          "role": "semantic-core",
+          "applicability": "not-applicable",
+          "sha256": "d2c9c9144dc662caa139b276869eb3dfaf2b4d557d702dade569c8c4adfe857c"
+        },
+        {
+          "path": "packages/shared-algebras/proofs/rule-core/spell-turn-hook-core.qnt",
+          "role": "semantic-core",
+          "applicability": "not-applicable",
+          "sha256": "dd9ace08509b1f6c13331a8e968af268c883fb2d7135bfbb7052aec6185410d0"
+        },
+        {
+          "path": "packages/shared-algebras/proofs/rule-core/spell-object-hit-point-damage-core.qnt",
+          "role": "semantic-core",
+          "applicability": "not-applicable",
+          "sha256": "fac47945fe54b1b85694ade3c0f9ecbc93024db0494dd659c690ca1179f77a03"
+        },
+        {
+          "path": "packages/shared-algebras/proofs/rule-core/spell-sleep-repeat-save-lifecycle-core.qnt",
+          "role": "semantic-core",
+          "applicability": "not-applicable",
+          "sha256": "13903b68774bf12e075d93eccd79755fac2aa7f36cfd0eeef2670613148e9956"
+        },
+        {
+          "path": "packages/shared-algebras/proofs/rule-core/spell-attack-burst-save-damage-core.qnt",
+          "role": "semantic-core",
+          "applicability": "applicable",
+          "sha256": "c1083478f834ee761f1aafd6a2aa6f46e34e95f4fb562ad498c6be4d4ee0b7b7"
+        },
+        {
+          "path": "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
+          "role": "semantic-core",
+          "applicability": "not-applicable",
+          "sha256": "31df455b8d2261461b46dceb534304afe022bb1181b19d75e0946f82f536b6b1"
+        },
+        {
+          "path": "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+          "role": "bridge",
+          "applicability": "applicable",
+          "sha256": "d59a390f17a21633e5022d61ddf79f0b68f9ef689ed4de102d8d6dcd4f7fe394"
+        },
+        {
+          "path": "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+          "role": "proof-only",
+          "applicability": "not-applicable",
+          "sha256": "350204c798b2a1323cd84d3340bde6d5f8e88211df7c6e31a44d44b9a1b330a2"
+        }
+      ],
+      "productionTypeScriptOwners": [
+        "packages/battle-runtime/src/battle-reducer.ts"
+      ],
+      "productionTypeScriptOwnerEvidence": [
+        {
+          "path": "packages/battle-runtime/src/battle-reducer.ts",
+          "sha256": "4788a4106956cb7879749838ec1a4f1c9471ac0ad929dd6ed2857bb6eb4ce050"
+        }
+      ],
+      "parityWitness": {
+        "kind": "focused-mbt",
+        "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+        "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+        "stepAction": "step"
+      },
+      "calibrationResult": "exact-current-executable"
+    },
+    {
+      "obligationId": "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
+      "profileId": "spell.invocation-damage-save-or-attack",
+      "qntOwners": [
+        {
+          "path": "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
+          "role": "semantic-core",
+          "applicability": "applicable",
+          "sha256": "ef27b305de823766e82c11cd3de54cf9c0e9854dba71ca509a9dfe23f7689bc7"
+        },
+        {
+          "path": "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt",
+          "role": "semantic-core",
+          "applicability": "applicable",
+          "sha256": "79f5c328dcd75de71b9afbad5e2aecea9b02ebe65dd47b8d4c15fed5bf776090"
+        }
+      ],
+      "productionTypeScriptOwners": [
+        "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+        "packages/battle-runtime/src/battle-reducer/damage-apply.ts"
+      ],
+      "productionTypeScriptOwnerEvidence": [
+        {
+          "path": "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+          "sha256": "253596efeb4db3c3542e7aa33010034320336594810bd2aee7f4f578fbc3ef10"
+        },
+        {
+          "path": "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+          "sha256": "bc9af4d498096fe7d49cad18c131bdf77c3faacaee30c56237c37068731f73f3"
+        }
+      ],
+      "parityWitness": {
+        "kind": "focused-mbt",
+        "ownerPath": "packages/battle-runtime/src/rule-core-spells.mbt.test.ts",
+        "qntSpecPath": "packages/battle-runtime/rule-core-spell-damage.mbt.qnt",
+        "stepAction": "step"
+      },
+      "calibrationResult": "exact-current-executable"
+    }
+  ],
+  "branchCalibrations": [
+    {
+      "branchId": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt#step:doResolveIceKnifeHitAttackDamageAndBurstSavingThrows",
+      "driverPath": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
+      "qntFileSha256": "f6cb3dafe7fc50f78e922ed16ca0a46d098c5d777ff982cd44af3138b03eac60",
+      "branchFamily": "step",
+      "branchAction": "doResolveIceKnifeHitAttackDamageAndBurstSavingThrows",
+      "qntReplay": {
+        "stepAction": "replayIceKnifeHitBranch",
+        "actionTaken": "doResolveIceKnifeHitAttackDamageAndBurstSavingThrows",
+        "observationMode": "deterministic-qnt-step-action"
+      },
+      "calibratedObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES"
+      ],
+      "productionTypeScript": {
+        "harnessPath": "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
+        "harnessEntrypoint": "level1DamageSpellDiscoveries.doResolveIceKnifeHitAttackDamageAndBurstSavingThrows",
+        "productionEntrypointPath": "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-burst.ts",
+        "productionEntrypoint": "resolveAttackBurstSaveDamageSpellAct",
+        "productionEntrypointSha256": "014886201be89fc9a9e08254057997cbdfd3038fb236951c2f0b4a282349b623",
+        "productionProjectionPath": "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/attack-burst-save-damage.ts",
+        "productionProjection": "attackBurstSaveDamageProfile",
+        "productionProjectionSha256": "d3bc33a82bf1735e2a3258d9de06fe774f2bafd6608f390278e2d6091bca7ac7",
+        "productionDispatchEvidence": {
+          "mode": "registered-production-dispatch-chain",
+          "harnessDiscovery": "discoverBattleActs",
+          "resolverSubject": "resolveBattleSubject",
+          "profileResolver": "resolveAttackBurstSaveDamage",
+          "entrypoint": "resolveAttackBurstSaveDamageSpellAct",
+          "projection": "attackBurstSaveDamageProfile"
+        }
+      },
+      "verificationEvidenceSha256": "7a44e59b650df94c8e2c94780618eb6e66e7a441acf32e2acd551d40c6adfa6a"
+    },
+    {
+      "branchId": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt#step:doResolveIceKnifeMissBurstSavingThrows",
+      "driverPath": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
+      "qntFileSha256": "f6cb3dafe7fc50f78e922ed16ca0a46d098c5d777ff982cd44af3138b03eac60",
+      "branchFamily": "step",
+      "branchAction": "doResolveIceKnifeMissBurstSavingThrows",
+      "qntReplay": {
+        "stepAction": "replayIceKnifeMissBranch",
+        "actionTaken": "doResolveIceKnifeMissBurstSavingThrows",
+        "observationMode": "deterministic-qnt-step-action"
+      },
+      "calibratedObligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES"
+      ],
+      "productionTypeScript": {
+        "harnessPath": "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
+        "harnessEntrypoint": "level1DamageSpellDiscoveries.doResolveIceKnifeMissBurstSavingThrows",
+        "productionEntrypointPath": "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-burst.ts",
+        "productionEntrypoint": "resolveAttackBurstSaveDamageSpellAct",
+        "productionEntrypointSha256": "014886201be89fc9a9e08254057997cbdfd3038fb236951c2f0b4a282349b623",
+        "productionProjectionPath": "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/attack-burst-save-damage.ts",
+        "productionProjection": "attackBurstSaveDamageProfile",
+        "productionProjectionSha256": "d3bc33a82bf1735e2a3258d9de06fe774f2bafd6608f390278e2d6091bca7ac7",
+        "productionDispatchEvidence": {
+          "mode": "registered-production-dispatch-chain",
+          "harnessDiscovery": "discoverBattleActs",
+          "resolverSubject": "resolveBattleSubject",
+          "profileResolver": "resolveAttackBurstSaveDamage",
+          "entrypoint": "resolveAttackBurstSaveDamageSpellAct",
+          "projection": "attackBurstSaveDamageProfile"
+        }
+      },
+      "verificationEvidenceSha256": "7a44e59b650df94c8e2c94780618eb6e66e7a441acf32e2acd551d40c6adfa6a"
+    }
+  ],
+  "obligationFamilyDecisions": [
+    {
+      "family": "generic-attack",
+      "applicability": "applicable",
+      "obligationIds": [
+        "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES"
+      ],
+      "basis": "The source has a ranged Spell Attack before its burst Saving Throw."
+    },
+    {
+      "family": "save",
+      "applicability": "applicable",
+      "obligationIds": [
+        "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES"
+      ],
+      "basis": "The target and nearby creatures make Dexterity Saving Throws."
+    },
+    {
+      "family": "mixed-target",
+      "applicability": "applicable",
+      "obligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "basis": "The primary target and each creature within 5 feet are distinct target roles."
+    },
+    {
+      "family": "exact-damage",
+      "applicability": "applicable",
+      "obligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS",
+        "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES"
+      ],
+      "basis": "The source specifies 1d10 Piercing attack damage and 2d6 Cold burst damage."
+    },
+    {
+      "family": "resource",
+      "applicability": "applicable",
+      "obligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "basis": "The source specifies an Action casting time and a level-1 spell slot profile."
+    },
+    {
+      "family": "scaling",
+      "applicability": "applicable",
+      "obligationIds": [
+        "BATTLE.SPELL.PROCEDURE_PROFILE_SEMANTICS"
+      ],
+      "basis": "Higher-level slots add one Cold 1d6 per slot level above 1."
+    },
+    {
+      "family": "reaction",
+      "applicability": "not-applicable",
+      "obligationIds": [],
+      "basis": "The registered source shape is an Action casting-time spell with no Reaction trigger."
+    },
+    {
+      "family": "concentration",
+      "applicability": "not-applicable",
+      "obligationIds": [],
+      "basis": "The registered source shape has Instantaneous duration and no Concentration requirement."
+    },
+    {
+      "family": "connector",
+      "applicability": "not-applicable",
+      "obligationIds": [],
+      "basis": "The selected profile's registered QNT owner closure includes the spell bridge; connector routing is a separate composition owner."
+    }
+  ],
+  "sourceOnlyProjection": {
+    "scope": {
+      "unitId": "ice_knife",
+      "profileId": "spell.invocation-damage-save-or-attack"
+    },
+    "raw": {
+      "path": ".references/srd-5.2.1/Spells/Descriptions-E-L.md",
+      "anchor": ".references/srd-5.2.1/Spells/Descriptions-E-L.md#Ice Knife",
+      "sha256": "11631f44ffed126af54e7607b6e1d550185738702b79e044ae34809eab67826b"
+    },
+    "ubiquitousLanguage": {
+      "path": "UBIQUITOUS_LANGUAGE.md",
+      "headings": [
+        "UBIQUITOUS_LANGUAGE.md#D20 Rolls",
+        "UBIQUITOUS_LANGUAGE.md#Damage",
+        "UBIQUITOUS_LANGUAGE.md#Spellcasting"
+      ],
+      "sha256": "92517573b39bcc91edca6316f89a8ef6634929b700b9b37bfa1ddee7ded6bc33"
+    },
+    "qnt": {
+      "driverPath": "packages/battle-runtime/battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
+      "selectedActions": [
+        "doResolveIceKnifeHitAttackDamageAndBurstSavingThrows",
+        "doResolveIceKnifeMissBurstSavingThrows"
+      ],
+      "owners": [
+        "packages/shared-algebras/proofs/rule-core/spell-invocation-resource-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-slot-expenditure.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-invocation-target-cardinality-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-invocation-action-slot-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-damage-projection-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-direct-damage-projection-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-save-gate.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-save-damage-projection-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-save-condition-projection-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-attack-damage-projection-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-defensive-effect-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-scalar-buff-projection-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-damage-rider-projection-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-chained-attack-damage-projection-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-independent-attack-sequence-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-turn-hook-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-object-hit-point-damage-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-sleep-repeat-save-lifecycle-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-attack-burst-save-damage-core.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-readied-spell-response-core.qnt",
+        "packages/battle-runtime/battle-runtime-spell-bridge.qnt",
+        "packages/shared-algebras/proofs/rule-core/spell-procedure-profiles.qnt",
+        "packages/shared-algebras/proofs/rule-core/unit-feature-save-damage-core.qnt"
+      ]
+    }
+  },
+  "cleanroomBoundary": {
+    "sourceOnly": true,
+    "excludedFromCleanroomInput": true,
+    "excludedPaths": [
+      "packages/battle-runtime/src/level1-damage-spell-selected-identity.mbt.test.ts",
+      "packages/battle-runtime/src/selected-identity-witness.ts",
+      "packages/battle-runtime/src/battle-reducer/spells-resolve-attack-burst.ts",
+      "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/attack-burst-save-damage.ts",
+      "packages/battle-runtime/src/battle-reducer.ts",
+      "packages/battle-runtime/src/battle-reducer/spells-resolve.ts",
+      "packages/battle-runtime/src/battle-reducer/damage-apply.ts",
+      "packages/battle-runtime/src/rule-core-spells.mbt.test.ts"
+    ],
+    "artifactPath": "plans/ralph-artifacts/l12-cleanroom-ice-knife-pilot/source-calibration-index.json"
+  },
+  "contentSha256": "07ac51afee15b5545873d0f566104de27e898df6f742635dd98d96da535cd44f"
+}

@@ -552,6 +552,21 @@ defineSelectedIdentityReplayAndQntReplay({
     import.meta.dirname,
     "battle-runtime-level1-damage-spell-selected-identity.mbt.qnt",
   ),
+  qntStepActions: [
+    {
+      stepAction: "replayIceKnifeHitBranch",
+      observedAction: "doResolveIceKnifeHitAttackDamageAndBurstSavingThrows",
+    },
+    {
+      stepAction: "replayIceKnifeMissBranch",
+      observedAction: "doResolveIceKnifeMissBurstSavingThrows",
+    },
+  ],
+  qntActionObservation: ({ stepAction, observedAction }) => {
+    process.stdout.write(
+      `SOURCE_CALIBRATION_QNT_OBSERVED:${stepAction}:${observedAction}\n`,
+    );
+  },
   quintStateField: "qState",
   quintStateFieldPrefix: "q",
   witnessProtocolField: "protocol",

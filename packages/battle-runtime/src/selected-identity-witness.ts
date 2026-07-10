@@ -70,6 +70,14 @@ type SelectedIdentityReplayWitnessBase<
 type SelectedIdentityQntReplayBase<P extends ProjectionRecord> =
   SelectedIdentityReplayWitnessBase<P, SelectedIdentityQntProcedure<P>> & {
     readonly specFile: string;
+    readonly qntStepActions?: ReadonlyArray<{
+      readonly stepAction: string;
+      readonly observedAction: string;
+    }>;
+    readonly qntActionObservation?: (observation: {
+      readonly stepAction: string;
+      readonly observedAction: string;
+    }) => void;
     readonly mbtParityTimeoutMs?: number;
     readonly quintStateField?: string;
     readonly quintStateFieldPrefix?: "q";
@@ -178,17 +186,42 @@ function defineSelectedIdentityQntReplayCore<
     it(
       "replays deterministic QNT parity",
       async () => {
+        let currentQntStep = "step";
+        const observeQntAction = (observedAction: string) => {
+          witness.qntActionObservation?.({
+            stepAction: currentQntStep,
+            observedAction,
+          });
+        };
+        const runQnt = (step: string) =>
+          (currentQntStep = step,
+          run({
+            spec: witness.specFile,
+            init: "init",
+            step,
+            driver: () => createSelectedIdentityQntDriver(witness, observeQntAction),
+            backend: "typescript",
+            seed: process.env["QUINT_SEED"],
+            nTraces: mbtTraceCount(),
+            maxSteps: focusedMbtMaxSteps(1),
+            stateCheck: selectedIdentityStateCheck(witness),
+          }));
+        currentQntStep = "step";
         await run({
           spec: witness.specFile,
           init: "init",
           step: "step",
-          driver: () => createSelectedIdentityQntDriver(witness),
+          driver: () => createSelectedIdentityQntDriver(witness, observeQntAction),
           backend: "typescript",
           seed: process.env["QUINT_SEED"],
           nTraces: mbtTraceCount(),
           maxSteps: focusedMbtMaxSteps(1),
           stateCheck: selectedIdentityStateCheck(witness),
         });
+        if (witness.qntStepActions === undefined) return;
+        for (const { stepAction } of witness.qntStepActions) {
+          await runQnt(stepAction);
+        }
       },
       witness.mbtParityTimeoutMs ?? MBT_TEST_TIMEOUT_MS,
     );
@@ -225,8 +258,13 @@ function createSelectedIdentityQntDriver<P extends ProjectionRecord>(
     P,
     SelectedIdentityQntProcedure<P>
   >,
+  observeAction?: (actionName: string) => void,
 ): SimpleDriver<P, SimpleActionMap> {
-  return createSelectedIdentityDriver(witness, "computedProjectionOnly");
+  return createSelectedIdentityDriver(
+    witness,
+    "computedProjectionOnly",
+    observeAction,
+  );
 }
 
 function createSelectedIdentityDriver<P extends ProjectionRecord>(
@@ -235,6 +273,7 @@ function createSelectedIdentityDriver<P extends ProjectionRecord>(
     SelectedIdentityProcedureBase<P>
   >,
   mode: "allowProjectionAfter" | "computedProjectionOnly",
+  observeAction?: (actionName: string) => void,
 ): SimpleDriver<P, SimpleActionMap> {
   let projection = witness.initialProjection;
   const actions: Record<
@@ -257,6 +296,7 @@ function createSelectedIdentityDriver<P extends ProjectionRecord>(
       actions[procedure.actionName] = {
         picks: {},
         handler: async () => {
+          observeAction?.(procedure.actionName);
           if (procedure.project !== undefined) {
             projection = procedure.project(projection);
             return;
