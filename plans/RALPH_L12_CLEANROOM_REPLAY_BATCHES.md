@@ -349,7 +349,7 @@
     {
       "number": 58,
       "id": "L12CEG-DU-002",
-      "status": "blocked",
+      "status": "todo",
       "title": "Check animal_friendship against latest dirty cleanroom"
     },
     {
@@ -649,7 +649,7 @@
     {
       "number": 108,
       "id": "L12CEG-DU-052",
-      "status": "blocked",
+      "status": "todo",
       "title": "Check protection_from_evil_and_good against latest dirty cleanroom"
     },
     {
@@ -787,7 +787,7 @@
     {
       "number": 131,
       "id": "L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS",
-      "status": "todo",
+      "status": "done",
       "title": "Produce latest dirty target harness acceptance artifacts"
     }
   ]
@@ -1015,19 +1015,18 @@ implementation task records a concrete dependency through `Plan Impact`.
 
 Tasks 58, 108, 1, and 2 established the same durable blocker against the named
 latest dirty target: `node scripts/check-cleanroom-harness.cjs --task-root
-/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29` fails because
-concrete target acceptance artifacts are missing: `tasks/RUN_LEDGER.json`,
+/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29` failed because
+concrete target acceptance artifacts were missing. Task 131 repaired that target
+artifact surface for the queued creature-type protection/charm driver with
+source-authorized, hash-bound dirty-start artifacts at `tasks/RUN_LEDGER.json`,
 `START_GATE.json`, `ENGINE_DEPTH_MANIFEST.json`,
-`STATE_OWNER_MANIFEST.json`, `REVIEW_LOOP.json`, and
-`DECIDER_DECISION.json`. Replay batches also require matching
-`tasks/target-replay-evidence/*.json` receipt files or retained-artifact
-references before source-side closure.
+`STATE_OWNER_MANIFEST.json`, `REVIEW_LOOP.json`, `DECIDER_DECISION.json`, and
+`tasks/target-replay-evidence/T131-creature-type-protection-charm.json`.
 
-Until `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` is done, all `L12CEG-RP-*` replay tasks and
-`L12CEG-DU-*` latest-dirty unit proof tasks are non-runnable. Do not spend
-additional Ralph runs rediscovering the same missing target ledger/gate files;
-repair the target artifact surface first, then unblock and rerun the affected
-byte-sized replay or unit tasks.
+Do not spend additional Ralph runs rediscovering the old missing target
+ledger/gate blocker. Rerun the affected dirty-unit tasks next, and keep replay
+batches ordered behind their related dirty-unit tasks unless those unit tasks
+close or record a precise blocker.
 
 ## Global Verification
 
@@ -1168,11 +1167,10 @@ Dependencies:
 - Completed prep plan task `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`.
 - Related dirty unit proof tasks listed above must be done or explicitly
   blocked before source-side closure for this replay batch.
-- Currently blocked by `L12CEG-DU-002` and `L12CEG-DU-052`, which lack latest
-  dirty-target harness acceptance artifacts for `animal_friendship` and
-  `protection_from_evil_and_good`. Do not rerun this replay batch until those
-  blockers are resolved and the latest dirty target can produce a current
-  source-checkable replay receipt for these six rows.
+- Currently blocked by `L12CEG-DU-002` and `L12CEG-DU-052`. Task 131 repaired
+  the latest dirty target's generic harness acceptance surface for this driver;
+  rerun the related dirty-unit tasks before source-side closure for these six
+  rows.
 
 One-Agent-Session Scope:
 
@@ -1200,15 +1198,12 @@ concrete reasons for rejected notes.
 
 Plan Impact:
 
-`update-required`. The named latest dirty cleanroom target has copied L1-2
-inputs, but it lacks concrete `L12CEG-RP-001` target harness artifacts:
-`RUN_LEDGER.json`, `START_GATE.json`, `ENGINE_DEPTH_MANIFEST.json`,
-`STATE_OWNER_MANIFEST.json`, `REVIEW_LOOP.json`, `DECIDER_DECISION.json`, and
-matching `tasks/target-replay-evidence/*.json` receipt files. It is also
-dependency-blocked by `L12CEG-DU-002` and `L12CEG-DU-052`; see
-`plans/ralph-artifacts/l12-cleanroom-generation/task-1-replay-blocker.md`.
-Do not mark the listed rows done from prose, old target files, scaffold
-examples, grouped selected-identity proof, or diagnostic tests.
+`applied` only after this replay batch has a current hash-bound cleanroom run
+reference or compact receipt that covers the listed rows and passes
+`pnpm cleanroom-harness:check`. This task remains dependency-blocked by
+`L12CEG-DU-002` and `L12CEG-DU-052` until those dirty-unit tasks close or record
+precise blockers. Do not mark the listed rows done from prose, old target files,
+scaffold examples, grouped selected-identity proof, or diagnostic tests.
 
 ### Task 2 - L12CEG-RP-002
 
@@ -1309,10 +1304,9 @@ Dependencies:
 - Completed prep plan task `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`.
 - Related dirty unit proof tasks listed above must be done or explicitly
   blocked before source-side closure for this replay batch.
-- Currently blocked by `L12CEG-DU-052`, which lacks latest dirty-target harness
-  acceptance artifacts for `protection_from_evil_and_good`. Do not rerun this
-  replay batch until that blocker is resolved and the latest dirty target can
-  produce a current source-checkable replay receipt for these two rows.
+- Currently blocked by `L12CEG-DU-052`. Task 131 repaired the latest dirty
+  target's generic harness acceptance surface for this driver; rerun the related
+  dirty-unit task before source-side closure for these two rows.
 
 One-Agent-Session Scope:
 
@@ -1340,13 +1334,10 @@ concrete reasons for rejected notes.
 
 Plan Impact:
 
-`update-required`. The named latest dirty cleanroom target has copied L1-2
-inputs, but it lacks concrete `L12CEG-RP-002` target harness artifacts:
-`RUN_LEDGER.json`, `START_GATE.json`, `ENGINE_DEPTH_MANIFEST.json`,
-`STATE_OWNER_MANIFEST.json`, `REVIEW_LOOP.json`, `DECIDER_DECISION.json`, and a
-matching source-checkable receipt for this replay batch's two rows. It is also
-dependency-blocked by `L12CEG-DU-052`; see
-`plans/ralph-artifacts/l12-cleanroom-generation/task-2-replay-blocker.md`.
+`applied` only after this replay batch has a current hash-bound cleanroom run
+reference or compact receipt that covers the listed rows and passes
+`pnpm cleanroom-harness:check`. This task remains dependency-blocked by
+`L12CEG-DU-052` until that dirty-unit task closes or records a precise blocker.
 Do not mark the listed rows done from prose, old target files, scaffold
 examples, grouped selected-identity proof, or diagnostic tests.
 
@@ -8760,7 +8751,7 @@ repair.
 
 ### Task 58 - L12CEG-DU-002
 
-Status: `blocked`
+Status: `todo`
 
 Goal:
 
@@ -8777,6 +8768,10 @@ Input:
   `plans/ralph-artifacts/l12-cleanroom-generation/exhaustive-task-graph.json`.
 - Cleanroom scaffold/package containing the copied L1-2 artifacts listed below.
 - Related replay batch ids listed below.
+- Task 131 target acceptance artifacts for the shared creature-type
+  protection/charm driver are present and source-checkable; this task owns the
+  Unit-specific dirty-target check and source-side closure for
+  `animal_friendship`.
 
 Unit Metadata:
 
@@ -14896,7 +14891,7 @@ repair.
 
 ### Task 108 - L12CEG-DU-052
 
-Status: `blocked`
+Status: `todo`
 
 Goal:
 
@@ -14913,6 +14908,10 @@ Input:
   `plans/ralph-artifacts/l12-cleanroom-generation/exhaustive-task-graph.json`.
 - Cleanroom scaffold/package containing the copied L1-2 artifacts listed below.
 - Related replay batch ids listed below.
+- Task 131 target acceptance artifacts for the shared creature-type
+  protection/charm driver are present and source-checkable; this task owns the
+  Unit-specific dirty-target check and source-side closure for
+  `protection_from_evil_and_good`.
 
 Unit Metadata:
 
@@ -17563,7 +17562,7 @@ validator-lineage, or source corpus redesign.
 
 ### Task 131 - L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS
 
-Status: `todo`
+Status: `done`
 
 Goal:
 
@@ -17668,19 +17667,16 @@ artifacts and `node scripts/check-cleanroom-harness.cjs --task-root
 `update-required` if the missing artifacts require broader target design or
 artifact-store work before individual replay and dirty-unit tasks can run.
 
-Retry Guidance:
+Completion Note:
 
-Do not retry by copying scaffold examples or stale source-side receipts into the
-latest dirty target. The current target can emit concrete ledger, gate,
+Task 131 repaired the latest dirty target by emitting concrete ledger, gate,
 manifest, review, decision, history, and compact receipt artifacts for the
 queued `battle-runtime-creature-type-protection-and-charm-selected-identity`
-driver, but the source harness rejects the truthful dirty start gate. Before
-retrying this acceptance task, research and choose one executable path: revise
-the source contract to admit hash-bound dirty start gates, or create a target
-flow that starts from a clean target state and then emits accepted artifacts.
-Do not unblock replay or dirty-unit tasks until the chosen path makes
-`node scripts/check-cleanroom-harness.cjs --task-root
-/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29` pass.
+driver. The source harness now admits this exact dirty start only when the
+source-owned authorization matches task `T131`, the named target root, target
+HEAD `02a1337d5e2be04307d44c63e2596f60c2104301`, the selected driver, and the
+recorded dirty-status SHA-256. Rerun the affected dirty-unit tasks before
+marking any replay rows done.
 
 ## Cleanroom Run Reference Contract Task Details
 

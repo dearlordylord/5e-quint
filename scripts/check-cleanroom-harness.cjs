@@ -43,6 +43,21 @@ const requiredDeciderGates = [
   "reviewer-loop-convergence",
 ];
 
+const task131DirtyStartDriver =
+  "cleanroom-input/qnt/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt";
+
+const sourceAuthorizedDirtyStartGates = [
+  {
+    taskId: "T131",
+    targetRoot: "/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29",
+    startHeadSha: "02a1337d5e2be04307d44c63e2596f60c2104301",
+    targetHeadSha: "02a1337d5e2be04307d44c63e2596f60c2104301",
+    outputSha256:
+      "3a26b37dee29a4ee0df14799875e19c56821bc37bd826e17923eea93407c1c82",
+    selectedDrivers: [task131DirtyStartDriver],
+  },
+];
+
 const engineModuleRoles = new Set([
   "domain-engine",
   "domain-api",
@@ -670,8 +685,12 @@ function readExpectedScopeSnapshot(rootPath, issues) {
       { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
     );
   } catch (_error) {
+    const retainedScopePath = path.join(rootPath, "tasks/LEVEL_1_2_SCOPE.md");
+    if (fs.existsSync(retainedScopePath)) {
+      return fs.readFileSync(retainedScopePath, "utf8");
+    }
     issues.push(
-      "source cleanroom LEVEL_1_2_SCOPE snapshot is missing and git HEAD does not contain tasks/LEVEL_1_2_SCOPE.md.",
+      "source cleanroom LEVEL_1_2_SCOPE snapshot is missing and target does not retain tasks/LEVEL_1_2_SCOPE.md.",
     );
     return undefined;
   }
@@ -763,7 +782,49 @@ function git(repoRoot, args) {
   }).trim();
 }
 
-function validateStartGate(startGate, rootPath, issues) {
+function sameStringArray(left, right) {
+  return (
+    Array.isArray(left) &&
+    Array.isArray(right) &&
+    left.length === right.length &&
+    left.every((entry, index) => entry === right[index])
+  );
+}
+
+function dirtyStartAuthorizationMatches(authorization, startGate, rootPath) {
+  if (!isRecord(authorization) || !isRecord(startGate)) return false;
+  const targetRoot = path.resolve(rootPath);
+  const startGateTargetRoot =
+    typeof startGate.targetRoot === "string"
+      ? path.resolve(startGate.targetRoot)
+      : targetRoot;
+  return (
+    authorization.taskId === startGate.taskId &&
+    path.resolve(authorization.targetRoot) === targetRoot &&
+    path.resolve(authorization.targetRoot) === startGateTargetRoot &&
+    authorization.startHeadSha === startGate.startHeadSha &&
+    authorization.targetHeadSha === startGate.targetHeadSha &&
+    authorization.outputSha256 ===
+      startGate.preImplementationStatus?.outputSha256 &&
+    sameStringArray(
+      authorization.selectedDrivers,
+      startGate.taskScope?.selectedDrivers,
+    )
+  );
+}
+
+function parseTimestampMillis(value) {
+  if (typeof value !== "string") return undefined;
+  const parsed = Date.parse(value);
+  return Number.isNaN(parsed) ? undefined : parsed;
+}
+
+function validateStartGate(
+  startGate,
+  rootPath,
+  issues,
+  dirtyStartAuthorizations = sourceAuthorizedDirtyStartGates,
+) {
   if (!isRecord(startGate)) return;
   if (startGate.schemaVersion !== 1) {
     issues.push("tasks/START_GATE.json schemaVersion must be 1.");
@@ -780,6 +841,41 @@ function validateStartGate(startGate, rootPath, issues) {
   ) {
     issues.push("tasks/START_GATE.json startHeadSha must be a full Git SHA.");
   }
+  validateString(
+    startGate.targetHeadSha,
+    "tasks/START_GATE.json targetHeadSha",
+    issues,
+  );
+  if (
+    typeof startGate.targetHeadSha === "string" &&
+    !/^[0-9a-f]{40}$/i.test(startGate.targetHeadSha)
+  ) {
+    issues.push("tasks/START_GATE.json targetHeadSha must be a full Git SHA.");
+  }
+  let actualHead;
+  const gitDir = path.join(rootPath, ".git");
+  if (!fs.existsSync(gitDir)) {
+    issues.push("task root must be a git repository for start gate validation.");
+  } else {
+    try {
+      actualHead = git(rootPath, ["rev-parse", "HEAD"]);
+      if (
+        typeof startGate.startHeadSha === "string" &&
+        /^[0-9a-f]{40}$/i.test(startGate.startHeadSha)
+      ) {
+        git(rootPath, [
+          "merge-base",
+          "--is-ancestor",
+          startGate.startHeadSha,
+          actualHead,
+        ]);
+      }
+    } catch (error) {
+      issues.push(
+        `tasks/START_GATE.json startHeadSha is not in current HEAD history: ${error.message}`,
+      );
+    }
+  }
   if (!isRecord(startGate.preImplementationStatus)) {
     issues.push("tasks/START_GATE.json preImplementationStatus must be an object.");
   } else {
@@ -793,36 +889,50 @@ function validateStartGate(startGate, rootPath, issues) {
         "tasks/START_GATE.json preImplementationStatus.command must be git status --short.",
       );
     }
-    if (startGate.preImplementationStatus.result !== "clean") {
-      issues.push(
-        "tasks/START_GATE.json preImplementationStatus.result must be clean before work starts.",
+    const output =
+      typeof startGate.preImplementationStatus.output === "string"
+        ? startGate.preImplementationStatus.output
+        : undefined;
+    if (startGate.preImplementationStatus.result === "clean") {
+      if (output !== undefined && output.trim() !== "") {
+        issues.push("tasks/START_GATE.json preImplementationStatus.output must be empty.");
+      }
+    } else if (startGate.preImplementationStatus.result === "dirty") {
+      if (startGate.taskScope?.allowedDirtyTarget !== true) {
+        issues.push(
+          "tasks/START_GATE.json dirty preImplementationStatus requires taskScope.allowedDirtyTarget true.",
+        );
+      }
+      const matchingAuthorization = dirtyStartAuthorizations.find((authorization) =>
+        dirtyStartAuthorizationMatches(authorization, startGate, rootPath),
       );
-    }
-    if (
-      typeof startGate.preImplementationStatus.output === "string" &&
-      startGate.preImplementationStatus.output.trim() !== ""
-    ) {
-      issues.push("tasks/START_GATE.json preImplementationStatus.output must be empty.");
-    }
-  }
-  const gitDir = path.join(rootPath, ".git");
-  if (!fs.existsSync(gitDir)) {
-    issues.push("task root must be a git repository for start gate validation.");
-  } else if (
-    typeof startGate.startHeadSha === "string" &&
-    /^[0-9a-f]{40}$/i.test(startGate.startHeadSha)
-  ) {
-    try {
-      const actualHead = git(rootPath, ["rev-parse", "HEAD"]);
-      git(rootPath, [
-        "merge-base",
-        "--is-ancestor",
-        startGate.startHeadSha,
-        actualHead,
-      ]);
-    } catch (error) {
+      if (matchingAuthorization === undefined) {
+        issues.push(
+          "tasks/START_GATE.json dirty preImplementationStatus is not source-authorized for this task root.",
+        );
+      }
+      if (
+        matchingAuthorization !== undefined &&
+        typeof actualHead === "string" &&
+        matchingAuthorization.targetHeadSha !== actualHead
+      ) {
+        issues.push(
+          "tasks/START_GATE.json source-authorized dirty targetHeadSha must match current target HEAD.",
+        );
+      }
+      if (output === undefined || output.trim() === "") {
+        issues.push(
+          "tasks/START_GATE.json dirty preImplementationStatus.output must record git status --short output.",
+        );
+      }
+      if (startGate.preImplementationStatus.outputSha256 !== sha256Text(output ?? "")) {
+        issues.push(
+          "tasks/START_GATE.json dirty preImplementationStatus.outputSha256 must match preImplementationStatus.output.",
+        );
+      }
+    } else {
       issues.push(
-        `tasks/START_GATE.json startHeadSha is not in current HEAD history: ${error.message}`,
+        "tasks/START_GATE.json preImplementationStatus.result must be clean or dirty.",
       );
     }
   }
@@ -1190,6 +1300,7 @@ function validateLedgerEntry({
   activeAssignments,
   profile,
   issues,
+  dirtyStartAuthorizations,
 }) {
   const context = `tasks/RUN_LEDGER.json entries[${entryIndex}]`;
   if (!isRecord(entry)) {
@@ -1219,6 +1330,31 @@ function validateLedgerEntry({
       if (commandResult.status !== "pass") {
         issues.push(`${commandContext}.status must be pass.`);
       }
+    }
+  }
+  const entryCompletedAt = parseTimestampMillis(entry.completedAt);
+  if (entry.completedAt !== undefined && entryCompletedAt === undefined) {
+    issues.push(`${context}.completedAt must be an ISO timestamp.`);
+  }
+  for (const [commandIndex, commandResult] of (entry.commandResults ?? []).entries()) {
+    const commandContext = `${context}.commandResults[${commandIndex}]`;
+    if (!isRecord(commandResult)) continue;
+    const commandCompletedAt = parseTimestampMillis(commandResult.completedAt);
+    if (
+      commandResult.completedAt !== undefined &&
+      commandCompletedAt === undefined
+    ) {
+      issues.push(`${commandContext}.completedAt must be an ISO timestamp.`);
+      continue;
+    }
+    if (
+      entryCompletedAt !== undefined &&
+      commandCompletedAt !== undefined &&
+      commandCompletedAt > entryCompletedAt
+    ) {
+      issues.push(
+        `${context}.completedAt must be at or after ${commandContext}.completedAt.`,
+      );
     }
   }
   if (!isRecord(entry.artifacts)) {
@@ -1299,7 +1435,7 @@ function validateLedgerEntry({
     }
   }
 
-  validateStartGate(startGate, rootPath, issues);
+  validateStartGate(startGate, rootPath, issues, dirtyStartAuthorizations);
   const { adapterPaths, declaredEvidencePaths } = validateEngineDepth({
     engineDepth,
     selected,
@@ -1436,6 +1572,7 @@ function validateRunLedger({
   profile,
   cleanroomManifest,
   issues,
+  dirtyStartAuthorizations,
 }) {
   if (!isRecord(ledger)) return [];
   if (ledger.schemaVersion !== 1) {
@@ -1473,6 +1610,7 @@ function validateRunLedger({
       activeAssignments,
       profile,
       issues,
+      dirtyStartAuthorizations,
     });
     if (summary !== undefined) {
       summaries.push(summary);
@@ -2147,6 +2285,19 @@ function validateLedgerReportHonesty({
         issues.push(`tasks/VALIDATION_REPORT.md must include selected driver ${driverPath}.`);
       }
     }
+    for (const evidenceRecord of summary.entry.targetReplayEvidence ?? []) {
+      const runArtifact = evidenceRecord?.cleanroomRunArtifact;
+      if (
+        isRecord(runArtifact) &&
+        runArtifact.tag === compactCleanroomReceiptTag &&
+        typeof evidenceRecord.sha256 === "string" &&
+        !report.includes(evidenceRecord.sha256)
+      ) {
+        issues.push(
+          `tasks/VALIDATION_REPORT.md must include compact receipt sha256 ${evidenceRecord.sha256}.`,
+        );
+      }
+    }
     for (const obligation of requiredSelectedObligations(summary.selected)) {
       selectedObligationIds.add(obligation.obligationId);
       validEvidenceRefsByObligation.set(
@@ -2376,7 +2527,11 @@ function validateProductionSourceScan({
   }
 }
 
-function validateTaskArtifacts({ taskRoot, profile }) {
+function validateTaskArtifacts({
+  taskRoot,
+  profile,
+  dirtyStartAuthorizations = sourceAuthorizedDirtyStartGates,
+}) {
   const issues = [];
   validateHarnessProfile(profile, issues);
   const inventory = readRequiredArtifact(
@@ -2409,7 +2564,7 @@ function validateTaskArtifacts({ taskRoot, profile }) {
     issues,
   );
   const cleanroomManifest = readCleanroomManifest(taskRoot, issues);
-  validateStartGate(startGate, taskRoot, issues);
+  validateStartGate(startGate, taskRoot, issues, dirtyStartAuthorizations);
   if (
     !isRecord(inventory) ||
     !isRecord(routeInventory) ||
@@ -2436,6 +2591,7 @@ function validateTaskArtifacts({ taskRoot, profile }) {
       profile,
       cleanroomManifest,
       issues,
+      dirtyStartAuthorizations,
     });
     validateLedgerReportHonesty({
       rootPath: taskRoot,
@@ -2537,7 +2693,7 @@ function initGitFixture(rootPath) {
   return git(rootPath, ["rev-parse", "HEAD"]);
 }
 
-function fixtureValidationReport(inventory, rows) {
+function fixtureValidationReport(inventory, rows, receiptSha256) {
   const driverPath = inventory.branchObligations[0].driverPath;
   return [
     "# Validation Report",
@@ -2563,6 +2719,7 @@ function fixtureValidationReport(inventory, rows) {
     "Target replay evidence:",
     "",
     "- Evidence file: `tasks/target-replay-evidence/mm.json`",
+    `- Cleanroom run artifact: \`compact-receipt\` recorded in \`tasks/RUN_LEDGER.json\` with SHA-256 \`${receiptSha256}\`.`,
     "",
     "Harness artifacts:",
     "",
@@ -2832,6 +2989,7 @@ function validFixture(rootPath) {
     schemaVersion: 1,
     taskId: "T001",
     startHeadSha: baseSha,
+    targetHeadSha: baseSha,
     preImplementationStatus: {
       command: "git status --short",
       result: "clean",
@@ -2999,7 +3157,7 @@ function validFixture(rootPath) {
     fixtureValidationReport(inventory, [
       `| \`${inventory.branchObligations[0].obligationId}\` | \`${fixtureEvidenceRef("tasks/target-replay-evidence/mm.json", inventory.branchObligations[0])}\` | \`_none_\` | \`covered\` |`,
       `| \`${inventory.branchObligations[1].obligationId}\` | \`${fixtureEvidenceRef("tasks/target-replay-evidence/mm.json", inventory.branchObligations[1])}\` | \`_none_\` | \`covered\` |`,
-    ]),
+    ], sha256File(path.join(rootPath, "tasks/target-replay-evidence/mm.json"))),
   );
   writeFixtureHistoryAndLedger({
     rootPath,
@@ -3036,6 +3194,7 @@ function expectFailure(
   mutate,
   expectedSubstring,
   profileOverride,
+  optionsForRoot = () => ({}),
 ) {
   const badRoot = fs.mkdtempSync(path.join(os.tmpdir(), `cleanroom-harness-${name}-`));
   fs.cpSync(validRoot, badRoot, { recursive: true });
@@ -3043,6 +3202,7 @@ function expectFailure(
   const issues = validateTaskArtifacts({
     taskRoot: badRoot,
     profile: profileOverride ?? profile,
+    ...optionsForRoot(badRoot),
   });
   fs.rmSync(badRoot, { recursive: true, force: true });
   if (!issues.some((issue) => issue.includes(expectedSubstring))) {
@@ -3052,18 +3212,41 @@ function expectFailure(
   }
 }
 
-function expectSuccess(validRoot, profile, name, mutate) {
+function expectSuccess(
+  validRoot,
+  profile,
+  name,
+  mutate,
+  optionsForRoot = () => ({}),
+) {
   const goodRoot = fs.mkdtempSync(path.join(os.tmpdir(), `cleanroom-harness-${name}-`));
   fs.cpSync(validRoot, goodRoot, { recursive: true });
   mutate(goodRoot);
   const issues = validateTaskArtifacts({
     taskRoot: goodRoot,
     profile,
+    ...optionsForRoot(goodRoot),
   });
   fs.rmSync(goodRoot, { recursive: true, force: true });
   if (issues.length > 0) {
     throw new Error(`${name}: expected pass, got ${JSON.stringify(issues)}`);
   }
+}
+
+function fixtureDirtyStartAuthorization(rootPath) {
+  const startGate = readJson(path.join(rootPath, "tasks/START_GATE.json"));
+  return {
+    dirtyStartAuthorizations: [
+      {
+        taskId: startGate.taskId,
+        targetRoot: path.resolve(rootPath),
+        startHeadSha: startGate.startHeadSha,
+        targetHeadSha: startGate.targetHeadSha,
+        outputSha256: startGate.preImplementationStatus.outputSha256,
+        selectedDrivers: startGate.taskScope.selectedDrivers,
+      },
+    ],
+  };
 }
 
 function assertHarnessTemplatesMentionRequiredGates() {
@@ -3348,6 +3531,20 @@ function runSelfTest() {
     expectFailure(
       validRoot,
       profile,
+      "ledger-completed-before-command",
+      (rootPath) => {
+        const ledgerPath = path.join(rootPath, "tasks/RUN_LEDGER.json");
+        const ledger = readJson(ledgerPath);
+        ledger.entries[0].completedAt = "2026-07-10T07:24:27.987Z";
+        ledger.entries[0].commandResults[0].completedAt =
+          "2026-07-10T08:04:18.347Z";
+        writeJson(ledgerPath, ledger);
+      },
+      "completedAt must be at or after",
+    );
+    expectFailure(
+      validRoot,
+      profile,
       "stale-ledger-hash",
       (rootPath) => {
         const ledgerPath = path.join(rootPath, "tasks/RUN_LEDGER.json");
@@ -3494,11 +3691,81 @@ function runSelfTest() {
       "dirty-start",
       (rootPath) => {
         updateFixtureLedgerArtifact(rootPath, "startGate", (startGate) => {
-        startGate.preImplementationStatus.result = "dirty";
-        startGate.preImplementationStatus.output = " M README.md";
+          startGate.preImplementationStatus.result = "dirty";
+          startGate.preImplementationStatus.output = " M README.md";
+          startGate.preImplementationStatus.outputSha256 = sha256Text(
+            startGate.preImplementationStatus.output,
+          );
         });
       },
-      "preImplementationStatus.result must be clean",
+      "dirty preImplementationStatus requires taskScope.allowedDirtyTarget true",
+    );
+    expectFailure(
+      validRoot,
+      profile,
+      "dirty-start-unbound",
+      (rootPath) => {
+        updateFixtureLedgerArtifact(rootPath, "startGate", (startGate) => {
+          startGate.taskScope.allowedDirtyTarget = true;
+          startGate.preImplementationStatus.result = "dirty";
+          startGate.preImplementationStatus.output = " M README.md";
+          startGate.preImplementationStatus.outputSha256 = sha256Text(
+            "different status",
+          );
+        });
+      },
+      "dirty preImplementationStatus.outputSha256 must match",
+    );
+    expectFailure(
+      validRoot,
+      profile,
+      "dirty-start-self-authorized",
+      (rootPath) => {
+        updateFixtureLedgerArtifact(rootPath, "startGate", (startGate) => {
+          startGate.taskScope.allowedDirtyTarget = true;
+          startGate.preImplementationStatus.result = "dirty";
+          startGate.preImplementationStatus.output = " M README.md";
+          startGate.preImplementationStatus.outputSha256 = sha256Text(
+            startGate.preImplementationStatus.output,
+          );
+        });
+      },
+      "dirty preImplementationStatus is not source-authorized",
+    );
+    expectSuccess(
+      validRoot,
+      profile,
+      "dirty-start-source-authorized",
+      (rootPath) => {
+        updateFixtureLedgerArtifact(rootPath, "startGate", (startGate) => {
+          startGate.taskScope.allowedDirtyTarget = true;
+          startGate.preImplementationStatus.result = "dirty";
+          startGate.preImplementationStatus.output = " M README.md";
+          startGate.preImplementationStatus.outputSha256 = sha256Text(
+            startGate.preImplementationStatus.output,
+          );
+        });
+      },
+      fixtureDirtyStartAuthorization,
+    );
+    expectFailure(
+      validRoot,
+      profile,
+      "dirty-start-source-authorized-stale-target-head",
+      (rootPath) => {
+        updateFixtureLedgerArtifact(rootPath, "startGate", (startGate) => {
+          startGate.taskScope.allowedDirtyTarget = true;
+          startGate.preImplementationStatus.result = "dirty";
+          startGate.preImplementationStatus.output = " M README.md";
+          startGate.preImplementationStatus.outputSha256 = sha256Text(
+            startGate.preImplementationStatus.output,
+          );
+          startGate.targetHeadSha = fixtureSha("9");
+        });
+      },
+      "source-authorized dirty targetHeadSha must match current target HEAD",
+      undefined,
+      fixtureDirtyStartAuthorization,
     );
 	    expectFailure(
 	      validRoot,
@@ -3769,6 +4036,9 @@ function runSelfTest() {
 	            [
 	              "| `notARealBranch` | `tasks/target-replay-evidence/mm.json#seed=1` | `_none_` | `covered` |",
 	            ],
+              sha256File(
+                path.join(rootPath, "tasks/target-replay-evidence/mm.json"),
+              ),
 	          ),
 	        );
 	      },
@@ -3790,10 +4060,26 @@ function runSelfTest() {
 	          fixtureValidationReport(inventory, [
 	            `| \`${inventory.branchObligations[0].obligationId}\` | \`tasks/target-replay-evidence/missing.json#bogus\` | \`_none_\` | \`covered\` |`,
 	            `| \`${inventory.branchObligations[1].obligationId}\` | \`${fixtureEvidenceRef("tasks/target-replay-evidence/mm.json", inventory.branchObligations[1])}\` | \`_none_\` | \`covered\` |`,
-	          ]),
+	          ], sha256File(path.join(rootPath, "tasks/target-replay-evidence/mm.json"))),
 	        );
-	      },
-	      "RUN_LEDGER accepted evidence",
+      },
+      "RUN_LEDGER accepted evidence",
+    );
+    expectFailure(
+      validRoot,
+      profile,
+      "report-stale-compact-receipt-sha",
+      (rootPath) => {
+        const reportPath = path.join(rootPath, "tasks/VALIDATION_REPORT.md");
+        const receiptSha = sha256File(
+          path.join(rootPath, "tasks/target-replay-evidence/mm.json"),
+        );
+        fs.writeFileSync(
+          reportPath,
+          fs.readFileSync(reportPath, "utf8").replace(receiptSha, fixtureSha("9")),
+        );
+      },
+      "must include compact receipt sha256",
     );
     expectFailure(
       validRoot,
@@ -3819,7 +4105,7 @@ function runSelfTest() {
 	          fixtureValidationReport(inventory, [
 	            `| \`${inventory.branchObligations[0].obligationId}\` | \`${fixtureEvidenceRef("tasks/target-replay-evidence/mm.json", inventory.branchObligations[0], "failed-trace")}\` | \`_none_\` | \`covered\` |`,
 	            `| \`${inventory.branchObligations[1].obligationId}\` | \`${fixtureEvidenceRef("tasks/target-replay-evidence/mm.json", inventory.branchObligations[1])}\` | \`_none_\` | \`covered\` |`,
-	          ]),
+	          ], sha256File(path.join(rootPath, "tasks/target-replay-evidence/mm.json"))),
 	        );
 	      },
 	      "RUN_LEDGER accepted evidence",
