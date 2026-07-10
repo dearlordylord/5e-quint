@@ -7,11 +7,10 @@ Inspection target: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
 ## Target State Checked
 
 - Target git `HEAD`: `02a1337d5e2be04307d44c63e2596f60c2104301`
-- Target worktree state: dirty. `git status --short` reported modified
-  cleanroom implementation, evidence, copied QNT input, and target utility
-  files; it also reported untracked scaffold/input files including
-  `cleanroom-input/l12-cleanroom-generation/`, `scripts/`, `tasks/`, and
-  `target-profile.json`.
+- Target worktree state: dirty. `git status --short` reported 230 changed or
+  untracked paths. Its output SHA-256 was
+  `3a26b37dee29a4ee0df14799875e19c56821bc37bd826e17923eea93407c1c82`,
+  matching the source-authorized dirty-start contract used by the harness.
 - Target cleanroom manifest source commit:
   `a2e7550352cf0b288f3cbb691afc4ebc21d7faa8`
 - Target `cleanroom-input/MANIFEST.md` SHA-256:
@@ -37,24 +36,62 @@ hashes match the source worktree artifacts checked for this task.
 
 All Task 108 rows map to Unit `protection_from_evil_and_good` in the source
 L1-2 accounting artifacts. In `srd-l12-denominator.json` each row has
-`cleanroomDisposition: "executable"`. In `capability-fact-coverage-matrix.json`
-and `srd-row-generic-fact-map.json`, each row has profile
+`cleanroomDisposition: "executable"`, `executableMechanics: true`,
+`unitProfileDisposition: "supported-profile"`, and
+`battleReadinessStatus: "accepted"`. In
+`capability-fact-coverage-matrix.json` and
+`srd-row-generic-fact-map.json`, each row has profile
 `spell.creature-type-protection-and-charm`.
 
 `srd-row-generic-fact-map.json` lists the focused route proof candidate
 `packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt`
 with connector
 `packages/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.route.mbt.qnt`.
-The target `tasks/ACTIVE_WORK.json` includes the matching copied driver
-`cleanroom-input/qnt/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt`
-in the battle lane queue, but there is no accepted run ledger entry for this
-Unit.
 
 - `srd521:classes/cleric:spell-level-1:spell-unit-pressure:cleric_spell_list_protection_from_evil_and_good`
 - `srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_protection_from_evil_and_good`
 - `srd521:classes/paladin:spell-level-1:spell-unit-pressure:paladin_spell_list_protection_from_evil_and_good`
 - `srd521:classes/warlock:spell-level-1:spell-unit-pressure:warlock_spell_list_protection_from_evil_and_good`
 - `srd521:classes/wizard:spell-level-1:spell-unit-pressure:wizard_spell_list_protection_from_evil_and_good`
+
+## Current Cleanroom Run Reference
+
+The latest dirty target now has concrete harness acceptance artifacts under
+`tasks/`, and the source harness checker accepts them.
+
+| Target artifact | SHA-256 |
+| --- | --- |
+| `tasks/RUN_LEDGER.json` | `4cbae14620b9b81b1fdd27a620df000e37b4f8473a02ffb90693d2b563f3823b` |
+| `tasks/START_GATE.json` | `4083295f9e05bdb30a5cf9549ae2d29f5e422cb166f99914a3477c72b6aa8328` |
+| `tasks/ENGINE_DEPTH_MANIFEST.json` | `f7a497cf3c4ca2c829da2db7ac686ed5d2cd36637b0897562622399a5b4c176f` |
+| `tasks/STATE_OWNER_MANIFEST.json` | `cccb598cc6c1436625f9d006530eb9c8c539fbed419a58d3f486a31c7f0f1f12` |
+| `tasks/REVIEW_LOOP.json` | `11bf93a680aba7e6b07594b6f5e9368d6a31dd43df17d2b6e010f4597081fd5c` |
+| `tasks/DECIDER_DECISION.json` | `1962d64142a2101d1fccdffa929fa77665d00a7541438bbfa145fd64119ba968` |
+
+The hash-bound compact receipt is:
+
+- Path:
+  `tasks/target-replay-evidence/T131-creature-type-protection-charm.json`
+- SHA-256:
+  `009e7d28ecc02aba75ab232c3fff282c8f86ff3177231ae4e0ab854d88e59332`
+- Driver:
+  `cleanroom-input/qnt/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt`
+- QNT driver SHA-256:
+  `a6e8fbb495c3f01f51297148e02b970dfde9d6e1acbb6297cd08a3ac5995edc0`
+- Schema:
+  `target-l12-cleanroom-generation-evidence.v1`
+
+The receipt includes the copied L1-2 artifact hashes above and passing replay
+entries for Protection from Evil and Good:
+
+- `doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection`
+- `doPreventProtectionFromEvilAndGoodScopedCharmAndPossession`
+- `doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage`
+- `doResolveProtectionFromEvilAndGoodRelevantCharmSaveAdvantage`
+
+`tasks/RUN_LEDGER.json` records this compact receipt and lists
+`L12CEG-DU-052` in `unblockedTaskIds`. `tasks/DECIDER_DECISION.json` has
+`decision: "accepted"` and status `accepted-source-authorized-dirty-start`.
 
 ## Harness Check
 
@@ -64,37 +101,27 @@ Command run from the source worktree:
 node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29
 ```
 
-Result: failed.
+Result: passed.
 
-Failure output:
+Output:
 
 ```text
-cleanroom harness acceptance FAILED:
-  - tasks/RUN_LEDGER.json is missing.
-  - tasks/START_GATE.json is missing.
-  - tasks/ENGINE_DEPTH_MANIFEST.json is missing.
-  - tasks/STATE_OWNER_MANIFEST.json is missing.
-  - tasks/REVIEW_LOOP.json is missing.
-  - tasks/DECIDER_DECISION.json is missing.
+cleanroom harness acceptance passed.
 ```
-
-The target has scaffold example files such as `tasks/RUN_LEDGER.example.json`
-and `tasks/TARGET_REPLAY_EVIDENCE.example.json`, but no concrete Task 108
-hash-bound cleanroom run reference or compact receipt that passes
-`pnpm cleanroom-harness:check`.
 
 ## Source Validation
 
 Command run from the source worktree:
 
 ```sh
-pnpm check:l12-cleanroom-generation:strict && pnpm cleanroom-scaffold:check && pnpm cleanroom-harness:check && pnpm unit-profile-coverage:check && git diff --check
+node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29 || true; pnpm check:l12-cleanroom-generation:strict && pnpm cleanroom-scaffold:check && pnpm cleanroom-harness:check && pnpm unit-profile-coverage:check && git diff --check
 ```
 
 Result: passed.
 
 Validation output summary:
 
+- `cleanroom harness acceptance passed.`
 - `l12 cleanroom generation gate passed in strict acceptance mode.`
 - `cleanroom scaffold renderer self-test OK.`
 - `cleanroom harness self-test OK.`
@@ -113,49 +140,43 @@ Read for this inspection:
 - `.references/srd-5.2.1/Classes/Warlock.md`
 - `.references/srd-5.2.1/Classes/Wizard.md`
 - `.references/srd-5.2.1/Rules-Glossary.md`, including `Charmed`,
-  `Creature Type`, and `Possession`
-- `UBIQUITOUS_LANGUAGE.md`, including `Creature`, `Stat Block`, and
-  `Creature Type`
+  `Creature`, `Creature Type`, `Possession`, and `Stat Block`
+- `UBIQUITOUS_LANGUAGE.md`, including `Charmed`, `Creature`, `Stat Block`,
+  and `Creature Type`
 
 No runtime, QNT, Surface, or cleanroom target rule behavior was changed in this
 source worktree.
 
-## Reviewer Loop
+## Reviewer Loop Notes
 
-- RAW/domain: the inspected SRD rows and spell/profile terminology match the
-  local SRD and ubiquitous-language terms listed above.
-- Architecture/connascence: no source runtime type, state, reducer, QNT, or
-  harness contract was changed; the note records existing machine-readable
-  artifact hashes instead of duplicating executable facts.
-- Cleanroom-authored-identity: the note names SRD row ids and the SRD Unit id at
-  allowed catalog/evidence boundaries; no production runtime behavior dispatches
-  on authored identity.
-- Ralph task quality: the inspection used exactly the latest dirty target named
-  by the task and did not substitute older targets, scaffold examples, source
-  strict passes, or diagnostic output for a cleanroom run reference.
-- Code review: documentation-only source change; no casts, assertions,
-  executable parser behavior, or state shape changes were introduced.
+- RAW/domain: the inspected receipt covers the willing touched creature target
+  protection, creature-type-scoped attack-roll Disadvantage, scoped Charmed and
+  possession prevention, and relevant-effect Saving Throw Advantage listed in
+  SRD 5.2.1.
+- Architecture/connascence: source changes are documentation-only and reference
+  target artifact hashes instead of copying cleanroom runtime state into source.
+- Cleanroom authored identity: the source note records SRD row ids and target
+  evidence handles at catalog/evidence boundaries only; no runtime dispatch was
+  introduced.
+- Ralph task quality: the checked target is exactly
+  `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`, not an older
+  preservation target.
+- Code review: no code paths changed; no assertions, runtime exceptions,
+  adapters, or duplicate state were introduced.
 
-## Blocker
+## Plan Impact
 
-Task 108 cannot be closed from the latest dirty target because the target lacks
-current concrete harness acceptance artifacts and fails
-`node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
-Per the task instructions, no older target, scaffold example, prose note, or
-diagnostic source check is a substitute for a passing hash-bound cleanroom run
-reference or compact receipt.
+Plan Impact: applied
 
-Plan Impact: update-required
-
-- Affected task `L12CEG-DU-052`: blocked until the latest dirty target produces
-  concrete Task 108 run artifacts (`RUN_LEDGER.json`, `START_GATE.json`,
-  `ENGINE_DEPTH_MANIFEST.json`, `STATE_OWNER_MANIFEST.json`,
-  `REVIEW_LOOP.json`, `DECIDER_DECISION.json`) and a run reference or compact
-  receipt covering the listed `protection_from_evil_and_good` rows.
-- Affected task `L12CEG-RP-001`: blocked for source-side closure until
-  `L12CEG-DU-052` is done or explicitly accepted as blocked by the decider.
-- Affected task `L12CEG-RP-002`: blocked for source-side closure until
-  `L12CEG-DU-052` is done or explicitly accepted as blocked by the decider.
-- Required plan edit: mark `L12CEG-DU-052` as blocked on latest dirty target
-  harness artifacts; mark `L12CEG-RP-001` and `L12CEG-RP-002` as still blocked
-  on this dirty unit proof task.
+- Affected task `L12CEG-DU-052`: completed for Unit
+  `protection_from_evil_and_good` based on the current latest dirty target
+  compact receipt above.
+- Affected task `L12CEG-RP-001`: unblocked with respect to
+  `L12CEG-DU-052`; `L12CEG-DU-002` was already closed by Task 58, so this
+  replay batch is runnable for source-side closure.
+- Affected task `L12CEG-RP-002`: unblocked with respect to
+  `L12CEG-DU-052` and is runnable for source-side closure.
+- Plan edit: `plans/RALPH_L12_CLEANROOM_REPLAY_BATCHES.md` marks
+  `L12CEG-DU-052` done, marks `L12CEG-RP-001` and `L12CEG-RP-002` todo, and
+  replaces stale latest-dirty-target blocker text with this accepted current
+  run reference.

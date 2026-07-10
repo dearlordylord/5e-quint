@@ -7,13 +7,13 @@
     {
       "number": 1,
       "id": "L12CEG-RP-001",
-      "status": "blocked",
+      "status": "todo",
       "title": "Replay spell.creature-type-protection-and-charm chunk 1/2 through catalog-after-substrate"
     },
     {
       "number": 2,
       "id": "L12CEG-RP-002",
-      "status": "blocked",
+      "status": "todo",
       "title": "Replay spell.creature-type-protection-and-charm chunk 2/2 through catalog-after-substrate"
     },
     {
@@ -649,7 +649,7 @@
     {
       "number": 108,
       "id": "L12CEG-DU-052",
-      "status": "todo",
+      "status": "done",
       "title": "Check protection_from_evil_and_good against latest dirty cleanroom"
     },
     {
@@ -1065,7 +1065,7 @@ with a concrete reason.
 
 ### Task 1 - L12CEG-RP-001
 
-Status: `blocked`
+Status: `todo`
 
 Goal:
 
@@ -1167,11 +1167,12 @@ Dependencies:
 - Completed prep plan task `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`.
 - Related dirty unit proof tasks listed above must be done or explicitly
   blocked before source-side closure for this replay batch.
-- Currently blocked by `L12CEG-DU-052`. `L12CEG-DU-002` closed the
-  `animal_friendship` portion from the latest dirty target compact receipt.
-  Task 131 repaired the latest dirty target's generic harness acceptance
-  surface for this driver; rerun the remaining related dirty-unit task before
-  source-side closure for these six rows.
+- Dirty-unit dependencies are closed for this replay batch:
+  `L12CEG-DU-002` closed the `animal_friendship` portion, and
+  `L12CEG-DU-052` closed the `protection_from_evil_and_good` portion from the
+  latest dirty target compact receipt. Source-side closure still requires this
+  replay batch's own current hash-bound cleanroom run reference or compact
+  receipt.
 
 One-Agent-Session Scope:
 
@@ -1201,16 +1202,15 @@ Plan Impact:
 
 `applied` only after this replay batch has a current hash-bound cleanroom run
 reference or compact receipt that covers the listed rows and passes
-`pnpm cleanroom-harness:check`. This task remains dependency-blocked by
-`L12CEG-DU-052` until that dirty-unit task closes or records a precise blocker.
-`L12CEG-DU-002` is closed for the `animal_friendship` rows by the current
-latest dirty target compact receipt. Do not mark the listed rows done from
+`pnpm cleanroom-harness:check`. Dirty-unit dependencies are now closed for this
+batch (`L12CEG-DU-002` and `L12CEG-DU-052`); this task is runnable for
+source-side closure but is not done. Do not mark the listed rows done from
 prose, old target files, scaffold examples, grouped selected-identity proof, or
 diagnostic tests.
 
 ### Task 2 - L12CEG-RP-002
 
-Status: `blocked`
+Status: `todo`
 
 Goal:
 
@@ -1307,9 +1307,10 @@ Dependencies:
 - Completed prep plan task `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`.
 - Related dirty unit proof tasks listed above must be done or explicitly
   blocked before source-side closure for this replay batch.
-- Currently blocked by `L12CEG-DU-052`. Task 131 repaired the latest dirty
-  target's generic harness acceptance surface for this driver; rerun the related
-  dirty-unit task before source-side closure for these two rows.
+- Dirty-unit dependency `L12CEG-DU-052` is closed for
+  `protection_from_evil_and_good` from the latest dirty target compact receipt.
+  Source-side closure still requires this replay batch's own current hash-bound
+  cleanroom run reference or compact receipt.
 
 One-Agent-Session Scope:
 
@@ -1339,9 +1340,9 @@ Plan Impact:
 
 `applied` only after this replay batch has a current hash-bound cleanroom run
 reference or compact receipt that covers the listed rows and passes
-`pnpm cleanroom-harness:check`. This task remains dependency-blocked by
-`L12CEG-DU-052` until that dirty-unit task closes or records a precise blocker.
-Do not mark the listed rows done from prose, old target files, scaffold
+`pnpm cleanroom-harness:check`. Dirty-unit dependency `L12CEG-DU-052` is now
+closed for this batch; this task is runnable for source-side closure but is not
+done. Do not mark the listed rows done from prose, old target files, scaffold
 examples, grouped selected-identity proof, or diagnostic tests.
 
 ### Task 3 - L12CEG-RP-003
@@ -14894,7 +14895,7 @@ repair.
 
 ### Task 108 - L12CEG-DU-052
 
-Status: `todo`
+Status: `done`
 
 Goal:
 
@@ -14919,8 +14920,8 @@ Input:
 Unit Metadata:
 
 - Unit id: `protection_from_evil_and_good`
-- Current task status: `planned-not-executed`
-- Current dirty cleanroom status: `pending-latest-dirty-target-check`
+- Current task status: `accepted`
+- Current dirty cleanroom status: `accepted-source-authorized-dirty-start`
 - Harness-run file schema: `target-l12-cleanroom-generation-evidence.v1`
 
 Rows:
@@ -15017,14 +15018,15 @@ concrete reasons for rejected notes.
 
 Plan Impact:
 
-`update-required`. The named latest dirty cleanroom target has the required
-copied L1-2 inputs for `protection_from_evil_and_good`, but it lacks concrete
-Task 108 harness acceptance artifacts: `RUN_LEDGER.json`, `START_GATE.json`,
-`ENGINE_DEPTH_MANIFEST.json`, `STATE_OWNER_MANIFEST.json`, `REVIEW_LOOP.json`,
-and `DECIDER_DECISION.json`. See
+`applied`. The latest dirty cleanroom target
+`/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29` has current
+harness acceptance artifacts and the hash-bound compact receipt
+`tasks/target-replay-evidence/T131-creature-type-protection-charm.json`
+(`009e7d28ecc02aba75ab232c3fff282c8f86ff3177231ae4e0ab854d88e59332`)
+covering the `protection_from_evil_and_good` replay entries. Source check
+`node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+passed. See
 `plans/ralph-artifacts/l12-cleanroom-generation/task-108-protection-from-evil-and-good-dirty-target-inspection.md`.
-Do not mark the listed rows done from prose, old target files, scaffold
-examples, or diagnostic tests.
 
 ### Task 109 - L12CEG-DU-053
 
