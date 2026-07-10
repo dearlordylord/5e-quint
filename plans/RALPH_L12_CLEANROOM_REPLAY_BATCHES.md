@@ -649,7 +649,7 @@
     {
       "number": 108,
       "id": "L12CEG-DU-052",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check protection_from_evil_and_good against latest dirty cleanroom"
     },
     {
@@ -980,7 +980,7 @@ implementation task records a concrete dependency through `Plan Impact`.
 | `L12CEG-DU-049` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
 | `L12CEG-DU-050` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
 | `L12CEG-DU-051` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-052` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
+| `L12CEG-DU-052` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-001-REFRESH-LATEST-DIRTY-TARGET-L12-INPUTS` |
 | `L12CEG-DU-053` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
 | `L12CEG-DU-054` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
 | `L12CEG-DU-055` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
@@ -14852,7 +14852,7 @@ repair.
 
 ### Task 108 - L12CEG-DU-052
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -14941,6 +14941,8 @@ Success Criteria:
 Dependencies:
 
 - Completed prep plan task `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`.
+- Target refresh task
+  `L12CEG-TG-001-REFRESH-LATEST-DIRTY-TARGET-L12-INPUTS`.
 - Related replay batches listed above consume this task's result before
   source-side closure.
 
@@ -14969,12 +14971,14 @@ concrete reasons for rejected notes.
 
 Plan Impact:
 
-`applied` only after the latest dirty cleanroom target produces a current
-hash-bound cleanroom run reference or compact receipt that passes
-`pnpm cleanroom-harness:check` and the source-side artifacts are updated. Use
-`update-required` if this Unit needs target implementation, stale input repair,
-task splitting, a different harness-run reference shape, or source corpus/harness
-repair.
+`update-required`. The named latest dirty cleanroom target has the required
+copied L1-2 inputs for `protection_from_evil_and_good`, but it lacks concrete
+Task 108 harness acceptance artifacts: `RUN_LEDGER.json`, `START_GATE.json`,
+`ENGINE_DEPTH_MANIFEST.json`, `STATE_OWNER_MANIFEST.json`, `REVIEW_LOOP.json`,
+and `DECIDER_DECISION.json`. See
+`plans/ralph-artifacts/l12-cleanroom-generation/task-108-protection-from-evil-and-good-dirty-target-inspection.md`.
+Do not mark the listed rows done from prose, old target files, scaffold
+examples, or diagnostic tests.
 
 ### Task 109 - L12CEG-DU-053
 
