@@ -48,6 +48,16 @@ run multiple checklists, but each checklist result must be recorded separately.
   API path.
 - Equal expected/observed projection hashes without the matching source record
   are rejected.
+- `tasks/RUN_LEDGER.json` records `cleanroomRunArtifact` for every accepted
+  evidence file: either a compact receipt whose SHA-256 matches the evidence
+  JSON or a retained run artifact handle with its own SHA-256 plus receipt path
+  and hash. Retained artifacts use `retainedBy` `target-repo`,
+  `target-artifact-store`, or `external-artifact-store`, never `source-repo`;
+  `target-repo` handles are relative `target-artifacts/` paths and
+  their local file hash matches `contentSha256`; artifact-store handles are
+  URI-like.
+- Raw cleanroom logs are retained in the target or external artifact store;
+  they are not checked into source or accepted as source close artifacts.
 - Focused target-language tests are listed only as diagnostics.
 
 ### verification-contract

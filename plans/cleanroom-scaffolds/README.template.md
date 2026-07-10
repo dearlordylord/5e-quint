@@ -64,13 +64,18 @@ Target profile: `{{targetProfileId}}`. Target package/tooling:
 
 The target test suite is also the conformance lane: tasks with applicable
 `.mbt.qnt` drivers must wire them through {{quintBindingName}} and emit
-target replay evidence. Target-language tests may supplement diagnosis, but
-they do not close source branch coverage.
+target replay evidence as a compact source-checkable receipt or as a
+hash-bound reference to a retained cleanroom run artifact. Target-language
+tests may supplement diagnosis, but they do not close source branch coverage.
 Target replay evidence must cite the copied L1-2 artifact hashes in
 `l12CleanroomGeneration`; grouped selected-identity evidence and source support
 passes are not accepted cleanroom proof for executable L1-2 rows.
 Dirty cleanroom ledgers, previous target adapters, prior validation reports,
 and implementation history are not acceptance evidence.
+Detailed logs stay in the target repo or external artifact store. Do not check
+raw cleanroom logs into the source repo as a close condition; return only the
+compact receipt or retained-artifact handle and SHA-256 digest that the copied
+harness can verify.
 
 {{verificationCommandsMarkdown}}
 
@@ -91,4 +96,11 @@ Every accepted task records:
 
 `tasks/RUN_LEDGER.json` is the machine-readable run ledger. The validation
 report is the human-readable view generated from it. These JSON artifacts are
-the acceptance contract.
+the acceptance contract. Each `targetReplayEvidence[]` row records
+`cleanroomRunArtifact`: use `tag: "compact-receipt"` when the evidence JSON is
+the complete source-checkable receipt, or `tag: "retained-run-artifact"` when
+detailed logs remain in the target or external store and the ledger records
+`retainedBy` as `target-repo`, `target-artifact-store`, or
+`external-artifact-store` plus the handle and content hash. Use relative
+`target-artifacts/` handles for target-repo retention; the local file hash must
+match `contentSha256`. Use URI-like handles for artifact-store retention.

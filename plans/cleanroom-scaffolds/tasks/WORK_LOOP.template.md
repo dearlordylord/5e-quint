@@ -137,7 +137,9 @@ For the selected branch set:
     coverage.
 13. Run all required verification commands.
 14. Write target replay evidence under `tasks/target-replay-evidence/`,
-    matching `tasks/TARGET_REPLAY_EVIDENCE.example.json`.
+    matching `tasks/TARGET_REPLAY_EVIDENCE.example.json`, and record a
+    `cleanroomRunArtifact` entry in `tasks/RUN_LEDGER.json` for each accepted
+    evidence file.
 15. Update `tasks/VALIDATION_REPORT.md`.
 16. Update `tasks/BLOCKERS.md` only if the allowed corpus or target
     implementation remains insufficient.
@@ -178,8 +180,15 @@ Generated branch coverage:
 Target replay evidence:
 
 - Evidence file: `tasks/target-replay-evidence/<file>.json`
+- Cleanroom run artifact: `compact-receipt` in `tasks/RUN_LEDGER.json`, or
+  `retained-run-artifact` with an external/target-retained handle and SHA-256
+  digest.
 - Target profile SHA-256: `{{targetProfileSha256}}`
 - Reproduction seed or trace id: `<seed or trace id>`
+
+Keep detailed target logs in the target repo or external artifact store. Do not
+check raw cleanroom logs into the source repo as a branch-coverage close
+condition.
 
 Remaining gaps:
 

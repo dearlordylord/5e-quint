@@ -105,6 +105,16 @@ artifacts and target replay evidence; a task is not accepted until it passes.
 - Record harness-generated target replay evidence under
   `tasks/target-replay-evidence/`.
 - Match the exact JSON shape in `tasks/TARGET_REPLAY_EVIDENCE.example.json`.
+- Keep detailed run logs in this cleanroom repo or in an external artifact
+  store. Do not check raw cleanroom logs into the source repo to close a task.
+  `tasks/RUN_LEDGER.json` must return a source-checkable
+  `cleanroomRunArtifact` for each accepted evidence file: either a
+  `compact-receipt` whose content hash matches the evidence JSON, or a
+  `retained-run-artifact` handle with `retainedBy` set to `target-repo`,
+  `target-artifact-store`, or `external-artifact-store`, its own SHA-256, and
+  the compact receipt path and hash. `target-repo` handles must be relative
+  `target-artifacts/` paths whose file hash matches `contentSha256`;
+  artifact-store handles must be URI-like.
 - Each replay evidence file must name `cleanroomManifestSourceCommitSha` from
   `cleanroom-input/MANIFEST.md`, `sourceBranchInventorySha256`, target profile
   id, `targetProfileSha256` computed from canonical JSON with sorted keys, and
@@ -146,8 +156,9 @@ Every implementation task must update:
 - `tasks/history/<taskId>/*.json` — immutable copies of the accepted task's
   start, engine-depth, state-owner, review-loop, and decider artifacts;
 - `tasks/RUN_LEDGER.json` — machine-readable append-only run ledger with task
-  ids, selected drivers, artifact hashes, target replay evidence refs, command
-  results, manifest source commit SHA, and source branch inventory SHA;
+  ids, selected drivers, artifact hashes, target replay evidence refs,
+  cleanroom run artifact receipts or hash-bound handles, command results,
+  manifest source commit SHA, and source branch inventory SHA;
 - `tasks/VALIDATION_REPORT.md` — manifest source commit SHA, source branch
   inventory hash, run-ledger citation, allowed inputs used, behavior
   implemented, generated branch coverage table, verification results, seeds or

@@ -36,6 +36,12 @@ findings converge. Record the decision in `tasks/DECIDER_DECISION.json`.
 - Passing target replay evidence with equal expected/observed projection hashes
   but no matching observed projection source, target entrypoint sequence, and
   reducer/public API path.
+- Target replay evidence missing `tasks/RUN_LEDGER.json`
+  `cleanroomRunArtifact`, or a retained artifact handle without a SHA-256
+  content digest and compact receipt path/hash.
+- Raw cleanroom logs checked into source, or cited as the source close
+  condition instead of a compact receipt or hash-bound retained artifact
+  reference.
 - Public production symbol derived from a QNT action or witness field name.
 - Durable field without owner and derivability classification.
 - Unresolved reasonable reviewer finding.

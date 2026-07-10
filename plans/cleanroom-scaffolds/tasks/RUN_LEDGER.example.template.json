@@ -38,6 +38,11 @@
         {
           "path": "tasks/target-replay-evidence/T001-<driver>.json",
           "sha256": "<sha256>",
+          "cleanroomRunArtifact": {
+            "tag": "compact-receipt",
+            "receiptPath": "tasks/target-replay-evidence/T001-<driver>.json",
+            "contentSha256": "<same sha256 as this compact receipt>"
+          },
           "evidenceRefs": [
             "tasks/target-replay-evidence/T001-<driver>.json#driver:<driver path>#<branch family>:<branch action>#trace:<trace id>"
           ]

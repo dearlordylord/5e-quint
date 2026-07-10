@@ -12,6 +12,7 @@
     "artifacts": {{l12CleanroomArtifactsJson}},
     "note": "These hashes bind target replay evidence to copied SRD L1-2 source artifacts; they are not replay proof by themselves."
   },
+  "cleanroomRunArtifactNote": "Record the compact-receipt hash or retained-run-artifact handle in tasks/RUN_LEDGER.json targetReplayEvidence[].cleanroomRunArtifact. For retained-run-artifact, retainedBy must be target-repo, target-artifact-store, or external-artifact-store; target-repo handles must be relative target-artifacts/ paths whose file hash matches contentSha256, and artifact-store handles must be URI-like. Keep detailed run logs in the target repo or external artifact store; do not check raw cleanroom logs into source as a close condition.",
   "runs": [
     {
       "evidenceKind": "target-qnt-mbt-replay",

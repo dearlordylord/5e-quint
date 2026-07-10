@@ -63,6 +63,7 @@ const stateOwners = new Set([
 const harnessWitnessProtocolNames = [
   "mbt::actionTaken",
   "mbt::nondetPicks",
+  "cleanroomRunArtifact",
   "observedActionTaken",
   "traceId",
   "qntFileSha256",
@@ -83,6 +84,27 @@ const harnessWitnessProtocolNames = [
   "checkedTargetStateFields",
   "harnessTestPath",
 ];
+
+const cleanroomRunArtifactReceiptProtocolNames = [
+  "contentSha256",
+  "handle",
+  "receiptPath",
+  "receiptSha256",
+  "retainedBy",
+];
+
+const compactCleanroomReceiptTag = "compact-receipt";
+const retainedCleanroomRunArtifactTag = "retained-run-artifact";
+const cleanroomRunArtifactTags = new Set([
+  compactCleanroomReceiptTag,
+  retainedCleanroomRunArtifactTag,
+]);
+const cleanroomRunArtifactRetainers = new Set([
+  "target-repo",
+  "target-artifact-store",
+  "external-artifact-store",
+]);
+const targetRetainedRunArtifactPrefix = "target-artifacts/";
 
 const validatorFiles = [
   "scripts/check-cleanroom-harness.cjs",
@@ -1047,6 +1069,108 @@ function validateArtifactRef({ rootPath, artifact, context, issues }) {
   return filePath;
 }
 
+function validateCleanroomRunArtifactRef({
+  rootPath,
+  artifact,
+  evidenceRecord,
+  context,
+  issues,
+}) {
+  if (!isRecord(artifact)) {
+    issues.push(`${context} must be an object.`);
+    return;
+  }
+  if (!cleanroomRunArtifactTags.has(artifact.tag)) {
+    issues.push(
+      `${context}.tag must be one of ${Array.from(cleanroomRunArtifactTags).join(", ")}.`,
+    );
+    return;
+  }
+  validateString(artifact.contentSha256, `${context}.contentSha256`, issues);
+  if (
+    typeof artifact.contentSha256 === "string" &&
+    !/^[0-9a-f]{64}$/i.test(artifact.contentSha256)
+  ) {
+    issues.push(`${context}.contentSha256 must be a sha256 hex digest.`);
+  }
+  if (artifact.tag === compactCleanroomReceiptTag) {
+    if (artifact.receiptPath !== evidenceRecord.path) {
+      issues.push(`${context}.receiptPath must match targetReplayEvidence path ${evidenceRecord.path}.`);
+    }
+    if (artifact.contentSha256 !== evidenceRecord.sha256) {
+      issues.push(`${context}.contentSha256 must match compact receipt sha256 ${evidenceRecord.sha256}.`);
+    }
+    return;
+  }
+
+  validateString(artifact.handle, `${context}.handle`, issues);
+  validateString(artifact.retainedBy, `${context}.retainedBy`, issues);
+  if (
+    typeof artifact.retainedBy === "string" &&
+    !cleanroomRunArtifactRetainers.has(artifact.retainedBy)
+  ) {
+    issues.push(`${context}.retainedBy must be one of ${Array.from(cleanroomRunArtifactRetainers).join(", ")}.`);
+  }
+  if (typeof artifact.handle === "string") {
+    const hasExternalScheme = /^[a-z][a-z0-9+.-]*:/i.test(artifact.handle);
+    const isTargetRetainedPath =
+      isSafeRelativePath(artifact.handle) &&
+      artifact.handle.startsWith(targetRetainedRunArtifactPrefix);
+    if (!hasExternalScheme && !isSafeRelativePath(artifact.handle)) {
+      issues.push(`${context}.handle must be an external URI-like handle or a target-retained relative path without parent segments.`);
+    }
+    if (artifact.retainedBy === "target-repo" && !isTargetRetainedPath) {
+      issues.push(`${context}.handle must be under ${targetRetainedRunArtifactPrefix} when retainedBy is target-repo.`);
+    }
+    if (artifact.retainedBy === "target-repo" && isTargetRetainedPath) {
+      const retainedPath = path.join(rootPath, artifact.handle);
+      if (!fs.existsSync(retainedPath)) {
+        issues.push(`${context}.handle references missing target-retained artifact ${artifact.handle}.`);
+      } else if (
+        typeof artifact.contentSha256 === "string" &&
+        /^[0-9a-f]{64}$/i.test(artifact.contentSha256)
+      ) {
+        const actualSha = sha256File(retainedPath);
+        if (actualSha !== artifact.contentSha256) {
+          issues.push(`${context}.contentSha256 is stale for target-retained artifact ${artifact.handle}: expected ${artifact.contentSha256}, got ${actualSha}.`);
+        }
+      }
+    }
+    if (
+      (artifact.retainedBy === "target-artifact-store" ||
+        artifact.retainedBy === "external-artifact-store") &&
+      !hasExternalScheme
+    ) {
+      issues.push(`${context}.handle must be URI-like when retainedBy is ${artifact.retainedBy}.`);
+    }
+    if (/tasks\/target-replay-evidence|tasks\/history/i.test(artifact.handle)) {
+      issues.push(`${context}.handle must not point at checked-in target replay evidence or history artifacts.`);
+    }
+    if (
+      !hasExternalScheme &&
+      isSafeRelativePath(artifact.handle) &&
+      artifact.handle !== evidenceRecord.path &&
+      !isTargetRetainedPath &&
+      fs.existsSync(path.join(rootPath, artifact.handle))
+    ) {
+      issues.push(`${context}.handle must not resolve to a checked-in source artifact; retain detailed runs in the target or external artifact store and return only the hash-bound handle.`);
+    }
+  }
+  if (artifact.receiptPath !== evidenceRecord.path) {
+    issues.push(`${context}.receiptPath must match source-checkable receipt path ${evidenceRecord.path}.`);
+  }
+  validateString(artifact.receiptSha256, `${context}.receiptSha256`, issues);
+  if (
+    typeof artifact.receiptSha256 === "string" &&
+    !/^[0-9a-f]{64}$/i.test(artifact.receiptSha256)
+  ) {
+    issues.push(`${context}.receiptSha256 must be a sha256 hex digest.`);
+  }
+  if (artifact.receiptSha256 !== evidenceRecord.sha256) {
+    issues.push(`${context}.receiptSha256 must match source-checkable receipt sha256 ${evidenceRecord.sha256}.`);
+  }
+}
+
 function evidenceRefsFromSummary(summary) {
   return new Set(
     Array.from(summary.coveredEvidenceRefsByObligation.values()).flatMap((refs) =>
@@ -1200,8 +1324,18 @@ function validateLedgerEntry({
       if (!evidenceRecord.path.startsWith("tasks/target-replay-evidence/")) {
         issues.push(`${evidenceContext}.path must be under tasks/target-replay-evidence/.`);
       }
+      if (!evidenceRecord.path.endsWith(".json")) {
+        issues.push(`${evidenceContext}.path must be a compact JSON receipt, not a raw cleanroom log.`);
+      }
       ledgerEvidencePaths.add(evidenceRecord.path);
     }
+    validateCleanroomRunArtifactRef({
+      rootPath,
+      artifact: evidenceRecord?.cleanroomRunArtifact,
+      evidenceRecord,
+      context: `${evidenceContext}.cleanroomRunArtifact`,
+      issues,
+    });
     if (!Array.isArray(evidenceRecord?.evidenceRefs) || evidenceRecord.evidenceRefs.length === 0) {
       issues.push(`${evidenceContext}.evidenceRefs must be a non-empty array.`);
     } else {
@@ -1382,12 +1516,22 @@ function forbiddenWitnessNamesForSelection(selected) {
       ...protocolNamesForObligations(selected),
       ...sampledInputNames,
       ...harnessWitnessProtocolNames,
+      ...cleanroomRunArtifactReceiptProtocolNames,
     ]),
   ).sort();
 }
 
 function productionSourceScanWitnessNamesForSelection(selected) {
-  return forbiddenWitnessNamesForSelection(selected);
+  const sampledInputNames = (selected.sampledInputs ?? []).map(
+    (input) => input.pickName,
+  );
+  return Array.from(
+    new Set([
+      ...protocolNamesForObligations(selected),
+      ...sampledInputNames,
+      ...harnessWitnessProtocolNames,
+    ]),
+  ).sort();
 }
 
 function validateManifestPath({
@@ -2479,6 +2623,11 @@ function writeFixtureHistoryAndLedger({
           {
             path: evidencePath,
             sha256: sha256File(path.join(rootPath, evidencePath)),
+            cleanroomRunArtifact: {
+              tag: compactCleanroomReceiptTag,
+              receiptPath: evidencePath,
+              contentSha256: sha256File(path.join(rootPath, evidencePath)),
+            },
             evidenceRefs,
           },
         ],
@@ -2514,7 +2663,14 @@ function updateFixtureLedgerEvidence(rootPath, mutate) {
   writeJson(evidencePath, evidence);
   const ledgerPath = path.join(rootPath, "tasks/RUN_LEDGER.json");
   const ledger = readJson(ledgerPath);
-  ledger.entries[0].targetReplayEvidence[0].sha256 = sha256File(evidencePath);
+  const sha256 = sha256File(evidencePath);
+  ledger.entries[0].targetReplayEvidence[0].sha256 = sha256;
+  const runArtifact = ledger.entries[0].targetReplayEvidence[0].cleanroomRunArtifact;
+  if (runArtifact?.tag === compactCleanroomReceiptTag) {
+    runArtifact.contentSha256 = sha256;
+  } else if (runArtifact?.tag === retainedCleanroomRunArtifactTag) {
+    runArtifact.receiptSha256 = sha256;
+  }
   writeJson(ledgerPath, ledger);
 }
 
@@ -2778,6 +2934,7 @@ function validFixture(rootPath) {
           "hit",
           "roll",
           ...harnessWitnessProtocolNames,
+          ...cleanroomRunArtifactReceiptProtocolNames,
         ],
         targetReplayEvidence: ["tasks/target-replay-evidence/mm.json"],
       },
@@ -3003,6 +3160,153 @@ function runSelfTest() {
         });
       },
       "l12CleanroomGeneration.artifacts must include cleanroom-input/l12-cleanroom-generation/srd-l12-denominator.json with manifest hash",
+    );
+    expectFailure(
+      validRoot,
+      profile,
+      "missing-cleanroom-run-artifact",
+      (rootPath) => {
+        const ledgerPath = path.join(rootPath, "tasks/RUN_LEDGER.json");
+        const ledger = readJson(ledgerPath);
+        delete ledger.entries[0].targetReplayEvidence[0].cleanroomRunArtifact;
+        writeJson(ledgerPath, ledger);
+      },
+      "cleanroomRunArtifact must be an object",
+    );
+    expectFailure(
+      validRoot,
+      profile,
+      "raw-log-run-artifact-handle",
+      (rootPath) => {
+        const ledgerPath = path.join(rootPath, "tasks/RUN_LEDGER.json");
+        const ledger = readJson(ledgerPath);
+        ledger.entries[0].targetReplayEvidence[0].cleanroomRunArtifact = {
+          tag: retainedCleanroomRunArtifactTag,
+          handle: "tasks/history/T001/raw-run.log",
+          retainedBy: "source-repo",
+          contentSha256: sha256Text("raw log"),
+          receiptPath: "tasks/target-replay-evidence/mm.json",
+          receiptSha256: ledger.entries[0].targetReplayEvidence[0].sha256,
+        };
+        writeJson(ledgerPath, ledger);
+      },
+      "must not point at checked-in target replay evidence or history artifacts",
+    );
+    expectFailure(
+      validRoot,
+      profile,
+      "source-repo-retained-run-artifact",
+      (rootPath) => {
+        const ledgerPath = path.join(rootPath, "tasks/RUN_LEDGER.json");
+        const ledger = readJson(ledgerPath);
+        ledger.entries[0].targetReplayEvidence[0].cleanroomRunArtifact = {
+          tag: retainedCleanroomRunArtifactTag,
+          handle: "source-logs/T001/raw-run.log",
+          retainedBy: "source-repo",
+          contentSha256: sha256Text("source retained raw log"),
+          receiptPath: "tasks/target-replay-evidence/mm.json",
+          receiptSha256: ledger.entries[0].targetReplayEvidence[0].sha256,
+        };
+        writeJson(ledgerPath, ledger);
+      },
+      "retainedBy must be one of target-repo, target-artifact-store, external-artifact-store",
+    );
+    expectFailure(
+      validRoot,
+      profile,
+      "checked-in-source-run-artifact",
+      (rootPath) => {
+        const sourceLogPath = path.join(rootPath, "source-logs/T001/raw-run.log");
+        fs.mkdirSync(path.dirname(sourceLogPath), { recursive: true });
+        fs.writeFileSync(sourceLogPath, "raw run log\n");
+        const ledgerPath = path.join(rootPath, "tasks/RUN_LEDGER.json");
+        const ledger = readJson(ledgerPath);
+        ledger.entries[0].targetReplayEvidence[0].cleanroomRunArtifact = {
+          tag: retainedCleanroomRunArtifactTag,
+          handle: "source-logs/T001/raw-run.log",
+          retainedBy: "target-repo",
+          contentSha256: sha256Text("checked-in source raw log"),
+          receiptPath: "tasks/target-replay-evidence/mm.json",
+          receiptSha256: ledger.entries[0].targetReplayEvidence[0].sha256,
+        };
+        writeJson(ledgerPath, ledger);
+      },
+      "must not resolve to a checked-in source artifact",
+    );
+    expectSuccess(
+      validRoot,
+      profile,
+      "retained-run-artifact-reference",
+      (rootPath) => {
+        const ledgerPath = path.join(rootPath, "tasks/RUN_LEDGER.json");
+        const ledger = readJson(ledgerPath);
+        ledger.entries[0].targetReplayEvidence[0].cleanroomRunArtifact = {
+          tag: retainedCleanroomRunArtifactTag,
+          handle: "artifact-store://synthetic-alpha/T001/mm-run",
+          retainedBy: "target-artifact-store",
+          contentSha256: sha256Text("retained run artifact"),
+          receiptPath: "tasks/target-replay-evidence/mm.json",
+          receiptSha256: ledger.entries[0].targetReplayEvidence[0].sha256,
+        };
+        writeJson(ledgerPath, ledger);
+      },
+    );
+    expectSuccess(
+      validRoot,
+      profile,
+      "target-retained-run-artifact-path",
+      (rootPath) => {
+        const retainedPath = path.join(rootPath, "target-artifacts/T001/mm-run.json");
+        fs.mkdirSync(path.dirname(retainedPath), { recursive: true });
+        fs.writeFileSync(retainedPath, "{}\n");
+        const ledgerPath = path.join(rootPath, "tasks/RUN_LEDGER.json");
+        const ledger = readJson(ledgerPath);
+        ledger.entries[0].targetReplayEvidence[0].cleanroomRunArtifact = {
+          tag: retainedCleanroomRunArtifactTag,
+          handle: "target-artifacts/T001/mm-run.json",
+          retainedBy: "target-repo",
+          contentSha256: sha256File(retainedPath),
+          receiptPath: "tasks/target-replay-evidence/mm.json",
+          receiptSha256: ledger.entries[0].targetReplayEvidence[0].sha256,
+        };
+        writeJson(ledgerPath, ledger);
+      },
+    );
+    expectFailure(
+      validRoot,
+      profile,
+      "stale-target-retained-run-artifact-hash",
+      (rootPath) => {
+        const retainedPath = path.join(rootPath, "target-artifacts/T001/mm-run.json");
+        fs.mkdirSync(path.dirname(retainedPath), { recursive: true });
+        fs.writeFileSync(retainedPath, "{}\n");
+        const ledgerPath = path.join(rootPath, "tasks/RUN_LEDGER.json");
+        const ledger = readJson(ledgerPath);
+        ledger.entries[0].targetReplayEvidence[0].cleanroomRunArtifact = {
+          tag: retainedCleanroomRunArtifactTag,
+          handle: "target-artifacts/T001/mm-run.json",
+          retainedBy: "target-repo",
+          contentSha256: sha256Text("stale retained artifact hash"),
+          receiptPath: "tasks/target-replay-evidence/mm.json",
+          receiptSha256: ledger.entries[0].targetReplayEvidence[0].sha256,
+        };
+        writeJson(ledgerPath, ledger);
+      },
+      "contentSha256 is stale for target-retained artifact",
+    );
+    expectSuccess(
+      validRoot,
+      profile,
+      "generic-handle-domain-api",
+      (rootPath) => {
+        fs.appendFileSync(
+          path.join(rootPath, "engine/rules/force_projectiles.aster"),
+          "fn handleAttack(input) = input\n",
+        );
+        updateFixtureLedgerArtifact(rootPath, "engineDepth", (manifest) => {
+          manifest.productionModulesExtended[0].domainApis.push("handleAttack");
+        });
+      },
     );
     expectFailure(
       validRoot,

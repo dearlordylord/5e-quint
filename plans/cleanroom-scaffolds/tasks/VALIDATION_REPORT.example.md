@@ -47,11 +47,15 @@ Generated branch coverage:
 Target replay evidence:
 
 - Evidence file: `tasks/target-replay-evidence/<file>.json`
+- Cleanroom run artifact: `compact-receipt` or `retained-run-artifact` recorded
+  in `tasks/RUN_LEDGER.json` with a SHA-256 content hash.
 - Target profile: `{{targetProfileId}}`
 - Target profile SHA-256: `{{targetProfileSha256}}`
 - Quint binding: {{quintBindingName}}
 - Reproduction seed or trace id: `<seed or trace id>`
 - Accepted evidence refs use `tasks/target-replay-evidence/<file>.json#driver:<driver path>#<branch family>:<branch action>#trace:<trace id>`.
+  Detailed logs remain in the target repo or external artifact store; raw
+  cleanroom logs are not source close artifacts.
 
 Harness artifacts:
 

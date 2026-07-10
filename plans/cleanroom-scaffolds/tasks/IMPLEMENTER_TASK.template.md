@@ -125,10 +125,21 @@ and record a bootstrap blocker in `tasks/BLOCKERS.md`.
   public API path. Equal expected/observed projection hashes without that
   source record do not close branch coverage. Diagnostic target-language tests
   are allowed, but they do not close branch coverage.
+- Retain detailed run logs in the target repo or external artifact store, not
+  as source close artifacts. Each accepted evidence file must have a
+  `tasks/RUN_LEDGER.json` `cleanroomRunArtifact` entry: use
+  `compact-receipt` when the evidence JSON is the complete source-checkable
+  receipt, or `retained-run-artifact` when a target/external handle and
+  SHA-256 digest identify the retained detailed artifact. `retainedBy` must be
+  `target-repo`, `target-artifact-store`, or `external-artifact-store`, never
+  `source-repo`; `target-repo` handles must be relative `target-artifacts/`
+  paths whose file hash matches `contentSha256`, and artifact-store handles
+  must be URI-like.
 - Copy the accepted task's rolling artifacts into
   `tasks/history/<taskId>/`, then append `tasks/RUN_LEDGER.json` with the
-  history artifact hashes, target replay evidence refs, command results,
-  manifest source commit SHA, and source branch inventory SHA.
+  history artifact hashes, target replay evidence refs, cleanroom run artifact
+  receipt or handle, command results, manifest source commit SHA, and source
+  branch inventory SHA.
 - Update `tasks/VALIDATION_REPORT.md` from accepted target replay evidence,
   not from prose claims, generated report rows, or adapter-local expected
   routes. The report is the readable view; executable route-event provenance
