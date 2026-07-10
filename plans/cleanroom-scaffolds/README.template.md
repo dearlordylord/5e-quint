@@ -16,6 +16,11 @@ diagnostic route selection lives in
 `cleanroom-input/branch-coverage/reducer-route-inventory.json`.
 The `level-1-5-cleanroom-route-v1.freshCleanroomPackageGate` record in that
 inventory is the fresh package acceptance slice.
+SRD L1-2 cleanroom generation artifacts live in
+`cleanroom-input/l12-cleanroom-generation/` and are source inputs, not target
+replay evidence:
+
+{{l12CleanroomArtifactsMarkdown}}
 
 Cleanroom boundary rule: production reducers route by runtime shape and typed
 facts, not authored or fixture identity. Using fixture identity to choose
@@ -29,8 +34,8 @@ Target profile: `{{targetProfileId}}`. Target package/tooling:
 ## Layout
 
 - `cleanroom-input/` — the only rules corpus (RAW, QNT, domain, source branch
-  inventory, reducer route inventory, and guidance pack). Read-only; populated
-  by the source repo's sync script.
+  inventory, reducer route inventory, SRD L1-2 cleanroom generation artifacts,
+  and guidance pack). Read-only; populated by the source repo's sync script.
 - `BOOTSTRAP_QUERY.md` — owner-facing query for starting a cleanroom session
   after the corpus and scaffold files have been copied here.
 - `{{enginePath}}` — target implementation and its tests.
@@ -61,6 +66,9 @@ The target test suite is also the conformance lane: tasks with applicable
 `.mbt.qnt` drivers must wire them through {{quintBindingName}} and emit
 target replay evidence. Target-language tests may supplement diagnosis, but
 they do not close source branch coverage.
+Target replay evidence must cite the copied L1-2 artifact hashes in
+`l12CleanroomGeneration`; grouped selected-identity evidence and source support
+passes are not accepted cleanroom proof for executable L1-2 rows.
 Dirty cleanroom ledgers, previous target adapters, prior validation reports,
 and implementation history are not acceptance evidence.
 

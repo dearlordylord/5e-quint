@@ -78,6 +78,11 @@ function validateArchive(archivePath) {
     "./cleanroom-input/MANIFEST.md",
     "./cleanroom-input/branch-coverage/source-branch-inventory.json",
     "./cleanroom-input/branch-coverage/reducer-route-inventory.json",
+    "./cleanroom-input/l12-cleanroom-generation/capability-fact-coverage-matrix.json",
+    "./cleanroom-input/l12-cleanroom-generation/route-proof-inventory.json",
+    "./cleanroom-input/l12-cleanroom-generation/srd-l12-denominator.json",
+    "./cleanroom-input/l12-cleanroom-generation/srd-row-generic-fact-map.json",
+    "./cleanroom-input/l12-cleanroom-generation/verifier-gate-spec.json",
   ]);
   const listing = execFileSync("tar", ["-tzf", archivePath], {
     encoding: "utf8",

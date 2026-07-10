@@ -142,6 +142,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
         kind: "attackSpellDamageAddition",
         sourceSpellId: trueStrikeUnitId,
         sourceCombatantId: spellCasterId,
+        sourceProcedure: "spellHostedWeaponAttack",
         damage: {
           expr: { dice: 1, dieSize: 6 },
           damageType: "radiant",

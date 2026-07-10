@@ -58,6 +58,37 @@ const ALLOWLIST = [
     transform: "cleanroom-paths",
   },
   {
+    sourceRoot: "plans/ralph-artifacts/l12-cleanroom-generation/srd-l12-denominator.json",
+    destRoot: "l12-cleanroom-generation/srd-l12-denominator.json",
+    kind: "file",
+  },
+  {
+    sourceRoot:
+      "plans/ralph-artifacts/l12-cleanroom-generation/capability-fact-coverage-matrix.json",
+    destRoot: "l12-cleanroom-generation/capability-fact-coverage-matrix.json",
+    kind: "file",
+  },
+  {
+    sourceRoot:
+      "plans/ralph-artifacts/l12-cleanroom-generation/route-proof-inventory.json",
+    destRoot: "l12-cleanroom-generation/route-proof-inventory.json",
+    kind: "file",
+    transform: "cleanroom-paths",
+  },
+  {
+    sourceRoot:
+      "plans/ralph-artifacts/l12-cleanroom-generation/srd-row-generic-fact-map.json",
+    destRoot: "l12-cleanroom-generation/srd-row-generic-fact-map.json",
+    kind: "file",
+    transform: "cleanroom-paths",
+  },
+  {
+    sourceRoot:
+      "plans/ralph-artifacts/l12-cleanroom-generation/verifier-gate-spec.json",
+    destRoot: "l12-cleanroom-generation/verifier-gate-spec.json",
+    kind: "file",
+  },
+  {
     sourceRoot: "plans/cleanroom-guidance",
     destRoot: "guidance",
     kind: "tree",
@@ -364,6 +395,11 @@ function runSelfTest() {
   const routeInventoryCopy = copies.find(
     (copy) => copy.dest === "branch-coverage/reducer-route-inventory.json",
   );
+  const l12ArtifactDestinations = new Set(
+    copies
+      .filter((copy) => copy.dest.startsWith("l12-cleanroom-generation/"))
+      .map((copy) => copy.dest),
+  );
   if (
     inventoryCopy === undefined ||
     inventoryCopy.transform !== "source-branch-inventory-cleanroom-paths"
@@ -379,6 +415,17 @@ function runSelfTest() {
     fail(
       "reducer route inventory copy must preserve its cleanroom path transform.",
     );
+  }
+  for (const required of [
+    "l12-cleanroom-generation/srd-l12-denominator.json",
+    "l12-cleanroom-generation/capability-fact-coverage-matrix.json",
+    "l12-cleanroom-generation/route-proof-inventory.json",
+    "l12-cleanroom-generation/srd-row-generic-fact-map.json",
+    "l12-cleanroom-generation/verifier-gate-spec.json",
+  ]) {
+    if (!l12ArtifactDestinations.has(required)) {
+      fail(`L1-2 cleanroom artifact is not copied: ${required}`);
+    }
   }
   const transformed = JSON.parse(
     transformSourceBranchInventory(
@@ -540,6 +587,7 @@ function main() {
     "- `qnt/**`: active QNT specs, MBT drivers, and rule-core slices.",
     "- `branch-coverage/source-branch-inventory.json`: source branch obligations.",
     "- `branch-coverage/reducer-route-inventory.json`: source reducer-route task selection.",
+    "- `l12-cleanroom-generation/*.json`: SRD L1-2 denominator, capability matrix, route inventory, row mapping, and verifier gate spec.",
     "- `guidance/**`: curated source-side cleanroom guidance.",
     "- `domain/UBIQUITOUS_LANGUAGE.md`: domain language.",
     "- `domain/CLEANROOM_ASSUMPTIONS.md`: curated RAW-ambiguity decisions.",

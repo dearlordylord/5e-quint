@@ -4,14 +4,13 @@
     "target": "ES2022",
     "jsx": "react-jsx",
     "module": "ESNext",
-    "baseUrl": ".",
     "paths": {
       "#/*": ["./src/*"],
       "@/*": ["./src/*"],
       "@dnd/mcp/experimental-admin-mirror-contract": ["../mcp/src/admin-mirror-contract.ts"]
     },
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["vite/client"],
+    "types": ["vite/client", "node"],
     "allowJs": true,
 
     /* Bundler mode */

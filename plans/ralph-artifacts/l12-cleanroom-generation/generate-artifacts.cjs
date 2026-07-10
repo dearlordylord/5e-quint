@@ -48,6 +48,14 @@ function unique(items) {
   return [...new Set(items)].sort();
 }
 
+function uniqueAssignments(assignments) {
+  return [
+    ...new Map(
+      assignments.map((assignment) => [assignment.driverPath, assignment]),
+    ).values(),
+  ].sort((left, right) => left.driverPath.localeCompare(right.driverPath));
+}
+
 function normalizeId(value) {
   return String(value ?? "")
     .toLowerCase()
@@ -66,7 +74,8 @@ function routeConnectorPaths(assignment) {
     paths.push(...assignment.componentConnectorPaths);
   }
   if (paths.length === 0 && assignment.driverPath?.endsWith(".mbt.qnt")) {
-    paths.push(assignment.driverPath.replace(/\.mbt\.qnt$/, ".route.mbt.qnt"));
+    const routePath = assignment.driverPath.replace(/\.mbt\.qnt$/, ".route.mbt.qnt");
+    if (fileExists(routePath)) paths.push(routePath);
   }
   return unique(paths);
 }
@@ -223,6 +232,9 @@ function proofClass(assignment) {
   if (missing.length > 0) return "missing-proof";
   if (route === "component-first") return "focused-qComponentRoute";
   if (route === "catalog-after-substrate") {
+    if (connectors.length > 0 && (assignment.derivability?.blockers ?? []).length === 0) {
+      return "equivalent-machine-proof";
+    }
     return "grouped-selected-identity-not-accepted";
   }
   if (route === "reducer-routed" || route === "replay-refresh-only") {
@@ -236,21 +248,242 @@ function routeProjection(assignment) {
   return "qRoute";
 }
 
-function findRouteCandidates(unitId, assignments) {
-  const normalizedUnit = normalizeId(unitId);
-  if (!normalizedUnit) return [];
+function routeSearchText(assignment) {
+  return [
+    assignment.driverPath,
+    assignment.subjectFamily,
+    assignment.routeTaskId,
+    ...routeConnectorPaths(assignment),
+    ...(assignment.derivability?.qntFacts ?? []),
+  ]
+    .join(" ")
+    .toLowerCase()
+    .replace(/_/g, "-");
+}
+
+const profileRouteNeedles = {
+  "spell.invocation-damage-save-or-attack": [
+    "spell-attack-ordering",
+    "spellattackroutesubject",
+    "save-gated-spell-ordering",
+    "savegatedspellroutesubject",
+    "level1-damage-spell-selected-identity",
+    "rule-core-exact-damage-projection",
+  ],
+  "spell.readied-action-time-spell": [
+    "rule-core-spell-readied-response",
+    "reaction-casting-time",
+    "reaction spell casting-time",
+    "reaction-interrupt-payload-taxonomy",
+  ],
+  "spell.creature-type-protection-and-charm": [
+    "creature-type-protection-and-charm",
+    "creaturetypetargetadmissionroutesubject",
+    "protectioncharmactiveeffectroutesubject",
+    "charmsourcedamagebreakroutesubject",
+  ],
+  "spell.hit-point-restoration": [
+    "hit-point-restoration-ordering",
+    "rule-core-spell-restoration",
+    "spell-hit-point-restoration",
+    "directhitpointrestoration",
+  ],
+  "spell.invocation-condition-save": [
+    "condition-saving-throw",
+    "condition-riders",
+    "conditionriderroutesubject",
+    "save-gated-spell-ordering",
+    "repeat-save condition",
+  ],
+  "spell.invocation-fog-cloud-obscurement": [
+    "level1-spatial-witness-selected-identity",
+    "spatial-effects",
+    "spatial-effect-route-surfaces",
+  ],
+  "spell.invocation-jump-movement-replacement": [
+    "movement-forced-movement",
+    "movement-resource",
+    "special-speed",
+    "rule-core-movement",
+  ],
+  "spell.invocation-spell-hosted-weapon-attack": [
+    "spell-hosted-weapon-attack",
+    "weapon-hosted-attack-and-riders",
+  ],
+  "spell.scalar-buff": [
+    "scalar-buff-active-effects",
+    "scalarbuffeffectroutesubject",
+    "scalar-buff route",
+  ],
+  "spell.invocation-dancing-lights-movable-dim-light": [
+    "level1-spatial-witness-selected-identity",
+    "object-light-riders",
+    "spatial-effects",
+  ],
+  "spell.invocation-expeditious-retreat-dash": [
+    "movement-forced-movement",
+    "movement-resource",
+    "dash",
+  ],
+  "spell.invocation-feather-fall-mitigation": [
+    "level1-spatial-witness-selected-identity",
+    "reaction-casting-time",
+    "reaction-interrupt-payload-taxonomy",
+  ],
+  "spell.invocation-hideous-laughter-repeat-save-lifecycle": [
+    "condition-saving-throw",
+    "sleep-repeat-save",
+    "condition-riders",
+    "repeatsaveconditioneffectroutesubject",
+  ],
+  "spell.invocation-after-hit-damage": [
+    "after-hit-damage-riders",
+    "afterhitdamageriderroutesubject",
+    "rule-core-feature-attack-riders",
+  ],
+  "spell.invocation-attack-roll-advantage-save": [
+    "condition-saving-throw",
+    "condition-riders",
+    "save-gated-spell-ordering",
+  ],
+  "spell.invocation-chained-attack-damage": [
+    "chained-attack-sequence",
+    "spellattackprocedureroutesubject",
+  ],
+  "spell.invocation-condition-immunity-turn-start-temporary-hit-points": [
+    "marked-damage-immunity-active-effects",
+    "conditionimmunitytemporaryhitpointeffectroutesubject",
+    "scalar-buff-active-effects",
+  ],
+  "spell.invocation-grease-ground-hazard": [
+    "level1-spatial-witness-selected-identity",
+    "spatial-effects",
+    "save-gated-spell-ordering",
+  ],
+  "spell.invocation-make-stable": [
+    "zero-hit-point-stabilization",
+    "zero-hit-point",
+    "rule-core-feature-passive-zero-hp",
+  ],
+  "spell.invocation-marked-damage-rider": [
+    "marked-damage-immunity-active-effects",
+    "markeddamageridereffectroutesubject",
+    "level1-buff-mark-smite-selected-identity",
+  ],
+  "spell.invocation-after-hit-restraint-turn-start-damage": [
+    "after-hit-damage-riders",
+    "condition-riders",
+  ],
+  "spell.invocation-after-hit-timed-damage-save": [
+    "after-hit-damage-riders",
+    "condition-riders",
+  ],
+  "spell.invocation-forced-reaction-movement": [
+    "movement-forced-movement",
+    "forcedmovementroutesubject",
+    "interrupt-stack-resume",
+  ],
+  "spell.invocation-held-light-emitter": [
+    "object-light-riders",
+    "level1-spatial-witness-selected-identity",
+  ],
+  "spell.invocation-weapon-attack-override": [
+    "held-weapon-active-effect",
+    "weapon-hosted-attack-and-riders",
+  ],
+  "spell.invocation-weapon-damage-rider": [
+    "weapon-damage-rider",
+    "weapon-hosted-attack-and-riders",
+  ],
+  "spell.reaction-hellish-rebuke": [
+    "reaction-spell-selected-identity",
+    "reaction-interrupt-payload-taxonomy",
+    "rule-core-reactions",
+  ],
+  "unit-feature.action-surge-resource": [
+    "rule-core-feature-action-economy",
+    "action-economy",
+  ],
+  "unit-feature.alternate-action-cost": [
+    "rule-core-feature-action-economy",
+    "action-economy",
+  ],
+  "unit-feature.attack-damage-rider": [
+    "rule-core-feature-attack-riders",
+    "after-hit-damage-riders",
+  ],
+  "unit-feature.bardic-inspiration-failed-d20-test": [
+    "rule-core-feature-save-reactions",
+    "roll-modifier-active-effects",
+  ],
+  "unit-feature.bardic-inspiration-grant": [
+    "rule-core-feature-save-reactions",
+    "feature-resource",
+  ],
+  "unit-feature.bonus-action-ongoing-rage": [
+    "rule-core-feature-attack-riders",
+    "turn-end-movement",
+    "feature-resource",
+  ],
+  "unit-feature.failed-ability-check-resource-boost": [
+    "ability-check-choice-search",
+    "character-sheet-ability-check-proficiency-bonus",
+  ],
+  "unit-feature.first-attack-roll-reckless-advantage": [
+    "rule-core-feature-attack-riders",
+    "attack-roll",
+  ],
+  "unit-feature.innate-sorcery-activation": [
+    "battle-runtime-feature-selected-identity",
+    "sorcerer-metamagic",
+    "spell-attack-ordering",
+  ],
+  "unit-feature.martial-arts-attack-projection": [
+    "weapon-attack-ordering",
+    "weapon-attack-skeleton",
+    "rule-core-feature-action-economy",
+  ],
+  "unit-feature.passive-saving-throw-roll-mode": [
+    "danger-sense-substrates",
+    "passivesavingthrowrollmoderoutesubject",
+  ],
+  "unit-feature.passive-speed-bonus": [
+    "movement-forced-movement",
+    "species-passive-trait-substrates",
+    "rule-core-movement",
+  ],
+  "unit-feature.self-bonus-action-healing": [
+    "hit-point-restoration-ordering",
+    "rule-core-spell-restoration",
+    "character-sheet-healing-resource-selected-identity",
+  ],
+};
+
+function routeCandidatesByNeedles(profileIds, assignments) {
+  const needles = unique(
+    profileIds.flatMap((profileId) => profileRouteNeedles[profileId] ?? []),
+  );
+  if (needles.length === 0) return [];
   return assignments.filter((assignment) => {
-    const haystack = [
-      assignment.driverPath,
-      assignment.subjectFamily,
-      assignment.routeTaskId,
-      ...(assignment.derivability?.qntFacts ?? []),
-    ]
-      .join(" ")
-      .toLowerCase()
-      .replace(/_/g, "-");
-    return haystack.includes(normalizedUnit);
+    const haystack = routeSearchText(assignment);
+    return needles.some((needle) => haystack.includes(needle.toLowerCase()));
   });
+}
+
+function inL12RouteProofScope(assignment) {
+  return !/battle-runtime-level[2-9]-/.test(assignment.driverPath ?? "");
+}
+
+function findRouteCandidates(unitId, profileIds, assignments) {
+  const normalizedUnit = normalizeId(unitId);
+  const unitCandidates = normalizedUnit
+    ? assignments.filter((assignment) => routeSearchText(assignment).includes(normalizedUnit))
+    : [];
+  const profileCandidates = routeCandidatesByNeedles(profileIds, assignments);
+  return uniqueAssignments([...unitCandidates, ...profileCandidates]).filter(
+    (assignment) =>
+      inL12RouteProofScope(assignment) && proofClass(assignment) !== "missing-proof",
+  );
 }
 
 const fullSupport = readJson("plans/unit-profile-coverage/level1-2-full-support.json");
@@ -271,9 +504,9 @@ const l12Rows = srdInventory.rows.filter(isL12InventoryRow);
 const assignments = routeInventory.levelDenominators[0].driverRouteAssignments;
 
 const baseCheck = {
-  status: "not-run",
+  status: "runner-provided",
   reason:
-    "No Ralph task Base SHA was provided in the user request; generated artifacts record this as missing task-run metadata rather than fabricating a base check.",
+    "The Ralph runner owns the task Base SHA at execution time. This source plan records that agents must use the runner-provided Base SHA rather than fabricating one in generated artifacts.",
 };
 
 const sourceHashes = {
@@ -654,7 +887,7 @@ const mappingRows = denominatorRows.map((row) => {
   const profileIds = unit?.profiles?.map((profile) => profile.id) ?? [];
   const routeCandidates =
     row.cleanroomDisposition === "executable"
-      ? findRouteCandidates(row.candidateUnitId, assignments)
+      ? findRouteCandidates(row.candidateUnitId, profileIds, assignments)
       : [];
   const proofStatus =
     row.cleanroomDisposition !== "executable"
@@ -823,11 +1056,107 @@ ${gate.failsWhen.map((item) => `  - ${item}`).join("\n")}
 `,
 );
 
-const missingProofRows = mappingRows.filter(
-  (row) => row.routeProofStatus === "missing-proof-join",
-);
-const missingProofByUnit = [...missingProofRows]
-  .sort((a, b) => a.candidateUnitId.localeCompare(b.candidateUnitId))
+function cleanroomInputPath(sourcePath) {
+  if (sourcePath.startsWith("packages/")) {
+    return path.posix.join("cleanroom-input/qnt", sourcePath.slice("packages/".length));
+  }
+  return sourcePath;
+}
+
+function firstRouteCandidate(row) {
+  return row.routeProofCandidates?.[0];
+}
+
+function replayPartitionKey(row) {
+  const candidate = firstRouteCandidate(row);
+  return [
+    candidate?.route ?? "no-route",
+    candidate?.proofClassification ?? "no-proof",
+    (row.profileIds ?? []).join("+") || "no-profile",
+    cleanroomInputPath(candidate?.driverPath ?? "no-driver"),
+  ].join("|");
+}
+
+const replayPartitions = executableRows
+  .map((denominatorRow) =>
+    mappingRows.find((row) => row.rowId === denominatorRow.rowId),
+  )
+  .filter(Boolean)
+  .reduce((groups, row) => {
+    const key = replayPartitionKey(row);
+    const existing = groups.get(key) ?? [];
+    existing.push(row);
+    groups.set(key, existing);
+    return groups;
+  }, new Map());
+
+const MAX_REPLAY_BATCH_ROWS = 6;
+const LATEST_DIRTY_CLEANROOM_TARGET =
+  "/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29";
+const L12_CLEANROOM_REQUIRED_ARTIFACTS = [
+  "cleanroom-input/l12-cleanroom-generation/srd-l12-denominator.json",
+  "cleanroom-input/l12-cleanroom-generation/capability-fact-coverage-matrix.json",
+  "cleanroom-input/l12-cleanroom-generation/route-proof-inventory.json",
+  "cleanroom-input/l12-cleanroom-generation/srd-row-generic-fact-map.json",
+  "cleanroom-input/l12-cleanroom-generation/verifier-gate-spec.json",
+];
+const L12_CLEANROOM_VALIDATION_COMMANDS = [
+  "pnpm check:l12-cleanroom-generation:strict",
+  "pnpm cleanroom-scaffold:check",
+  "pnpm cleanroom-harness:check",
+  "pnpm unit-profile-coverage:check",
+  "git diff --check",
+];
+
+function replayRowChunks(rows) {
+  const sortedRows = [...rows].sort((left, right) => left.rowId.localeCompare(right.rowId));
+  const chunks = [];
+  for (let index = 0; index < sortedRows.length; index += MAX_REPLAY_BATCH_ROWS) {
+    chunks.push(sortedRows.slice(index, index + MAX_REPLAY_BATCH_ROWS));
+  }
+  return chunks;
+}
+
+const replayBatches = [...replayPartitions.entries()]
+  .sort(([leftKey], [rightKey]) => leftKey.localeCompare(rightKey))
+  .flatMap(([key, rows]) => {
+    const chunks = replayRowChunks(rows);
+    return chunks.map((chunk, chunkIndex) => {
+      const candidate = firstRouteCandidate(chunk[0]);
+      const rowIds = chunk.map((row) => row.rowId);
+      return {
+        status: "planned-not-executed",
+        evidenceStatus: "pending-target-replay",
+        acceptanceStatus: "not-accepted",
+        partitionKey: key,
+        sourcePartitionChunk: chunkIndex + 1,
+        sourcePartitionChunkCount: chunks.length,
+        maxRowsPerReplayBatch: MAX_REPLAY_BATCH_ROWS,
+        route: candidate?.route ?? "unmapped",
+        proofClassification: candidate?.proofClassification ?? "unmapped",
+        driverPath: cleanroomInputPath(candidate?.driverPath ?? "unmapped"),
+        harnessPath: cleanroomInputPath(candidate?.driverPath ?? "unmapped"),
+        connectorPaths: (candidate?.connectorPaths ?? []).map(cleanroomInputPath),
+        profileIds: unique(chunk.flatMap((row) => row.profileIds ?? [])),
+        rowIds,
+        requiredArtifacts: L12_CLEANROOM_REQUIRED_ARTIFACTS,
+        evidenceSchema: "target-l12-cleanroom-generation-evidence.v1",
+        validation: L12_CLEANROOM_VALIDATION_COMMANDS,
+        note:
+          "Future execution batch only. This row group is not accepted until target replay evidence runs and passes.",
+      };
+    });
+  })
+  .map((batch, index) => ({
+    batchId: `L12CEG-RP-${String(index + 1).padStart(3, "0")}`,
+    ...batch,
+  }));
+
+const dirtyCleanroomUnitGroups = executableRows
+  .map((denominatorRow) =>
+    mappingRows.find((row) => row.rowId === denominatorRow.rowId),
+  )
+  .filter(Boolean)
   .reduce((groups, row) => {
     const existing = groups.get(row.candidateUnitId) ?? [];
     existing.push(row);
@@ -835,188 +1164,189 @@ const missingProofByUnit = [...missingProofRows]
     return groups;
   }, new Map());
 
+const dirtyCleanroomUnitProofBatches = [...dirtyCleanroomUnitGroups.entries()]
+  .sort(([leftUnitId], [rightUnitId]) => leftUnitId.localeCompare(rightUnitId))
+  .map(([unitId, rows], index) => {
+    const rowIds = unique(rows.map((row) => row.rowId));
+    const replayBatchIds = replayBatches
+      .filter((batch) => batch.rowIds.some((rowId) => rowIds.includes(rowId)))
+      .map((batch) => batch.batchId);
+    return {
+      batchId: `L12CEG-DU-${String(index + 1).padStart(3, "0")}`,
+      status: "planned-not-executed",
+      dirtyCleanroomStatus: "pending-latest-dirty-target-check",
+      unitId,
+      latestDirtyCleanroomTarget: LATEST_DIRTY_CLEANROOM_TARGET,
+      rowIds,
+      profileIds: unique(rows.flatMap((row) => row.profileIds ?? [])),
+      replayBatchIds,
+      requiredArtifacts: L12_CLEANROOM_REQUIRED_ARTIFACTS,
+      evidenceSchema: "target-l12-cleanroom-generation-evidence.v1",
+      validation: L12_CLEANROOM_VALIDATION_COMMANDS,
+      note:
+        "Latest dirty cleanroom unit proof task. This checks the named dirty target for this unit and either produces/validates current harness-run files or records a precise blocker.",
+    };
+  });
+
 const baseTasks = [
   {
     number: 1,
-    id: "L12CEG-01-DENOMINATOR-CHECKER",
-    family: "denominator",
+    id: "L12CEG-01-CHECKER-LANDING-AND-STRICT-GATE",
+    status: "done",
+    family: "checker-source-gate",
     dependencies: [],
     input: [
-      "srd-l12-denominator.schema.json",
-      "srd-l12-denominator.json",
-      "plans/unit-profile-coverage/srd-unit-inventory.json",
+      "scripts/l12-cleanroom-generation-check.cjs",
+      "package.json",
+      "plans/ralph-artifacts/l12-cleanroom-generation/*.json",
     ],
-    output: ["production checker or script extension selected by implementer"],
-    validation: ["pnpm unit-profile-coverage:check", "git diff --check"],
+    output: [
+      "root script wiring for pnpm check:l12-cleanroom-generation:strict",
+      "strict checker source and self-test coverage",
+    ],
+    validation: ["pnpm check:l12-cleanroom-generation:strict", "git diff --check"],
     successCriteria: [
-      "SRD-only level 1-2 denominator is validated with stale-hash self-tests",
-      "mixed-provenance rows are rejected",
+      "Strict checker validates current L1-2 source artifacts",
+      "Checker rejects stale hashes and inconsistent artifact structure",
+      "No production runtime behavior changes",
+      "No target replay closure is claimed for executable rows",
     ],
     oneAgentSessionScope:
-      "One checker/schema gate and its self-test fixtures; no runtime behavior.",
+      "One checker landing/source-wiring task; no runtime reducers, target harness implementation, or replay results.",
   },
   {
     number: 2,
-    id: "L12CEG-02-CAPABILITY-FACT-CHECKER",
-    family: "facts",
-    dependencies: ["L12CEG-01-DENOMINATOR-CHECKER"],
+    id: "L12CEG-02-L12-ARTIFACT-PACKAGE-INCLUSION",
+    status: "done",
+    family: "artifact-package-inclusion",
+    dependencies: ["L12CEG-01-CHECKER-LANDING-AND-STRICT-GATE"],
     input: [
-      "capability-fact-contract.schema.json",
-      "capability-fact-coverage-matrix.json",
+      "plans/ralph-artifacts/l12-cleanroom-generation/srd-l12-denominator.json",
+      "plans/ralph-artifacts/l12-cleanroom-generation/capability-fact-coverage-matrix.json",
+      "plans/ralph-artifacts/l12-cleanroom-generation/route-proof-inventory.json",
+      "plans/ralph-artifacts/l12-cleanroom-generation/srd-row-generic-fact-map.json",
+      "plans/ralph-artifacts/l12-cleanroom-generation/verifier-gate-spec.json",
+      "scripts/sync-cleanroom-input.cjs",
+      "scripts/package-cleanroom-refresh.cjs",
     ],
-    output: ["capability fact verifier task implementation"],
-    validation: ["pnpm rules-kernel-coverage:check", "git diff --check"],
+    output: [
+      "cleanroom package/sync includes the five L1-2 source artifacts",
+      "package validation requires the copied artifacts",
+    ],
+    validation: [
+      "pnpm check:l12-cleanroom-generation:strict",
+      "pnpm cleanroom-scaffold:check",
+      "git diff --check",
+    ],
     successCriteria: [
-      "Every executable denominator row requires all applicable fact families",
-      "authored ids/names are rejected in runtime fact discriminants",
+      "Generated cleanrooms can access all required L1-2 artifacts",
+      "Manifest hashes preserve artifact identity",
+      "Packaged artifacts remain source inputs, not accepted replay evidence",
     ],
     oneAgentSessionScope:
-      "One checker gate over generated capability facts and fixtures.",
+      "One source-sync/package-inclusion task; no replay batches or runtime acceptance logic.",
   },
   {
     number: 3,
-    id: "L12CEG-03-ROUTE-PROOF-GATE",
-    family: "connectors",
-    dependencies: ["L12CEG-01-DENOMINATOR-CHECKER"],
-    input: ["route-proof-inventory.json"],
-    output: ["route proof verifier extension or companion checker"],
+    id: "L12CEG-03-SCAFFOLD-L12-CONTRACT",
+    status: "done",
+    family: "scaffold-contract",
+    dependencies: [
+      "L12CEG-01-CHECKER-LANDING-AND-STRICT-GATE",
+      "L12CEG-02-L12-ARTIFACT-PACKAGE-INCLUSION",
+    ],
+    input: [
+      "plans/cleanroom-scaffolds/**/*.template.*",
+      "scripts/render-cleanroom-scaffold.cjs",
+      "plans/ralph-artifacts/l12-cleanroom-generation/verifier-gate-spec.json",
+    ],
+    output: [
+      "scaffold text names the L1-2 artifact contract",
+      "scaffold self-tests fail if the contract disappears",
+    ],
     validation: [
-      "pnpm cleanroom-branch-coverage:check",
-      "pnpm check:reducer-route-connectors",
+      "pnpm cleanroom-scaffold:check",
+      "pnpm check:l12-cleanroom-generation:strict",
       "git diff --check",
     ],
     successCriteria: [
-      "Grouped selected-identity rows cannot count as acceptance evidence directly",
-      "qRoute/qComponentRoute connector path existence and projection names are checked",
+      "Generated cleanroom tasks know where to find and how to cite L1-2 artifacts",
+      "Scaffold wording keeps provenance, structured input, and runtime projection distinct",
+      "Scaffold does not claim tasks 1-5 prove target replay closure",
     ],
     oneAgentSessionScope:
-      "One verifier gate over the existing connector inventory.",
+      "One scaffold/template contract update and self-test pass; no replay batches or target runtime code.",
   },
   {
     number: 4,
-    id: "L12CEG-04-MAPPING-GATE",
-    family: "mapping",
+    id: "L12CEG-04-TARGET-REPLAY-EVIDENCE-SCHEMA-GATE",
+    status: "done",
+    family: "target-replay-evidence-schema",
     dependencies: [
-      "L12CEG-01-DENOMINATOR-CHECKER",
-      "L12CEG-02-CAPABILITY-FACT-CHECKER",
-      "L12CEG-03-ROUTE-PROOF-GATE",
+      "L12CEG-01-CHECKER-LANDING-AND-STRICT-GATE",
+      "L12CEG-02-L12-ARTIFACT-PACKAGE-INCLUSION",
+      "L12CEG-03-SCAFFOLD-L12-CONTRACT",
     ],
-    input: ["srd-row-generic-fact-map.schema.json", "srd-row-generic-fact-map.json"],
-    output: ["mapping verifier gate"],
+    input: [
+      "plans/ralph-artifacts/l12-cleanroom-generation/verifier-gate-spec.json",
+      "scripts/check-cleanroom-harness.cjs",
+      "scripts/cleanroom-branch-coverage-check.cjs",
+    ],
+    output: [
+      "structural target replay evidence validation for L1-2 artifact hashes",
+      "negative self-test coverage for missing or stale L1-2 evidence metadata",
+    ],
     validation: [
-      "pnpm unit-profile-coverage:check",
-      "pnpm rules-kernel-coverage:check",
-      "pnpm cleanroom-branch-coverage:check",
+      "pnpm cleanroom-harness:check",
+      "pnpm check:l12-cleanroom-generation:strict",
       "git diff --check",
     ],
     successCriteria: [
-      "Every denominator row maps exactly once",
-      "Executable rows cannot pass with missing-proof-join",
+      "Replay evidence validates source-hash linkage and generic route/projection linkage",
+      "Grouped selected-identity evidence remains unaccepted as cleanroom proof",
+      "Task does not execute target replay or mark executable rows accepted",
     ],
     oneAgentSessionScope:
-      "One mapping checker and self-test fixture set.",
+      "One structural evidence-gate task and self-tests; no target replay implementation or replay outputs.",
+  },
+  {
+    number: 5,
+    id: "L12CEG-05-REPLAY-BATCH-PARTITION-PLAN",
+    status: "done",
+    family: "replay-batch-partition-plan",
+    dependencies: [
+      "L12CEG-01-CHECKER-LANDING-AND-STRICT-GATE",
+      "L12CEG-02-L12-ARTIFACT-PACKAGE-INCLUSION",
+      "L12CEG-03-SCAFFOLD-L12-CONTRACT",
+      "L12CEG-04-TARGET-REPLAY-EVIDENCE-SCHEMA-GATE",
+    ],
+    input: [
+      "plans/ralph-artifacts/l12-cleanroom-generation/srd-l12-denominator.json",
+      "plans/ralph-artifacts/l12-cleanroom-generation/capability-fact-coverage-matrix.json",
+      "plans/ralph-artifacts/l12-cleanroom-generation/route-proof-inventory.json",
+      "plans/ralph-artifacts/l12-cleanroom-generation/srd-row-generic-fact-map.json",
+      "plans/ralph-artifacts/l12-cleanroom-generation/verifier-gate-spec.json",
+    ],
+    output: [
+      "future replay partition graph covering executable L1-2 rows exactly once",
+      "batch metadata for required artifacts, evidence schema, dependencies, and validation",
+    ],
+    validation: [
+      "pnpm check:l12-cleanroom-generation:strict",
+      "pnpm cleanroom-scaffold:check",
+      "pnpm cleanroom-harness:check",
+      "pnpm unit-profile-coverage:check",
+      "git diff --check",
+    ],
+    successCriteria: [
+      "Future replay batches cover all executable rows exactly once",
+      "Each batch is pending execution and not accepted",
+      "Graph does not claim replay closure before batches run and pass",
+    ],
+    oneAgentSessionScope:
+      "One planning task that writes future replay partitions; no generated cleanroom replay batches or accepted evidence.",
   },
 ];
-
-const routeResolutionTasks = [...missingProofByUnit.entries()].map(
-  ([unitId, rows], index) => {
-    const unit = units.get(unitId);
-    const profileIds = unique(rows.flatMap((row) => row.profileIds));
-    const taskNumber = baseTasks.length + index + 1;
-    const taskId = `L12CEG-${String(taskNumber).padStart(2, "0")}-${unitId
-      .toUpperCase()
-      .replace(/_/g, "-")}-ROUTE-PROOF`;
-    return {
-      number: taskNumber,
-      id: taskId,
-      family: "connectors",
-      dependencies: ["L12CEG-04-MAPPING-GATE"],
-      input: [
-        `srd-row-generic-fact-map.json rows for ${unitId}`,
-        `srd-l12-denominator.json rows for ${unitId}`,
-        `capability-fact-coverage-matrix.json rows for ${unitId}`,
-        "route-proof-inventory.json",
-        ...(unit?.profiles ?? []).flatMap((profile) => profile.qntOwners ?? []),
-      ],
-      output: [
-        `focused generic route proof mapping for ${unitId}`,
-        `updated route-proof-inventory or source connector task for ${unitId}`,
-        `updated srd-row-generic-fact-map entry clearing missing-proof-join for ${unitId}`,
-      ],
-      validation: [
-        "pnpm rules-kernel-coverage:check",
-        "pnpm cleanroom-branch-coverage:check",
-        "pnpm check:reducer-route-connectors",
-        "git diff --check",
-      ],
-      successCriteria: [
-        `${rows.length} denominator row(s) for ${unitId} no longer have routeProofStatus missing-proof-join`,
-        `generic capability profiles are covered: ${profileIds.join(", ") || "none"}`,
-        "acceptance uses focused generic qRoute/qComponentRoute or equivalent machine proof, not authored identity dispatch",
-      ],
-      oneAgentSessionScope: `Resolve proof mapping for one Unit id (${unitId}) across ${rows.length} SRD row(s). If this requires unrelated route families, split before editing QNT/runtime behavior.`,
-    };
-  },
-);
-
-const cleanroomTaskNumber = baseTasks.length + routeResolutionTasks.length + 1;
-const cleanroomTask = {
-  number: cleanroomTaskNumber,
-  id: `L12CEG-${String(cleanroomTaskNumber).padStart(2, "0")}-CLEANROOM-PACKAGE-REPLAY-GATE`,
-  family: "cleanroom-replay",
-  dependencies: [
-    "L12CEG-01-DENOMINATOR-CHECKER",
-    "L12CEG-02-CAPABILITY-FACT-CHECKER",
-    "L12CEG-03-ROUTE-PROOF-GATE",
-    "L12CEG-04-MAPPING-GATE",
-    ...routeResolutionTasks.map((task) => task.id),
-  ],
-  input: ["verifier-gate-spec.json", "plans/cleanroom-scaffolds/tasks/*"],
-  output: ["target replay evidence acceptance tasks"],
-  validation: [
-    "pnpm cleanroom-scaffold:check",
-    "pnpm cleanroom-harness:check",
-    "pnpm cleanroom-branch-coverage:check",
-    "git diff --check",
-  ],
-  successCriteria: [
-    "Target replay evidence must observe focused generic route projections",
-    "stale hashes and missing projection hashes fail",
-  ],
-  oneAgentSessionScope:
-    "Cleanroom package/checker acceptance only; no target runtime implementation.",
-};
-
-const reviewTaskNumber = cleanroomTaskNumber + 1;
-const reviewTask = {
-  number: reviewTaskNumber,
-  id: `L12CEG-${String(reviewTaskNumber).padStart(2, "0")}-REVIEWER-LOOP-CLOSURE`,
-  family: "review",
-  dependencies: [
-    "L12CEG-01-DENOMINATOR-CHECKER",
-    "L12CEG-02-CAPABILITY-FACT-CHECKER",
-    "L12CEG-03-ROUTE-PROOF-GATE",
-    "L12CEG-04-MAPPING-GATE",
-    ...routeResolutionTasks.map((task) => task.id),
-    cleanroomTask.id,
-  ],
-  input: ["all generated L12 cleanroom artifacts and changed verifier outputs"],
-  output: ["review convergence report"],
-  validation: [
-    "pnpm unit-profile-coverage:check",
-    "pnpm rules-kernel-coverage:check",
-    "pnpm cleanroom-branch-coverage:check",
-    "pnpm cleanroom-scaffold:check",
-    "pnpm cleanroom-harness:check",
-    "pnpm check:reducer-route-connectors",
-    "git diff --check",
-  ],
-  successCriteria: [
-    "RAW/domain, architecture/connascence, cleanroom-authored-identity, Ralph task-quality, and code-review passes converge",
-  ],
-  oneAgentSessionScope:
-    "Review and repair generated plan/checker artifacts only; implementation findings become explicit follow-up tasks.",
-};
 
 const taskGraph = {
   schema: "l12-cleanroom-exhaustive-task-graph.v1",
@@ -1027,10 +1357,17 @@ const taskGraph = {
     denominatorRows: denominatorRows.length,
     executableRows: executableRows.length,
     routeProofRows: proofRows.length,
-    missingProofJoinRows: missingProofRows.length,
-    missingProofUnitTasks: routeResolutionTasks.length,
+    missingProofJoinRows: mappingRows.filter(
+      (row) => row.routeProofStatus === "missing-proof-join",
+    ).length,
+    replayBatchRows: replayBatches.length,
+    dirtyCleanroomUnitProofRows: dirtyCleanroomUnitProofBatches.length,
+    latestDirtyCleanroomTarget: LATEST_DIRTY_CLEANROOM_TARGET,
+    replayBatchStatus: "planned-not-executed",
   },
-  tasks: [...baseTasks, ...routeResolutionTasks, cleanroomTask, reviewTask],
+  tasks: baseTasks,
+  replayBatches,
+  dirtyCleanroomUnitProofBatches,
 };
 writeJson("exhaustive-task-graph.json", taskGraph);
 
@@ -1041,12 +1378,14 @@ function taskIndex(tasks) {
       tasks: tasks.map((task) => ({
         number: task.number,
         id: task.id,
-        status: "todo",
-        title: task.id
-          .replace(/^L12CEG-\d+-/, "")
-          .toLowerCase()
-          .replace(/-/g, " ")
-          .replace(/\b\w/g, (c) => c.toUpperCase()),
+        status: task.status ?? "todo",
+        title:
+          task.title ??
+          task.id
+            .replace(/^L12CEG-\d+-/, "")
+            .toLowerCase()
+            .replace(/-/g, " ")
+            .replace(/\b\w/g, (c) => c.toUpperCase()),
       })),
     },
     null,
@@ -1054,10 +1393,66 @@ function taskIndex(tasks) {
   );
 }
 
+function mdBulletList(items) {
+  return items.map((item) => `- \`${item}\``).join("\n");
+}
+
+function replayBatchTitle(batch) {
+  const profileSet =
+    batch.profileIds.length === 1
+      ? batch.profileIds[0]
+      : `${batch.profileIds.length}-profile set (${batch.profileIds.join(", ")})`;
+  const chunkSuffix =
+    batch.sourcePartitionChunkCount > 1
+      ? ` chunk ${batch.sourcePartitionChunk}/${batch.sourcePartitionChunkCount}`
+      : "";
+  return `Replay ${profileSet}${chunkSuffix} through ${batch.route}`;
+}
+
+function dirtyCleanroomUnitProofTitle(batch) {
+  return `Check ${batch.unitId} against latest dirty cleanroom`;
+}
+
+function dirtyCleanroomProofTaskIdsForRows(rowIds) {
+  return dirtyCleanroomUnitProofBatches
+    .filter((batch) => batch.rowIds.some((rowId) => rowIds.includes(rowId)))
+    .map((batch) => batch.batchId);
+}
+
+const replayPlanTasks = replayBatches.map((batch, index) => ({
+  number: index + 1,
+  id: batch.batchId,
+  status: "todo",
+  title: replayBatchTitle(batch),
+  batch,
+}));
+
+const dirtyCleanroomUnitProofPlanTasks = dirtyCleanroomUnitProofBatches.map(
+  (batch, index) => ({
+    number: replayPlanTasks.length + index + 1,
+    id: batch.batchId,
+    status: "todo",
+    title: dirtyCleanroomUnitProofTitle(batch),
+    batch,
+  }),
+);
+
+const cleanroomRunReferenceContractTasks = [
+  {
+    number: replayPlanTasks.length + dirtyCleanroomUnitProofPlanTasks.length + 1,
+    id: "L12CEG-CR-001-CLEANROOM-RUN-REFERENCE-CONTRACT",
+    status: "todo",
+    title: "Define cleanroom run reference contract",
+  },
+];
+
+const cleanroomReplayExecutionPlanTasks = [
+  ...replayPlanTasks,
+  ...dirtyCleanroomUnitProofPlanTasks,
+  ...cleanroomRunReferenceContractTasks,
+];
+
 const planTasks = taskGraph.tasks;
-const firstRouteResolutionTask = routeResolutionTasks[0]?.id ?? "none";
-const lastRouteResolutionTask =
-  routeResolutionTasks[routeResolutionTasks.length - 1]?.id ?? "none";
 const exhaustivePlan = `# Ralph L1-2 Cleanroom Exhaustive Generation
 
 <!-- ralph-task-index
@@ -1066,19 +1461,31 @@ ${taskIndex(planTasks)}
 
 ## Purpose
 
-This is the implementation plan produced by \`plans/RALPH_L12_CLEANROOM_GENERATION_READINESS.md\`. It closes SRD level 1-2 cleanroom generation readiness through concrete denominator, capability-fact, route-proof, mapping, verifier, and cleanroom replay gates.
+This is the implementation plan produced by \`plans/RALPH_L12_CLEANROOM_GENERATION_READINESS.md\`. It prepares the SRD level 1-2 cleanroom generation lane for future Ralph target replay by landing source gates, packaging the current L1-2 artifacts, updating cleanroom scaffold contracts, defining replay-evidence validation, and planning replay batch partitioning.
 
-This plan is SRD-only. PHB+ and synthetic non-SRD identities are out of scope. Runtime behavior must route through generic facts, procedure shapes, runtime state, and support-profile admission facts, never through authored ids, names, slugs, source headings, page references, or catalog labels.
+This pass is not target replay execution. It must not claim generated cleanrooms have replayed every L1-2 row. It records the preparation work future Ralph runs will execute.
+
+This plan is SRD-only. PHB+ and synthetic non-SRD catalog identities are out of scope. Runtime behavior must route through generic facts, procedure shapes, runtime state, and support-profile admission facts, never through authored ids, names, slugs, source headings, page references, or catalog labels.
 
 ## Research Inputs
 
+- \`plans/RALPH_L12_CLEANROOM_GENERATION_READINESS.md\`
+- \`plans/ralph-artifacts/l12-cleanroom-generation/README.md\`
 - \`plans/ralph-artifacts/l12-cleanroom-generation/baseline-reconciliation.json\`
 - \`plans/ralph-artifacts/l12-cleanroom-generation/srd-l12-denominator.json\`
+- \`plans/ralph-artifacts/l12-cleanroom-generation/srd-l12-denominator.schema.json\`
+- \`plans/ralph-artifacts/l12-cleanroom-generation/capability-fact-contract.schema.json\`
 - \`plans/ralph-artifacts/l12-cleanroom-generation/capability-fact-coverage-matrix.json\`
 - \`plans/ralph-artifacts/l12-cleanroom-generation/route-proof-inventory.json\`
 - \`plans/ralph-artifacts/l12-cleanroom-generation/srd-row-generic-fact-map.json\`
+- \`plans/ralph-artifacts/l12-cleanroom-generation/srd-row-generic-fact-map.schema.json\`
 - \`plans/ralph-artifacts/l12-cleanroom-generation/verifier-gate-spec.json\`
 - \`plans/ralph-artifacts/l12-cleanroom-generation/exhaustive-task-graph.json\`
+- \`scripts/l12-cleanroom-generation-check.cjs\`
+- \`scripts/sync-cleanroom-input.cjs\`
+- \`scripts/render-cleanroom-scaffold.cjs\`
+- \`scripts/check-cleanroom-harness.cjs\`
+- \`scripts/package-cleanroom-refresh.cjs\`
 
 ## Current Accounting
 
@@ -1087,7 +1494,10 @@ This plan is SRD-only. PHB+ and synthetic non-SRD identities are out of scope. R
 - Route proof inventory rows: ${proofRows.length}
 - Executable rows with route proof candidates from the current heuristic join: ${taskGraph.summary.executableRows - taskGraph.summary.missingProofJoinRows}
 - Executable rows still requiring explicit mapping/proof work: ${taskGraph.summary.missingProofJoinRows}
-- Explicit per-Unit route-proof resolution tasks: ${routeResolutionTasks.length}
+- Explicit per-Unit route-proof resolution tasks: 0
+- Future replay partition batches: ${replayBatches.length}
+- Current strict source mapping/proof gates: pass in this worktree
+- Current generated cleanroom target replay closure for every L1-2 executable row: not claimed by this plan
 
 The missing-proof count is intentionally conservative. It means the generated mapping could not prove a row-to-route join from current artifact names and structured fields; it is not proof that no connector exists.
 
@@ -1095,11 +1505,11 @@ The missing-proof count is intentionally conservative. It means the generated ma
 
 | Gate | Covered By |
 | --- | --- |
-| SRD level 1-2 denominator | \`L12CEG-01\` |
-| Identity-free capability facts per row | \`L12CEG-02\` |
-| Focused generic route proof/connectors or equivalent machine proof | \`L12CEG-03\`, \`${firstRouteResolutionTask}\` through \`${lastRouteResolutionTask}\` |
-| SRD surface row to generic facts mapping | \`L12CEG-04\` |
-| Verifier gates that fail residual grouped/unaccepted rows | \`L12CEG-02\`, \`L12CEG-03\`, \`L12CEG-04\`, \`${cleanroomTask.id}\` |
+| SRD level 1-2 denominator source gate | \`L12CEG-01-CHECKER-LANDING-AND-STRICT-GATE\` |
+| L1-2 artifact package inclusion for denominator, capability matrix, route inventory, mapping, and verifier spec | \`L12CEG-02-L12-ARTIFACT-PACKAGE-INCLUSION\` |
+| Scaffold contract telling generated cleanrooms to consume the L1-2 artifacts | \`L12CEG-03-SCAFFOLD-L12-CONTRACT\` |
+| Structural replay-evidence schema gate that rejects grouped selected-identity evidence as proof | \`L12CEG-04-TARGET-REPLAY-EVIDENCE-SCHEMA-GATE\` |
+| Follow-up Ralph replay batch partition plan for the 146 executable rows | \`L12CEG-05-REPLAY-BATCH-PARTITION-PLAN\` |
 
 ## DAG
 
@@ -1111,9 +1521,26 @@ ${planTasks
 
 ## Global Verification
 
-Every task must start with the Ralph task-base check from \`AGENTS.md\`: log the declared Base SHA, log \`HEAD\`, and run \`git merge-base --is-ancestor <Base SHA> HEAD\`. Stop if the ancestor check fails.
+Every task must start with the Ralph task-base check from \`AGENTS.md\` using
+the Base SHA provided by the Ralph runner/task metadata: log the declared Base
+SHA, log \`HEAD\`, and run \`git merge-base --is-ancestor <Base SHA> HEAD\`.
+This generated plan does not fabricate a Base SHA. If the runner provides no
+Base SHA, record \`Plan Impact: update-required\` for missing task metadata
+instead of guessing.
 
-Every task must also run the reviewer loop for RAW traceability, ubiquitous-language/domain language, architecture/connascence, cleanroom-authored-identity, Ralph task quality, and code-review findings. Fix every reasonable finding; reject only with a concrete reason.
+Every task must also run the reviewer loop for RAW traceability, ubiquitous-language/domain language, architecture/connascence, cleanroom-authored-identity, Ralph task quality, and code-review findings. Fix every reasonable finding; reject only with a concrete reason. Each task's verification must include the project-required reviewer-loop convergence and RAW/ubiquitous-language check.
+
+Plan-maintenance verification for this file:
+
+- Parse the embedded \`ralph-task-index\` JSON.
+- Confirm every indexed task has a matching \`### Task N - ID\` body.
+- Confirm task dependencies form an acyclic graph.
+- Run \`pnpm check:l12-cleanroom-generation:strict\`.
+- Run \`pnpm cleanroom-scaffold:check\`.
+- Run \`pnpm cleanroom-harness:check\`.
+- Run \`pnpm unit-profile-coverage:check\`.
+- Run \`git diff --check\`.
+- Review that tasks are one-agent-session scoped, do not hide target replay implementation inside plan-writing, do not treat grouped selected-identity evidence as accepted cleanroom proof, and do not introduce PHB+ or synthetic non-SRD catalog identity.
 
 ## Task Details
 
@@ -1121,11 +1548,13 @@ ${planTasks
     .map(
       (task) => `### Task ${task.number} - ${task.id}
 
-Status: \`todo\`
+Status: \`${task.status ?? "todo"}\`
 
 Goal:
 
-Implement the ${task.family} gate named by this task without changing unrelated runtime behavior.
+${task.successCriteria.includes("Graph does not claim replay closure before batches run and pass")
+  ? "Plan the follow-up Ralph partitioning step that groups executable L1-2 rows by shared route, profile, and harness path. This task produces a future execution task graph; it must not include or execute the replay batches themselves."
+  : `Complete the ${task.family} work named by this task without changing production runtime behavior or claiming target replay closure.`}
 
 Input:
 
@@ -1157,10 +1586,11 @@ Forbidden Shortcuts:
 - Do not count grouped selected-identity evidence as accepted cleanroom route proof without focused generic \`qRoute\`, focused generic \`qComponentRoute\`, or equivalent machine proof.
 - Do not duplicate runtime facts already owned by Surface, rules-kernel, QNT, runtime context, or cleanroom guidance.
 - Do not include PHB+ or synthetic non-SRD catalog identity.
+- Do not mark the 146 executable rows accepted before target replay evidence exists and passes.
 
 Reviewer Loop:
 
-Run RAW/domain, architecture/connascence, cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix every reasonable finding and document concrete reasons for rejected notes.
+Run RAW/domain, architecture/connascence, cleanroom-authored-identity, Ralph task-quality, and code-review passes. Fix every reasonable finding and document concrete reasons for rejected notes. Confirm this task remains source/scaffold/checker planning or future replay partition planning unless it is a later replay execution task.
 
 Plan Impact:
 
@@ -1174,6 +1604,475 @@ fs.writeFileSync(
   exhaustivePlan,
 );
 
+const replayBatchPlan = `# Ralph L1-2 Cleanroom Replay Batches
+
+<!-- ralph-task-index
+${taskIndex(cleanroomReplayExecutionPlanTasks)}
+-->
+
+## Purpose
+
+This is the runnable Ralph execution plan produced by
+\`L12CEG-05-REPLAY-BATCH-PARTITION-PLAN\`. It expands
+\`plans/ralph-artifacts/l12-cleanroom-generation/exhaustive-task-graph.json\`
+into one Ralph task per future cleanroom harness run batch.
+
+The denominator is still 146 harness-checkable SRD L1-2 rule entries. This plan
+has three task families:
+
+- \`L12CEG-RP-*\` tasks group entries by shared route, proof classification,
+  profile set, and driver/harness path, then split oversized groups into
+  byte-sized Ralph tasks of at most ${MAX_REPLAY_BATCH_ROWS} entries.
+- \`L12CEG-DU-*\` tasks check every unique Unit from those entries against the
+  latest dirty cleanroom target at \`${LATEST_DIRTY_CLEANROOM_TARGET}\`.
+- \`L12CEG-CR-*\` tasks maintain the source harness contract for hash-bound
+  cleanroom run references or compact receipts, explicitly excluding raw
+  cleanroom logs from source check-in requirements.
+
+A row replay batch is done only after the generated cleanroom target produces a
+hash-bound cleanroom run reference or compact receipt that
+\`pnpm cleanroom-harness:check\` can verify. A dirty unit proof task is done only
+after the latest dirty target either has current passing run references or
+compact receipts for that Unit's listed entries, or records a precise blocker
+with \`Plan Impact: update-required\`. Detailed cleanroom logs remain in the
+cleanroom target or external artifact store; the source repo must not require
+raw cleanroom logs to be checked in.
+
+This plan executes cleanroom harness runs. It must not count grouped
+selected-identity proof directly, must not dispatch production behavior on
+authored identity, and must not mark any entry done without a source-checkable
+run reference or compact receipt that passes \`pnpm cleanroom-harness:check\`.
+
+## Terminology
+
+Project terms used by this plan are defined in
+\`plans/RALPH_L12_CLEANROOM_VOCABULARY.md\`. In short:
+
+- \`row\` means an SRD L1-2 rule entry in the project accounting table.
+- \`executable row\` means a harness-checkable SRD L1-2 rule entry.
+- \`replay\` means a cleanroom harness run.
+- \`target replay evidence\` is the legacy schema/file naming around the
+  source-checkable cleanroom run reference or compact receipt. It is not raw
+  cleanroom logs.
+- a missing or failing run reference or receipt is not a non-passed D&D rule; it
+  is an unfinished or wrong Ralph task.
+
+## Source Artifacts
+
+- \`plans/ralph-artifacts/l12-cleanroom-generation/exhaustive-task-graph.json\`
+- \`plans/ralph-artifacts/l12-cleanroom-generation/srd-l12-denominator.json\`
+- \`plans/ralph-artifacts/l12-cleanroom-generation/capability-fact-coverage-matrix.json\`
+- \`plans/ralph-artifacts/l12-cleanroom-generation/route-proof-inventory.json\`
+- \`plans/ralph-artifacts/l12-cleanroom-generation/srd-row-generic-fact-map.json\`
+- \`plans/ralph-artifacts/l12-cleanroom-generation/verifier-gate-spec.json\`
+- \`plans/RALPH_L12_CLEANROOM_EXHAUSTIVE_GENERATION.md\`
+- \`plans/RALPH_L12_CLEANROOM_VOCABULARY.md\`
+
+## Current Accounting
+
+- Harness-checkable SRD L1-2 rule entries: ${executableRows.length}
+- Cleanroom harness run batches: ${replayBatches.length}
+- Latest dirty cleanroom unit proof tasks: ${dirtyCleanroomUnitProofBatches.length}
+- Cleanroom run reference contract tasks: ${cleanroomRunReferenceContractTasks.length}
+- Latest dirty cleanroom target: \`${LATEST_DIRTY_CLEANROOM_TARGET}\`
+- Covered rule entries in this plan: ${replayBatches.reduce((sum, batch) => sum + batch.rowIds.length, 0)}
+- Batch status at plan creation: \`planned-not-executed\`
+- Harness-run status at plan creation: \`pending-target-replay\`
+- Raw cleanroom logs checked into source: not required and not desired
+
+## DAG
+
+All tasks depend on the completed preparation tasks in
+\`plans/RALPH_L12_CLEANROOM_EXHAUSTIVE_GENERATION.md\`, especially
+\`L12CEG-05-REPLAY-BATCH-PARTITION-PLAN\`. The replay batches, dirty unit
+proof tasks, and run-reference contract task are otherwise independent and may
+run in any order unless a target
+implementation task records a concrete dependency through \`Plan Impact\`.
+
+| Task | Depends On |
+| --- | --- |
+${cleanroomReplayExecutionPlanTasks.map((task) => `| \`${task.id}\` | completed prep plan \`L12CEG-05-REPLAY-BATCH-PARTITION-PLAN\` |`).join("\n")}
+
+## Global Verification
+
+Every task must start with the Ralph task-base check from \`AGENTS.md\` using
+the Base SHA provided by the Ralph runner/task metadata: log the declared Base
+SHA, log \`HEAD\`, and run \`git merge-base --is-ancestor <Base SHA> HEAD\`.
+This generated plan does not fabricate a Base SHA. If the runner provides no
+Base SHA, record \`Plan Impact: update-required\` for missing task metadata
+instead of guessing.
+
+Every completed replay or dirty-unit task must produce a hash-bound cleanroom
+run reference or compact receipt that passes \`pnpm cleanroom-harness:check\`,
+or for a latest-dirty unit proof task, record a precise blocker and
+\`Plan Impact: update-required\` when the latest dirty target cannot currently
+produce that source-checkable handle. Raw cleanroom logs stay outside the source
+repo. Source-side gates must remain green:
+
+- \`pnpm check:l12-cleanroom-generation:strict\`
+- \`pnpm cleanroom-scaffold:check\`
+- \`pnpm cleanroom-harness:check\`
+- \`pnpm unit-profile-coverage:check\`
+- \`git diff --check\`
+
+Before source-side closure, every \`L12CEG-RP-*\` row replay batch must have all
+related \`L12CEG-DU-*\` latest-dirty unit proof tasks done or explicitly blocked
+with a decider-visible reason. The dirty unit proof tasks are not substitutes
+for row replay batch closure; they prove/check the latest dirty target state per
+Unit so the replay batches cannot hide stale or missing target work.
+
+Run reviewer-loop convergence for RAW traceability, ubiquitous-language/domain
+language, architecture/connascence, cleanroom-authored-identity, Ralph task
+quality, and code-review findings. Fix every reasonable finding; reject only
+with a concrete reason.
+
+## Replay Batch Task Details
+
+${replayPlanTasks
+    .map(
+      ({ number, id, status, batch }) => `### Task ${number} - ${id}
+
+Status: \`${status}\`
+
+Goal:
+
+Run the generated cleanroom target harness for this L1-2 batch and produce a
+hash-bound cleanroom run reference or compact receipt for the listed
+harness-checkable SRD rule entries. The task is complete only when
+\`pnpm cleanroom-harness:check\` verifies that source-checkable handle and a
+follow-up artifact update can mark the batch done.
+
+Batch Metadata:
+
+- Batch id: \`${batch.batchId}\`
+- Route: \`${batch.route}\`
+- Proof classification: \`${batch.proofClassification}\`
+- Source partition chunk: \`${batch.sourcePartitionChunk}/${batch.sourcePartitionChunkCount}\`
+- Max rows per replay task: \`${batch.maxRowsPerReplayBatch}\`
+- Driver path: \`${batch.driverPath}\`
+- Harness path: \`${batch.harnessPath}\`
+- Harness-run file schema: \`${batch.evidenceSchema}\`
+- Current batch status: \`${batch.status}\`
+- Current harness-run status: \`${batch.evidenceStatus}\`
+- Current done status: \`${batch.acceptanceStatus}\`
+
+Input:
+
+- Source task graph batch \`${batch.batchId}\` from
+  \`plans/ralph-artifacts/l12-cleanroom-generation/exhaustive-task-graph.json\`.
+- Cleanroom scaffold/package containing the copied L1-2 artifacts listed below.
+- Driver path \`${batch.driverPath}\` and harness path
+  \`${batch.harnessPath}\`.
+- Connector paths listed below, if any.
+
+Rows:
+
+${mdBulletList(batch.rowIds)}
+
+Profiles:
+
+${mdBulletList(batch.profileIds)}
+
+Related Dirty Unit Proof Tasks:
+
+${mdBulletList(dirtyCleanroomProofTaskIdsForRows(batch.rowIds))}
+
+Connectors:
+
+${batch.connectorPaths.length === 0 ? "- none" : mdBulletList(batch.connectorPaths)}
+
+Required Artifacts:
+
+${mdBulletList(batch.requiredArtifacts)}
+
+Output:
+
+- Hash-bound cleanroom run reference or compact receipt that the source harness
+  can verify without checking raw cleanroom logs into source.
+- Updated run ledger, validation report, reviewer loop, decider decision, raw
+  logs, and history artifacts retained in the cleanroom target or external
+  artifact store.
+- A source-side artifact update only after \`pnpm cleanroom-harness:check\`
+  passes; do not mark an entry done from prose or diagnostic tests.
+
+Validation:
+
+${batch.validation.map((command) => `- \`${command}\``).join("\n")}
+
+Success Criteria:
+
+- Every SRD rule entry listed in this task is covered by a hash-bound cleanroom
+  run reference or compact receipt that passes \`pnpm cleanroom-harness:check\`.
+- The cleanroom run reference or compact receipt includes
+  \`l12CleanroomGeneration.artifacts[]\` entries matching the copied L1-2
+  artifact hashes.
+- The cleanroom run reference or compact receipt observes focused generic
+  \`qRoute\`, focused generic \`qComponentRoute\`, or equivalent machine proof
+  required by this batch.
+- \`pnpm cleanroom-harness:check\` passes.
+- Raw cleanroom logs are not checked into the source repo as the close condition.
+- No production runtime behavior dispatches on authored ids, names, slugs,
+  source headings, page references, official catalog labels, fixture labels, or
+  QNT action names.
+
+Dependencies:
+
+- Completed prep plan task \`L12CEG-05-REPLAY-BATCH-PARTITION-PLAN\`.
+- Related dirty unit proof tasks listed above must be done or explicitly
+  blocked before source-side closure for this replay batch.
+
+One-Agent-Session Scope:
+
+One byte-sized replay batch sharing route, profile set, and harness path, capped
+at ${MAX_REPLAY_BATCH_ROWS} row ids. If implementation pressure requires
+unrelated routes, a different profile set, a different harness path, or more row
+ids, stop and record \`Plan Impact: update-required\` instead of widening this
+task.
+
+Forbidden Shortcuts:
+
+- Do not count grouped selected-identity proof as a completed cleanroom run.
+- Do not treat source strict support, generated rows, or diagnostic tests as
+  source-checkable cleanroom run references or receipts.
+- Do not check raw cleanroom logs into source to satisfy the harness.
+- Do not duplicate runtime facts already owned by Surface, rules-kernel, QNT,
+  runtime context, or cleanroom guidance.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, architecture/connascence, cleanroom-authored-identity, Ralph
+task-quality, and code-review passes. Fix every reasonable finding and document
+concrete reasons for rejected notes.
+
+Plan Impact:
+
+\`applied\` only after a hash-bound cleanroom run reference or compact receipt
+passes \`pnpm cleanroom-harness:check\` and updates the source-side artifacts. Use
+\`update-required\` if this batch needs splitting, new dependencies, a different
+harness-run reference shape, or a source corpus/harness blocker.
+`,
+    )
+    .join("\n")}
+
+## Dirty Cleanroom Unit Proof Task Details
+
+${dirtyCleanroomUnitProofPlanTasks
+    .map(
+      ({ number, id, status, batch }) => `### Task ${number} - ${id}
+
+Status: \`${status}\`
+
+Goal:
+
+Check the latest dirty cleanroom target for Unit \`${batch.unitId}\` and either
+produce or verify current cleanroom run references or compact receipts for the listed
+harness-checkable SRD rule entries. If the latest dirty target is stale, missing,
+or cannot run this Unit yet, record a precise blocker with
+\`Plan Impact: update-required\`; do not substitute an older cleanroom target.
+
+Input:
+
+- Latest dirty cleanroom target \`${batch.latestDirtyCleanroomTarget}\`.
+- Source task graph unit proof batch \`${batch.batchId}\` from
+  \`plans/ralph-artifacts/l12-cleanroom-generation/exhaustive-task-graph.json\`.
+- Cleanroom scaffold/package containing the copied L1-2 artifacts listed below.
+- Related replay batch ids listed below.
+
+Unit Metadata:
+
+- Unit id: \`${batch.unitId}\`
+- Current task status: \`${batch.status}\`
+- Current dirty cleanroom status: \`${batch.dirtyCleanroomStatus}\`
+- Harness-run file schema: \`${batch.evidenceSchema}\`
+
+Rows:
+
+${mdBulletList(batch.rowIds)}
+
+Profiles:
+
+${mdBulletList(batch.profileIds)}
+
+Replay Batches:
+
+${mdBulletList(batch.replayBatchIds)}
+
+Required Artifacts:
+
+${mdBulletList(batch.requiredArtifacts)}
+
+Output:
+
+- Dirty-target inspection note naming \`${batch.latestDirtyCleanroomTarget}\`
+  and the exact commit or worktree state checked.
+- Hash-bound cleanroom run reference or compact receipt for this Unit's listed
+  rows, when the latest dirty target can produce one.
+- Precise blocker with \`Plan Impact: update-required\` when the latest dirty
+  target lacks current runnable support, has stale copied inputs, or cannot pass
+  \`pnpm cleanroom-harness:check\`.
+- Source-side artifact update only after \`pnpm cleanroom-harness:check\`
+  passes; do not mark rows done from prose, old target files, or diagnostic tests.
+
+Validation:
+
+${batch.validation.map((command) => `- \`${command}\``).join("\n")}
+
+Success Criteria:
+
+- The task checks exactly \`${batch.latestDirtyCleanroomTarget}\`; older targets
+  and preservation directories do not count.
+- Every row listed in this task maps to Unit \`${batch.unitId}\` in the source
+  L1-2 accounting artifacts.
+- A current cleanroom run reference or compact receipt covers the listed rows
+  and passes \`pnpm cleanroom-harness:check\`, or the task records a precise
+  blocker with \`Plan Impact: update-required\`.
+- The dirty target check uses the copied L1-2 artifacts and records their hashes.
+- Raw cleanroom logs are retained outside the source repo and are not required
+  as checked-in source artifacts.
+- No production runtime behavior dispatches on authored ids, names, slugs,
+  source headings, page references, official catalog labels, fixture labels, or
+  QNT action names.
+
+Dependencies:
+
+- Completed prep plan task \`L12CEG-05-REPLAY-BATCH-PARTITION-PLAN\`.
+- Related replay batches listed above consume this task's result before
+  source-side closure.
+
+One-Agent-Session Scope:
+
+One Unit in the latest dirty cleanroom target, with at most this Unit's listed
+SRD L1-2 row ids. If the Unit requires broad target architecture changes,
+unrelated Units, or a different dirty target, stop and record
+\`Plan Impact: update-required\` instead of widening this task.
+
+Forbidden Shortcuts:
+
+- Do not use an older dirty target, stale preservation copy, source strict pass,
+  generated row list, or diagnostic test as the cleanroom run reference.
+- Do not count grouped selected-identity proof as a completed cleanroom run.
+- Do not check raw cleanroom logs into source to satisfy the harness.
+- Do not duplicate runtime facts already owned by Surface, rules-kernel, QNT,
+  runtime context, or cleanroom guidance.
+- Do not include PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, architecture/connascence, cleanroom-authored-identity, Ralph
+task-quality, and code-review passes. Fix every reasonable finding and document
+concrete reasons for rejected notes.
+
+Plan Impact:
+
+\`applied\` only after the latest dirty cleanroom target produces a current
+hash-bound cleanroom run reference or compact receipt that passes
+\`pnpm cleanroom-harness:check\` and the source-side artifacts are updated. Use
+\`update-required\` if this Unit needs target implementation, stale input repair,
+task splitting, a different harness-run reference shape, or source corpus/harness
+repair.
+`,
+    )
+    .join("\n")}
+
+## Cleanroom Run Reference Contract Task Details
+
+${cleanroomRunReferenceContractTasks
+    .map(
+      ({ number, id, status }) => `### Task ${number} - ${id}
+
+Status: \`${status}\`
+
+Goal:
+
+Define and wire the source harness contract so replay and dirty-unit tasks close
+through a hash-bound cleanroom run reference or compact receipt, not by checking
+raw cleanroom logs into the source repo. Keep compatibility with the existing
+legacy \`target replay evidence\` schema name only where the checker already uses
+that domain boundary.
+
+Input:
+
+- \`plans/RALPH_L12_CLEANROOM_REPLAY_BATCHES.md\`
+- \`plans/RALPH_L12_CLEANROOM_VOCABULARY.md\`
+- \`plans/ralph-artifacts/l12-cleanroom-generation/exhaustive-task-graph.json\`
+- \`scripts/check-cleanroom-harness.cjs\`
+- \`scripts/l12-cleanroom-generation-check.cjs\`
+- \`plans/cleanroom-scaffolds/**/*.template.*\`
+
+Output:
+
+- Source harness wording and checker behavior that accepts a compact receipt or
+  hash-bound reference to a cleanroom-retained run artifact.
+- Explicit rejection of raw cleanroom log check-in as a required source close
+  condition.
+- Updated scaffold guidance telling cleanroom targets to retain detailed logs in
+  the target or external artifact store and return only the source-checkable
+  handle required by the harness.
+- Negative self-test or fixture coverage if checker behavior changes.
+
+Validation:
+
+- \`pnpm check:l12-cleanroom-generation:strict\`
+- \`pnpm cleanroom-scaffold:check\`
+- \`pnpm cleanroom-harness:check\`
+- \`pnpm unit-profile-coverage:check\`
+- \`git diff --check\`
+
+Success Criteria:
+
+- Source does not require raw cleanroom logs to be checked in.
+- The source harness can verify row ids, target identity, copied artifact hashes,
+  harness path, projection/route facts, and content hash for the retained
+  cleanroom run artifact or compact receipt.
+- Replay and dirty-unit tasks have a deterministic close condition that is
+  machine-checkable and not prose-only.
+- The contract preserves SRD provenance boundaries and does not introduce PHB+
+  or synthetic non-SRD catalog identity.
+- The contract does not make production runtime behavior depend on cleanroom
+  artifact paths, authored ids, names, slugs, or fixture labels.
+
+Dependencies:
+
+- Completed prep plan task \`L12CEG-05-REPLAY-BATCH-PARTITION-PLAN\`.
+
+One-Agent-Session Scope:
+
+One source harness contract cleanup task. If implementing the reference shape
+requires broad ledger redesign, external artifact service integration, or
+target runtime behavior changes, stop and record \`Plan Impact: update-required\`
+instead of widening this task.
+
+Forbidden Shortcuts:
+
+- Do not solve this by checking raw cleanroom logs into source.
+- Do not make a prose-only convention; the source harness must have a
+  machine-checkable handle.
+- Do not weaken artifact hash checks, row coverage checks, stale-input checks,
+  or duplicate-row checks.
+- Do not introduce PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run RAW/domain, architecture/connascence, cleanroom-authored-identity, Ralph
+task-quality, and code-review passes. Fix every reasonable finding and document
+concrete reasons for rejected notes.
+
+Plan Impact:
+
+\`applied\` only after the source harness contract can verify a hash-bound run
+reference or compact receipt without requiring raw cleanroom logs in source. Use
+\`update-required\` if this needs a larger artifact-store or ledger redesign.
+`,
+    )
+    .join("\n")}
+`;
+
+fs.writeFileSync(
+  path.join(root, "plans/RALPH_L12_CLEANROOM_REPLAY_BATCHES.md"),
+  replayBatchPlan,
+);
+
 writeText(
   "reviewer-loop-report.md",
   `# L1-2 Cleanroom Generation Reviewer Loop
@@ -1183,23 +2082,23 @@ Generated by \`${path.relative(root, __filename)}\`.
 ## Round 1 Findings
 
 - RAW/domain: accepted. Generated artifacts cite local SRD source paths from \`srd-unit-inventory.json\` and keep \`.references/srd-5.2.1/\` as the RAW corpus.
-- Architecture/connascence: accepted with one follow-up. The generated mapping records source hashes so stale inputs are visible; the exhaustive plan includes a checker task to make that executable.
+- Architecture/connascence: accepted. The generated mapping records source hashes, the strict checker validates them, and the cleanroom package manifest binds copied L1-2 artifacts by hash.
 - Cleanroom authored identity: accepted. Unit ids appear only at denominator/mapping boundaries. Runtime fact requirements use generic fact family names.
-- Ralph task quality: accepted with one caveat. The plan is byte-sized by gate, but connector implementation is intentionally split into a batching task because current row-to-route joins are conservative.
-- Code-review stance: accepted. The generator is plan-owned research tooling under the artifact directory and does not change production runtime, QNT, or checker behavior.
+- Ralph task quality: accepted. Tasks 1-4 are source/scaffold/checker work and task 5 produces future replay partitions; none claims target replay closure.
+- Code-review stance: accepted. Source changes are limited to checker, cleanroom packaging, scaffold, and harness validation; no production runtime, QNT behavior, or target replay implementation changed.
 
 ## Round 2 Findings
 
-- No additional reasonable findings after checking generated artifact boundaries and exhaustive plan task bodies.
+- No additional reasonable findings after checking generated artifact boundaries, scaffold contracts, harness evidence metadata, and exhaustive plan task bodies.
 
 ## Explicit Rejections
 
 - Rejected: treating the generated heuristic missing-proof list as authoritative absence of proof. Reason: it is only a conservative join result from current artifact names and fields; \`L12CEG-05\` exists to assign each row to a concrete generic connector or source-harness task.
-- Rejected: doing production checker implementation inside this meta-plan. Reason: \`plans/RALPH_L12_CLEANROOM_GENERATION_READINESS.md\` forbids production verifier-script changes.
+- Rejected: treating the future replay partitions as accepted target evidence. Reason: the partitions are \`planned-not-executed\` and \`not-accepted\`; only future harness-generated replay evidence can close target execution.
 
 ## Convergence
 
-Reviewer loop converged for planning artifacts. The exhaustive plan remains the handoff for implementation work.
+Reviewer loop converged for the L1-2 source/scaffold/checker preparation work and future replay partition plan. Target replay execution remains future work.
 `,
 );
 

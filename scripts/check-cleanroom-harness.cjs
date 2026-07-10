@@ -89,6 +89,14 @@ const validatorFiles = [
   "scripts/cleanroom-branch-coverage-check.cjs",
 ];
 
+const l12CleanroomArtifactPaths = [
+  "l12-cleanroom-generation/srd-l12-denominator.json",
+  "l12-cleanroom-generation/capability-fact-coverage-matrix.json",
+  "l12-cleanroom-generation/route-proof-inventory.json",
+  "l12-cleanroom-generation/srd-row-generic-fact-map.json",
+  "l12-cleanroom-generation/verifier-gate-spec.json",
+];
+
 const historicalArtifacts = {
   startGate: "START_GATE.json",
   engineDepth: "ENGINE_DEPTH_MANIFEST.json",
@@ -358,6 +366,17 @@ function validateCleanroomInputIntegrity({
       "cleanroom-input/MANIFEST.md must include branch-coverage/reducer-route-inventory.json.",
     );
   }
+  for (const artifactPath of l12CleanroomArtifactPaths) {
+    if (!cleanroomManifest.fileHashes.has(artifactPath)) {
+      issues.push(
+        `cleanroom-input/MANIFEST.md must include ${artifactPath}.`,
+      );
+    }
+    const filePath = path.join(rootPath, "cleanroom-input", artifactPath);
+    if (!fs.existsSync(filePath)) {
+      issues.push(`cleanroom-input/${artifactPath} is missing.`);
+    }
+  }
   const checkedDrivers = new Set();
   for (const obligation of inventory.branchObligations ?? []) {
     if (!isRecord(obligation) || typeof obligation.driverPath !== "string") continue;
@@ -390,6 +409,76 @@ function validateCleanroomInputIntegrity({
     if (obligation.qntFileSha256 !== actualSha) {
       issues.push(
         `${obligation.driverPath}: source branch inventory qntFileSha256 ${obligation.qntFileSha256} does not match copied file ${actualSha}.`,
+      );
+    }
+  }
+}
+
+function expectedL12CleanroomArtifacts(cleanroomManifest) {
+  if (cleanroomManifest === undefined) return undefined;
+  return l12CleanroomArtifactPaths.map((artifactPath) => ({
+    path: `cleanroom-input/${artifactPath}`,
+    sha256: cleanroomManifest.fileHashes.get(artifactPath),
+  }));
+}
+
+function validateL12CleanroomGenerationEvidence({
+  evidence,
+  expectedArtifacts,
+  context,
+  issues,
+}) {
+  if (expectedArtifacts === undefined) return;
+  const block = evidence.l12CleanroomGeneration;
+  if (!isRecord(block)) {
+    issues.push(`${context}: target replay evidence requires l12CleanroomGeneration.`);
+    return;
+  }
+  if (block.schema !== "target-l12-cleanroom-generation-evidence.v1") {
+    issues.push(
+      `${context}: l12CleanroomGeneration.schema must be target-l12-cleanroom-generation-evidence.v1.`,
+    );
+  }
+  if (!Array.isArray(block.artifacts)) {
+    issues.push(`${context}: l12CleanroomGeneration.artifacts must be an array.`);
+    return;
+  }
+  const artifactsByPath = new Map();
+  for (const [index, artifact] of block.artifacts.entries()) {
+    const artifactContext = `${context}: l12CleanroomGeneration.artifacts[${index}]`;
+    if (!isRecord(artifact)) {
+      issues.push(`${artifactContext} must be an object.`);
+      continue;
+    }
+    validateString(artifact.path, `${artifactContext}.path`, issues);
+    validateString(artifact.sha256, `${artifactContext}.sha256`, issues);
+    if (
+      typeof artifact.path === "string" &&
+      artifactsByPath.has(artifact.path)
+    ) {
+      issues.push(`${artifactContext}.path duplicates ${artifact.path}.`);
+    }
+    if (
+      typeof artifact.sha256 === "string" &&
+      !/^[0-9a-f]{64}$/i.test(artifact.sha256)
+    ) {
+      issues.push(`${artifactContext}.sha256 must be a sha256 hex digest.`);
+    }
+    if (typeof artifact.path === "string") {
+      artifactsByPath.set(artifact.path, artifact.sha256);
+    }
+  }
+  for (const expected of expectedArtifacts) {
+    if (artifactsByPath.get(expected.path) !== expected.sha256) {
+      issues.push(
+        `${context}: l12CleanroomGeneration.artifacts must include ${expected.path} with manifest hash ${expected.sha256}.`,
+      );
+    }
+  }
+  for (const artifactPath of artifactsByPath.keys()) {
+    if (!expectedArtifacts.some((expected) => expected.path === artifactPath)) {
+      issues.push(
+        `${context}: l12CleanroomGeneration.artifacts includes unexpected ${artifactPath}.`,
       );
     }
   }
@@ -744,6 +833,7 @@ function validateEvidenceDocs({
   selected,
   declaredEvidencePaths,
   expectedCleanroomManifestSourceCommitSha,
+  expectedL12Artifacts,
   evidencePaths,
   enforceNoExtraEvidence = true,
   issues,
@@ -792,6 +882,12 @@ function validateEvidenceDocs({
       issues.push(`${context} must be an object.`);
       continue;
     }
+    validateL12CleanroomGenerationEvidence({
+      evidence,
+      expectedArtifacts: expectedL12Artifacts,
+      context,
+      issues,
+    });
     const perFileResult = validateTargetReplayEvidence(
       evidence,
       selected,
@@ -1137,6 +1233,7 @@ function validateLedgerEntry({
     evidencePaths: ledgerEvidencePaths,
     enforceNoExtraEvidence: false,
     expectedCleanroomManifestSourceCommitSha: cleanroomManifest?.sourceCommitSha,
+    expectedL12Artifacts: expectedL12CleanroomArtifacts(cleanroomManifest),
     issues,
   });
   const acceptedEvidenceRefs = evidenceRefsFromSummary(evidenceSummary);
@@ -2248,6 +2345,7 @@ function validateTaskArtifacts({ taskRoot, profile }) {
     selected,
     declaredEvidencePaths,
     expectedCleanroomManifestSourceCommitSha: cleanroomManifest?.sourceCommitSha,
+    expectedL12Artifacts: expectedL12CleanroomArtifacts(cleanroomManifest),
     issues,
   });
   validateStateOwnerManifest({
@@ -2527,6 +2625,19 @@ function validFixture(rootPath) {
     ),
     routeInventory,
   );
+  const l12ArtifactRefs = l12CleanroomArtifactPaths.map((artifactPath) => {
+    const filePath = path.join(rootPath, "cleanroom-input", artifactPath);
+    writeJson(filePath, {
+      schema: `fixture-${path.basename(artifactPath, ".json")}.v1`,
+      sourceHashes: {},
+      rows: [],
+    });
+    return {
+      path: `cleanroom-input/${artifactPath}`,
+      manifestPath: artifactPath,
+      sha256: sha256File(filePath),
+    };
+  });
   const inventoryFileSha = sha256File(
     path.join(
       rootPath,
@@ -2553,6 +2664,10 @@ function validFixture(rootPath) {
       "| --- | --- | --- |",
       `| \`branch-coverage/source-branch-inventory.json\` | \`${inventoryFileSha}\` | \`plans/cleanroom-branch-coverage/source-branch-inventory.json\` |`,
       `| \`branch-coverage/reducer-route-inventory.json\` | \`${routeInventoryFileSha}\` | \`plans/cleanroom-branch-coverage/reducer-route-inventory.json\` |`,
+      ...l12ArtifactRefs.map(
+        (artifact) =>
+          `| \`${artifact.manifestPath}\` | \`${artifact.sha256}\` | \`plans/ralph-artifacts/${artifact.manifestPath}\` |`,
+      ),
       `| \`${driverPath.slice("cleanroom-input/".length)}\` | \`${qntSha}\` | \`packages/battle-runtime/battle-runtime-magic-missile.mbt.qnt\` |`,
       "",
     ].join("\n"),
@@ -2596,6 +2711,10 @@ function validFixture(rootPath) {
     sourceBranchInventorySha256: inventorySha,
     targetProfile: "synthetic-alpha",
     targetProfileSha256: profileSha,
+    l12CleanroomGeneration: {
+      schema: "target-l12-cleanroom-generation-evidence.v1",
+      artifacts: l12ArtifactRefs.map(({ path, sha256 }) => ({ path, sha256 })),
+    },
     runs: inventory.branchObligations.map((obligation) => ({
       evidenceKind: "target-qnt-mbt-replay",
       driverPath: obligation.driverPath,
@@ -2862,6 +2981,28 @@ function runSelfTest() {
         });
       },
       "target replay evidence requires targetProfile",
+    );
+    expectFailure(
+      validRoot,
+      profile,
+      "missing-l12-cleanroom-generation",
+      (rootPath) => {
+        updateFixtureLedgerEvidence(rootPath, (evidence) => {
+          delete evidence.l12CleanroomGeneration;
+        });
+      },
+      "target replay evidence requires l12CleanroomGeneration",
+    );
+    expectFailure(
+      validRoot,
+      profile,
+      "stale-l12-cleanroom-generation-hash",
+      (rootPath) => {
+        updateFixtureLedgerEvidence(rootPath, (evidence) => {
+          evidence.l12CleanroomGeneration.artifacts[0].sha256 = "9".repeat(64);
+        });
+      },
+      "l12CleanroomGeneration.artifacts must include cleanroom-input/l12-cleanroom-generation/srd-l12-denominator.json with manifest hash",
     );
     expectFailure(
       validRoot,

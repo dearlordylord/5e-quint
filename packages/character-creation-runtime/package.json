@@ -25,8 +25,9 @@
   "devDependencies": {
     "@firfi/quint-connect": "^2.0.0",
     "@types/node": "^22.10.0",
+    "@typescript/native": "npm:typescript@^7.0.2",
     "fast-check": "3.23.2",
-    "typescript": "^5.7.2",
+    "typescript": "^5.9.3",
     "vitest": "^3.0.5",
     "zod": "^4.3.6"
   }

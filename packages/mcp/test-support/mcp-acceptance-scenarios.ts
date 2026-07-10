@@ -70,6 +70,13 @@ const levelFiveWizardFireballDraftId =
   "draft:stdio-level-five-elf-soldier-wizard-fireball";
 const levelFiveWizardFireballCombatantId = "wizard-level-5";
 const levelFiveWizardFireballBattleId = "battle:stdio-level-five-fireball";
+const iceKnifeCasterDraftId = "draft:stdio-ice-knife-caster-wizard";
+const iceKnifePrimaryDraftId = "draft:stdio-ice-knife-primary-wizard";
+const iceKnifeSecondaryDraftId = "draft:stdio-ice-knife-secondary-wizard";
+const iceKnifeCasterCombatantId = "ice-knife-caster";
+const iceKnifePrimaryCombatantId = "ice-knife-primary-wizard";
+const iceKnifeSecondaryCombatantId = "ice-knife-secondary-wizard";
+const iceKnifeBattleId = "battle:stdio-ice-knife-wizards";
 const levelSixRogueExpertiseDraftId =
   "draft:stdio-level-six-orc-soldier-rogue-expertise";
 const levelSixRogueExpertiseBattleId =
@@ -1374,6 +1381,162 @@ export async function verifyLevelFiveWizardFireballBattleHandoff(
   );
 }
 
+export async function verifyWizardIceKnifeBattleHandoff(client: Client) {
+  const workflow = await callTool(client, "describe_mcp_workflow", {});
+  assert.equal(get(workflow, "resultPaths.battleActs"), "snapshot.acts");
+
+  const units = await callTool(client, "list_catalog_units", {});
+  assert.ok(
+    unitSummaries(units, "spell").some((unit) => unit.id === "ice_knife"),
+  );
+
+  await createAndFinalizeElfWizardTwoWithSpells(client, iceKnifeCasterDraftId, {
+    spellbook: [
+      "detect_magic",
+      "mage_armor",
+      "magic_missile",
+      "shield",
+      "sleep",
+      "thunderwave",
+      "ice_knife",
+      "feather_fall",
+    ],
+    preparedSpells: [
+      "mage_armor",
+      "magic_missile",
+      "shield",
+      "thunderwave",
+      "ice_knife",
+    ],
+  });
+  await createAndFinalizeElfWizardTwoWithSpells(client, iceKnifePrimaryDraftId, {
+    preparedSpells: [
+      "mage_armor",
+      "magic_missile",
+      "sleep",
+      "thunderwave",
+      "chromatic_orb",
+    ],
+  });
+  await createAndFinalizeElfWizardTwoWithSpells(client, iceKnifeSecondaryDraftId, {
+    preparedSpells: [
+      "mage_armor",
+      "magic_missile",
+      "sleep",
+      "thunderwave",
+      "chromatic_orb",
+    ],
+  });
+
+  const started = await callTool(client, "start_battle", {
+    battleId: iceKnifeBattleId,
+    initialCombatants: [
+      {
+        kind: "characterSession",
+        characterId: testCharacterId(iceKnifeCasterDraftId),
+        combatantId: iceKnifeCasterCombatantId,
+        initiative: 18,
+        side: "party",
+      },
+      {
+        kind: "characterSession",
+        characterId: testCharacterId(iceKnifePrimaryDraftId),
+        combatantId: iceKnifePrimaryCombatantId,
+        initiative: 12,
+        side: "opposition",
+      },
+      {
+        kind: "characterSession",
+        characterId: testCharacterId(iceKnifeSecondaryDraftId),
+        combatantId: iceKnifeSecondaryCombatantId,
+        initiative: 10,
+        side: "opposition",
+      },
+    ],
+  });
+  assert.equal(get(started, "snapshot.battleId"), iceKnifeBattleId);
+  assert.deepEqual(get(started, "snapshot.turnOrder"), [
+    iceKnifeCasterCombatantId,
+    iceKnifePrimaryCombatantId,
+    iceKnifeSecondaryCombatantId,
+  ]);
+  const primaryStartingHp = combatantHp(started, iceKnifePrimaryCombatantId);
+  const secondaryStartingHp = combatantHp(started, iceKnifeSecondaryCombatantId);
+
+  const casterActs = await callTool(client, "discover_battle_acts", {});
+  assert.equal(get(casterActs, "snapshot.currentActorId"), iceKnifeCasterCombatantId);
+  const iceKnifeAct = battleActByLabel(casterActs, "Ice Knife");
+  assert.ok(iceKnifeAct, "Missing Ice Knife act");
+  const targetHole = singleInitialHoleOfKind(iceKnifeAct, "targetChoice");
+
+  const afterTarget = await callTool(client, "fill_battle_hole", {
+    subject: iceKnifeAct.subject,
+    fill: spellTargetFill(
+      targetHole.holeId,
+      iceKnifeCasterCombatantId,
+      "ice_knife",
+      iceKnifePrimaryCombatantId,
+    ),
+  });
+  assert.equal(get(afterTarget, "result.tag"), "needsHoles");
+  const attackHole = resultHole(afterTarget, "attackRoll");
+
+  const afterAttack = await callTool(client, "fill_battle_hole", {
+    subject: iceKnifeAct.subject,
+    fill: battleAttackRollFill(attackHole.holeId, 25, 17),
+  });
+  assert.equal(get(afterAttack, "result.tag"), "needsHoles");
+  const attackDamageHole = resultHole(afterAttack, "rolledDice");
+
+  const afterAttackDamage = await callTool(client, "fill_battle_hole", {
+    subject: iceKnifeAct.subject,
+    fill: rolledDiceFill(attackDamageHole.holeId, [[4]]),
+  });
+  assert.equal(get(afterAttackDamage, "result.tag"), "needsHoles");
+  const savingThrowHole = resultHole(afterAttackDamage, "savingThrowOutcome");
+
+  const afterSavingThrows = await callTool(client, "fill_battle_hole", {
+    subject: iceKnifeAct.subject,
+    fill: {
+      kind: "savingThrowOutcome",
+      holeId: savingThrowHole.holeId,
+      value: {
+        area: {
+          originAnchorId: iceKnifePrimaryCombatantId,
+          affectedTargetIds: [
+            iceKnifePrimaryCombatantId,
+            iceKnifeSecondaryCombatantId,
+          ],
+        },
+        outcomes: [
+          { targetId: iceKnifePrimaryCombatantId, succeeded: false },
+          { targetId: iceKnifeSecondaryCombatantId, succeeded: false },
+        ],
+      },
+    },
+  });
+  assert.equal(get(afterSavingThrows, "result.tag"), "needsHoles");
+  const burstDamageHole = resultHole(afterSavingThrows, "rolledDice");
+
+  const afterBurstDamage = await callTool(client, "fill_battle_hole", {
+    subject: iceKnifeAct.subject,
+    fill: rolledDiceFill(burstDamageHole.holeId, [[2, 2]]),
+  });
+  assert.equal(get(afterBurstDamage, "result.tag"), "resolved");
+  assert.equal(
+    combatantHp(afterBurstDamage, iceKnifePrimaryCombatantId),
+    primaryStartingHp - 8,
+  );
+  assert.equal(
+    combatantHp(afterBurstDamage, iceKnifeSecondaryCombatantId),
+    secondaryStartingHp - 4,
+  );
+  assert.deepEqual(
+    wizardSpellSlotsFor(afterBurstDamage, iceKnifeCasterCombatantId),
+    [{ count: 3, expended: 1, spellLevel: 1 }],
+  );
+}
+
 export async function verifyLevelSixRogueExpertiseSheetScenario(
   client: Client,
 ) {
@@ -1923,6 +2086,34 @@ async function createAndFinalizeFighterTwo(client: Client, draftId: string) {
 }
 
 async function createAndFinalizeElfWizardTwo(client: Client, draftId: string) {
+  return createAndFinalizeElfWizardTwoWithSpells(client, draftId);
+}
+
+async function createAndFinalizeElfWizardTwoWithSpells(
+  client: Client,
+  draftId: string,
+  spells: {
+    readonly spellbook?: readonly string[];
+    readonly preparedSpells?: readonly string[];
+  } = {},
+) {
+  const spellbook = spells.spellbook ?? [
+    "detect_magic",
+    "mage_armor",
+    "magic_missile",
+    "shield",
+    "sleep",
+    "thunderwave",
+    "chromatic_orb",
+    "feather_fall",
+  ];
+  const preparedSpells = spells.preparedSpells ?? [
+    "mage_armor",
+    "magic_missile",
+    "shield",
+    "thunderwave",
+    "chromatic_orb",
+  ];
   await callTool(client, "create_character_draft", { draftId });
   await fillBaseCharacter(client, draftId, {
     progression: "12:class_wizard|12:class_wizard:level_2:fixed_hp_gain",
@@ -1953,22 +2144,11 @@ async function createAndFinalizeElfWizardTwo(client: Client, draftId: string) {
       ),
       choiceFill(
         unitHoleId("class_wizard", "wizard_spellbook_choices"),
-        "detect_magic",
-        "mage_armor",
-        "magic_missile",
-        "shield",
-        "sleep",
-        "thunderwave",
-        "chromatic_orb",
-        "feather_fall",
+        ...spellbook,
       ),
       choiceFill(
         unitHoleId("class_wizard", "wizard_prepared_spell_choices"),
-        "mage_armor",
-        "magic_missile",
-        "shield",
-        "thunderwave",
-        "chromatic_orb",
+        ...preparedSpells,
       ),
       choiceFill(
         unitHoleId("background_soldier", "background_ability_score_increase"),

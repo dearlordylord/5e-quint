@@ -3372,6 +3372,7 @@ describe("MCP server route", () => {
       hitPointMaximumReduction: 0,
       hitPoints: { tag: "positive", currentHp: 12, tempHp: 0 },
       conditions: [],
+      exhaustionLevel: 0,
       spentHitDice: [],
       restFeatureUses: [],
       resourceExpenditures: [],

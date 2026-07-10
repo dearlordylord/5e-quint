@@ -3,11 +3,11 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
-    "baseUrl": ".",
     "paths": {
       "#/*": ["./src/*"]
     },
     "lib": ["ES2022"],
+    "types": ["node"],
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,

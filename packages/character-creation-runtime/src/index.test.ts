@@ -992,6 +992,7 @@ describe("character creation hole discovery", () => {
           "11:class_rogue:level_1:maximum_hit_die",
           "11:class_rogue|11:class_rogue|11:class_rogue:level_3:fixed_hp_gain",
           "11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue:level_6:fixed_hp_gain",
+          "11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue|11:class_rogue:level_10:fixed_hp_gain",
           "14:class_sorcerer:level_1:maximum_hit_die",
           "14:class_sorcerer|14:class_sorcerer|14:class_sorcerer:level_3:fixed_hp_gain",
           "14:class_sorcerer|14:class_sorcerer:level_2:fixed_hp_gain",

@@ -25,6 +25,10 @@ Target profile: `{{targetProfileId}}`. Target package/tooling:
   branch obligations each target task must satisfy.
 - `cleanroom-input/branch-coverage/reducer-route-inventory.json` — curated
   reducer-spine diagnostic route selection and derivability records.
+- `cleanroom-input/l12-cleanroom-generation/*.json` — SRD L1-2 denominator,
+  capability matrix, route inventory, row-to-generic-fact mapping, and verifier
+  gate spec. These artifacts are structured source inputs and do not by
+  themselves prove target replay closure.
 - `cleanroom-input/guidance/**` — curated language-independent architecture
   guidance.
 - `cleanroom-input/domain/UBIQUITOUS_LANGUAGE.md` — canonical terminology. Use
@@ -103,7 +107,10 @@ artifacts and target replay evidence; a task is not accepted until it passes.
 - Match the exact JSON shape in `tasks/TARGET_REPLAY_EVIDENCE.example.json`.
 - Each replay evidence file must name `cleanroomManifestSourceCommitSha` from
   `cleanroom-input/MANIFEST.md`, `sourceBranchInventorySha256`, target profile
-  id, and `targetProfileSha256` computed from canonical JSON with sorted keys.
+  id, `targetProfileSha256` computed from canonical JSON with sorted keys, and
+  `l12CleanroomGeneration.artifacts[]` entries matching the copied L1-2
+  artifact paths and hashes:
+{{l12CleanroomArtifactsMarkdown}}
   Each run must name the QNT file hash, driver path, branch family, branch
   action, observed `mbt::actionTaken`, sampled `mbt::nondetPicks` when present,
   trace id or seed, pass/fail result, and a state/projection check with a
@@ -116,6 +123,9 @@ artifacts and target replay evidence; a task is not accepted until it passes.
   API path.
 - Diagnostic target-language tests are allowed, but a diagnostic row is not
   target replay evidence and cannot close branch coverage.
+- Grouped selected-identity evidence is not accepted cleanroom proof for an
+  executable L1-2 row unless the evidence also observes focused generic
+  `qRoute`, focused generic `qComponentRoute`, or equivalent machine proof.
 
 ## Reporting
 

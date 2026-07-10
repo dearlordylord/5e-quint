@@ -16,6 +16,7 @@ state owner that must become executable.
 - `cleanroom-input/MANIFEST.md`
 - `cleanroom-input/branch-coverage/source-branch-inventory.json`
 - `cleanroom-input/branch-coverage/reducer-route-inventory.json`
+- `cleanroom-input/l12-cleanroom-generation/*.json`
 - `cleanroom-input/qnt/**` for the selected drivers and connectors
 - `cleanroom-input/raw/srd-5.2.1/**` for rule-bearing behavior
 - `cleanroom-input/domain/UBIQUITOUS_LANGUAGE.md`
@@ -44,8 +45,9 @@ state owner that must become executable.
   artifacts.
 - Rule-bearing tasks cite local RAW and ubiquitous-language/domain inputs.
 - Target replay evidence records the required evidence fields from
-  `tasks/TARGET_REPLAY_EVIDENCE.example.json`, including target entrypoint
-  sequence, observed projection source, and reducer/public API path.
+  `tasks/TARGET_REPLAY_EVIDENCE.example.json`, including
+  `l12CleanroomGeneration`, target entrypoint sequence, observed projection source,
+  and reducer/public API path.
 - If a branch cannot be implemented, `tasks/BLOCKERS.md` uses only these
   blocker classes: `source-qnt-corpus`, `source-scope`, or
   `target-implementation`.
@@ -114,14 +116,15 @@ and record a bootstrap blocker in `tasks/BLOCKERS.md`.
   acceptance evidence.
 - Generate target replay evidence under `tasks/target-replay-evidence/`.
   Match `tasks/TARGET_REPLAY_EVIDENCE.example.json` exactly. Passing evidence
-  must record the target entrypoint sequence and an `observedProjectionSource`
-  tagged as `qRoute`, `qComponentRoute`, or `semantic-projection`. `qRoute`
-  and `qComponentRoute` evidence must name the observed route-event source and
-  reducer/public API path that produced those events; semantic projections must
-  name the semantic projection source and public API path. Equal
-  expected/observed projection hashes without that source record do not close
-  branch coverage. Diagnostic target-language tests are allowed, but they do
-  not close branch coverage.
+  must record `l12CleanroomGeneration.artifacts[]` hashes for
+  `cleanroom-input/l12-cleanroom-generation/`, the target entrypoint sequence,
+  and an `observedProjectionSource` tagged as `qRoute`, `qComponentRoute`, or
+  `semantic-projection`. `qRoute` and `qComponentRoute` evidence must name the
+  observed route-event source and reducer/public API path that produced those
+  events; semantic projections must name the semantic projection source and
+  public API path. Equal expected/observed projection hashes without that
+  source record do not close branch coverage. Diagnostic target-language tests
+  are allowed, but they do not close branch coverage.
 - Copy the accepted task's rolling artifacts into
   `tasks/history/<taskId>/`, then append `tasks/RUN_LEDGER.json` with the
   history artifact hashes, target replay evidence refs, command results,

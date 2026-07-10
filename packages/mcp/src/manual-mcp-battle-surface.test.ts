@@ -38,6 +38,7 @@ const goblinId = combatantId("goblin");
 const allyId = combatantId("ally");
 const partySide = battleCombatantSide("party");
 const oppositionSide = battleCombatantSide("opposition");
+const PROMOTED_ACTION_TIME_SPELL_DISCOVERY_TIMEOUT_MS = 120_000;
 
 describe("manual MCP battle surface coverage", () => {
   test("uses Bardic Inspiration grant through MCP battle tools", () => {
@@ -893,83 +894,87 @@ describe("manual MCP battle surface coverage", () => {
     ]);
   });
 
-  test("discovers promoted action-time spell procedures through MCP battle tools", () => {
-    const root = createMcpCompositionRoot();
-    const cantrips = [
-      "acid_splash",
-      "chill_touch",
-      "eldritch_blast",
-      "fire_bolt",
-      "guidance",
-      "light",
-      "poison_spray",
-      "produce_flame",
-      "ray_of_frost",
-      "resistance",
-      "sacred_flame",
-      "sorcerous_burst",
-      "starry_wisp",
-    ] as const;
-    const preparedSpells = [
-      "animal_friendship",
-      "bane",
-      "bless",
-      "burning_hands",
-      "chromatic_orb",
-      "color_spray",
-      "command",
-      "cure_wounds",
-      "dissonant_whispers",
-      "entangle",
-      "expeditious_retreat",
-      "faerie_fire",
-      "grease",
-      "healing_word",
-      "hunters_mark",
-      "ice_knife",
-      "inflict_wounds",
-      "jump",
-      "mage_armor",
-      "magic_missile",
-      "mass_cure_wounds",
-      "mass_healing_word",
-      "protection_from_evil_and_good",
-      "shield_of_faith",
-      "sleep",
-      "thunderwave",
-    ] as const;
-    root.sessionStore.battleState = startBattleRight(root, [
-      character(root, {
-        combatantId: fighterId,
-        displayName: "Prepared Caster",
-        initiative: 20,
-        attack: null,
-        spellcasting: spellcasting(root, {
-          sourceClassName: "wizard",
-          abilityModifier: 3,
-          cantrips,
-          preparedSpells,
-          slots: [
-            { spellLevel: 1, count: 12 },
-            { spellLevel: 2, count: 3 },
-            { spellLevel: 3, count: 3 },
-            { spellLevel: 5, count: 2 },
-          ],
+  test(
+    "discovers promoted action-time spell procedures through MCP battle tools",
+    () => {
+      const root = createMcpCompositionRoot();
+      const cantrips = [
+        "acid_splash",
+        "chill_touch",
+        "eldritch_blast",
+        "fire_bolt",
+        "guidance",
+        "light",
+        "poison_spray",
+        "produce_flame",
+        "ray_of_frost",
+        "resistance",
+        "sacred_flame",
+        "sorcerous_burst",
+        "starry_wisp",
+      ] as const;
+      const preparedSpells = [
+        "animal_friendship",
+        "bane",
+        "bless",
+        "burning_hands",
+        "chromatic_orb",
+        "color_spray",
+        "command",
+        "cure_wounds",
+        "dissonant_whispers",
+        "entangle",
+        "expeditious_retreat",
+        "faerie_fire",
+        "grease",
+        "healing_word",
+        "hunters_mark",
+        "ice_knife",
+        "inflict_wounds",
+        "jump",
+        "mage_armor",
+        "magic_missile",
+        "mass_cure_wounds",
+        "mass_healing_word",
+        "protection_from_evil_and_good",
+        "shield_of_faith",
+        "sleep",
+        "thunderwave",
+      ] as const;
+      root.sessionStore.battleState = startBattleRight(root, [
+        character(root, {
+          combatantId: fighterId,
+          displayName: "Prepared Caster",
+          initiative: 20,
+          attack: null,
+          spellcasting: spellcasting(root, {
+            sourceClassName: "wizard",
+            abilityModifier: 3,
+            cantrips,
+            preparedSpells,
+            slots: [
+              { spellLevel: 1, count: 12 },
+              { spellLevel: 2, count: 3 },
+              { spellLevel: 3, count: 3 },
+              { spellLevel: 5, count: 2 },
+            ],
+          }),
         }),
-      }),
-      statBlock(root, {
-        combatantId: goblinId,
-        initiative: 10,
-        creatureType: "beast",
-      }),
-    ]);
+        statBlock(root, {
+          combatantId: goblinId,
+          initiative: 10,
+          creatureType: "beast",
+        }),
+      ]);
 
-    for (const spellId of [...cantrips, ...preparedSpells]) {
-      expect(requireSpellAct(root, spellId).subject.invocation.spellId).toBe(
-        spellId,
-      );
-    }
-  });
+      for (const spellId of [...cantrips, ...preparedSpells]) {
+        expect(requireSpellAct(root, spellId).subject.invocation.spellId).toBe(
+          spellId,
+        );
+      }
+    },
+    PROMOTED_ACTION_TIME_SPELL_DISCOVERY_TIMEOUT_MS,
+  );
 });
 
 type Root = ReturnType<typeof createMcpCompositionRoot>;

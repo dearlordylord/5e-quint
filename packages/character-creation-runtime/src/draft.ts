@@ -656,13 +656,13 @@ function twoAndOneBackgroundAbilityScoreIncrease(
     return invalid(path, "Expected two distinct ability score choices.");
   }
 
-  return Either.right({
+  const selection = {
     kind: "twoAndOne",
     plusTwo,
-    // The branch above establishes the Exclude<Ability, PlusTwo> invariant;
-    // TypeScript cannot express that relation for two runtime values.
-    plusOne: plusOne as Exclude<Ability, typeof plusTwo>,
-  });
+    plusOne,
+  } as TwoAndOneBackgroundAbilityScoreIncreaseSelection;
+
+  return Either.right(selection);
 }
 
 function selectableStandardLanguage(

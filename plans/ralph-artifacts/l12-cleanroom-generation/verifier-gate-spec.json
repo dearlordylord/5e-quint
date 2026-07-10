@@ -2,13 +2,13 @@
   "schema": "l12-cleanroom-verifier-gate-spec.v1",
   "generatedBy": "plans/ralph-artifacts/l12-cleanroom-generation/generate-artifacts.cjs",
   "baseCheck": {
-    "status": "not-run",
-    "reason": "No Ralph task Base SHA was provided in the user request; generated artifacts record this as missing task-run metadata rather than fabricating a base check."
+    "status": "runner-provided",
+    "reason": "The Ralph runner owns the task Base SHA at execution time. This source plan records that agents must use the runner-provided Base SHA rather than fabricating one in generated artifacts."
   },
   "sourceHashes": {
     "plans/unit-profile-coverage/level1-2-full-support.json": "ebd1c73b238de48d6bb133599a6e532680726a5efc0b228d426c8fd535259e9f",
-    "plans/unit-profile-coverage/srd-unit-inventory.json": "bc520ef06e595dd65d47380056f0b31520c797e86f47ad86387b5cc47f19136a",
-    "plans/unit-profile-coverage/unit-matrix.json": "c670b9c0eecb534493034ec53eb2bc0d88ccdf0a32211191f411ca9f44318ba2",
+    "plans/unit-profile-coverage/srd-unit-inventory.json": "4b09551577d9577018fc511b843428f015905b27c6d81b41b83ee05107bc48a7",
+    "plans/unit-profile-coverage/unit-matrix.json": "47cf47a5c5fc7e28aab0642638a855ec7d55f649725ad0599aab5fc91edd4a89",
     "plans/cleanroom-branch-coverage/reducer-route-inventory.json": "061aaafaf7cde96f0878292c8f27031e55ece2542d1fe2f710cd1196a6b4b7eb",
     "plans/cleanroom-branch-coverage/reducer-convergence-backlog.json": "6338b215e8b20ca983ac76e1bf59c212a948816ca7ca64fd4a392b9bf6cbb6e0"
   },

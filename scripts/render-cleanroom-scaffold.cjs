@@ -177,6 +177,38 @@ function readSourceBranchInventorySha(targetDir) {
   return sha256Text(stableStringify(readJson(inventoryPath)));
 }
 
+const l12CleanroomArtifactPaths = [
+  "l12-cleanroom-generation/srd-l12-denominator.json",
+  "l12-cleanroom-generation/capability-fact-coverage-matrix.json",
+  "l12-cleanroom-generation/route-proof-inventory.json",
+  "l12-cleanroom-generation/srd-row-generic-fact-map.json",
+  "l12-cleanroom-generation/verifier-gate-spec.json",
+];
+
+function readL12CleanroomArtifactManifest(targetDir) {
+  return l12CleanroomArtifactPaths.map((artifactPath) => {
+    const filePath = path.join(targetDir, "cleanroom-input", artifactPath);
+    return {
+      path: `cleanroom-input/${artifactPath}`,
+      sha256: fs.existsSync(filePath)
+        ? sha256Text(fs.readFileSync(filePath))
+        : `<sha256 for cleanroom-input/${artifactPath}>`,
+    };
+  });
+}
+
+function l12CleanroomArtifactMarkdown(targetDir) {
+  return readL12CleanroomArtifactManifest(targetDir)
+    .map((artifact) => `  - \`${artifact.path}\` (\`${artifact.sha256}\`)`)
+    .join("\n");
+}
+
+function l12CleanroomArtifactJson(targetDir) {
+  return JSON.stringify(readL12CleanroomArtifactManifest(targetDir), null, 6)
+    .split("\n")
+    .join("\n      ");
+}
+
 function readFirstInScopeDriver() {
   const scopePath = path.join(
     scaffoldRoot,
@@ -232,6 +264,8 @@ function renderValues(profile, targetDir) {
     firstAssignedDriver: activeWorkCursor.firstAssignedDriver,
     firstInScopeDriver: readFirstInScopeDriver(),
     implementationKind: profile.implementationKind,
+    l12CleanroomArtifactsJson: l12CleanroomArtifactJson(targetDir),
+    l12CleanroomArtifactsMarkdown: l12CleanroomArtifactMarkdown(targetDir),
     nextTaskId: "T001",
     packageManager: profile.packageManager,
     quintBindingName: profile.quintBinding.name,
@@ -411,6 +445,8 @@ function assertTaskTemplateContract() {
     /target entrypoint\s+sequence/,
     "observed projection source",
     "reducer/public API path",
+    "l12CleanroomGeneration",
+    "cleanroom-input/l12-cleanroom-generation/",
   ]);
   const reviewerChecklist = fs.readFileSync(
     path.join(scaffoldRoot, "tasks/REVIEWER_CHECKLIST.template.md"),

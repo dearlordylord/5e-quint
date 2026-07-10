@@ -11,36 +11,43 @@ import {
   verifyLevelThreeWizardVertical,
   verifyToolContract,
   verifyWidthVertical,
+  verifyWizardIceKnifeBattleHandoff,
 } from "../test-support/mcp-acceptance-scenarios.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
+
+const FULL_ACCEPTANCE_TEST_TIMEOUT_MS = 60_000;
 
 describe("MCP protocol server", () => {
   test("keeps the LLM drivability scenarios documented", () => {
     verifyAgentConversationScenarios();
   });
 
-  test("runs the full acceptance client over in-memory MCP", async () => {
-    const [clientTransport, serverTransport] =
-      InMemoryTransport.createLinkedPair();
-    const { server } = createDndMcpProtocolServer();
-    const client = new Client({
-      name: "dnd-in-memory-acceptance-client",
-      version: "0.1.0",
-    });
+  test(
+    "runs the full acceptance client over in-memory MCP",
+    async () => {
+      const [clientTransport, serverTransport] =
+        InMemoryTransport.createLinkedPair();
+      const { server } = createDndMcpProtocolServer();
+      const client = new Client({
+        name: "dnd-in-memory-acceptance-client",
+        version: "0.1.0",
+      });
 
-    try {
-      await server.connect(serverTransport);
-      await client.connect(clientTransport);
+      try {
+        await server.connect(serverTransport);
+        await client.connect(clientTransport);
 
-      await verifyToolContract(client);
-      await verifyBaselineVertical(client);
-      await verifyWidthVertical(client);
-      await verifyLevelThreeWizardVertical(client);
-      await verifyLevelFourWizardVertical(client);
-    } finally {
-      await Promise.allSettled([client.close(), server.close()]);
-    }
-  }, 30_000);
+        await verifyToolContract(client);
+        await verifyBaselineVertical(client);
+        await verifyWidthVertical(client);
+        await verifyLevelThreeWizardVertical(client);
+        await verifyLevelFourWizardVertical(client);
+      } finally {
+        await Promise.allSettled([client.close(), server.close()]);
+      }
+    },
+    FULL_ACCEPTANCE_TEST_TIMEOUT_MS,
+  );
 
   test("runs the level 5 Wizard Fireball acceptance client over in-memory MCP", async () => {
     const [clientTransport, serverTransport] =
@@ -75,6 +82,25 @@ describe("MCP protocol server", () => {
       await client.connect(clientTransport);
 
       await verifyLevelSixRogueSteadyAimBattleHandoff(client);
+    } finally {
+      await Promise.allSettled([client.close(), server.close()]);
+    }
+  }, 30_000);
+
+  test("runs the Wizard Ice Knife battle handoff client over in-memory MCP", async () => {
+    const [clientTransport, serverTransport] =
+      InMemoryTransport.createLinkedPair();
+    const { server } = createDndMcpProtocolServer();
+    const client = new Client({
+      name: "dnd-ice-knife-protocol-acceptance-client",
+      version: "0.1.0",
+    });
+
+    try {
+      await server.connect(serverTransport);
+      await client.connect(clientTransport);
+
+      await verifyWizardIceKnifeBattleHandoff(client);
     } finally {
       await Promise.allSettled([client.close(), server.close()]);
     }

@@ -41,7 +41,7 @@ import {
 } from "./unit-catalog.ts";
 import { CREATURE_TYPES } from "./types.ts";
 import type { Srd521Unit, SrdUnitCollection } from "./unit-catalog.ts";
-import type { WeaponRecord } from "./types.ts";
+import type { StartingEquipmentItemRef, WeaponRecord } from "./types.ts";
 
 const task183ClassFeatureUnitIds = [
   "bard_bardic_inspiration",
@@ -8257,10 +8257,15 @@ describe("SRD Unit catalog boundary", () => {
       ],
       unitId: "background_soldier",
     },
-  ])(
+  ] satisfies ReadonlyArray<{
+    readonly coinsGp: number;
+    readonly expectedItems: Array<StartingEquipmentItemRef>;
+    readonly unitId: string;
+  }>)(
     "keeps $unitId option A free of unresolved Unit refs",
     ({ coinsGp, expectedItems, unitId }) => {
       const result = buildUnitCatalog({ collections: [srdUnitCollection] });
+      const expectedItemMatchers: Array<unknown> = expectedItems;
 
       expect(result.tag).toBe("ok");
       if (result.tag === "ok") {
@@ -8278,7 +8283,7 @@ describe("SRD Unit catalog boundary", () => {
             {
               coinsGp,
               id: "option_a",
-              items: expect.arrayContaining(expectedItems),
+              items: expect.arrayContaining(expectedItemMatchers),
               kind: "item_bundle",
             },
           ]),

@@ -3,12 +3,12 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
-    "baseUrl": ".",
     "paths": {
       "@dnd/surface/*": ["../surface/src/*"],
       "#/*": ["./src/*"]
     },
     "lib": ["ES2022"],
+    "types": ["node"],
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,

@@ -415,8 +415,15 @@ describe("QMBT14 deterministic Command control option admission", () => {
     expect(wrongActorHaltEndTurn).toMatchObject({
       tag: "invalid",
       reason: "wrongActor",
+      routeEvents: [
+        {
+          holes: [],
+          kind: "resolveBattleSubjectWithoutFill",
+          owner: "battleActionEconomy",
+          subject: "battleAction",
+        },
+      ],
     });
-    expect(wrongActorHaltEndTurn).not.toHaveProperty("routeEvents");
 
     const ended = endTurn({ state: targetTurn.state, actorId: spellTargetId });
     if (ended.tag !== "resolved") {

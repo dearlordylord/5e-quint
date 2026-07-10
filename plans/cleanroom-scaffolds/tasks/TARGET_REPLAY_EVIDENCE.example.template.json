@@ -7,6 +7,11 @@
   "sourceBranchInventorySha256": "{{sourceBranchInventorySha}}",
   "targetProfile": "{{targetProfileId}}",
   "targetProfileSha256": "{{targetProfileSha256}}",
+  "l12CleanroomGeneration": {
+    "schema": "target-l12-cleanroom-generation-evidence.v1",
+    "artifacts": {{l12CleanroomArtifactsJson}},
+    "note": "These hashes bind target replay evidence to copied SRD L1-2 source artifacts; they are not replay proof by themselves."
+  },
   "runs": [
     {
       "evidenceKind": "target-qnt-mbt-replay",
