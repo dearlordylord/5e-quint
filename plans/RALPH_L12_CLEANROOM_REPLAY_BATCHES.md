@@ -17671,13 +17671,16 @@ artifact-store work before individual replay and dirty-unit tasks can run.
 Retry Guidance:
 
 Do not retry by copying scaffold examples or stale source-side receipts into the
-latest dirty target. First inspect the target's active work queue and implement
-or decompose the target-side harness work needed for the queued
-`battle-runtime-creature-type-protection-and-charm-selected-identity` driver to
-emit concrete ledger, gate, manifest, review, decision, history, and compact
-receipt artifacts. If the target needs a separate artifact-store or retained-run
-handle design before those artifacts can be emitted, split that into a concrete
-target task before retrying this acceptance-artifact task.
+latest dirty target. The current target can emit concrete ledger, gate,
+manifest, review, decision, history, and compact receipt artifacts for the
+queued `battle-runtime-creature-type-protection-and-charm-selected-identity`
+driver, but the source harness rejects the truthful dirty start gate. Before
+retrying this acceptance task, research and choose one executable path: revise
+the source contract to admit hash-bound dirty start gates, or create a target
+flow that starts from a clean target state and then emits accepted artifacts.
+Do not unblock replay or dirty-unit tasks until the chosen path makes
+`node scripts/check-cleanroom-harness.cjs --task-root
+/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29` pass.
 
 ## Cleanroom Run Reference Contract Task Details
 
