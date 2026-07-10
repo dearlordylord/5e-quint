@@ -775,7 +775,7 @@
     {
       "number": 129,
       "id": "L12CEG-CR-001-CLEANROOM-RUN-REFERENCE-CONTRACT",
-      "status": "todo",
+      "status": "done",
       "title": "Define cleanroom run reference contract"
     }
   ]
@@ -17411,7 +17411,7 @@ repair.
 
 ### Task 129 - L12CEG-CR-001-CLEANROOM-RUN-REFERENCE-CONTRACT
 
-Status: `todo`
+Status: `done`
 
 Goal:
 
