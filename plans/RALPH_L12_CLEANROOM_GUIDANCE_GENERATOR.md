@@ -8,7 +8,8 @@
       "number": 1,
       "id": "L12CG-01-SOURCE-CALIBRATION-CONTRACT",
       "status": "todo",
-      "title": "Define source-only TypeScript calibration evidence"
+      "title": "Define source-only TypeScript calibration evidence",
+      "dependencies": []
     },
     {
       "number": 2,
@@ -86,96 +87,29 @@ agent in the target repository. After this plan lands, normal operation is:
 2. one unattended target `/goal` run over the immutable experiment catalog;
 3. one source intake command.
 
-## Paired Plan Synchronization
+## Shared Contract And Scope
 
-This full-corpus plan and
-`plans/RALPH_L12_CLEANROOM_ICE_KNIFE_PILOT.md` are co-authoritative execution
-plans for different scopes. Neither supersedes the other:
+The canonical shared experiment contract is
+`plans/L12_CLEANROOM_EXPERIMENT_CONTRACT.md`. It owns calibration, readiness,
+input isolation, manifest freshness, run kinds, target commit evidence, receipt
+validation, blocker classification, measurement provenance, and durable
+handoff. This plan must not restate those rules.
 
-- the pilot owns the one-Unit Ice Knife experiment, its real target evidence,
-  handoff behavior, and measured effort;
-- this plan owns exhaustive readiness and expansion across all 72 executable
-  L1-2 Units.
-
-They share one contract for TypeScript calibration, cleanroom-safe inputs,
-atomic Unit acceptance, blocker classification, manifest freshness, target
-isolation, and source/target handoff. A change to any shared invariant, schema,
-blocker class, exact Ice Knife action, freshness rule, or command contract must
-update both plans in the same change unless the difference is explicitly
-scope-backed.
+This plan remains authoritative for exhaustive readiness and expansion across
+all 72 executable L1-2 Units.
+`plans/RALPH_L12_CLEANROOM_ICE_KNIFE_PILOT.md` remains authoritative for the
+one-Unit Ice Knife tracer and its measured evidence. Neither scope plan
+supersedes the other.
 
 After the pilot lands, Tasks 1-6 extend its landed schemas, commands, and gates.
-They must not build parallel calibration indexes, readiness results, exporters,
-intake models, measurement state, or handoff protocols. Pilot results do not
-change the corpus denominator or imply readiness for another Unit; the
-corpus-wide generated facts in this plan remain independently checked.
+They must not create parallel calibration, readiness, export, intake,
+measurement, or handoff state. Pilot success does not alter the corpus
+denominator or imply readiness for another Unit. Task 7 is the post-expansion
+regression against the accepted pilot.
 
-Before launching this full plan, reconcile both documents against the real
-pilot intake. Record changed shared decisions in both, record measured scaling
-evidence in this plan, and leave any scope-specific difference named and
-justified. Task 7 is the post-expansion regression against the accepted pilot,
-not a second independent Ice Knife design.
-
-## Non-Negotiable Boundaries
-
-### TypeScript calibration
-
-TypeScript is the calibrated first language target. A rule-bearing QNT
-obligation or cleanroom-facing MBT action is not exportable until:
-
-- the semantic obligation has a registered QNT owner role;
-- production TypeScript has a runtime owner for that obligation;
-- an executable QNT-connected TS parity witness exercises production behavior;
-- every exported MBT branch action has exact TS replay calibration for the
-  current QNT hash;
-- every supported profile and selected Unit joins to the calibrated obligation
-  without authored-identity runtime dispatch.
-
-The reason is diagnostic isolation. Without this calibration, a cleanroom
-failure cannot distinguish a QNT defect, a QNT-to-runtime mapping defect, and a
-target implementation defect. The cleanroom tests portability of a known
-integrated specification; it is not the first implementation site for orphaned
-QNT.
-
-“Exhaustive” is obligation- and branch-exhaustive. It is not file-exhaustive or
-whole-state-space exhaustive. Proof-only companions, vocabulary leaves,
-witness-protocol leaves, bridges, and retired/exempt QNT retain their classified
-roles. Cross-slice integration remains deliberately bounded.
-
-### Cleanroom input
-
-The target may receive only manifest-declared language-independent inputs:
-
-- SRD RAW;
-- QNT semantic owners, proof companions, MBT drivers, and required import
-  closure;
-- ubiquitous language and curated assumptions;
-- curated language-independent architecture guidance;
-- branch/scope inventory, target profile, and harness/scaffold contracts;
-- a Unit corpus index that points into those inputs.
-
-The target must not receive production TypeScript, TypeScript tests, TS owner or
-test paths, Surface mechanics, prior cleanroom implementation, generated source
-traces, manually transcribed expected behavior, or uncontrolled planning logs.
-
-### No compensating guidance
-
-The source program must not make weak QNT appear sufficient by generating a
-second rules specification. Unit artifacts are navigation indexes into RAW and
-QNT, not rule contracts. A semantic fact that cannot be reached through
-calibrated QNT is a source-readiness blocker. Target-language unit tests are
-diagnostic only and cannot close a QNT obligation or MBT branch.
-
-### Freshness
-
-An experiment is bound to one immutable source manifest and QNT corpus hash.
-
-- A target implementation problem under the same manifest may be fixed by
-  continuing the same target `/goal` run or a remediation run.
-- A source QNT, RAW, scope, calibration, or harness change creates a new
-  experiment manifest. Evidence from the prior manifest cannot be promoted;
-  the strict cleanroom reruns from a fresh target so earlier implementation
-  knowledge does not contaminate the new measurement.
+Before launching this plan, reconcile its scope-specific estimates and tasks
+against real pilot intake. A shared-rule change belongs in the canonical
+contract once; a scope-specific difference remains here with its domain reason.
 
 ## Existing Source Facts
 
@@ -208,77 +142,21 @@ The current L1-2 accounting denominator is 146 executable rows across 72 unique
 Units. Repeated class-list rows are accounting aliases for one Unit experiment
 slice; they never cause repeated target implementation.
 
-## Artifact Model
+## Artifact Scope
 
-### Source-only readiness index
+The canonical calibration, Unit-index, readiness, manifest, receipt, and intake
+shapes are defined by `plans/L12_CLEANROOM_EXPERIMENT_CONTRACT.md`.
 
-The source-only index may reference TypeScript and is never copied into the
-cleanroom. It has two joined collections so an obligation and a branch cannot
-be accidentally combined into one misleading product record:
+This plan expands those shapes across 72 atomic Units and 146 executable
+accounting rows. Repeated class-list rows remain aliases for one Unit
+experiment. The full-corpus export cannot report ready while any requested Unit
+is source-blocked, and source-only TypeScript calibration never enters the
+target projection.
 
-```text
-obligationCalibrations[]
-    semantic obligation id
-    QNT semantic owners and owner roles
-    production TypeScript runtime owners
-    executable TS parity witness
-    calibration result
+## Task Order
 
-branchCalibrations[]
-    QNT driver hash
-    exact MBT branch action
-    calibrated obligation ids
-    TS production entrypoint/projection exercised
-    source verification command
-    calibration result
-```
-
-### Unit corpus index
-
-The cleanroom-copied Unit index contains only navigation and experiment scope:
-
-```text
-Unit identity                     # catalog/accounting boundary only
-denominator row ids
-RAW anchors
-semantic obligation ids
-QNT semantic owner paths and hashes
-QNT proof/bridge role references
-MBT driver paths, hashes, and exact branch actions
-generic qRoute/qComponentRoute connector references
-QNT-derived prerequisite obligation ids
-```
-
-It contains no restated dice, damage, timing, targeting, state-transition, or
-other rule facts. Those facts remain in RAW/QNT. It contains no TypeScript path
-or calibration detail; the exported manifest binds the source calibration
-index hash and passing gate result without copying the index itself.
-
-### Readiness result
-
-A Unit source result is a discriminated union:
-
-- `ready`: every required RAW/QNT reference exists, every active semantic
-  obligation is TS-calibrated, every selected branch is exactly TS-replayed,
-  and every copied QNT import resolves;
-- `source-blocked`: a non-empty accumulated issue list identifies missing or
-  contradictory RAW, QNT, scope, calibration, replayability, or import facts.
-
-Only `ready` Units enter a target experiment catalog. A requested full-L1-2
-experiment cannot claim full readiness while any of its 72 Units is
-source-blocked.
-
-## DAG
-
-```text
-L12CG-01 Source calibration contract
-    -> L12CG-02 QNT readiness index
-        -> L12CG-03 Unit corpus index
-            -> L12CG-04 Export readiness gate
-                -> L12CG-05 Cleanroom export
-                    -> L12CG-06 Experiment intake
-                        -> L12CG-07 Ice Knife tracer and review
-```
+The `ralph-task-index.tasks[].dependencies` fields are the sole task-order
+authority. Do not duplicate the dependency graph in prose or a Markdown table.
 
 ## Global Verification
 
@@ -286,6 +164,10 @@ Every task must perform the Ralph Base SHA check from `AGENTS.md`: log the
 task-provided Base SHA, log `HEAD`, and run
 `git merge-base --is-ancestor <Base SHA> HEAD`. Stop on mismatch; the runner or
 decider owns branch repair.
+
+Every task must read and satisfy
+`plans/L12_CLEANROOM_EXPERIMENT_CONTRACT.md`. Scope-task text may narrow work
+but cannot redefine a shared contract rule.
 
 Every task runs the checks relevant to its changes plus:
 
@@ -438,12 +320,15 @@ source-ready cleanroom experiment catalog.
 
 Required work:
 
-- Add only readiness-approved QNT files/import closure and the cleanroom-safe
-  Unit corpus index to the sync allowlist.
+- Add only readiness-approved QNT files/import closure, the generated
+  target-facing harness projection of the canonical contract, and the cleanroom-safe Unit
+  corpus index to the sync allowlist. Do not copy source-plan authority or
+  TypeScript calibration sections merely to expose the contract hash.
 - Add one `pnpm` command that regenerates readiness artifacts, runs Task 4,
   syncs the allowed corpus, and hashes the experiment catalog.
 - Bind the export to source commit, RAW/QNT/domain hashes, source calibration
-  index hash/pass result, target profile hash, and catalog hash.
+  index hash/pass result, canonical shared-contract hash, run kind, target
+  profile hash, and catalog hash.
 - Render a static capability/dependency order for the target `/goal` from QNT
   obligation dependencies. Do not install an executor or Ralph in the target.
 - Refuse dirty allowlisted inputs and refuse partial full-L1-2 export.
@@ -464,18 +349,24 @@ target workarounds into source success.
 
 Required work:
 
-- Verify manifest, catalog, QNT, branch, target profile, target commit, replay
-  projection, and retained-artifact hashes.
+- Verify manifest, catalog, shared-contract, QNT, branch, target profile, run
+  kind, target start/finish commit chain, clean-status attestations, replay
+  projection, and retained-artifact hashes from the finish commit tree.
+- Require the external receipt finish commit to equal the clean target HEAD;
+  require fresh experiments to start clean and reject diagnostic rehearsals as
+  acceptance evidence.
 - Require every selected branch to be observed through the target's native
   QNT/MBT lane and production API path.
 - Accept each Unit atomically across all of its denominator rows.
-- Preserve the existing blocker classes: `source-qnt-corpus`, `source-scope`,
-  and `target-implementation`.
+- Preserve the canonical blocker union.
 - Treat missing/contradictory allowed semantics or unreplayable QNT as source
   findings. Do not accept a target-language test or workaround in their place.
 - Permit same-manifest remediation only for `target-implementation` findings.
 - When adjudication changes QNT, RAW, scope, calibration, or harness inputs,
-  issue a new manifest and require a fresh target experiment.
+  issue a new manifest. Diagnostic rehearsal may reuse its declared target;
+  the next authoritative experiment starts from a new target.
+- Record every canonical measurement-provenance field with explicit
+  unavailable variants and keep it outside conformance.
 - Produce one machine-readable result summary and, when valid, one remediation
   catalog for same-manifest target implementation work.
 
@@ -517,8 +408,9 @@ Required work:
   contains no direct Ice Knife action.
 - Exercise export and intake with synthetic receipts for target conformance,
   source-QNT insufficiency, stale manifest, and target implementation failure.
-- Reconcile every shared contract difference between the two plans. Update both
-  in the same change or document the concrete scope reason for the difference.
+- Reconcile both scope plans against the canonical shared contract. Shared-rule
+  findings update that contract once; scope-specific differences remain in the
+  owning plan with their domain reason.
 - Run at least two reviewer rounds covering RAW/QNT traceability, ubiquitous
   language, domain modeling, architecture/connascence, cleanroom contamination,
   branch coverage, and code review.
@@ -532,6 +424,6 @@ Success criteria:
   knowledge.
 - The generalized pipeline still reproduces the accepted pilot contract for
   Ice Knife without duplicating pilot-owned state.
-- Both co-authoritative plans agree on every shared invariant, with any
-  scope-specific difference explicitly justified.
+- Both scope plans reference and satisfy the same canonical shared contract,
+  with any scope-specific difference explicitly justified.
 - No reasonable reviewer finding remains.

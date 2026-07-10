@@ -449,79 +449,7 @@ write_state() {
 write_state
 
 write_task_index() {
-  node - "$plan_snapshot" >"$task_index" <<'NODE'
-const fs = require("fs")
-const path = process.argv[2]
-const text = fs.readFileSync(path, "utf8")
-const indexMatch = text.match(/<!-- ralph-task-index\n([\s\S]*?)\n-->/)
-
-if (!indexMatch) {
-  throw new Error("missing ralph-task-index block in " + path)
-}
-
-const index = JSON.parse(indexMatch[1])
-if (index.schema !== "ralph-plan.v1" || !Array.isArray(index.tasks)) {
-  throw new Error("invalid ralph-task-index schema in " + path)
-}
-
-const lineStarts = [0]
-for (let i = 0; i < text.length; i += 1) {
-  if (text[i] === "\n") {
-    lineStarts.push(i + 1)
-  }
-}
-
-const lineNumber = (offset) => {
-  let lo = 0
-  let hi = lineStarts.length - 1
-  while (lo <= hi) {
-    const mid = Math.floor((lo + hi) / 2)
-    if (lineStarts[mid] <= offset) {
-      lo = mid + 1
-    } else {
-      hi = mid - 1
-    }
-  }
-  return hi + 1
-}
-
-const headings = [...text.matchAll(/^### Task ([0-9]+)\b.*$/gm)].map((match) => ({
-  number: Number(match[1]),
-  offset: match.index,
-}))
-const headingByNumber = new Map(headings.map((heading, index) => [
-  heading.number,
-  {
-    startLine: lineNumber(heading.offset),
-    endLine: index + 1 < headings.length ? lineNumber(headings[index + 1].offset) - 1 : text.split("\n").length,
-  },
-]))
-const lines = text.split("\n")
-const queueRowByNumber = new Map()
-for (let i = 0; i < lines.length; i += 1) {
-  const line = lines[i]
-  if (!line.startsWith("|")) continue
-  const cells = line.split("|")
-  if (cells.length < 3) continue
-  const number = Number(cells[1]?.trim())
-  if (!Number.isInteger(number)) continue
-  queueRowByNumber.set(number, {
-    startLine: i + 1,
-    endLine: i + 1,
-  })
-}
-
-for (const task of index.tasks) {
-  if (!Number.isInteger(task.number) || typeof task.id !== "string" || typeof task.status !== "string" || typeof task.title !== "string") {
-    throw new Error("invalid task metadata: " + JSON.stringify(task))
-  }
-  const heading = headingByNumber.get(task.number) ?? queueRowByNumber.get(task.number)
-  if (!heading) {
-    throw new Error("missing markdown heading or queue row for task " + task.number + " (" + task.id + ")")
-  }
-  console.log([task.number, task.id, task.status, heading.startLine, heading.endLine, task.title].join("\t"))
-}
-NODE
+  node "$repo_root/scripts/ralph-task-index.cjs" "$plan_snapshot" --all-tsv >"$task_index"
 
   [[ -s "$task_index" ]] || die "no task headings or queue rows found in plan snapshot: $plan_snapshot"
 }
@@ -629,6 +557,10 @@ if (!indexMatch) {
 const index = JSON.parse(indexMatch[1])
 if (index.schema !== "ralph-plan.v1" || !Array.isArray(index.tasks)) {
   throw new Error("invalid ralph-task-index schema in " + path)
+}
+
+if (index.tasks.some((task) => Object.hasOwn(task, "dependencies"))) {
+  process.exit(0)
 }
 
 const statusById = new Map()
@@ -811,6 +743,10 @@ if (index.schema !== "ralph-plan.v1" || !Array.isArray(index.tasks)) {
   throw new Error("invalid ralph-task-index schema in " + path)
 }
 
+if (index.tasks.some((task) => Object.hasOwn(task, "dependencies"))) {
+  process.exit(0)
+}
+
 const statusById = new Map()
 for (const task of index.tasks) {
   if (typeof task?.id === "string") {
@@ -910,20 +846,23 @@ lookup_task_row() {
   ' "$task_index"
 }
 
-task_status_is_runnable() {
-  local status="$1"
-  [[ "$status" == "ready-for-research" || "$status" == "ready-for-implementation" || "$status" == "ready-for-implementation-after-light-research" ]]
+lookup_ready_task_row() {
+  local task_no="$1"
+  awk -F $'\t' -v selected="$task_no" '
+    $1 == selected {
+      print
+      found = 1
+      exit
+    }
+    END {
+      exit found ? 0 : 1
+    }
+  ' "$2"
 }
 
 write_ready_tasks_file() {
   local output_file="$1"
-  : >"$output_file"
-  while IFS=$'\t' read -r task_no task_id status task_start task_end task_title; do
-    [[ -n "$task_no" ]] || continue
-    if task_status_is_runnable "$status"; then
-      printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$task_no" "$task_id" "$status" "$task_start" "$task_end" "$task_title" >>"$output_file"
-    fi
-  done <"$task_index"
+  node "$repo_root/scripts/ralph-task-index.cjs" "$plan_snapshot" --runnable-tsv >"$output_file"
 }
 
 append_history() {
@@ -2323,19 +2262,24 @@ choose_next_task() {
   auto_unblock_blocked_tasks "$plan_file"
   commit_plan_automation_change "Auto-unblock ready Ralph tasks"
   refresh_plan_snapshot
+  write_ready_tasks_file "$ready_tasks_file"
 
   if [[ ${#selected_tasks[@]} -gt 0 ]]; then
     local selected
     for selected in "${selected_tasks[@]}"; do
-      if lookup_task_row "$selected" >/dev/null 2>&1; then
-        lookup_task_row "$selected"
+      if lookup_ready_task_row "$selected" "$ready_tasks_file" >/dev/null 2>&1; then
+        lookup_ready_task_row "$selected" "$ready_tasks_file"
         return 0
+      fi
+      if awk -F $'\t' -v task_no="$selected" '$1 == task_no { found = 1 } END { exit found ? 0 : 1 }' "$task_index"; then
+        printf 'selected task %s is not runnable because its status or indexed dependencies are incomplete\n' "$selected" >"$last_error_file"
+        note "chooser" "fatal-selected-task-not-runnable task=$selected"
+        return 2
       fi
     done
     return 1
   fi
 
-  write_ready_tasks_file "$ready_tasks_file"
   if [[ ! -s "$ready_tasks_file" ]]; then
     local stale_block_error=""
     if ! stale_block_error="$(assert_no_stale_dependency_blocks "$plan_snapshot" 2>&1)"; then
@@ -2388,16 +2332,12 @@ choose_next_task() {
   chooser_task_id="${chooser_task#*$'\t'}"
   [[ "$chooser_task_no" != "$chooser_task_id" ]] || chooser_task_id=""
 
-  task_row="$(lookup_task_row "$chooser_task_no")" || {
-    printf 'chooser selected nonexistent task: %s\n' "$chooser_task_no" >"$last_error_file"
+  task_row="$(lookup_ready_task_row "$chooser_task_no" "$ready_tasks_file")" || {
+    printf 'chooser selected task outside the dependency-filtered runnable set: %s\n' "$chooser_task_no" >"$last_error_file"
     return 2
   }
 
   IFS=$'\t' read -r _task_no _task_id _status _task_start _task_end _task_title <<<"$task_row"
-  task_status_is_runnable "$_status" || {
-    printf 'chooser selected non-runnable task: %s (%s)\n' "$_task_no" "$_status" >"$last_error_file"
-    return 2
-  }
   if [[ -n "$chooser_task_id" && "$chooser_task_id" != "$_task_id" ]]; then
     printf 'chooser selected mismatched task id: expected %s got %s\n' "$_task_id" "$chooser_task_id" >"$last_error_file"
     return 2

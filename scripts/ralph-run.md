@@ -15,8 +15,12 @@
 11. Refreshes the plan snapshot again and repeats until task selection finds no meaningful runnable work left.
 
 Runtime logs, prompts, task context packets, review reports, chooser outputs, matrix progress snapshots, and diffs are written under ignored `.ralph/runs/<run-id>/`.
-The supplied plan is copied to `.ralph/runs/<run-id>/plan.md` and agents read that snapshot. The snapshot is refreshed from the source plan file after every decider run, so a task can update future planning when it discovers new information. Unfiltered runs rescan the refreshed `ralph-task-index` after every task, so newly added runnable tasks and newly unblocked tasks are picked up automatically. Explicit `--task` selections still run in the requested order because the operator has deliberately selected them.
-When auto-unblocking dependency-blocked tasks, the harness expands same-prefix dependency ranges such as `QMBT40-QMBT42` and same-number letter ranges such as `SRDINV28A-SRDINV28E` into their concrete task IDs before checking whether all dependencies are `done`.
+The supplied plan is copied to `.ralph/runs/<run-id>/plan.md` and agents read that snapshot. The snapshot is refreshed from the source plan file after every decider run, so a task can update future planning when it discovers new information. Unfiltered runs rescan the refreshed `ralph-task-index` after every task, so newly added runnable tasks and newly satisfied dependencies are picked up automatically. Explicit `--task` selections preserve requested order but fail if a selected task is not runnable or has an unfinished indexed dependency.
+
+The old Markdown-table auto-unblock compatibility path applies only when no
+task in a plan declares indexed dependencies. It expands historical range
+spellings before checking `done` status. New plans use exact indexed task IDs
+and never duplicate dependency truth in a table.
 
 For unattended runs, Ralph emits supervisor heartbeats while Codex/OpenCode
 children are quiet. Heartbeats are appended to `events.tsv`, mirrored to
@@ -27,7 +31,7 @@ Every run also writes `run-report.md` on both success and failure, plus
 later operator can tell whether the run finished cleanly, failed, or left
 relevant MBT/model processes behind.
 
-If Ralph finds no runnable tasks but a blocked task depends only on completed or missing historical task IDs, the run fails loudly instead of reporting normal completion. That state usually means the active queue removed completed dependencies without unblocking the follow-up task; repair the plan by unblocking the task, restoring dependency tasks to the active index, or recording an explicit owner-decision blocker.
+For an old table-driven plan, if Ralph finds no runnable tasks but a blocked task depends only on completed or missing historical task IDs, the run fails loudly instead of reporting normal completion. That compatibility check does not apply to indexed dependencies, whose references and cycles are validated when the plan is parsed.
 
 If `OPENROUTER_API_KEY` is not already exported in the shell, the harness loads it from repo-root `.env` before launching agents.
 
@@ -104,14 +108,23 @@ Plans must include a machine-readable task index:
       "number": 1,
       "id": "MCP0-A",
       "status": "ready-for-implementation-after-light-research",
-      "title": "Dead-Creature Condition Mutation Bug"
+      "title": "Dead-Creature Condition Mutation Bug",
+      "dependencies": []
     }
   ]
 }
 -->
 ```
 
-Each indexed task must also have a matching markdown body headed by `### Task N`. The harness uses the JSON block for task order, stable ID, status, and title, then extracts the task body from the matching heading. Keep the JSON block synchronized when a task is added, renamed, reordered, or changes status.
+Each indexed task must also have a matching markdown body headed by `### Task N`.
+The harness uses the JSON block for task order, stable ID, status, title, and
+dependencies, then extracts the task body from the matching heading. Indexed
+dependencies are canonical: references must exist, the graph must be acyclic,
+and a runnable-status task is withheld until every dependency is `done`.
+Explicit `--task` selection cannot bypass this rule. New plans must not copy
+dependency truth into a Markdown DAG table. The old `## DAG / Queue Order`
+auto-unblock parser remains compatibility-only for plans with no indexed
+`dependencies` fields.
 
 ## Plan Impact
 

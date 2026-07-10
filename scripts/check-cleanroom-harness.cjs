@@ -46,6 +46,9 @@ const requiredDeciderGates = [
 const task131DirtyStartDriver =
   "cleanroom-input/qnt/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt";
 
+// Historical compatibility for the exact archived T131 receipt only. The Ice
+// Knife pilot intake task replaces this active exception with the canonical
+// external receipt contract; this tuple must never authorize a new run.
 const sourceAuthorizedDirtyStartGates = [
   {
     taskId: "T131",

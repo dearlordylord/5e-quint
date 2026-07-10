@@ -8,7 +8,8 @@
       "number": 1,
       "id": "L12IKP-01-EXACT-SOURCE-CALIBRATION",
       "status": "ready-for-research",
-      "title": "Calibrate the exact Ice Knife QNT branches against production TypeScript"
+      "title": "Calibrate the exact Ice Knife QNT branches against production TypeScript",
+      "dependencies": []
     },
     {
       "number": 2,
@@ -58,36 +59,25 @@ prototype to discard. The selection boundary is limited to one Unit, while the
 calibration, readiness, export, intake, and measurement models must accept an
 explicit experiment scope and remain reusable for later corpus expansion.
 
-## Relationship To The Full Plan
+## Contract And Scope Authority
 
-This pilot precedes
-`plans/RALPH_L12_CLEANROOM_GUIDANCE_GENERATOR.md`. It does not supersede the
-full plan and must not silently mark any full-corpus task complete.
+The canonical shared experiment contract is
+`plans/L12_CLEANROOM_EXPERIMENT_CONTRACT.md`. It owns calibration, readiness,
+input isolation, run kinds, freshness, target commit evidence, receipt
+validation, blocker classification, measurement provenance, and durable
+handoff. This pilot must apply rather than restate those rules.
 
-After the real target experiment is reviewed, update the full plan with the
-measured architecture and effort before starting its 72-Unit run. Do not run
-the pilot and full source plans concurrently because both may change the same
-cleanroom generators and gates.
+This plan remains authoritative for the one-Unit Ice Knife experiment, its real
+target evidence, and measured effort.
+`plans/RALPH_L12_CLEANROOM_GUIDANCE_GENERATOR.md` remains authoritative for
+exhaustive expansion across all 72 executable L1-2 Units. Neither scope plan
+supersedes the other.
 
-The two documents are co-authoritative execution plans for different scopes:
-
-- this pilot owns the one-Unit Ice Knife experiment, its real target evidence,
-  handoff behavior, and measured effort;
-- the full plan owns exhaustive readiness and expansion across all 72
-  executable L1-2 Units.
-
-They share one contract for TypeScript calibration, cleanroom-safe inputs,
-atomic Unit acceptance, blocker classification, manifest freshness, target
-isolation, and source/target handoff. A change to any shared invariant, schema,
-blocker class, exact Ice Knife action, freshness rule, or command contract must
-update both plans in the same change unless the difference is explicitly
-scope-backed.
-
-The full plan's corpus denominator and generated counts remain corpus-wide
-facts; this one-Unit pilot must not rewrite or infer them from Ice Knife. After
-the pilot lands, the full plan must extend the pilot's schemas, commands, and
-gates rather than create parallel state. Its Task 7 is the post-expansion
-regression against this pilot, not a second independent Ice Knife design.
+After the pilot is reviewed, update only full-plan scaling and corpus tasks
+unless evidence changes the canonical shared contract. Do not run the pilot and
+full source plans concurrently because both may change the same implementation.
+The full plan must extend pilot machinery rather than create parallel state;
+its Task 7 is the post-expansion regression against this pilot.
 
 ## Workflow Boundary
 
@@ -110,136 +100,22 @@ queue, an agent runner, or source-repository planning infrastructure in the
 target. The target receives an immutable input catalog and a static launch
 prompt, performs one unattended `/goal`, and returns a receipt.
 
-## Durable Architectural Decisions
+## Contract Application
 
-### Experiment scope
+This pilot implements the canonical contract for the single-Unit scope
+`ice_knife`. The authoritative target result uses the `fresh-experiment` run
+kind. An existing target may first consume the same manifest as a
+`diagnostic-rehearsal`, but that receipt is permanently ineligible for
+cleanroom acceptance and its timing is reported separately.
 
-Scope is an explicit domain value. The pilot uses the single-Unit scope
-`ice_knife`; later expansion may use a complete declared corpus scope. A
-single-Unit export must never be representable as a full-L1-2 export, and an
-empty Unit selection is invalid.
+The Druid, Sorcerer, and Wizard denominator rows collapse into one atomic Unit.
+The final real export is generated after all four Ralph task commits land so its
+manifest records the clean final source commit. Task worktrees may create only
+deterministic test exports.
 
-The Unit identity is permitted only at catalog, selection, provenance, and
-experiment-accounting boundaries. Production runtime behavior, calibration
-logic, QNT obligation matching, and target execution must not dispatch on the
-Ice Knife id or name.
-
-### TypeScript calibration
-
-TypeScript is the calibrated first language target. Source-only evidence has
-two distinct collections:
-
-```text
-obligationCalibrations[]
-    semantic obligation id
-    QNT semantic owner roles and hashes
-    production TypeScript runtime owners
-    executable QNT-connected TypeScript parity witness
-    calibration result
-
-branchCalibrations[]
-    QNT driver path and hash
-    exact MBT branch action
-    calibrated obligation ids
-    production TypeScript entrypoint/projection exercised
-    verification command and result
-```
-
-Branch rows reference obligations; they do not duplicate semantic ownership.
-Neither collection is cleanroom input. A content hash and passing result may be
-bound into the exported manifest, but TypeScript paths and evidence must not be
-copied to the target.
-
-### Unit index
-
-The cleanroom-safe Ice Knife index is navigation and experiment scope only:
-
-```text
-Unit identity and all three class-list denominator row ids
-exact SRD RAW anchors
-semantic obligation ids
-QNT semantic owner paths, roles, and hashes
-required QNT support/import closure
-exact MBT driver paths, hashes, and branch actions
-applicable qRoute/qComponentRoute connectors
-QNT-derived prerequisite obligation ids
-```
-
-It must not contain TypeScript paths, Surface mechanics, restated dice or
-damage facts, handwritten expectations, generated source traces, target tests,
-or prose that compensates for missing QNT semantics.
-
-### Readiness
-
-Readiness is a discriminated result:
-
-- `ready`: all required RAW/QNT references, exact branch calibrations,
-  connector projections, copied imports, and hashes are present and current;
-- `source-blocked`: a non-empty accumulated issue list classifies every
-  independent RAW, QNT, scope, calibration, replayability, or copied-corpus
-  problem found in the requested Unit.
-
-Adding guidance or a target-language test cannot change `source-blocked` to
-`ready`. The source facts must be corrected and a new manifest issued.
-
-### Export and freshness
-
-The export is content-addressed and bound to the source commit, declared scope,
-RAW/QNT/domain hashes, calibration-index hash and passing result, target
-profile, import closure, and catalog hash. Identical committed inputs produce
-byte-identical catalogs.
-
-A target implementation correction may continue under the same manifest. A
-change to RAW, QNT, source scope, calibration, harness, target profile, or
-exported architecture input requires a new manifest and a fresh target.
-
-The final real export is generated only after all four Ralph task commits land,
-because its manifest records the final source commit. Task worktrees may create
-deterministic test exports, but must not present a pre-decider worktree SHA as
-the real pilot manifest. The fresh Ralph orchestration agent runs the rendered
-finalization command from the clean output branch before handing off to target.
-
-### Intake and measurement
-
-Acceptance evidence and performance observations are different models.
-
-- Acceptance validates manifest/catalog hashes, exact branch observation,
-  production target entrypoint use, replay projections, retained artifacts,
-  and atomic Unit completion.
-- Measurement derives elapsed time from timestamped Ralph events, target goal
-  timestamps, and source-intake timestamps. It does not decide conformance.
-
-Do not store a derived duration beside its start/end timestamps. Goal usage is
-either a reported value with its source or an explicit unavailable result with
-a reason; absence must not have multiple meanings.
-
-### Durable handoff
-
-No transition may depend on remembering this conversation or finding the
-agent that performed an earlier stage. The source pipeline derives and prints
-the next action from validated artifacts:
-
-```text
-ready immutable export, no valid target receipt
-    -> run the exported target /goal prompt
-
-valid target receipt, no completed source intake
-    -> run the generated fresh source-review prompt
-
-completed source intake and measurement
-    -> review findings and revise the full 72-Unit plan
-```
-
-Provide one source-side pilot-status command that checks artifacts and prints
-the exact next command/prompt path. It must derive state from manifest, receipt,
-and intake validation rather than storing a second mutable phase/status file.
-
-The target export contains its complete `/goal` prompt and an end-of-run return
-instruction. The target prompt requires the target agent's final response to
-name the receipt/evidence paths and tell the operator to return to the source
-repository for intake. Source review uses a fresh source-side agent with the
-generated review prompt; it must not depend on resuming the Ralph orchestrator
-or the target implementation agent.
+Ralph performs no target implementation and installs no Ralph infrastructure in
+a target. The generated source status and handoff commands derive the next
+action from validated artifacts as required by the canonical contract.
 
 ## Existing Ice Knife Evidence To Reconcile
 
@@ -299,14 +175,10 @@ create an Ice Knife-only registry or duplicate existing cleanroom state.
 - Treating synthetic intake receipts as cleanroom success.
 - Running broad battle MBT merely to inspect trace or variable shapes.
 
-## DAG
+## Task Order
 
-```text
-L12IKP-01 Exact source calibration
-    -> L12IKP-02 Unit readiness slice
-        -> L12IKP-03 Immutable export
-            -> L12IKP-04 Intake and measurement
-```
+The `ralph-task-index.tasks[].dependencies` fields are the sole task-order
+authority. Do not duplicate the dependency graph in prose or a Markdown table.
 
 ## Verification
 
@@ -314,6 +186,10 @@ Every task must perform the Ralph Base SHA check from `AGENTS.md`: log the
 declared Base ref and SHA, log `HEAD`, and run
 `git merge-base --is-ancestor <Base SHA> HEAD`. Stop on mismatch; the runner or
 decider owns branch repair.
+
+Every task must read and satisfy
+`plans/L12_CLEANROOM_EXPERIMENT_CONTRACT.md`. Scope-task text may narrow work
+but cannot redefine a shared contract rule.
 
 Run the checks relevant to the changed ownership surface, including these when
 applicable:
@@ -471,14 +347,18 @@ Required work:
   Ice Knife ready.
 - Copy only readiness-approved RAW, QNT semantic/proof/bridge/driver files,
   their required import closure, curated domain/architecture inputs, target
-  profile/harness contract, and the cleanroom-safe Unit index.
+  profile and generated target-facing harness projection of the canonical
+  contract, and the cleanroom-safe Unit index. Do not copy source-plan authority or
+  TypeScript calibration sections merely to expose the contract hash.
 - Bind the manifest to the committed source SHA, declared scope, input hashes,
-  source calibration index hash/pass result, target profile, and catalog hash.
+  canonical shared-contract hash, source calibration index hash/pass result,
+  target profile, run kind, and catalog hash.
 - Define the language-independent target receipt contract needed by the launch
-  prompt: manifest/catalog identity, target profile and commit, exact branch
-  observations, production target entrypoint/projection evidence, retained
-  artifacts, and start/finish timestamps. Source classification remains Task
-  4's responsibility.
+  prompt by implementing the canonical contract's external envelope. It must
+  carry target start/finish commits, clean-status attestations, run kind, exact
+  branch observations, production target entrypoint/projection evidence,
+  retained artifacts, start/finish timestamps, and measurement provenance.
+  Source classification remains Task 4's responsibility.
 - Generate a static launch prompt that tells one fresh target `/goal` to
   implement the complete Unit, replay every selected branch through its native
   QNT/MBT lane and production API, retain the required artifacts, and emit the
@@ -521,17 +401,23 @@ leave a precise handoff for the real fresh-target `/goal` run.
 Required work:
 
 - Implement accumulated-error parsing and classification for Task 3's target
-  receipt contract, which binds the manifest, catalog, target profile, target
-  commit, selected branch observations, production target
-  entrypoint/projection, replay artifacts, and retained-artifact hashes.
+  receipt envelope. Verify the target start commit is an ancestor of the finish
+  commit, fresh runs started clean, all runs finished clean, current target HEAD
+  equals the receipt finish commit, and every selected branch/code/evidence hash
+  resolves from that exact commit tree.
+- When the replacement intake lands, remove the T131 dirty-start authorization
+  from the active current checker. Preserve historical verification through Git
+  history or a non-authorizing fixture; the tuple must not survive as a
+  compatibility branch in the canonical receipt parser.
 - Accept Ice Knife atomically across all three denominator rows only when every
   selected branch is observed through the target's native QNT/MBT lane and
   production API path.
-- Preserve the blocker classes `source-qnt-corpus`, `source-scope`, and
-  `target-implementation`; accumulate independent intake issues.
+- Preserve the canonical blocker union and accumulate independent intake
+  issues.
 - Permit same-manifest continuation only for target implementation failures.
   A source QNT, RAW, scope, calibration, harness, or target-profile correction
-  invalidates the manifest and requires a fresh target.
+  invalidates the manifest. A diagnostic rehearsal may reuse its declared
+  target under a new manifest; a later authoritative attempt uses a new target.
 - Add synthetic receipts for conformance, source-QNT insufficiency, source
   scope contradiction, stale manifest, missing branch observation, adapter-only
   replay, and target implementation failure. Synthetic success verifies the
@@ -539,6 +425,8 @@ Required work:
 - Provide a measurement command or report generator that derives source Ralph
   phase durations from `.ralph/runs/<run-id>/events.tsv`, target elapsed time
   from receipt timestamps, and intake elapsed time from intake events.
+- Record every canonical measurement-provenance field, including explicit
+  unavailable variants, without letting measurement affect conformance.
 - Keep measurement unavailable/reported states explicit and separate from
   acceptance. Do not store derived duration beside source timestamps.
 - Render the exact post-Ralph commands, export location, target launch prompt,
@@ -548,10 +436,9 @@ Required work:
   evidence paths, runs intake and measurement, performs the required reviewer
   loop, and updates the full-plan recommendations without resuming either
   implementation agent.
-- Require that source-review prompt to compare both co-authoritative plans. If
-  pilot evidence changes a shared contract, update both plans together; if it
-  changes only scaling or corpus work, update the full plan and record why the
-  pilot contract remains unchanged.
+- Require that source-review prompt to compare both scope plans with the
+  canonical shared contract. Shared-rule findings update the contract once;
+  scaling or corpus findings update only the full plan.
 - Provide a source-side status command that validates available artifacts and
   prints exactly one next transition: target `/goal`, fresh source review, or
   full-plan revision. Derive the transition; do not persist redundant phase
@@ -560,6 +447,8 @@ Required work:
 Success criteria:
 
 - Re-intake is idempotent and cannot partially close Ice Knife.
+- A dirty start, dirty finish, non-ancestor finish, stale current HEAD, or
+  artifact absent from the finish commit makes a fresh receipt unacceptable.
 - Source and target blockers produce different executable next actions.
 - Measurement reports source Ralph, target `/goal`, intake, and total wall time
   separately without affecting conformance.

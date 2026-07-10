@@ -14,6 +14,7 @@
     "check:qnt-inventory": "node scripts/check-qnt-inventory.cjs",
     "check:qnt-run-block-separation": "node scripts/check-qnt-run-block-separation.cjs",
     "check:reducer-route-connectors": "node scripts/check-reducer-route-connectors.cjs",
+    "check:ralph-task-index": "node scripts/ralph-task-index-self-test.cjs",
     "check:l12-cleanroom-generation": "node scripts/l12-cleanroom-generation-check.cjs",
     "check:l12-cleanroom-generation:strict": "node scripts/l12-cleanroom-generation-check.cjs --strict-acceptance",
     "check:l12-cleanroom-generation:self-test": "node scripts/l12-cleanroom-generation-check.cjs --self-test",
@@ -34,7 +35,7 @@
     "unit-profile-coverage:check:self-test": "node scripts/unit-profile-coverage-check.cjs --self-test",
     "lint": "pnpm --filter @dnd/mcp lint && pnpm --filter @dnd/app lint",
     "circular": "pnpm --filter @dnd/mcp circular && pnpm --filter @dnd/app circular",
-    "quality": "pnpm check:authored-id-dispatch && pnpm check:character-sheet-runtime-split && pnpm check:surface-class-json-sync && pnpm check:qa-generated-identity && pnpm check:mbt-driver-closure && pnpm check:test-lane-hygiene && pnpm check:mbt-script-inventory && pnpm check:qnt-inventory && pnpm check:qnt-run-block-separation && pnpm check:reducer-route-connectors && pnpm check:l12-cleanroom-generation:strict && pnpm rules-kernel-coverage:check && pnpm cleanroom-branch-coverage:check && pnpm cleanroom-sync:check && pnpm cleanroom-scaffold:check && pnpm cleanroom-harness:check && pnpm unit-profile-coverage:check && pnpm sdk-raw-integration-inventory:check && pnpm lint && pnpm circular && pnpm typecheck",
+    "quality": "pnpm check:authored-id-dispatch && pnpm check:character-sheet-runtime-split && pnpm check:surface-class-json-sync && pnpm check:qa-generated-identity && pnpm check:mbt-driver-closure && pnpm check:test-lane-hygiene && pnpm check:mbt-script-inventory && pnpm check:qnt-inventory && pnpm check:qnt-run-block-separation && pnpm check:reducer-route-connectors && pnpm check:ralph-task-index && pnpm check:l12-cleanroom-generation:strict && pnpm rules-kernel-coverage:check && pnpm cleanroom-branch-coverage:check && pnpm cleanroom-sync:check && pnpm cleanroom-scaffold:check && pnpm cleanroom-harness:check && pnpm unit-profile-coverage:check && pnpm sdk-raw-integration-inventory:check && pnpm lint && pnpm circular && pnpm typecheck",
     "typecheck": "turbo typecheck",
     "test": "turbo test"
   },
