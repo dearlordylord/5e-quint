@@ -14,7 +14,7 @@
     {
       "number": 2,
       "id": "L12IKP-02-UNIT-READINESS-SLICE",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Build and gate one cleanroom-safe Ice Knife Unit index",
       "dependencies": [
         "L12IKP-01-EXACT-SOURCE-CALIBRATION"
