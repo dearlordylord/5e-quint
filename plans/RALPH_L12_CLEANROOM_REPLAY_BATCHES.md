@@ -19,331 +19,331 @@
     {
       "number": 3,
       "id": "L12CEG-RP-003",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay spell.invocation-attack-roll-advantage-save through catalog-after-substrate"
     },
     {
       "number": 4,
       "id": "L12CEG-RP-004",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay spell.invocation-condition-immunity-turn-start-temporary-hit-points through catalog-after-substrate"
     },
     {
       "number": 5,
       "id": "L12CEG-RP-005",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay spell.invocation-condition-save through catalog-after-substrate"
     },
     {
       "number": 6,
       "id": "L12CEG-RP-006",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay spell.invocation-damage-reduction through catalog-after-substrate"
     },
     {
       "number": 7,
       "id": "L12CEG-RP-007",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay 2-profile set (spell.invocation-damage-save-or-attack, spell.invocation-forced-reaction-movement) through catalog-after-substrate"
     },
     {
       "number": 8,
       "id": "L12CEG-RP-008",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay 2-profile set (spell.invocation-damage-save-or-attack, spell.invocation-held-light-emitter) through catalog-after-substrate"
     },
     {
       "number": 9,
       "id": "L12CEG-RP-009",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay 2-profile set (spell.invocation-damage-save-or-attack, spell.readied-action-time-spell) chunk 1/5 through catalog-after-substrate"
     },
     {
       "number": 10,
       "id": "L12CEG-RP-010",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay 2-profile set (spell.invocation-damage-save-or-attack, spell.readied-action-time-spell) chunk 2/5 through catalog-after-substrate"
     },
     {
       "number": 11,
       "id": "L12CEG-RP-011",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay 2-profile set (spell.invocation-damage-save-or-attack, spell.readied-action-time-spell) chunk 3/5 through catalog-after-substrate"
     },
     {
       "number": 12,
       "id": "L12CEG-RP-012",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay 2-profile set (spell.invocation-damage-save-or-attack, spell.readied-action-time-spell) chunk 4/5 through catalog-after-substrate"
     },
     {
       "number": 13,
       "id": "L12CEG-RP-013",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay 2-profile set (spell.invocation-damage-save-or-attack, spell.readied-action-time-spell) chunk 5/5 through catalog-after-substrate"
     },
     {
       "number": 14,
       "id": "L12CEG-RP-014",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay spell.invocation-damage-save-or-attack chunk 1/2 through catalog-after-substrate"
     },
     {
       "number": 15,
       "id": "L12CEG-RP-015",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay spell.invocation-damage-save-or-attack chunk 2/2 through catalog-after-substrate"
     },
     {
       "number": 16,
       "id": "L12CEG-RP-016",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay spell.invocation-grease-ground-hazard through catalog-after-substrate"
     },
     {
       "number": 17,
       "id": "L12CEG-RP-017",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay spell.invocation-hideous-laughter-repeat-save-lifecycle through catalog-after-substrate"
     },
     {
       "number": 18,
       "id": "L12CEG-RP-018",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay spell.invocation-make-stable through catalog-after-substrate"
     },
     {
       "number": 19,
       "id": "L12CEG-RP-019",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay spell.invocation-marked-damage-rider through catalog-after-substrate"
     },
     {
       "number": 20,
       "id": "L12CEG-RP-020",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay spell.invocation-roll-modifier chunk 1/2 through catalog-after-substrate"
     },
     {
       "number": 21,
       "id": "L12CEG-RP-021",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay spell.invocation-roll-modifier chunk 2/2 through catalog-after-substrate"
     },
     {
       "number": 22,
       "id": "L12CEG-RP-022",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay spell.invocation-sanctuary-targeting-interdiction through catalog-after-substrate"
     },
     {
       "number": 23,
       "id": "L12CEG-RP-023",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay 2-profile set (spell.invocation-sleep-repeat-save-lifecycle, spell.invocation-sleep-target-admission) through catalog-after-substrate"
     },
     {
       "number": 24,
       "id": "L12CEG-RP-024",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay spell.invocation-spell-hosted-weapon-attack through catalog-after-substrate"
     },
     {
       "number": 25,
       "id": "L12CEG-RP-025",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay spell.invocation-weapon-attack-override through catalog-after-substrate"
     },
     {
       "number": 26,
       "id": "L12CEG-RP-026",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay spell.invocation-weapon-damage-rider through catalog-after-substrate"
     },
     {
       "number": 27,
       "id": "L12CEG-RP-027",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay 2-profile set (spell.invocation-damage-save-or-attack, spell.reaction-hellish-rebuke) through catalog-after-substrate"
     },
     {
       "number": 28,
       "id": "L12CEG-RP-028",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay spell.scalar-buff chunk 1/2 through catalog-after-substrate"
     },
     {
       "number": 29,
       "id": "L12CEG-RP-029",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay spell.scalar-buff chunk 2/2 through catalog-after-substrate"
     },
     {
       "number": 30,
       "id": "L12CEG-RP-030",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay unit-feature.first-attack-roll-reckless-advantage through catalog-after-substrate"
     },
     {
       "number": 31,
       "id": "L12CEG-RP-031",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay unit-feature.innate-sorcery-activation through catalog-after-substrate"
     },
     {
       "number": 32,
       "id": "L12CEG-RP-032",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay unit-feature.passive-saving-throw-roll-mode through catalog-after-substrate"
     },
     {
       "number": 33,
       "id": "L12CEG-RP-033",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay unit-feature.passive-speed-bonus through catalog-after-substrate"
     },
     {
       "number": 34,
       "id": "L12CEG-RP-034",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay spell.hit-point-restoration chunk 1/2 through reducer-routed"
     },
     {
       "number": 35,
       "id": "L12CEG-RP-035",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay spell.hit-point-restoration chunk 2/2 through reducer-routed"
     },
     {
       "number": 36,
       "id": "L12CEG-RP-036",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay spell.invocation-after-hit-damage through reducer-routed"
     },
     {
       "number": 37,
       "id": "L12CEG-RP-037",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay spell.invocation-after-hit-restraint-turn-start-damage through reducer-routed"
     },
     {
       "number": 38,
       "id": "L12CEG-RP-038",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay spell.invocation-after-hit-timed-damage-save through reducer-routed"
     },
     {
       "number": 39,
       "id": "L12CEG-RP-039",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay 2-profile set (spell.invocation-chained-attack-damage, spell.readied-action-time-spell) through reducer-routed"
     },
     {
       "number": 40,
       "id": "L12CEG-RP-040",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay 4-profile set (spell.invocation-command-approach-route, spell.invocation-command-drop-held-object, spell.invocation-command-flee-route, spell.invocation-command-halt-grovel) through reducer-routed"
     },
     {
       "number": 41,
       "id": "L12CEG-RP-041",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay spell.invocation-dancing-lights-movable-dim-light through reducer-routed"
     },
     {
       "number": 42,
       "id": "L12CEG-RP-042",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay spell.invocation-expeditious-retreat-dash through reducer-routed"
     },
     {
       "number": 43,
       "id": "L12CEG-RP-043",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay spell.invocation-feather-fall-mitigation through reducer-routed"
     },
     {
       "number": 44,
       "id": "L12CEG-RP-044",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay spell.invocation-fog-cloud-obscurement through reducer-routed"
     },
     {
       "number": 45,
       "id": "L12CEG-RP-045",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay spell.invocation-independent-attack-sequence through reducer-routed"
     },
     {
       "number": 46,
       "id": "L12CEG-RP-046",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay spell.invocation-jump-movement-replacement through reducer-routed"
     },
     {
       "number": 47,
       "id": "L12CEG-RP-047",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay spell.invocation-object-light through reducer-routed"
     },
     {
       "number": 48,
       "id": "L12CEG-RP-048",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay spell.reaction-shield through reducer-routed"
     },
     {
       "number": 49,
       "id": "L12CEG-RP-049",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay unit-feature.action-surge-resource through reducer-routed"
     },
     {
       "number": 50,
       "id": "L12CEG-RP-050",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay unit-feature.alternate-action-cost through reducer-routed"
     },
     {
       "number": 51,
       "id": "L12CEG-RP-051",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay unit-feature.attack-damage-rider through reducer-routed"
     },
     {
       "number": 52,
       "id": "L12CEG-RP-052",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay 2-profile set (unit-feature.bardic-inspiration-failed-d20-test, unit-feature.bardic-inspiration-grant) through reducer-routed"
     },
     {
       "number": 53,
       "id": "L12CEG-RP-053",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay unit-feature.bonus-action-ongoing-rage through reducer-routed"
     },
     {
       "number": 54,
       "id": "L12CEG-RP-054",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay unit-feature.failed-ability-check-resource-boost through reducer-routed"
     },
     {
       "number": 55,
       "id": "L12CEG-RP-055",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay unit-feature.martial-arts-attack-projection through reducer-routed"
     },
     {
       "number": 56,
       "id": "L12CEG-RP-056",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay unit-feature.self-bonus-action-healing through reducer-routed"
     },
     {
       "number": 57,
       "id": "L12CEG-DU-001",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check acid_splash against latest dirty cleanroom"
     },
     {
@@ -355,295 +355,295 @@
     {
       "number": 59,
       "id": "L12CEG-DU-003",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check bane against latest dirty cleanroom"
     },
     {
       "number": 60,
       "id": "L12CEG-DU-004",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check barbarian_danger_sense against latest dirty cleanroom"
     },
     {
       "number": 61,
       "id": "L12CEG-DU-005",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check barbarian_rage against latest dirty cleanroom"
     },
     {
       "number": 62,
       "id": "L12CEG-DU-006",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check barbarian_reckless_attack against latest dirty cleanroom"
     },
     {
       "number": 63,
       "id": "L12CEG-DU-007",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check bard_bardic_inspiration against latest dirty cleanroom"
     },
     {
       "number": 64,
       "id": "L12CEG-DU-008",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check bless against latest dirty cleanroom"
     },
     {
       "number": 65,
       "id": "L12CEG-DU-009",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check burning_hands against latest dirty cleanroom"
     },
     {
       "number": 66,
       "id": "L12CEG-DU-010",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check chill_touch against latest dirty cleanroom"
     },
     {
       "number": 67,
       "id": "L12CEG-DU-011",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check chromatic_orb against latest dirty cleanroom"
     },
     {
       "number": 68,
       "id": "L12CEG-DU-012",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check color_spray against latest dirty cleanroom"
     },
     {
       "number": 69,
       "id": "L12CEG-DU-013",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check command against latest dirty cleanroom"
     },
     {
       "number": 70,
       "id": "L12CEG-DU-014",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check cure_wounds against latest dirty cleanroom"
     },
     {
       "number": 71,
       "id": "L12CEG-DU-015",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check dancing_lights against latest dirty cleanroom"
     },
     {
       "number": 72,
       "id": "L12CEG-DU-016",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check dissonant_whispers against latest dirty cleanroom"
     },
     {
       "number": 73,
       "id": "L12CEG-DU-017",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check divine_favor against latest dirty cleanroom"
     },
     {
       "number": 74,
       "id": "L12CEG-DU-018",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check divine_smite against latest dirty cleanroom"
     },
     {
       "number": 75,
       "id": "L12CEG-DU-019",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check eldritch_blast against latest dirty cleanroom"
     },
     {
       "number": 76,
       "id": "L12CEG-DU-020",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check ensnaring_strike against latest dirty cleanroom"
     },
     {
       "number": 77,
       "id": "L12CEG-DU-021",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check entangle against latest dirty cleanroom"
     },
     {
       "number": 78,
       "id": "L12CEG-DU-022",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check expeditious_retreat against latest dirty cleanroom"
     },
     {
       "number": 79,
       "id": "L12CEG-DU-023",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check faerie_fire against latest dirty cleanroom"
     },
     {
       "number": 80,
       "id": "L12CEG-DU-024",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check false_life against latest dirty cleanroom"
     },
     {
       "number": 81,
       "id": "L12CEG-DU-025",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check feather_fall against latest dirty cleanroom"
     },
     {
       "number": 82,
       "id": "L12CEG-DU-026",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check fighter_action_surge against latest dirty cleanroom"
     },
     {
       "number": 83,
       "id": "L12CEG-DU-027",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check fighter_second_wind against latest dirty cleanroom"
     },
     {
       "number": 84,
       "id": "L12CEG-DU-028",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check fighter_tactical_mind against latest dirty cleanroom"
     },
     {
       "number": 85,
       "id": "L12CEG-DU-029",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check fire_bolt against latest dirty cleanroom"
     },
     {
       "number": 86,
       "id": "L12CEG-DU-030",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check fog_cloud against latest dirty cleanroom"
     },
     {
       "number": 87,
       "id": "L12CEG-DU-031",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check grease against latest dirty cleanroom"
     },
     {
       "number": 88,
       "id": "L12CEG-DU-032",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check guidance against latest dirty cleanroom"
     },
     {
       "number": 89,
       "id": "L12CEG-DU-033",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check guiding_bolt against latest dirty cleanroom"
     },
     {
       "number": 90,
       "id": "L12CEG-DU-034",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check healing_word against latest dirty cleanroom"
     },
     {
       "number": 91,
       "id": "L12CEG-DU-035",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check hellish_rebuke against latest dirty cleanroom"
     },
     {
       "number": 92,
       "id": "L12CEG-DU-036",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check heroism against latest dirty cleanroom"
     },
     {
       "number": 93,
       "id": "L12CEG-DU-037",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check hex against latest dirty cleanroom"
     },
     {
       "number": 94,
       "id": "L12CEG-DU-038",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check hideous_laughter against latest dirty cleanroom"
     },
     {
       "number": 95,
       "id": "L12CEG-DU-039",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check hunters_mark against latest dirty cleanroom"
     },
     {
       "number": 96,
       "id": "L12CEG-DU-040",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check ice_knife against latest dirty cleanroom"
     },
     {
       "number": 97,
       "id": "L12CEG-DU-041",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check inflict_wounds against latest dirty cleanroom"
     },
     {
       "number": 98,
       "id": "L12CEG-DU-042",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check jump against latest dirty cleanroom"
     },
     {
       "number": 99,
       "id": "L12CEG-DU-043",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check light against latest dirty cleanroom"
     },
     {
       "number": 100,
       "id": "L12CEG-DU-044",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check longstrider against latest dirty cleanroom"
     },
     {
       "number": 101,
       "id": "L12CEG-DU-045",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check mage_armor against latest dirty cleanroom"
     },
     {
       "number": 102,
       "id": "L12CEG-DU-046",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check magic_missile against latest dirty cleanroom"
     },
     {
       "number": 103,
       "id": "L12CEG-DU-047",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check monk_martial_arts against latest dirty cleanroom"
     },
     {
       "number": 104,
       "id": "L12CEG-DU-048",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check monk_unarmored_movement against latest dirty cleanroom"
     },
     {
       "number": 105,
       "id": "L12CEG-DU-049",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check paladin_paladins_smite against latest dirty cleanroom"
     },
     {
       "number": 106,
       "id": "L12CEG-DU-050",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check poison_spray against latest dirty cleanroom"
     },
     {
       "number": 107,
       "id": "L12CEG-DU-051",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check produce_flame against latest dirty cleanroom"
     },
     {
@@ -655,121 +655,121 @@
     {
       "number": 109,
       "id": "L12CEG-DU-053",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check ray_of_frost against latest dirty cleanroom"
     },
     {
       "number": 110,
       "id": "L12CEG-DU-054",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check ray_of_sickness against latest dirty cleanroom"
     },
     {
       "number": 111,
       "id": "L12CEG-DU-055",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check resistance against latest dirty cleanroom"
     },
     {
       "number": 112,
       "id": "L12CEG-DU-056",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check rogue_cunning_action against latest dirty cleanroom"
     },
     {
       "number": 113,
       "id": "L12CEG-DU-057",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check rogue_sneak_attack against latest dirty cleanroom"
     },
     {
       "number": 114,
       "id": "L12CEG-DU-058",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check sacred_flame against latest dirty cleanroom"
     },
     {
       "number": 115,
       "id": "L12CEG-DU-059",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check sanctuary against latest dirty cleanroom"
     },
     {
       "number": 116,
       "id": "L12CEG-DU-060",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check searing_smite against latest dirty cleanroom"
     },
     {
       "number": 117,
       "id": "L12CEG-DU-061",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check shield against latest dirty cleanroom"
     },
     {
       "number": 118,
       "id": "L12CEG-DU-062",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check shield_of_faith against latest dirty cleanroom"
     },
     {
       "number": 119,
       "id": "L12CEG-DU-063",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check shillelagh against latest dirty cleanroom"
     },
     {
       "number": 120,
       "id": "L12CEG-DU-064",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check shocking_grasp against latest dirty cleanroom"
     },
     {
       "number": 121,
       "id": "L12CEG-DU-065",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check sleep against latest dirty cleanroom"
     },
     {
       "number": 122,
       "id": "L12CEG-DU-066",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check sorcerer_innate_sorcery against latest dirty cleanroom"
     },
     {
       "number": 123,
       "id": "L12CEG-DU-067",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check sorcerous_burst against latest dirty cleanroom"
     },
     {
       "number": 124,
       "id": "L12CEG-DU-068",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check spare_the_dying against latest dirty cleanroom"
     },
     {
       "number": 125,
       "id": "L12CEG-DU-069",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check starry_wisp against latest dirty cleanroom"
     },
     {
       "number": 126,
       "id": "L12CEG-DU-070",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check thunderwave against latest dirty cleanroom"
     },
     {
       "number": 127,
       "id": "L12CEG-DU-071",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check true_strike against latest dirty cleanroom"
     },
     {
       "number": 128,
       "id": "L12CEG-DU-072",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check vicious_mockery against latest dirty cleanroom"
     },
     {
@@ -783,6 +783,12 @@
       "id": "L12CEG-TG-001-REFRESH-LATEST-DIRTY-TARGET-L12-INPUTS",
       "status": "done",
       "title": "Refresh latest dirty cleanroom target L12 input bundle"
+    },
+    {
+      "number": 131,
+      "id": "L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS",
+      "status": "todo",
+      "title": "Produce latest dirty target harness acceptance artifacts"
     }
   ]
 }
@@ -855,7 +861,7 @@ Project terms used by this plan are defined in
 - Cleanroom harness run batches: 56
 - Latest dirty cleanroom unit proof tasks: 72
 - Cleanroom run reference contract tasks: 1
-- Latest dirty cleanroom target refresh tasks: 1
+- Latest dirty cleanroom target refresh tasks: 2
 - Latest dirty cleanroom target: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
 - Covered rule entries in this plan: 146
 - Batch status at plan creation: `planned-not-executed`
@@ -873,136 +879,155 @@ implementation task records a concrete dependency through `Plan Impact`.
 
 | Task | Depends On |
 | --- | --- |
-| `L12CEG-RP-001` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-DU-002`; `L12CEG-DU-052` |
-| `L12CEG-RP-002` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-DU-052` |
-| `L12CEG-RP-003` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-004` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-005` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-006` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-007` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-008` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-009` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-010` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-011` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-012` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-013` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-014` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-015` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-016` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-017` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-018` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-019` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-020` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-021` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-022` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-023` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-024` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-025` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-026` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-027` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-028` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-029` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-030` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-031` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-032` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-033` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-034` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-035` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-036` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-037` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-038` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-039` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-040` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-041` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-042` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-043` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-044` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-045` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-046` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-047` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-048` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-049` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-050` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-051` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-052` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-053` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-054` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-055` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-RP-056` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-001` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-002` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-001-REFRESH-LATEST-DIRTY-TARGET-L12-INPUTS` |
-| `L12CEG-DU-003` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-004` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-005` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-006` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-007` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-008` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-009` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-010` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-011` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-012` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-013` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-014` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-015` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-016` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-017` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-018` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-019` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-020` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-021` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-022` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-023` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-024` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-025` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-026` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-027` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-028` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-029` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-030` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-031` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-032` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-033` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-034` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-035` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-036` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-037` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-038` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-039` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-040` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-041` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-042` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-043` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-044` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-045` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-046` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-047` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-048` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-049` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-050` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-051` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-052` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-001-REFRESH-LATEST-DIRTY-TARGET-L12-INPUTS` |
-| `L12CEG-DU-053` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-054` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-055` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-056` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-057` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-058` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-059` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-060` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-061` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-062` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-063` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-064` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-065` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-066` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-067` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-068` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-069` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-070` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-071` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-072` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
+| `L12CEG-RP-001` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-DU-002`; `L12CEG-DU-052`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-002` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-DU-052`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-003` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-004` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-005` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-006` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-007` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-008` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-009` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-010` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-011` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-012` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-013` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-014` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-015` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-016` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-017` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-018` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-019` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-020` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-021` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-022` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-023` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-024` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-025` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-026` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-027` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-028` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-029` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-030` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-031` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-032` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-033` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-034` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-035` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-036` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-037` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-038` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-039` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-040` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-041` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-042` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-043` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-044` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-045` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-046` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-047` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-048` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-049` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-050` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-051` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-052` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-053` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-054` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-055` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-056` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-001` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-002` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-001-REFRESH-LATEST-DIRTY-TARGET-L12-INPUTS`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-003` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-004` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-005` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-006` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-007` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-008` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-009` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-010` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-011` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-012` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-013` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-014` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-015` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-016` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-017` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-018` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-019` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-020` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-021` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-022` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-023` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-024` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-025` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-026` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-027` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-028` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-029` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-030` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-031` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-032` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-033` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-034` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-035` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-036` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-037` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-038` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-039` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-040` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-041` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-042` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-043` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-044` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-045` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-046` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-047` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-048` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-049` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-050` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-051` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-052` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-001-REFRESH-LATEST-DIRTY-TARGET-L12-INPUTS`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-053` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-054` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-055` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-056` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-057` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-058` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-059` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-060` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-061` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-062` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-063` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-064` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-065` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-066` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-067` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-068` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-069` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-070` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-071` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-DU-072` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
 | `L12CEG-CR-001-CLEANROOM-RUN-REFERENCE-CONTRACT` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
 | `L12CEG-TG-001-REFRESH-LATEST-DIRTY-TARGET-L12-INPUTS` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-CR-001-CLEANROOM-RUN-REFERENCE-CONTRACT` |
+| `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-CR-001-CLEANROOM-RUN-REFERENCE-CONTRACT`; `L12CEG-TG-001-REFRESH-LATEST-DIRTY-TARGET-L12-INPUTS` |
+
+## Global Latest-Target Harness Artifact Blocker
+
+Tasks 58, 108, 1, and 2 established the same durable blocker against the named
+latest dirty target: `node scripts/check-cleanroom-harness.cjs --task-root
+/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29` fails because
+concrete target acceptance artifacts are missing: `tasks/RUN_LEDGER.json`,
+`START_GATE.json`, `ENGINE_DEPTH_MANIFEST.json`,
+`STATE_OWNER_MANIFEST.json`, `REVIEW_LOOP.json`, and
+`DECIDER_DECISION.json`. Replay batches also require matching
+`tasks/target-replay-evidence/*.json` receipt files or retained-artifact
+references before source-side closure.
+
+Until `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` is done, all `L12CEG-RP-*` replay tasks and
+`L12CEG-DU-*` latest-dirty unit proof tasks are non-runnable. Do not spend
+additional Ralph runs rediscovering the same missing target ledger/gate files;
+repair the target artifact surface first, then unblock and rerun the affected
+byte-sized replay or unit tasks.
 
 ## Global Verification
 
@@ -1327,7 +1352,7 @@ examples, grouped selected-identity proof, or diagnostic tests.
 
 ### Task 3 - L12CEG-RP-003
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -1462,7 +1487,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 4 - L12CEG-RP-004
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -1598,7 +1623,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 5 - L12CEG-RP-005
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -1737,7 +1762,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 6 - L12CEG-RP-006
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -1870,7 +1895,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 7 - L12CEG-RP-007
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -2005,7 +2030,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 8 - L12CEG-RP-008
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -2140,7 +2165,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 9 - L12CEG-RP-009
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -2285,7 +2310,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 10 - L12CEG-RP-010
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -2430,7 +2455,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 11 - L12CEG-RP-011
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -2574,7 +2599,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 12 - L12CEG-RP-012
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -2719,7 +2744,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 13 - L12CEG-RP-013
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -2854,7 +2879,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 14 - L12CEG-RP-014
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -2996,7 +3021,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 15 - L12CEG-RP-015
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -3138,7 +3163,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 16 - L12CEG-RP-016
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -3273,7 +3298,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 17 - L12CEG-RP-017
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -3407,7 +3432,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 18 - L12CEG-RP-018
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -3538,7 +3563,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 19 - L12CEG-RP-019
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -3675,7 +3700,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 20 - L12CEG-RP-020
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -3814,7 +3839,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 21 - L12CEG-RP-021
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -3946,7 +3971,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 22 - L12CEG-RP-022
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -4076,7 +4101,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 23 - L12CEG-RP-023
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -4211,7 +4236,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 24 - L12CEG-RP-024
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -4349,7 +4374,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 25 - L12CEG-RP-025
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -4484,7 +4509,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 26 - L12CEG-RP-026
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -4619,7 +4644,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 27 - L12CEG-RP-027
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -4754,7 +4779,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 28 - L12CEG-RP-028
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -4896,7 +4921,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 29 - L12CEG-RP-029
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -5033,7 +5058,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 30 - L12CEG-RP-030
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -5167,7 +5192,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 31 - L12CEG-RP-031
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -5301,7 +5326,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 32 - L12CEG-RP-032
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -5431,7 +5456,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 33 - L12CEG-RP-033
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -5561,7 +5586,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 34 - L12CEG-RP-034
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -5697,7 +5722,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 35 - L12CEG-RP-035
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -5828,7 +5853,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 36 - L12CEG-RP-036
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -5960,7 +5985,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 37 - L12CEG-RP-037
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -6090,7 +6115,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 38 - L12CEG-RP-038
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -6220,7 +6245,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 39 - L12CEG-RP-039
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -6352,7 +6377,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 40 - L12CEG-RP-040
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -6487,7 +6512,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 41 - L12CEG-RP-041
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -6625,7 +6650,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 42 - L12CEG-RP-042
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -6757,7 +6782,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 43 - L12CEG-RP-043
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -6895,7 +6920,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 44 - L12CEG-RP-044
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -7034,7 +7059,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 45 - L12CEG-RP-045
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -7164,7 +7189,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 46 - L12CEG-RP-046
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -7297,7 +7322,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 47 - L12CEG-RP-047
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -7436,7 +7461,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 48 - L12CEG-RP-048
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -7567,7 +7592,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 49 - L12CEG-RP-049
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -7697,7 +7722,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 50 - L12CEG-RP-050
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -7827,7 +7852,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 51 - L12CEG-RP-051
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -7957,7 +7982,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 52 - L12CEG-RP-052
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -8088,7 +8113,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 53 - L12CEG-RP-053
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -8218,7 +8243,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 54 - L12CEG-RP-054
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -8348,7 +8373,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 55 - L12CEG-RP-055
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -8478,7 +8503,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 56 - L12CEG-RP-056
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -8611,7 +8636,7 @@ harness-run reference shape, or a source corpus/harness blocker.
 
 ### Task 57 - L12CEG-DU-001
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -8863,7 +8888,7 @@ examples, or diagnostic tests.
 
 ### Task 59 - L12CEG-DU-003
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -8987,7 +9012,7 @@ repair.
 
 ### Task 60 - L12CEG-DU-004
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -9108,7 +9133,7 @@ repair.
 
 ### Task 61 - L12CEG-DU-005
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -9229,7 +9254,7 @@ repair.
 
 ### Task 62 - L12CEG-DU-006
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -9350,7 +9375,7 @@ repair.
 
 ### Task 63 - L12CEG-DU-007
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -9472,7 +9497,7 @@ repair.
 
 ### Task 64 - L12CEG-DU-008
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -9594,7 +9619,7 @@ repair.
 
 ### Task 65 - L12CEG-DU-009
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -9718,7 +9743,7 @@ repair.
 
 ### Task 66 - L12CEG-DU-010
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -9843,7 +9868,7 @@ repair.
 
 ### Task 67 - L12CEG-DU-011
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -9966,7 +9991,7 @@ repair.
 
 ### Task 68 - L12CEG-DU-012
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -10089,7 +10114,7 @@ repair.
 
 ### Task 69 - L12CEG-DU-013
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -10215,7 +10240,7 @@ repair.
 
 ### Task 70 - L12CEG-DU-014
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -10341,7 +10366,7 @@ repair.
 
 ### Task 71 - L12CEG-DU-015
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -10464,7 +10489,7 @@ repair.
 
 ### Task 72 - L12CEG-DU-016
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -10586,7 +10611,7 @@ repair.
 
 ### Task 73 - L12CEG-DU-017
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -10707,7 +10732,7 @@ repair.
 
 ### Task 74 - L12CEG-DU-018
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -10828,7 +10853,7 @@ repair.
 
 ### Task 75 - L12CEG-DU-019
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -10949,7 +10974,7 @@ repair.
 
 ### Task 76 - L12CEG-DU-020
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -11070,7 +11095,7 @@ repair.
 
 ### Task 77 - L12CEG-DU-021
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -11192,7 +11217,7 @@ repair.
 
 ### Task 78 - L12CEG-DU-022
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -11315,7 +11340,7 @@ repair.
 
 ### Task 79 - L12CEG-DU-023
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -11437,7 +11462,7 @@ repair.
 
 ### Task 80 - L12CEG-DU-024
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -11560,7 +11585,7 @@ repair.
 
 ### Task 81 - L12CEG-DU-025
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -11683,7 +11708,7 @@ repair.
 
 ### Task 82 - L12CEG-DU-026
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -11804,7 +11829,7 @@ repair.
 
 ### Task 83 - L12CEG-DU-027
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -11925,7 +11950,7 @@ repair.
 
 ### Task 84 - L12CEG-DU-028
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -12046,7 +12071,7 @@ repair.
 
 ### Task 85 - L12CEG-DU-029
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -12169,7 +12194,7 @@ repair.
 
 ### Task 86 - L12CEG-DU-030
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -12293,7 +12318,7 @@ repair.
 
 ### Task 87 - L12CEG-DU-031
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -12415,7 +12440,7 @@ repair.
 
 ### Task 88 - L12CEG-DU-032
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -12537,7 +12562,7 @@ repair.
 
 ### Task 89 - L12CEG-DU-033
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -12659,7 +12684,7 @@ repair.
 
 ### Task 90 - L12CEG-DU-034
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -12782,7 +12807,7 @@ repair.
 
 ### Task 91 - L12CEG-DU-035
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -12904,7 +12929,7 @@ repair.
 
 ### Task 92 - L12CEG-DU-036
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -13026,7 +13051,7 @@ repair.
 
 ### Task 93 - L12CEG-DU-037
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -13147,7 +13172,7 @@ repair.
 
 ### Task 94 - L12CEG-DU-038
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -13270,7 +13295,7 @@ repair.
 
 ### Task 95 - L12CEG-DU-039
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -13391,7 +13416,7 @@ repair.
 
 ### Task 96 - L12CEG-DU-040
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -13515,7 +13540,7 @@ repair.
 
 ### Task 97 - L12CEG-DU-041
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -13637,7 +13662,7 @@ repair.
 
 ### Task 98 - L12CEG-DU-042
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -13761,7 +13786,7 @@ repair.
 
 ### Task 99 - L12CEG-DU-043
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -13885,7 +13910,7 @@ repair.
 
 ### Task 100 - L12CEG-DU-044
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -14010,7 +14035,7 @@ repair.
 
 ### Task 101 - L12CEG-DU-045
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -14134,7 +14159,7 @@ repair.
 
 ### Task 102 - L12CEG-DU-046
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -14258,7 +14283,7 @@ repair.
 
 ### Task 103 - L12CEG-DU-047
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -14379,7 +14404,7 @@ repair.
 
 ### Task 104 - L12CEG-DU-048
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -14500,7 +14525,7 @@ repair.
 
 ### Task 105 - L12CEG-DU-049
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -14621,7 +14646,7 @@ repair.
 
 ### Task 106 - L12CEG-DU-050
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -14749,7 +14774,7 @@ repair.
 
 ### Task 107 - L12CEG-DU-051
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -15001,7 +15026,7 @@ examples, or diagnostic tests.
 
 ### Task 109 - L12CEG-DU-053
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -15125,7 +15150,7 @@ repair.
 
 ### Task 110 - L12CEG-DU-054
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -15249,7 +15274,7 @@ repair.
 
 ### Task 111 - L12CEG-DU-055
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -15371,7 +15396,7 @@ repair.
 
 ### Task 112 - L12CEG-DU-056
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -15492,7 +15517,7 @@ repair.
 
 ### Task 113 - L12CEG-DU-057
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -15613,7 +15638,7 @@ repair.
 
 ### Task 114 - L12CEG-DU-058
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -15735,7 +15760,7 @@ repair.
 
 ### Task 115 - L12CEG-DU-059
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -15856,7 +15881,7 @@ repair.
 
 ### Task 116 - L12CEG-DU-060
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -15977,7 +16002,7 @@ repair.
 
 ### Task 117 - L12CEG-DU-061
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -16099,7 +16124,7 @@ repair.
 
 ### Task 118 - L12CEG-DU-062
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -16221,7 +16246,7 @@ repair.
 
 ### Task 119 - L12CEG-DU-063
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -16342,7 +16367,7 @@ repair.
 
 ### Task 120 - L12CEG-DU-064
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -16466,7 +16491,7 @@ repair.
 
 ### Task 121 - L12CEG-DU-065
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -16590,7 +16615,7 @@ repair.
 
 ### Task 122 - L12CEG-DU-066
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -16711,7 +16736,7 @@ repair.
 
 ### Task 123 - L12CEG-DU-067
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -16832,7 +16857,7 @@ repair.
 
 ### Task 124 - L12CEG-DU-068
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -16954,7 +16979,7 @@ repair.
 
 ### Task 125 - L12CEG-DU-069
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -17076,7 +17101,7 @@ repair.
 
 ### Task 126 - L12CEG-DU-070
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -17201,7 +17226,7 @@ repair.
 
 ### Task 127 - L12CEG-DU-071
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -17325,7 +17350,7 @@ repair.
 
 ### Task 128 - L12CEG-DU-072
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -17536,6 +17561,111 @@ input bundle and validator support needed by the source harness. Use
 `update-required` if the target refresh requires broader artifact-store,
 validator-lineage, or source corpus redesign.
 
+### Task 131 - L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS
+
+Status: `todo`
+
+Goal:
+
+Repair the named latest dirty cleanroom target so it contains the concrete
+harness acceptance artifacts required by the source cleanroom harness, then
+record enough target-side evidence for replay and dirty-unit tasks to become
+runnable again. This task does not mark any SRD row done by itself.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Completed source contract task `L12CEG-CR-001-CLEANROOM-RUN-REFERENCE-CONTRACT`.
+- Completed target refresh task
+  `L12CEG-TG-001-REFRESH-LATEST-DIRTY-TARGET-L12-INPUTS`.
+- Existing blocker artifacts:
+  - `plans/ralph-artifacts/l12-cleanroom-generation/task-58-animal-friendship-dirty-target-inspection.md`
+  - `plans/ralph-artifacts/l12-cleanroom-generation/task-108-protection-from-evil-and-good-dirty-target-inspection.md`
+  - `plans/ralph-artifacts/l12-cleanroom-generation/task-1-replay-blocker.md`
+  - `plans/ralph-artifacts/l12-cleanroom-generation/task-2-replay-blocker.md`
+
+Output:
+
+- The latest dirty target contains concrete, non-example harness acceptance
+  artifacts at these paths, with target-local provenance and timestamps:
+  - `tasks/RUN_LEDGER.json`
+  - `tasks/START_GATE.json`
+  - `tasks/ENGINE_DEPTH_MANIFEST.json`
+  - `tasks/STATE_OWNER_MANIFEST.json`
+  - `tasks/REVIEW_LOOP.json`
+  - `tasks/DECIDER_DECISION.json`
+- The latest dirty target contains the receipt directory or retained-artifact
+  reference surface expected by the source harness, including
+  `tasks/target-replay-evidence/*.json` when concrete replay receipts are
+  produced.
+- A source-side inspection note records the target commit/worktree state, target
+  artifact hashes, and whether the target is now ready for individual replay and
+  dirty-unit tasks.
+- Do not mark any `L12CEG-RP-*` or `L12CEG-DU-*` task done from this
+  target repair alone; after this task passes, unblock and rerun the relevant
+  byte-sized tasks to verify their specific rows.
+
+Validation:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm check:l12-cleanroom-generation:strict`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `pnpm unit-profile-coverage:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The source checker no longer reports missing `RUN_LEDGER.json`,
+  `START_GATE.json`, `ENGINE_DEPTH_MANIFEST.json`,
+  `STATE_OWNER_MANIFEST.json`, `REVIEW_LOOP.json`, or
+  `DECIDER_DECISION.json` for the named latest dirty target.
+- The target artifacts are concrete run/decision artifacts, not scaffold
+  examples renamed into place.
+- The target artifact surface preserves the cleanroom run reference contract:
+  source keeps only compact receipts or hash-bound references, while raw logs
+  remain in the target or external artifact store.
+- The task records which replay or dirty-unit tasks can be unblocked next; if
+  the target still cannot produce receipts, the blocker is precise and
+  target-design-sized rather than repeated per row.
+
+Dependencies:
+
+- Completed prep plan task `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`.
+- Completed source contract task
+  `L12CEG-CR-001-CLEANROOM-RUN-REFERENCE-CONTRACT`.
+- Completed target refresh task
+  `L12CEG-TG-001-REFRESH-LATEST-DIRTY-TARGET-L12-INPUTS`.
+
+One-Agent-Session Scope:
+
+One target artifact-surface repair for the named latest dirty target. If this
+requires broad target runtime implementation, external artifact-store design, or
+a different dirty target, stop and record `Plan Impact: update-required`
+instead of fabricating receipt files.
+
+Forbidden Shortcuts:
+
+- Do not satisfy the checker with example files, prose-only notes, stale files
+  from an older target, or raw logs checked into source.
+- Do not mark replay or dirty-unit rows done from this task.
+- Do not weaken source harness validation, copied artifact hash checks, or row
+  coverage checks.
+- Do not introduce PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run architecture/connascence, cleanroom-authored-identity, Ralph task-quality,
+report-honesty, and code-review passes. Fix every reasonable finding and
+document concrete reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after the latest dirty target has concrete harness acceptance
+artifacts and `node scripts/check-cleanroom-harness.cjs --task-root
+/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29` passes. Use
+`update-required` if the missing artifacts require broader target design or
+artifact-store work before individual replay and dirty-unit tasks can run.
 
 ## Cleanroom Run Reference Contract Task Details
 
