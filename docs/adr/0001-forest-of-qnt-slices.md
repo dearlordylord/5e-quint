@@ -2,6 +2,40 @@
 
 The engine is QNT-verified via MBT parity and the long-term goal is generating implementations in multiple language targets from one Quint source. A whole-battle Quint model is infeasible: the `creature x turn x effect x hole x fill` cross-product explodes the MBT state space, as the deleted root monoliths demonstrated at scale. Therefore the QNT corpus is structured as a forest of small composite slices that `import` shared atomic rule files, each slice with its own bounded MBT trace generator (state minimal, variability pushed into per-action `nondet`/fills). Composition across slices lives at the production reducer (command dispatch) and at one bounded-fixture-world integration MBT that witnesses cross-slice sequencing (never a generation input). Each language-target implementation is an independent MBT harness against the same Quint source via that language's `quint-connect` equivalent; harnesses do not call each other.
 
+## TypeScript calibration before another language target
+
+TypeScript is the first active language target and calibrates the QNT corpus
+before that corpus is used to evaluate another implementation. A rule-bearing
+QNT slice is not eligible as cleanroom or generator input merely because it
+parses, proves an invariant, or can emit a trace. Its active semantic
+obligations must first be integrated into the production TypeScript system:
+
+- every active semantic obligation has a registered QNT owner, a production
+  TypeScript runtime owner, and an executable QNT-connected TS parity witness;
+- every cleanroom-facing MBT branch is intentionally replayable through the TS
+  `quint-connect` lane and compared with production TS behavior;
+- every supported Surface profile and selected Unit identity joins to those
+  calibrated obligations without making authored identity the runtime model;
+- every production command variant has a TypeScript handler through exhaustive
+  dispatch.
+
+This ordering is required to calibrate both sides of the oracle boundary. It
+proves that the QNT projection is implementable, that its adapter mapping is
+correct, and that it agrees with the repository's production behavior before a
+fresh language target is blamed for divergence. Without the TS calibration, a
+cleanroom failure cannot distinguish a QNT defect, a harness/bridge defect, and
+a target implementation defect. The cleanroom is intended to test portability
+of a known integrated specification, not to become the first place an orphaned
+QNT rule acquires an implementation.
+
+“Exhaustive” applies to active semantic obligations, cleanroom-facing branch
+actions, supported-profile joins, and language-level dispatch. It does not mean
+that every `.qnt` file needs a production handler: proof-only examples,
+inductive companions, type-vocabulary leaves, witness protocol leaves, and
+retired/exempt files are classified separately. It also does not claim
+exhaustive whole-battle state-space coverage; cross-slice integration remains
+the bounded-fixture tier described below.
+
 ## Considered options
 
 - **Monolithic whole-battle QNT** — rejected; the deleted root monoliths were exactly that path at scale, and the explosion is documented in CLAUDE.md (Apalache record-set enumeration becomes infeasible for large records; MBT trace generation slows under branch count).
@@ -10,6 +44,9 @@ The engine is QNT-verified via MBT parity and the long-term goal is generating i
 ## Consequences
 
 - "100% QNT coverage" is exhaustive for atomic + composite + per-Unit-identity tiers and _bounded-fixture_ for cross-slice sequencing; the combinatorial whole-battle space is deliberately out of scope.
+- QNT promoted into the active portable corpus is already calibrated against
+  production TypeScript at the applicable obligation and MBT-branch tiers; a
+  QNT-only semantic owner is a source-readiness blocker, not cleanroom work.
 - Implementation completeness per language target is enforced by three orthogonal CI gates: the obligation registry (no slice forgotten), per-slice MBT parity (each handler matches its QNT), and language-level exhaustive dispatch (every command variant has a handler at compile time).
 - Adding a new language target = adding its harness + per-slice drivers; no QNT changes, no changes to other languages' code.
 

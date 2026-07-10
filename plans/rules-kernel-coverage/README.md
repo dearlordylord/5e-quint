@@ -14,6 +14,41 @@ runtime reducers admit and execute today. Surface schema support, catalog
 presence, display payloads, parser failure, and unsupported profile rows do not
 enter the QNT denominator by themselves.
 
+## Cleanroom Export Precondition
+
+The TS-current denominator is the baseline coverage direction, not permission
+to export unintegrated QNT. Before an active QNT semantic obligation or
+cleanroom-facing MBT branch is used to guide another language target, the
+source must close the reverse readiness direction as well:
+
+```text
+active rule-bearing QNT
+  -> registered semantic obligation and owner role
+  -> production TypeScript runtime owner
+  -> executable QNT-connected TS parity witness
+  -> exact TS replay for every exported cleanroom-facing MBT branch
+  -> eligible cleanroom input
+```
+
+The TypeScript implementation is therefore the calibrated first language
+target. This prevents a second-language cleanroom failure from ambiguously
+meaning “QNT was wrong,” “the QNT-to-runtime adapter was wrong,” or “the new
+implementation was wrong.” QNT-only semantics and branches that have not been
+observed through production TS remain source-readiness blockers.
+
+This requirement is exhaustive over active semantic obligations and exported
+branch actions, not over files. `proof-only`, `mbt-fixture`, `bridge`,
+`selected-identity-trace`, and checker-exempt vocabulary/retired files have the
+role-specific integration described below; they do not each require an
+independent production handler. Bounded cross-slice MBT also remains bounded.
+
+The rules-kernel checker enforces the obligation-level owner/parity chain
+today. Exact action-level TS replay is a separate cleanroom-export gate and must
+not be inferred from a green obligation row or a driver-level test. Its
+calibration index remains source-only because TypeScript implementation and
+test paths are forbidden cleanroom inputs; the exported manifest records only
+the calibrated source snapshot/hash and pass result.
+
 ## Coverage Chain
 
 Rules-kernel obligations enter through one of two evidence paths.

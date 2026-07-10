@@ -1,5 +1,13 @@
 # Ralph L1-2 Cleanroom Replay Batches
 
+> **Superseded for future target execution.** This file is retained as the
+> historical replay/accounting ledger for work already performed. Do not send
+> its unfinished `RP`, `DU`, `TG`, or `UB` queue to Ralph. Its assignment
+> partition selects `routeProofCandidates[0]` and can associate a Unit with a
+> compatible driver that contains no direct Unit witness. Build the corrected
+> source generator with
+> `plans/RALPH_L12_CLEANROOM_GUIDANCE_GENERATOR.md`.
+
 <!-- ralph-task-index
 {
   "schema": "ralph-plan.v1",
