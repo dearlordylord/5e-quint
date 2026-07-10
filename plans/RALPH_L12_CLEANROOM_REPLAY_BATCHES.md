@@ -349,7 +349,7 @@
     {
       "number": 58,
       "id": "L12CEG-DU-002",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check animal_friendship against latest dirty cleanroom"
     },
     {
@@ -777,6 +777,12 @@
       "id": "L12CEG-CR-001-CLEANROOM-RUN-REFERENCE-CONTRACT",
       "status": "done",
       "title": "Define cleanroom run reference contract"
+    },
+    {
+      "number": 130,
+      "id": "L12CEG-TG-001-REFRESH-LATEST-DIRTY-TARGET-L12-INPUTS",
+      "status": "todo",
+      "title": "Refresh latest dirty cleanroom target L12 input bundle"
     }
   ]
 }
@@ -790,7 +796,7 @@ This is the runnable Ralph execution plan produced by
 into one Ralph task per future cleanroom harness run batch.
 
 The denominator is still 146 harness-checkable SRD L1-2 rule entries. This plan
-has three task families:
+has four task families:
 
 - `L12CEG-RP-*` tasks group entries by shared route, proof classification,
   profile set, and driver/harness path, then split oversized groups into
@@ -800,6 +806,9 @@ has three task families:
 - `L12CEG-CR-*` tasks maintain the source harness contract for hash-bound
   cleanroom run references or compact receipts, explicitly excluding raw
   cleanroom logs from source check-in requirements.
+- `L12CEG-TG-*` tasks refresh or repair the named latest dirty cleanroom target
+  when a dirty-unit check proves that target cannot run the current L12 harness
+  contract.
 
 A row replay batch is done only after the generated cleanroom target produces a
 hash-bound cleanroom run reference or compact receipt that
@@ -846,6 +855,7 @@ Project terms used by this plan are defined in
 - Cleanroom harness run batches: 56
 - Latest dirty cleanroom unit proof tasks: 72
 - Cleanroom run reference contract tasks: 1
+- Latest dirty cleanroom target refresh tasks: 1
 - Latest dirty cleanroom target: `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
 - Covered rule entries in this plan: 146
 - Batch status at plan creation: `planned-not-executed`
@@ -920,7 +930,7 @@ implementation task records a concrete dependency through `Plan Impact`.
 | `L12CEG-RP-055` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
 | `L12CEG-RP-056` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
 | `L12CEG-DU-001` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
-| `L12CEG-DU-002` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
+| `L12CEG-DU-002` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-001-REFRESH-LATEST-DIRTY-TARGET-L12-INPUTS` |
 | `L12CEG-DU-003` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
 | `L12CEG-DU-004` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
 | `L12CEG-DU-005` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
@@ -992,6 +1002,7 @@ implementation task records a concrete dependency through `Plan Impact`.
 | `L12CEG-DU-071` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
 | `L12CEG-DU-072` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
 | `L12CEG-CR-001-CLEANROOM-RUN-REFERENCE-CONTRACT` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
+| `L12CEG-TG-001-REFRESH-LATEST-DIRTY-TARGET-L12-INPUTS` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-CR-001-CLEANROOM-RUN-REFERENCE-CONTRACT` |
 
 ## Global Verification
 
@@ -8705,7 +8716,7 @@ repair.
 
 ### Task 58 - L12CEG-DU-002
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -8791,6 +8802,8 @@ Success Criteria:
 Dependencies:
 
 - Completed prep plan task `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`.
+- Target refresh task
+  `L12CEG-TG-001-REFRESH-LATEST-DIRTY-TARGET-L12-INPUTS`.
 - Related replay batches listed above consume this task's result before
   source-side closure.
 
@@ -8819,12 +8832,11 @@ concrete reasons for rejected notes.
 
 Plan Impact:
 
-`applied` only after the latest dirty cleanroom target produces a current
-hash-bound cleanroom run reference or compact receipt that passes
-`pnpm cleanroom-harness:check` and the source-side artifacts are updated. Use
-`update-required` if this Unit needs target implementation, stale input repair,
-task splitting, a different harness-run reference shape, or source corpus/harness
-repair.
+`update-required`. The named latest dirty cleanroom target lacks the current L12
+copied input bundle and target-side harness validators required by this task, so
+this Unit cannot produce a current hash-bound run reference or compact receipt
+until `L12CEG-TG-001-REFRESH-LATEST-DIRTY-TARGET-L12-INPUTS` refreshes the
+target. Do not mark the listed rows done from this blocker.
 
 ### Task 59 - L12CEG-DU-003
 
@@ -17405,6 +17417,97 @@ hash-bound cleanroom run reference or compact receipt that passes
 `update-required` if this Unit needs target implementation, stale input repair,
 task splitting, a different harness-run reference shape, or source corpus/harness
 repair.
+
+
+## Latest Dirty Target Refresh Task Details
+
+### Task 130 - L12CEG-TG-001-REFRESH-LATEST-DIRTY-TARGET-L12-INPUTS
+
+Status: `todo`
+
+Goal:
+
+Refresh the named latest dirty cleanroom target so dirty-unit and replay tasks
+can run the current L12 cleanroom harness contract from copied inputs instead of
+stale target-local state.
+
+Input:
+
+- Latest dirty cleanroom target `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
+- Source cleanroom scaffold/package guidance.
+- Current source L12 artifacts:
+  - `plans/ralph-artifacts/l12-cleanroom-generation/srd-l12-denominator.json`
+  - `plans/ralph-artifacts/l12-cleanroom-generation/capability-fact-coverage-matrix.json`
+  - `plans/ralph-artifacts/l12-cleanroom-generation/route-proof-inventory.json`
+  - `plans/ralph-artifacts/l12-cleanroom-generation/srd-row-generic-fact-map.json`
+  - `plans/ralph-artifacts/l12-cleanroom-generation/verifier-gate-spec.json`
+- Source harness validators:
+  - `scripts/check-cleanroom-harness.cjs`
+  - `scripts/cleanroom-branch-coverage-check.cjs`
+
+Output:
+
+- The latest dirty target contains `cleanroom-input/l12-cleanroom-generation/*`
+  copied from current source artifacts with recorded hashes.
+- The latest dirty target contains the source harness validators needed by
+  `pnpm cleanroom-harness:check` or an equivalent manifest-resolved validator
+  path accepted by the source checker.
+- A target inspection note records the target commit and dirty worktree state
+  after refresh.
+- Do not produce or mark any Unit row receipts in this task; rerun the relevant
+  dirty-unit or replay task after the target refresh passes.
+
+Validation:
+
+- `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+- `pnpm cleanroom-scaffold:check`
+- `pnpm cleanroom-harness:check`
+- `git diff --check`
+
+Success Criteria:
+
+- The named latest dirty target is the only target refreshed; older targets and
+  preservation directories do not count.
+- The copied L12 artifact hashes in the target match current source artifacts.
+- The source checker can inspect the target through
+  `node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`
+  without reporting missing `cleanroom-input/l12-cleanroom-generation/*` or
+  harness validator scripts.
+- The target refresh does not check raw cleanroom logs into source.
+
+Dependencies:
+
+- Completed prep plan task `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`.
+- Completed source contract task
+  `L12CEG-CR-001-CLEANROOM-RUN-REFERENCE-CONTRACT`.
+
+One-Agent-Session Scope:
+
+Refresh the named target with the current L12 copied input bundle and validator
+support only. If this reveals a larger cleanroom artifact-store redesign,
+source corpus repair, or target runtime implementation gap, stop and record
+`Plan Impact: update-required` instead of widening the task.
+
+Forbidden Shortcuts:
+
+- Do not use an older dirty target, stale preservation copy, generated row list,
+  or diagnostic test as proof that the latest target is refreshed.
+- Do not mark dirty-unit or replay rows complete from this target-refresh task.
+- Do not check raw cleanroom logs into source.
+- Do not introduce PHB+ or synthetic non-SRD catalog identity.
+
+Reviewer Loop:
+
+Run architecture/connascence, cleanroom-authored-identity, Ralph task-quality,
+and code-review passes. Fix every reasonable finding and document concrete
+reasons for rejected notes.
+
+Plan Impact:
+
+`applied` only after the latest dirty cleanroom target has the current L12 copied
+input bundle and validator support needed by the source harness. Use
+`update-required` if the target refresh requires broader artifact-store,
+validator-lineage, or source corpus redesign.
 
 
 ## Cleanroom Run Reference Contract Task Details
