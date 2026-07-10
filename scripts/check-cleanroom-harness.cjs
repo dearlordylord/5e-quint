@@ -3760,7 +3760,7 @@ function runSelfTest() {
     expectFailure(
       validRoot,
       profile,
-      "dirty-start-source-authorized-stale-target-head",
+      "dirty-start-source-authorized-non-ancestor-target-head",
       (rootPath) => {
         updateFixtureLedgerArtifact(rootPath, "startGate", (startGate) => {
           startGate.taskScope.allowedDirtyTarget = true;
