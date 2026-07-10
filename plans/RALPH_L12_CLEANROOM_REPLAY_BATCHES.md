@@ -349,7 +349,7 @@
     {
       "number": 58,
       "id": "L12CEG-DU-002",
-      "status": "todo",
+      "status": "blocked",
       "title": "Check animal_friendship against latest dirty cleanroom"
     },
     {
@@ -8716,7 +8716,7 @@ repair.
 
 ### Task 58 - L12CEG-DU-002
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -8832,10 +8832,15 @@ concrete reasons for rejected notes.
 
 Plan Impact:
 
-`none`. The named latest dirty cleanroom target has been refreshed by
-`L12CEG-TG-001-REFRESH-LATEST-DIRTY-TARGET-L12-INPUTS`; run this task against
-that target and do not mark the listed rows done from prose, old target files,
-or diagnostic tests.
+`update-required`. The named latest dirty cleanroom target has current L12
+copied inputs and validator scripts after
+`L12CEG-TG-001-REFRESH-LATEST-DIRTY-TARGET-L12-INPUTS`, but it lacks concrete
+Task 58 harness acceptance artifacts: `RUN_LEDGER.json`, `START_GATE.json`,
+`ENGINE_DEPTH_MANIFEST.json`, `STATE_OWNER_MANIFEST.json`,
+`REVIEW_LOOP.json`, and `DECIDER_DECISION.json`. See
+`plans/ralph-artifacts/l12-cleanroom-generation/task-58-animal-friendship-dirty-target-inspection.md`.
+Do not mark the listed rows done from prose, old target files, scaffold
+examples, or diagnostic tests.
 
 ### Task 59 - L12CEG-DU-003
 
