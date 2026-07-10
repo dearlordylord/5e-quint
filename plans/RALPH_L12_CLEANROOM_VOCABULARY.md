@@ -85,9 +85,10 @@ fixed before that entry can be marked done in this plan.
 
 ## Done
 
-For this plan, a listed SRD L1-2 rule entry is done only when a cleanroom harness
-run reference or compact receipt covers it and `pnpm cleanroom-harness:check`
-passes.
+For this historical plan, a listed SRD L1-2 rule entry is done only when a
+cleanroom harness run reference or compact receipt covers it and `node
+scripts/check-cleanroom-harness.cjs --task-root <target>` passes for the target
+that retains the referenced evidence.
 
 Grouped selected-identity proof, source-side accounting, source strict gates,
 diagnostic tests, and prose reports do not make a listed rule entry done in this

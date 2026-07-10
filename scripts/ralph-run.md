@@ -2,7 +2,7 @@
 
 `scripts/ralph-run.sh` runs a per-task fresh-context implementation harness for a plan file:
 
-1. Parses the plan's `ralph-task-index` JSON block and uses `### Task N` headings only as body anchors.
+1. Parses the plan's `ralph-task-index` JSON block and uses `### Task N` headings only as body anchors, validating any heading ID against the indexed ID.
 2. Creates an integration branch from the current main `HEAD`.
 3. Refreshes the live plan snapshot every iteration.
 4. Selects the next runnable task from the refreshed plan. By default this is deterministic first-runnable selection; set `RALPH_MODEL_CHOOSER=1` or pass `--model-chooser` to ask Codex to choose among multiple runnable tasks.
@@ -116,9 +116,11 @@ Plans must include a machine-readable task index:
 -->
 ```
 
-Each indexed task must also have a matching markdown body headed by `### Task N`.
-The harness uses the JSON block for task order, stable ID, status, title, and
-dependencies, then extracts the task body from the matching heading. Indexed
+Each indexed task must also have a matching markdown body headed by `### Task N`
+or `### Task N - TASK-ID`. When the heading includes an ID, it must exactly
+match the indexed task ID. The harness uses the JSON block for task order,
+stable ID, status, title, and dependencies, then extracts the task body from
+the matching heading. Indexed
 dependencies are canonical: references must exist, the graph must be acyclic,
 and a runnable-status task is withheld until every dependency is `done`.
 Explicit `--task` selection cannot bypass this rule. New plans must not copy

@@ -39,8 +39,21 @@ function headingLines(text) {
     return high + 1;
   };
 
-  const headings = [...text.matchAll(/^### Task ([0-9]+)\b.*$/gm)].map(
-    (match) => ({ number: Number(match[1]), offset: match.index }),
+  const headings = [...text.matchAll(/^### Task ([0-9]+)(.*)$/gm)].map(
+    (match) => {
+      const suffix = match[2];
+      const idMatch = suffix.match(/^ - ([^\s]+)(?:\s+-.*)?$/);
+      if (suffix !== "" && !idMatch) {
+        throw new Error(
+          `invalid Task ${match[1]} heading; expected "### Task N" or "### Task N - TASK-ID"`,
+        );
+      }
+      return {
+        number: Number(match[1]),
+        headingId: idMatch?.[1],
+        offset: match.index,
+      };
+    },
   );
   const byNumber = new Map();
   for (const [index, heading] of headings.entries()) {
@@ -48,6 +61,7 @@ function headingLines(text) {
       throw new Error(`duplicate Task ${heading.number} heading`);
     }
     byNumber.set(heading.number, {
+      headingId: heading.headingId,
       startLine: lineNumber(heading.offset),
       endLine:
         index + 1 < headings.length
@@ -124,6 +138,11 @@ function parsePlan(planPath) {
         `missing markdown heading or queue row for task ${task.number} (${task.id})`,
       );
     }
+    if (body.headingId !== undefined && body.headingId !== task.id) {
+      throw new Error(
+        `Task ${task.number} heading id ${body.headingId} does not match indexed id ${task.id}`,
+      );
+    }
 
     const rawDependencies = task.dependencies ?? [];
     if (!Array.isArray(rawDependencies)) {
@@ -149,7 +168,12 @@ function parsePlan(planPath) {
       throw new Error(`${task.id} cannot depend on itself`);
     }
 
-    return { ...task, ...body, dependencies };
+    return {
+      ...task,
+      startLine: body.startLine,
+      endLine: body.endLine,
+      dependencies,
+    };
   });
 
   const byId = new Map(tasks.map((task) => [task.id, task]));

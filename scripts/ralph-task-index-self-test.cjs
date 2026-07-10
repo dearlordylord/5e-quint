@@ -83,4 +83,15 @@ withPlan(
   },
 );
 
+withPlan([task(1, "A", "ready-for-research")], (planPath) => {
+  const mismatchedHeading = fs
+    .readFileSync(planPath, "utf8")
+    .replace("### Task 1 - A", "### Task 1 - WRONG-TASK");
+  fs.writeFileSync(planPath, mismatchedHeading);
+  assert.throws(
+    () => parsePlan(planPath),
+    /Task 1 heading id WRONG-TASK does not match indexed id A/,
+  );
+});
+
 console.log("Ralph task-index self-test passed.");
