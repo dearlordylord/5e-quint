@@ -7,7 +7,7 @@
     {
       "number": 1,
       "id": "L12IKP-01-EXACT-SOURCE-CALIBRATION",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Calibrate the exact Ice Knife QNT branches against production TypeScript",
       "dependencies": []
     },
@@ -16,21 +16,27 @@
       "id": "L12IKP-02-UNIT-READINESS-SLICE",
       "status": "ready-for-research",
       "title": "Build and gate one cleanroom-safe Ice Knife Unit index",
-      "dependencies": ["L12IKP-01-EXACT-SOURCE-CALIBRATION"]
+      "dependencies": [
+        "L12IKP-01-EXACT-SOURCE-CALIBRATION"
+      ]
     },
     {
       "number": 3,
       "id": "L12IKP-03-IMMUTABLE-EXPORT",
       "status": "ready-for-research",
       "title": "Export one immutable Ice Knife cleanroom experiment",
-      "dependencies": ["L12IKP-02-UNIT-READINESS-SLICE"]
+      "dependencies": [
+        "L12IKP-02-UNIT-READINESS-SLICE"
+      ]
     },
     {
       "number": 4,
       "id": "L12IKP-04-INTAKE-AND-MEASUREMENT",
       "status": "ready-for-research",
       "title": "Intake Ice Knife results and measure the complete pilot",
-      "dependencies": ["L12IKP-03-IMMUTABLE-EXPORT"]
+      "dependencies": [
+        "L12IKP-03-IMMUTABLE-EXPORT"
+      ]
     }
   ]
 }
