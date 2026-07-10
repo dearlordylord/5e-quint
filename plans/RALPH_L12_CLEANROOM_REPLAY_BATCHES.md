@@ -649,7 +649,7 @@
     {
       "number": 108,
       "id": "L12CEG-DU-052",
-      "status": "done",
+      "status": "blocked",
       "title": "Check protection_from_evil_and_good against latest dirty cleanroom"
     },
     {
@@ -14852,7 +14852,7 @@ repair.
 
 ### Task 108 - L12CEG-DU-052
 
-Status: `done`
+Status: `blocked`
 
 Goal:
 
