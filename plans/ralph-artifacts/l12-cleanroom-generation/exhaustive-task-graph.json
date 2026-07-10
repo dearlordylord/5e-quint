@@ -274,9 +274,9 @@
     },
     {
       "batchId": "L12CEG-RP-002",
-      "status": "planned-not-executed",
-      "evidenceStatus": "pending-target-replay",
-      "acceptanceStatus": "not-accepted",
+      "status": "accepted-source-checkable-cleanroom-replay",
+      "evidenceStatus": "source-checkable-compact-receipt",
+      "acceptanceStatus": "accepted",
       "partitionKey": "catalog-after-substrate|equivalent-machine-proof|spell.creature-type-protection-and-charm|cleanroom-input/qnt/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt",
       "sourcePartitionChunk": 2,
       "sourcePartitionChunkCount": 2,
@@ -310,7 +310,53 @@
         "pnpm unit-profile-coverage:check",
         "git diff --check"
       ],
-      "note": "Future execution batch only. This row group is not accepted until target replay evidence runs and passes."
+      "note": "Accepted by source-checkable compact receipt after the target harness passed for the listed driver and rows.",
+      "targetReplayEvidence": {
+        "targetTaskId": "T131",
+        "targetRoot": "/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29",
+        "targetHeadSha": "02a1337d5e2be04307d44c63e2596f60c2104301",
+        "runLedgerPath": "tasks/RUN_LEDGER.json",
+        "runLedgerSha256": "4cbae14620b9b81b1fdd27a620df000e37b4f8473a02ffb90693d2b563f3823b",
+        "receiptPath": "tasks/target-replay-evidence/T131-creature-type-protection-charm.json",
+        "receiptSha256": "009e7d28ecc02aba75ab232c3fff282c8f86ff3177231ae4e0ab854d88e59332",
+        "cleanroomRunArtifact": {
+          "tag": "compact-receipt",
+          "receiptPath": "tasks/target-replay-evidence/T131-creature-type-protection-charm.json",
+          "contentSha256": "009e7d28ecc02aba75ab232c3fff282c8f86ff3177231ae4e0ab854d88e59332"
+        },
+        "manifestSourceCommitSha": "a2e7550352cf0b288f3cbb691afc4ebc21d7faa8",
+        "sourceBranchInventorySha256": "75980b370dc91ea229c4164852c019d0cb070fa3b0c96a22fc63415f52295fa3",
+        "targetProfile": "rust",
+        "targetProfileSha256": "6d4cc6c6a4769962798133d57aff01438fb2b661941f71d1aa8a3333f4b7ecc1",
+        "observedProjection": "qRoute",
+        "harnessCheckCommand": "node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29",
+        "harnessCheckResult": "pass",
+        "l12CleanroomGeneration": {
+          "schema": "target-l12-cleanroom-generation-evidence.v1",
+          "artifacts": [
+            {
+              "path": "cleanroom-input/l12-cleanroom-generation/srd-l12-denominator.json",
+              "sha256": "03330b5c49e6343949da7e2914f8762f0f909f60bae659a4e7c8cda83b7469fb"
+            },
+            {
+              "path": "cleanroom-input/l12-cleanroom-generation/capability-fact-coverage-matrix.json",
+              "sha256": "edddd496caf9c55cf824aaf7dbfc62b0ddddfa1de3a3821ac5b4b85ebc9df686"
+            },
+            {
+              "path": "cleanroom-input/l12-cleanroom-generation/route-proof-inventory.json",
+              "sha256": "674478b990c95d05405e30e950832a09037884c91c53b7b5b0af2def67f0254f"
+            },
+            {
+              "path": "cleanroom-input/l12-cleanroom-generation/srd-row-generic-fact-map.json",
+              "sha256": "2b5a1ef6fbac23b8b645d611c5d4ddf79a88cb33859df3ccfe096b220e746aa7"
+            },
+            {
+              "path": "cleanroom-input/l12-cleanroom-generation/verifier-gate-spec.json",
+              "sha256": "c2a793c90cdd101368a5114a7d9ab5e6ea6b9f90038ec69c184f7e91f8e00b1e"
+            }
+          ]
+        }
+      }
     },
     {
       "batchId": "L12CEG-RP-003",

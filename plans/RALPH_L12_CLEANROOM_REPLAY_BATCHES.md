@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L12CEG-RP-002",
-      "status": "todo",
+      "status": "done",
       "title": "Replay spell.creature-type-protection-and-charm chunk 2/2 through catalog-after-substrate"
     },
     {
@@ -1210,7 +1210,7 @@ ledger hash, and accepted compact-receipt status for the six listed rows.
 
 ### Task 2 - L12CEG-RP-002
 
-Status: `todo`
+Status: `done`
 
 Goal:
 
@@ -1230,9 +1230,9 @@ Batch Metadata:
 - Driver path: `cleanroom-input/qnt/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt`
 - Harness path: `cleanroom-input/qnt/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt`
 - Harness-run file schema: `target-l12-cleanroom-generation-evidence.v1`
-- Current batch status: `planned-not-executed`
-- Current harness-run status: `pending-target-replay`
-- Current done status: `not-accepted`
+- Current batch status: `accepted-source-checkable-cleanroom-replay`
+- Current harness-run status: `source-checkable-compact-receipt`
+- Current done status: `accepted`
 
 Input:
 
@@ -1309,8 +1309,8 @@ Dependencies:
   blocked before source-side closure for this replay batch.
 - Dirty-unit dependency `L12CEG-DU-052` is closed for
   `protection_from_evil_and_good` from the latest dirty target compact receipt.
-  Source-side closure still requires this replay batch's own current hash-bound
-  cleanroom run reference or compact receipt.
+  Source-side closure is now satisfied by this replay batch's current
+  hash-bound compact receipt recorded in the source task graph.
 
 One-Agent-Session Scope:
 
@@ -1338,12 +1338,14 @@ concrete reasons for rejected notes.
 
 Plan Impact:
 
-`applied` only after this replay batch has a current hash-bound cleanroom run
-reference or compact receipt that covers the listed rows and passes
-`pnpm cleanroom-harness:check`. Dirty-unit dependency `L12CEG-DU-052` is now
-closed for this batch; this task is runnable for source-side closure but is not
-done. Do not mark the listed rows done from prose, old target files, scaffold
-examples, grouped selected-identity proof, or diagnostic tests.
+`applied`. This replay batch has a current hash-bound compact receipt from
+target task `T131` at
+`tasks/target-replay-evidence/T131-creature-type-protection-charm.json`
+with SHA-256
+`009e7d28ecc02aba75ab232c3fff282c8f86ff3177231ae4e0ab854d88e59332`.
+The source task graph records the copied L1-2 artifact hashes, the target
+ledger hash, and accepted compact-receipt status for the two listed rows.
+Dirty-unit dependency `L12CEG-DU-052` remains closed for this replay batch.
 
 ### Task 3 - L12CEG-RP-003
 
