@@ -24,3 +24,4 @@ Expected outputs:
 - `exhaustive-task-graph.json`
 - `reviewer-loop-report.md`
 - `task-1-replay-blocker.md`
+- `task-2-replay-blocker.md`

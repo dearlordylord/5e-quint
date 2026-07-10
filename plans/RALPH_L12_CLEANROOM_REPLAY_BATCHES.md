@@ -13,7 +13,7 @@
     {
       "number": 2,
       "id": "L12CEG-RP-002",
-      "status": "todo",
+      "status": "blocked",
       "title": "Replay spell.creature-type-protection-and-charm chunk 2/2 through catalog-after-substrate"
     },
     {
@@ -874,7 +874,7 @@ implementation task records a concrete dependency through `Plan Impact`.
 | Task | Depends On |
 | --- | --- |
 | `L12CEG-RP-001` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-DU-002`; `L12CEG-DU-052` |
-| `L12CEG-RP-002` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
+| `L12CEG-RP-002` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-DU-052` |
 | `L12CEG-RP-003` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
 | `L12CEG-RP-004` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
 | `L12CEG-RP-005` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN` |
@@ -1187,7 +1187,7 @@ examples, grouped selected-identity proof, or diagnostic tests.
 
 ### Task 2 - L12CEG-RP-002
 
-Status: `todo`
+Status: `blocked`
 
 Goal:
 
@@ -1284,6 +1284,10 @@ Dependencies:
 - Completed prep plan task `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`.
 - Related dirty unit proof tasks listed above must be done or explicitly
   blocked before source-side closure for this replay batch.
+- Currently blocked by `L12CEG-DU-052`, which lacks latest dirty-target harness
+  acceptance artifacts for `protection_from_evil_and_good`. Do not rerun this
+  replay batch until that blocker is resolved and the latest dirty target can
+  produce a current source-checkable replay receipt for these two rows.
 
 One-Agent-Session Scope:
 
@@ -1311,10 +1315,15 @@ concrete reasons for rejected notes.
 
 Plan Impact:
 
-`applied` only after a hash-bound cleanroom run reference or compact receipt
-passes `pnpm cleanroom-harness:check` and updates the source-side artifacts. Use
-`update-required` if this batch needs splitting, new dependencies, a different
-harness-run reference shape, or a source corpus/harness blocker.
+`update-required`. The named latest dirty cleanroom target has copied L1-2
+inputs, but it lacks concrete `L12CEG-RP-002` target harness artifacts:
+`RUN_LEDGER.json`, `START_GATE.json`, `ENGINE_DEPTH_MANIFEST.json`,
+`STATE_OWNER_MANIFEST.json`, `REVIEW_LOOP.json`, `DECIDER_DECISION.json`, and a
+matching source-checkable receipt for this replay batch's two rows. It is also
+dependency-blocked by `L12CEG-DU-052`; see
+`plans/ralph-artifacts/l12-cleanroom-generation/task-2-replay-blocker.md`.
+Do not mark the listed rows done from prose, old target files, scaffold
+examples, grouped selected-identity proof, or diagnostic tests.
 
 ### Task 3 - L12CEG-RP-003
 
