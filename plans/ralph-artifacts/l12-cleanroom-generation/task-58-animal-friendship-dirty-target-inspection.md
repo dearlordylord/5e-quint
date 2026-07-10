@@ -43,6 +43,42 @@ and `srd-row-generic-fact-map.json`, each row has profile
 - `srd521:classes/druid:spell-level-1:spell-unit-pressure:druid_spell_list_animal_friendship`
 - `srd521:classes/ranger:spell-level-1:spell-unit-pressure:ranger_spell_list_animal_friendship`
 
+## Current Cleanroom Run Reference
+
+The latest dirty target now has concrete harness acceptance artifacts under
+`tasks/`, and the source harness checker accepts them.
+
+| Target artifact | SHA-256 |
+| --- | --- |
+| `tasks/RUN_LEDGER.json` | `4cbae14620b9b81b1fdd27a620df000e37b4f8473a02ffb90693d2b563f3823b` |
+| `tasks/START_GATE.json` | `4083295f9e05bdb30a5cf9549ae2d29f5e422cb166f99914a3477c72b6aa8328` |
+| `tasks/ENGINE_DEPTH_MANIFEST.json` | `f7a497cf3c4ca2c829da2db7ac686ed5d2cd36637b0897562622399a5b4c176f` |
+| `tasks/STATE_OWNER_MANIFEST.json` | `cccb598cc6c1436625f9d006530eb9c8c539fbed419a58d3f486a31c7f0f1f12` |
+| `tasks/REVIEW_LOOP.json` | `11bf93a680aba7e6b07594b6f5e9368d6a31dd43df17d2b6e010f4597081fd5c` |
+| `tasks/DECIDER_DECISION.json` | `1962d64142a2101d1fccdffa929fa77665d00a7541438bbfa145fd64119ba968` |
+
+The hash-bound compact receipt is:
+
+- Path:
+  `tasks/target-replay-evidence/T131-creature-type-protection-charm.json`
+- SHA-256:
+  `009e7d28ecc02aba75ab232c3fff282c8f86ff3177231ae4e0ab854d88e59332`
+- Driver:
+  `cleanroom-input/qnt/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt`
+- Schema:
+  `target-l12-cleanroom-generation-evidence.v1`
+
+The receipt includes the copied L1-2 artifact hashes above and passing replay
+entries for Animal Friendship:
+
+- `doDiscoverAnimalFriendshipBeastTargetAdmission`
+- `doResolveAnimalFriendshipCasterDamageBreak`
+- `doResolveAnimalFriendshipFailedSaveCharmed`
+
+`tasks/RUN_LEDGER.json` records this compact receipt and lists
+`L12CEG-DU-002` in `unblockedTaskIds`. `tasks/DECIDER_DECISION.json` has
+`decision: "accepted"` and status `accepted-source-authorized-dirty-start`.
+
 ## Harness Check
 
 Command run from the source worktree:
@@ -51,37 +87,27 @@ Command run from the source worktree:
 node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29
 ```
 
-Result: failed.
+Result: passed.
 
-Failure output:
+Output:
 
 ```text
-cleanroom harness acceptance FAILED:
-  - tasks/RUN_LEDGER.json is missing.
-  - tasks/START_GATE.json is missing.
-  - tasks/ENGINE_DEPTH_MANIFEST.json is missing.
-  - tasks/STATE_OWNER_MANIFEST.json is missing.
-  - tasks/REVIEW_LOOP.json is missing.
-  - tasks/DECIDER_DECISION.json is missing.
+cleanroom harness acceptance passed.
 ```
-
-The target has scaffold example files such as `tasks/RUN_LEDGER.example.json`
-and `tasks/TARGET_REPLAY_EVIDENCE.example.json`, but no concrete Task 58
-hash-bound cleanroom run reference or compact receipt that passes
-`pnpm cleanroom-harness:check`.
 
 ## Source Validation
 
 Command run from the source worktree:
 
 ```sh
-pnpm check:l12-cleanroom-generation:strict && pnpm cleanroom-scaffold:check && pnpm cleanroom-harness:check && pnpm unit-profile-coverage:check && git diff --check
+node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29 || true; pnpm check:l12-cleanroom-generation:strict && pnpm cleanroom-scaffold:check && pnpm cleanroom-harness:check && pnpm unit-profile-coverage:check && git diff --check
 ```
 
 Result: passed.
 
 Validation output summary:
 
+- `cleanroom harness acceptance passed.`
 - `l12 cleanroom generation gate passed in strict acceptance mode.`
 - `cleanroom scaffold renderer self-test OK.`
 - `cleanroom harness self-test OK.`
@@ -97,29 +123,38 @@ Read for this inspection:
 - `.references/srd-5.2.1/Classes/Druid.md`
 - `.references/srd-5.2.1/Classes/Ranger.md`
 - `.references/srd-5.2.1/Rules-Glossary.md`, including `Charmed` and creature types
-- `UBIQUITOUS_LANGUAGE.md`, including `Saving Throw`, `Condition`, and `Charmed`
+- `UBIQUITOUS_LANGUAGE.md`, including `Saving Throw`, `Condition`, `Charmed`,
+  and `Creature Type`
 
 No runtime, QNT, Surface, or cleanroom target rule behavior was changed in this
 source worktree.
 
-## Blocker
+## Reviewer Loop Notes
 
-Task 58 cannot be closed from the latest dirty target because the target lacks
-current concrete harness acceptance artifacts and fails
-`node scripts/check-cleanroom-harness.cjs --task-root /workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`.
-Per the task instructions, no older target, scaffold example, prose note, or
-diagnostic source check is a substitute for a passing hash-bound cleanroom run
-reference or compact receipt.
+- RAW/domain: the inspected receipt covers the Animal Friendship Beast target
+  admission, failed Wisdom Saving Throw Charmed result, and caster or ally
+  damage break listed in SRD 5.2.1.
+- Architecture/connascence: source changes are documentation-only and reference
+  target artifact hashes instead of copying cleanroom runtime state into source.
+- Cleanroom authored identity: the source note records SRD row ids and target
+  evidence handles at catalog/evidence boundaries only; no runtime dispatch was
+  introduced.
+- Ralph task quality: the checked target is exactly
+  `/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29`, not an older
+  preservation target.
+- Code review: no code paths changed; no assertions, runtime exceptions,
+  adapters, or duplicate state were introduced.
 
-Plan Impact: update-required
+## Plan Impact
 
-- Affected task `L12CEG-DU-002`: blocked until the latest dirty target produces
-  concrete Task 58 run artifacts (`RUN_LEDGER.json`, `START_GATE.json`,
-  `ENGINE_DEPTH_MANIFEST.json`, `STATE_OWNER_MANIFEST.json`, `REVIEW_LOOP.json`,
-  `DECIDER_DECISION.json`) and a run reference or compact receipt covering the
-  listed `animal_friendship` rows.
-- Affected task `L12CEG-RP-001`: blocked for source-side closure until
-  `L12CEG-DU-002` is done or explicitly accepted as blocked by the decider.
-- Required plan edit: mark `L12CEG-DU-002` as blocked on latest dirty target
-  harness artifacts; mark `L12CEG-RP-001` as still blocked on this dirty unit
-  proof task.
+Plan Impact: applied
+
+- Affected task `L12CEG-DU-002`: unblocked and should be marked accepted or
+  completed for Unit `animal_friendship` based on the current latest dirty
+  target compact receipt above.
+- Affected task `L12CEG-RP-001`: unblocked with respect to
+  `L12CEG-DU-002`; leave any separate dependency on `L12CEG-DU-052` unchanged
+  until that task is independently closed or accepted.
+- Applied plan edit: replaced stale Task 58 blocker text with this accepted
+  current run reference; updated dependency text that said `L12CEG-DU-002`
+  still lacked latest dirty-target harness artifacts.

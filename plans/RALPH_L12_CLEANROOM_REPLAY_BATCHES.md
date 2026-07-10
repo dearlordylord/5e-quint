@@ -349,7 +349,7 @@
     {
       "number": 58,
       "id": "L12CEG-DU-002",
-      "status": "todo",
+      "status": "done",
       "title": "Check animal_friendship against latest dirty cleanroom"
     },
     {
@@ -879,7 +879,7 @@ implementation task records a concrete dependency through `Plan Impact`.
 
 | Task | Depends On |
 | --- | --- |
-| `L12CEG-RP-001` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-DU-002`; `L12CEG-DU-052`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
+| `L12CEG-RP-001` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-DU-052`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
 | `L12CEG-RP-002` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-DU-052`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
 | `L12CEG-RP-003` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
 | `L12CEG-RP-004` | completed prep plan `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`; `L12CEG-TG-002-PRODUCE-LATEST-DIRTY-TARGET-HARNESS-ARTIFACTS` |
@@ -1167,10 +1167,11 @@ Dependencies:
 - Completed prep plan task `L12CEG-05-REPLAY-BATCH-PARTITION-PLAN`.
 - Related dirty unit proof tasks listed above must be done or explicitly
   blocked before source-side closure for this replay batch.
-- Currently blocked by `L12CEG-DU-002` and `L12CEG-DU-052`. Task 131 repaired
-  the latest dirty target's generic harness acceptance surface for this driver;
-  rerun the related dirty-unit tasks before source-side closure for these six
-  rows.
+- Currently blocked by `L12CEG-DU-052`. `L12CEG-DU-002` closed the
+  `animal_friendship` portion from the latest dirty target compact receipt.
+  Task 131 repaired the latest dirty target's generic harness acceptance
+  surface for this driver; rerun the remaining related dirty-unit task before
+  source-side closure for these six rows.
 
 One-Agent-Session Scope:
 
@@ -1201,9 +1202,11 @@ Plan Impact:
 `applied` only after this replay batch has a current hash-bound cleanroom run
 reference or compact receipt that covers the listed rows and passes
 `pnpm cleanroom-harness:check`. This task remains dependency-blocked by
-`L12CEG-DU-002` and `L12CEG-DU-052` until those dirty-unit tasks close or record
-precise blockers. Do not mark the listed rows done from prose, old target files,
-scaffold examples, grouped selected-identity proof, or diagnostic tests.
+`L12CEG-DU-052` until that dirty-unit task closes or records a precise blocker.
+`L12CEG-DU-002` is closed for the `animal_friendship` rows by the current
+latest dirty target compact receipt. Do not mark the listed rows done from
+prose, old target files, scaffold examples, grouped selected-identity proof, or
+diagnostic tests.
 
 ### Task 2 - L12CEG-RP-002
 
@@ -8751,7 +8754,7 @@ repair.
 
 ### Task 58 - L12CEG-DU-002
 
-Status: `todo`
+Status: `done`
 
 Goal:
 
@@ -8776,8 +8779,8 @@ Input:
 Unit Metadata:
 
 - Unit id: `animal_friendship`
-- Current task status: `planned-not-executed`
-- Current dirty cleanroom status: `pending-latest-dirty-target-check`
+- Current task status: `done`
+- Current dirty cleanroom status: `accepted-source-authorized-dirty-start`
 - Harness-run file schema: `target-l12-cleanroom-generation-evidence.v1`
 
 Rows:
@@ -8871,15 +8874,15 @@ concrete reasons for rejected notes.
 
 Plan Impact:
 
-`update-required`. The named latest dirty cleanroom target has current L12
-copied inputs and validator scripts after
-`L12CEG-TG-001-REFRESH-LATEST-DIRTY-TARGET-L12-INPUTS`, but it lacks concrete
-Task 58 harness acceptance artifacts: `RUN_LEDGER.json`, `START_GATE.json`,
-`ENGINE_DEPTH_MANIFEST.json`, `STATE_OWNER_MANIFEST.json`,
-`REVIEW_LOOP.json`, and `DECIDER_DECISION.json`. See
+`applied`. The named latest dirty cleanroom target has current L12 copied inputs,
+concrete harness acceptance artifacts, and a hash-bound compact receipt covering
+the listed `animal_friendship` rows:
+`tasks/target-replay-evidence/T131-creature-type-protection-charm.json` with
+SHA-256 `009e7d28ecc02aba75ab232c3fff282c8f86ff3177231ae4e0ab854d88e59332`.
+The source harness accepts the target. See
 `plans/ralph-artifacts/l12-cleanroom-generation/task-58-animal-friendship-dirty-target-inspection.md`.
-Do not mark the listed rows done from prose, old target files, scaffold
-examples, or diagnostic tests.
+`L12CEG-RP-001` is unblocked with respect to `L12CEG-DU-002` and remains
+blocked by `L12CEG-DU-052`.
 
 ### Task 59 - L12CEG-DU-003
 
