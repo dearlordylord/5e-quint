@@ -767,37 +767,6 @@ function git(repoRoot, args) {
   }).trim();
 }
 
-function sameStringArray(left, right) {
-  return (
-    Array.isArray(left) &&
-    Array.isArray(right) &&
-    left.length === right.length &&
-    left.every((entry, index) => entry === right[index])
-  );
-}
-
-function dirtyStartAuthorizationMatches(authorization, startGate, rootPath) {
-  if (!isRecord(authorization) || !isRecord(startGate)) return false;
-  const targetRoot = path.resolve(rootPath);
-  const startGateTargetRoot =
-    typeof startGate.targetRoot === "string"
-      ? path.resolve(startGate.targetRoot)
-      : targetRoot;
-  return (
-    authorization.taskId === startGate.taskId &&
-    path.resolve(authorization.targetRoot) === targetRoot &&
-    path.resolve(authorization.targetRoot) === startGateTargetRoot &&
-    authorization.startHeadSha === startGate.startHeadSha &&
-    authorization.targetHeadSha === startGate.targetHeadSha &&
-    authorization.outputSha256 ===
-      startGate.preImplementationStatus?.outputSha256 &&
-    sameStringArray(
-      authorization.selectedDrivers,
-      startGate.taskScope?.selectedDrivers,
-    )
-  );
-}
-
 function parseTimestampMillis(value) {
   if (typeof value !== "string") return undefined;
   const parsed = Date.parse(value);
@@ -808,7 +777,6 @@ function validateStartGate(
   startGate,
   rootPath,
   issues,
-  dirtyStartAuthorizations = [],
 ) {
   if (!isRecord(startGate)) return;
   if (startGate.schemaVersion !== 1) {
@@ -901,19 +869,9 @@ function validateStartGate(
         issues.push("tasks/START_GATE.json preImplementationStatus.output must be empty.");
       }
     } else if (startGate.preImplementationStatus.result === "dirty") {
-      if (startGate.taskScope?.allowedDirtyTarget !== true) {
-        issues.push(
-          "tasks/START_GATE.json dirty preImplementationStatus requires taskScope.allowedDirtyTarget true.",
-        );
-      }
-      const matchingAuthorization = dirtyStartAuthorizations.find((authorization) =>
-        dirtyStartAuthorizationMatches(authorization, startGate, rootPath),
+      issues.push(
+        "tasks/START_GATE.json dirty preImplementationStatus is not permitted for an active cleanroom run.",
       );
-      if (matchingAuthorization === undefined) {
-        issues.push(
-          "tasks/START_GATE.json dirty preImplementationStatus is not source-authorized for this task root.",
-        );
-      }
       if (output === undefined || output.trim() === "") {
         issues.push(
           "tasks/START_GATE.json dirty preImplementationStatus.output must record git status --short output.",
@@ -1294,7 +1252,6 @@ function validateLedgerEntry({
   activeAssignments,
   profile,
   issues,
-  dirtyStartAuthorizations,
 }) {
   const context = `tasks/RUN_LEDGER.json entries[${entryIndex}]`;
   if (!isRecord(entry)) {
@@ -1429,7 +1386,7 @@ function validateLedgerEntry({
     }
   }
 
-  validateStartGate(startGate, rootPath, issues, dirtyStartAuthorizations);
+  validateStartGate(startGate, rootPath, issues);
   const { adapterPaths, declaredEvidencePaths } = validateEngineDepth({
     engineDepth,
     selected,
@@ -1566,7 +1523,6 @@ function validateRunLedger({
   profile,
   cleanroomManifest,
   issues,
-  dirtyStartAuthorizations,
 }) {
   if (!isRecord(ledger)) return [];
   if (ledger.schemaVersion !== 1) {
@@ -1604,7 +1560,6 @@ function validateRunLedger({
       activeAssignments,
       profile,
       issues,
-      dirtyStartAuthorizations,
     });
     if (summary !== undefined) {
       summaries.push(summary);
@@ -2524,7 +2479,6 @@ function validateProductionSourceScan({
 function validateTaskArtifacts({
   taskRoot,
   profile,
-  dirtyStartAuthorizations = [],
 }) {
   const issues = [];
   validateHarnessProfile(profile, issues);
@@ -2558,7 +2512,7 @@ function validateTaskArtifacts({
     issues,
   );
   const cleanroomManifest = readCleanroomManifest(taskRoot, issues);
-  validateStartGate(startGate, taskRoot, issues, dirtyStartAuthorizations);
+  validateStartGate(startGate, taskRoot, issues);
   if (
     !isRecord(inventory) ||
     !isRecord(routeInventory) ||
@@ -2585,7 +2539,6 @@ function validateTaskArtifacts({
       profile,
       cleanroomManifest,
       issues,
-      dirtyStartAuthorizations,
     });
     validateLedgerReportHonesty({
       rootPath: taskRoot,
@@ -3227,22 +3180,6 @@ function expectSuccess(
   }
 }
 
-function fixtureDirtyStartAuthorization(rootPath) {
-  const startGate = readJson(path.join(rootPath, "tasks/START_GATE.json"));
-  return {
-    dirtyStartAuthorizations: [
-      {
-        taskId: startGate.taskId,
-        targetRoot: path.resolve(rootPath),
-        startHeadSha: startGate.startHeadSha,
-        targetHeadSha: startGate.targetHeadSha,
-        outputSha256: startGate.preImplementationStatus.outputSha256,
-        selectedDrivers: startGate.taskScope.selectedDrivers,
-      },
-    ],
-  };
-}
-
 function assertHarnessTemplatesMentionRequiredGates() {
   const scaffoldTaskRoot = path.join(
     __dirname,
@@ -3692,7 +3629,7 @@ function runSelfTest() {
           );
         });
       },
-      "dirty preImplementationStatus requires taskScope.allowedDirtyTarget true",
+      "dirty preImplementationStatus is not permitted for an active cleanroom run",
     );
     expectFailure(
       validRoot,
@@ -3724,23 +3661,7 @@ function runSelfTest() {
           );
         });
       },
-      "dirty preImplementationStatus is not source-authorized",
-    );
-    expectSuccess(
-      validRoot,
-      profile,
-      "dirty-start-source-authorized",
-      (rootPath) => {
-        updateFixtureLedgerArtifact(rootPath, "startGate", (startGate) => {
-          startGate.taskScope.allowedDirtyTarget = true;
-          startGate.preImplementationStatus.result = "dirty";
-          startGate.preImplementationStatus.output = " M README.md";
-          startGate.preImplementationStatus.outputSha256 = sha256Text(
-            startGate.preImplementationStatus.output,
-          );
-        });
-      },
-      fixtureDirtyStartAuthorization,
+      "dirty preImplementationStatus is not permitted for an active cleanroom run",
     );
     expectFailure(
       validRoot,
@@ -3758,8 +3679,6 @@ function runSelfTest() {
         });
       },
       "targetHeadSha is not in current HEAD history",
-      undefined,
-      fixtureDirtyStartAuthorization,
     );
 	    expectFailure(
 	      validRoot,

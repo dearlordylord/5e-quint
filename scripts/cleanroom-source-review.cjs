@@ -93,15 +93,16 @@ ${command("cleanroom:measure:l12-ice-knife", [
 
 ## Required convergent reviewer loop
 
-Run exactly these review dimensions in two rounds. Round 2 must re-check every
-Round 1 finding and may close only when it introduces no new reasonable
-finding. Record each finding, disposition, and evidence in
+Run these review dimensions for at least two rounds. Round 2 must re-check
+every Round 1 finding. If Round 2 discovers a new actionable issue, continue
+with additional rounds until no reasonable finding remains. Record each
+finding, disposition, and evidence in
 ${shellQuote(convergencePath)}:
 
 1. Round 1: RAW and ubiquitous-language traceability, QNT/branch/parity,
    architecture and connascence, contamination/freshness, and code review.
-2. Round 2: repeat all five dimensions, verify the Round 1 dispositions, and
-   record convergence or the remaining blocker.
+2. Round 2 and later: repeat all five dimensions, verify prior dispositions,
+   and continue until the reviewer loop converges with no reasonable finding.
 
 Compare both scope plans with the canonical shared contract:
 

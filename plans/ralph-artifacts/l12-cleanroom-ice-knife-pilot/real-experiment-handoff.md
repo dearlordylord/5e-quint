@@ -9,6 +9,7 @@ pnpm cleanroom:export:l12-ice-knife -- --finalize \
   --scope plans/ralph-artifacts/l12-cleanroom-ice-knife-pilot/unit-readiness-scope.json \
   --profile plans/cleanroom-scaffolds/target-profiles/rust.json \
   --output /workspace/typescript/dnd-cleanroom-ice-knife-final
+pnpm cleanroom:status:l12-ice-knife -- --catalog /workspace/typescript/dnd-cleanroom-ice-knife-final
 ```
 
 Export location: `/workspace/typescript/dnd-cleanroom-ice-knife-final`

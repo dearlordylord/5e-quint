@@ -1492,7 +1492,8 @@ function sourceRalphPhases(events) {
       begin("task", event);
     if (
       event.kind === "task" &&
-      (event.detail.startsWith("done ") ||
+      (event.detail.startsWith("complete ") ||
+        event.detail.startsWith("done ") ||
         eventHasLabel(event, "task-finished"))
     )
       finish("task", event);
@@ -2040,6 +2041,7 @@ function renderHandoff(outputPath) {
     "  --scope " + artifactRoot + "/unit-readiness-scope.json \\",
     "  --profile plans/cleanroom-scaffolds/target-profiles/rust.json \\",
     "  --output /workspace/typescript/dnd-cleanroom-ice-knife-final",
+    "pnpm cleanroom:status:l12-ice-knife -- --catalog /workspace/typescript/dnd-cleanroom-ice-knife-final",
     "```",
     "",
     "Export location: `/workspace/typescript/dnd-cleanroom-ice-knife-final`",
@@ -2633,11 +2635,28 @@ function runSelfTest() {
       !sourceReview.freshAgentInvocation.includes("codex exec") ||
       !prompt.includes("Round 1") ||
       !prompt.includes("Round 2") ||
+      !prompt.includes("at least two rounds") ||
+      !prompt.includes(
+        "additional rounds until no reasonable finding remains",
+      ) ||
       !prompt.includes("source-review-recommendations.md") ||
       !prompt.includes("source-review-convergence.md") ||
       !prompt.includes("L12_CLEANROOM_EXPERIMENT_CONTRACT.md")
     )
       throw new Error("fresh source-review prompt was incomplete");
+    const handoffPath = path.join(root, "real-experiment-handoff.md");
+    renderHandoff(handoffPath);
+    const handoff = fs.readFileSync(handoffPath, "utf8");
+    const preLaunchStatus =
+      "pnpm cleanroom:status:l12-ice-knife -- --catalog /workspace/typescript/dnd-cleanroom-ice-knife-final";
+    if (
+      handoff.indexOf(preLaunchStatus) < handoff.indexOf("--finalize") ||
+      handoff.indexOf(preLaunchStatus) >
+        handoff.indexOf("## Executable source-review procedure")
+    )
+      throw new Error(
+        "handoff omitted the pre-target catalog status transition",
+      );
     const staleResult = JSON.parse(fs.readFileSync(resultPath, "utf8"));
     staleResult.bindings.receiptSha256 = "f".repeat(64);
     fs.writeFileSync(resultPath, stableJson(staleResult));
@@ -2788,7 +2807,7 @@ function runSelfTest() {
     const events = path.join(root, "events.tsv");
     fs.writeFileSync(
       events,
-      "2026-01-01T00:00:00.000Z\trun\tstart\n2026-01-01T00:00:01.000Z\ttask\tstart task=1\n2026-01-01T00:00:02.000Z\ttask\timplementation-start task=1 round=1\n2026-01-01T00:00:03.000Z\ttask\timplementation-finished task=1 round=1\n2026-01-01T00:00:04.000Z\ttask\timplementation-reviewed task=1 round=1\n2026-01-01T00:00:05.000Z\ttask\timplementation-handoff task=1 round=1\n2026-01-01T00:00:06.000Z\ttask\timplementation-start task=1 round=2\n2026-01-01T00:00:07.000Z\ttask\timplementation-finished task=1 round=2\n2026-01-01T00:00:08.000Z\ttask\timplementation-reviewed task=1 round=2\n2026-01-01T00:00:09.000Z\ttask\timplementation-handoff task=1 round=2\n2026-01-01T00:00:10.000Z\trun\tdone\n",
+      "2026-01-01T00:00:00.000Z\trun\tstart\n2026-01-01T00:00:01.000Z\ttask\tstart task=1\n2026-01-01T00:00:02.000Z\ttask\timplementation-start task=1 round=1\n2026-01-01T00:00:03.000Z\ttask\timplementation-finished task=1 round=1\n2026-01-01T00:00:04.000Z\ttask\timplementation-reviewed task=1 round=1\n2026-01-01T00:00:05.000Z\ttask\timplementation-handoff task=1 round=1\n2026-01-01T00:00:06.000Z\ttask\timplementation-start task=1 round=2\n2026-01-01T00:00:07.000Z\ttask\timplementation-finished task=1 round=2\n2026-01-01T00:00:08.000Z\ttask\timplementation-reviewed task=1 round=2\n2026-01-01T00:00:09.000Z\ttask\timplementation-handoff task=1 round=2\n2026-01-01T00:00:10.000Z\ttask\tcomplete task=1\n2026-01-01T00:00:11.000Z\trun\tdone\n",
     );
     const measurement = measure({
       receiptPath,
@@ -2802,7 +2821,10 @@ function runSelfTest() {
       measurement.sourceRalph.tag !== "reported" ||
       measurement.sourceRalph.value.phases.filter(
         (phase) => phase.phase === "implementation",
-      ).length !== 2
+      ).length !== 2 ||
+      measurement.sourceRalph.value.phases.find(
+        (phase) => phase.phase === "task",
+      )?.elapsed.tag !== "reported"
     )
       throw new Error("measurement fixture was not reported");
     if (
