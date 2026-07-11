@@ -23,7 +23,7 @@
     {
       "number": 3,
       "id": "L12IKP-03-IMMUTABLE-EXPORT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Export one immutable Ice Knife cleanroom experiment",
       "dependencies": [
         "L12IKP-02-UNIT-READINESS-SLICE"
