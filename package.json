@@ -32,6 +32,8 @@
     "cleanroom-sync:check": "node scripts/sync-cleanroom-input.cjs --self-test",
     "cleanroom-scaffold:check": "node scripts/render-cleanroom-scaffold.cjs --self-test",
     "cleanroom-refresh:package": "node scripts/package-cleanroom-refresh.cjs",
+    "cleanroom:export:l12-ice-knife": "node scripts/package-cleanroom-refresh.cjs --experiment",
+    "cleanroom:export:l12-ice-knife:self-test": "node scripts/package-cleanroom-refresh.cjs --experiment --self-test",
     "cleanroom-harness:check": "node scripts/check-cleanroom-harness.cjs --self-test",
     "level-lt4-choice-closure:check": "node scripts/level-lt4-choice-closure-check.cjs",
     "sdk-raw-integration-inventory:check": "node scripts/sdk-raw-integration-inventory.cjs",

@@ -6,6 +6,11 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { execFileSync } = require("node:child_process");
+const {
+  exportExperiment,
+  parseArgs: parseExperimentArgs,
+  runExperimentSelfTest,
+} = require("./cleanroom-experiment.cjs");
 
 const root = path.resolve(__dirname, "..");
 
@@ -95,7 +100,29 @@ function validateArchive(archivePath) {
   }
 }
 
+function runExperimentMode() {
+  const args = process.argv
+    .slice(2)
+    .filter((argument) => argument !== "--experiment");
+  const options = parseExperimentArgs(args);
+  if (options === undefined) return;
+  if (options.selfTest) {
+    runExperimentSelfTest();
+    return;
+  }
+  const result = exportExperiment(options);
+  process.stdout.write(
+    `exported ${result.copies.length} cleanroom inputs to ${options.output}\n`,
+  );
+  process.stdout.write(`catalog: ${result.manifest.catalogSha256}\n`);
+  process.stdout.write(`source: ${result.manifest.sourceCommitSha}\n`);
+}
+
 function main() {
+  if (process.argv.includes("--experiment")) {
+    runExperimentMode();
+    return;
+  }
   const profileArg = argValue("--profile");
   if (profileArg === undefined) {
     fail(

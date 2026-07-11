@@ -193,6 +193,484 @@ Diagnostic rehearsals record the same commit chain and clean finish, but their
 start attestation also records the declared pre-existing implementation
 boundary. Their receipts remain ineligible for cleanroom acceptance.
 
+The target-facing receipt projection is generated from the following
+machine-readable contract block. Keep this block authoritative for field
+presence and run-kind shape; source tooling must fail when it is missing or
+cannot be parsed.
+
+```json
+{
+  "schema": "cleanroom-target-receipt.v1",
+  "version": 1,
+  "runKinds": {
+    "diagnostic-rehearsal": {
+      "startStatus": "attested",
+      "requiresPreExistingImplementationBoundary": true
+    },
+    "fresh-experiment": {
+      "startStatus": "clean-required",
+      "requiresPreExistingImplementationBoundary": false
+    }
+  },
+  "requiredFields": [
+    "schema",
+    "version",
+    "runKind",
+    "manifest",
+    "scope",
+    "targetStartCommit",
+    "targetStartStatus",
+    "targetFinishCommit",
+    "targetFinishStatus",
+    "ancestorProof",
+    "targetOutcome",
+    "branchObservations",
+    "retainedArtifacts",
+    "timing",
+    "measurementProvenance",
+    "nextAction"
+  ],
+  "measurementFields": [
+    "agentProvider",
+    "model",
+    "tool",
+    "reasoningEffort",
+    "requestedGoalBudget",
+    "usage",
+    "targetLanguage",
+    "compiler",
+    "dependencyLock"
+  ],
+  "statusAttestationFields": [
+    "command",
+    "clean",
+    "outputSha256",
+    "implementationBoundary"
+  ],
+  "implementationBoundary": {
+    "tag": "declared-pre-existing-implementation-boundary",
+    "fields": ["knownPaths"]
+  },
+  "branchObservationFields": [
+    "driverPath",
+    "branchAction",
+    "qntFileSha256",
+    "observedActionTaken",
+    "replayLane",
+    "production",
+    "evidencePath",
+    "evidenceSha256"
+  ],
+  "productionEvidenceFields": ["entrypoint", "projection"],
+  "productionEvidenceReferenceFields": ["path", "sha256"],
+  "emptyStatusOutputSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "jsonSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "schema",
+      "version",
+      "runKind",
+      "manifest",
+      "scope",
+      "targetStartCommit",
+      "targetStartStatus",
+      "targetFinishCommit",
+      "targetFinishStatus",
+      "ancestorProof",
+      "targetOutcome",
+      "branchObservations",
+      "retainedArtifacts",
+      "timing",
+      "measurementProvenance",
+      "nextAction"
+    ],
+    "properties": {
+      "schema": { "const": "cleanroom-target-receipt.v1" },
+      "version": { "const": 1 },
+      "runKind": { "enum": ["fresh-experiment", "diagnostic-rehearsal"] },
+      "manifest": { "$ref": "#/$defs/manifest" },
+      "scope": { "$ref": "#/$defs/scope" },
+      "targetStartCommit": { "$ref": "#/$defs/commit" },
+      "targetStartStatus": { "$ref": "#/$defs/statusAttestation" },
+      "targetFinishCommit": { "$ref": "#/$defs/commit" },
+      "targetFinishStatus": { "$ref": "#/$defs/cleanFinishStatus" },
+      "ancestorProof": { "$ref": "#/$defs/ancestorProof" },
+      "targetOutcome": { "$ref": "#/$defs/targetOutcome" },
+      "branchObservations": {
+        "type": "array",
+        "items": { "$ref": "#/$defs/branchObservation" }
+      },
+      "retainedArtifacts": {
+        "type": "array",
+        "minItems": 1,
+        "items": { "$ref": "#/$defs/reference" }
+      },
+      "timing": { "$ref": "#/$defs/timing" },
+      "measurementProvenance": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "agentProvider",
+          "model",
+          "tool",
+          "reasoningEffort",
+          "requestedGoalBudget",
+          "usage",
+          "targetLanguage",
+          "compiler",
+          "dependencyLock"
+        ],
+        "properties": {
+          "agentProvider": { "$ref": "#/$defs/measurementValue" },
+          "model": { "$ref": "#/$defs/measurementValue" },
+          "tool": { "$ref": "#/$defs/measurementValue" },
+          "reasoningEffort": { "$ref": "#/$defs/measurementValue" },
+          "requestedGoalBudget": { "$ref": "#/$defs/measurementValue" },
+          "usage": { "$ref": "#/$defs/measurementValue" },
+          "targetLanguage": { "$ref": "#/$defs/measurementValue" },
+          "compiler": { "$ref": "#/$defs/measurementValue" },
+          "dependencyLock": { "$ref": "#/$defs/measurementValue" }
+        }
+      },
+      "nextAction": { "const": "source-intake" }
+    },
+    "allOf": [
+      {
+        "if": { "properties": { "runKind": { "const": "fresh-experiment" } } },
+        "then": {
+          "properties": {
+            "targetStartStatus": {
+              "properties": {
+                "clean": { "const": true },
+                "outputSha256": {
+                  "const": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                },
+                "implementationBoundary": { "const": { "tag": "none" } }
+              }
+            }
+          }
+        }
+      },
+      {
+        "if": { "required": ["targetFinishStatus"] },
+        "then": {
+          "properties": {
+            "targetFinishStatus": {
+              "properties": {
+                "clean": { "const": true },
+                "implementationBoundary": { "const": { "tag": "none" } }
+              }
+            }
+          }
+        }
+      },
+      {
+        "if": {
+          "properties": {
+            "targetOutcome": {
+              "properties": { "tag": { "const": "completed" } }
+            }
+          }
+        },
+        "then": {
+          "properties": {
+            "branchObservations": { "minItems": 1 }
+          }
+        }
+      },
+      {
+        "if": {
+          "properties": {
+            "targetOutcome": { "properties": { "tag": { "const": "blocked" } } }
+          }
+        },
+        "then": {
+          "properties": {
+            "branchObservations": { "maxItems": 0 },
+            "targetOutcome": {
+              "properties": {
+                "observations": { "minItems": 1 }
+              }
+            }
+          }
+        }
+      },
+      {
+        "if": {
+          "properties": { "runKind": { "const": "diagnostic-rehearsal" } }
+        },
+        "then": {
+          "properties": {
+            "targetStartStatus": {
+              "properties": {
+                "implementationBoundary": {
+                  "$ref": "#/$defs/preExistingImplementationBoundary"
+                }
+              }
+            }
+          }
+        }
+      }
+    ],
+    "$defs": {
+      "sha256": { "type": "string", "pattern": "^[0-9a-fA-F]{64}$" },
+      "commit": { "type": "string", "pattern": "^[0-9a-fA-F]{40}$" },
+      "relativePath": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+"
+      },
+      "reference": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": { "$ref": "#/$defs/relativePath" },
+          "sha256": { "$ref": "#/$defs/sha256" }
+        }
+      },
+      "manifest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "catalogSha256",
+          "sourceCommitSha",
+          "targetProfileId",
+          "runKind"
+        ],
+        "properties": {
+          "catalogSha256": { "$ref": "#/$defs/sha256" },
+          "sourceCommitSha": { "$ref": "#/$defs/commit" },
+          "targetProfileId": { "type": "string", "minLength": 1 },
+          "runKind": { "enum": ["fresh-experiment", "diagnostic-rehearsal"] }
+        }
+      },
+      "scope": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "unitIds", "fullCorpus"],
+        "properties": {
+          "kind": { "const": "single-unit" },
+          "unitIds": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "fullCorpus": { "const": false }
+        }
+      },
+      "noneBoundary": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["tag"],
+        "properties": { "tag": { "const": "none" } }
+      },
+      "preExistingImplementationBoundary": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["tag", "knownPaths"],
+        "properties": {
+          "tag": { "const": "declared-pre-existing-implementation-boundary" },
+          "knownPaths": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/relativePath" }
+          }
+        }
+      },
+      "statusAttestation": {
+        "oneOf": [
+          { "$ref": "#/$defs/cleanStatusAttestation" },
+          { "$ref": "#/$defs/dirtyStatusAttestation" }
+        ]
+      },
+      "cleanStatusAttestation": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "command",
+          "clean",
+          "outputSha256",
+          "implementationBoundary"
+        ],
+        "properties": {
+          "command": { "const": "git status --porcelain=v2" },
+          "clean": { "const": true },
+          "outputSha256": {
+            "const": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "implementationBoundary": {
+            "oneOf": [
+              { "$ref": "#/$defs/noneBoundary" },
+              { "$ref": "#/$defs/preExistingImplementationBoundary" }
+            ]
+          }
+        }
+      },
+      "dirtyStatusAttestation": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "command",
+          "clean",
+          "outputSha256",
+          "implementationBoundary",
+          "statusEvidence"
+        ],
+        "properties": {
+          "command": { "const": "git status --porcelain=v2" },
+          "clean": { "const": false },
+          "outputSha256": { "$ref": "#/$defs/sha256" },
+          "implementationBoundary": {
+            "oneOf": [
+              { "$ref": "#/$defs/noneBoundary" },
+              { "$ref": "#/$defs/preExistingImplementationBoundary" }
+            ]
+          },
+          "statusEvidence": { "$ref": "#/$defs/reference" }
+        }
+      },
+      "cleanFinishStatus": {
+        "allOf": [
+          { "$ref": "#/$defs/statusAttestation" },
+          {
+            "type": "object",
+            "properties": {
+              "clean": { "const": true },
+              "outputSha256": {
+                "const": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+              },
+              "implementationBoundary": { "const": { "tag": "none" } }
+            }
+          }
+        ]
+      },
+      "ancestorProof": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["verified", "command", "outputSha256"],
+        "properties": {
+          "verified": { "const": true },
+          "command": {
+            "const": "git merge-base --is-ancestor targetStartCommit targetFinishCommit"
+          },
+          "outputSha256": { "$ref": "#/$defs/sha256" }
+        }
+      },
+      "targetObservation": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["tag", "subject", "evidence"],
+        "properties": {
+          "tag": {
+            "enum": [
+              "missing-copied-input",
+              "contradictory-copied-input",
+              "unavailable-target-verification",
+              "implementation-failure"
+            ]
+          },
+          "subject": { "$ref": "#/$defs/relativePath" },
+          "evidence": { "$ref": "#/$defs/reference" }
+        }
+      },
+      "targetOutcome": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["tag"],
+            "properties": { "tag": { "const": "completed" } }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["tag", "observations"],
+            "properties": {
+              "tag": { "const": "blocked" },
+              "observations": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "$ref": "#/$defs/targetObservation" }
+              }
+            }
+          }
+        ]
+      },
+      "productionEvidence": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["entrypoint", "projection"],
+        "properties": {
+          "entrypoint": { "$ref": "#/$defs/reference" },
+          "projection": { "$ref": "#/$defs/reference" }
+        }
+      },
+      "branchObservation": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "driverPath",
+          "branchAction",
+          "qntFileSha256",
+          "observedActionTaken",
+          "replayLane",
+          "production",
+          "evidencePath",
+          "evidenceSha256"
+        ],
+        "properties": {
+          "driverPath": { "$ref": "#/$defs/relativePath" },
+          "branchAction": { "type": "string", "minLength": 1 },
+          "qntFileSha256": { "$ref": "#/$defs/sha256" },
+          "observedActionTaken": { "type": "string", "minLength": 1 },
+          "replayLane": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["tag"],
+            "properties": { "tag": { "const": "native-qnt-mbt" } }
+          },
+          "production": { "$ref": "#/$defs/productionEvidence" },
+          "evidencePath": { "$ref": "#/$defs/relativePath" },
+          "evidenceSha256": { "$ref": "#/$defs/sha256" }
+        }
+      },
+      "timing": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["startedAt", "finishedAt"],
+        "properties": {
+          "startedAt": { "type": "string", "format": "date-time" },
+          "finishedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "measurementValue": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["tag", "value"],
+            "properties": { "tag": { "const": "reported" }, "value": {} }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["tag", "reason"],
+            "properties": {
+              "tag": { "const": "unavailable" },
+              "reason": { "type": "string", "minLength": 1 }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
 ## Intake And Blockers
 
 Source intake validates manifest, catalog, contract, QNT, branch, target

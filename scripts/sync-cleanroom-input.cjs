@@ -58,7 +58,8 @@ const ALLOWLIST = [
     transform: "cleanroom-paths",
   },
   {
-    sourceRoot: "plans/ralph-artifacts/l12-cleanroom-generation/srd-l12-denominator.json",
+    sourceRoot:
+      "plans/ralph-artifacts/l12-cleanroom-generation/srd-l12-denominator.json",
     destRoot: "l12-cleanroom-generation/srd-l12-denominator.json",
     kind: "file",
   },
@@ -299,14 +300,20 @@ function verifyBranchInventoryHashes(targetRoot, inputRoot) {
   return checked.size;
 }
 
-function requireCleanSources(repoRoot) {
-  const roots = ALLOWLIST.map((rule) => rule.sourceRoot);
+function requireCleanSourcePaths(repoRoot, roots) {
   const status = git(repoRoot, "status", "--porcelain", "--", ...roots);
   if (status !== "") {
     fail(
       `allowlisted sources have uncommitted changes; commit them first so the manifest source commit SHA is truthful:\n${status}`,
     );
   }
+}
+
+function requireCleanSources(repoRoot) {
+  requireCleanSourcePaths(
+    repoRoot,
+    ALLOWLIST.map((rule) => rule.sourceRoot),
+  );
 }
 
 function sha256(filePath) {
@@ -633,4 +640,11 @@ function main() {
   );
 }
 
-main();
+if (require.main === module) main();
+
+module.exports = {
+  collectCopies,
+  requireCleanSourcePaths,
+  sha256,
+  verifyImportsResolve,
+};
