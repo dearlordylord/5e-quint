@@ -32,7 +32,7 @@
     {
       "number": 4,
       "id": "L12IKP-04-INTAKE-AND-MEASUREMENT",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Intake Ice Knife results and measure the complete pilot",
       "dependencies": [
         "L12IKP-03-IMMUTABLE-EXPORT"
