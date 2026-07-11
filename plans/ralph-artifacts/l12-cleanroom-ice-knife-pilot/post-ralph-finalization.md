@@ -17,3 +17,9 @@ artifacts, Surface records, or source planning files before launch.
 
 The target returns its external receipt and retained evidence to source intake.
 The target does not classify the source result.
+
+After the receipt returns, derive the next transition and run source intake and
+measurement with the commands in
+`plans/ralph-artifacts/l12-cleanroom-ice-knife-pilot/real-experiment-handoff.md`.
+That handoff also contains the fresh source-review prompt. Synthetic receipts
+exercise only the intake parser; they do not claim target success.

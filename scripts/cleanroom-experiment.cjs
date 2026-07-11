@@ -1511,8 +1511,12 @@ function runExperimentSelfTest() {
 
 module.exports = {
   buildReceiptContractProjection,
+  catalogBasis,
   exportExperiment,
+  inputHashes,
   parseArgs,
   runExperimentSelfTest,
+  sha256Text,
   selectedQntPaths,
+  stableJson,
 };

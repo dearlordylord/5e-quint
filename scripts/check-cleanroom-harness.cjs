@@ -43,24 +43,6 @@ const requiredDeciderGates = [
   "reviewer-loop-convergence",
 ];
 
-const task131DirtyStartDriver =
-  "cleanroom-input/qnt/battle-runtime/battle-runtime-creature-type-protection-and-charm-selected-identity.mbt.qnt";
-
-// Historical compatibility for the exact archived T131 receipt only. The Ice
-// Knife pilot intake task replaces this active exception with the canonical
-// external receipt contract; this tuple must never authorize a new run.
-const sourceAuthorizedDirtyStartGates = [
-  {
-    taskId: "T131",
-    targetRoot: "/workspace/typescript/dnd-cleanroom-rust-agent-2026-jun-29",
-    startHeadSha: "02a1337d5e2be04307d44c63e2596f60c2104301",
-    targetHeadSha: "02a1337d5e2be04307d44c63e2596f60c2104301",
-    outputSha256:
-      "3a26b37dee29a4ee0df14799875e19c56821bc37bd826e17923eea93407c1c82",
-    selectedDrivers: [task131DirtyStartDriver],
-  },
-];
-
 const engineModuleRoles = new Set([
   "domain-engine",
   "domain-api",
@@ -826,7 +808,7 @@ function validateStartGate(
   startGate,
   rootPath,
   issues,
-  dirtyStartAuthorizations = sourceAuthorizedDirtyStartGates,
+  dirtyStartAuthorizations = [],
 ) {
   if (!isRecord(startGate)) return;
   if (startGate.schemaVersion !== 1) {
@@ -2542,7 +2524,7 @@ function validateProductionSourceScan({
 function validateTaskArtifacts({
   taskRoot,
   profile,
-  dirtyStartAuthorizations = sourceAuthorizedDirtyStartGates,
+  dirtyStartAuthorizations = [],
 }) {
   const issues = [];
   validateHarnessProfile(profile, issues);
