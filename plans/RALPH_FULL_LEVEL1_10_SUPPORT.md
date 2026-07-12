@@ -28,7 +28,7 @@
     { "number": 22, "id": "L110E-01-SPELL-LEVEL5-CARRY-FORWARD", "status": "todo", "title": "Carry spell-level-5 support into level-1-10 scope" },
     { "number": 23, "id": "L110E-02-DIVINE-INTERVENTION-BATTLE-SPELL-HANDOFF", "status": "todo", "title": "Bridge Divine Intervention to supported battle spell paths" },
     { "number": 24, "id": "L110E-03-NO-SPELL-LEVEL6-GATE", "status": "todo", "title": "Add executable no spell-level-6 access checks for character level 10" },
-    { "number": 25, "id": "L110F-01-RULES-KERNEL-CLEANROOM-EVIDENCE", "status": "todo", "title": "Add rules-kernel and cleanroom evidence for level-10 promoted behavior" },
+    { "number": 25, "id": "L110F-01-RULES-KERNEL-EVIDENCE", "status": "todo", "title": "Add rules-kernel evidence for level-10 promoted behavior" },
     { "number": 26, "id": "L110F-02-MCP-LEVEL10-SHEET-SCENARIO", "status": "todo", "title": "Add executable level-10 character creation and sheet MCP scenario evidence" },
     { "number": 27, "id": "L110F-03-MCP-LEVEL10-BATTLE-HANDOFF", "status": "todo", "title": "Add executable level-10 battle handoff MCP scenario evidence" },
     { "number": 28, "id": "L110F-04-MCP-LEVEL10-NONBATTLE-SCENARIO", "status": "todo", "title": "Add executable level-10 nonbattle/session MCP scenario evidence" },
@@ -85,7 +85,7 @@ in-scope level-10 support:
 
 Non-battle rules still need implemented support at the correct owner: Surface,
 Character Creation, Character Sheet/session, Spell Access, MCP/session tooling,
-rules-kernel, cleanroom branch evidence, or table-facing API. "Not battle
+rules-kernel evidence, or table-facing API. "Not battle
 runtime" is a routing decision, not a completion state.
 
 ## Level-10 Frontier
@@ -153,7 +153,7 @@ Known current partial level-10 state:
 - Lane D, Runtime/QNT: battle-facing level-10 class and subclass features.
 - Lane E, Spell frontier: spell-level-5 carry-forward and no spell-level-6
   leakage.
-- Lane F, Evidence and final gates: rules-kernel, cleanroom, MCP scenarios,
+- Lane F, Evidence and final gates: rules-kernel, MCP scenarios,
   focused QNT/MBT, reviewer convergence, final serialized quality gate.
 
 No level-10 lane files exist at plan creation. This file is canonical. If lane
@@ -188,14 +188,14 @@ outputs, and final-gate semantics.
 | 22 | E | L110E-01-SPELL-LEVEL5-CARRY-FORWARD | todo | L110A-04-NONVACUOUS-STRICT-GATE, L110B-01-SPELLCASTING-PROGRESSION-ROWS, L110C-01-LEVEL10-CREATION-SHEET-PROGRESSION | carried spell-level-5 rows |
 | 23 | E | L110E-02-DIVINE-INTERVENTION-BATTLE-SPELL-HANDOFF | todo | L110C-03-DIVINE-INTERVENTION-SESSION, L110E-01-SPELL-LEVEL5-CARRY-FORWARD | supported battle spell handoff rows |
 | 24 | E | L110E-03-NO-SPELL-LEVEL6-GATE | todo | L110B-01-SPELLCASTING-PROGRESSION-ROWS, L110C-01-LEVEL10-CREATION-SHEET-PROGRESSION, L110E-01-SPELL-LEVEL5-CARRY-FORWARD | no spell-level-6 tests and report checks |
-| 25 | F | L110F-01-RULES-KERNEL-CLEANROOM-EVIDENCE | todo | L110D-01-BARBARIAN-RETALIATION, L110D-02-FIGHTER-HEROIC-WARRIOR, L110D-03-MONK-HEIGHTENED-FOCUS-ATTACK-DEFENSE, L110D-04-MONK-STEP-OF-WIND-CARRY, L110D-05-MONK-SELF-RESTORATION, L110D-06-PALADIN-AURA-OF-COURAGE, L110D-07-RANGER-TIRELESS-THP, L110D-08-LAND-AND-FIEND-RESISTANCES, L110D-09-WIZARD-EMPOWERED-EVOCATION, L110E-02-DIVINE-INTERVENTION-BATTLE-SPELL-HANDOFF | rules-kernel and cleanroom rows |
+| 25 | F | L110F-01-RULES-KERNEL-EVIDENCE | todo | L110D-01-BARBARIAN-RETALIATION, L110D-02-FIGHTER-HEROIC-WARRIOR, L110D-03-MONK-HEIGHTENED-FOCUS-ATTACK-DEFENSE, L110D-04-MONK-STEP-OF-WIND-CARRY, L110D-05-MONK-SELF-RESTORATION, L110D-06-PALADIN-AURA-OF-COURAGE, L110D-07-RANGER-TIRELESS-THP, L110D-08-LAND-AND-FIEND-RESISTANCES, L110D-09-WIZARD-EMPOWERED-EVOCATION, L110E-02-DIVINE-INTERVENTION-BATTLE-SPELL-HANDOFF | rules-kernel rows |
 | 26 | F | L110F-02-MCP-LEVEL10-SHEET-SCENARIO | todo | L110C-01-LEVEL10-CREATION-SHEET-PROGRESSION, L110C-02-MAGICAL-SECRETS-SPELL-ACCESS, L110C-03-DIVINE-INTERVENTION-SESSION, L110C-04-REST-CHOICE-AND-PASSIVE-SHEET-STATE | `mcp-scenario-evidence.json` sheet rows |
 | 27 | F | L110F-03-MCP-LEVEL10-BATTLE-HANDOFF | todo | L110D-01-BARBARIAN-RETALIATION, L110D-02-FIGHTER-HEROIC-WARRIOR, L110D-03-MONK-HEIGHTENED-FOCUS-ATTACK-DEFENSE, L110D-05-MONK-SELF-RESTORATION, L110D-06-PALADIN-AURA-OF-COURAGE, L110D-07-RANGER-TIRELESS-THP, L110D-08-LAND-AND-FIEND-RESISTANCES, L110D-09-WIZARD-EMPOWERED-EVOCATION, L110F-02-MCP-LEVEL10-SHEET-SCENARIO | `mcp-scenario-evidence.json` battle rows |
 | 28 | F | L110F-04-MCP-LEVEL10-NONBATTLE-SCENARIO | todo | L110C-02-MAGICAL-SECRETS-SPELL-ACCESS, L110C-03-DIVINE-INTERVENTION-SESSION, L110C-04-REST-CHOICE-AND-PASSIVE-SHEET-STATE, L110F-02-MCP-LEVEL10-SHEET-SCENARIO | `mcp-scenario-evidence.json` nonbattle rows |
 | 29 | F | L110F-05-FOCUSED-QNT-MBT-CLOSURE | todo | L110D-01-BARBARIAN-RETALIATION, L110D-02-FIGHTER-HEROIC-WARRIOR, L110D-03-MONK-HEIGHTENED-FOCUS-ATTACK-DEFENSE, L110D-04-MONK-STEP-OF-WIND-CARRY, L110D-05-MONK-SELF-RESTORATION, L110D-06-PALADIN-AURA-OF-COURAGE, L110D-07-RANGER-TIRELESS-THP, L110D-08-LAND-AND-FIEND-RESISTANCES, L110D-09-WIZARD-EMPOWERED-EVOCATION, L110E-02-DIVINE-INTERVENTION-BATTLE-SPELL-HANDOFF | focused QNT/MBT evidence |
-| 30 | F | L110F-06-REVIEWER-LOOP-CONVERGENCE | todo | L110F-01-RULES-KERNEL-CLEANROOM-EVIDENCE, L110F-02-MCP-LEVEL10-SHEET-SCENARIO, L110F-03-MCP-LEVEL10-BATTLE-HANDOFF, L110F-04-MCP-LEVEL10-NONBATTLE-SCENARIO, L110F-05-FOCUSED-QNT-MBT-CLOSURE | reviewer findings and fixes |
+| 30 | F | L110F-06-REVIEWER-LOOP-CONVERGENCE | todo | L110F-01-RULES-KERNEL-EVIDENCE, L110F-02-MCP-LEVEL10-SHEET-SCENARIO, L110F-03-MCP-LEVEL10-BATTLE-HANDOFF, L110F-04-MCP-LEVEL10-NONBATTLE-SCENARIO, L110F-05-FOCUSED-QNT-MBT-CLOSURE | reviewer findings and fixes |
 | 31 | F | L110F-07-RALPH-PLAN-CONSISTENCY | todo | L110F-06-REVIEWER-LOOP-CONVERGENCE | plan graph consistency evidence |
-| 32 | A | L110A-06-STRICT-ARTIFACT-REFRESH | todo | L110F-01-RULES-KERNEL-CLEANROOM-EVIDENCE, L110F-02-MCP-LEVEL10-SHEET-SCENARIO, L110F-03-MCP-LEVEL10-BATTLE-HANDOFF, L110F-04-MCP-LEVEL10-NONBATTLE-SCENARIO, L110F-05-FOCUSED-QNT-MBT-CLOSURE, L110F-06-REVIEWER-LOOP-CONVERGENCE, L110F-07-RALPH-PLAN-CONSISTENCY | regenerated strict level-1-10 artifacts |
+| 32 | A | L110A-06-STRICT-ARTIFACT-REFRESH | todo | L110F-01-RULES-KERNEL-EVIDENCE, L110F-02-MCP-LEVEL10-SHEET-SCENARIO, L110F-03-MCP-LEVEL10-BATTLE-HANDOFF, L110F-04-MCP-LEVEL10-NONBATTLE-SCENARIO, L110F-05-FOCUSED-QNT-MBT-CLOSURE, L110F-06-REVIEWER-LOOP-CONVERGENCE, L110F-07-RALPH-PLAN-CONSISTENCY | regenerated strict level-1-10 artifacts |
 | 33 | F | L110F-08-FINAL-SERIALIZED-QUALITY-GATE | todo | L110A-06-STRICT-ARTIFACT-REFRESH | final command transcript |
 
 ## Shared Verification
@@ -228,7 +228,6 @@ pnpm unit-profile-coverage:check
 pnpm rules-kernel-coverage:check:self-test
 pnpm rules-kernel-coverage:check -- --write
 pnpm rules-kernel-coverage:check
-pnpm cleanroom-branch-coverage:check
 pnpm --filter @dnd/mcp test:mcp-scenario-evidence
 pnpm --filter @dnd/surface exec tsc --noEmit --pretty false
 pnpm --filter @dnd/character-creation-runtime test
@@ -978,8 +977,7 @@ Output:
   melee weapon or Unarmed Strike attack against that creature.
 - Expected generated artifacts or evidence rows changed:
   `unit-evidence.jsonl`, `profiles.jsonl`, `shared-algebra-owner-evidence.json`,
-  `rules-kernel-coverage/profile-obligations.jsonl`,
-  `cleanroom-branch-coverage/branch-scope.jsonl`, `unit-matrix.json`.
+  `rules-kernel-coverage/profile-obligations.jsonl`, `unit-matrix.json`.
 
 Completion / Success Criteria:
 
@@ -1030,7 +1028,7 @@ Output:
   starts a turn without Heroic Inspiration, they can give it to themselves.
 - Expected generated artifacts or evidence rows changed:
   `unit-evidence.jsonl`, `profiles.jsonl`, `character-sheet-owner-evidence.json`,
-  `shared-algebra-owner-evidence.json`, rules-kernel and cleanroom rows.
+  `shared-algebra-owner-evidence.json` and rules-kernel rows.
 
 Completion / Success Criteria:
 
@@ -1080,7 +1078,7 @@ Output:
   Defense grants Temporary Hit Points equal to two Martial Arts die rolls.
 - Expected generated artifacts or evidence rows changed:
   `unit-evidence.jsonl`, `profiles.jsonl`, `shared-algebra-owner-evidence.json`,
-  rules-kernel and cleanroom rows.
+  and rules-kernel rows.
 
 Completion / Success Criteria:
 
@@ -1184,7 +1182,7 @@ Output:
   clause if survival state has no owner.
 - Expected generated artifacts or evidence rows changed:
   `unit-evidence.jsonl`, `profiles.jsonl`, `shared-algebra-owner-evidence.json`,
-  `character-sheet-owner-evidence.json`, rules-kernel and cleanroom rows.
+  `character-sheet-owner-evidence.json` and rules-kernel rows.
 
 Completion / Success Criteria:
 
@@ -1235,7 +1233,7 @@ Output:
   condition suppressed while there.
 - Expected generated artifacts or evidence rows changed:
   `unit-evidence.jsonl`, `profiles.jsonl`, `shared-algebra-owner-evidence.json`,
-  rules-kernel and cleanroom rows.
+  and rules-kernel rows.
 
 Completion / Success Criteria:
 
@@ -1289,7 +1287,7 @@ Output:
   Long Rest.
 - Expected generated artifacts or evidence rows changed:
   `unit-evidence.jsonl`, `profiles.jsonl`, `character-sheet-owner-evidence.json`,
-  `shared-algebra-owner-evidence.json`, rules-kernel and cleanroom rows.
+  `shared-algebra-owner-evidence.json` and rules-kernel rows.
 
 Completion / Success Criteria:
 
@@ -1345,7 +1343,7 @@ Output:
   until another rest choice replaces it.
 - Expected generated artifacts or evidence rows changed:
   `unit-evidence.jsonl`, `profiles.jsonl`, `character-sheet-owner-evidence.json`,
-  `shared-algebra-owner-evidence.json`, rules-kernel and cleanroom rows.
+  `shared-algebra-owner-evidence.json` and rules-kernel rows.
 
 Completion / Success Criteria:
 
@@ -1396,7 +1394,7 @@ Output:
   one damage roll of a Wizard Evocation spell cast by the character.
 - Expected generated artifacts or evidence rows changed:
   `unit-evidence.jsonl`, `profiles.jsonl`, `shared-algebra-owner-evidence.json`,
-  rules-kernel and cleanroom rows.
+  and rules-kernel rows.
 
 Completion / Success Criteria:
 
@@ -1582,7 +1580,7 @@ Plan Impact:
 
 - Protects the Level 10 boundary before Level 11 work begins.
 
-### Task 25 - L110F-01-RULES-KERNEL-CLEANROOM-EVIDENCE
+### Task 25 - L110F-01-RULES-KERNEL-EVIDENCE
 
 Status: `todo`
 
@@ -1591,28 +1589,24 @@ Depends on: `L110D-01-BARBARIAN-RETALIATION`, `L110D-02-FIGHTER-HEROIC-WARRIOR`,
 Inputs:
 
 - `plans/rules-kernel-coverage/profile-obligations.jsonl`
-- `plans/cleanroom-branch-coverage/branch-scope.jsonl`
 - `plans/unit-profile-coverage/shared-algebra-owner-evidence.json`
 - runtime/QNT evidence from Tasks 13-23.
 
 Current state:
 
-- Level 10 promoted behavior has no rules-kernel or cleanroom evidence rows.
+- Level 10 promoted behavior has no rules-kernel evidence rows.
 
 Output:
 
-- Rules-kernel and cleanroom evidence rows for every promoted Level 10 runtime
-  behavior and every session/table-facing closure that needs branch evidence.
+- Rules-kernel evidence rows for every promoted Level 10 runtime behavior and
+  every session/table-facing closure that needs executable coverage evidence.
 - Expected generated artifacts or evidence rows changed:
   `plans/rules-kernel-coverage/profile-obligations.jsonl`,
-  `plans/cleanroom-branch-coverage/branch-scope.jsonl`,
-  `plans/cleanroom-branch-coverage/REPORT.md`,
   `shared-algebra-owner-evidence.json`, `unit-matrix.json`.
 
 Completion / Success Criteria:
 
-- No promoted Level 10 behavior lacks the corresponding rules-kernel or
-  cleanroom row.
+- No promoted Level 10 behavior lacks the corresponding rules-kernel row.
 
 Acceptance:
 
@@ -1621,7 +1615,6 @@ Acceptance:
 
 Forbidden Shortcuts:
 
-- Do not reuse Level 9 cleanroom rows for new Level 10 behavior.
 - Do not add evidence before the referenced test/proof exists.
 
 Verification:
@@ -1629,7 +1622,6 @@ Verification:
 - `pnpm rules-kernel-coverage:check:self-test`
 - `pnpm rules-kernel-coverage:check -- --write`
 - `pnpm rules-kernel-coverage:check`
-- `pnpm cleanroom-branch-coverage:check`
 
 Plan Impact:
 
@@ -1835,7 +1827,7 @@ Plan Impact:
 
 Status: `todo`
 
-Depends on: `L110F-01-RULES-KERNEL-CLEANROOM-EVIDENCE`, `L110F-02-MCP-LEVEL10-SHEET-SCENARIO`, `L110F-03-MCP-LEVEL10-BATTLE-HANDOFF`, `L110F-04-MCP-LEVEL10-NONBATTLE-SCENARIO`, `L110F-05-FOCUSED-QNT-MBT-CLOSURE`
+Depends on: `L110F-01-RULES-KERNEL-EVIDENCE`, `L110F-02-MCP-LEVEL10-SHEET-SCENARIO`, `L110F-03-MCP-LEVEL10-BATTLE-HANDOFF`, `L110F-04-MCP-LEVEL10-NONBATTLE-SCENARIO`, `L110F-05-FOCUSED-QNT-MBT-CLOSURE`
 
 Inputs:
 
@@ -1935,14 +1927,13 @@ Plan Impact:
 
 Status: `todo`
 
-Depends on: `L110F-01-RULES-KERNEL-CLEANROOM-EVIDENCE`, `L110F-02-MCP-LEVEL10-SHEET-SCENARIO`, `L110F-03-MCP-LEVEL10-BATTLE-HANDOFF`, `L110F-04-MCP-LEVEL10-NONBATTLE-SCENARIO`, `L110F-05-FOCUSED-QNT-MBT-CLOSURE`, `L110F-06-REVIEWER-LOOP-CONVERGENCE`, `L110F-07-RALPH-PLAN-CONSISTENCY`
+Depends on: `L110F-01-RULES-KERNEL-EVIDENCE`, `L110F-02-MCP-LEVEL10-SHEET-SCENARIO`, `L110F-03-MCP-LEVEL10-BATTLE-HANDOFF`, `L110F-04-MCP-LEVEL10-NONBATTLE-SCENARIO`, `L110F-05-FOCUSED-QNT-MBT-CLOSURE`, `L110F-06-REVIEWER-LOOP-CONVERGENCE`, `L110F-07-RALPH-PLAN-CONSISTENCY`
 
 Inputs:
 
 - All coverage scripts and evidence files changed by earlier tasks.
 - `plans/unit-profile-coverage/`
 - `plans/rules-kernel-coverage/`
-- `plans/cleanroom-branch-coverage/`
 
 Current state:
 
@@ -1956,7 +1947,7 @@ Output:
   `level1-10-full-support.json`, `LEVEL1_10_FULL_SUPPORT.md`,
   `level1-10-mining-audit.json`, `LEVEL1_10_MINING_AUDIT.md`,
   `ultra-golden-gate.json`, `ULTRA_GOLDEN_GATE.md`, `unit-matrix.json`,
-  rules-kernel and cleanroom reports.
+  and the rules-kernel report.
 
 Completion / Success Criteria:
 
@@ -1979,7 +1970,6 @@ Verification:
 - `pnpm unit-profile-coverage:check`
 - `pnpm rules-kernel-coverage:check -- --write`
 - `pnpm rules-kernel-coverage:check`
-- `pnpm cleanroom-branch-coverage:check`
 
 Plan Impact:
 
@@ -1994,7 +1984,7 @@ Depends on: `L110A-06-STRICT-ARTIFACT-REFRESH`
 Inputs:
 
 - Complete Level 10 implementation changeset.
-- Final generated coverage, rules-kernel, cleanroom, and MCP artifacts.
+- Final generated coverage, rules-kernel, and MCP artifacts.
 
 Current state:
 
@@ -2034,7 +2024,6 @@ pnpm unit-profile-coverage:check
 pnpm rules-kernel-coverage:check:self-test
 pnpm rules-kernel-coverage:check -- --write
 pnpm rules-kernel-coverage:check
-pnpm cleanroom-branch-coverage:check
 pnpm --filter @dnd/mcp test:mcp-scenario-evidence
 pnpm --filter @dnd/surface exec tsc --noEmit --pretty false
 pnpm --filter @dnd/character-creation-runtime test

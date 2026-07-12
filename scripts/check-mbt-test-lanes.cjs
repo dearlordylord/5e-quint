@@ -35,7 +35,6 @@ const SELECTED_IDENTITY_VOCABULARY_EXCLUDED_PATHS = new Set([
 ]);
 const SELECTED_IDENTITY_VOCABULARY_EXCLUDED_PREFIXES = [
   "plans/ralph-artifacts/",
-  "plans/cleanroom-scaffolds/trials/",
 ];
 const FORBIDDEN_SELECTED_IDENTITY_VOCABULARY = [
   {
