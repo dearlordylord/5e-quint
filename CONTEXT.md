@@ -24,6 +24,14 @@ _Avoid_: Per-Unit package, export catalog, experiment catalog
 The closed conformance-tool profile paired with the Cleanroom Core for one Target Language Profile. It identifies the real language Quint connector, its documentation and invocation, and the evidence checks required for conformance. Rust is currently the only such adapter. It contains no Target SDK interfaces or implementation code.
 _Avoid_: Target implementation kit, reducer skeleton
 
+**Opaque Oracle**:
+A conformance-only source implementation whose behavior can be queried without exposing its implementation. A Target SDK may compare generated cases against it but must remain independent of it; RAW and calibrated QNT remain the rules authority.
+_Avoid_: Reference SDK, Target dependency, source-code handoff
+
+**Portable Surface Contract**:
+The language-neutral boundary that accepts one complete supplied SRD Surface catalog or rejects it with typed content issues. It covers JSON shape and catalog integrity; it does not establish Static Mechanics Admission or dynamic availability.
+_Avoid_: Dhall schema, mechanics support manifest, content release protocol
+
 The Cleanroom input for one Target SDK is the Cleanroom Core plus the applicable
 Target Language Adapter. There are not multiple Cleanroom Cores per Unit.
 
