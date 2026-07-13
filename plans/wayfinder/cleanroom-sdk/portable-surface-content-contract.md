@@ -7,15 +7,16 @@ source commit `6eba6154a8a00f047d9783cd881262592dc87329`.
 ## Decision
 
 The **Portable Surface Contract** is a strict, language-neutral catalog-load
-boundary for the one supplied SRD corpus. A Target SDK accepts one generated SRD
-Surface catalog document into its typed catalog, or rejects the document with a
-non-empty collection of typed content issues. Acceptance is atomic: no partial
-catalog survives a rejected load.
+boundary for the generated Cleanroom projection of the canonical SRD corpus. A
+Target SDK accepts one generated Cleanroom Surface catalog document into its
+typed catalog, or rejects the document with a non-empty collection of typed
+content issues. Acceptance is atomic: no partial catalog survives a rejected
+load.
 
 The contract consists of:
 
-1. one generated SRD catalog JSON document containing named Unit and Stat Block
-   collections;
+1. one generated Cleanroom catalog JSON document containing named Unit and Stat
+   Block collections of complete record-rooted mechanics graphs;
 2. one generated JSON Schema Draft 2020-12 compound schema for that document;
 3. source-owned valid and invalid conformance cases with expected, unordered
    typed issue facts; and
@@ -33,11 +34,11 @@ check detects that state by regeneration and direct comparison before the
 cleanroom is constructed.
 
 The Portable Surface Contract stops at decoded catalog integrity. The separate
-Static Mechanics Admission question begins from that decoded catalog and asks
-how authored mechanics become typed production-reducer support facts. Issue #18
-does not decide that workflow's timing, traversal, or result cardinality.
-Dynamic availability depends on actor/session/battle state. Neither mechanics
-support nor availability belongs in Surface structural issues.
+Static Mechanics Admission decision defines both the source-side executable
+projection that determines supplied membership and the Target admission step
+that begins from the decoded Cleanroom catalog. Dynamic availability depends on
+actor/session/battle state. Neither mechanics support nor availability belongs
+in Surface structural issues or member metadata.
 
 ## Why this boundary
 
@@ -60,9 +61,9 @@ counts therefore do not establish pairing, shipment, or installed membership.
 
 One aggregate catalog document removes per-record membership from the Target
 protocol. Per-source Dhall and JSON remain useful source-authoring artifacts,
-but a Target receives one catalog-shaped value, not a directory whose meaning
-it must reconstruct. The aggregate keeps Units and Stat Blocks as named record
-families rather than conflating them into one union.
+but a Target receives one catalog-shaped Cleanroom projection, not a directory
+whose meaning it must reconstruct. The aggregate keeps Units and Stat Blocks as
+named record families rather than conflating them into one union.
 
 Conceptually, the successful decoded value has this shape:
 
@@ -187,11 +188,16 @@ One invocation performs these steps in order:
 5. Flatten and partition the complete decoded record set by its Unit or Stat Block family,
    then build the SRD collections while collecting all duplicate-id,
    provenance, and reference issues.
-6. Generate the one aggregate SRD catalog from those successful collections.
-   Production TypeScript installs this generated aggregate instead of retaining
-   hand-maintained JSON imports or collection arrays. Canonical-source
-   discovery therefore determines membership once; no second filesystem scan,
-   import parser, or manifest re-declares it.
+6. Derive complete record-rooted mechanics graphs through the source-side
+   executable-mechanics projection, applying the Source Execution Horizon to
+   progression-governed roots, then generate the one Cleanroom aggregate from
+   those graphs. A root with any represented mechanic lacking production
+   TypeScript reducer execution is excluded or the source is repaired; nested
+   mechanics are never deleted to make a partial record. The publication
+   command closes the projection under required catalog references and reruns
+   collection integrity over the projected catalog. Production TypeScript
+   installs this generated aggregate instead of retaining hand-maintained JSON
+   imports, collection arrays, or a support manifest.
 7. Generate the Draft 2020-12 compound schema from the Effect schema, validate
    the schema against its meta-schema, and compare it directly with the
    committed portable schema.
@@ -207,10 +213,12 @@ independent catalog issues are accumulated. Publication writes no artifact on a
 failed run.
 
 The check eliminates the current distant membership interpretations. Every
-canonical record flows into the aggregate, generated JSON without a source is
-rejected, and production installs only the aggregate. A record therefore cannot
-be canonical-but-unshipped, shipped-but-not-decoded, or installed outside the
-generated catalog without the publication command failing.
+canonical record flows through regeneration, strict decoding, catalog checks,
+and the source executable-mechanics projection; generated JSON without a source
+is rejected, and production installs only the derived aggregate. A record can
+be absent from the Target package only because its complete mechanics graph
+does not meet the source-derived Cleanroom boundary, never because a second
+filesystem scan, import list, or handwritten support inventory omitted it.
 
 ## Target acceptance contract
 
@@ -237,13 +245,14 @@ The operation must:
    path. Running a detached validator while production code loads content some
    other way is not conformance.
 
-The full supplied SRD catalog is the positive corpus. This decision does not
-require a general third-party installation API. Future PHB+ content is official
-closed-licensed content, not a widening of the SRD catalog: it must enter through
-a separately named licensed/private collection and distribution boundary. No
-real PHB+ authored identity, prose, fixture, or generated artifact belongs in
-this contract. Synthetic mechanics fixtures elsewhere remain test pressure, not
-PHB+ content.
+The exact generated Cleanroom aggregate is the positive corpus. The complete
+canonical SRD catalog remains source-side publication input and is not supplied
+to Targets. This decision does not require a general third-party installation
+API. Future PHB+ content is official closed-licensed content, not a widening of
+the SRD catalog: it must enter through a separately named licensed/private
+collection and distribution boundary. No real PHB+ authored identity, prose,
+fixture, or generated artifact belongs in this contract. Synthetic mechanics
+fixtures elsewhere remain test pressure, not PHB+ content.
 
 ## Typed issue algebra
 
@@ -314,7 +323,7 @@ typed facts; it does not compare rendered strings.
 Cases are source-owned JSON inputs plus expected accepted/rejected typed facts.
 They are small enough to diagnose one boundary while collectively covering:
 
-- the exact supplied SRD catalog accepted as a whole;
+- the exact supplied Cleanroom aggregate accepted as a whole;
 - every top-level Unit and Stat Block variant represented by the supplied
   corpus;
 - missing required fields, wrong primitive types, invalid literals, invalid
@@ -375,10 +384,11 @@ supplied aggregate JSON.
 
 ### No Static Mechanics Admission status in Surface
 
-A structurally valid catalog can contain mechanics not yet executable by a
-runtime. The separate admission decision owns typed unsupported-shape facts.
-Adding `supported` metadata to the Surface contract would duplicate runtime
-capability and allow it to drift.
+The complete canonical source catalog can contain records that do not enter the
+Cleanroom projection. The supplied aggregate is derived from source executable
+behavior, and each Target independently admits it with typed mechanics issues.
+Adding `supported` metadata to Surface records would duplicate that executable
+boundary and allow it to drift.
 
 ### No Opaque Oracle in this contract
 
@@ -398,7 +408,8 @@ source implementation establishes all of the following:
 - every canonical Dhall source has exactly one generated JSON peer and every
   generated peer has a canonical source;
 - the full generated set strictly decodes with no unknown-property stripping;
-- installed Unit and Stat Block membership derives once into the generated
+- supplied Unit and Stat Block membership derives once from complete
+  source-executable record-rooted mechanics graphs into the generated Cleanroom
   aggregate catalog;
 - the aggregate catalog makes mixed provenance unrepresentable after decode
   and passes all collection/reference checks;
@@ -415,11 +426,12 @@ ticket decides the contract; it does not alter executable Surface behavior.
 ## Map impact
 
 This decision clears the portable Surface validation fog from the Cleanroom SDK
-map. Static Mechanics Admission remains owned by [Define Static Mechanics
-Admission and dynamic
-availability](https://github.com/dearlordylord/5e-quint/issues/17). Cleanroom
-composition and Target Language Adapter packaging remain owned by [Define the
-Cleanroom Core and Target Language Adapter
+map. Its original full-canonical-catalog Target membership statement is revised
+by [Static Mechanics Admission and Dynamic
+Availability](./static-mechanics-admission-and-dynamic-availability.md): the
+complete catalog is source publication input, while Targets receive its derived
+Cleanroom projection. Cleanroom composition and Target Language Adapter
+packaging remain owned by [Define the Cleanroom Core and Target Language Adapter
 boundary](https://github.com/dearlordylord/5e-quint/issues/20).
 
 Two follow-ups surface from the grilling:

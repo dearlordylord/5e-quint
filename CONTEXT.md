@@ -17,8 +17,28 @@ The restriction on which source knowledge may be used to build a Target SDK. It 
 _Avoid_: Cleanroom harness, cleanroom implementation
 
 **Cleanroom Core**:
-The one language-neutral input corpus used to build independent Target SDKs. It contains RAW, canonical Dhall and generated JSON Surface content, active calibrated QNT, and shared domain language. It is not divided into per-Unit or per-assignment packages.
+The one language-neutral input corpus used to build independent Target SDKs. It contains RAW, the Cleanroom Mechanics Slice projected from canonical authored content, active calibrated QNT, and shared domain language. It is not divided into per-Unit or per-assignment packages.
 _Avoid_: Per-Unit package, export catalog, experiment catalog
+
+**Reducer-Eligible Authored Mechanics**:
+The authored mechanics whose rules consequences can be owned by a Functional Reducer rather than decided by the table. They may consume explicit table-supplied witnesses; needing a witness does not make the resulting mechanical consequence table-owned.
+_Avoid_: Treating every rule that mentions space, objects, tactics, or a caller choice as non-executable
+
+**Source-Executable Authored Mechanics**:
+The Reducer-Eligible Authored Mechanics actually supported through production TypeScript Functional Reducers in the source snapshot. Authored mechanics outside the Source Execution Horizon or without a production execution path do not enter the Cleanroom package.
+_Avoid_: Catalog-only mechanics, planned runtime support, test-helper-only execution
+
+**Source Execution Horizon**:
+The character-progression range used when package eligibility depends on acquiring or composing a mechanic through character advancement, presently levels 1 through 10. It does not assign a fictitious level to Stat Blocks or other non-progression roots, and it is not a cap on the character levels, Spell Levels, Cast Levels, or other extension inputs that an included mechanic already supports through production TypeScript reducers.
+_Avoid_: Spell-level horizon, maximum executable level
+
+**Cleanroom Mechanics Slice**:
+The packaged projection of complete Authored Mechanics Graphs whose represented mechanics are all Source-Executable and whose progression-governed roots fall within the Source Execution Horizon. An included record retains its entire authored mechanic, including every progression, scaling, and extension fact; if any represented part lacks production TypeScript reducer execution, the record is excluded or the source is repaired rather than packaged as a partial rule. The slice is derived from source authority, not a handwritten support list or a Target-selected subset.
+_Avoid_: Support scope, per-Unit package, Target capability declaration
+
+**Cleanroom Workflow Horizon**:
+The character-progression range for which the Cleanroom requires composed public Character Creation-to-Battle SDK workflows, presently levels 1 and 2. It narrows required public workflow reachability, not package membership, Static Mechanics Admission, or the extension behavior of an included mechanic; Spell Level is a separate domain axis. Widening the horizon should compose already-executable reducer semantics rather than add rule logic or redesign the Target's mechanics model.
+_Avoid_: Spell-level horizon; truncating authored records at the horizon; treating the horizon as the maximum level representable by Target domain types
 
 **Target Language Adapter**:
 The closed conformance-tool profile paired with the Cleanroom Core for one Target Language Profile. It identifies the real language Quint connector, its documentation and invocation, and the evidence checks required for conformance. Rust is currently the only such adapter. It contains no Target SDK interfaces or implementation code.
@@ -29,7 +49,7 @@ A conformance-only source implementation whose behavior can be queried without e
 _Avoid_: Reference SDK, Target dependency, source-code handoff
 
 **Portable Surface Contract**:
-The language-neutral boundary that accepts one complete supplied SRD Surface catalog or rejects it with typed content issues. It covers JSON shape and catalog integrity; it does not establish Static Mechanics Admission or dynamic availability.
+The language-neutral boundary that accepts the complete generated Surface aggregate for the Cleanroom Mechanics Slice or rejects it with typed content issues. The complete canonical SRD catalog remains the source-side publication authority rather than Target input; this boundary covers the generated projection's JSON shape and catalog integrity, not Static Mechanics Admission or dynamic availability.
 _Avoid_: Dhall schema, mechanics support manifest, content release protocol
 
 The Cleanroom input for one Target SDK is the Cleanroom Core plus the applicable
@@ -125,31 +145,63 @@ calibrate it through source-side parity, and only then admit it to a later
 version of the Cleanroom Core.
 
 **Authored Selection**:
-Selection of a real Surface record by authored identity, such as a wizard choosing the SRD Ice Knife record. Identity is valid at catalog, selection, provenance, replay, and presentation boundaries. After selection, executable admission and reducer behavior are determined from the record's parsed mechanics and typed procedure facts, not a reducer branch on the authored id.
+Selection of a real Surface record by authored identity, such as a wizard choosing the SRD Ice Knife record. Identity is valid at catalog, selection, provenance, replay, and presentation boundaries. After selection, binding and reducer behavior consume the record's statically admitted mechanics and typed procedure facts, not a reducer branch on the authored id.
 _Avoid_: Erasing authored identity from user workflows; dispatching runtime semantics by spell or Unit id
 
+**Authored Record**:
+A top-level decoded authored aggregate in the Surface corpus: either a `UnitRecord` or a `StatBlockRecord`. They share the authored-record role, but remain distinct families because their catalogs, provenance boundaries, and execution relationships differ; use the specific family when that distinction matters.
+_Avoid_: Using “Unit” as the umbrella term for every authored record
+
+**Execution State**:
+The complete state used by a reducer transition, including authored catalogs, admitted mechanics, and mutable runtime facts. “Immutable context” may describe a current lifecycle optimization, but it is not a domain boundary; a rules-changing game could update its catalog as part of state.
+_Avoid_: Treating catalogs as categorically outside state
+
+**Derived Mechanics Cache**:
+An optional memoization of mechanics inspection or executable projections derived from authored records and support code. It is a performance/lifecycle optimization, not a second source of truth, an authored-content store, or a required workflow boundary; cached facts must remain reproducible from their authoritative inputs.
+_Avoid_: Treating cached projections as an independently maintained support ledger
+
+**Authored Mechanics Graph**:
+The connected authored content rooted at a catalog record under mechanics examination: a `UnitRecord` or `StatBlockRecord`, its nested mechanics, and the domain-typed Authored Dependencies whose mechanics must be consulted to interpret or execute that root. It contains authored relationships and rule input specifications, not live reducer holes. An Authored Reference does not join the graph merely because it contains another record's identity; selection, presentation, or rules-defined identity predicates are not execution dependencies.
+_Avoid_: Treating Unit and Stat Block catalogs as unrelated execution boundaries; traversing every identity-shaped Authored Reference as a mechanics dependency
+
+**Authored Reference**:
+An identity edge explicitly named by authored content, such as a Unit or Stat Block catalog reference. It exists because the rule refers to that authored record; it is not generic indirection or a reason to copy the referenced record's fields.
+_Avoid_: Treating every lookup or copied projection as an authored reference
+
+**Authored Dependency**:
+Authored content whose mechanics must be consulted to interpret or execute another authored record. A dependency may be embedded, referenced by identity, or constructed by the source mechanics; it does not authorize independently maintained duplicate facts.
+_Avoid_: Calling a duplicated subset of fields the dependency itself
+
+**Authored Input Specification**:
+A rule-defined constraint or parameter shape in authored mechanics, such as “one creature target,” a slot-scaling axis, or a selectable option. An authored `holeId` may name this specification, but it describes what a procedure may require; it is neither an authored-record dependency nor an open runtime request.
+_Avoid_: Calling an authored input specification a filled value or a runtime hole
+
+**Runtime Hole**:
+A live reducer-workflow request for a value required to complete an executable procedure, such as a target, chosen option, slot level, or roll. It is created after a procedure is available for interaction; an authored `holeId` may identify the corresponding input specification, but the live request and its eventual fill come from a later interaction or runtime state. It is not an authored-record dependency or an authored input specification.
+_Avoid_: Treating unresolved authored references and runtime inputs as the same concept
+
 **Static Mechanics Admission**:
-The context-independent step that turns a decoded Surface record into typed facts for a production reducer rule, or returns a typed unsupported-shape reason. It occurs when content is installed into a Target SDK, before character or battle discovery. It is distinct from dynamic availability: whether a supported rule can be used by this actor in this state with these resources.
-_Avoid_: Returning an empty list for both unsupported mechanics and a supported rule that is currently unavailable
+The observable support relation evaluated during catalog installation over the packaged Cleanroom Mechanics Slice. Every represented mechanic in that slice is required: successful admission is backed by production Functional Reducer execution, while failure returns typed unsupported-mechanics issues attributed through record-rooted mechanics paths. It is evaluated without live actor, session, or battle facts and does not create Runtime Holes. Per-root checks and receipts are diagnostic and conformance decomposition, not separate installation transactions or stored admission objects. Character/build binding and cross-capability composition occur later through production reducers and SDK Scenarios.
+_Avoid_: Treating a derived cache, per-record receipt, or support-status record as the admitted object; claiming admission from decoding or shape recognition alone; merging selected records into an admission unit; returning an empty discovery result for unsupported mechanics
 
 ## Target SDK Data Flow
 
-The Cleanroom Core supplies already-authored Dhall and the corresponding
-already-generated JSON. Generation belongs to source-side package preparation;
-a Target SDK neither authors Dhall nor regenerates JSON.
+Canonical Dhall and the complete SRD catalog remain source-side authorities.
+Source-side package preparation generates the Cleanroom Surface aggregate; a
+Target SDK loads that aggregate and neither authors Dhall nor regenerates JSON.
 
 ```text
 Cleanroom Core
-  pre-authored Dhall + pre-generated JSON + QNT + RAW/domain language
+  generated Cleanroom Surface JSON + QNT + RAW/domain language
                               |
                               v
 Target SDK loads the authored JSON catalog
                               |
                               v
-user or application selects an authored record identity
+target evaluates Static Mechanics Admission over decoded authored mechanics
                               |
                               v
-target parses/admits that record's mechanics into typed domain facts
+user or application selects authored record identities and supplies bindings
                               |
                               v
 production character-creation or battle reducer
@@ -175,8 +227,10 @@ The language conformance checks must establish at least:
   stranded below the Target SDK interface.
 
 Catalog installation combines portable Surface decoding with Static Mechanics
-Admission. A catalog whose declared support scope contains an unsupported record
-fails with typed reasons. Later character/battle discovery consumes admitted
+Admission. Every represented mechanic in the supplied Cleanroom Mechanics Slice
+is required, so any unsupported mechanic rejects executable installation with
+typed reasons. Mechanics excluded by the source-side narrowing pipeline are not
+shipped in that package. Later character/battle discovery consumes admitted
 facts plus current state to decide dynamic availability; it does not repeat
 shape recognition or silently reinterpret unsupported content as unavailable.
 
