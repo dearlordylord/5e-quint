@@ -37,16 +37,32 @@ The packaged projection of complete Authored Mechanics Graphs whose represented 
 _Avoid_: Support scope, per-Unit package, Target capability declaration
 
 **Cleanroom Workflow Horizon**:
-The character-progression range for which the Cleanroom requires composed public Character Creation-to-Battle SDK workflows, presently levels 1 and 2. It narrows required public workflow reachability, not package membership, Static Mechanics Admission, or the extension behavior of an included mechanic; Spell Level is a separate domain axis. Widening the horizon should compose already-executable reducer semantics rather than add rule logic or redesign the Target's mechanics model.
+The character-progression range for which the Cleanroom requires composed public Character Creation-to-Battle SDK workflows, presently levels 1 and 2. It narrows required public workflow reachability, not package membership, Static Mechanics Admission, or the extension behavior of an included mechanic; Spell Level is a separate domain axis. The source-free main application may apply it once when loading the catalog used for Oracle evaluation, while preserving the complete Authored Mechanics Graphs and Authored Reference closure required by the Portable Surface Contract for retained roots; that runtime view does not redefine the packaged Cleanroom Mechanics Slice. Widening the horizon should compose already-executable reducer semantics rather than add rule logic or redesign the Target's mechanics model.
 _Avoid_: Spell-level horizon; truncating authored records at the horizon; treating the horizon as the maximum level representable by Target domain types
 
 **Target Language Adapter**:
-The closed conformance-tool profile paired with the Cleanroom Core for one Target Language Profile. It identifies the real language Quint connector, its documentation and invocation, and the evidence checks required for conformance. Rust is currently the only such adapter. It contains no Target SDK interfaces or implementation code.
+The closed conformance-tool profile paired with the Cleanroom Core for one Target Language Profile. It identifies the real language Quint connector, its documentation and invocation, the evidence checks required for conformance, and may recommend an ordinary property-testing library for Target-owned Oracle Case generation and optional shrinking. Rust is currently the only such adapter. It contains no Target SDK interfaces or implementation code.
 _Avoid_: Target implementation kit, reducer skeleton
 
 **Opaque Oracle**:
-A conformance-only source implementation whose behavior can be queried without exposing its implementation. A Target SDK may compare generated cases against it but must remain independent of it; RAW and calibrated QNT remain the rules authority.
-_Avoid_: Reference SDK, Target dependency, source-code handoff
+The role in which Target SDK tests query a source-free distribution of the main production application's CLI or HTTP surface to discover calibrated production behavior during implementation and later differential conformance. Both intrinsic production surfaces expose the same strict JSON contract for one stateless composed Character Creation-to-Battle evaluation; there is no Oracle-specific application or harness. A Target SDK remains buildable and runnable without them, and RAW plus calibrated QNT remain the rules authority.
+_Avoid_: Reference SDK, separate Oracle implementation, Target dependency, source-code handoff
+
+**Oracle Case**:
+A self-contained, schema-decoded input to the Opaque Oracle's single composed Character Creation-to-Battle evaluation. It contains complete Character Creation inputs, a finite Battle decision sequence, and every externally varying fact consumed by the workflow; it carries no transport correlation or retained Oracle session identity. Successful creation always proceeds through Character Build, Character Sheet, and Battle entry before the Battle decision prefix may stop at a continuation frontier. The exact case is the reproducibility artifact; a Target-owned property test may shrink it while preserving a failure, but shrinking is not an Oracle responsibility.
+_Avoid_: Oracle session, transport-specific test case
+
+**Oracle Evaluation Batch**:
+A non-empty, ordered collection of Oracle Cases decoded atomically and evaluated sequentially by the main production application. Each normally evaluated Case has exactly one position-corresponding Oracle Trace; singleton evaluation uses a one-Case batch, so no alternate wire shape or case identifier is needed. Batch evaluation is observationally equal to concatenated singleton evaluations, including after prior messages in the same process.
+_Avoid_: Partial batch, correlated request set
+
+**Oracle Trace**:
+A source-owned, language-neutral ordered trace returned by evaluating an Oracle Case through the real production Character Creation-to-Battle workflow. It contains only contractually observable typed outcomes and continuation frontiers; its contract makes collection comparison semantics structural where possible and otherwise explicit, and excludes internal helper calls, unstable prose, route evidence, and caches.
+_Avoid_: Internal execution trace, final observation only
+
+**Oracle Discrepancy**:
+A difference identified by a Target-owned test between its SDK observations and the Oracle Trace for the same replayable Oracle Case. The difference is evidence rather than an Oracle verdict; the implementer owns failure behavior, reporting, persistence, diagnosis against RAW and calibrated QNT, and any resulting fix.
+_Avoid_: Oracle verdict, generated golden expectation
 
 **Portable Surface Contract**:
 The language-neutral boundary that accepts the complete generated Surface aggregate for the Cleanroom Mechanics Slice or rejects it with typed content issues. The complete canonical SRD catalog remains the source-side publication authority rather than Target input; this boundary covers the generated projection's JSON shape and catalog integrity, not Static Mechanics Admission or dynamic availability.
