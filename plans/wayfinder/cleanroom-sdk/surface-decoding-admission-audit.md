@@ -450,7 +450,7 @@ For **Define Static Mechanics Admission and dynamic availability**:
 
 This audit resolves the ownership question and makes no implementation choice.
 The two downstream questions above already exist as named child tickets, so no
-new ticket or dependency is required. The related `CONTEXT.md` material remains
+new ticket or dependency is required. The related `docs/cleanroom/CONTEXT.md` material remains
 protected and in scope: portable Surface validation, Static Mechanics Admission,
 typed unsupported reasons, dynamic discovery, authored-identity independence,
 source readiness, and Cleanroom composition are not retired or narrowed by this

@@ -62,7 +62,7 @@ Source readiness must repair the owning documents or separate their concerns at
 the source. It must not generate a second assumptions ledger or duplicate
 glossary that can drift.
 
-`ARCHITECTURE.md`, `CONTEXT.md`, `AGENTS.md`, `CLAUDE.md`, ADRs, package
+`ARCHITECTURE.md`, `docs/cleanroom/CONTEXT.md`, `AGENTS.md`, `CLAUDE.md`, ADRs, package
 documentation, wayfinder decisions, implementation plans, and Ralph
 infrastructure remain source-side. They constrain how the Core is produced but
 are not language-neutral implementation inputs.

@@ -26,7 +26,7 @@ implementing the source semantics. It does not design a Target Language
 Adapter, prescribe target modules or types, choose a portable manifest, or
 claim that every current QNT artifact is cleanroom-eligible.
 
-The terms follow `CONTEXT.md` and `UBIQUITOUS_LANGUAGE.md`:
+The terms follow `docs/cleanroom/CONTEXT.md` and `UBIQUITOUS_LANGUAGE.md`:
 
 - the **Functional Reducer** is the production rule-execution boundary;
 - **QNT conformance** is executable agreement between eligible Quint semantics
@@ -398,7 +398,7 @@ This is documentation-only research. It changes no rule semantics, QNT, runtime
 state, reducer behavior, Surface content, or public API. RAW applicability was
 therefore checked as **no new modeled rule**: the audit uses the repository's
 formal-evidence vocabulary and existing rule traceability without making a new
-SRD interpretation. `UBIQUITOUS_LANGUAGE.md`, `CONTEXT.md`, `ARCHITECTURE.md`,
+SRD interpretation. `UBIQUITOUS_LANGUAGE.md`, `docs/cleanroom/CONTEXT.md`, `ARCHITECTURE.md`,
 ADRs 0001 and 0002, and `.claude/review-rules.md` were reviewed before the
 classification.
 

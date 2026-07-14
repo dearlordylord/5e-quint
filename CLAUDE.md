@@ -79,6 +79,14 @@ General design rule:
 
 When a union type feels off, the signal to refactor is **domain conflation**, not _just_ "is this type-safe?" Type safety matters a lot; it is necessary but not sufficient. A mixed union whose name fits only half its members already lies about the world even if every variant typechecks. Justify splits/renames in domain terms first (e.g., "rest-triggered" vs "calendar-time-triggered" are distinct SRD triggers), and let type safety follow.
 
+## Documentation ownership
+
+Consult `CONTEXT-MAP.md` before adding or moving domain, architecture,
+assumption, Cleanroom, or acceptance documentation. The repository's mapped
+owners take precedence over generic skill file conventions. Keep each fact in
+one owning document and link to it elsewhere; do not maintain parallel glossary,
+architecture, assumption, or acceptance prose.
+
 ## Connascence discipline (CRITICAL)
 
 When changing code, actively look for connascence: code facts that must change together for correctness.
@@ -125,6 +133,20 @@ Code review agents must consult `.claude/review-rules.md` for project-specific q
 When the user asks for a review, findings are the primary output. Enforce the review rules strictly and cite file/line references for every finding.
 
 Assertions are only for facts already established at compile time or by an immediately preceding parser, type guard, support gate, exhaustive match, or narrowed workflow state. Runtime/domain failures such as absent lookups, unsupported authored data, invalid tool input, unreadable content, or session conflicts must be represented as `Either`, `Option`, parser results, or precise discriminated unions rather than exceptions. A throwing helper named `require*` is acceptable only when it asserts an already-proven internal invariant; if it discovers ordinary failure, make the failure typed. Exhaustive/impossible-branch harness throws are acceptable when they assert that every compile-time-known variant has already been handled.
+
+## Implementation claims
+
+`Implemented` is not a standalone status. If the user asks only "is it
+implemented?", first ask the short clarifying question "Implemented what?" The
+relevant subject may be a Rule Capability Increment, an Authored Record, or the
+whole Target SDK. A Cleanroom Acceptance Run is evidence about the Target SDK,
+not another implementation subject.
+
+Once the subject is clear, lead with `yes`, `no`, or `partially` and name the
+subject. State the decisive evidence or missing fact in one concise sentence.
+Do not answer by reciting every related gate, lifecycle stage, parser/reducer
+boundary, or conformance term unless the user asks for that detail. Prefer a
+link to detailed evidence over a wall of acceptance jargon.
 
 ## Memory
 
