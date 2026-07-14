@@ -49,7 +49,7 @@ The role in which Target SDK tests query a source-free distribution of the main 
 _Avoid_: Reference SDK, separate Oracle implementation, Target dependency, source-code handoff
 
 **Oracle Case**:
-A self-contained, schema-decoded input to the Opaque Oracle's single composed Character Creation-to-Battle evaluation. It contains complete Character Creation inputs, a finite Battle decision sequence, and every externally varying fact consumed by the workflow; it carries no transport correlation or retained Oracle session identity. Successful creation always proceeds through Character Build, Character Sheet, and Battle entry before the Battle decision prefix may stop at a continuation frontier. The exact case is the reproducibility artifact; a Target-owned property test may shrink it while preserving a failure, but shrinking is not an Oracle responsibility.
+A self-contained, schema-decoded input to the Opaque Oracle's single composed Character Creation-to-Battle evaluation. It contains an ordered Character Creation fill-batch prefix, non-derivable fresh-sheet input, explicit Battle-entry facts, and an ordered prefix of Battle Act attempts with Runtime Hole fill batches; it carries no transport correlation, mutation revision, cumulative replay state, or retained Oracle session identity. Successful creation always proceeds through Character Build, Character Sheet, and Battle entry before ordinary input exhaustion may return an Oracle Continuation Frontier. The exact case is the reproducibility artifact; a Target-owned property test may shrink it while preserving a failure, but shrinking is not an Oracle responsibility.
 _Avoid_: Oracle session, transport-specific test case
 
 **Oracle Evaluation Batch**:
@@ -57,8 +57,16 @@ A non-empty, ordered collection of Oracle Cases decoded atomically and evaluated
 _Avoid_: Partial batch, correlated request set
 
 **Oracle Trace**:
-A source-owned, language-neutral ordered trace returned by evaluating an Oracle Case through the real production Character Creation-to-Battle workflow. It contains only contractually observable typed outcomes and continuation frontiers; its contract makes collection comparison semantics structural where possible and otherwise explicit, and excludes internal helper calls, unstable prose, route evidence, and caches.
+A source-owned, language-neutral ordered trace returned by evaluating an Oracle Case through the real production Character Creation-to-Battle workflow. It contains presentation-free Character Creation, Character Build, Character Sheet, and Battle outcomes plus the exclusive current Oracle Continuation Frontier; collection comparison is structural after canonical set projection, and internal helpers, mutation/replay bookkeeping, unstable prose, route evidence, sessions, and caches are excluded.
 _Avoid_: Internal execution trace, final observation only
+
+**Oracle Continuation Frontier**:
+The one decision boundary at which a successful Oracle Case may stop after Battle entry: either the canonical set of currently available Battle Acts or the ordered non-empty Runtime Holes for one selected Act. Character Creation input exhaustion is an Oracle Workflow Rejection rather than a continuation frontier.
+_Avoid_: Active battle marker, creation continuation, internal replay state
+
+**Oracle Workflow Rejection**:
+A typed outcome showing that structurally valid Case data contradicts the composed evaluation lifecycle, such as creation input exhaustion/surplus or Battle input supplied beyond the current Act-or-Hole frontier. It is deterministic domain data in an Oracle Trace, not a decode failure or unexpected application defect.
+_Avoid_: Protocol error, exception, partial success
 
 **Oracle Discrepancy**:
 A difference identified by a Target-owned test between its SDK observations and the Oracle Trace for the same replayable Oracle Case. The difference is evidence rather than an Oracle verdict; the implementer owns failure behavior, reporting, persistence, diagnosis against RAW and calibrated QNT, and any resulting fix.
